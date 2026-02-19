@@ -1,0 +1,1765 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 매물 - 휙</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #facc15;
+            --primary-dark: #eab308;
+            --bg-dark: #0a1628;
+            --bg-card: #111827;
+            --bg-input: #1f2937;
+            --text-white: #ffffff;
+            --text-gray: #9ca3af;
+            --text-gray-light: #6b7280;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-white);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* 미니멀 스크롤바 */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.15);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.25);
+        }
+        
+        /* 네비게이션 */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(10, 22, 40, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .nav-logo {
+            font-size: 28px;
+            font-weight: 900;
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: var(--bg-dark);
+        }
+        
+        /* 메인 레이아웃 */
+        .main-layout {
+            display: flex;
+            height: calc(100vh - 64px);
+            margin-top: 64px;
+        }
+        
+        /* 왼쪽: 매물 리스트 */
+        .list-panel {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            border-right: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .page-title {
+            font-size: 22px;
+            font-weight: 800;
+        }
+        
+        .page-count {
+            color: var(--text-gray);
+            font-size: 14px;
+        }
+        
+        /* 필터 & 검색 */
+        .filter-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+
+        
+        .filter-group {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 6px 14px;
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: transparent;
+            color: var(--text-gray);
+            transition: all 0.2s;
+        }
+        
+        .filter-btn:hover {
+            border-color: rgba(255,255,255,0.3);
+            color: var(--text-white);
+        }
+        
+        .filter-btn.active {
+            background: var(--primary);
+            color: var(--bg-dark);
+            border-color: var(--primary);
+        }
+        
+        .search-box {
+            flex: 1;
+            min-width: 180px;
+            position: relative;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 8px 14px 8px 36px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: var(--bg-input);
+            color: var(--text-white);
+            font-size: 14px;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .search-box input::placeholder {
+            color: var(--text-gray-light);
+        }
+        
+        .search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+        }
+        
+        /* 검색 결과 정보 */
+        .search-info {
+            padding: 10px 14px;
+            background: rgba(250, 204, 21, 0.1);
+            border: 1px solid rgba(250, 204, 21, 0.3);
+            border-radius: 8px;
+            font-size: 13px;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        /* 유사도 배지 */
+        .similarity-badge {
+            padding: 2px 8px;
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+        
+        /* 매물 리스트 */
+        .property-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .property-item {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 10px;
+            transition: all 0.15s;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        
+        .property-item-main {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+        }
+        
+        .property-item:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(255,255,255,0.12);
+        }
+        
+        .property-item.selected {
+            background: rgba(250, 204, 21, 0.1);
+            border-color: rgba(250, 204, 21, 0.4);
+        }
+        
+        /* 체크박스 */
+        .property-checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid rgba(255,255,255,0.2);
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.15s;
+        }
+        
+        .property-item.selected .property-checkbox {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+        
+        .property-item.selected .property-checkbox::after {
+            content: '✓';
+            color: var(--bg-dark);
+            font-size: 12px;
+            font-weight: 700;
+        }
+        
+        .property-text {
+            flex: 1;
+            font-size: 14px;
+            color: var(--text-white);
+            line-height: 1.5;
+        }
+
+        .property-type-badge {
+            font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 5px; margin-right: 6px;
+        }
+        .badge-jeonse { background: rgba(78,205,196,0.15); color: var(--accent-jeonse); }
+        .badge-sale { background: rgba(249,115,22,0.15); color: #f97316; }
+        .badge-rent { background: rgba(167,139,250,0.15); color: #a78bfa; }
+
+        /* 상세 펼치기 */
+        .property-detail {
+            display: none;
+            padding: 0 14px 12px 46px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        .property-detail.open { display: block; }
+        .detail-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; margin-top: 8px; }
+        .detail-tag { padding: 2px 8px; border-radius: 6px; background: rgba(78,205,196,0.1); color: var(--accent-jeonse); font-size: 11px; }
+        .detail-info { font-size: 12px; color: var(--text-gray); margin-bottom: 4px; }
+        .detail-memo { font-size: 12px; color: #f87171; background: rgba(248,113,113,0.06); padding: 6px 10px; border-radius: 8px; margin-top: 4px; }
+        
+        .property-delete {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        
+        .property-edit {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            background: rgba(250, 204, 21, 0.1);
+            color: #fbbf24;
+            border: 1px solid rgba(250, 204, 21, 0.2);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        
+        .property-edit:hover {
+            background: rgba(250, 204, 21, 0.25);
+            border-color: rgba(250, 204, 21, 0.4);
+        }
+        
+        .property-delete:hover {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+        
+        /* 인라인 수정 모달 */
+        .edit-modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.7); z-index: 1000;
+            align-items: center; justify-content: center;
+        }
+        .edit-modal-overlay.show { display: flex; }
+        .edit-modal {
+            background: #1a2535; border-radius: 16px; padding: 24px;
+            width: 90%; max-width: 520px; max-height: 85vh; overflow-y: auto;
+        }
+        .edit-modal h3 { color: white; font-size: 18px; margin-bottom: 20px; }
+        .edit-row { margin-bottom: 14px; }
+        .edit-row label { display: block; font-size: 12px; color: #9ca3af; margin-bottom: 6px; }
+        .edit-input {
+            width: 100%; padding: 10px 12px; border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1); background: #0d1520;
+            color: white; font-size: 14px; box-sizing: border-box;
+        }
+        .edit-input:focus { outline: none; border-color: var(--primary); }
+        .edit-tag-wrap {
+            display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+            padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
+            background: #0d1520; min-height: 40px; cursor: text;
+        }
+        .edit-chip {
+            background: rgba(78,205,196,0.15); color: #4ecdc4;
+            padding: 3px 10px; border-radius: 20px; font-size: 12px;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .edit-chip-del { background: none; border: none; color: #4ecdc4; cursor: pointer; font-size: 14px; padding: 0; }
+        .edit-tag-input { background: none; border: none; color: white; font-size: 13px; outline: none; flex: 1; min-width: 80px; }
+        .edit-memo { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: #0d1520; color: white; font-size: 13px; resize: vertical; min-height: 70px; box-sizing: border-box; }
+        .edit-btns { display: flex; gap: 10px; margin-top: 20px; }
+        .edit-btn-cancel { flex: 1; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); background: transparent; color: white; cursor: pointer; font-size: 14px; }
+        .edit-btn-save { flex: 2; padding: 12px; border-radius: 10px; border: none; background: var(--primary); color: #111; font-weight: 700; cursor: pointer; font-size: 14px; }
+
+        /* 오른쪽: 미리보기 패널 */
+        .preview-panel {
+            width: 380px;
+            min-width: 380px;
+            background: #0d1520;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px;
+            overflow: hidden;
+            position: relative;
+            opacity: 1;
+            border-left: 1px solid rgba(255,255,255,0.06);
+        }
+        
+        .preview-panel.show {
+            width: 380px;
+            min-width: 380px;
+            padding: 24px;
+            opacity: 1;
+        }
+        
+        .preview-panel .preview-inner {
+            opacity: 1;
+            transform: translateX(0);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            justify-content: center;
+        }
+        
+        .preview-panel.show .preview-inner {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .preview-title {
+            font-size: 14px;
+            color: var(--text-gray);
+            margin-bottom: 16px;
+            flex-shrink: 0;
+        }
+        
+        /* 폰 목업 */
+        .phone-mockup {
+            width: 280px;
+            height: 460px;
+            background: #000;
+            border-radius: 36px;
+            padding: 10px;
+            box-shadow: 0 0 0 2px #333, 0 20px 50px rgba(0,0,0,0.5);
+            position: relative;
+            flex-shrink: 0;
+        }
+        
+        .phone-notch {
+            width: 80px;
+            height: 22px;
+            background: #000;
+            border-radius: 0 0 14px 14px;
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+        
+        .phone-screen {
+            width: 100%;
+            height: 100%;
+            background: #0f0f1a;
+            border-radius: 28px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .phone-header {
+            padding: 28px 12px 8px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        
+        .phone-logo {
+            font-size: 16px;
+            font-weight: 900;
+            color: var(--primary);
+        }
+        
+        .phone-indicator {
+            font-size: 11px;
+            color: #666;
+            margin-top: 2px;
+        }
+        
+        .phone-indicator span {
+            color: #fff;
+            font-weight: 600;
+        }
+        
+        .phone-body {
+            flex: 1;
+            padding: 0 10px 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .phone-empty {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-gray);
+            text-align: center;
+        }
+        
+        .phone-empty-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+        
+        .phone-empty-text {
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        
+        /* 카드 슬라이더 */
+        .card-slider {
+            height: 100%;
+            position: relative;
+            touch-action: pan-y;
+            overflow: hidden;
+        }
+        
+        .card-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            transition: transform 0.3s ease;
+            cursor: grab;
+        }
+        
+        .card-slide.dragging {
+            transition: none;
+            cursor: grabbing;
+        }
+        
+        /* 미니 카드 */
+        .mini-card {
+            border-radius: 12px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .mini-card .card-header {
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .mini-card .badge {
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        
+        .mini-card .area-badge {
+            font-size: 11px;
+            color: #888;
+        }
+        
+        .mini-card .body {
+            padding: 10px 12px 12px;
+        }
+        
+        .mini-card .complex-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+        
+        .mini-card .location {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .mini-card .price {
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+        
+        .mini-card .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        
+        .mini-card .info-item {
+            background: rgba(255,255,255,0.05);
+            padding: 6px 10px;
+            border-radius: 6px;
+        }
+        
+        .mini-card .info-label {
+            font-size: 9px;
+            color: #666;
+        }
+        
+        .mini-card .info-value {
+            font-size: 12px;
+            color: #fff;
+            font-weight: 600;
+        }
+        
+        .mini-card .features {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .mini-card .feature-tag {
+            padding: 3px 8px;
+            border-radius: 5px;
+            font-size: 10px;
+        }
+        
+        .mini-card .agent {
+            background: rgba(255,255,255,0.03);
+            padding: 8px 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .mini-card .agent-name {
+            font-size: 11px;
+            color: #fff;
+            font-weight: 600;
+        }
+        
+        .mini-card .agent-phone {
+            font-size: 11px;
+        }
+        
+        /* 카드 색상 */
+        .mini-card.mint { background: #1a1a2e; border: 2px solid rgba(78,205,196,0.3); }
+        .mini-card.mint .card-header { background: rgba(78,205,196,0.15); }
+        .mini-card.mint .badge { background: #4ecdc4; color: #1a1a2e; }
+        .mini-card.mint .price { color: #4ecdc4; }
+        .mini-card.mint .feature-tag { background: rgba(78,205,196,0.15); color: #4ecdc4; }
+        .mini-card.mint .agent-phone { color: #4ecdc4; }
+        
+        .mini-card.orange { background: #1a1a2e; border: 2px solid rgba(251,146,60,0.3); }
+        .mini-card.orange .card-header { background: rgba(251,146,60,0.15); }
+        .mini-card.orange .badge { background: #fb923c; color: #1a1a2e; }
+        .mini-card.orange .price { color: #fb923c; }
+        .mini-card.orange .feature-tag { background: rgba(251,146,60,0.15); color: #fb923c; }
+        .mini-card.orange .agent-phone { color: #fb923c; }
+        
+        .mini-card.gold { background: #1a1a2e; border: 2px solid rgba(251,191,36,0.3); }
+        .mini-card.gold .card-header { background: rgba(251,191,36,0.15); }
+        .mini-card.gold .badge { background: #fbbf24; color: #1a1a2e; }
+        .mini-card.gold .price { color: #fbbf24; }
+        .mini-card.gold .feature-tag { background: rgba(251,191,36,0.15); color: #fbbf24; }
+        .mini-card.gold .agent-phone { color: #fbbf24; }
+        
+        /* 도트 인디케이터 */
+        .dots-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 12px;
+            flex-shrink: 0;
+        }
+        
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .dot.active {
+            background: var(--primary);
+            width: 20px;
+            border-radius: 4px;
+        }
+        
+        /* 보내기 버튼 */
+        .send-section {
+            margin-top: 16px;
+            width: 100%;
+            max-width: 300px;
+            flex-shrink: 0;
+        }
+        
+        .btn-send {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            background: var(--primary);
+            color: var(--bg-dark);
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-send:hover {
+            background: var(--primary-dark);
+        }
+        
+        .btn-send:disabled {
+            background: rgba(255,255,255,0.1);
+            color: var(--text-gray);
+            cursor: not-allowed;
+        }
+        
+        .send-hint {
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-gray);
+            margin-top: 10px;
+        }
+        
+        /* 빈 상태 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-gray);
+        }
+        
+        .empty-icon {
+            font-size: 40px;
+            margin-bottom: 16px;
+        }
+        
+        .empty-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-white);
+            margin-bottom: 8px;
+        }
+        
+        .empty-desc {
+            margin-bottom: 20px;
+        }
+        
+        /* 토스트 */
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background: var(--bg-card);
+            color: var(--text-white);
+            padding: 16px 28px;
+            border-radius: 12px;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+            border: 1px solid var(--primary);
+            transition: all 0.2s ease-out;
+            z-index: 3000;
+            font-size: 15px;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .toast.show {
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+        }
+        
+        /* 반응형 */
+        @media (max-width: 900px) {
+            .preview-panel.show {
+                position: fixed;
+                top: 64px;
+                right: 0;
+                bottom: 0;
+                width: 100%;
+                min-width: 100%;
+                z-index: 500;
+            }
+            
+            .preview-panel .preview-close-btn {
+                display: block;
+            }
+        }
+        
+        .preview-close-btn {
+            display: none;
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- 네비게이션 -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="card_generator_v2_auth.html" class="nav-logo">휙</a>
+            <div id="navButtons">
+                <a href="card_generator_v2_auth.html" class="btn btn-primary">+ 새 카드</a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- 메인 레이아웃 -->
+    <div class="main-layout">
+        <!-- 왼쪽: 매물 리스트 -->
+        <div class="list-panel">
+            <div class="page-header">
+                <h1 class="page-title">내 매물</h1>
+                <span class="page-count" id="pageCount">불러오는 중...</span>
+            </div>
+            
+            <div class="filter-section">
+                <div class="filter-row">
+                    <div class="filter-group" id="typeFilter">
+                        <button class="filter-btn active" data-filter="전체">전체</button>
+                        <button class="filter-btn" data-filter="매매">매매</button>
+                        <button class="filter-btn" data-filter="전세">전세</button>
+                        <button class="filter-btn" data-filter="월세">월세</button>
+                    </div>
+                </div>
+                <div class="filter-row">
+                    <div class="filter-group" id="categoryFilter">
+                        <button class="filter-btn active" data-filter="전체">전체</button>
+                        <button class="filter-btn" data-filter="아파트">아파트</button>
+                        <button class="filter-btn" data-filter="오피스텔">오피스텔</button>
+                        <button class="filter-btn" data-filter="원투룸">원투룸</button>
+                        <button class="filter-btn" data-filter="상가">상가</button>
+                        <button class="filter-btn" data-filter="사무실">사무실</button>
+                    </div>
+                </div>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="역세권 3억 이하 투룸... 자연어로 검색">
+                </div>
+            </div>
+            
+            <div class="property-list" id="propertyList">
+                <div class="empty-state">불러오는 중...</div>
+            </div>
+        </div>
+        
+        <!-- 오른쪽: 미리보기 -->
+        <div class="preview-panel show">
+            <div class="preview-inner">
+                
+                <div class="preview-title">손님에게 보이는 화면</div>
+            
+                <div class="phone-mockup">
+                    <div class="phone-notch"></div>
+                    <div class="phone-screen">
+                        <div class="phone-header">
+                            <div class="phone-logo">휙</div>
+                            <div class="phone-indicator" id="phoneIndicator"></div>
+                        </div>
+                        <div class="phone-body" id="phoneBody">
+                            <div class="phone-empty">
+                                <div class="phone-empty-icon">☝️</div>
+                                <div class="phone-empty-text">왼쪽에서 매물을<br>선택해보세요</div>
+                                <div style="font-size:11px;color:#4ecdc4;margin-top:8px;text-align:center">손님에게 보낼 카드 미리보기</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="dots-indicator" id="dotsIndicator"></div>
+                
+                <div class="send-section">
+                    <button class="btn-send" id="sendBtn" disabled onclick="sendToCustomer()">
+                        손님에게 보내기
+                    </button>
+                    <div class="send-hint" id="sendHint">매물을 선택하면 링크를 보낼 수 있어요</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 토스트 -->
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        // Supabase 초기화
+        const SUPABASE_URL = 'https://jqaxejgzkchxbfzgzyzi.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxYXhlamd6a2NoeGJmemd6eXppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2MzI3NTIsImV4cCI6MjA4MjIwODc1Mn0.-njNdAKVA7Me60H98AYaf-Z3oi45SfUmeoBNvuRJugE';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // 인증 상태
+        let currentUser = null;
+        
+        // 상태
+        let allCards = [];
+        let searchResults = [];  // 검색 결과 저장
+        let isSearchMode = false; // 검색 모드 여부
+        let currentFilter = '전체';      // 거래유형 필터
+        let currentCategory = '전체';    // 부동산종류 필터
+        let searchQuery = '';
+        let selectedCards = [];
+        let currentSlideIndex = 0;
+        
+        // 부동산종류 분류 - property.room 우선, 없으면 텍스트 추론
+        function categorizeProperty(text, roomField, area, floor) {
+            // 1. AI가 파싱한 room 필드 우선 사용
+            const r = (roomField || '').toLowerCase();
+            if (r.includes('아파트') || r.includes('apt')) return '아파트';
+            if (r.includes('오피스텔') || r.includes('officetel')) return '오피스텔';
+            if (r.includes('상가') || r.includes('점포')) return '상가';
+            if (r.includes('사무실') || r.includes('오피스')) return '사무실';
+            if (r.includes('원룸') || r.includes('투룸') || r.includes('빌라') || r.includes('주택')) return '원투룸';
+
+            // 2. rawText 텍스트 추론
+            const t = (text || '').toLowerCase();
+            if (t.includes('상가') || t.includes('점포') || t.includes('매장')) return '상가';
+            if (t.includes('사무실') || t.includes('업무용')) return '사무실';
+            if (t.includes('오피스텔')) return '오피스텔';
+            
+            // 아파트 브랜드 목록 (확장)
+            const aptBrands = ['아파트','자이','래미안','힐스테이트','푸르지오','더샵','롯데캐슬',
+                'e편한세상','아이파크','sk뷰','sk view','엘스','리센츠','트리지움','헬리오시티',
+                '올림픽파크','아크로','반포자이','은마','주공','현대아파트','삼성아파트','대림아파트',
+                '동아아파트','미도아파트','우성아파트','경남아파트','한신아파트','쌍용아파트',
+                '서초아이파크','잠실엘스','잠실리센츠','잠실트리지움','레이크팰리스','파크리오',
+                '청담자이','도곡렉슬','타워팰리스','갤러리아팰리스','목동아이파크','목동신시가지',
+                '신반포','반포한양','반포주공','개포주공','개포자이','일원현대','대치아이파크',
+                '대치은마','대치미도','역삼자이','역삼래미안','서초래미안','잠원한신','압구정현대',
+                '압구정로데오','성수자이','용산파크타워','마포래미안','공덕자이','광장현대',
+                '하이페리온','센트럴파크','베라체','센트레빌','자이더스타','포레나','우미린',
+                '중흥s클래스','금호어울림','두산위브','한화포레나','대방노블랜드','신동아파밀리에',
+                '벽산블루밍','한진한화','두산','위브','어울림','파밀리에','블루밍'];
+            
+            if (aptBrands.some(b => t.includes(b))) return '아파트';
+            if (t.includes('원룸') || t.includes('투룸') || t.includes('빌라') || t.includes('연립') || t.includes('주택')) return '원투룸';
+            
+            // 3. 월세 금액으로 추론
+            // 가격 파싱: "3000/80" → 보증금 3000만, 월세 80만
+            if (text && text.includes('/')) {
+                const parts = text.match(/([\d,]+)\s*\/\s*([\d,]+)/);
+                if (parts) {
+                    const deposit = parseInt(parts[1].replace(/,/g, ''));
+                    const monthly = parseInt(parts[2].replace(/,/g, ''));
+                    // 보증금 5000만 이하, 월세 150만 이하 → 원투룸/오피스텔
+                    if (deposit <= 5000 && monthly <= 150) return '원투룸';
+                }
+            }
+
+            // 4. 평수 + 층수로 추론
+            const areaNum = parseInt((area || '').replace(/[^0-9]/g, '')) || 0;
+            const floorNum = parseInt((floor || '').replace(/[^0-9]/g, '')) || 0;
+            if (areaNum >= 20 && floorNum >= 5) return '아파트';
+            if (areaNum >= 30) return '아파트';
+            
+            return '원투룸';
+        }
+        
+        // 스와이프 상태
+        let isDragging = false;
+        let startX = 0;
+        let currentX = 0;
+        
+        // 중개사 정보
+        function getAgentInfo() {
+            return JSON.parse(localStorage.getItem('hwik_agent') || '{}');
+        }
+        
+        // 매물 로드
+        async function loadCards() {
+            // 검색 모드 해제
+            isSearchMode = false;
+            searchResults = [];
+            
+            if (!currentUser) {
+                showNoAgentState();
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabaseClient
+                    .from('cards')
+                    .select('*')
+                    .eq('agent_id', currentUser.id)
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                allCards = data || [];
+                renderList();
+                
+            } catch (error) {
+                console.error('로딩 오류:', error);
+                document.getElementById('propertyList').innerHTML = 
+                    '<div class="empty-state"><div class="empty-icon">❌</div><div class="empty-title">오류 발생</div></div>';
+            }
+        }
+        
+        // 로그인 필요 상태
+        function showNoAgentState() {
+            document.getElementById('pageCount').textContent = '';
+            document.getElementById('propertyList').innerHTML = 
+                '<div class="empty-state">' +
+                    '<div class="empty-icon">🔒</div>' +
+                    '<div class="empty-title">로그인이 필요해요</div>' +
+                    '<div class="empty-desc">카카오 로그인 후 내 매물을 확인할 수 있어요</div>' +
+                    '<a href="card_generator_v2_auth.html" class="btn btn-primary">카카오로 시작하기</a>' +
+                '</div>';
+        }
+        
+        // 리스트 렌더링
+        function renderList() {
+            if (allCards.length === 0) {
+                document.getElementById('pageCount').textContent = '0개';
+                document.getElementById('propertyList').innerHTML = 
+                    '<div class="empty-state">' +
+                        '<div class="empty-icon">📝</div>' +
+                        '<div class="empty-title">등록된 매물이 없어요</div>' +
+                        '<a href="card_generator_v2_auth.html" class="btn btn-primary">첫 매물 등록</a>' +
+                    '</div>';
+                return;
+            }
+            
+            let filtered = allCards;
+            
+            // 거래유형 필터
+            if (currentFilter !== '전체') {
+                filtered = filtered.filter(c => c.property && c.property.type === currentFilter);
+            }
+            
+            // 부동산종류 필터
+            if (currentCategory !== '전체') {
+                filtered = filtered.filter(c => {
+                    const p = c.property || {};
+                    const rawText = p.rawText || '';
+                    const category = categorizeProperty(rawText, p.room, p.area, p.floor);
+                    return category === currentCategory;
+                });
+            }
+            
+            if (searchQuery) {
+                const q = searchQuery.toLowerCase();
+                filtered = filtered.filter(c => {
+                    const p = c.property || {};
+                    return ((p.rawText || '') + (p.complex || '') + (p.location || '')).toLowerCase().includes(q);
+                });
+            }
+            
+            document.getElementById('pageCount').textContent = filtered.length + '개';
+            
+            if (filtered.length === 0) {
+                document.getElementById('propertyList').innerHTML = 
+                    '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">검색 결과 없음</div></div>';
+                return;
+            }
+            
+            let html = '';
+            filtered.forEach(card => {
+                const p = card.property || {};
+                const pn = card.private_note || {};
+                const isSelected = selectedCards.some(c => c.id === card.id);
+                
+                const typeClass = p.type === '매매' ? 'badge-sale' : p.type === '전세' ? 'badge-jeonse' : 'badge-rent';
+                const mainText = [p.complex, p.location].filter(Boolean).join(' · ');
+                const subText = [p.area, p.floor].filter(Boolean).join(' · ');
+
+                html += `<div class="property-item ${isSelected ? 'selected' : ''}" id="item-${card.id}">`;
+                html += `<div class="property-item-main" onclick="toggleSelect('${card.id}')">`;
+                html += `<div class="property-checkbox"></div>`;
+                html += `<div class="property-text">
+                    <span class="property-type-badge ${typeClass}">${p.type||''}</span>
+                    <strong>${p.price||''}</strong>
+                    ${mainText ? `<span style="color:var(--text-gray);font-size:13px;margin-left:6px">${mainText}</span>` : ''}
+                    ${subText ? `<span style="color:var(--text-gray-light);font-size:12px;margin-left:4px">· ${subText}</span>` : ''}
+                </div>`;
+                html += `<button class="property-edit" onclick="event.stopPropagation(); toggleDetail('${card.id}')">상세</button>`;
+                html += `<button class="property-edit" onclick="event.stopPropagation(); editCard('${card.id}')">수정</button>`;
+                html += `<button class="property-delete" onclick="event.stopPropagation(); deleteCard('${card.id}')">삭제</button>`;
+                html += `</div>`;
+                html += `<div class="property-detail" id="detail-${card.id}">`;
+                if (p.features && p.features.length) {
+                    html += `<div class="detail-tags">${p.features.map(f=>`<span class="detail-tag">${f}</span>`).join('')}</div>`;
+                }
+                if (subText) html += `<div class="detail-info">📐 ${subText}</div>`;
+                if (pn.memo) html += `<div class="detail-memo">🔒 ${pn.memo}</div>`;
+                html += `</div>`;
+                html += `</div>`;
+            });
+            
+            document.getElementById('propertyList').innerHTML = html;
+        }
+        
+        // 선택 토글
+        function toggleDetail(cardId) {
+            const detail = document.getElementById('detail-' + cardId);
+            if (!detail) return;
+            detail.classList.toggle('open');
+        }
+
+        function toggleSelect(cardId) {
+            // 검색 모드면 searchResults에서, 아니면 allCards에서 찾기
+            const sourceCards = isSearchMode ? searchResults : allCards;
+            const card = sourceCards.find(c => c.id === cardId);
+            if (!card) return;
+            
+            const idx = selectedCards.findIndex(c => c.id === cardId);
+            if (idx >= 0) {
+                selectedCards.splice(idx, 1);
+            } else {
+                selectedCards.push(card);
+            }
+            
+            currentSlideIndex = 0;
+            
+            // 검색 모드면 검색 결과 다시 렌더링
+            if (isSearchMode) {
+                renderSearchResults();
+            } else {
+                renderList();
+            }
+            renderPreview();
+            updateSendButton();
+        }
+        
+        // 검색 결과 렌더링
+        function renderSearchResults() {
+            document.getElementById('pageCount').textContent = searchResults.length + '개';
+            
+            if (searchResults.length === 0) {
+                document.getElementById('propertyList').innerHTML = 
+                    '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">조건에 맞는 매물 없음</div></div>';
+                return;
+            }
+            
+            let html = '';
+            searchResults.forEach(card => {
+                const p = card.property || {};
+                const displayText = p.rawText || [p.type, p.price, p.complex, p.location].filter(Boolean).join(' ');
+                const isSelected = selectedCards.some(c => c.id === card.id);
+                const similarityBadge = card.similarity > 0 ? 
+                    `<span class="similarity-badge">${Math.round(card.similarity * 100)}%</span>` : '';
+                
+                html += `<div class="property-item ${isSelected ? 'selected' : ''}" onclick="toggleSelect('${card.id}')">`;
+                html += `<div class="property-checkbox"></div>`;
+                html += `<div class="property-text">${displayText}</div>`;
+                html += similarityBadge;
+                html += `<button class="property-edit" onclick="event.stopPropagation(); editCard('${card.id}')">수정</button>`;
+                html += `<button class="property-delete" onclick="event.stopPropagation(); deleteCard('${card.id}')">삭제</button>`;
+                html += `</div>`;
+            });
+            
+            document.getElementById('propertyList').innerHTML = html;
+        }
+        
+        // 미리보기 렌더링
+        function renderPreview() {
+            const panel = document.querySelector('.preview-panel');
+            const body = document.getElementById('phoneBody');
+            const indicator = document.getElementById('phoneIndicator');
+            const dots = document.getElementById('dotsIndicator');
+            
+            // 패널 표시/숨김
+            if (selectedCards.length === 0) {
+                panel.classList.remove('show');
+                body.innerHTML = `
+                    <div class="phone-empty">
+                        <div class="phone-empty-icon">👆</div>
+                        <div class="phone-empty-text">왼쪽에서 매물을<br>선택해주세요</div>
+                    </div>`;
+                indicator.innerHTML = '';
+                dots.innerHTML = '';
+                return;
+            }
+            
+            panel.classList.add('show');
+            
+            // 인디케이터
+            indicator.innerHTML = `<span>${currentSlideIndex + 1}</span> / ${selectedCards.length}`;
+            
+            // 도트
+            dots.innerHTML = selectedCards.map((_, i) => 
+                `<div class="dot ${i === currentSlideIndex ? 'active' : ''}" onclick="goToSlide(${i})"></div>`
+            ).join('');
+            
+            // 카드 슬라이더
+            let slidesHtml = '<div class="card-slider" id="cardSlider">';
+            selectedCards.forEach((card, i) => {
+                const offset = (i - currentSlideIndex) * 100;
+                slidesHtml += `<div class="card-slide" style="transform: translateX(${offset}%)">${renderMiniCard(card)}</div>`;
+            });
+            slidesHtml += '</div>';
+            
+            body.innerHTML = slidesHtml;
+            setupSwipe();
+        }
+        
+        // 미니 카드 렌더링
+        function renderMiniCard(card) {
+            const p = card.property || {};
+            const agent = card.agent || {};
+            const color = card.color || 'mint';
+            
+            const type = p.type || '매물';
+            const price = p.price || '-';
+            const name = p.complex || p.location || '-';
+            const location = p.complex ? p.location : '';
+            const area = p.area || '';
+            const floor = p.floor || '';
+            const features = p.features || [];
+            
+            let html = `<div class="mini-card ${color}">`;
+            html += `<div class="card-header">`;
+            html += `<span class="badge">${type}</span>`;
+            if (area) html += `<span class="area-badge">${area}</span>`;
+            html += `</div>`;
+            html += `<div class="body">`;
+            html += `<div class="complex-name">${name}</div>`;
+            if (location) html += `<div class="location">${location}</div>`;
+            html += `<div class="price">${price}</div>`;
+            
+            if (area || floor) {
+                html += `<div class="info-grid">`;
+                if (area) html += `<div class="info-item"><div class="info-label">면적</div><div class="info-value">${area}</div></div>`;
+                if (floor) html += `<div class="info-item"><div class="info-label">층수</div><div class="info-value">${floor}</div></div>`;
+                html += `</div>`;
+            }
+            
+            if (features.length > 0) {
+                html += `<div class="features">`;
+                features.slice(0, 4).forEach(f => { html += `<span class="feature-tag">${f}</span>`; });
+                html += `</div>`;
+            }
+            
+            if (agent.name || agent.phone) {
+                html += `<div class="agent">`;
+                html += `<span class="agent-name">${agent.name || ''}</span>`;
+                html += `<span class="agent-phone">${agent.phone || ''}</span>`;
+                html += `</div>`;
+            }
+            
+            html += `</div></div>`;
+            return html;
+        }
+        
+        // 슬라이드 이동
+        function goToSlide(index) {
+            if (index < 0 || index >= selectedCards.length) return;
+            currentSlideIndex = index;
+            
+            // 부드러운 애니메이션
+            document.querySelectorAll('.card-slide').forEach((slide, i) => {
+                const offset = (i - currentSlideIndex) * 100;
+                slide.style.transform = `translateX(${offset}%)`;
+            });
+            
+            // 인디케이터 업데이트
+            document.getElementById('phoneIndicator').innerHTML = 
+                `<span>${currentSlideIndex + 1}</span> / ${selectedCards.length}`;
+            document.querySelectorAll('.dot').forEach((dot, i) => {
+                dot.classList.toggle('active', i === currentSlideIndex);
+            });
+        }
+        
+        // 스와이프 설정
+        function setupSwipe() {
+            const slider = document.getElementById('cardSlider');
+            if (!slider) return;
+            
+            slider.addEventListener('touchstart', onSwipeStart, { passive: true });
+            slider.addEventListener('touchmove', onSwipeMove, { passive: true });
+            slider.addEventListener('touchend', onSwipeEnd);
+            slider.addEventListener('mousedown', onSwipeStart);
+            slider.addEventListener('mousemove', onSwipeMove);
+            slider.addEventListener('mouseup', onSwipeEnd);
+            slider.addEventListener('mouseleave', onSwipeEnd);
+        }
+        
+        function onSwipeStart(e) {
+            if (selectedCards.length <= 1) return;
+            isDragging = true;
+            startX = e.touches ? e.touches[0].clientX : e.clientX;
+            currentX = 0;
+            
+            document.querySelectorAll('.card-slide').forEach(slide => {
+                slide.classList.add('dragging');
+            });
+        }
+        
+        function onSwipeMove(e) {
+            if (!isDragging || selectedCards.length <= 1) return;
+            const x = e.touches ? e.touches[0].clientX : e.clientX;
+            currentX = x - startX;
+            
+            const slider = document.getElementById('cardSlider');
+            const sliderWidth = slider ? slider.offsetWidth : 200;
+            
+            document.querySelectorAll('.card-slide').forEach((slide, i) => {
+                const baseOffset = (i - currentSlideIndex) * 100;
+                const dragOffset = (currentX / sliderWidth) * 100;
+                slide.style.transform = `translateX(${baseOffset + dragOffset}%)`;
+            });
+        }
+        
+        function onSwipeEnd() {
+            if (!isDragging) return;
+            isDragging = false;
+            
+            document.querySelectorAll('.card-slide').forEach(slide => {
+                slide.classList.remove('dragging');
+            });
+            
+            const threshold = 40;
+            let newIndex = currentSlideIndex;
+            
+            if (currentX < -threshold && currentSlideIndex < selectedCards.length - 1) {
+                newIndex = currentSlideIndex + 1;
+            } else if (currentX > threshold && currentSlideIndex > 0) {
+                newIndex = currentSlideIndex - 1;
+            }
+            
+            // 부드러운 스냅 애니메이션
+            document.querySelectorAll('.card-slide').forEach((slide, i) => {
+                const offset = (i - newIndex) * 100;
+                slide.style.transform = `translateX(${offset}%)`;
+            });
+            
+            currentSlideIndex = newIndex;
+            
+            // 인디케이터 업데이트
+            document.getElementById('phoneIndicator').innerHTML = 
+                `<span>${currentSlideIndex + 1}</span> / ${selectedCards.length}`;
+            document.querySelectorAll('.dot').forEach((dot, i) => {
+                dot.classList.toggle('active', i === currentSlideIndex);
+            });
+            
+            currentX = 0;
+        }
+        
+        // 보내기 버튼 업데이트
+        function updateSendButton() {
+            const btn = document.getElementById('sendBtn');
+            const hint = document.getElementById('sendHint');
+            
+            if (selectedCards.length > 0) {
+                btn.disabled = false;
+                btn.textContent = selectedCards.length === 1 ? '손님에게 보내기' : `${selectedCards.length}개 묶어서 보내기`;
+                hint.textContent = '클릭하면 링크가 복사됩니다';
+            } else {
+                btn.disabled = true;
+                btn.textContent = '손님에게 보내기';
+                hint.textContent = '매물을 선택하면 링크를 보낼 수 있어요';
+            }
+        }
+        
+        // 손님에게 보내기
+        function sendToCustomer() {
+            if (selectedCards.length === 0) return;
+            
+            let link;
+            if (selectedCards.length === 1) {
+                link = window.location.origin + '/property_view.html?id=' + selectedCards[0].id;
+            } else {
+                const ids = selectedCards.map(c => c.id).join(',');
+                link = window.location.origin + '/property_view.html?ids=' + ids;
+            }
+            
+            navigator.clipboard.writeText(link).then(() => {
+                showToast('✅ 링크가 복사되었습니다!');
+            }).catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = link;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showToast('✅ 링크가 복사되었습니다!');
+            });
+        }
+        
+        // 미리보기 닫기 (모바일)
+        function closePreview() {
+            selectedCards = [];
+            currentSlideIndex = 0;
+            renderList();
+            renderPreview();
+            updateSendButton();
+        }
+        
+        // 수정
+        let editTags = [];
+
+        function editCard(cardId) {
+            const card = allCards.find(c => c.id === cardId);
+            if (!card) return;
+            const p = card.property || {};
+            document.getElementById('editCardId').value = cardId;
+            document.getElementById('editType').value = p.type || '매매';
+            document.getElementById('editPrice').value = p.price || '';
+            document.getElementById('editComplex').value = p.complex || '';
+            document.getElementById('editLocation').value = p.location || '';
+            document.getElementById('editArea').value = p.area || '';
+            document.getElementById('editFloor').value = p.floor || '';
+            document.getElementById('editMemo').value = card.private_note?.memo || '';
+            document.getElementById('editRoom').value = p.room || '';
+            editTags = [...(p.features || [])];
+            renderEditTags();
+            document.getElementById('editModalOverlay').classList.add('show');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModalOverlay').classList.remove('show');
+        }
+
+        function renderEditTags() {
+            const wrap = document.getElementById('editTagWrap');
+            wrap.innerHTML = editTags.map((t,i) =>
+                `<span class="edit-chip">${t}<button class="edit-chip-del" onclick="editTags.splice(${i},1);renderEditTags()">×</button></span>`
+            ).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const tagInput = document.getElementById('editTagInput');
+            if (tagInput) {
+                tagInput.addEventListener('keydown', e => {
+                    if (e.key === 'Enter' || e.key === ',') {
+                        e.preventDefault();
+                        const val = tagInput.value.trim().replace(/,$/, '');
+                        if (val && !editTags.includes(val)) { editTags.push(val); renderEditTags(); }
+                        tagInput.value = '';
+                    }
+                });
+            }
+        });
+
+        async function saveEditModal() {
+            const cardId = document.getElementById('editCardId').value;
+            const card = allCards.find(c => c.id === cardId);
+            if (!card) return;
+
+            // 태그 input에 남은 값도 추가
+            const tagInput = document.getElementById('editTagInput');
+            if (tagInput.value.trim()) {
+                const v = tagInput.value.trim();
+                if (!editTags.includes(v)) editTags.push(v);
+                tagInput.value = '';
+            }
+
+            card.property = {
+                ...card.property,
+                type: document.getElementById('editType').value,
+                room: document.getElementById('editRoom').value,
+                price: document.getElementById('editPrice').value,
+                complex: document.getElementById('editComplex').value,
+                location: document.getElementById('editLocation').value,
+                area: document.getElementById('editArea').value,
+                floor: document.getElementById('editFloor').value,
+                features: editTags,
+            };
+            card.private_note = { memo: document.getElementById('editMemo').value };
+
+            const searchText = [card.property.type, card.property.price, card.property.location,
+                card.property.complex, card.property.area, card.property.floor,
+                ...editTags].filter(Boolean).join(' ');
+
+            try {
+                const { error } = await supabaseClient.from('cards').update({
+                    property: card.property,
+                    private_note: card.private_note,
+                    search_text: searchText,
+                }).eq('id', cardId);
+                if (error) throw error;
+                closeEditModal();
+                renderList();
+                showToast('✅ 수정 완료!');
+            } catch(e) {
+                alert('수정 실패: ' + e.message);
+            }
+        }
+        
+        // 삭제
+        async function deleteCard(cardId) {
+            if (!confirm('삭제하시겠습니까?')) return;
+            
+            try {
+                const { error } = await supabaseClient.from('cards').delete().eq('id', cardId);
+                if (error) throw error;
+                
+                allCards = allCards.filter(c => c.id !== cardId);
+                selectedCards = selectedCards.filter(c => c.id !== cardId);
+                currentSlideIndex = 0;
+                
+                renderList();
+                renderPreview();
+                updateSendButton();
+                showToast('삭제됨');
+                
+            } catch (error) {
+                alert('삭제 실패');
+            }
+        }
+        
+        // 토스트
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+        
+        // 벡터 검색 (새로운 search-property API 사용)
+        async function vectorSearch(query) {
+            if (!query || !currentUser) {
+                renderList();
+                return;
+            }
+            
+            // 검색 중 표시
+            document.getElementById('propertyList').innerHTML = 
+                '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">AI 검색 중...</div></div>';
+            
+            try {
+                const response = await fetch('https://jqaxejgzkchxbfzgzyzi.supabase.co/functions/v1/search-property', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + SUPABASE_KEY
+                    },
+                    body: JSON.stringify({ 
+                        query: query,
+                        agent_id: currentUser.id,
+                        limit: 50
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                // 검색 결과
+                const results = data.results || [];
+                
+                // allCards 업데이트 (검색 결과로)
+                // 기존 allCards에서 검색된 ID와 매칭
+                const searchedCards = results.map(r => {
+                    // results에서 직접 카드 데이터 사용
+                    return {
+                        id: r.id,
+                        property: r.property,
+                        agent: r.agent,
+                        lat: r.lat,
+                        lng: r.lng,
+                        created_at: r.created_at,
+                        similarity: r.similarity
+                    };
+                });
+                
+                // 검색 결과 저장
+                searchResults = searchedCards;
+                isSearchMode = true;
+                
+                document.getElementById('pageCount').textContent = searchedCards.length + '개';
+                
+                if (searchedCards.length === 0) {
+                    document.getElementById('propertyList').innerHTML = 
+                        '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">조건에 맞는 매물 없음</div></div>';
+                    return;
+                }
+                
+                // 검색 분석 결과 표시 (선택적)
+                let parsedInfo = '';
+                if (data.parsed) {
+                    const p = data.parsed;
+                    const filters = [];
+                    if (p.filters?.trade_type) filters.push(p.filters.trade_type);
+                    if (p.filters?.property_type) filters.push(p.filters.property_type);
+                    if (p.filters?.max_price) filters.push(`${(p.filters.max_price/10000).toFixed(0)}억 이하`);
+                    if (p.filters?.location) filters.push(p.filters.location);
+                    if (p.semantic) filters.push(`"${p.semantic}"`);
+                    if (filters.length > 0) {
+                        parsedInfo = `<div class="search-info">🤖 ${filters.join(' · ')}</div>`;
+                    }
+                }
+                
+                let html = parsedInfo;
+                searchedCards.forEach(card => {
+                    const p = card.property || {};
+                    const displayText = p.rawText || [p.type, p.price, p.complex, p.location].filter(Boolean).join(' ');
+                    const isSelected = selectedCards.some(c => c.id === card.id);
+                    const similarityBadge = card.similarity > 0 ? 
+                        `<span class="similarity-badge">${Math.round(card.similarity * 100)}%</span>` : '';
+                    
+                    html += `<div class="property-item ${isSelected ? 'selected' : ''}" onclick="toggleSelect('${card.id}')">`;
+                    html += `<div class="property-checkbox"></div>`;
+                    html += `<div class="property-text">${displayText}</div>`;
+                    html += similarityBadge;
+                    html += `<button class="property-edit" onclick="event.stopPropagation(); editCard('${card.id}')">수정</button>`;
+                    html += `<button class="property-delete" onclick="event.stopPropagation(); deleteCard('${card.id}')">삭제</button>`;
+                    html += `</div>`;
+                });
+                
+                document.getElementById('propertyList').innerHTML = html;
+                showToast(`${searchedCards.length}개 검색됨`);
+                
+            } catch (error) {
+                console.error('벡터 검색 오류:', error);
+                showToast('검색 오류: ' + error.message);
+                renderList();
+            }
+        }
+        
+        // 네비 업데이트
+        function updateNav() {
+            const nav = document.getElementById('navButtons');
+            if (currentUser) {
+                const agentInfo = getAgentInfo();
+                const displayName = agentInfo.name || '내 정보';
+                nav.innerHTML = `
+                    <span style="color: var(--primary); font-weight: 600; margin-right: 12px;">${displayName}님</span>
+                    <a href="card_generator_v2_auth.html" class="btn btn-primary">+ 새 카드</a>
+                    <button onclick="logout()" style="background:none;border:1px solid rgba(255,255,255,0.2);color:#9ca3af;padding:8px 16px;border-radius:8px;cursor:pointer;margin-left:8px;">로그아웃</button>
+                `;
+            }
+        }
+        
+        // 로그아웃
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            currentUser = null;
+            localStorage.removeItem('hwik_agent');
+            window.location.reload();
+        }
+        
+        // 이벤트
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 인증 상태 확인
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (user) {
+                currentUser = user;
+                updateNav();
+            }
+            
+            loadCards();
+            
+            document.getElementById('typeFilter').addEventListener('click', e => {
+                if (e.target.classList.contains('filter-btn')) {
+                    document.querySelectorAll('#typeFilter .filter-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentFilter = e.target.dataset.filter;
+                    isSearchMode = false; // 검색 모드 해제
+                    renderList();
+                }
+            });
+            
+            document.getElementById('categoryFilter').addEventListener('click', e => {
+                if (e.target.classList.contains('filter-btn')) {
+                    document.querySelectorAll('#categoryFilter .filter-btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentCategory = e.target.dataset.filter;
+                    isSearchMode = false; // 검색 모드 해제
+                    renderList();
+                }
+            });
+            
+            let timeout;
+            document.getElementById('searchInput').addEventListener('input', e => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => {
+                    searchQuery = e.target.value.trim();
+                    if (!searchQuery) {
+                        isSearchMode = false; // 검색어 지우면 검색 모드 해제
+                    }
+                    renderList();
+                }, 200);
+            });
+            
+            // Enter 키 → 벡터 검색 실행
+            document.getElementById('searchInput').addEventListener('keypress', async e => {
+                if (e.key === 'Enter') {
+                    const query = e.target.value.trim();
+                    if (!query) {
+                        // 검색어 없으면 전체 목록 표시
+                        loadCards();
+                        return;
+                    }
+                    
+                    // 벡터 검색 실행
+                    vectorSearch(query);
+                }
+            });
+        });
+    </script>
+
+    <!-- 인라인 수정 모달 -->
+    <div class="edit-modal-overlay" id="editModalOverlay">
+        <div class="edit-modal">
+            <h3>✏️ 매물 수정</h3>
+            <input type="hidden" id="editCardId">
+            <div class="edit-row">
+                <label>거래유형</label>
+                <select class="edit-input" id="editType">
+                    <option>매매</option><option>전세</option><option>월세</option><option>손님</option>
+                </select>
+            </div>
+            <div class="edit-row">
+                <label>건물종류</label>
+                <select class="edit-input" id="editRoom">
+                    <option value="">자동 분류</option>
+                    <option value="아파트">아파트</option>
+                    <option value="오피스텔">오피스텔</option>
+                    <option value="원투룸">원룸/투룸/빌라</option>
+                    <option value="상가">상가</option>
+                    <option value="사무실">사무실</option>
+                </select>
+            </div>
+            <div class="edit-row">
+                <label>가격</label>
+                <input class="edit-input" id="editPrice" placeholder="예: 18억5000, 5억/200">
+            </div>
+            <div class="edit-row">
+                <label>단지명</label>
+                <input class="edit-input" id="editComplex" placeholder="래미안, 아크로 등">
+            </div>
+            <div class="edit-row">
+                <label>위치</label>
+                <input class="edit-input" id="editLocation" placeholder="반포, 강남역 등">
+            </div>
+            <div class="edit-row" style="display:flex;gap:10px">
+                <div style="flex:1">
+                    <label>평수</label>
+                    <input class="edit-input" id="editArea" placeholder="32평">
+                </div>
+                <div style="flex:1">
+                    <label>층수</label>
+                    <input class="edit-input" id="editFloor" placeholder="15층">
+                </div>
+            </div>
+            <div class="edit-row">
+                <label>태그</label>
+                <div class="edit-tag-wrap" id="editTagWrap" onclick="document.getElementById('editTagInput').focus()"></div>
+                <input class="edit-tag-input" id="editTagInput" placeholder="태그 입력 후 Enter" style="margin-top:6px;width:100%;background:#0d1520;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 12px;color:white;font-size:13px;outline:none;">
+            </div>
+            <div class="edit-row">
+                <label>🔒 비공개 메모</label>
+                <textarea class="edit-memo" id="editMemo" placeholder="본인만 보이는 메모"></textarea>
+            </div>
+            <div class="edit-btns">
+                <button class="edit-btn-cancel" onclick="closeEditModal()">취소</button>
+                <button class="edit-btn-save" onclick="saveEditModal()">적용</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

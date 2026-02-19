@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>휙 - 파일 정리</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        :root {
+            --primary: #facc15;
+            --primary-dark: #eab308;
+            --bg-dark: #0a1628;
+            --bg-card: #111827;
+            --bg-input: #1f2937;
+            --text-white: #ffffff;
+            --text-gray: #9ca3af;
+            --text-gray-light: #6b7280;
+            --accent-jeonse: #4ecdc4;
+            --accent-sale: #f97316;
+            --accent-rent: #a78bfa;
+            --accent-client: #fb923c;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-white);
+            min-height: 100vh;
+        }
+
+        /* ===== 네비게이션 (card_generator와 동일) ===== */
+        .nav {
+            position: fixed; top:0; left:0; right:0; z-index:1000;
+            background: rgba(10,22,40,0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .nav-container {
+            max-width: 1200px; margin:0 auto; padding:0 24px;
+            height: 64px; display:flex; align-items:center; justify-content:space-between;
+        }
+        .nav-logo { font-size:28px; font-weight:900; color:var(--primary); text-decoration:none; letter-spacing:-1px; }
+        .nav-buttons { display:flex; align-items:center; gap:12px; }
+        .btn { padding:10px 20px; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s; text-decoration:none; border:none; }
+        .btn-ghost { background:transparent; color:var(--text-gray); }
+        .btn-ghost:hover { color:var(--text-white); }
+        .btn-primary { background:var(--primary); color:var(--bg-dark); }
+        .btn-primary:hover { background:var(--primary-dark); }
+        .kakao-nav-btn { padding:8px 20px; background:#FEE500; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; color:#191919; }
+        .kakao-nav-btn:hover { background:#F0D900; }
+        .btn-logout { padding:6px 12px; background:transparent; border:1px solid rgba(255,255,255,0.15); color:var(--text-gray); border-radius:6px; font-size:12px; cursor:pointer; }
+        .btn-logout:hover { border-color:rgba(255,255,255,0.3); color:white; }
+
+        /* ===== 메인 ===== */
+        .main { padding-top: 64px; min-height: 100vh; }
+        .page-container { max-width: 800px; margin: 0 auto; padding: 32px 24px 100px; }
+
+        /* 페이지 타이틀 */
+        .page-title { font-size: 28px; font-weight: 800; letter-spacing: -1px; margin-bottom: 6px; }
+        .page-title .hl { color: var(--primary); }
+        .page-subtitle { color: var(--text-gray); font-size: 15px; margin-bottom: 28px; }
+
+        /* ===== 업로드 영역 ===== */
+        .upload-zone {
+            border: 2px dashed rgba(255,255,255,0.15);
+            border-radius: 16px;
+            padding: 48px 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(255,255,255,0.02);
+            margin-bottom: 16px;
+        }
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--primary);
+            background: rgba(250,204,21,0.04);
+        }
+        .upload-zone.has-file {
+            border-color: var(--accent-jeonse);
+            background: rgba(78,205,196,0.04);
+            padding: 24px;
+        }
+        .upload-icon { font-size: 40px; margin-bottom: 12px; }
+        .upload-text { color: var(--text-gray); font-size: 15px; }
+        .upload-text b { color: var(--primary); }
+        .upload-hint { color: var(--text-gray-light); font-size: 12px; margin-top: 8px; }
+        .upload-filename { color: var(--accent-jeonse); font-weight: 700; font-size: 16px; }
+        .upload-meta { color: var(--text-gray); font-size: 13px; margin-top: 4px; }
+
+        /* 또는 직접 입력 */
+        .or-divider { text-align:center; color:var(--text-gray-light); font-size:12px; margin:12px 0; position:relative; }
+        .or-divider::before, .or-divider::after { content:''; position:absolute; top:50%; width:calc(50% - 24px); height:1px; background:rgba(255,255,255,0.08); }
+        .or-divider::before { left:0; }
+        .or-divider::after { right:0; }
+        .direct-input {
+            width: 100%; min-height: 100px; max-height: 200px;
+            padding: 14px; border-radius: 12px;
+            border: 2px solid rgba(255,255,255,0.08);
+            background: var(--bg-input); color: white;
+            font-size: 14px; font-family: inherit; resize: vertical;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+        .direct-input::-webkit-scrollbar { display: none; }
+        .direct-input:focus { outline:none; border-color: var(--primary); }
+        .direct-input::placeholder { color: var(--text-gray-light); }
+
+        /* 파싱 버튼 */
+        .parse-btn {
+            width: 100%; padding: 16px; margin-top: 16px;
+            background: var(--primary); color: var(--bg-dark);
+            border: none; border-radius: 12px;
+            font-size: 16px; font-weight: 700;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .parse-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .parse-btn:disabled { background: #374151; color: #6b7280; cursor: not-allowed; transform: none; }
+
+        /* ===== 진행 상태 ===== */
+        .progress-bar {
+            display: none;
+            margin-top: 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .progress-bar.show { display: block; }
+        .progress-label { font-size: 14px; color: var(--text-gray); margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+        .progress-track { height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
+        .progress-fill { 
+            height: 100%; 
+            background: linear-gradient(90deg, var(--primary-dark), var(--primary));
+            border-radius: 4px; 
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1); 
+            width: 0%;
+            box-shadow: 0 0 8px rgba(250,204,21,0.4);
+        }
+        .progress-status { font-size: 13px; color: var(--text-gray-light); margin-top: 8px; }
+
+        /* 선을 따라 휙휙 도는 스피너 */
+        .spinner {
+            display: inline-block;
+            width: 20px; height: 20px;
+            flex-shrink: 0;
+            position: relative;
+        }
+        .spinner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 2px solid rgba(250,204,21,0.15);
+        }
+        .spinner::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            border-top-color: var(--primary);
+            border-right-color: rgba(250,204,21,0.4);
+            animation: hwik-orbit 0.7s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            box-shadow: 0 0 8px rgba(250,204,21,0.6);
+        }
+
+        @keyframes hwik-orbit {
+            0%   { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 파싱 버튼 로딩 상태 */
+        .parse-btn.loading {
+            background: rgba(255,255,255,0.05) !important;
+            color: var(--text-gray) !important;
+            cursor: not-allowed;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+
+        /* ===== 결과 섹션 ===== */
+        .result-section { display: none; margin-top: 32px; }
+        .result-section.show { display: block; }
+
+        /* 요약 */
+        .summary-bar {
+            display: flex; gap: 12px; margin-bottom: 20px;
+            background: var(--bg-card); border-radius: 12px; padding: 16px;
+            border: 1px solid rgba(255,255,255,0.06);
+        }
+        .sum-item { flex:1; text-align:center; }
+        .sum-num { font-size: 24px; font-weight: 800; }
+        .sum-label { font-size: 11px; color: var(--text-gray-light); margin-top: 2px; }
+
+        /* 필터 탭 */
+        .filter-bar { display:flex; gap:6px; margin-bottom: 16px; flex-wrap: wrap; }
+        .filter-btn {
+            padding: 7px 16px; border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: transparent; color: var(--text-gray);
+            font-size: 13px; cursor: pointer; transition: all 0.2s;
+        }
+        .filter-btn:hover { border-color: rgba(255,255,255,0.25); color: white; }
+        .filter-btn.active { background: var(--primary); color: var(--bg-dark); border-color: var(--primary); font-weight: 600; }
+
+        /* 액션 바 */
+        .action-bar {
+            display: flex; gap: 10px; margin-bottom: 20px; align-items: center;
+        }
+        .save-all-btn {
+            padding: 12px 28px; background: var(--accent-jeonse); color: var(--bg-dark);
+            border: none; border-radius: 10px; font-size: 15px; font-weight: 700;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .save-all-btn:hover { background: #3dbdb5; transform: translateY(-1px); }
+        .save-all-btn:disabled { background: #374151; color: #6b7280; cursor: not-allowed; }
+        .card-count { color: var(--text-gray); font-size: 13px; margin-left: auto; }
+
+        /* ===== 매물 카드 ===== */
+        .card-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .card-item {
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .card-item:hover { border-color: rgba(255,255,255,0.12); }
+        .card-item.duplicate { border-color: rgba(251,146,60,0.4); background: rgba(251,146,60,0.03); }
+        .card-item.client-card { border-left: 3px solid var(--accent-client); }
+        .card-item.editing { border-color: var(--primary); background: rgba(250,204,21,0.03); }
+        .card-item.deleted { opacity: 0.3; pointer-events: none; }
+
+        /* 카드 상단 */
+        .card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+        .card-num { color: var(--text-gray-light); font-size: 11px; font-weight: 700; }
+        .card-type {
+            padding: 3px 10px; border-radius: 12px;
+            font-size: 12px; font-weight: 700;
+        }
+        .card-type.jeonse { background: rgba(78,205,196,0.15); color: var(--accent-jeonse); }
+        .card-type.sale { background: rgba(249,115,22,0.15); color: var(--accent-sale); }
+        .card-type.rent { background: rgba(167,139,250,0.15); color: var(--accent-rent); }
+        .card-type.client { background: rgba(251,146,60,0.15); color: var(--accent-client); }
+        .card-price { font-size: 17px; font-weight: 800; }
+        .card-price-num { font-size: 11px; color: var(--text-gray-light); margin-left: 4px; }
+        .card-category { font-size: 11px; color: var(--text-gray-light); padding: 2px 8px; border-radius: 8px; background: rgba(255,255,255,0.05); margin-left: auto; }
+
+        /* 카드 정보 */
+        .card-info { color: var(--text-gray); font-size: 14px; margin-bottom: 6px; }
+        .card-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
+        .card-tag { padding: 2px 8px; border-radius: 6px; background: rgba(78,205,196,0.1); color: var(--accent-jeonse); font-size: 11px; }
+        .card-memo { font-size: 12px; color: #f87171; background: rgba(248,113,113,0.06); padding: 6px 10px; border-radius: 8px; margin-top: 6px; }
+        .card-original {
+            font-size: 11px; color: var(--text-gray-light);
+            margin-top: 6px; cursor: pointer;
+            max-height: 18px; overflow: hidden;
+            transition: max-height 0.3s;
+            background: rgba(255,255,255,0.02); padding: 4px 8px; border-radius: 6px;
+        }
+        .card-original.expanded { max-height: 200px; }
+        .card-dup-badge {
+            font-size: 11px; color: var(--accent-client);
+            background: rgba(251,146,60,0.1);
+            padding: 3px 10px; border-radius: 8px;
+        }
+
+        /* 카드 액션 */
+        .card-actions {
+            display: flex; gap: 6px; margin-top: 8px; justify-content: flex-end;
+        }
+        .card-act-btn {
+            padding: 4px 12px; border-radius: 6px; border: none;
+            font-size: 11px; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-edit { background: rgba(255,255,255,0.06); color: var(--text-gray); }
+        .btn-edit:hover { background: rgba(255,255,255,0.12); color: white; }
+        .btn-del { background: rgba(248,113,113,0.08); color: #f87171; }
+        .btn-del:hover { background: rgba(248,113,113,0.2); }
+
+        /* ===== 인라인 수정 ===== */
+        .edit-form { margin-top: 10px; display: none; }
+        .edit-form.show { display: block; }
+        .edit-row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+        .edit-field { flex: 1; min-width: 120px; }
+        .edit-label { font-size: 11px; color: var(--text-gray-light); margin-bottom: 3px; }
+        .edit-input {
+            width: 100%; padding: 8px 10px;
+            background: var(--bg-input); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px; color: white; font-size: 13px;
+        }
+        .edit-input:focus { outline: none; border-color: var(--primary); }
+        .edit-actions { display: flex; gap: 6px; justify-content: flex-end; margin-top: 6px; }
+        .edit-save { padding: 6px 16px; background: var(--primary); color: var(--bg-dark); border:none; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; }
+        .edit-cancel { padding: 6px 16px; background: rgba(255,255,255,0.06); color: var(--text-gray); border:none; border-radius:6px; font-size:12px; cursor:pointer; }
+
+        /* 태그 칩 에디터 */
+        .tag-editor {
+            display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+            background: var(--bg-input); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px; padding: 6px 8px; min-height: 38px;
+            cursor: text;
+        }
+        .tag-editor:focus-within { border-color: var(--primary); }
+        .tag-chip {
+            display: flex; align-items: center; gap: 4px;
+            background: rgba(78,205,196,0.15); color: var(--accent-jeonse);
+            border-radius: 6px; padding: 2px 8px; font-size: 12px; font-weight: 500;
+        }
+        .tag-chip-del {
+            background: none; border: none; color: var(--accent-jeonse);
+            cursor: pointer; font-size: 14px; line-height: 1; padding: 0 0 0 2px;
+            opacity: 0.7;
+        }
+        .tag-chip-del:hover { opacity: 1; }
+        .tag-add-input {
+            background: none; border: none; color: white; font-size: 13px;
+            outline: none; min-width: 80px; flex: 1;
+        }
+
+        /* ===== 토스트 ===== */
+        .toast {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+            background: #1e293b; color: white; padding: 14px 28px;
+            border-radius: 12px; font-size: 14px; font-weight: 600;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: transform 0.3s ease; z-index: 3000;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+
+        /* ===== 로그인 모달 (card_generator와 동일) ===== */
+        .auth-modal-overlay { display:none; position:fixed; top:0;left:0;right:0;bottom:0; background:rgba(0,0,0,0.7); z-index:2000; justify-content:center; align-items:center; backdrop-filter:blur(4px); }
+        .auth-modal-overlay.show { display:flex; }
+        .auth-modal { background:#1a1a2e; border-radius:16px; padding:36px; width:400px; max-width:90vw; box-shadow:0 20px 60px rgba(0,0,0,0.5); border:1px solid rgba(255,255,255,0.1); }
+        .auth-modal h2 { text-align:center; font-size:24px; margin-bottom:8px; }
+        .auth-modal .auth-subtitle { text-align:center; color:var(--text-gray); font-size:14px; margin-bottom:28px; }
+        .kakao-login-btn { width:100%; padding:14px; background:#FEE500; border:none; border-radius:10px; font-size:16px; font-weight:600; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; color:#191919; }
+        .kakao-login-btn:hover { background:#F0D900; }
+        .auth-close { position:absolute; top:16px; right:16px; background:none; border:none; color:var(--text-gray); font-size:24px; cursor:pointer; }
+        .auth-modal-wrapper { position:relative; }
+
+        /* 프로필 설정 모달 */
+        .profile-input { width:100%; padding:12px 14px; border-radius:8px; border:2px solid rgba(255,255,255,0.1); background:var(--bg-input); color:white; font-size:16px; }
+        .profile-input:focus { outline:none; border-color:var(--primary); }
+        .profile-label { display:block; font-size:14px; color:var(--text-gray); margin-bottom:6px; }
+        .profile-field { margin-bottom:16px; }
+        .phone-row { display:flex; gap:8px; }
+        .phone-row input { flex:1; }
+        .btn-verify { padding:12px 16px; background:var(--primary); color:var(--bg-dark); border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; white-space:nowrap; }
+        .btn-verify:hover { background:var(--primary-dark); }
+        .btn-verify:disabled { background:#555; color:#999; cursor:not-allowed; }
+        .otp-section { display:none; }
+        .otp-section.show { display:block; }
+        .otp-row { display:flex; gap:8px; margin-top:8px; }
+        .otp-row input { flex:1; }
+        .otp-timer { font-size:12px; color:var(--primary); margin-top:4px; }
+        .verified-badge { display:none; align-items:center; gap:4px; color:#51cf66; font-size:13px; margin-top:6px; }
+        .verified-badge.show { display:flex; }
+
+        /* 반응형 */
+        @media (max-width: 640px) {
+            .page-container { padding: 20px 16px 100px; }
+            .page-title { font-size: 22px; }
+            .summary-bar { flex-wrap: wrap; }
+            .sum-item { min-width: 60px; }
+            .card-top { gap: 6px; }
+            .edit-row { flex-direction: column; }
+            .edit-field { min-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 네비게이션 -->
+    <nav class="nav">
+        <div class="nav-container">
+            <a href="#" class="nav-logo">휙</a>
+            <div class="nav-buttons" id="navButtons">
+                <button class="kakao-nav-btn" onclick="openLoginModal()">💬 카카오로 시작하기</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main">
+        <div class="page-container">
+            <!-- 타이틀 -->
+            <h1 class="page-title">파일 올리면 <span class="hl">휙</span> 정리해드려요</h1>
+            <p class="page-subtitle">엑셀, 텍스트, 카톡 복붙 — 아무거나 올려보세요</p>
+
+            <!-- 업로드 영역 -->
+            <div class="upload-zone" id="uploadZone">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text"><b>파일을 드래그</b>하거나 <b>클릭</b>해서 올려주세요</div>
+                <div class="upload-hint">txt, xlsx, xls 파일 지원</div>
+            </div>
+            <input type="file" id="fileInput" accept=".txt,.xlsx,.xls" style="display:none">
+
+            <div class="or-divider">또는 직접 입력</div>
+            <textarea class="direct-input" id="directInput" placeholder="매물 메모를 직접 붙여넣기 하세요..."></textarea>
+
+            <button class="parse-btn" id="parseBtn" disabled onclick="startParse()">✨ AI 정리 시작</button>
+
+            <!-- 진행 상태 -->
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-label" id="progressLabel"><span class="spinner"></span>AI가 준비 중이에요...</div>
+                <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+                <div class="progress-status" id="progressStatus"></div>
+            </div>
+
+            <!-- 결과 섹션 -->
+            <div class="result-section" id="resultSection">
+                <!-- 요약 -->
+                <div class="summary-bar" id="summaryBar"></div>
+
+                <!-- 필터 -->
+                <div class="filter-bar" id="filterBar">
+                    <button class="filter-btn active" onclick="filterCards('all')">전체</button>
+                    <button class="filter-btn" onclick="filterCards('jeonse')">전세</button>
+                    <button class="filter-btn" onclick="filterCards('sale')">매매</button>
+                    <button class="filter-btn" onclick="filterCards('rent')">월세</button>
+                    <button class="filter-btn" onclick="filterCards('client')">손님</button>
+                </div>
+
+                <!-- 액션 바 -->
+                <div class="action-bar">
+                    <button class="save-all-btn" id="saveAllBtn" onclick="saveAll()">💾 전체 저장</button>
+                    <span class="card-count" id="cardCount"></span>
+                </div>
+
+                <!-- 카드 목록 -->
+                <div class="card-list" id="cardList"></div>
+                <div style="margin-top: 16px; text-align: right;">
+                    <button class="save-all-btn" id="saveAllBtnBottom" onclick="saveAll()">💾 전체 저장</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 토스트 -->
+    <div class="toast" id="toast"></div>
+
+    <!-- 카카오 로그인 모달 -->
+    <div class="auth-modal-overlay" id="loginModal">
+        <div class="auth-modal auth-modal-wrapper">
+            <button class="auth-close" onclick="closeLoginModal()">×</button>
+            <h2>휙</h2>
+            <p class="auth-subtitle">매물 정리를 시작하려면 로그인이 필요해요</p>
+            <button class="kakao-login-btn" onclick="loginWithKakao()">💬 카카오로 시작하기</button>
+        </div>
+    </div>
+
+    <!-- 프로필 설정 모달 -->
+    <div class="auth-modal-overlay" id="profileModal">
+        <div class="auth-modal auth-modal-wrapper">
+            <button class="auth-close" onclick="closeProfileModal()">×</button>
+            <h2>환영합니다! 👋</h2>
+            <p class="auth-subtitle">카드에 표시될 정보를 입력해주세요</p>
+            <div class="profile-field">
+                <label class="profile-label">이름 *</label>
+                <input type="text" id="profileAgentName" class="profile-input" placeholder="예: 김철수">
+            </div>
+            <div class="profile-field">
+                <label class="profile-label">부동산명 *</label>
+                <input type="text" id="profileBizName" class="profile-input" placeholder="예: 행복부동산">
+            </div>
+            <div class="profile-field">
+                <label class="profile-label">연락처 *</label>
+                <div class="phone-row">
+                    <input type="tel" id="profilePhone" class="profile-input" placeholder="010-1234-5678">
+                    <button class="btn-verify" id="btnSendOtp" onclick="sendOtp()">인증요청</button>
+                </div>
+                <div class="verified-badge" id="phoneVerified">✅ 인증완료</div>
+            </div>
+            <div class="otp-section" id="otpSection">
+                <div class="otp-row">
+                    <input type="text" id="otpCode" class="profile-input" placeholder="인증번호 6자리" maxlength="6">
+                    <button class="btn-verify" onclick="verifyOtp()">확인</button>
+                </div>
+                <div class="otp-timer" id="otpTimer"></div>
+            </div>
+            <div class="profile-field" style="margin-top:8px;">
+                <label class="profile-label">주소 (선택)</label>
+                <input type="text" id="profileAddress" class="profile-input" placeholder="예: 서울시 강남구 역삼동">
+            </div>
+            <button class="btn btn-primary" style="width:100%;padding:14px;margin-top:8px;" onclick="saveProfile()">시작하기</button>
+        </div>
+    </div>
+
+<script>
+// ============================================================
+// Supabase 초기화 + 인증
+// ============================================================
+const SUPABASE_URL = 'https://jqaxejgzkchxbfzgzyzi.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxYXhlamd6a2NoeGJmemd6eXppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2MzI3NTIsImV4cCI6MjA4MjIwODc1Mn0.-njNdAKVA7Me60H98AYaf-Z3oi45SfUmeoBNvuRJugE';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentUser = null;
+let userProfile = null;
+let phoneVerified = false;
+let otpTimerInterval = null;
+let profileEditMode = false;
+
+// 파싱 관련
+let parsedCards = []; // 파싱 결과
+let deletedIds = new Set(); // 삭제된 카드 ID
+let currentFilter = 'all';
+
+// 카카오 로그인
+async function loginWithKakao() {
+    const { data, error } = await supabaseClient.auth.signInWithOAuth({
+        provider: 'kakao',
+        options: { redirectTo: window.location.href.split('?')[0].split('#')[0], scopes: 'profile_nickname profile_image account_email' }
+    });
+    if (error) alert('로그인 실패: ' + error.message);
+}
+
+async function logout() {
+    await supabaseClient.auth.signOut();
+    currentUser = null; userProfile = null;
+    localStorage.removeItem('hwik_agent');
+    window.location.reload();
+}
+
+function openLoginModal() { document.getElementById('loginModal').classList.add('show'); }
+function closeLoginModal() { document.getElementById('loginModal').classList.remove('show'); }
+function openProfileModal() {
+    if (!profileEditMode) {
+        document.getElementById('profilePhone').readOnly = false;
+        document.getElementById('btnSendOtp').style.display = '';
+        document.getElementById('phoneVerified').classList.remove('show');
+        document.getElementById('otpSection').classList.remove('show');
+    }
+    document.getElementById('profileModal').classList.add('show');
+}
+function closeProfileModal() { document.getElementById('profileModal').classList.remove('show'); profileEditMode = false; }
+
+async function sendOtp() {
+    const phone = document.getElementById('profilePhone').value.trim();
+    if (!phone) { alert('전화번호를 입력해주세요'); return; }
+    const btn = document.getElementById('btnSendOtp');
+    btn.disabled = true; btn.textContent = '발송중...';
+    try {
+        const res = await fetch(SUPABASE_URL + '/functions/v1/send-otp', { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY}, body:JSON.stringify({phone}) });
+        const data = await res.json();
+        if (!res.ok) { alert(data.error||'발송 실패'); btn.disabled=false; btn.textContent='인증요청'; return; }
+        document.getElementById('otpSection').classList.add('show');
+        btn.textContent = '재발송';
+        let seconds = 180;
+        clearInterval(otpTimerInterval);
+        otpTimerInterval = setInterval(() => { seconds--; document.getElementById('otpTimer').textContent=`${Math.floor(seconds/60)}:${(seconds%60).toString().padStart(2,'0')} 남음`; if(seconds<=0){clearInterval(otpTimerInterval);btn.disabled=false;} }, 1000);
+        setTimeout(() => { btn.disabled = false; }, 180000);
+    } catch(e) { alert('발송 실패: '+e.message); btn.disabled=false; btn.textContent='인증요청'; }
+}
+
+async function verifyOtp() {
+    const phone = document.getElementById('profilePhone').value.trim();
+    const code = document.getElementById('otpCode').value.trim();
+    if (!code) { alert('인증번호를 입력해주세요'); return; }
+    try {
+        const res = await fetch(SUPABASE_URL + '/functions/v1/verify-otp', { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY}, body:JSON.stringify({phone,code}) });
+        if (!res.ok) { const d=await res.json(); alert(d.error||'인증 실패'); return; }
+        phoneVerified = true;
+        clearInterval(otpTimerInterval);
+        document.getElementById('otpSection').classList.remove('show');
+        document.getElementById('phoneVerified').classList.add('show');
+        document.getElementById('btnSendOtp').style.display = 'none';
+        document.getElementById('profilePhone').readOnly = true;
+    } catch(e) { alert('인증 실패: '+e.message); }
+}
+
+async function saveProfile() {
+    const agentName = document.getElementById('profileAgentName').value.trim();
+    const bizName = document.getElementById('profileBizName').value.trim();
+    const phone = document.getElementById('profilePhone').value.trim().replace(/-/g,'');
+    const address = document.getElementById('profileAddress').value.trim();
+    if (!agentName) { alert('이름을 입력해주세요'); return; }
+    if (!bizName) { alert('부동산명을 입력해주세요'); return; }
+    if (!phone) { alert('연락처를 입력해주세요'); return; }
+    if (!phoneVerified) { alert('전화번호 인증이 필요합니다'); return; }
+    try {
+        const { data: existing } = await supabaseClient.from('profiles').select('id').eq('phone',phone).neq('id',currentUser.id).maybeSingle();
+        if (existing) { alert('이미 사용 중인 번호입니다.'); return; }
+        const { error } = await supabaseClient.from('profiles').upsert({ id:currentUser.id, agent_name:agentName, phone, business_name:bizName, address:address||null, phone_verified:true }, {onConflict:'id'});
+        if (error) throw error;
+        userProfile = { agent_name:agentName, business_name:bizName, phone, address };
+        localStorage.setItem('hwik_agent', JSON.stringify({agent_name:agentName, name:bizName, phone}));
+        updateNavAuth();
+        closeProfileModal();
+        if (!profileEditMode) showToast('가입 완료! 이제 파일을 올려보세요');
+        else showToast('프로필 수정 완료!');
+    } catch(e) { alert('저장 실패: '+e.message); }
+}
+
+async function loadProfile(userId) {
+    const { data } = await supabaseClient.from('profiles').select('*').eq('id',userId).maybeSingle();
+    if (data) { userProfile = data; localStorage.setItem('hwik_agent', JSON.stringify({agent_name:data.agent_name||'',name:data.business_name,phone:data.phone})); return true; }
+    return false;
+}
+
+function updateNavAuth() {
+    const nav = document.getElementById('navButtons');
+    if (currentUser && userProfile) {
+        nav.innerHTML = `
+            <a href="card_generator_v2_auth.html" class="btn btn-ghost">카드 만들기</a>
+            <a href="my_cards.html" class="btn btn-ghost">내 카드</a>
+            <button class="btn btn-primary" onclick="openAgentModal()">${userProfile.business_name}님</button>
+            <button class="btn-logout" onclick="logout()">로그아웃</button>`;
+    } else if (currentUser) {
+        nav.innerHTML = `<button class="btn btn-primary" onclick="openProfileModal()">프로필 설정</button><button class="btn-logout" onclick="logout()">로그아웃</button>`;
+    } else {
+        nav.innerHTML = `<button class="kakao-nav-btn" onclick="openLoginModal()">💬 카카오로 시작하기</button>`;
+    }
+}
+
+function openAgentModal() {
+    profileEditMode = true;
+    const modal = document.getElementById('profileModal');
+    modal.querySelector('h2').textContent = '내 정보 수정';
+    modal.querySelector('.auth-subtitle').textContent = '정보를 수정해주세요';
+    modal.querySelector('button.btn-primary').textContent = '저장하기';
+    document.getElementById('profileAgentName').value = userProfile?.agent_name || '';
+    document.getElementById('profileBizName').value = userProfile?.business_name || '';
+    document.getElementById('profileAddress').value = userProfile?.address || '';
+    document.getElementById('profilePhone').value = userProfile?.phone || '';
+    document.getElementById('profilePhone').readOnly = true;
+    document.getElementById('btnSendOtp').style.display = 'none';
+    document.getElementById('phoneVerified').classList.add('show');
+    phoneVerified = true;
+    openProfileModal();
+}
+
+async function checkAuth() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if (user) {
+        currentUser = user;
+        const hasProfile = await loadProfile(user.id);
+        if (!hasProfile) setTimeout(() => openProfileModal(), 500);
+        updateNavAuth();
+        return true;
+    }
+    return false;
+}
+
+let pendingParse = false;
+
+supabaseClient.auth.onAuthStateChange(async (event, session) => {
+    if (event === 'SIGNED_IN' && session?.user) {
+        currentUser = session.user;
+        closeLoginModal();
+        const hasProfile = await loadProfile(session.user.id);
+        updateNavAuth();
+        if (!hasProfile) {
+            openProfileModal();
+        } else if (pendingParse && directInput.value.trim()) {
+            pendingParse = false;
+            setTimeout(() => startParse(), 500);
+        }
+    } else if (event === 'SIGNED_OUT') {
+        currentUser = null;
+    }
+});
+
+// 페이지 로드 시 로그인 상태 확인 → 미로그인이면 모달 바로 표시
+(async () => {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+        openLoginModal();
+    }
+})();
+
+
+// ============================================================
+// 파일 업로드
+// ============================================================
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+const directInput = document.getElementById('directInput');
+const parseBtn = document.getElementById('parseBtn');
+
+// 드래그 앤 드롭
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop', e => { e.preventDefault(); uploadZone.classList.remove('dragover'); if (!currentUser) { openLoginModal(); return; } if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+
+// 업로드존 클릭 시 로그인 체크
+uploadZone.addEventListener('click', e => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!currentUser) { openLoginModal(); return; }
+    fileInput.click();
+});
+
+fileInput.addEventListener('change', e => { if(e.target.files[0]) handleFile(e.target.files[0]); });
+
+// 직접 입력도 로그인 체크
+directInput.addEventListener('focus', () => {
+    if (!currentUser) { directInput.blur(); openLoginModal(); }
+});
+directInput.addEventListener('input', () => { parseBtn.disabled = !directInput.value.trim(); });
+
+let sourceText = '';
+let sourceFileName = '';
+
+function handleFile(file) {
+    sourceFileName = file.name;
+    const ext = file.name.split('.').pop().toLowerCase();
+
+    uploadZone.classList.add('has-file');
+    uploadZone.innerHTML = `
+        <div class="upload-filename">📄 ${file.name}</div>
+        <div class="upload-meta">${(file.size/1024).toFixed(1)}KB · 클릭하면 다른 파일 선택</div>`;
+
+    if (ext === 'xlsx' || ext === 'xls') {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const data = new Uint8Array(e.target.result);
+            const wb = XLSX.read(data, { type:'array' });
+            let allText = '';
+            wb.SheetNames.forEach(name => {
+                const sheet = wb.Sheets[name];
+                const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1');
+                allText += `[시트: ${name}]\n`;
+                for (let r = range.s.r; r <= range.e.r; r++) {
+                    let row = [];
+                    for (let c = range.s.c; c <= range.e.c; c++) {
+                        const cell = sheet[XLSX.utils.encode_cell({r,c})];
+                        if (cell && cell.v !== undefined && cell.v !== '') row.push(String(cell.v).trim());
+                    }
+                    if (row.length) allText += row.join(' | ') + '\n';
+                }
+                allText += '\n';
+            });
+            sourceText = allText;
+            directInput.value = allText;
+            parseBtn.disabled = false;
+        };
+        reader.readAsArrayBuffer(file);
+    } else {
+        const reader = new FileReader();
+        reader.onload = e => { sourceText = e.target.result; directInput.value = sourceText; parseBtn.disabled = false; };
+        reader.readAsText(file, 'UTF-8');
+    }
+}
+
+
+// ============================================================
+// 텍스트 chunk 분할
+// ============================================================
+function splitChunks(text, maxLen = 1500) {
+    if (text.length <= maxLen) return [text];
+    const chunks = [];
+    const paras = text.split(/\n\n+/);
+    let cur = '';
+    for (const p of paras) {
+        if ((cur + '\n\n' + p).length > maxLen && cur) { chunks.push(cur.trim()); cur = p; }
+        else cur = cur ? cur + '\n\n' + p : p;
+    }
+    if (cur.trim()) chunks.push(cur.trim());
+    return chunks;
+}
+
+
+// ============================================================
+// 파싱 시작
+// ============================================================
+async function startParse() {
+    const text = directInput.value.trim();
+    if (!text) return;
+
+    // 세션 유효성 실시간 확인
+    try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) {
+            currentUser = null;
+            pendingParse = true;
+            openLoginModal();
+            return;
+        }
+        currentUser = session.user;
+    } catch(e) {
+        currentUser = null;
+        openLoginModal();
+        return;
+    }
+
+    isParsing = true;
+
+    parseBtn.disabled = true;
+    parseBtn.classList.add('loading');
+    parseBtn.innerHTML = '<span class="spinner"></span> AI가 분석 중이에요...';
+    parsedCards = [];
+    deletedIds = new Set();
+
+    const progBar = document.getElementById('progressBar');
+    const progFill = document.getElementById('progressFill');
+    const progLabel = document.getElementById('progressLabel');
+    const progStatus = document.getElementById('progressStatus');
+    // 즉시 프로그레스바 표시
+    progBar.classList.add('show');
+    progFill.style.width = '0%';
+    progLabel.innerHTML = '<span class="spinner"></span>AI가 준비 중이에요...';
+    progStatus.textContent = '메모를 분석하고 있어요';
+
+    const chunks = splitChunks(text, 1500);
+    progLabel.innerHTML = `<span class="spinner"></span>매물 정리중... (0/${chunks.length})`;
+    progStatus.textContent = 'AI가 메모를 분석하고 있어요';
+
+    let allCards = [];
+    let errors = 0;
+    const agentId = currentUser?.id || 'anonymous';
+
+    // 청크별 구간: 각 청크가 전체의 1/n 차지
+    // API 응답 기다리는 동안 서서히 채우고, 완료되면 다음 구간으로
+    let currentPct = 0;
+    let animFrame = null;
+
+    function animateTo(targetPct, duration) {
+        return new Promise(resolve => {
+            const startPct = currentPct;
+            const startTime = performance.now();
+            function step(now) {
+                const elapsed = now - startTime;
+                const t = Math.min(elapsed / duration, 1);
+                // easeOutCubic
+                const eased = 1 - Math.pow(1 - t, 3);
+                currentPct = startPct + (targetPct - startPct) * eased;
+                progFill.style.width = currentPct.toFixed(1) + '%';
+                if (t < 1) {
+                    animFrame = requestAnimationFrame(step);
+                } else {
+                    currentPct = targetPct;
+                    resolve();
+                }
+            }
+            if (animFrame) cancelAnimationFrame(animFrame);
+            animFrame = requestAnimationFrame(step);
+        });
+    }
+
+    for (let i = 0; i < chunks.length; i++) {
+        const chunkStart = (i / chunks.length) * 95;
+        const chunkEnd = ((i + 1) / chunks.length) * 95;
+
+        // 청크 시작점까지 빠르게
+        await animateTo(chunkStart, 200);
+
+        progLabel.innerHTML = `<span class="spinner"></span>매물 정리중... (${i+1}/${chunks.length})`;
+        progStatus.textContent = `${allCards.length}개 찾았어요...`;
+
+        // API 응답 기다리는 동안 chunkEnd-5%까지 천천히 채움 (3초 동안)
+        const slowFillPromise = animateTo(chunkEnd - 5, 3000);
+
+        try {
+            const res = await fetch(`${SUPABASE_URL}/functions/v1/batch-parse`, {
+                method: 'POST',
+                headers: { 'Content-Type':'application/json', 'Authorization':'Bearer '+SUPABASE_KEY },
+                body: JSON.stringify({ text: chunks[i], agent_id: agentId, skip_save: true })
+            });
+            const result = await res.json();
+            if (animFrame) cancelAnimationFrame(animFrame);
+            if (result.success && result.cards) {
+                allCards = allCards.concat(result.cards);
+            } else {
+                errors++;
+            }
+        } catch(e) {
+            if (animFrame) cancelAnimationFrame(animFrame);
+            errors++;
+        }
+
+        // 응답 왔으면 청크 끝까지 빠르게
+        await animateTo(chunkEnd, 300);
+        progStatus.textContent = `${allCards.length}개 찾았어요...`;
+    }
+
+    // 완료: 100%까지 빠르게
+    await animateTo(100, 400);
+    progLabel.textContent = `✅ ${allCards.length}개 정리 완료!`;
+    progStatus.textContent = errors > 0 ? `⚠️ ${errors}개 구간 실패` : '';
+
+    // 중복 감지
+    detectDuplicates(allCards);
+
+    parsedCards = allCards;
+    displayResults();
+    isParsing = false;
+    parseBtn.disabled = false;
+    parseBtn.classList.remove('loading');
+    parseBtn.innerHTML = '✨ AI 정리 시작';
+
+    setTimeout(() => { progBar.classList.remove('show'); }, 2000);
+}
+
+
+// ============================================================
+// 중복 감지
+// ============================================================
+function detectDuplicates(cards) {
+    const seen = {};
+    cards.forEach(card => {
+        if (card.is_client) return;
+        const p = card.property || {};
+        const key = `${(p.complex||'').trim()}|${(p.area||'').trim()}|${(p.price||'').trim()}`;
+        if (seen[key]) {
+            card._duplicate = true;
+            seen[key]._duplicate = true;
+        } else {
+            seen[key] = card;
+        }
+    });
+}
+
+
+// ============================================================
+// 결과 표시
+// ============================================================
+function displayResults() {
+    const section = document.getElementById('resultSection');
+    section.classList.add('show');
+
+    const active = parsedCards.filter(c => !deletedIds.has(c.id));
+    const props = active.filter(c => !c.is_client);
+    const clients = active.filter(c => c.is_client);
+
+    // 요약
+    document.getElementById('summaryBar').innerHTML = `
+        <div class="sum-item"><div class="sum-num">${active.length}</div><div class="sum-label">전체</div></div>
+        <div class="sum-item"><div class="sum-num" style="color:var(--accent-jeonse)">${props.filter(p=>p.property?.type==='전세').length}</div><div class="sum-label">전세</div></div>
+        <div class="sum-item"><div class="sum-num" style="color:var(--accent-sale)">${props.filter(p=>p.property?.type==='매매').length}</div><div class="sum-label">매매</div></div>
+        <div class="sum-item"><div class="sum-num" style="color:var(--accent-rent)">${props.filter(p=>p.property?.type==='월세').length}</div><div class="sum-label">월세</div></div>
+        <div class="sum-item"><div class="sum-num" style="color:var(--accent-client)">${clients.length}</div><div class="sum-label">손님</div></div>`;
+
+    document.getElementById('cardCount').textContent = `${props.length}개 매물 저장 예정`;
+    renderCards();
+    section.scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderCards() {
+    const container = document.getElementById('cardList');
+    container.innerHTML = '';
+
+    parsedCards.forEach((card, i) => {
+        if (deletedIds.has(card.id)) return;
+
+        const p = card.property || {};
+        const pn = card.private_note || {};
+        const isClient = card.is_client;
+        const type = isClient ? 'client' : (p.type === '매매' ? 'sale' : p.type === '월세' ? 'rent' : 'jeonse');
+
+        // 필터
+        if (currentFilter !== 'all') {
+            if (currentFilter === 'client' && !isClient) return;
+            if (currentFilter === 'jeonse' && (p.type !== '전세' || isClient)) return;
+            if (currentFilter === 'sale' && (p.type !== '매매' || isClient)) return;
+            if (currentFilter === 'rent' && (p.type !== '월세' || isClient)) return;
+        }
+
+        const priceColor = isClient ? 'var(--accent-client)' : (p.type==='매매' ? 'var(--accent-sale)' : p.type==='월세' ? 'var(--accent-rent)' : 'var(--accent-jeonse)');
+        const catNames = {apartment:'아파트',officetel:'오피스텔',room:'원투룸',commercial:'상가',office:'사무실'};
+
+        let html = `<div class="card-item ${isClient?'client-card':''} ${card._duplicate?'duplicate':''}" id="card-${card.id}">`;
+
+        // 상단
+        html += `<div class="card-top">`;
+        html += `<span class="card-num">#${i+1}</span>`;
+        html += `<span class="card-type ${type}">${isClient?'손님':(p.type||'?')}</span>`;
+        html += `<span class="card-price" style="color:${priceColor}">${p.price||'-'}</span>`;
+        if (card.price_number) html += `<span class="card-price-num">(${card.price_number.toLocaleString()}만)</span>`;
+        if (card._duplicate) html += `<span class="card-dup-badge">⚠️ 중복?</span>`;
+        if (!isClient && p.category) html += `<span class="card-category">${catNames[p.category]||p.category}</span>`;
+        html += `</div>`;
+
+        // 정보
+        const infoParts = [p.complex, p.location, p.area, p.floor].filter(Boolean);
+        if (infoParts.length) html += `<div class="card-info">${infoParts.join(' · ')}</div>`;
+
+        // 태그
+        if (p.features?.length) html += `<div class="card-tags">${p.features.map(f=>`<span class="card-tag">${f}</span>`).join('')}</div>`;
+
+        // 비공개 메모
+        if (pn.memo) html += `<div class="card-memo">🔒 ${pn.memo}</div>`;
+
+        // 원본 (기본 접힘)
+        if (pn.original_text) html += `<div class="card-original" onclick="this.classList.toggle('expanded')">📋 ${pn.original_text}</div>`;
+
+        // 액션
+        html += `<div class="card-actions">`;
+        html += `<button class="card-act-btn btn-edit" onclick="toggleEdit('${card.id}')">수정</button>`;
+        html += `<button class="card-act-btn btn-del" onclick="deleteCard('${card.id}')">삭제</button>`;
+        html += `</div>`;
+
+        // 수정 폼
+        const tags = (p.features || []).join(', ');
+        const memo = pn.memo || '';
+        html += `<div class="edit-form" id="edit-${card.id}">`;
+        html += `<div class="edit-row">`;
+        html += `<div class="edit-field"><div class="edit-label">거래유형</div><input class="edit-input" id="et-${card.id}" value="${p.type||''}"></div>`;
+        html += `<div class="edit-field"><div class="edit-label">가격</div><input class="edit-input" id="ep-${card.id}" value="${p.price||''}"></div>`;
+        html += `</div><div class="edit-row">`;
+        html += `<div class="edit-field"><div class="edit-label">단지명</div><input class="edit-input" id="ec-${card.id}" value="${p.complex||''}"></div>`;
+        html += `<div class="edit-field"><div class="edit-label">위치</div><input class="edit-input" id="el-${card.id}" value="${p.location||''}"></div>`;
+        html += `</div><div class="edit-row">`;
+        html += `<div class="edit-field"><div class="edit-label">평수</div><input class="edit-input" id="ea-${card.id}" value="${p.area||''}"></div>`;
+        html += `<div class="edit-field"><div class="edit-label">층수</div><input class="edit-input" id="ef-${card.id}" value="${p.floor||''}"></div>`;
+        html += `</div>`;
+        html += `<div class="edit-row" style="margin-top:4px">`;
+        html += `<div class="edit-field" style="flex:1"><div class="edit-label">태그</div>
+            <div class="tag-editor" id="tag-editor-${card.id}" onclick="document.getElementById('tag-input-${card.id}').focus()">
+                ${(p.features||[]).map(f => `
+                    <span class="tag-chip">
+                        ${f}<button class="tag-chip-del" onclick="removeTag('${card.id}','${f}')">×</button>
+                    </span>`).join('')}
+                <input class="tag-add-input" id="tag-input-${card.id}" placeholder="${(p.features||[]).length ? '+ 추가' : '태그 입력 후 엔터'}" 
+                    onkeydown="addTag(event,'${card.id}')">
+            </div></div>`;
+        html += `</div>`;
+        html += `<div class="edit-row" style="margin-top:4px">`;
+        html += `<div class="edit-field" style="flex:1"><div class="edit-label">🔒 비공개 메모</div><textarea class="edit-input" id="ememo-${card.id}" rows="2" style="resize:vertical;line-height:1.5" placeholder="중개사만 보는 메모">${memo}</textarea></div>`;
+        html += `</div>`;
+        html += `<div class="edit-actions">`;
+        html += `<button class="edit-cancel" onclick="toggleEdit('${card.id}')">취소</button>`;
+        html += `<button class="edit-save" onclick="saveEdit('${card.id}')">적용</button>`;
+        html += `</div></div>`;
+
+        html += `</div>`;
+        container.innerHTML += html;
+    });
+}
+
+
+// ============================================================
+// 카드 수정/삭제
+// ============================================================
+function toggleEdit(id) {
+    const form = document.getElementById('edit-' + id);
+    const card = document.getElementById('card-' + id);
+    form.classList.toggle('show');
+    card.classList.toggle('editing');
+}
+
+function addTag(e, id) {
+    if (e.key !== 'Enter' && e.key !== ',') return;
+    e.preventDefault();
+    const input = document.getElementById('tag-input-' + id);
+    const val = input.value.trim().replace(/,$/, '');
+    if (!val) return;
+    const card = parsedCards.find(c => c.id === id);
+    if (!card.property.features) card.property.features = [];
+    if (!card.property.features.includes(val)) {
+        card.property.features.push(val);
+        renderTagEditor(id, card.property.features);
+    }
+    input.value = '';
+}
+
+function removeTag(id, tag) {
+    const card = parsedCards.find(c => c.id === id);
+    if (!card) return;
+    card.property.features = (card.property.features || []).filter(f => f !== tag);
+    renderTagEditor(id, card.property.features);
+}
+
+function renderTagEditor(id, features) {
+    const editor = document.getElementById('tag-editor-' + id);
+    if (!editor) return;
+    const chips = features.map(f => `
+        <span class="tag-chip">
+            ${f}<button class="tag-chip-del" onclick="removeTag('${id}','${f}')">×</button>
+        </span>`).join('');
+    editor.innerHTML = chips + `<input class="tag-add-input" id="tag-input-${id}" placeholder="${features.length ? '+ 추가' : '태그 입력 후 엔터'}" onkeydown="addTag(event,'${id}')">`;
+    document.getElementById('tag-input-' + id).focus();
+}
+
+function saveEdit(id) {
+    const card = parsedCards.find(c => c.id === id);
+    if (!card) return;
+
+    card.property.type = document.getElementById('et-'+id).value.trim();
+    card.property.price = document.getElementById('ep-'+id).value.trim();
+    card.property.complex = document.getElementById('ec-'+id).value.trim() || null;
+    card.property.location = document.getElementById('el-'+id).value.trim();
+    card.property.area = document.getElementById('ea-'+id).value.trim();
+    card.property.floor = document.getElementById('ef-'+id).value.trim();
+
+    // 태그는 chip 방식으로 이미 card.property.features에 반영됨
+    // 입력창에 남은 텍스트도 저장
+    const input = document.getElementById('tag-input-'+id);
+    if (input && input.value.trim()) {
+        const val = input.value.trim();
+        if (!card.property.features) card.property.features = [];
+        if (!card.property.features.includes(val)) card.property.features.push(val);
+    }
+
+    // 메모 저장
+    const memo = document.getElementById('ememo-'+id).value.trim();
+    if (!card.private_note) card.private_note = {};
+    card.private_note.memo = memo;
+
+    showToast('수정됨');
+    displayResults();
+}
+
+function deleteCard(id) {
+    deletedIds.add(id);
+    document.getElementById('card-'+id).classList.add('deleted');
+    displayResults();
+    showToast('삭제됨');
+}
+
+
+// ============================================================
+// 필터
+// ============================================================
+function filterCards(type) {
+    currentFilter = type;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    renderCards();
+}
+
+
+
+// 페이지 이탈 경고 상태
+let isSaving = false;
+let isParsing = false;
+
+window.addEventListener('beforeunload', (e) => {
+    if (isSaving || isParsing) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+
+// ============================================================
+// 전체 저장
+// ============================================================
+async function saveAll() {
+    if (!currentUser) { openLoginModal(); return; }
+
+    isSaving = true;
+    const btns = ['saveAllBtn', 'saveAllBtnBottom'].map(id => document.getElementById(id)).filter(Boolean);
+
+    // 저장중 애니메이션
+    let dotCount = 0;
+    const savingTimer = setInterval(() => {
+        dotCount = (dotCount + 1) % 4;
+        const dots = '.'.repeat(dotCount);
+        btns.forEach(b => { b.innerHTML = `<span class="spinner"></span> 저장중${dots}`; });
+    }, 400);
+
+    btns.forEach(b => { b.disabled = true; b.innerHTML = `<span class="spinner"></span> 저장중`; });
+
+    // 매물만 저장 (손님 제외, 삭제 제외)
+    const toSave = parsedCards.filter(c => !c.is_client && !deletedIds.has(c.id));
+
+    const cardsToInsert = toSave.map(c => ({
+        id: c.id,
+        agent_id: currentUser.id,
+        style: userProfile?.style || 'a',
+        color: 'mint',
+        property: c.property,
+        private_note: c.private_note,
+        price_number: c.price_number || null,
+        search_text: [c.property.type, c.property.price, c.property.location, c.property.complex, c.property.area, c.property.floor, ...(c.property.features||[])].filter(Boolean).join(' '),
+        search_text_private: c.private_note?.memo || '',
+        created_at: new Date().toISOString(),
+    }));
+
+    try {
+        // 50개씩 순차 처리 (진행률 표시)
+        const BATCH_SIZE = 50;
+        const batches = [];
+        for (let i = 0; i < cardsToInsert.length; i += BATCH_SIZE) {
+            batches.push(cardsToInsert.slice(i, i + BATCH_SIZE));
+        }
+
+        let allData = [];
+        for (let i = 0; i < batches.length; i++) {
+            const pct = Math.round((i / batches.length) * 90);
+            btns.forEach(b => { b.innerHTML = `<span class="spinner"></span> 저장중 ${pct}%`; });
+            const { data: batchData, error } = await supabaseClient
+                .from('cards').upsert(batches[i], {onConflict: 'id'}).select('id');
+            if (error) throw error;
+            allData = allData.concat(batchData || []);
+        }
+
+        const data = allData;
+        clearInterval(savingTimer);
+        isSaving = false;
+
+        // 백그라운드 임베딩 생성 (저장 완료 후 비동기)
+        setTimeout(() => {
+            toSave.forEach(card => {
+                const searchText = [card.property?.type, card.property?.price, card.property?.location,
+                    card.property?.complex, card.property?.area, card.property?.floor,
+                    ...(card.property?.features||[])].filter(Boolean).join(' ');
+                if (!searchText) return;
+                fetch(`${SUPABASE_URL}/functions/v1/embed-card`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+                    body: JSON.stringify({ card_id: card.id, search_text: searchText })
+                }).catch(() => {});
+            });
+        }, 2000); // 저장 완료 2초 후
+
+        // localStorage에도 저장
+        const myCards = JSON.parse(localStorage.getItem('hwik_my_cards') || '[]');
+        data.forEach(d => { if (!myCards.includes(d.id)) myCards.push(d.id); });
+        localStorage.setItem('hwik_my_cards', JSON.stringify(myCards));
+
+        showToast(`✅ ${data.length}개 매물 저장 완료!`);
+        btns.forEach(b => { b.textContent = `✅ ${data.length}개 저장됨`; });
+
+        // 3초 후 내 카드 페이지로
+        setTimeout(() => {
+            if (confirm('내 카드 페이지로 이동할까요?')) {
+                window.location.href = 'my_cards.html';
+            }
+        }, 1500);
+
+    } catch(e) {
+        clearInterval(savingTimer);
+        isSaving = false;
+        alert('저장 실패: ' + e.message);
+        btns.forEach(b => { b.disabled = false; b.textContent = '💾 전체 저장'; });
+    }
+}
+
+
+// ============================================================
+// 토스트
+// ============================================================
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+
+// ============================================================
+// 초기화
+// ============================================================
+window.addEventListener('DOMContentLoaded', async () => {
+    await checkAuth();
+});
+</script>
+</body>
+</html>
