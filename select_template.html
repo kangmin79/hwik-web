@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>내 스타일 선택 - 휙</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #facc15;
+            --bg-dark: #0a1628;
+            --text-white: #ffffff;
+            --text-gray: #9ca3af;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans KR', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-white);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* 헤더 */
+        .header {
+            text-align: center;
+            padding: 40px 20px 20px;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .header h1 {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+        
+        .header h1 span {
+            color: var(--primary);
+        }
+        
+        .header p {
+            color: var(--text-gray);
+            font-size: 16px;
+        }
+        
+        /* 섹션 타이틀 */
+        .section-title {
+            color: #fff;
+            font-size: 18px;
+            margin: 40px 0 20px;
+            padding-left: 20px;
+            border-left: 4px solid var(--primary);
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+            padding-left: 40px;
+        }
+        
+        /* 카드 그리드 */
+        .templates-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            max-width: 1400px;
+            margin: 0 auto 40px;
+            padding: 0 20px;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.6s ease forwards;
+        }
+        
+        .templates-grid:nth-child(2) { animation-delay: 0.1s; }
+        .templates-grid:nth-child(3) { animation-delay: 0.2s; }
+        .templates-grid:nth-child(4) { animation-delay: 0.3s; }
+        .templates-grid:nth-child(5) { animation-delay: 0.4s; }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 카드 래퍼 */
+        .template-wrapper {
+            width: 200px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .template-wrapper:hover {
+            transform: scale(1.05);
+        }
+        
+        .template-label {
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-gray);
+            margin-bottom: 8px;
+        }
+        
+        /* 중앙 확대 오버레이 */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+        
+        .overlay-card {
+            transform: scale(0.8);
+            transition: transform 0.3s ease;
+        }
+        
+        .overlay.show .overlay-card {
+            transform: scale(1);
+        }
+        
+        .overlay-info {
+            margin-top: 24px;
+            text-align: center;
+        }
+        
+        .overlay-style {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .overlay-color {
+            font-size: 16px;
+            color: var(--text-gray);
+            margin-bottom: 24px;
+        }
+        
+        .overlay-buttons {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: var(--bg-dark);
+        }
+        
+        .btn-primary:hover {
+            background: #eab308;
+        }
+        
+        .btn-ghost {
+            background: rgba(255,255,255,0.1);
+            color: var(--text-white);
+        }
+        
+        .btn-ghost:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        /* ========== 카드 스타일 ========== */
+        .card {
+            width: 100%;
+            border-radius: 16px;
+            overflow: hidden;
+            font-size: 12px;
+        }
+        
+        /* 오버레이용 큰 카드 */
+        .overlay-card .card {
+            width: 320px;
+            font-size: 14px;
+        }
+
+        /* ========== 타입 A: 미니멀 다크 ========== */
+        .card-a { background: #1a1a2e; }
+        .card-a .header { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+        .card-a .badge { padding: 5px 12px; border-radius: 16px; font-size: 11px; font-weight: 700; }
+        .card-a .area-badge { color: #888; font-size: 10px; }
+        .card-a .body { padding: 14px 16px; }
+        .card-a .complex-name { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+        .card-a .location { font-size: 11px; color: #666; margin-bottom: 12px; }
+        .card-a .price { font-size: 22px; font-weight: 800; margin-bottom: 12px; }
+        .card-a .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+        .card-a .info-item { background: rgba(255,255,255,0.05); padding: 8px; border-radius: 6px; }
+        .card-a .info-label { font-size: 9px; color: #666; margin-bottom: 2px; }
+        .card-a .info-value { font-size: 12px; color: #fff; font-weight: 600; }
+        .card-a .features { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; }
+        .card-a .feature-tag { padding: 4px 8px; border-radius: 10px; font-size: 10px; }
+        .card-a .agent { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .card-a .agent-name { font-size: 12px; color: #fff; font-weight: 600; }
+        .card-a .agent-phone { font-size: 11px; }
+
+        .card-a.mint { border: 2px solid rgba(78,205,196,0.3); }
+        .card-a.mint .header { background: rgba(78,205,196,0.15); }
+        .card-a.mint .badge { background: #4ecdc4; color: #1a1a2e; }
+        .card-a.mint .price { color: #4ecdc4; }
+        .card-a.mint .feature-tag { background: rgba(78,205,196,0.1); color: #4ecdc4; }
+        .card-a.mint .agent-phone { color: #4ecdc4; }
+
+        .card-a.purple { border: 2px solid rgba(167,139,250,0.3); }
+        .card-a.purple .header { background: rgba(167,139,250,0.15); }
+        .card-a.purple .badge { background: #a78bfa; color: #1a1a2e; }
+        .card-a.purple .price { color: #a78bfa; }
+        .card-a.purple .feature-tag { background: rgba(167,139,250,0.1); color: #a78bfa; }
+        .card-a.purple .agent-phone { color: #a78bfa; }
+
+        .card-a.blue { border: 2px solid rgba(96,165,250,0.3); }
+        .card-a.blue .header { background: rgba(96,165,250,0.15); }
+        .card-a.blue .badge { background: #60a5fa; color: #1a1a2e; }
+        .card-a.blue .price { color: #60a5fa; }
+        .card-a.blue .feature-tag { background: rgba(96,165,250,0.1); color: #60a5fa; }
+        .card-a.blue .agent-phone { color: #60a5fa; }
+
+        .card-a.orange { border: 2px solid rgba(251,146,60,0.3); }
+        .card-a.orange .header { background: rgba(251,146,60,0.15); }
+        .card-a.orange .badge { background: #fb923c; color: #1a1a2e; }
+        .card-a.orange .price { color: #fb923c; }
+        .card-a.orange .feature-tag { background: rgba(251,146,60,0.1); color: #fb923c; }
+        .card-a.orange .agent-phone { color: #fb923c; }
+
+        .card-a.pink { border: 2px solid rgba(244,114,182,0.3); }
+        .card-a.pink .header { background: rgba(244,114,182,0.15); }
+        .card-a.pink .badge { background: #f472b6; color: #1a1a2e; }
+        .card-a.pink .price { color: #f472b6; }
+        .card-a.pink .feature-tag { background: rgba(244,114,182,0.1); color: #f472b6; }
+        .card-a.pink .agent-phone { color: #f472b6; }
+
+        .card-a.gold { border: 2px solid rgba(251,191,36,0.3); }
+        .card-a.gold .header { background: rgba(251,191,36,0.15); }
+        .card-a.gold .badge { background: #fbbf24; color: #1a1a2e; }
+        .card-a.gold .price { color: #fbbf24; }
+        .card-a.gold .feature-tag { background: rgba(251,191,36,0.1); color: #fbbf24; }
+        .card-a.gold .agent-phone { color: #fbbf24; }
+
+        /* ========== 타입 D: 라이트 모드 ========== */
+        .card-d { background: #ffffff; box-shadow: 0 4px 20px rgba(0,0,0,0.12); }
+        .card-d .header { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+        .card-d .badge { padding: 5px 12px; border-radius: 16px; font-size: 11px; font-weight: 700; color: #fff; }
+        .card-d .area-badge { color: #666; font-size: 10px; }
+        .card-d .body { padding: 14px 16px; }
+        .card-d .complex-name { font-size: 16px; font-weight: 700; color: #1a1a2e; margin-bottom: 2px; }
+        .card-d .location { font-size: 11px; color: #888; margin-bottom: 12px; }
+        .card-d .price { font-size: 22px; font-weight: 800; margin-bottom: 12px; }
+        .card-d .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+        .card-d .info-item { background: #f5f5f7; padding: 8px; border-radius: 6px; }
+        .card-d .info-label { font-size: 9px; color: #888; margin-bottom: 2px; }
+        .card-d .info-value { font-size: 12px; color: #1a1a2e; font-weight: 600; }
+        .card-d .features { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; }
+        .card-d .feature-tag { padding: 4px 8px; border-radius: 10px; font-size: 10px; }
+        .card-d .agent { background: #f5f5f7; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .card-d .agent-name { font-size: 12px; color: #1a1a2e; font-weight: 600; }
+        .card-d .agent-phone { font-size: 11px; }
+
+        .card-d.mint .header { background: #e8faf8; }
+        .card-d.mint .badge { background: #4ecdc4; }
+        .card-d.mint .price, .card-d.mint .agent-phone { color: #4ecdc4; }
+        .card-d.mint .feature-tag { background: #e8faf8; color: #2a9d8f; }
+        
+        .card-d.purple .header { background: #f3f0ff; }
+        .card-d.purple .badge { background: #a78bfa; }
+        .card-d.purple .price, .card-d.purple .agent-phone { color: #a78bfa; }
+        .card-d.purple .feature-tag { background: #f3f0ff; color: #7c3aed; }
+        
+        .card-d.blue .header { background: #eff6ff; }
+        .card-d.blue .badge { background: #60a5fa; }
+        .card-d.blue .price, .card-d.blue .agent-phone { color: #60a5fa; }
+        .card-d.blue .feature-tag { background: #eff6ff; color: #3b82f6; }
+        
+        .card-d.orange .header { background: #fff7ed; }
+        .card-d.orange .badge { background: #fb923c; }
+        .card-d.orange .price, .card-d.orange .agent-phone { color: #fb923c; }
+        .card-d.orange .feature-tag { background: #fff7ed; color: #ea580c; }
+        
+        .card-d.pink .header { background: #fdf2f8; }
+        .card-d.pink .badge { background: #f472b6; }
+        .card-d.pink .price, .card-d.pink .agent-phone { color: #f472b6; }
+        .card-d.pink .feature-tag { background: #fdf2f8; color: #db2777; }
+        
+        .card-d.gold .header { background: #fefce8; }
+        .card-d.gold .badge { background: #fbbf24; }
+        .card-d.gold .price, .card-d.gold .agent-phone { color: #d97706; }
+        .card-d.gold .feature-tag { background: #fefce8; color: #b45309; }
+
+        /* ========== 타입 E: 풀 그라데이션 ========== */
+        .card-e { border-radius: 20px; padding: 20px; }
+        .card-e .badge { display: inline-block; background: rgba(255,255,255,0.25); color: #fff; padding: 5px 12px; border-radius: 14px; font-size: 11px; font-weight: 700; margin-bottom: 12px; }
+        .card-e .complex-name { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+        .card-e .location { font-size: 11px; color: rgba(255,255,255,0.7); margin-bottom: 12px; }
+        .card-e .price { font-size: 26px; font-weight: 800; color: #fff; margin-bottom: 14px; }
+        .card-e .info-row { display: flex; gap: 12px; margin-bottom: 14px; }
+        .card-e .info-item { flex: 1; background: rgba(255,255,255,0.15); padding: 10px; border-radius: 10px; text-align: center; }
+        .card-e .info-value { font-size: 14px; font-weight: 700; color: #fff; }
+        .card-e .info-label { font-size: 9px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+        .card-e .agent { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 10px; display: flex; justify-content: space-between; font-size: 12px; }
+        .card-e .agent-name { color: #fff; font-weight: 600; }
+        .card-e .agent-phone { color: #fff; font-weight: 600; }
+
+        .card-e.mint { background: linear-gradient(135deg, #4ecdc4, #44a08d); }
+        .card-e.purple { background: linear-gradient(135deg, #a78bfa, #7c3aed); }
+        .card-e.blue { background: linear-gradient(135deg, #60a5fa, #3b82f6); }
+        .card-e.orange { background: linear-gradient(135deg, #fb923c, #ea580c); }
+        .card-e.pink { background: linear-gradient(135deg, #f472b6, #db2777); }
+        .card-e.gold { background: linear-gradient(135deg, #fbbf24, #d97706); }
+
+        /* ========== 타입 F: 네온 테두리 ========== */
+        .card-f { background: #0a0a12; border-radius: 20px; padding: 18px; }
+        .card-f .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .card-f .badge { padding: 5px 12px; border-radius: 14px; font-size: 11px; font-weight: 700; }
+        .card-f .area-badge { font-size: 11px; }
+        .card-f .complex-name { font-size: 18px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+        .card-f .location { font-size: 11px; color: #666; margin-bottom: 12px; }
+        .card-f .price { font-size: 26px; font-weight: 800; margin-bottom: 14px; }
+        .card-f .info-row { display: flex; gap: 12px; margin-bottom: 14px; }
+        .card-f .info-item { flex: 1; border: 1px solid rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; text-align: center; }
+        .card-f .info-value { font-size: 14px; color: #fff; font-weight: 600; }
+        .card-f .info-label { font-size: 9px; color: #666; margin-top: 2px; }
+        .card-f .agent { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 14px; display: flex; justify-content: space-between; font-size: 12px; }
+        .card-f .agent-name { color: #888; }
+        .card-f .agent-phone { font-weight: 600; }
+
+        .card-f.mint { border: 3px solid #4ecdc4; box-shadow: 0 0 20px rgba(78,205,196,0.3); }
+        .card-f.mint .badge { background: #4ecdc4; color: #0a0a12; }
+        .card-f.mint .area-badge, .card-f.mint .price, .card-f.mint .agent-phone { color: #4ecdc4; }
+        .card-f.purple { border: 3px solid #a78bfa; box-shadow: 0 0 20px rgba(167,139,250,0.3); }
+        .card-f.purple .badge { background: #a78bfa; color: #0a0a12; }
+        .card-f.purple .area-badge, .card-f.purple .price, .card-f.purple .agent-phone { color: #a78bfa; }
+        .card-f.blue { border: 3px solid #60a5fa; box-shadow: 0 0 20px rgba(96,165,250,0.3); }
+        .card-f.blue .badge { background: #60a5fa; color: #0a0a12; }
+        .card-f.blue .area-badge, .card-f.blue .price, .card-f.blue .agent-phone { color: #60a5fa; }
+        .card-f.orange { border: 3px solid #fb923c; box-shadow: 0 0 20px rgba(251,146,60,0.3); }
+        .card-f.orange .badge { background: #fb923c; color: #0a0a12; }
+        .card-f.orange .area-badge, .card-f.orange .price, .card-f.orange .agent-phone { color: #fb923c; }
+        .card-f.pink { border: 3px solid #f472b6; box-shadow: 0 0 20px rgba(244,114,182,0.3); }
+        .card-f.pink .badge { background: #f472b6; color: #0a0a12; }
+        .card-f.pink .area-badge, .card-f.pink .price, .card-f.pink .agent-phone { color: #f472b6; }
+        .card-f.gold { border: 3px solid #fbbf24; box-shadow: 0 0 20px rgba(251,191,36,0.3); }
+        .card-f.gold .badge { background: #fbbf24; color: #0a0a12; }
+        .card-f.gold .area-badge, .card-f.gold .price, .card-f.gold .agent-phone { color: #fbbf24; }
+
+        /* ========== 타입 J: 테이블형 ========== */
+        .card-j { background: #1a1a2e; }
+        .card-j .header { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+        .card-j .badge { padding: 5px 12px; border-radius: 14px; font-size: 11px; font-weight: 700; }
+        .card-j .price { font-size: 18px; font-weight: 800; }
+        .card-j .body { padding: 0 16px 16px; }
+        .card-j .complex-name { font-size: 14px; font-weight: 700; color: #fff; margin-bottom: 2px; }
+        .card-j .location { font-size: 10px; color: #666; margin-bottom: 10px; }
+        .card-j table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        .card-j td { padding: 6px 0; font-size: 11px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .card-j td:first-child { color: #666; width: 60px; }
+        .card-j td:last-child { color: #fff; font-weight: 500; }
+        .card-j .agent { padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; font-size: 11px; }
+        .card-j .agent-name { color: #888; }
+        .card-j .agent-phone { font-weight: 600; }
+
+        .card-j.mint { border-top: 3px solid #4ecdc4; }
+        .card-j.mint .header { background: rgba(78,205,196,0.1); }
+        .card-j.mint .badge { background: #4ecdc4; color: #1a1a2e; }
+        .card-j.mint .price, .card-j.mint .agent-phone { color: #4ecdc4; }
+        
+        .card-j.purple { border-top: 3px solid #a78bfa; }
+        .card-j.purple .header { background: rgba(167,139,250,0.1); }
+        .card-j.purple .badge { background: #a78bfa; color: #1a1a2e; }
+        .card-j.purple .price, .card-j.purple .agent-phone { color: #a78bfa; }
+        
+        .card-j.blue { border-top: 3px solid #60a5fa; }
+        .card-j.blue .header { background: rgba(96,165,250,0.1); }
+        .card-j.blue .badge { background: #60a5fa; color: #1a1a2e; }
+        .card-j.blue .price, .card-j.blue .agent-phone { color: #60a5fa; }
+        
+        .card-j.orange { border-top: 3px solid #fb923c; }
+        .card-j.orange .header { background: rgba(251,146,60,0.1); }
+        .card-j.orange .badge { background: #fb923c; color: #1a1a2e; }
+        .card-j.orange .price, .card-j.orange .agent-phone { color: #fb923c; }
+        
+        .card-j.pink { border-top: 3px solid #f472b6; }
+        .card-j.pink .header { background: rgba(244,114,182,0.1); }
+        .card-j.pink .badge { background: #f472b6; color: #1a1a2e; }
+        .card-j.pink .price, .card-j.pink .agent-phone { color: #f472b6; }
+        
+        .card-j.gold { border-top: 3px solid #fbbf24; }
+        .card-j.gold .header { background: rgba(251,191,36,0.1); }
+        .card-j.gold .badge { background: #fbbf24; color: #1a1a2e; }
+        .card-j.gold .price, .card-j.gold .agent-phone { color: #fbbf24; }
+        
+        /* 닫기 버튼 */
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .close-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>내 <span>스타일</span> 선택</h1>
+        <p>앞으로 모든 카드에 적용됩니다. 나중에 변경할 수 있어요.</p>
+    </div>
+    
+    <!-- 타입 A: 미니멀 다크 -->
+    <h2 class="section-title">미니멀 다크</h2>
+    <div class="templates-grid" id="grid-a">
+        <!-- JS로 생성 -->
+    </div>
+    
+    <!-- 타입 D: 라이트 모드 -->
+    <h2 class="section-title">라이트 모드</h2>
+    <div class="templates-grid" id="grid-d">
+    </div>
+    
+    <!-- 타입 E: 풀 그라데이션 -->
+    <h2 class="section-title">풀 그라데이션</h2>
+    <div class="templates-grid" id="grid-e">
+    </div>
+    
+    <!-- 타입 F: 네온 테두리 -->
+    <h2 class="section-title">네온 테두리</h2>
+    <div class="templates-grid" id="grid-f">
+    </div>
+    
+    <!-- 타입 J: 테이블형 -->
+    <h2 class="section-title">테이블형</h2>
+    <div class="templates-grid" id="grid-j">
+    </div>
+    
+    <!-- 오버레이 -->
+    <div class="overlay" id="overlay" onclick="closeOverlay(event)">
+        <button class="close-btn" onclick="closeOverlay(event)">×</button>
+        <div class="overlay-card" id="overlayCard">
+            <!-- 카드가 여기에 복제됨 -->
+        </div>
+        <div class="overlay-info">
+            <div class="overlay-style" id="overlayStyle">미니멀 다크</div>
+            <div class="overlay-color" id="overlayColor">민트 색상</div>
+            <div class="overlay-buttons">
+                <button class="btn btn-ghost" onclick="closeOverlay(event)">취소</button>
+                <button class="btn btn-primary" onclick="selectTemplate()">이 스타일로 할래요!</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 거래유형별 색상 (자동)
+        const typeColors = {
+            '매매': 'orange',
+            '전세': 'mint',
+            '월세': 'gold'
+        };
+        
+        // 샘플 데이터 (거래유형별)
+        const samples = [
+            { type: '전세', price: '5억', color: 'mint' },
+            { type: '매매', price: '8억 5,000', color: 'orange' },
+            { type: '월세', price: '3,000/120', color: 'gold' }
+        ];
+        
+        // 스타일 정보
+        const styles = {
+            a: { name: '미니멀 다크', grid: 'grid-a' },
+            d: { name: '라이트 모드', grid: 'grid-d' },
+            e: { name: '풀 그라데이션', grid: 'grid-e' },
+            f: { name: '네온 테두리', grid: 'grid-f' },
+            j: { name: '테이블형', grid: 'grid-j' }
+        };
+        
+        // 중개사 정보
+        const agentInfo = { name: '부동산', phone: '010-0000-0000', agent_name: '' };
+        
+        // 현재 선택
+        let selectedStyle = '';
+        
+        // 카드 HTML 생성
+        function createCardHTML(style, sample) {
+            const agentName = agentInfo.name || '행복부동산';
+            const agentPhone = agentInfo.phone || '010-1234-5678';
+            const color = sample.color;
+            
+            if (style === 'a') {
+                return `
+                    <div class="card card-a ${color}">
+                        <div class="header">
+                            <span class="badge">${sample.type}</span>
+                            <span class="area-badge">32평</span>
+                        </div>
+                        <div class="body">
+                            <div class="complex-name">우남푸르미아</div>
+                            <div class="location">서울 중랑구 신내동</div>
+                            <div class="price">${sample.price}</div>
+                            <div class="info-grid">
+                                <div class="info-item"><div class="info-label">층수</div><div class="info-value">8층/15층</div></div>
+                                <div class="info-item"><div class="info-label">방향</div><div class="info-value">남향</div></div>
+                            </div>
+                            <div class="features">
+                                <span class="feature-tag">풀옵션</span>
+                                <span class="feature-tag">올수리</span>
+                            </div>
+                            <div class="agent">
+                                <span class="agent-name">${agentName}</span>
+                                <span class="agent-phone">${agentPhone}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (style === 'd') {
+                return `
+                    <div class="card card-d ${color}">
+                        <div class="header">
+                            <span class="badge">${sample.type}</span>
+                            <span class="area-badge">32평</span>
+                        </div>
+                        <div class="body">
+                            <div class="complex-name">우남푸르미아</div>
+                            <div class="location">서울 중랑구 신내동</div>
+                            <div class="price">${sample.price}</div>
+                            <div class="info-grid">
+                                <div class="info-item"><div class="info-label">층수</div><div class="info-value">8층/15층</div></div>
+                                <div class="info-item"><div class="info-label">방향</div><div class="info-value">남향</div></div>
+                            </div>
+                            <div class="features">
+                                <span class="feature-tag">풀옵션</span>
+                                <span class="feature-tag">올수리</span>
+                            </div>
+                            <div class="agent">
+                                <span class="agent-name">${agentName}</span>
+                                <span class="agent-phone">${agentPhone}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (style === 'e') {
+                return `
+                    <div class="card card-e ${color}">
+                        <span class="badge">${sample.type}</span>
+                        <div class="complex-name">우남푸르미아</div>
+                        <div class="location">서울 중랑구 신내동</div>
+                        <div class="price">${sample.price}</div>
+                        <div class="info-row">
+                            <div class="info-item"><div class="info-value">32평</div><div class="info-label">면적</div></div>
+                            <div class="info-item"><div class="info-value">8층</div><div class="info-label">층수</div></div>
+                        </div>
+                        <div class="agent">
+                            <span class="agent-name">${agentName}</span>
+                            <span class="agent-phone">${agentPhone}</span>
+                        </div>
+                    </div>
+                `;
+            } else if (style === 'f') {
+                return `
+                    <div class="card card-f ${color}">
+                        <div class="header">
+                            <span class="badge">${sample.type}</span>
+                            <span class="area-badge">32평</span>
+                        </div>
+                        <div class="complex-name">우남푸르미아</div>
+                        <div class="location">서울 중랑구 신내동</div>
+                        <div class="price">${sample.price}</div>
+                        <div class="info-row">
+                            <div class="info-item"><div class="info-value">8층</div><div class="info-label">층수</div></div>
+                            <div class="info-item"><div class="info-value">남향</div><div class="info-label">방향</div></div>
+                        </div>
+                        <div class="agent">
+                            <span class="agent-name">${agentName}</span>
+                            <span class="agent-phone">${agentPhone}</span>
+                        </div>
+                    </div>
+                `;
+            } else if (style === 'j') {
+                return `
+                    <div class="card card-j ${color}">
+                        <div class="header">
+                            <span class="badge">${sample.type}</span>
+                            <span class="price">${sample.price}</span>
+                        </div>
+                        <div class="body">
+                            <div class="complex-name">우남푸르미아</div>
+                            <div class="location">서울 중랑구 신내동</div>
+                            <table>
+                                <tr><td>면적</td><td>32평</td></tr>
+                                <tr><td>층수</td><td>8층/15층</td></tr>
+                                <tr><td>특징</td><td>풀옵션, 올수리</td></tr>
+                            </table>
+                            <div class="agent">
+                                <span class="agent-name">${agentName}</span>
+                                <span class="agent-phone">${agentPhone}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // 그리드 초기화
+        function initGrids() {
+            Object.keys(styles).forEach(style => {
+                const grid = document.getElementById(styles[style].grid);
+                let html = '';
+                
+                samples.forEach(sample => {
+                    html += `
+                        <div class="template-wrapper" onclick="showOverlay('${style}')" data-style="${style}">
+                            <div class="template-label">${sample.type}</div>
+                            ${createCardHTML(style, sample)}
+                        </div>
+                    `;
+                });
+                
+                grid.innerHTML = html;
+            });
+        }
+        
+        // 오버레이 표시
+        function showOverlay(style) {
+            selectedStyle = style;
+            
+            const overlay = document.getElementById('overlay');
+            const overlayCard = document.getElementById('overlayCard');
+            const overlayStyle = document.getElementById('overlayStyle');
+            const overlayColor = document.getElementById('overlayColor');
+            
+            // 전세 샘플로 미리보기
+            overlayCard.innerHTML = createCardHTML(style, samples[0]);
+            overlayStyle.textContent = styles[style].name;
+            overlayColor.textContent = '매매=오렌지 / 전세=민트 / 월세=골드';
+            
+            overlay.classList.add('show');
+        }
+        
+        // 오버레이 닫기
+        function closeOverlay(event) {
+            if (event.target === document.getElementById('overlay') || 
+                event.target.classList.contains('close-btn') ||
+                event.target.classList.contains('btn-ghost')) {
+                document.getElementById('overlay').classList.remove('show');
+            }
+        }
+        
+        // 템플릿 선택
+        // Supabase 초기화
+        const SUPABASE_URL = 'https://api.hwik.kr';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxYXhlamd6a2NoeGJmemd6eXppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2MzI3NTIsImV4cCI6MjA4MjIwODc1Mn0.-njNdAKVA7Me60H98AYaf-Z3oi45SfUmeoBNvuRJugE';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        // 인증 체크
+        let currentUser = null;
+        const fromParam = new URLSearchParams(window.location.search).get('from');
+        function getReturnUrl() {
+            if (fromParam === 'my_cards') return 'my_cards.html';
+            return 'card_generator_v2_auth.html';
+        }
+        
+        async function loadAgentProfile(userId) {
+            const { data: profile } = await supabaseClient
+                .from('profiles')
+                .select('business_name, phone, agent_name')
+                .eq('id', userId)
+                .maybeSingle();
+            if (profile) {
+                agentInfo.name = profile.business_name || '부동산';
+                agentInfo.phone = profile.phone || '';
+                agentInfo.agent_name = profile.agent_name || '';
+                initGrids();
+            }
+        }
+        
+        // 세션 복원 시도 (리다이렉트 안 함)
+        (async () => {
+            try {
+                // 방법 1: getSession (localStorage)
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session?.user) {
+                    currentUser = session.user;
+                    console.log('[휙] 세션 복원 성공 (getSession):', currentUser.id);
+                    await loadAgentProfile(currentUser.id);
+                    return;
+                }
+                
+                // 방법 2: getUser (서버 요청) - fallback
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                if (user) {
+                    currentUser = user;
+                    console.log('[휙] 세션 복원 성공 (getUser):', currentUser.id);
+                    await loadAgentProfile(currentUser.id);
+                    return;
+                }
+                
+                console.warn('[휙] 세션 없음 - 로그인 필요');
+            } catch(e) {
+                console.error('[휙] 인증 체크 오류:', e);
+            }
+        })();
+        
+        // 백업: onAuthStateChange로도 감지
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (session?.user && !currentUser) {
+                currentUser = session.user;
+                console.log('[휙] onAuthStateChange 세션 복원:', event);
+                loadAgentProfile(currentUser.id);
+            }
+        });
+        
+        // 템플릿 선택
+        async function selectTemplate() {
+            // 저장 시점에 인증 재확인
+            if (!currentUser) {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session?.user) {
+                    currentUser = session.user;
+                } else {
+                    alert('로그인이 필요합니다. 다시 로그인해주세요.');
+                    window.location.href = 'card_generator_v2_auth.html';
+                    return;
+                }
+            }
+            
+            const btn = document.querySelector('.overlay .btn-primary');
+            btn.textContent = '저장 중...';
+            btn.disabled = true;
+            
+            try {
+                // profiles 테이블에 style 저장
+                if (currentUser) {
+                    await supabaseClient
+                        .from('profiles')
+                        .update({ style: selectedStyle })
+                        .eq('id', currentUser.id);
+                    
+                    // 기존 카드 스타일도 일괄 업데이트
+                    await supabaseClient
+                        .from('cards')
+                        .update({ style: selectedStyle })
+                        .eq('agent_id', currentUser.id);
+                }
+                
+                // 원래 페이지로 복귀
+                window.location.href = getReturnUrl();
+                
+            } catch (error) {
+                console.error('오류:', error);
+                btn.textContent = '이 스타일로 할래요!';
+                btn.disabled = false;
+                alert('저장 중 오류가 발생했습니다.');
+            }
+        }
+        
+        // ESC로 닫기
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                document.getElementById('overlay').classList.remove('show');
+            }
+        });
+        
+        // 초기화
+        initGrids();
+    </script>
+</body>
+</html>
