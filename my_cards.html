@@ -2153,13 +2153,13 @@
                 <h3 id="inviteModalTitle">멤버 초대</h3>
                 <button class="room-modal-close" onclick="closeInviteModal()">×</button>
             </div>
-            <div style="margin-bottom:12px">
+            <div style="margin-bottom:16px">
                 <input type="tel" id="invitePhoneInput" class="room-create-row" style="width:100%;display:block;margin:0;padding:12px 14px;border:1px solid rgba(255,255,255,0.15);background:var(--bg-input);color:#fff;border-radius:8px;font-size:14px;" placeholder="전화번호 (010-0000-0000)">
-                <div style="font-size:11px;color:#f59e0b;margin-top:6px;padding:0 2px">ℹ️ 휙에 가입된 회원만 초대할 수 있습니다</div>
+                <div style="font-size:11px;color:rgba(255,255,255,0.3);margin-top:6px;padding:0 2px">가입된 회원만 초대 가능</div>
             </div>
-            <div style="display:flex;gap:8px;justify-content:flex-end">
-                <button onclick="closeInviteModal()" style="padding:10px 18px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:var(--text-gray);cursor:pointer;font-size:13px;">취소</button>
-                <button onclick="inviteMember()" style="padding:10px 18px;border-radius:8px;border:none;background:var(--primary);color:var(--bg-dark);font-weight:700;font-size:13px;cursor:pointer;">초대하기</button>
+            <div style="display:flex;gap:8px">
+                <button onclick="closeInviteModal()" style="flex:1;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:var(--text-gray);cursor:pointer;font-size:13px;font-weight:500;">취소</button>
+                <button onclick="inviteMember()" style="flex:1;padding:12px;border-radius:8px;border:none;background:var(--primary);color:var(--bg-dark);font-weight:700;font-size:13px;cursor:pointer;">초대하기</button>
             </div>
         </div>
     </div>
