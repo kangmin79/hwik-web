@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>휙 관리자</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif; background: #0a0a12; color: #e2e8f0; min-height: 100vh; }
+
+        /* ========== 로그인 화면 ========== */
+        .login-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        .login-box { background: #1a1a2e; border: 1px solid rgba(250,204,21,0.2); border-radius: 16px; padding: 40px 32px; width: 100%; max-width: 360px; text-align: center; }
+        .login-box .logo { font-size: 36px; font-weight: 900; color: #facc15; margin-bottom: 8px; }
+        .login-box .subtitle { font-size: 14px; color: #666; margin-bottom: 28px; }
+        .login-input { width: 100%; padding: 14px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: #fff; font-size: 15px; outline: none; margin-bottom: 16px; text-align: center; letter-spacing: 4px; }
+        .login-input:focus { border-color: rgba(250,204,21,0.4); }
+        .login-input::placeholder { letter-spacing: normal; }
+        .login-btn { width: 100%; padding: 14px; background: #facc15; color: #0a0a12; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; }
+        .login-btn:hover { background: #f0c000; }
+        .login-error { color: #f87171; font-size: 13px; margin-top: 12px; display: none; }
+
+        /* ========== 대시보드 ========== */
+        .dashboard { display: none; }
+        .top-bar { padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.07); }
+        .top-bar .logo { font-size: 24px; font-weight: 900; color: #facc15; }
+        .top-bar .admin-label { font-size: 12px; color: #666; background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 6px; }
+        .refresh-btn { background: rgba(250,204,21,0.1); color: #facc15; border: 1px solid rgba(250,204,21,0.2); padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+        .refresh-btn:hover { background: rgba(250,204,21,0.2); }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+        /* 마지막 업데이트 */
+        .update-time { text-align: right; font-size: 12px; color: #555; margin-bottom: 20px; }
+
+        /* ========== 통계 카드 ========== */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px; }
+        .stat-card { background: #1a1a2e; border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 20px; }
+        .stat-card .label { font-size: 12px; color: #666; margin-bottom: 8px; }
+        .stat-card .value { font-size: 32px; font-weight: 800; color: #fff; line-height: 1; }
+        .stat-card .sub { font-size: 12px; color: #555; margin-top: 6px; }
+        .stat-card .sub .up { color: #4ecdc4; }
+        .stat-card .sub .num { color: #facc15; font-weight: 600; }
+        .stat-card.highlight { border-color: rgba(250,204,21,0.3); }
+        .stat-card.highlight .value { color: #facc15; }
+
+        /* ========== 섹션 ========== */
+        .section { margin-bottom: 32px; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .section-title { font-size: 18px; font-weight: 700; }
+        .section-badge { font-size: 12px; color: #666; background: rgba(255,255,255,0.05); padding: 4px 10px; border-radius: 6px; }
+
+        /* ========== 차트 (CSS 바) ========== */
+        .chart-container { background: #1a1a2e; border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; padding: 20px; }
+        .chart-bars { display: flex; align-items: flex-end; gap: 4px; height: 120px; }
+        .chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
+        .chart-bar { width: 100%; min-height: 2px; background: rgba(250,204,21,0.6); border-radius: 3px 3px 0 0; transition: height 0.3s; position: relative; }
+        .chart-bar:hover { background: #facc15; }
+        .chart-bar .tooltip { display: none; position: absolute; top: -28px; left: 50%; transform: translateX(-50%); background: #333; color: #fff; padding: 3px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap; }
+        .chart-bar:hover .tooltip { display: block; }
+        .chart-date { font-size: 9px; color: #555; margin-top: 4px; writing-mode: vertical-lr; transform: rotate(180deg); height: 40px; overflow: hidden; }
+        .chart-legend { display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: #555; }
+
+        /* ========== 테이블 ========== */
+        .table-wrap { background: #1a1a2e; border: 1px solid rgba(255,255,255,0.07); border-radius: 14px; overflow: hidden; }
+        .table-scroll { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        thead th { background: rgba(255,255,255,0.03); padding: 12px 14px; text-align: left; font-weight: 600; color: #888; border-bottom: 1px solid rgba(255,255,255,0.07); white-space: nowrap; }
+        tbody td { padding: 11px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); white-space: nowrap; }
+        tbody tr:hover { background: rgba(255,255,255,0.02); }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+        .badge-active { background: rgba(78,205,196,0.15); color: #4ecdc4; }
+        .badge-completed { background: rgba(239,68,68,0.15); color: #f87171; }
+        .badge-hold { background: rgba(251,146,60,0.15); color: #fb923c; }
+        .user-active { color: #4ecdc4; }
+        .user-inactive { color: #666; }
+
+        /* ========== 탭 ========== */
+        .tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+        .tab { padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; background: rgba(255,255,255,0.05); color: #888; border: 1px solid transparent; }
+        .tab.active { background: rgba(250,204,21,0.1); color: #facc15; border-color: rgba(250,204,21,0.2); }
+
+        /* ========== 로딩 ========== */
+        .loading { text-align: center; padding: 60px; color: #555; }
+        .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid rgba(250,204,21,0.2); border-top-color: #facc15; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ========== 반응형 ========== */
+        @media (max-width: 600px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .stat-card .value { font-size: 24px; }
+            .container { padding: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== 로그인 화면 ===== -->
+<div class="login-screen" id="loginScreen">
+    <div class="login-box">
+        <div class="logo">휙</div>
+        <div class="subtitle">관리자 전용</div>
+        <input type="password" class="login-input" id="adminPw" placeholder="비밀번호" maxlength="20"
+               onkeydown="if(event.key==='Enter') adminLogin()">
+        <button class="login-btn" onclick="adminLogin()">로그인</button>
+        <div class="login-error" id="loginError">비밀번호가 틀렸습니다</div>
+    </div>
+</div>
+
+<!-- ===== 대시보드 ===== -->
+<div class="dashboard" id="dashboard">
+    <div class="top-bar">
+        <div style="display:flex;align-items:center;gap:12px;">
+            <span class="logo">휙</span>
+            <span class="admin-label">관리자</span>
+        </div>
+        <button class="refresh-btn" onclick="loadAll()">↻ 새로고침</button>
+    </div>
+
+    <div class="container">
+        <div class="update-time" id="updateTime"></div>
+
+        <!-- 통계 카드 -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card highlight">
+                <div class="label">전체 사용자</div>
+                <div class="value" id="statUsers">-</div>
+                <div class="sub">오늘 <span class="num" id="statTodayUsers">0</span> · 이번주 <span class="num" id="statWeekUsers">0</span> · 프로필 <span class="num" id="statProfileUsers">0</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="label">전체 매물</div>
+                <div class="value" id="statCards">-</div>
+                <div class="sub">오늘 <span class="num" id="statTodayCards">0</span> · 활성 <span class="num" id="statActiveCards">0</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="label">공유 횟수</div>
+                <div class="value" id="statShares">-</div>
+                <div class="sub">오늘 <span class="num" id="statTodayShares">0</span> · 공유방 <span class="num" id="statRooms">0</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="label">총 조회수</div>
+                <div class="value" id="statViews">-</div>
+                <div class="sub">매물 카드 열람 합계</div>
+            </div>
+        </div>
+
+        <!-- 일별 추이 차트 -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">일별 추이 (최근 30일)</div>
+                <div class="tabs">
+                    <div class="tab active" onclick="switchChart('signups')">가입자</div>
+                    <div class="tab" onclick="switchChart('cards')">매물 등록</div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <div class="chart-bars" id="chartBars"></div>
+                <div class="chart-legend">
+                    <span id="chartStart">-</span>
+                    <span id="chartEnd">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 사용자 목록 -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">사용자 목록</div>
+                <div class="section-badge" id="userCount">0명</div>
+            </div>
+            <div class="table-wrap">
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>카카오명</th>
+                                <th>상호명</th>
+                                <th>이름</th>
+                                <th>연락처</th>
+                                <th>프로필</th>
+                                <th>매물</th>
+                                <th>공유</th>
+                                <th>조회</th>
+                                <th>가입일</th>
+                                <th>최근 활동</th>
+                            </tr>
+                        </thead>
+                        <tbody id="userTableBody">
+                            <tr><td colspan="10" class="loading"><div class="spinner"></div><br>불러오는 중...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 최근 매물 -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">최근 등록 매물</div>
+                <div class="section-badge" id="recentCardCount">최근 20개</div>
+            </div>
+            <div class="table-wrap">
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>유형</th>
+                                <th>건물/단지</th>
+                                <th>가격</th>
+                                <th>주소</th>
+                                <th>상태</th>
+                                <th>조회</th>
+                                <th>등록자</th>
+                                <th>등록일</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cardTableBody">
+                            <tr><td colspan="8" class="loading"><div class="spinner"></div><br>불러오는 중...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ===== 설정 =====
+    const SUPABASE_URL = 'https://api.hwik.kr';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxYXhlamd6a2NoeGJmemd6eXppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2MzI3NTIsImV4cCI6MjA4MjIwODc1Mn0.-njNdAKVA7Me60H98AYaf-Z3oi45SfUmeoBNvuRJugE';
+    const ADMIN_PW_HASH = '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8'; // "password" - 반드시 변경!
+    
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let chartData = { signups: [], cards: [] };
+    let currentChart = 'signups';
+
+    // ===== 간단한 SHA-256 해시 =====
+    async function sha256(str) {
+        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    // ===== 관리자 로그인 =====
+    async function adminLogin() {
+        const pw = document.getElementById('adminPw').value;
+        const hash = await sha256(pw);
+        
+        if (hash === ADMIN_PW_HASH) {
+            sessionStorage.setItem('hwik_admin', 'true');
+            showDashboard();
+        } else {
+            document.getElementById('loginError').style.display = 'block';
+            document.getElementById('adminPw').value = '';
+            setTimeout(() => { document.getElementById('loginError').style.display = 'none'; }, 2000);
+        }
+    }
+
+    function showDashboard() {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('dashboard').style.display = 'block';
+        loadAll();
+    }
+
+    // 세션 확인
+    if (sessionStorage.getItem('hwik_admin') === 'true') {
+        showDashboard();
+    }
+
+    // ===== 데이터 로드 =====
+    async function loadAll() {
+        document.getElementById('updateTime').textContent = 
+            '마지막 업데이트: ' + new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
+        
+        await Promise.all([
+            loadStats(),
+            loadUsers(),
+            loadRecentCards(),
+            loadDailySignups(),
+            loadDailyCards()
+        ]);
+    }
+
+    // 1) 통계 요약
+    async function loadStats() {
+        try {
+            const { data, error } = await supabaseClient.rpc('admin_get_stats');
+            if (error) throw error;
+            
+            document.getElementById('statUsers').textContent = comma(data.total_users);
+            document.getElementById('statTodayUsers').textContent = data.today_users;
+            document.getElementById('statWeekUsers').textContent = data.week_users;
+            document.getElementById('statProfileUsers').textContent = data.profile_users || 0;
+            document.getElementById('statCards').textContent = comma(data.total_cards);
+            document.getElementById('statTodayCards').textContent = data.today_cards;
+            document.getElementById('statActiveCards').textContent = data.active_cards;
+            document.getElementById('statShares').textContent = comma(data.total_shares);
+            document.getElementById('statTodayShares').textContent = data.today_shares;
+            document.getElementById('statRooms').textContent = data.total_rooms;
+            document.getElementById('statViews').textContent = comma(data.total_views);
+        } catch(e) {
+            console.error('Stats error:', e);
+            document.getElementById('statUsers').textContent = 'ERR';
+        }
+    }
+
+    // 2) 사용자 목록
+    async function loadUsers() {
+        try {
+            const { data, error } = await supabaseClient.rpc('admin_get_users');
+            if (error) throw error;
+            
+            const users = data || [];
+            document.getElementById('userCount').textContent = users.length + '명';
+            
+            if (users.length === 0) {
+                document.getElementById('userTableBody').innerHTML = 
+                    '<tr><td colspan="10" style="text-align:center;padding:32px;color:#555">등록된 사용자가 없습니다</td></tr>';
+                return;
+            }
+
+            let html = '';
+            users.forEach(u => {
+                const joinDate = formatDate(u.created_at);
+                const lastActive = u.last_card_at ? timeAgo(u.last_card_at) : '-';
+                const isActive = u.card_count > 0;
+                const profileBadge = u.profile_completed 
+                    ? '<span class="badge badge-active">완료</span>' 
+                    : '<span class="badge badge-hold">미완성</span>';
+                
+                html += `<tr>
+                    <td>${u.kakao_name || '-'}</td>
+                    <td>${u.business_name || '<span style="color:#555">-</span>'}</td>
+                    <td>${u.agent_name || '-'}</td>
+                    <td>${u.phone || '-'}</td>
+                    <td>${profileBadge}</td>
+                    <td><span class="${isActive ? 'user-active' : ''}">${u.card_count}</span></td>
+                    <td>${u.share_count}</td>
+                    <td>${comma(u.total_views)}</td>
+                    <td>${joinDate}</td>
+                    <td>${lastActive}</td>
+                </tr>`;
+            });
+            document.getElementById('userTableBody').innerHTML = html;
+        } catch(e) {
+            console.error('Users error:', e);
+            document.getElementById('userTableBody').innerHTML = 
+                `<tr><td colspan="10" style="text-align:center;padding:32px;color:#f87171">데이터 로드 실패<br><small>${e.message}</small><br><small>SQL 함수를 먼저 실행하세요</small></td></tr>`;
+        }
+    }
+
+    // 3) 최근 매물
+    async function loadRecentCards() {
+        try {
+            const { data, error } = await supabaseClient.rpc('admin_get_recent_cards', { lim: 20 });
+            if (error) throw error;
+            
+            const cards = data || [];
+            if (cards.length === 0) {
+                document.getElementById('cardTableBody').innerHTML = 
+                    '<tr><td colspan="8" style="text-align:center;padding:32px;color:#555">등록된 매물이 없습니다</td></tr>';
+                return;
+            }
+
+            let html = '';
+            cards.forEach(c => {
+                const statusBadge = c.status === 'completed' 
+                    ? '<span class="badge badge-completed">완료</span>'
+                    : c.status === 'hold'
+                    ? '<span class="badge badge-hold">보류</span>'
+                    : '<span class="badge badge-active">활성</span>';
+                
+                html += `<tr>
+                    <td>${c.deal_type || '-'}</td>
+                    <td>${c.building_name || '-'}</td>
+                    <td style="font-weight:600">${c.price || '-'}</td>
+                    <td>${truncate(c.address, 20)}</td>
+                    <td>${statusBadge}</td>
+                    <td>${c.view_count || 0}</td>
+                    <td>${c.business_name || c.agent_name || '-'}</td>
+                    <td>${formatDate(c.created_at)}</td>
+                </tr>`;
+            });
+            document.getElementById('cardTableBody').innerHTML = html;
+        } catch(e) {
+            console.error('Cards error:', e);
+            document.getElementById('cardTableBody').innerHTML = 
+                `<tr><td colspan="8" style="text-align:center;padding:32px;color:#f87171">데이터 로드 실패<br><small>${e.message}</small></td></tr>`;
+        }
+    }
+
+    // 4) 일별 가입자 차트
+    async function loadDailySignups() {
+        try {
+            const { data, error } = await supabaseClient.rpc('admin_get_daily_signups');
+            if (error) throw error;
+            chartData.signups = data || [];
+            if (currentChart === 'signups') renderChart(chartData.signups);
+        } catch(e) { console.error('Chart error:', e); }
+    }
+
+    // 5) 일별 매물 등록 차트
+    async function loadDailyCards() {
+        try {
+            const { data, error } = await supabaseClient.rpc('admin_get_daily_cards');
+            if (error) throw error;
+            chartData.cards = data || [];
+            if (currentChart === 'cards') renderChart(chartData.cards);
+        } catch(e) { console.error('Chart error:', e); }
+    }
+
+    // ===== 차트 렌더링 =====
+    function switchChart(type) {
+        currentChart = type;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        renderChart(chartData[type]);
+    }
+
+    function renderChart(data) {
+        const container = document.getElementById('chartBars');
+        const startEl = document.getElementById('chartStart');
+        const endEl = document.getElementById('chartEnd');
+
+        if (!data || data.length === 0) {
+            container.innerHTML = '<div style="text-align:center;color:#555;width:100%;padding:40px">데이터 없음</div>';
+            startEl.textContent = '-';
+            endEl.textContent = '-';
+            return;
+        }
+
+        // 30일 채우기
+        const filled = fillDays(data, 30);
+        const maxVal = Math.max(...filled.map(d => d.count), 1);
+
+        let html = '';
+        filled.forEach(d => {
+            const h = Math.max(2, (d.count / maxVal) * 110);
+            const dateStr = d.date.slice(5); // MM-DD
+            html += `<div class="chart-bar-wrap">
+                <div class="chart-bar" style="height:${h}px">
+                    <div class="tooltip">${d.date}: ${d.count}건</div>
+                </div>
+                <div class="chart-date">${dateStr}</div>
+            </div>`;
+        });
+        container.innerHTML = html;
+        startEl.textContent = filled[0]?.date || '-';
+        endEl.textContent = filled[filled.length - 1]?.date || '-';
+    }
+
+    function fillDays(data, days) {
+        const map = {};
+        data.forEach(d => { map[d.date] = d.count; });
+
+        const result = [];
+        const now = new Date();
+        for (let i = days - 1; i >= 0; i--) {
+            const d = new Date(now);
+            d.setDate(d.getDate() - i);
+            const key = d.toISOString().slice(0, 10);
+            result.push({ date: key, count: map[key] || 0 });
+        }
+        return result;
+    }
+
+    // ===== 유틸 =====
+    function comma(n) {
+        return (n || 0).toLocaleString();
+    }
+
+    function formatDate(str) {
+        if (!str) return '-';
+        const d = new Date(str);
+        return `${d.getMonth() + 1}/${d.getDate()}`;
+    }
+
+    function truncate(str, len) {
+        if (!str) return '-';
+        return str.length > len ? str.slice(0, len) + '...' : str;
+    }
+
+    function timeAgo(str) {
+        if (!str) return '-';
+        const now = new Date();
+        const then = new Date(str);
+        const diff = Math.floor((now - then) / 1000);
+        
+        if (diff < 60) return '방금';
+        if (diff < 3600) return Math.floor(diff / 60) + '분 전';
+        if (diff < 86400) return Math.floor(diff / 3600) + '시간 전';
+        if (diff < 604800) return Math.floor(diff / 86400) + '일 전';
+        return formatDate(str);
+    }
+</script>
+
+</body>
+</html>
