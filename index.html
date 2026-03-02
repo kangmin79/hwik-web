@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>휙 - 매물카드 생성기</title>
+    <meta name="description" content="공인중개사를 위한 매물카드 생성기. 매물 정보를 입력하면 휙! 카드가 만들어집니다.">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif; background: #0a0a12; color: #fff; overflow-x: hidden; }
+        header { padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.07); }
+        .logo { font-size: 28px; font-weight: 900; color: #facc15; }
+        .header-cta { background: #facc15; color: #0a0a12; border: none; padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; }
+        .hero { text-align: center; padding: 64px 24px 48px; }
+        .hero-badge { display: inline-block; background: rgba(250,204,21,0.15); color: #facc15; border: 1px solid rgba(250,204,21,0.3); padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; margin-bottom: 24px; }
+        .hero h1 { font-size: clamp(32px, 8vw, 56px); font-weight: 900; line-height: 1.15; letter-spacing: -1.5px; margin-bottom: 20px; }
+        .hero h1 .highlight { color: #facc15; }
+        .hero p { font-size: 17px; color: #888; line-height: 1.7; max-width: 400px; margin: 0 auto 36px; }
+        .hero-btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .btn-primary { background: #facc15; color: #0a0a12; border: none; padding: 16px 32px; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; text-decoration: none; transition: all 0.2s; display: inline-block; }
+        .btn-primary:hover { background: #f0c000; transform: translateY(-1px); }
+        .btn-secondary { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.15); padding: 16px 32px; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; }
+        .preview-section { padding: 0 24px 64px; display: flex; justify-content: center; }
+        .preview-phone { background: #1a1a2e; border-radius: 32px; padding: 24px 20px; width: 100%; max-width: 320px; border: 2px solid rgba(255,255,255,0.1); box-shadow: 0 40px 80px rgba(0,0,0,0.5); }
+        .preview-card { background: #0a0a12; border-radius: 16px; border: 2px solid rgba(78,205,196,0.3); overflow: hidden; }
+        .preview-card-header { background: rgba(78,205,196,0.15); padding: 10px 14px; display: flex; justify-content: space-between; }
+        .preview-badge { background: #4ecdc4; color: #0a0a12; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; }
+        .preview-area { color: #888; font-size: 11px; line-height: 2; }
+        .preview-body { padding: 14px; }
+        .preview-name { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+        .preview-addr { font-size: 11px; color: #666; margin-bottom: 10px; }
+        .preview-price { font-size: 24px; font-weight: 800; color: #4ecdc4; margin-bottom: 10px; }
+        .preview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+        .preview-item { background: rgba(255,255,255,0.05); padding: 8px; border-radius: 6px; }
+        .preview-item-label { font-size: 9px; color: #666; margin-bottom: 2px; }
+        .preview-item-value { font-size: 12px; font-weight: 600; }
+        .preview-tags { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 10px; }
+        .preview-tag { background: rgba(78,205,196,0.1); color: #4ecdc4; padding: 3px 7px; border-radius: 8px; font-size: 10px; }
+        .preview-agent { background: rgba(255,255,255,0.03); padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; }
+        .preview-agent-name { font-size: 12px; font-weight: 600; }
+        .preview-agent-phone { font-size: 11px; color: #4ecdc4; }
+        .features-section { padding: 64px 24px; border-top: 1px solid rgba(255,255,255,0.07); }
+        .section-label { text-align: center; font-size: 13px; color: #facc15; font-weight: 600; margin-bottom: 12px; letter-spacing: 1px; }
+        .section-title { text-align: center; font-size: clamp(24px, 5vw, 36px); font-weight: 800; margin-bottom: 48px; line-height: 1.3; }
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; max-width: 900px; margin: 0 auto; }
+        .feature-card { background: #1a1a2e; border: 1px solid rgba(255,255,255,0.07); border-radius: 16px; padding: 24px; }
+        .feature-icon { font-size: 28px; margin-bottom: 14px; }
+        .feature-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+        .feature-desc { font-size: 14px; color: #888; line-height: 1.6; }
+        .howto-section { padding: 64px 24px; border-top: 1px solid rgba(255,255,255,0.07); }
+        .steps { max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; }
+        .step { display: flex; gap: 20px; position: relative; }
+        .step:not(:last-child)::after { content: ''; position: absolute; left: 19px; top: 44px; width: 2px; height: calc(100% - 12px); background: rgba(255,255,255,0.1); }
+        .step-num { width: 40px; height: 40px; border-radius: 50%; background: rgba(250,204,21,0.15); border: 2px solid rgba(250,204,21,0.3); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; color: #facc15; flex-shrink: 0; margin-bottom: 32px; }
+        .step-content { padding-top: 8px; }
+        .step-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+        .step-desc { font-size: 13px; color: #888; line-height: 1.5; }
+        .pricing-section { padding: 64px 24px; border-top: 1px solid rgba(255,255,255,0.07); text-align: center; }
+        .price-card { background: #1a1a2e; border: 1px solid rgba(250,204,21,0.3); border-radius: 20px; padding: 36px 32px; max-width: 360px; margin: 0 auto; }
+        .price-main { font-size: 48px; font-weight: 900; color: #facc15; margin: 16px 0 4px; }
+        .price-unit { font-size: 20px; font-weight: 400; }
+        .price-desc { color: #888; font-size: 14px; margin-bottom: 24px; }
+        .price-list { list-style: none; text-align: left; margin-bottom: 28px; }
+        .price-list li { font-size: 14px; color: #ccc; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; gap: 10px; }
+        .price-list li::before { content: '✓'; color: #4ecdc4; font-weight: 700; flex-shrink: 0; }
+        .cta-section { padding: 80px 24px; text-align: center; background: linear-gradient(to bottom, transparent, rgba(250,204,21,0.05)); }
+        .cta-section h2 { font-size: clamp(24px, 5vw, 36px); font-weight: 800; margin-bottom: 12px; }
+        .cta-section p { color: #888; font-size: 15px; margin-bottom: 32px; }
+        footer { padding: 24px; text-align: center; color: #444; font-size: 12px; border-top: 1px solid rgba(255,255,255,0.05); }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">휙</div>
+    <a href="card_generator_v2_auth.html" class="header-cta">무료로 시작하기</a>
+</header>
+
+<section class="hero">
+    <div class="hero-badge">🏠 공인중개사 전용</div>
+    <h1>매물 정보 입력하면<br><span class="highlight">휙!</span> 카드 완성</h1>
+    <p>복잡한 매물 내용을 붙여넣기만 하면<br>깔끔한 카드가 자동으로 만들어집니다.</p>
+    <div class="hero-btns">
+        <a href="card_generator_v2_auth.html" class="btn-primary">무료로 시작하기</a>
+        <a href="my_cards.html" class="btn-secondary">내 매물 보기</a>
+    </div>
+</section>
+
+<section class="preview-section">
+    <div class="preview-phone">
+        <div class="preview-card">
+            <div class="preview-card-header">
+                <span class="preview-badge">전세</span>
+                <span class="preview-area">84㎡ / 33평</span>
+            </div>
+            <div class="preview-body">
+                <div class="preview-name">래미안 첼리투스</div>
+                <div class="preview-addr">서울 용산구 이촌동</div>
+                <div class="preview-price">5억 5,000</div>
+                <div class="preview-grid">
+                    <div class="preview-item"><div class="preview-item-label">층수</div><div class="preview-item-value">12층</div></div>
+                    <div class="preview-item"><div class="preview-item-label">구조</div><div class="preview-item-value">방3 화2</div></div>
+                </div>
+                <div class="preview-tags">
+                    <span class="preview-tag">한강뷰</span>
+                    <span class="preview-tag">즉시입주</span>
+                    <span class="preview-tag">주차가능</span>
+                </div>
+                <div class="preview-agent">
+                    <span class="preview-agent-name">이촌부동산 김철수</span>
+                    <span class="preview-agent-phone">010-1234-5678</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="features-section">
+    <div class="section-label">WHY 휙</div>
+    <h2 class="section-title">왜 휙을 써야 할까요?</h2>
+    <div class="features-grid">
+        <div class="feature-card"><div class="feature-icon">⚡</div><div class="feature-title">AI가 알아서 정리</div><div class="feature-desc">카톡, 메모장, 어떤 형식이든 그냥 붙여넣으세요. AI가 구조를 파악해 자동으로 카드를 만들어요.</div></div>
+        <div class="feature-card"><div class="feature-icon">🎨</div><div class="feature-title">5가지 카드 스타일</div><div class="feature-desc">다크, 라이트, 그라데이션 등 다양한 스타일. 나만의 스타일로 매물을 돋보이게.</div></div>
+        <div class="feature-card"><div class="feature-icon">🔗</div><div class="feature-title">링크 하나로 공유</div><div class="feature-desc">링크를 카톡으로 보내면 끝. 고객은 앱 없이 바로 확인하고 전화할 수 있어요.</div></div>
+        <div class="feature-card"><div class="feature-icon">🔍</div><div class="feature-title">AI 매물 검색</div><div class="feature-desc">"역세권 30평대 전세" 처럼 자연어로 검색하면 딱 맞는 매물을 찾아줘요.</div></div>
+        <div class="feature-card"><div class="feature-icon">📁</div><div class="feature-title">엑셀/파일 한번에</div><div class="feature-desc">여러 매물을 파일로 한번에 올리면 전부 카드로 변환. 시간이 절약됩니다.</div></div>
+        <div class="feature-card"><div class="feature-icon">🛡️</div><div class="feature-title">7일 자동 만료</div><div class="feature-desc">링크는 7일 후 자동 만료. 오래된 매물 노출 걱정 없이 깔끔하게 관리돼요.</div></div>
+    </div>
+</section>
+
+<section class="howto-section">
+    <div class="section-label">HOW TO</div>
+    <h2 class="section-title" style="margin-bottom: 40px;">3단계로 끝납니다</h2>
+    <div class="steps">
+        <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-content"><div class="step-title">매물 정보 붙여넣기</div><div class="step-desc">카톡 내용, 메모, 어떤 형식이든 그냥 붙여넣으세요. AI가 알아서 읽어요.</div></div>
+        </div>
+        <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-content"><div class="step-title">카드 스타일 선택</div><div class="step-desc">마음에 드는 디자인을 고르면 자동으로 카드가 만들어집니다.</div></div>
+        </div>
+        <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-content"><div class="step-title">링크 공유</div><div class="step-desc">생성된 링크를 고객에게 카톡으로 보내면 끝! 고객이 바로 전화할 수 있어요.</div></div>
+        </div>
+    </div>
+</section>
+
+<section class="pricing-section">
+    <div class="section-label">PRICING</div>
+    <h2 class="section-title">지금은 무료입니다</h2>
+    <div class="price-card">
+        <div style="font-size: 14px; color: #888;">오픈 베타 기간</div>
+        <div class="price-main">0<span class="price-unit">원</span></div>
+        <div class="price-desc">모든 기능 무료 · 제한 없음</div>
+        <ul class="price-list">
+            <li>AI 매물 파싱 무료</li>
+            <li>카드 작성 및 저장 무료</li>
+            <li>공유 링크 생성 무료</li>
+            <li>AI 자연어 검색 무료</li>
+            <li>여러 매물 묶음 링크 가능</li>
+        </ul>
+        <a href="card_generator_v2_auth.html" class="btn-primary" style="display: block; text-align: center; width: 100%; padding: 15px;">무료로 시작하기</a>
+    </div>
+</section>
+
+<section class="cta-section">
+    <h2>지금 바로 써보세요</h2>
+    <p>복잡한 매물 정보, 이제 휙! 해결하세요.</p>
+    <a href="card_generator_v2_auth.html" class="btn-primary" style="font-size: 18px; padding: 18px 40px;">무료로 시작하기 →</a>
+</section>
+
+<footer>© 2026 휙(Hwik) · 공인중개사를 위한 매물카드 서비스</footer>
+
+</body>
+</html>
