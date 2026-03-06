@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>휙 - 문자 보내기</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a2e; color: #fff; font-family: -apple-system, 'Noto Sans KR', sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px; }
+  .logo { font-size: 32px; font-weight: 900; color: #f5c518; margin-bottom: 8px; }
+  .title { font-size: 16px; color: rgba(255,255,255,0.6); margin-bottom: 32px; }
+  .card {
+    background: #252540; border-radius: 16px; padding: 20px;
+    width: 100%; max-width: 360px; margin-bottom: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .card-label { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 8px; }
+  .sms-preview {
+    background: #e5e5ea; border-radius: 12px; padding: 14px;
+    font-size: 13px; line-height: 1.8; color: #1a1a1a;
+    white-space: pre-wrap; word-break: break-all;
+  }
+  .send-btn {
+    width: 100%; max-width: 360px; padding: 16px;
+    background: #f5c518; color: #1a1a2e; font-weight: 900; font-size: 16px;
+    border: none; border-radius: 14px; cursor: pointer;
+  }
+  .send-btn:active { opacity: 0.8; }
+  .status { color: rgba(255,255,255,0.4); font-size: 13px; text-align: center; margin-top: 16px; }
+  .loading { animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+</style>
+</head>
+<body>
+
+<div class="logo">휙</div>
+<div class="title">문자 보내기</div>
+
+<div class="card">
+  <div class="card-label">발송될 문자 내용</div>
+  <div class="sms-preview loading" id="preview">매물 정보 불러오는 중...</div>
+</div>
+
+<button class="send-btn" id="sendBtn" onclick="openSMS()" disabled>
+  📱 문자 앱 열기
+</button>
+<div class="status" id="status">모바일에서 열어주세요</div>
+
+<script>
+  const SUPABASE_URL = 'https://qoiysbiudxyspcsulbpv.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvaXlzYml1ZHh5c3Bjc3VsYnB2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2MzI3NTIsImV4cCI6MjA4MjIwODc1Mn0.RMRPNB1FhvuHNFBBWJFR4TY6TI8RK_Hj-9jv_xBuLuk';
+
+  let smsBody = '';
+
+  async function loadCard() {
+    const params = new URLSearchParams(location.search);
+    const cardId = params.get('id');
+    if (!cardId) { showError('매물 정보가 없어요'); return; }
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/cards?id=eq.${cardId}&select=*`, {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+      });
+      const [data] = await res.json();
+      if (!data) { showError('매물을 찾을 수 없어요'); return; }
+
+      const p = data.property || {};
+      const agent = data.agent || {};
+      const link = `${location.origin}${location.pathname.replace('sms.html','property_view.html')}?id=${cardId}`;
+
+      const type = p.type || '';
+      const price = p.price || '';
+      const complex = p.complex || '';
+      const location_ = p.location || '';
+      const area = p.area || '';
+      const floor = p.floor || '';
+      const features = (p.features || []).slice(0, 3).join(' · ');
+      const phone = agent.phone || '';
+      const agentName = agent.business_name || agent.name || '';
+
+      let msg = '';
+      msg += `🏠 ${type} ${price}\n`;
+      if (complex) msg += `📍 ${location_ ? location_ + ' ' : ''}${complex}${area ? ' ' + area : ''}\n`;
+      else if (location_) msg += `📍 ${location_}${area ? ' ' + area : ''}\n`;
+      if (floor) msg += `🏢 ${floor}\n`;
+      if (features) msg += `✨ ${features}\n`;
+      msg += `\n`;
+      if (agentName || phone) msg += `📞 ${agentName}${phone ? ' ' + phone : ''}\n`;
+      msg += `🔗 ${link}`;
+
+      smsBody = msg;
+      document.getElementById('preview').textContent = msg;
+      document.getElementById('preview').classList.remove('loading');
+      document.getElementById('sendBtn').disabled = false;
+      document.getElementById('status').textContent = '아래 버튼을 눌러 문자 앱을 열어주세요';
+
+    } catch(e) {
+      showError('불러오기 실패: ' + e.message);
+    }
+  }
+
+  function openSMS() {
+    if (!smsBody) return;
+    window.location.href = 'sms:?body=' + encodeURIComponent(smsBody);
+  }
+
+  function showError(msg) {
+    document.getElementById('preview').textContent = msg;
+    document.getElementById('preview').classList.remove('loading');
+    document.getElementById('status').textContent = '오류가 발생했어요';
+  }
+
+  loadCard();
+</script>
+</body>
+</html>
