@@ -1,0 +1,1879 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>휙</title>
+<meta name="description" content="AI가 찾아주는 내 조건에 딱 맞는 매물">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  
+  :root {
+    --hwik-dark: #1a1a2e;
+    --hwik-dark-light: #242442;
+    --hwik-yellow: #FFD43B;
+    --hwik-yellow-hover: #FFC800;
+    --bg: #f8f8fa;
+    --white: #ffffff;
+    --gray-100: #f0f0f3;
+    --gray-200: #e2e2e8;
+    --gray-400: #8e8e9a;
+    --gray-600: #5a5a6e;
+    --text: #1a1a2e;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: 'Noto Sans KR', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  /* ── 레이아웃 ── */
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 0 24px;
+    padding-bottom: 18%;
+    transition: justify-content 0.4s ease;
+  }
+
+  .container.active {
+    justify-content: flex-start;
+    padding-top: 40px;
+  }
+
+  /* ── 로고 ── */
+  .logo {
+    margin-bottom: 48px;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .logo-text {
+    font-size: 68px;
+    font-weight: 900;
+    letter-spacing: -3px;
+    color: var(--hwik-dark);
+    transition: all 0.3s ease;
+  }
+
+  .logo-dot {
+    width: 12px;
+    height: 12px;
+    background: var(--hwik-yellow);
+    border-radius: 50%;
+    margin-top: 28px;
+    transition: all 0.3s ease;
+  }
+
+  .logo:hover .logo-text { color: var(--hwik-dark-light); }
+  .logo:hover .logo-dot { transform: scale(1.3); background: var(--hwik-yellow-hover); }
+
+  .container.active .logo { margin-bottom: 20px; }
+  .container.active .logo-text { font-size: 32px; }
+  .container.active .logo-dot { width: 8px; height: 8px; margin-top: 14px; }
+
+  .tagline {
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--gray-400);
+    margin-top: -36px;
+    margin-bottom: 40px;
+    letter-spacing: -0.3px;
+    transition: all 0.4s ease;
+  }
+
+  .container.active .tagline { display: none; }
+
+  /* ── 검색 영역 ── */
+  .search-wrap {
+    width: 100%;
+    max-width: 540px;
+    position: relative;
+  }
+
+  .search-box {
+    position: relative;
+    width: 100%;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 18px 56px 18px 56px;
+    font-size: 17px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 400;
+    border: 2px solid var(--gray-200);
+    border-radius: 28px;
+    outline: none;
+    background: var(--white);
+    color: var(--text);
+    transition: all 0.25s ease;
+    -webkit-appearance: none;
+  }
+
+  .search-input::placeholder { color: var(--gray-400); font-weight: 300; }
+
+  .search-input:focus {
+    border-color: var(--hwik-dark);
+    box-shadow: 0 4px 24px rgba(26,26,46,0.1);
+  }
+
+  /* 드롭다운 열리면 검색창 하단 모서리 제거 */
+  .search-input.dropdown-open {
+    border-radius: 28px 28px 0 0;
+    border-bottom-color: var(--gray-100);
+  }
+
+  /* ── 좌우 버튼 ── */
+  .btn-left {
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .btn-right {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .icon-btn {
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .icon-btn:active { transform: scale(0.9); }
+
+  .icon-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2.5;
+    fill: none;
+  }
+
+  .btn-search { background: var(--hwik-yellow); }
+  .btn-search:hover { background: var(--hwik-yellow-hover); }
+  .btn-search svg { stroke: var(--hwik-dark); }
+
+  .btn-register { background: var(--hwik-dark); }
+  .btn-register:hover { background: var(--hwik-dark-light); }
+  .btn-register svg { stroke: var(--hwik-yellow); }
+
+  /* ── 추천 드롭다운 ── */
+  .suggest-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--white);
+    border: 2px solid var(--hwik-dark);
+    border-top: 1px solid var(--gray-100);
+    border-radius: 0 0 20px 20px;
+    padding: 4px 0 8px;
+    z-index: 50;
+    box-shadow: 0 8px 24px rgba(26,26,46,0.1);
+  }
+
+  .suggest-dropdown.show { display: block; }
+
+  .suggest-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: background 0.1s ease;
+    font-size: 15px;
+    color: var(--text);
+    font-weight: 400;
+  }
+
+  .suggest-item:hover { background: var(--gray-100); }
+  .suggest-item:active { background: var(--gray-200); }
+
+  .suggest-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .suggest-icon svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--gray-400);
+    stroke-width: 2;
+    fill: none;
+  }
+
+  .suggest-text {
+    flex: 1;
+  }
+
+  .suggest-label {
+    font-size: 11px;
+    color: var(--gray-400);
+    font-weight: 300;
+    padding: 10px 20px 4px;
+  }
+
+  /* ── 결과 ── */
+  .results {
+    display: none;
+    width: 100%;
+    max-width: 540px;
+    margin-top: 16px;
+    overflow-y: auto;
+    max-height: calc(100vh - 240px);
+    padding-bottom: 90px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .container.active .results { display: block; }
+  .results::-webkit-scrollbar { display: none; }
+  .results { scrollbar-width: none; }
+
+  .results-status {
+    font-size: 14px;
+    color: var(--gray-400);
+    font-weight: 300;
+    margin-bottom: 16px;
+    padding-left: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .results-status strong { color: var(--hwik-dark); font-weight: 700; }
+
+  .sort-toggle {
+    display: flex; align-items: center; gap: 4px;
+    padding: 5px 10px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 20px;
+    background: var(--white);
+    font-size: 11px; font-weight: 600;
+    color: var(--gray-400);
+    cursor: pointer; font-family: inherit;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .sort-toggle.active {
+    border-color: var(--hwik-dark);
+    background: var(--hwik-dark);
+    color: var(--hwik-yellow);
+  }
+  .sort-toggle:active { transform: scale(0.95); }
+  .sort-toggle svg { width: 11px; height: 11px; stroke: currentColor; stroke-width: 2.5; fill: none; }
+
+  .searching { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--gray-400); font-weight: 300; padding-left: 4px; }
+  .dot-pulse { display: flex; gap: 4px; }
+  .dot-pulse span { width: 6px; height: 6px; border-radius: 50%; background: var(--hwik-yellow); animation: pulse 1.2s ease infinite; }
+  .dot-pulse span:nth-child(2) { animation-delay: 0.2s; }
+  .dot-pulse span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,100%{opacity:.3;transform:scale(.8)} 50%{opacity:1;transform:scale(1.2)} }
+
+  /* ── 리스트 아이템 ── */
+  .li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 10px;
+    margin-bottom: 6px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    animation: fadeUp 0.3s ease forwards;
+    opacity: 0;
+  }
+  .li.my { background: #FFFBEB; }
+  .li.shared { background: #F0F1FF; }
+  .li.my:hover { background: #FFF6D6; }
+  .li.shared:hover { background: #E8E9FF; }
+  .li.checked.my { background: #FFF0B3; box-shadow: inset 0 0 0 1.5px #E6C200; }
+  .li.checked.shared { background: #DDDEFF; box-shadow: inset 0 0 0 1.5px #7C8CF8; }
+  .li:nth-child(2){animation-delay:.05s}
+  .li:nth-child(3){animation-delay:.1s}
+  .li:nth-child(4){animation-delay:.15s}
+  .li:nth-child(5){animation-delay:.2s}
+  @keyframes fadeUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+  .li-check {
+    width: 20px; height: 20px;
+    border: 2px solid var(--gray-200);
+    border-radius: 5px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s ease;
+  }
+  .li-check svg { width: 14px; height: 14px; stroke: var(--white); stroke-width: 3; fill: none; display: none; }
+  .li.checked .li-check { background: var(--hwik-dark); border-color: var(--hwik-dark); }
+  .li.checked .li-check svg { display: block; }
+
+  .li-type {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .type-sale { background: #FFE8E8; color: #C62828; }
+  .type-jeonse { background: #E3F2FD; color: #1565C0; }
+  .type-rent { background: #E8F5E9; color: #2E7D32; }
+
+  .li-price {
+    font-size: 15px;
+    font-weight: 900;
+    color: var(--hwik-dark);
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 50px;
+  }
+
+  .li-info {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .li-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--hwik-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .li-detail {
+    font-size: 11px;
+    color: var(--gray-400);
+    font-weight: 300;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 1px;
+  }
+
+  .li-from {
+    font-size: 10px;
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .li-from.from-my { color: #9E8600; background: #FFF8E1; }
+  .li-from.from-shared { color: #4A52B5; background: #EDEFFF; }
+
+  .li-trade {
+    font-size: 10px; font-weight: 600;
+    white-space: nowrap; flex-shrink: 0;
+    padding: 2px 6px; border-radius: 4px;
+  }
+  .li-trade.trade-available { background: rgba(34,197,94,0.12); color: #16a34a; }
+  .li-trade.trade-ongoing   { background: rgba(250,204,21,0.15); color: #ca8a04; }
+  .li-trade.trade-done      { background: rgba(120,120,120,0.12); color: #888; }
+
+  /* 공유 시트 */
+  .share-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1100; }
+  .share-overlay.show { display:block; }
+  .share-sheet {
+    position:fixed; bottom:0; left:0; right:0; background:#fff; border-radius:20px 20px 0 0;
+    padding:20px 20px 40px; z-index:1101;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .share-sheet.show { transform: translateY(0); }
+  .share-sheet-title { text-align:center; font-size:14px; font-weight:700; color:#1a1a2e; margin-bottom:20px; }
+  .share-sheet-btns { display:flex; justify-content:center; gap:24px; margin-bottom:20px; }
+  .share-opt { display:flex; flex-direction:column; align-items:center; gap:6px; background:none; border:none; cursor:pointer; }
+  .share-opt-icon { width:56px; height:56px; border-radius:16px; background:#f5f5f5; display:flex; align-items:center; justify-content:center; font-size:24px; }
+  .share-opt.kakao .share-opt-icon { background:#FEE500; }
+  .share-opt.copy .share-opt-icon { background:#f0f0f0; }
+  .share-opt-label { font-size:12px; color:#444; font-weight:500; }
+  .share-sheet-cancel { width:100%; padding:14px; background:#f5f5f5; border:none; border-radius:12px; font-size:15px; font-weight:600; color:#666; cursor:pointer; }
+  .li-trade.trade-done      { background: rgba(120,120,120,0.12); color: #888; }
+
+  .li-btn-detail {
+    padding: 5px 10px;
+    font-size: 11px; font-weight: 600;
+    color: var(--gray-600);
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    cursor: pointer; font-family: inherit;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+  }
+  .li-btn-detail:active { transform: scale(0.93); background: var(--gray-100); }
+
+  /* ── 플로팅 카드 만들기 버튼 ── */
+  .float-card-btn {
+    position: fixed;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    padding: 14px 32px;
+    background: var(--gray-200);
+    color: var(--gray-400);
+    border: none; border-radius: 16px;
+    font-size: 15px; font-weight: 700;
+    font-family: inherit;
+    cursor: default;
+    box-shadow: 0 6px 24px rgba(26,26,46,0.1);
+    z-index: 90;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .float-card-btn.visible { transform: translateX(-50%) translateY(0); }
+  .float-card-btn.active {
+    background: var(--hwik-dark);
+    color: var(--hwik-yellow);
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(26,26,46,0.3);
+  }
+  .float-card-btn.active:active { transform: translateX(-50%) scale(0.95); }
+  .float-card-btn svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none; }
+
+  /* ── 로그인 시트 ── */
+  .overlay { display: none; position: fixed; top:0;left:0;right:0;bottom:0; background: rgba(0,0,0,0.3); z-index: 100; animation: fi .2s ease; }
+  .overlay.show { display: block; }
+  @keyframes fi { from{opacity:0}to{opacity:1} }
+
+  .login-sheet {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--white);
+    border-radius: 20px 20px 0 0;
+    padding: 28px 24px 36px;
+    z-index: 101;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    text-align: center;
+  }
+  .login-sheet.show { transform: translateY(0); }
+  .login-sheet-bar { width: 36px; height: 4px; background: var(--gray-200); border-radius: 2px; margin: 0 auto 20px; }
+
+  .kakao-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; max-width: 320px; margin: 0 auto;
+    padding: 14px 0;
+    background: #FEE500; border: none; border-radius: 12px;
+    font-size: 15px; font-weight: 600; color: #3C1E1E;
+    cursor: pointer; font-family: inherit;
+    transition: all 0.15s ease;
+  }
+  .kakao-btn:active { transform: scale(0.97); }
+  .kakao-btn svg { width: 20px; height: 20px; }
+
+  /* ── 상세 모달 (풀스크린) ── */
+  .detail-overlay {
+    display: none;
+    position: fixed; top:0;left:0;right:0;bottom:0;
+    background: rgba(0,0,0,0.4);
+    z-index: 200;
+  }
+  .detail-overlay.show { display: block; animation: fi .2s ease; }
+
+  .detail-modal {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: #0a0a1a;
+    z-index: 201;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .detail-modal.show { transform: translateY(0); }
+  .detail-modal::-webkit-scrollbar { display: none; }
+
+  .dm-header {
+    position: sticky; top: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px;
+    background: #0a0a1a;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    z-index: 10;
+  }
+  .dm-back {
+    width: 36px; height: 36px;
+    border: none; border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s ease;
+  }
+  .dm-back:active { transform: scale(0.9); }
+  .dm-back svg { width: 18px; height: 18px; stroke: #fff; stroke-width: 2.5; fill: none; }
+  .dm-title { font-size: 16px; font-weight: 700; color: #fff; }
+
+  .dm-body { padding: 20px; }
+
+  .dm-type-price {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 20px;
+  }
+  .dm-type-badge { font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 5px; }
+
+  .dm-field { margin-bottom: 16px; }
+  .dm-label {
+    font-size: 11px; font-weight: 500; color: #666;
+    margin-bottom: 6px;
+  }
+  .dm-input {
+    width: 100%;
+    padding: 12px 14px;
+    background: #1a1a2e;
+    border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    font-size: 15px; font-family: inherit; font-weight: 400;
+    color: #fff;
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+  .dm-input:focus { border-color: #4ECDC4; background: #1e1e36; }
+  .dm-input::placeholder { color: #555; font-weight: 300; }
+
+  .dm-row {
+    display: flex; gap: 10px;
+  }
+  .dm-row .dm-field { flex: 1; }
+
+  .dm-textarea {
+    width: 100%;
+    padding: 12px 14px;
+    background: #1a1a2e;
+    border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    font-size: 14px; font-family: inherit; font-weight: 400;
+    color: #fff;
+    outline: none; resize: none;
+    min-height: 60px;
+    line-height: 1.5;
+    transition: border-color 0.15s ease;
+  }
+  .dm-textarea:focus { border-color: #4ECDC4; background: #1e1e36; }
+  .dm-textarea::placeholder { color: #555; font-weight: 300; }
+
+  .dm-memo-label-icon {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 500; margin-bottom: 6px;
+  }
+  .dm-memo-private { color: #E67E22; }
+  .dm-memo-public { color: #4ECDC4; }
+
+
+  .dm-actions {
+    display: flex; gap: 8px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .dm-act {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 12px 0;
+    border: none; border-radius: 10px;
+    cursor: pointer; font-family: inherit;
+    font-size: 13px; font-weight: 600;
+    transition: all 0.15s ease;
+  }
+  .dm-act:active { transform: scale(0.95); }
+  .dm-act svg { width: 18px; height: 18px; stroke-width: 2; fill: none; }
+
+  .act-cancel { background: rgba(255,255,255,0.08); color: #aaa; }
+  .act-save { background: var(--hwik-yellow); color: #1a1a2e; }
+
+  /* ── 카드 미리보기 ── */
+  .card-overlay {
+    display: none;
+    position: fixed; top:0;left:0;right:0;bottom:0;
+    background: #0a0a1a;
+    z-index: 300;
+    flex-direction: column;
+  }
+  .card-overlay.show { display: flex; }
+
+  .card-header {
+    text-align: center;
+    padding: 16px 20px 8px;
+    color: #888;
+    font-size: 13px;
+    font-weight: 300;
+    position: relative;
+  }
+  .card-close {
+    position: absolute; right: 16px; top: 14px;
+    width: 32px; height: 32px;
+    border: none; border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .card-close svg { width: 16px; height: 16px; stroke: #aaa; stroke-width: 2.5; fill: none; }
+
+  .card-body {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 24px 20px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .card-body::-webkit-scrollbar { display: none; }
+
+  .card-pager {
+    color: #888;
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+  .card-pager strong { color: var(--hwik-yellow); font-weight: 700; }
+
+  .card-frame {
+    background: #1a1a2e;
+    border-radius: 16px;
+    padding: 20px;
+    width: 100%;
+    max-width: 340px;
+  }
+
+  .cf-top {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 14px;
+  }
+  .cf-type {
+    font-size: 12px; font-weight: 700;
+    padding: 4px 10px; border-radius: 4px;
+  }
+  .cf-type.sale { background: #FFE8E8; color: #C62828; }
+  .cf-type.jeonse { background: #E3F2FD; color: #1565C0; }
+  .cf-type.rent { background: #E8F5E9; color: #2E7D32; }
+  .cf-size { color: #888; font-size: 13px; }
+
+  .cf-name {
+    font-size: 18px; font-weight: 800;
+    color: #fff;
+    margin-bottom: 2px;
+  }
+  .cf-location {
+    font-size: 13px; color: #888;
+    margin-bottom: 8px;
+  }
+  .cf-price {
+    font-size: 28px; font-weight: 900;
+    color: #4ECDC4;
+    margin-bottom: 14px;
+  }
+
+  .cf-specs {
+    display: flex; gap: 8px;
+    margin-bottom: 12px;
+  }
+  .cf-spec {
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    border-radius: 8px;
+    padding: 8px 10px;
+    text-align: center;
+  }
+  .cf-spec-label { font-size: 10px; color: #666; margin-bottom: 2px; }
+  .cf-spec-value { font-size: 14px; font-weight: 700; color: #fff; }
+
+  .cf-tags {
+    display: flex; flex-wrap: wrap; gap: 5px;
+    margin-bottom: 14px;
+  }
+  .cf-tag {
+    font-size: 11px; font-weight: 500;
+    padding: 3px 8px;
+    background: rgba(78,205,196,0.15);
+    color: #4ECDC4;
+    border-radius: 4px;
+  }
+
+  .cf-agent {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 10px;
+  }
+  .cf-agent-name { font-size: 13px; color: #ccc; font-weight: 500; }
+  .cf-agent-phone { font-size: 13px; color: #4ECDC4; font-weight: 500; }
+
+  .cf-memo {
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+    padding: 12px;
+  }
+  .cf-memo-label { font-size: 11px; color: #4ECDC4; font-weight: 500; margin-bottom: 6px; }
+  .cf-memo-text { font-size: 13px; color: #ddd; line-height: 1.5; }
+
+  .card-footer {
+    padding: 12px 24px 28px;
+    text-align: center;
+  }
+  .card-send-btn {
+    width: 100%; max-width: 340px;
+    padding: 16px 0;
+    background: var(--hwik-yellow);
+    color: #1a1a2e;
+    border: none; border-radius: 12px;
+    font-size: 16px; font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .card-send-btn:active { transform: scale(0.97); }
+  .card-footer-sub {
+    font-size: 11px; color: #666;
+    margin-top: 8px;
+  }
+
+  .card-nav {
+    display: flex; gap: 12px;
+    margin-bottom: 12px;
+  }
+  .card-nav-btn {
+    width: 36px; height: 36px;
+    border: none; border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .card-nav-btn:active { transform: scale(0.9); }
+  .card-nav-btn:disabled { opacity: 0.3; }
+  .card-nav-btn svg { width: 16px; height: 16px; stroke: #fff; stroke-width: 2.5; fill: none; }
+
+  /* ── 태그 ── */
+  .dm-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .dm-tag {
+    display: flex; align-items: center; gap: 4px;
+    padding: 5px 10px;
+    background: rgba(78,205,196,0.15);
+    color: #4ECDC4;
+    font-size: 13px; font-weight: 500;
+    border-radius: 6px;
+    border: none; cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s ease;
+  }
+  .dm-tag:active { transform: scale(0.93); }
+  .dm-tag .tag-x {
+    font-size: 14px; font-weight: 700;
+    color: #4ECDC4;
+    opacity: 0.5;
+    margin-left: 2px;
+  }
+  .dm-tag-input-wrap {
+    display: flex; gap: 6px;
+  }
+  .dm-tag-input {
+    flex: 1;
+    padding: 8px 12px;
+    background: #1a1a2e;
+    border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    font-size: 13px; font-family: inherit;
+    color: #fff;
+    outline: none;
+  }
+  .dm-tag-input:focus { border-color: #4ECDC4; background: #1e1e36; }
+  .dm-tag-input::placeholder { color: #555; font-weight: 300; }
+  .dm-tag-add {
+    padding: 8px 14px;
+    background: rgba(78,205,196,0.15);
+    color: #4ECDC4;
+    border: none; border-radius: 8px;
+    font-size: 13px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+    flex-shrink: 0;
+  }
+  .dm-tag-add:active { transform: scale(0.93); }
+
+  /* ── 등록 모달 ── */
+  .reg-modal {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: #0a0a1a;
+    z-index: 201;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .reg-modal.show { transform: translateY(0); }
+  .reg-modal::-webkit-scrollbar { display: none; }
+
+  .reg-save-btn { display: none; }
+
+  .reg-body {
+    flex: 1; padding: 20px;
+    display: flex; flex-direction: column;
+  }
+
+  .reg-textarea {
+    flex: 1;
+    width: 100%;
+    padding: 16px;
+    background: #1a1a2e;
+    border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    font-size: 17px; font-family: inherit; font-weight: 400;
+    color: #fff;
+    outline: none; resize: none;
+    line-height: 1.7;
+    letter-spacing: 0.2px;
+  }
+  .reg-textarea:focus { border-color: #4ECDC4; background: #1e1e36; }
+  .reg-textarea::placeholder { color: #444; font-weight: 300; font-size: 15px; }
+  .reg-textarea::-webkit-scrollbar { display: none; }
+  .reg-textarea { scrollbar-width: none; }
+
+  .reg-footer {
+    padding: 12px 20px 28px;
+    background: #0a0a1a;
+  }
+  .reg-tip {
+    font-size: 13px; color: #999; font-weight: 400;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .reg-save-bottom {
+    width: 100%;
+    padding: 16px 0;
+    background: var(--hwik-yellow);
+    color: #1a1a2e;
+    border: none; border-radius: 12px;
+    font-size: 16px; font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .reg-save-bottom:active { transform: scale(0.97); }
+
+  /* ── 매물 현황 바 ── */
+  .stats-bar {
+    display: none;
+    gap: 0;
+    margin-bottom: 24px;
+    background: var(--white);
+    border-radius: 16px;
+    border: 1.5px solid var(--gray-200);
+    overflow: hidden;
+    width: 100%;
+    max-width: 540px;
+    box-shadow: 0 2px 12px rgba(26,26,46,0.06);
+  }
+  .stats-bar.visible { display: flex; }
+  .container.active .stats-bar { display: none !important; }
+
+  .stat-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 14px 10px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    position: relative;
+  }
+  .stat-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0; top: 20%; bottom: 20%;
+    width: 1px;
+    background: var(--gray-200);
+  }
+  .stat-item:active { background: var(--gray-100); }
+
+  .stat-num {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--hwik-dark);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-num.my-color { color: #9E8600; }
+  .stat-num.shared-color { color: #4A52B5; }
+
+  .stat-label {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--gray-400);
+  }
+
+  /* ── 최근 검색 ── */
+  .recent-wrap {
+    display: none;
+    width: 100%;
+    max-width: 540px;
+    margin-top: 16px;
+  }
+  .recent-wrap.visible { display: block; }
+  .container.active .recent-wrap { display: none !important; }
+
+  .recent-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding: 0 2px;
+  }
+  .recent-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gray-400);
+  }
+  .recent-clear {
+    font-size: 12px;
+    font-weight: 600;
+    color: #E53935;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 2px 4px;
+  }
+  .recent-clear:active { opacity: 0.6; }
+
+  .recent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .recent-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    background: var(--white);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    border: 1px solid transparent;
+  }
+  .recent-item:active { background: var(--gray-100); }
+  .recent-item svg {
+    width: 14px; height: 14px;
+    stroke: var(--gray-400); stroke-width: 2; fill: none;
+    flex-shrink: 0;
+  }
+  .recent-item-text {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 400;
+  }
+  .recent-item-del {
+    width: 20px; height: 20px;
+    display: flex; align-items: center; justify-content: center;
+    border: none; background: none; cursor: pointer;
+    color: var(--gray-400);
+    font-size: 16px;
+    line-height: 1;
+    flex-shrink: 0;
+    border-radius: 50%;
+    transition: background 0.15s;
+  }
+  .recent-item-del:active { background: var(--gray-200); }
+
+  /* ── 하단 ── */
+  .footer {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    text-align: center; padding: 20px;
+    font-size: 12px; color: var(--gray-400); font-weight: 300;
+    background: linear-gradient(transparent, var(--bg) 50%);
+    pointer-events: none;
+  }
+  .footer span { color: var(--hwik-yellow-hover); font-weight: 500; }
+  .container.active .footer { display: none; }
+
+  /* ── 모바일 ── */
+  @media (max-width: 480px) {
+    .logo-text { font-size: 52px; }
+    .logo-dot { width: 10px; height: 10px; margin-top: 22px; }
+    .logo { margin-bottom: 36px; }
+    .tagline { font-size: 13px; margin-top: -28px; margin-bottom: 32px; }
+    .container.active .logo-text { font-size: 26px; }
+    .container.active .logo-dot { width: 6px; height: 6px; margin-top: 10px; }
+    .container.active .logo { margin-bottom: 14px; }
+    .search-input { padding: 16px 50px 16px 50px; font-size: 16px; }
+    .container { padding: 0 20px; }
+    .container.active { padding-top: 30px; }
+    .icon-btn { width: 38px; height: 38px; }
+    .icon-btn svg { width: 17px; height: 17px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container" id="container">
+  
+  <div class="logo" onclick="resetAll()">
+    <span class="logo-text">휙</span>
+    <span class="logo-dot"></span>
+  </div>
+
+  <div class="tagline">중개사를 위한 AI 매물 도구</div>
+
+  <!-- 매물 현황 바 -->
+  <div class="stats-bar" id="statsBar">
+    <div class="stat-item" onclick="doQuickSearch('my')">
+      <div class="stat-num my-color" id="statMy">12</div>
+      <div class="stat-label">내 매물</div>
+    </div>
+    <div class="stat-item" onclick="doQuickSearch('shared')">
+      <div class="stat-num shared-color" id="statShared">3</div>
+      <div class="stat-label">공유받은</div>
+    </div>
+    <div class="stat-item" onclick="goRegister()">
+      <div class="stat-num" style="font-size:20px;">✏️</div>
+      <div class="stat-label">메모하기</div>
+    </div>
+  </div>
+
+  <div class="search-wrap">
+    <div class="search-box">
+      <input 
+        type="text" 
+        class="search-input" 
+        id="searchInput"
+        placeholder=""
+        autocomplete="off"
+        enterkeyhint="search"
+      >
+      <div class="btn-left">
+        <button class="icon-btn btn-register" onclick="goRegister()" title="매물 메모">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 20h9"/>
+            <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="btn-right">
+        <button class="icon-btn btn-search" onclick="doSearch()" title="매물 검색">
+          <svg viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="7"/>
+            <line x1="16.5" y1="16.5" x2="21" y2="21"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- 추천 드롭다운 -->
+      <div class="suggest-dropdown" id="dropdown">
+        <div class="suggest-label">이렇게 검색해보세요</div>
+        <div class="suggest-item" onclick="pickSuggest(this)">
+          <div class="suggest-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></div>
+          <span class="suggest-text">전세 30평</span>
+        </div>
+        <div class="suggest-item" onclick="pickSuggest(this)">
+          <div class="suggest-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></div>
+          <span class="suggest-text">월세 1000이하</span>
+        </div>
+        <div class="suggest-item" onclick="pickSuggest(this)">
+          <div class="suggest-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></div>
+          <span class="suggest-text">매매 10억</span>
+        </div>
+        <div class="suggest-item" onclick="pickSuggest(this)">
+          <div class="suggest-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></div>
+          <span class="suggest-text">오피스텔 투룸</span>
+        </div>
+      </div>
+    </div>
+  </div><!-- /search-wrap -->
+
+  <!-- 최근 검색 -->
+  <div class="recent-wrap" id="recentWrap">
+    <div class="recent-header">
+      <span class="recent-title">최근 검색</span>
+      <button class="recent-clear" onclick="clearAllRecent()">전체 삭제</button>
+    </div>
+    <div class="recent-list" id="recentList"></div>
+  </div>
+
+  <div class="results" id="results"></div>
+
+  <!-- 플로팅 카드 만들기 버튼 -->
+  <button class="float-card-btn" id="floatCardBtn" onclick="makeCards()">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
+    카드 만들기 <span id="floatCount"></span>
+  </button>
+
+  <div class="footer">AI가 찾아주는 매물 · <span>휙</span></div>
+</div>
+
+<!-- 로그인 시트 -->
+<div class="overlay" id="overlay" onclick="closeLogin()"></div>
+<div class="login-sheet" id="loginSheet">
+  <div class="login-sheet-bar"></div>
+  <button class="kakao-btn" onclick="doKakaoLogin()">
+    <svg viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3C6.48 3 2 6.48 2 10.8c0 2.76 1.84 5.18 4.6 6.56-.2.74-.72 2.68-.82 3.1-.14.52.19.51.4.37.16-.1 2.56-1.74 3.6-2.44.7.1 1.44.16 2.22.16 5.52 0 10-3.48 10-7.76S17.52 3 12 3z"/></svg>
+    카카오로 시작하기
+  </button>
+</div>
+
+<!-- 상세/수정 모달 -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail()"></div>
+
+<!-- 카드 미리보기 -->
+
+<!-- 매물 메모 모달 -->
+<div class="detail-overlay" id="regOverlay" onclick="closeRegister()"></div>
+<div class="reg-modal" id="regModal">
+  <div class="dm-header">
+    <button class="dm-back" onclick="closeRegister()">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span class="dm-title">매물 메모</span>
+    <span style="width:36px"></span>
+  </div>
+  <div class="reg-body">
+    <textarea class="reg-textarea" id="regInput" placeholder="통화 내용을 빠르게 메모하세요
+
+예) 대치동 래미안 매매 18억 32평
+집주인 010-1234-5678
+급매, 이번주까지 결정"></textarea>
+  </div>
+  <div class="reg-footer">
+    <div class="reg-tip">PC에서 매물 등록할 때 이 메모를 불러올 수 있어요</div>
+    <button class="reg-save-bottom" onclick="saveMemo()">저장</button>
+  </div>
+</div>
+
+<!-- 카드 미리보기 -->
+<div class="card-overlay" id="cardOverlay">
+  <div class="card-header">
+    손님에게 보이는 화면
+    <button class="card-close" onclick="closeCardPreview()">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="card-body">
+    <div style="color:var(--hwik-yellow);font-size:28px;font-weight:900;margin-bottom:4px;">휙</div>
+    <div class="card-pager" id="cardPager"></div>
+    <div class="card-nav" id="cardNav">
+      <button class="card-nav-btn" onclick="prevCard()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="card-nav-btn" onclick="nextCard()"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+    </div>
+    <div class="card-frame" id="cardFrame"></div>
+  </div>
+  <div class="card-footer">
+    <button class="card-send-btn" onclick="sendToCustomer()">손님에게 보내기</button>
+    <div class="card-footer-sub">카카오톡 또는 링크로 공유</div>
+  </div>
+</div>
+
+<!-- 공유 시트 -->
+<div class="share-overlay" id="shareOverlay" onclick="closeShareSheet()"></div>
+<div class="share-sheet" id="shareSheet">
+  <div class="share-sheet-title">카드 보내기</div>
+  <div class="share-sheet-btns">
+    <button class="share-opt kakao" onclick="shareKakao()">
+      <div class="share-opt-icon"><img src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_medium.png" style="width:32px;height:32px;"></div>
+      <div class="share-opt-label">카카오톡</div>
+    </button>
+    <button class="share-opt copy" onclick="copyLink()">
+      <div class="share-opt-icon">🔗</div>
+      <div class="share-opt-label">링크 복사</div>
+    </button>
+  </div>
+  <button class="share-sheet-cancel" onclick="closeShareSheet()">취소</button>
+</div>
+
+<div class="detail-modal" id="detailModal">
+  <div class="dm-header">
+    <button class="dm-back" onclick="closeDetail()">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span class="dm-title">매물 상세</span>
+    <span style="width:36px"></span>
+  </div>
+  <div class="dm-body">
+    <!-- 타입 + 가격 -->
+    <div class="dm-type-price">
+      <span class="dm-type-badge" id="dmType"></span>
+      <span class="li-trade" id="dmTrade" style="margin-left:6px;"></span>
+      <input class="dm-input" id="dmPrice" style="font-size:20px;font-weight:900;background:transparent;padding:4px 0;flex:1;border:none;color:#4ECDC4">
+    </div>
+
+    <!-- 기본 정보 -->
+    <div class="dm-field">
+      <div class="dm-label">건물명</div>
+      <input class="dm-input" id="dmName">
+    </div>
+    <div class="dm-field">
+      <div class="dm-label">위치</div>
+      <input class="dm-input" id="dmLocation">
+    </div>
+    <div class="dm-row">
+      <div class="dm-field">
+        <div class="dm-label">평수</div>
+        <input class="dm-input" id="dmSize">
+      </div>
+      <div class="dm-field">
+        <div class="dm-label">층수</div>
+        <input class="dm-input" id="dmFloor">
+      </div>
+    </div>
+    <div class="dm-row">
+      <div class="dm-field">
+        <div class="dm-label">방구조</div>
+        <input class="dm-input" id="dmRooms">
+      </div>
+      <div class="dm-field">
+        <div class="dm-label">향</div>
+        <input class="dm-input" id="dmDirection">
+      </div>
+    </div>
+
+    <!-- 태그 -->
+    <div class="dm-field">
+      <div class="dm-label">태그</div>
+      <div class="dm-tags" id="dmTags"></div>
+      <div class="dm-tag-input-wrap" id="dmTagInputWrap">
+        <input class="dm-tag-input" id="dmTagInput" placeholder="태그 입력 후 Enter" onkeydown="if(event.key==='Enter'){event.preventDefault();addTag();}">
+        <button class="dm-tag-add" onclick="addTag()">추가</button>
+      </div>
+    </div>
+
+    <!-- 메모 -->
+    <div class="dm-field" id="dmPrivateField">
+      <div class="dm-memo-label-icon dm-memo-private">🔒 비공개 메모</div>
+      <textarea class="dm-textarea" id="dmMemoPrivate" placeholder="예: 1601호, 집주인 010-xxxx-xxxx" rows="2"></textarea>
+    </div>
+    <div class="dm-field">
+      <div class="dm-memo-label-icon dm-memo-public">💬 손님에게 한마디</div>
+      <textarea class="dm-textarea" id="dmMemoPublic" placeholder="예: 급매물, 이번주 결정 필요" rows="2"></textarea>
+    </div>
+
+    <!-- 하단 액션 -->
+    <div class="dm-actions">
+      <button class="dm-act act-cancel" id="dmActCancel" onclick="closeDetail()">취소</button>
+      <button class="dm-act act-save" id="dmActSave" onclick="saveDetail()">저장</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js"></script>
+<script>
+  // ── 플레이스홀더 순환 ──
+  const placeholders = [
+    '전세 30평대 찾아줘',
+    '매매 10억 아파트',
+    '방 2개 월세 100만원',
+    '로얄층 남향 아파트',
+    '급매 30평 전세',
+    '오피스텔 투룸',
+  ];
+  let phIdx = 0;
+  let phTimer = null;
+  let phCharTimer = null;
+
+  function typePlaceholder(text, done) {
+    searchInput.placeholder = '';
+    let i = 0;
+    phCharTimer = setInterval(() => {
+      searchInput.placeholder = text.slice(0, ++i);
+      if (i >= text.length) {
+        clearInterval(phCharTimer);
+        if (done) done();
+      }
+    }, 60);
+  }
+
+  function erasePlaceholder(text, done) {
+    let i = text.length;
+    phCharTimer = setInterval(() => {
+      searchInput.placeholder = text.slice(0, --i);
+      if (i <= 0) {
+        clearInterval(phCharTimer);
+        if (done) done();
+      }
+    }, 30);
+  }
+
+  function cyclePlaceholder() {
+    const cur = placeholders[phIdx];
+    typePlaceholder(cur, () => {
+      phTimer = setTimeout(() => {
+        erasePlaceholder(cur, () => {
+          phIdx = (phIdx + 1) % placeholders.length;
+          phTimer = setTimeout(cyclePlaceholder, 300);
+        });
+      }, 2000);
+    });
+  }
+
+  function startPlaceholder() {
+    clearTimeout(phTimer);
+    clearInterval(phCharTimer);
+    cyclePlaceholder();
+  }
+
+  function stopPlaceholder() {
+    clearTimeout(phTimer);
+    clearInterval(phCharTimer);
+    searchInput.placeholder = '';
+  }
+
+  const container = document.getElementById('container');
+  const searchInput = document.getElementById('searchInput');
+  const dropdown = document.getElementById('dropdown');
+  const results = document.getElementById('results');
+
+  // 검색창 포커스/블러 시 플레이스홀더 정지/재시작
+  searchInput.addEventListener('focus', () => stopPlaceholder());
+  searchInput.addEventListener('blur', () => {
+    if (!searchInput.value.trim() && !container.classList.contains('active')) {
+      setTimeout(startPlaceholder, 500);
+    }
+  });
+
+  startPlaceholder();
+// ── Supabase + Kakao 초기화 ──
+  const SUPABASE_URL = 'https://api.hwik.kr';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxYXhlamd6a2NoeGJmemd6eXppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2MzI3NTIsImV4cCI6MjA4MjIwODc1Mn0.-njNdAKVA7Me60H98AYaf-Z3oi45SfUmeoBNvuRJugE';
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // 카카오 SDK 초기화 (my_cards.html 동일 패턴)
+  window.addEventListener('load', function() {
+    if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
+      Kakao.init('124cd68b3419bde24e03efa4f1ca2830');
+    }
+  });
+
+  const overlay = document.getElementById('overlay');
+  const loginSheet = document.getElementById('loginSheet');
+  let currentUser = null;
+  let searchData = [];
+
+  // 로그인 상태 확인
+  supabaseClient.auth.getSession().then(({ data: { session } }) => {
+    if (session?.user) { currentUser = session.user; onLoggedIn(); }
+  });
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (session?.user) { currentUser = session.user; onLoggedIn(); }
+    else { currentUser = null; }
+  });
+
+  async function onLoggedIn() {
+    closeLogin();
+    showHomeWidgets();
+    await loadMyCount();
+  }
+
+  async function loadMyCount() {
+    if (!currentUser) return;
+    try {
+      const { count } = await supabaseClient.from('cards').select('*', { count: 'exact', head: true }).eq('agent_id', currentUser.id);
+      document.getElementById('statMyCount').textContent = count || 0;
+    } catch(e) {}
+  }
+
+  // 검색창 포커스
+  searchInput.addEventListener('focus', () => {
+    if (!currentUser) { searchInput.blur(); showLogin(); return; }
+    openDropdown();
+  });
+  searchInput.addEventListener('input', () => {
+    if (searchInput.value.trim()) closeDropdown(); else openDropdown();
+  });
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-wrap')) closeDropdown();
+  });
+
+  function openDropdown() {
+    if (container.classList.contains('active')) return;
+    dropdown.classList.add('show');
+    searchInput.classList.add('dropdown-open');
+  }
+  function closeDropdown() {
+    dropdown.classList.remove('show');
+    searchInput.classList.remove('dropdown-open');
+  }
+  function pickSuggest(el) {
+    searchInput.value = el.querySelector('.suggest-text').textContent;
+    closeDropdown(); doSearch();
+  }
+
+  // ── 로그인 ──
+  function showLogin() {
+    overlay.classList.add('show');
+    setTimeout(() => loginSheet.classList.add('show'), 10);
+  }
+  function closeLogin() {
+    loginSheet.classList.remove('show');
+    setTimeout(() => overlay.classList.remove('show'), 300);
+  }
+  function doKakaoLogin() {
+    supabaseClient.auth.signInWithOAuth({
+      provider: 'kakao',
+      options: { redirectTo: window.location.href }
+    });
+  }
+  function showHomeWidgets() {
+    document.getElementById('statsBar').classList.add('visible');
+    renderRecent();
+  }
+
+  // ── 최근 검색 ──
+  let recentSearches = JSON.parse(localStorage.getItem('hwik_recent') || '[]');
+
+  function addRecent(query) {
+    recentSearches = recentSearches.filter(q => q !== query);
+    recentSearches.unshift(query);
+    if (recentSearches.length > 3) recentSearches = recentSearches.slice(0, 3);
+    localStorage.setItem('hwik_recent', JSON.stringify(recentSearches));
+  }
+  function renderRecent() {
+    const list = document.getElementById('recentList');
+    const wrap = document.getElementById('recentWrap');
+    if (!recentSearches.length) { wrap.classList.remove('visible'); return; }
+    wrap.classList.add('visible');
+    list.innerHTML = recentSearches.map((q, i) => `
+      <div class="recent-item" onclick="pickRecent('${q}')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+        <span class="recent-item-text">${q}</span>
+        <button class="recent-item-del" onclick="event.stopPropagation();deleteRecent(${i})">×</button>
+      </div>
+    `).join('');
+  }
+  function pickRecent(query) { searchInput.value = query; doSearch(); }
+  function deleteRecent(idx) {
+    recentSearches.splice(idx, 1);
+    localStorage.setItem('hwik_recent', JSON.stringify(recentSearches));
+    renderRecent();
+  }
+  function clearAllRecent() {
+    recentSearches = [];
+    localStorage.removeItem('hwik_recent');
+    renderRecent();
+  }
+  function doQuickSearch(cat) {
+    searchInput.value = cat === 'my' ? '내 매물 전체' : '공유받은 매물';
+    doSearch();
+  }
+
+  // ── 검색 ──
+  searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSearch(); });
+
+  async function doSearch() {
+    if (!currentUser) { showLogin(); return; }
+    const query = searchInput.value.trim();
+    if (!query) return;
+    addRecent(query);
+    closeDropdown();
+    container.classList.add('active');
+    searchInput.blur();
+    results.innerHTML = `
+      <div class="searching">
+        <div class="dot-pulse"><span></span><span></span><span></span></div>
+        "${query}" 검색 중
+      </div>`;
+    try {
+      const res = await fetch('https://api.hwik.kr/functions/v1/search-property', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+        body: JSON.stringify({ query, agent_id: currentUser.id, limit: 30, search_mode: 'my' })
+      });
+      const data = await res.json();
+      showResults(data.results || []);
+    } catch(e) {
+      results.innerHTML = `<div class="results-status" style="text-align:center;padding:32px 0;color:#f87171">검색 오류가 발생했어요</div>`;
+    }
+  }
+
+  function resetAll() {
+    container.classList.remove('active');
+    searchInput.value = '';
+    results.innerHTML = '';
+    searchData = [];
+    closeDropdown();
+    checkedSet.clear();
+    hideFloatBtn();
+    if (currentUser) showHomeWidgets();
+    setTimeout(startPlaceholder, 300);
+  }
+
+  let myFirst = false;
+  function toggleMyFirst() {
+    myFirst = !myFirst;
+    document.getElementById('sortToggleBtn')?.classList.toggle('active', myFirst);
+    renderResults(searchData);
+  }
+
+  function showResults(cards) {
+    searchData = cards;
+    checkedSet.clear();
+    updateFloatBtn();
+    myFirst = false;
+    if (!cards.length) {
+      results.innerHTML = `<div class="results-status" style="text-align:center;padding:32px 0">검색 결과가 없어요</div>`;
+      return;
+    }
+    renderResults(cards);
+  }
+
+  function renderResults(data) {
+    let sorted = [...data];
+    if (myFirst) sorted = [...sorted.filter(i => i._cat === 'my'), ...sorted.filter(i => i._cat !== 'my')];
+    let html = `
+      <div class="results-status">
+        <strong>${data.length}건</strong>
+        <button class="sort-toggle ${myFirst ? 'active' : ''}" id="sortToggleBtn" onclick="toggleMyFirst()">
+          <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+          내 매물 위로
+        </button>
+      </div>`;
+    sorted.forEach((item, idx) => {
+      const p = item.property || {};
+      const type = p.type || '';
+      const typeClass = type === '매매' ? 'type-sale' : type === '전세' ? 'type-jeonse' : 'type-rent';
+      const tradeStatus = item.trade_status === '계약중' ? '계약중' : item.trade_status === '완료' ? '완료' : '계약가능';
+      const tradeClass = tradeStatus === '계약가능' ? 'trade-available' : tradeStatus === '계약중' ? 'trade-ongoing' : 'trade-done';
+      const fromLabel = item._cat === 'my' ? '내 매물' : (item.agent?.business_name || '공유');
+      const fromClass = item._cat === 'my' ? 'from-my' : 'from-shared';
+      const name = p.complex || p.location || '매물';
+      const loc = p.location || '';
+      const detail = [p.area, p.floor].filter(Boolean).join(' · ');
+      html += `
+        <div class="li" id="li-${idx}" onclick="toggleCheck(${idx})">
+          <div class="li-check"><svg viewBox="0 0 24 24"><polyline points="4 12 9 17 20 6"/></svg></div>
+          <span class="li-type ${typeClass}">${type}</span>
+          <span class="li-price">${p.price || ''}</span>
+          <div class="li-info">
+            <div class="li-name">${name}${loc && loc !== name ? ' · ' + loc : ''}</div>
+            <div class="li-detail">${detail}</div>
+          </div>
+          <span class="li-trade ${tradeClass}">${tradeStatus}</span>
+          <span class="li-from ${fromClass}">${fromLabel}</span>
+          <button class="li-btn-detail" onclick="event.stopPropagation(); openDetailById('${item.id}')">상세</button>
+        </div>`;
+    });
+    results.innerHTML = html;
+  }
+
+  function goRegister() { alert('매물 등록은 PC에서 해주세요 😊'); }
+  function closeRegister() {}
+  function saveMemo() {}
+
+  // ── 체크 선택 ──
+  const checkedSet = new Set();
+  const floatBtn = document.getElementById('floatCardBtn');
+  const floatCount = document.getElementById('floatCount');
+
+  function toggleCheck(idx) {
+    const el = document.getElementById('li-' + idx);
+    if (checkedSet.has(idx)) { checkedSet.delete(idx); el.classList.remove('checked'); }
+    else { checkedSet.add(idx); el.classList.add('checked'); }
+    updateFloatBtn();
+  }
+  function updateFloatBtn() {
+    if (checkedSet.size > 0) { floatBtn.classList.add('visible','active'); floatCount.textContent = '(' + checkedSet.size + '건)'; }
+    else { floatBtn.classList.remove('visible','active'); floatCount.textContent = ''; }
+  }
+  function showFloatBtn() { floatBtn.classList.add('visible'); }
+  function hideFloatBtn() { floatBtn.classList.remove('visible','active'); }
+
+  let cardItems = [];
+  let cardIdx = 0;
+
+  function makeCards() {
+    if (checkedSet.size === 0) return;
+    cardItems = [];
+    checkedSet.forEach(idx => { if (searchData[idx]) cardItems.push(searchData[idx]); });
+    cardIdx = 0;
+    renderCard();
+    document.getElementById('cardOverlay').classList.add('show');
+  }
+
+  function renderCard() {
+    if (!cardItems.length) return;
+    const item = cardItems[cardIdx];
+    const p = item.property || {};
+    const agent = item.agent || {};
+    document.getElementById('cardPager').innerHTML = `<strong>${cardIdx + 1}</strong> / ${cardItems.length}`;
+    document.getElementById('cardNav').style.display = cardItems.length > 1 ? 'flex' : 'none';
+    const typeClass = (p.type || '') === '매매' ? 'sale' : (p.type || '') === '전세' ? 'jeonse' : 'rent';
+    const tags = (p.features || []).map(t => `<span class="cf-tag">${t}</span>`).join('');
+    const agentName = agent.business_name || agent.name || '';
+    const memo = item.agent_comment ? `<div class="cf-memo"><div class="cf-memo-label">💬 ${agentName}의 한마디</div><div class="cf-memo-text">${item.agent_comment}</div></div>` : '';
+    document.getElementById('cardFrame').innerHTML = `
+      <div class="cf-top"><span class="cf-type ${typeClass}">${p.type || ''}</span><span class="cf-size">${p.area || ''}</span></div>
+      <div class="cf-name">${p.complex || p.location || ''}</div>
+      <div class="cf-location">${p.location || ''}</div>
+      <div class="cf-price">${p.price || ''}</div>
+      <div class="cf-specs">
+        <div class="cf-spec"><div class="cf-spec-label">면적</div><div class="cf-spec-value">${p.area || '-'}</div></div>
+        <div class="cf-spec"><div class="cf-spec-label">층수</div><div class="cf-spec-value">${p.floor || '-'}</div></div>
+      </div>
+      ${tags ? `<div class="cf-tags">${tags}</div>` : ''}
+      <div class="cf-agent"><span class="cf-agent-name">${agentName}</span><span class="cf-agent-phone">${agent.phone || ''}</span></div>
+      ${memo}`;
+  }
+
+  function prevCard() { if (cardIdx > 0) { cardIdx--; renderCard(); } }
+  function nextCard() { if (cardIdx < cardItems.length - 1) { cardIdx++; renderCard(); } }
+  function closeCardPreview() { document.getElementById('cardOverlay').classList.remove('show'); }
+
+  // ── 공유 시트 ──
+  function sendToCustomer() {
+    // 카드 미리보기에서 공유 시트 열기
+    openShareSheet();
+  }
+
+  function openShareSheet() {
+    document.getElementById('shareOverlay').classList.add('show');
+    setTimeout(() => document.getElementById('shareSheet').classList.add('show'), 10);
+  }
+  function closeShareSheet() {
+    document.getElementById('shareSheet').classList.remove('show');
+    setTimeout(() => document.getElementById('shareOverlay').classList.remove('show'), 300);
+  }
+
+  function getShareLink() {
+    const ids = cardItems.map(c => c.id);
+    const agentParam = currentUser ? '&agent=' + currentUser.id : '';
+    const base = 'https://kangmin79.github.io/hwik-web/property_view.html';
+    return ids.length === 1 ? `${base}?id=${ids[0]}${agentParam}` : `${base}?ids=${ids.join(',')}${agentParam}`;
+  }
+
+  async function shareKakao() {
+    const link = getShareLink();
+    const first = cardItems[0]?.property || {};
+    const agent = cardItems[0]?.agent || {};
+    const agentName = agent.business_name || agent.name || '중개사';
+    const name = first.complex || first.location || '매물';
+    const title = cardItems.length === 1 ? `${name} 매물` : `${name} 외 ${cardItems.length}개 매물`;
+    const desc = cardItems.length === 1
+      ? [first.type, first.price, first.area, first.floor].filter(Boolean).join(' · ')
+      : `${agentName}이 보내는 매물 ${cardItems.length}개`;
+    const imageUrl = currentUser ? `${SUPABASE_URL}/storage/v1/object/public/og-images/agents/${currentUser.id}.png?t=${Date.now()}` : '';
+    const content = { title, description: desc, link: { mobileWebUrl: link, webUrl: link } };
+    if (imageUrl) { content.imageUrl = imageUrl; content.imageWidth = 800; content.imageHeight = 420; }
+    closeShareSheet();
+    if (typeof Kakao === 'undefined' || !Kakao.isInitialized()) {
+      showToast('카카오 SDK 로드 중입니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+    Kakao.Share.sendDefault({ objectType: 'feed', content, buttons: [{ title: '카드로 보기', link: { mobileWebUrl: link, webUrl: link } }] });
+  }
+
+  function copyLink() {
+    const link = getShareLink();
+    navigator.clipboard.writeText(link).then(() => {
+      closeShareSheet();
+      showToast('🔗 링크 복사됨!');
+    });
+  }
+
+  function showToast(msg) {
+    let t = document.getElementById('mobileToast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'mobileToast';
+      t.style.cssText = 'position:fixed;bottom:110px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:9999;border:1px solid rgba(255,255,255,0.2);white-space:nowrap;transition:opacity 0.3s;';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg; t.style.opacity = '1';
+    setTimeout(() => { t.style.opacity = '0'; }, 2000);
+  }
+
+  async function openDetailById(cardId) {
+    try {
+      const { data } = await supabaseClient.from('cards').select('*').eq('id', cardId).maybeSingle();
+      if (data) openDetail(data);
+    } catch(e) { console.error(e); }
+  }
+
+  // ── 검색창 포커스 → 드롭다운 (구글 방식 — 로그인 체크는 검색 시점에)
+  searchInput.addEventListener('focus', () => {
+    openDropdown();
+  });
+
+  // 입력 중이면 드롭다운 닫기
+  searchInput.addEventListener('input', () => {
+    if (searchInput.value.trim()) {
+      closeDropdown();
+    } else {
+      openDropdown();
+    }
+  });
+
+  // 바깥 터치하면 드롭다운 닫기
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-wrap')) {
+      closeDropdown();
+    }
+  });
+
+  function openDropdown() {
+    if (container.classList.contains('active')) return; // 검색 결과 상태에서는 안 열기
+    dropdown.classList.add('show');
+    searchInput.classList.add('dropdown-open');
+  }
+
+  function closeDropdown() {
+    dropdown.classList.remove('show');
+    searchInput.classList.remove('dropdown-open');
+  }
+
+  // 추천 항목 선택
+  function pickSuggest(el) {
+    const text = el.querySelector('.suggest-text').textContent;
+    searchInput.value = text;
+    closeDropdown();
+    doSearch();
+  }
+
+  // ── 로그인 ──
+
+
+  // ── 빠른 검색 (현황 바 탭) ──
+  function doQuickSearch(cat) {
+    searchInput.value = cat === 'my' ? '내 매물 전체' : '공유받은 매물';
+    doSearch();
+  }
+
+
+  // ── 검색 ──
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') doSearch();
+  });
+
+    // ── 상세 모달 ──
+  const detailOverlay = document.getElementById('detailOverlay');
+  const detailModal = document.getElementById('detailModal');
+  let currentItem = null;
+
+  let currentTags = [];
+
+  function openDetail(item) {
+    currentItem = item;
+    currentTags = [...(item.tags || [])];
+    const isShared = item.cat === 'shared';
+    const typeClass = item.type === '매매' ? 'type-sale' : item.type === '전세' ? 'type-jeonse' : 'type-rent';
+    
+    document.getElementById('dmType').className = 'dm-type-badge ' + typeClass;
+    document.getElementById('dmType').textContent = item.type;
+    const tradeStatus = item.status === '계약중' ? '계약중' : item.status === '완료' ? '완료' : '계약가능';
+    const tradeClass = tradeStatus === '계약가능' ? 'trade-available' : tradeStatus === '계약중' ? 'trade-ongoing' : 'trade-done';
+    const dmTrade = document.getElementById('dmTrade');
+    dmTrade.className = 'li-trade ' + tradeClass;
+    dmTrade.textContent = tradeStatus;
+    document.getElementById('dmPrice').value = item.shortPrice;
+    document.getElementById('dmName').value = item.name;
+    document.getElementById('dmLocation').value = item.location;
+    document.getElementById('dmSize').value = item.size;
+    document.getElementById('dmFloor').value = item.floor;
+    document.getElementById('dmRooms').value = item.rooms;
+    document.getElementById('dmDirection').value = item.direction;
+    document.getElementById('dmMemoPublic').value = item.memo || '';
+    document.getElementById('dmTagInput').value = '';
+
+    // 공유 매물: readonly, 비공개 숨김
+    const inputs = detailModal.querySelectorAll('.dm-input, .dm-textarea');
+    inputs.forEach(el => {
+      if (isShared) { el.readOnly = true; el.style.opacity = '0.7'; }
+      else { el.readOnly = false; el.style.opacity = '1'; }
+    });
+
+    // 비공개 메모
+    const privateField = document.getElementById('dmPrivateField');
+    if (isShared) {
+      privateField.style.display = 'none';
+    } else {
+      privateField.style.display = 'block';
+      document.getElementById('dmMemoPrivate').value = item.memoPrivate || '';
+    }
+
+    // 태그 입력
+    const tagInputWrap = document.getElementById('dmTagInputWrap');
+    tagInputWrap.style.display = isShared ? 'none' : 'flex';
+
+    renderTags();
+
+    // 하단 버튼: 공유면 닫기만, 내 매물이면 취소/저장
+    const actCancel = document.getElementById('dmActCancel');
+    const actSave = document.getElementById('dmActSave');
+    if (isShared) {
+      actCancel.textContent = '닫기';
+      actSave.style.display = 'none';
+    } else {
+      actCancel.textContent = '취소';
+      actSave.style.display = 'flex';
+    }
+
+    // 헤더 제목
+    document.querySelector('.dm-title').textContent = isShared ? '공유 매물 (읽기 전용)' : '매물 상세';
+
+    detailOverlay.classList.add('show');
+    setTimeout(() => detailModal.classList.add('show'), 10);
+  }
+
+  function renderTags() {
+    const container = document.getElementById('dmTags');
+    const isShared = currentItem?.cat === 'shared';
+    container.innerHTML = currentTags.map((t, i) => 
+      isShared 
+        ? `<span class="dm-tag" style="cursor:default">${t}</span>`
+        : `<button class="dm-tag" onclick="removeTag(${i})">${t}<span class="tag-x">×</span></button>`
+    ).join('');
+  }
+
+  function addTag() {
+    const input = document.getElementById('dmTagInput');
+    const val = input.value.trim();
+    if (!val) return;
+    if (currentTags.includes(val)) { input.value = ''; return; }
+    currentTags.push(val);
+    input.value = '';
+    renderTags();
+  }
+
+  function removeTag(idx) {
+    currentTags.splice(idx, 1);
+    renderTags();
+  }
+
+  function closeDetail() {
+    detailModal.classList.remove('show');
+    setTimeout(() => detailOverlay.classList.remove('show'), 300);
+  }
+
+  function saveDetail() {
+    alert('저장되었습니다');
+    closeDetail();
+  }
+
+</script>
+
+</body>
+</html>
