@@ -1,0 +1,31 @@
+{
+  "name": "휙 — AI 매물카드",
+  "short_name": "휙",
+  "description": "AI가 만들어주는 매물카드 공유 서비스",
+  "start_url": "/card_generator_v2_auth.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0a0a12",
+  "theme_color": "#facc15",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
