@@ -1,0 +1,2040 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>휙</title>
+<meta name="description" content="AI가 찾아주는 내 조건에 딱 맞는 매물">
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#facc15">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="휙">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icon-152.png">
+<link rel="apple-touch-icon" sizes="120x120" href="icon-120.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  
+  :root {
+    --hwik-dark: #1a1a2e;
+    --hwik-dark-light: #242442;
+    --hwik-yellow: #FFD43B;
+    --hwik-yellow-hover: #FFC800;
+    --bg: #f8f8fa;
+    --white: #ffffff;
+    --gray-100: #f0f0f3;
+    --gray-200: #e2e2e8;
+    --gray-400: #8e8e9a;
+    --gray-600: #5a5a6e;
+    --text: #1a1a2e;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: 'Noto Sans KR', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  /* ── 레이아웃 ── */
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 0 24px;
+    padding-bottom: 18%;
+    transition: justify-content 0.4s ease;
+  }
+
+  .container.active {
+    justify-content: flex-start;
+    padding-top: 40px;
+  }
+
+  /* ── 로고 ── */
+  .logo {
+    margin-bottom: 48px;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .logo-text {
+    font-size: 68px;
+    font-weight: 900;
+    letter-spacing: -3px;
+    color: var(--hwik-dark);
+    transition: all 0.3s ease;
+  }
+
+  .logo-dot {
+    width: 12px;
+    height: 12px;
+    background: var(--hwik-yellow);
+    border-radius: 50%;
+    margin-top: 28px;
+    transition: all 0.3s ease;
+  }
+
+  .logo:hover .logo-text { color: var(--hwik-dark-light); }
+  .logo:hover .logo-dot { transform: scale(1.3); background: var(--hwik-yellow-hover); }
+
+  .container.active .logo { margin-bottom: 20px; }
+  .container.active .logo-text { font-size: 32px; }
+  .container.active .logo-dot { width: 8px; height: 8px; margin-top: 14px; }
+
+  .tagline {
+    font-size: 14px;
+    font-weight: 300;
+    color: var(--gray-400);
+    margin-top: -36px;
+    margin-bottom: 40px;
+    letter-spacing: -0.3px;
+    transition: all 0.4s ease;
+  }
+
+  .container.active .tagline { display: none; }
+
+  /* ── 검색 영역 ── */
+  .search-wrap {
+    width: 100%;
+    max-width: 540px;
+    position: relative;
+  }
+
+  .search-box {
+    position: relative;
+    width: 100%;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 18px 56px 18px 20px;
+    font-size: 17px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 400;
+    border: 2px solid var(--gray-200);
+    border-radius: 28px;
+    outline: none;
+    background: var(--white);
+    color: var(--text);
+    transition: all 0.25s ease;
+    -webkit-appearance: none;
+  }
+
+  .search-input::placeholder { color: var(--gray-400); font-weight: 300; opacity: 0.5; }
+
+  .search-input:focus {
+    border-color: var(--hwik-dark);
+    box-shadow: 0 4px 24px rgba(26,26,46,0.1);
+  }
+
+  /* 드롭다운 열리면 검색창 하단 모서리 제거 */
+  .search-input.dropdown-open {
+    border-radius: 28px 28px 0 0;
+    border-bottom-color: var(--gray-100);
+  }
+
+  /* ── 좌우 버튼 ── */
+  .btn-left {
+    position: absolute;
+    left: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .btn-right {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .icon-btn {
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .icon-btn:active { transform: scale(0.9); }
+
+  .icon-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2.5;
+    fill: none;
+  }
+
+  .btn-search { background: var(--hwik-yellow); }
+  .btn-search:hover { background: var(--hwik-yellow-hover); }
+  .btn-search svg { stroke: var(--hwik-dark); }
+
+  .btn-register { background: var(--hwik-dark); }
+  .btn-register:hover { background: var(--hwik-dark-light); }
+  .btn-register svg { stroke: var(--hwik-yellow); }
+
+  /* ── 추천 드롭다운 ── */
+  .suggest-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--white);
+    border: 2px solid var(--hwik-dark);
+    border-top: 1px solid var(--gray-100);
+    border-radius: 0 0 20px 20px;
+    padding: 4px 0 8px;
+    z-index: 50;
+    box-shadow: 0 8px 24px rgba(26,26,46,0.1);
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+  .suggest-dropdown .recent-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px 4px;
+  }
+
+  .suggest-dropdown.show { display: block; }
+
+  .suggest-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: background 0.1s ease;
+    font-size: 15px;
+    color: var(--text);
+    font-weight: 400;
+  }
+
+  .suggest-item:hover { background: var(--gray-100); }
+  .suggest-item:active { background: var(--gray-200); }
+
+  .suggest-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .suggest-icon svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--gray-400);
+    stroke-width: 2;
+    fill: none;
+  }
+
+  .suggest-text {
+    flex: 1;
+  }
+
+  .suggest-label {
+    font-size: 11px;
+    color: var(--gray-400);
+    font-weight: 300;
+    padding: 10px 20px 4px;
+  }
+
+  /* ── 결과 ── */
+  .results {
+    display: none;
+    width: 100%;
+    max-width: 540px;
+    margin-top: 16px;
+    overflow-y: auto;
+    max-height: calc(100vh - 240px);
+    padding-bottom: 90px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .container.active .results { display: block; }
+  .results::-webkit-scrollbar { display: none; }
+  .results { scrollbar-width: none; }
+
+  .results-status {
+    font-size: 14px;
+    color: var(--gray-400);
+    font-weight: 300;
+    margin-bottom: 16px;
+    padding-left: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .results-status strong { color: var(--hwik-dark); font-weight: 700; }
+
+  .sort-toggle {
+    display: flex; align-items: center; gap: 4px;
+    padding: 5px 10px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 20px;
+    background: var(--white);
+    font-size: 11px; font-weight: 600;
+    color: var(--gray-400);
+    cursor: pointer; font-family: inherit;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .sort-toggle.active {
+    border-color: var(--hwik-dark);
+    background: var(--hwik-dark);
+    color: var(--hwik-yellow);
+  }
+  .sort-toggle:active { transform: scale(0.95); }
+  .sort-toggle svg { width: 11px; height: 11px; stroke: currentColor; stroke-width: 2.5; fill: none; }
+
+  .searching { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--gray-400); font-weight: 300; padding-left: 4px; }
+  .dot-pulse { display: flex; gap: 4px; }
+  .dot-pulse span { width: 6px; height: 6px; border-radius: 50%; background: var(--hwik-yellow); animation: pulse 1.2s ease infinite; }
+  .dot-pulse span:nth-child(2) { animation-delay: 0.2s; }
+  .dot-pulse span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%,100%{opacity:.3;transform:scale(.8)} 50%{opacity:1;transform:scale(1.2)} }
+
+  /* ── 리스트 아이템 ── */
+  .li {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 12px 14px;
+    margin-bottom: 6px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    animation: fadeUp 0.3s ease forwards;
+    opacity: 0;
+  }
+  .li-row1 { display: flex; align-items: center; gap: 8px; }
+  .li-row2 { display: flex; align-items: center; gap: 6px; }
+  .li.my { background: #FFFBEB; }
+  .li.shared { background: #F0F1FF; }
+  .li.my:hover { background: #FFF6D6; }
+  .li.shared:hover { background: #E8E9FF; }
+  .li.checked.my { background: #FFF0B3; box-shadow: inset 0 0 0 1.5px #E6C200; }
+  .li.checked.shared { background: #DDDEFF; box-shadow: inset 0 0 0 1.5px #7C8CF8; }
+  .li:nth-child(2){animation-delay:.05s}
+  .li:nth-child(3){animation-delay:.1s}
+  .li:nth-child(4){animation-delay:.15s}
+  .li:nth-child(5){animation-delay:.2s}
+  @keyframes fadeUp { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+  .li-check {
+    width: 20px; height: 20px;
+    border: 2px solid var(--gray-200);
+    border-radius: 5px;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s ease;
+  }
+  .li-check svg { width: 14px; height: 14px; stroke: var(--white); stroke-width: 3; fill: none; display: none; }
+  .li.checked .li-check { background: var(--hwik-dark); border-color: var(--hwik-dark); }
+  .li.checked .li-check svg { display: block; }
+
+  .li-type {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .type-sale { background: #FFE8E8; color: #C62828; }
+  .type-jeonse { background: #E3F2FD; color: #1565C0; }
+  .type-rent { background: #E8F5E9; color: #2E7D32; }
+
+  .li-price {
+    font-size: 15px;
+    font-weight: 900;
+    color: var(--hwik-dark);
+    white-space: nowrap;
+    flex-shrink: 0;
+    min-width: 50px;
+  }
+
+  .li-info {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .li-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--hwik-dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .li-detail {
+    font-size: 11px;
+    color: var(--gray-400);
+    font-weight: 400;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .li-from {
+    font-size: 10px;
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .li-from.from-my { color: #9E8600; background: #FFF8E1; }
+  .li-from.from-shared { color: #4A52B5; background: #EDEFFF; }
+
+  .li-trade {
+    font-size: 10px; font-weight: 600;
+    white-space: nowrap; flex-shrink: 0;
+    padding: 2px 6px; border-radius: 4px;
+  }
+  .li-trade.trade-available { background: rgba(34,197,94,0.12); color: #16a34a; }
+  .li-trade.trade-ongoing   { background: rgba(250,204,21,0.15); color: #ca8a04; }
+  .li-trade.trade-done      { background: rgba(120,120,120,0.12); color: #888; }
+
+  /* 공유 시트 — my_cards.html 동일 스타일 */
+  .share-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(3px); z-index:1100; }
+  .share-overlay.show { display:block; }
+  .share-sheet {
+    position:fixed; bottom:-100%; left:50%; transform:translateX(-50%);
+    width:min(400px, 92vw);
+    background:#1a2535; border-radius:24px 24px 0 0;
+    padding:12px 20px calc(32px + env(safe-area-inset-bottom)); z-index:1101;
+    transition:bottom 0.35s cubic-bezier(0.4,0,0.2,1);
+    border-top:1px solid rgba(255,255,255,0.08);
+  }
+  .share-sheet.show { bottom:0; }
+  .share-sheet-handle { width:36px; height:4px; background:rgba(255,255,255,0.15); border-radius:2px; margin:0 auto 16px; }
+  .share-sheet-title { font-size:13px; font-weight:600; color:#6b7280; text-align:center; margin-bottom:20px; letter-spacing:0.05em; }
+  .share-sheet-btns { display:flex; justify-content:center; gap:20px; margin-bottom:20px; }
+  .share-opt { display:flex; flex-direction:column; align-items:center; gap:8px; background:none; border:none; cursor:pointer; transition:transform 0.15s; }
+  .share-opt:active { transform:translateY(-3px); }
+  .share-opt-icon { width:56px; height:56px; border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:26px; transition:all 0.15s; }
+  .share-opt.kakao .share-opt-icon { background:#FEE500; }
+  .share-opt.copy .share-opt-icon { background:rgba(78,205,196,0.15); border:1.5px solid rgba(78,205,196,0.25); }
+  .share-opt-label { font-size:12px; color:#9ca3af; font-weight:500; }
+  .share-sheet-cancel { width:100%; padding:14px; border-radius:12px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.08); color:#9ca3af; font-size:14px; font-weight:600; cursor:pointer; font-family:inherit; transition:all 0.15s; }
+  .share-sheet-cancel:active { background:rgba(255,255,255,0.1); color:#fff; }
+
+  .li-btn-detail {
+    padding: 5px 10px;
+    font-size: 11px; font-weight: 600;
+    color: var(--gray-600);
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 6px;
+    cursor: pointer; font-family: inherit;
+    flex-shrink: 0;
+    transition: all 0.15s ease;
+  }
+  .li-btn-detail:active { transform: scale(0.93); background: var(--gray-100); }
+
+  /* ── 플로팅 카드 만들기 버튼 ── */
+  .float-card-btn {
+    position: fixed;
+    bottom: 80px; left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    padding: 14px 32px;
+    background: var(--gray-200);
+    color: var(--gray-400);
+    border: none; border-radius: 16px;
+    font-size: 15px; font-weight: 700;
+    font-family: inherit;
+    cursor: default;
+    box-shadow: 0 6px 24px rgba(26,26,46,0.1);
+    z-index: 90;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex; align-items: center; gap: 8px;
+    white-space: nowrap;
+  }
+  .float-card-btn.visible { transform: translateX(-50%) translateY(0); }
+  .float-card-btn.active {
+    background: var(--hwik-dark);
+    color: var(--hwik-yellow);
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(26,26,46,0.3);
+  }
+  .float-card-btn.active:active { transform: translateX(-50%) scale(0.95); }
+  .float-card-btn svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none; }
+
+  /* ── 로그인 시트 ── */
+  .overlay { display: none; position: fixed; top:0;left:0;right:0;bottom:0; background: rgba(0,0,0,0.3); z-index: 100; animation: fi .2s ease; }
+  .overlay.show { display: block; }
+  @keyframes fi { from{opacity:0}to{opacity:1} }
+
+  .login-sheet {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: var(--white);
+    border-radius: 20px 20px 0 0;
+    padding: 28px 24px 36px;
+    z-index: 101;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    text-align: center;
+  }
+  .login-sheet.show { transform: translateY(0); }
+  .login-sheet-bar { width: 36px; height: 4px; background: var(--gray-200); border-radius: 2px; margin: 0 auto 20px; }
+
+  .kakao-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; max-width: 320px; margin: 0 auto;
+    padding: 14px 0;
+    background: #FEE500; border: none; border-radius: 12px;
+    font-size: 15px; font-weight: 600; color: #3C1E1E;
+    cursor: pointer; font-family: inherit;
+    transition: all 0.15s ease;
+  }
+  .kakao-btn:active { transform: scale(0.97); }
+  .kakao-btn svg { width: 20px; height: 20px; }
+
+  /* ── 상세 모달 (풀스크린) ── */
+  .detail-overlay {
+    display: none;
+    position: fixed; top:0;left:0;right:0;bottom:0;
+    background: rgba(0,0,0,0.4);
+    z-index: 200;
+  }
+  .detail-overlay.show { display: block; animation: fi .2s ease; }
+
+  .detail-modal {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: #0a0a1a;
+    z-index: 201;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .detail-modal.show { transform: translateY(0); }
+  .detail-modal::-webkit-scrollbar { display: none; }
+
+  .dm-header {
+    position: sticky; top: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px;
+    background: #0a0a1a;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    z-index: 10;
+  }
+  .dm-back {
+    width: 36px; height: 36px;
+    border: none; border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s ease;
+  }
+  .dm-back:active { transform: scale(0.9); }
+  .dm-back svg { width: 18px; height: 18px; stroke: #fff; stroke-width: 2.5; fill: none; }
+  .dm-title { font-size: 16px; font-weight: 700; color: #fff; }
+
+  .dm-body { padding: 20px; }
+
+  .dm-type-price {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 20px;
+  }
+  .dm-type-badge { font-size: 12px; font-weight: 700; padding: 5px 12px; border-radius: 5px; }
+
+  .dm-field { margin-bottom: 16px; }
+  .dm-label {
+    font-size: 11px; font-weight: 500; color: #666;
+    margin-bottom: 6px;
+  }
+  .dm-input {
+    width: 100%;
+    padding: 12px 14px;
+    background: #1a1a2e;
+    border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    font-size: 15px; font-family: inherit; font-weight: 400;
+    color: #fff;
+    outline: none;
+    transition: border-color 0.15s ease;
+  }
+  .dm-input:focus { border-color: #4ECDC4; background: #1e1e36; }
+  .dm-input::placeholder { color: #555; font-weight: 300; }
+
+  .dm-row {
+    display: flex; gap: 10px;
+  }
+  .dm-row .dm-field { flex: 1; }
+
+  .dm-textarea {
+    width: 100%;
+    padding: 12px 14px;
+    background: #1a1a2e;
+    border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    font-size: 14px; font-family: inherit; font-weight: 400;
+    color: #fff;
+    outline: none; resize: none;
+    min-height: 60px;
+    line-height: 1.5;
+    transition: border-color 0.15s ease;
+  }
+  .dm-textarea:focus { border-color: #4ECDC4; background: #1e1e36; }
+  .dm-textarea::placeholder { color: #555; font-weight: 300; }
+
+  .dm-memo-label-icon {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 11px; font-weight: 500; margin-bottom: 6px;
+  }
+  .dm-memo-private { color: #E67E22; }
+  .dm-memo-public { color: #4ECDC4; }
+
+
+  .dm-actions {
+    display: flex; gap: 8px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
+  .dm-act {
+    flex: 1;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 12px 0;
+    border: none; border-radius: 10px;
+    cursor: pointer; font-family: inherit;
+    font-size: 13px; font-weight: 600;
+    transition: all 0.15s ease;
+  }
+  .dm-act:active { transform: scale(0.95); }
+  .dm-act svg { width: 18px; height: 18px; stroke-width: 2; fill: none; }
+
+  .act-cancel { background: rgba(255,255,255,0.08); color: #aaa; }
+  .act-save { background: var(--hwik-yellow); color: #1a1a2e; }
+
+  /* ── 카드 미리보기 ── */
+  .card-overlay {
+    display: none;
+    position: fixed; top:0;left:0;right:0;bottom:0;
+    background: #0a0a1a;
+    z-index: 300;
+    flex-direction: column;
+  }
+  .card-overlay.show { display: flex; }
+
+  .card-header {
+    text-align: center;
+    padding: 16px 20px 8px;
+    color: #888;
+    font-size: 13px;
+    font-weight: 300;
+    position: relative;
+  }
+  .card-close {
+    position: absolute; right: 16px; top: 14px;
+    width: 32px; height: 32px;
+    border: none; border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .card-close svg { width: 16px; height: 16px; stroke: #aaa; stroke-width: 2.5; fill: none; }
+
+  .card-body {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 24px 20px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .card-body::-webkit-scrollbar { display: none; }
+
+  .card-pager {
+    color: #888;
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+  .card-pager strong { color: var(--hwik-yellow); font-weight: 700; }
+
+  .card-frame {
+    background: #1a1a2e;
+    border-radius: 16px;
+    padding: 20px;
+    width: 100%;
+    max-width: 340px;
+  }
+
+  .cf-top {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 14px;
+  }
+  .cf-type {
+    font-size: 12px; font-weight: 700;
+    padding: 4px 10px; border-radius: 4px;
+  }
+  .cf-type.sale { background: #FFE8E8; color: #C62828; }
+  .cf-type.jeonse { background: #E3F2FD; color: #1565C0; }
+  .cf-type.rent { background: #E8F5E9; color: #2E7D32; }
+  .cf-size { color: #888; font-size: 13px; }
+
+  .cf-name {
+    font-size: 18px; font-weight: 800;
+    color: #fff;
+    margin-bottom: 2px;
+  }
+  .cf-location {
+    font-size: 13px; color: #888;
+    margin-bottom: 8px;
+  }
+  .cf-price {
+    font-size: 28px; font-weight: 900;
+    color: #4ECDC4;
+    margin-bottom: 14px;
+  }
+
+  .cf-specs {
+    display: flex; gap: 8px;
+    margin-bottom: 12px;
+  }
+  .cf-spec {
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    border-radius: 8px;
+    padding: 8px 10px;
+    text-align: center;
+  }
+  .cf-spec-label { font-size: 10px; color: #666; margin-bottom: 2px; }
+  .cf-spec-value { font-size: 14px; font-weight: 700; color: #fff; }
+
+  .cf-tags {
+    display: flex; flex-wrap: wrap; gap: 5px;
+    margin-bottom: 14px;
+  }
+  .cf-tag {
+    font-size: 11px; font-weight: 500;
+    padding: 3px 8px;
+    background: rgba(78,205,196,0.15);
+    color: #4ECDC4;
+    border-radius: 4px;
+  }
+
+  .cf-agent {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 0;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 10px;
+  }
+  .cf-agent-name { font-size: 13px; color: #ccc; font-weight: 500; }
+  .cf-agent-phone { font-size: 13px; color: #4ECDC4; font-weight: 500; }
+
+  .cf-memo {
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+    padding: 12px;
+  }
+  .cf-memo-label { font-size: 11px; color: #4ECDC4; font-weight: 500; margin-bottom: 6px; }
+  .cf-memo-text { font-size: 13px; color: #ddd; line-height: 1.5; }
+
+  .card-footer {
+    padding: 12px 24px 28px;
+    text-align: center;
+  }
+  .card-send-btn {
+    width: 100%; max-width: 340px;
+    padding: 16px 0;
+    background: var(--hwik-yellow);
+    color: #1a1a2e;
+    border: none; border-radius: 12px;
+    font-size: 16px; font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .card-send-btn:active { transform: scale(0.97); }
+  .card-footer-sub {
+    font-size: 11px; color: #666;
+    margin-top: 8px;
+  }
+
+  .card-nav {
+    display: flex; gap: 12px;
+    margin-bottom: 12px;
+  }
+  .card-nav-btn {
+    width: 36px; height: 36px;
+    border: none; border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .card-nav-btn:active { transform: scale(0.9); }
+  .card-nav-btn:disabled { opacity: 0.3; }
+  .card-nav-btn svg { width: 16px; height: 16px; stroke: #fff; stroke-width: 2.5; fill: none; }
+
+  /* ── 태그 ── */
+  .dm-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .dm-tag {
+    display: flex; align-items: center; gap: 4px;
+    padding: 5px 10px;
+    background: rgba(78,205,196,0.15);
+    color: #4ECDC4;
+    font-size: 13px; font-weight: 500;
+    border-radius: 6px;
+    border: none; cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s ease;
+  }
+  .dm-tag:active { transform: scale(0.93); }
+  .dm-tag .tag-x {
+    font-size: 14px; font-weight: 700;
+    color: #4ECDC4;
+    opacity: 0.5;
+    margin-left: 2px;
+  }
+  .dm-tag-input-wrap {
+    display: flex; gap: 6px;
+  }
+  .dm-tag-input {
+    flex: 1;
+    padding: 8px 12px;
+    background: #1a1a2e;
+    border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    font-size: 13px; font-family: inherit;
+    color: #fff;
+    outline: none;
+  }
+  .dm-tag-input:focus { border-color: #4ECDC4; background: #1e1e36; }
+  .dm-tag-input::placeholder { color: #555; font-weight: 300; }
+  .dm-tag-add {
+    padding: 8px 14px;
+    background: rgba(78,205,196,0.15);
+    color: #4ECDC4;
+    border: none; border-radius: 8px;
+    font-size: 13px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+    flex-shrink: 0;
+  }
+  .dm-tag-add:active { transform: scale(0.93); }
+
+  /* ── 등록 모달 ── */
+  .reg-modal {
+    position: fixed; bottom: -100%; left: 0; right: 0;
+    background: #0a0a1a;
+    border-radius: 24px 24px 0 0;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    z-index: 201;
+    transform: translateY(0);
+    transition: bottom 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
+    display: flex; flex-direction: column;
+    max-height: 80vh;
+  }
+  .reg-modal.show { bottom: 0; }
+  .reg-modal::-webkit-scrollbar { display: none; }
+
+  .reg-save-btn { display: none; }
+
+  .reg-body {
+    padding: 16px 20px;
+    display: flex; flex-direction: column;
+  }
+
+  .reg-textarea {
+    width: 100%;
+    height: 180px;
+    padding: 16px;
+    background: #1a1a2e;
+    border: 1.5px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    font-size: 16px; font-family: inherit; font-weight: 400;
+    color: #fff;
+    outline: none; resize: none;
+    line-height: 1.7;
+    letter-spacing: 0.2px;
+  }
+  .reg-textarea:focus { border-color: #4ECDC4; background: #1e1e36; }
+  .reg-textarea::placeholder { color: #444; font-weight: 300; font-size: 15px; }
+  .reg-textarea::-webkit-scrollbar { display: none; }
+  .reg-textarea { scrollbar-width: none; }
+
+  .reg-footer {
+    padding: 12px 20px 28px;
+    background: #0a0a1a;
+  }
+  .reg-tip {
+    font-size: 13px; color: #999; font-weight: 400;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .reg-save-bottom {
+    width: 100%;
+    padding: 16px 0;
+    background: var(--hwik-yellow);
+    color: #1a1a2e;
+    border: none; border-radius: 12px;
+    font-size: 16px; font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .reg-save-bottom:active { transform: scale(0.97); }
+
+  /* ── 하단 탭바 (텔레그램 스타일) ── */
+  .bottom-tab-bar {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 64px;
+    background: rgba(10, 10, 26, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255,255,255,0.07);
+    z-index: 200;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 8px;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .bottom-tab-bar.visible { display: flex; }
+
+  .tab-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tab-btn:active { transform: scale(0.88); }
+
+  .tab-icon {
+    width: 26px; height: 26px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .tab-icon svg {
+    width: 24px; height: 24px;
+    stroke: rgba(255,255,255,0.35);
+    stroke-width: 1.8;
+    fill: none;
+    transition: stroke 0.2s ease;
+  }
+  .tab-btn.active .tab-icon svg { stroke: var(--hwik-yellow); }
+
+  .tab-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.35);
+    transition: color 0.2s ease;
+    letter-spacing: -0.2px;
+  }
+  .tab-btn.active .tab-label { color: var(--hwik-yellow); font-weight: 700; }
+
+  /* PWA 설치 탭 */
+  #pwaInstallTab {
+    display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    gap: 4px; background: none; border: none; cursor: pointer;
+    padding: 8px 12px; font-family: inherit; transition: transform 0.15s;
+  }
+  #pwaInstallTab:active { transform: scale(0.88); }
+  #pwaInstallTab.visible { display: flex; }
+  .pwa-tab-icon {
+    width: 26px; height: 26px; background: var(--hwik-yellow);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  }
+  .pwa-tab-icon svg { width: 15px; height: 15px; stroke: #111; stroke-width: 2.5; fill: none; }
+  .pwa-tab-label { font-size: 10px; color: #9ca3af; font-weight: 500; letter-spacing: -0.3px; }
+
+  /* 뱃지 */
+  .tab-badge {
+    position: absolute;
+    top: -4px; right: -6px;
+    min-width: 16px; height: 16px;
+    background: #ff4d4d;
+    color: #fff;
+    font-size: 9px; font-weight: 800;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 4px;
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border: 1.5px solid rgba(10,10,26,0.9);
+  }
+  .tab-badge.show { opacity: 1; transform: scale(1); }
+
+  /* 활성 탭 아이콘/레이블 색상으로만 구분 */
+
+  /* 탭바 있을 때 하단 여백 */
+  .results { padding-bottom: 80px; }
+  .container.active .results { display: block; }
+
+  /* ── 최근 검색 ── */
+  .recent-wrap {
+    display: none;
+    width: 100%;
+    max-width: 540px;
+    margin-top: 16px;
+  }
+  .recent-wrap.visible { display: block; }
+  .container.active .recent-wrap { display: none !important; }
+
+  .recent-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding: 0 2px;
+  }
+  .recent-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--gray-400);
+  }
+  .recent-clear {
+    font-size: 12px;
+    font-weight: 600;
+    color: #E53935;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 8px 4px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .recent-clear:active { opacity: 0.6; }
+
+  .recent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .recent-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 14px;
+    background: var(--white);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    border: 1px solid transparent;
+  }
+  .recent-item:active { background: var(--gray-100); }
+  .recent-item svg {
+    width: 14px; height: 14px;
+    stroke: var(--gray-400); stroke-width: 2; fill: none;
+    flex-shrink: 0;
+  }
+  .recent-item-text {
+    flex: 1;
+    font-size: 14px;
+    color: var(--text);
+    font-weight: 400;
+  }
+  .recent-item-del {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    border: none; background: none; cursor: pointer;
+    color: var(--gray-400);
+    font-size: 18px;
+    line-height: 1;
+    flex-shrink: 0;
+    border-radius: 50%;
+    transition: background 0.15s;
+    -webkit-tap-highlight-color: transparent;
+    padding: 0;
+    margin: -6px;
+  }
+  .recent-item-del:active { background: var(--gray-200); color: #E53935; }
+
+  /* ── 하단 ── */
+  .footer {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    text-align: center; padding: 20px;
+    font-size: 12px; color: var(--gray-400); font-weight: 300;
+    background: linear-gradient(transparent, var(--bg) 50%);
+    pointer-events: none;
+  }
+  .footer span { color: var(--hwik-yellow-hover); font-weight: 500; }
+  .container.active .footer { display: none; }
+
+  /* ── 모바일 ── */
+  @media (max-width: 480px) {
+    .logo-text { font-size: 52px; }
+    .logo-dot { width: 10px; height: 10px; margin-top: 22px; }
+    .logo { margin-bottom: 36px; }
+    .tagline { font-size: 13px; margin-top: -28px; margin-bottom: 32px; }
+    .container.active .logo-text { font-size: 26px; }
+    .container.active .logo-dot { width: 6px; height: 6px; margin-top: 10px; }
+    .container.active .logo { margin-bottom: 14px; }
+    .search-input { padding: 16px 50px 16px 18px; font-size: 16px; }
+    .container { padding: 0 20px; }
+    .container.active { padding-top: 30px; }
+    .icon-btn { width: 38px; height: 38px; }
+    .icon-btn svg { width: 17px; height: 17px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container" id="container">
+  
+  <div class="logo" onclick="resetAll()">
+    <span class="logo-text">휙</span>
+    <span class="logo-dot"></span>
+  </div>
+
+  <div class="tagline">중개사를 위한 AI 매물 도구</div>
+
+  <!-- 하단 탭바 -->
+  <div class="bottom-tab-bar" id="bottomTabBar">
+    <!-- 홈 -->
+    <button class="tab-btn active" id="tabHome" onclick="switchTab('home')">
+      <div class="tab-icon">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <span class="tab-label">홈</span>
+    </button>
+    <!-- 내 매물 -->
+    <button class="tab-btn" id="tabMy" onclick="switchTab('my')">
+      <div class="tab-icon">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span class="tab-badge" id="badgeMy"></span>
+      </div>
+      <span class="tab-label">내 매물</span>
+    </button>
+    <!-- 공유받은 -->
+    <button class="tab-btn" id="tabShared" onclick="switchTab('shared')">
+      <div class="tab-icon">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        <span class="tab-badge" id="badgeShared"></span>
+      </div>
+      <span class="tab-label">공유받은</span>
+    </button>
+    <!-- 메모 -->
+    <button class="tab-btn" id="tabMemo" onclick="switchTab('memo')">
+      <div class="tab-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <span class="tab-badge" id="badgeMemo"></span>
+      </div>
+      <span class="tab-label">메모</span>
+    </button>
+
+    <button id="pwaInstallTab" onclick="triggerPwaInstall()">
+      <div class="pwa-tab-icon">
+        <svg viewBox="0 0 24 24"><path d="M12 2v13M8 11l4 4 4-4"/><line x1="3" y1="19" x2="21" y2="19"/></svg>
+      </div>
+      <span class="pwa-tab-label">설치</span>
+    </button>
+  </div>
+
+  <div class="search-wrap">
+    <div class="search-box">
+      <input 
+        type="text" 
+        class="search-input" 
+        id="searchInput"
+        placeholder="급매 전세 30평"
+        autocomplete="off"
+        enterkeyhint="search"
+      >
+      <div class="btn-right">
+        <button class="icon-btn btn-search" onclick="doSearch()" title="매물 검색">
+          <svg viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="7"/>
+            <line x1="16.5" y1="16.5" x2="21" y2="21"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- 드롭다운: 최근검색 + 추천 -->
+      <div class="suggest-dropdown" id="dropdown">
+        <!-- 최근 검색 (동적) -->
+        <div id="recentInDropdown"></div>
+        <!-- 추천 검색어 (최근 없을 때) -->
+        <div id="suggestStatic">
+          <div class="suggest-label">이렇게 검색해보세요</div>
+          <div class="suggest-item" onclick="pickSuggest(this)">
+            <div class="suggest-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></div>
+            <span class="suggest-text">전세 30평</span>
+          </div>
+          <div class="suggest-item" onclick="pickSuggest(this)">
+            <div class="suggest-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></div>
+            <span class="suggest-text">월세 1000이하</span>
+          </div>
+          <div class="suggest-item" onclick="pickSuggest(this)">
+            <div class="suggest-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></div>
+            <span class="suggest-text">매매 10억</span>
+          </div>
+          <div class="suggest-item" onclick="pickSuggest(this)">
+            <div class="suggest-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></div>
+            <span class="suggest-text">오피스텔 투룸</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /search-wrap -->
+
+  <div class="results" id="results"></div>
+
+  <!-- 플로팅 카드 만들기 버튼 -->
+  <button class="float-card-btn" id="floatCardBtn" onclick="makeCards()">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/></svg>
+    카드 만들기 <span id="floatCount"></span>
+  </button>
+
+  <div class="footer">AI가 찾아주는 매물 · <span>휙</span></div>
+</div>
+
+<!-- 로그인 시트 -->
+<div class="overlay" id="overlay" onclick="closeLogin()"></div>
+<div class="login-sheet" id="loginSheet">
+  <div class="login-sheet-bar"></div>
+  <button class="kakao-btn" onclick="doKakaoLogin()">
+    <svg viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3C6.48 3 2 6.48 2 10.8c0 2.76 1.84 5.18 4.6 6.56-.2.74-.72 2.68-.82 3.1-.14.52.19.51.4.37.16-.1 2.56-1.74 3.6-2.44.7.1 1.44.16 2.22.16 5.52 0 10-3.48 10-7.76S17.52 3 12 3z"/></svg>
+    카카오로 시작하기
+  </button>
+</div>
+
+<!-- 상세/수정 모달 -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail()"></div>
+
+<!-- 카드 미리보기 -->
+
+<!-- 매물 메모 모달 -->
+<div class="detail-overlay" id="regOverlay" onclick="closeRegister()"></div>
+<div class="reg-modal" id="regModal">
+  <div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:12px auto 0;"></div>
+  <div class="dm-header">
+    <button class="dm-back" onclick="closeRegister()">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span class="dm-title">매물 메모</span>
+    <span style="width:36px"></span>
+  </div>
+  <div class="reg-body">
+    <textarea class="reg-textarea" id="regInput" placeholder="통화 내용을 빠르게 메모하세요
+
+예) 대치동 래미안 매매 18억 32평
+집주인 010-1234-5678
+급매, 이번주까지 결정"></textarea>
+  </div>
+  <div class="reg-footer">
+    <div class="reg-tip">PC 내카드에서 메모를 확인하고 삭제할 수 있어요</div>
+    <button class="reg-save-bottom" onclick="saveMemo()">저장하기</button>
+  </div>
+</div>
+
+<!-- 카드 미리보기 -->
+<div class="card-overlay" id="cardOverlay">
+  <div class="card-header">
+    손님에게 보이는 화면
+    <button class="card-close" onclick="closeCardPreview()">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="card-body">
+    <div style="color:var(--hwik-yellow);font-size:28px;font-weight:900;margin-bottom:4px;">휙</div>
+    <div class="card-pager" id="cardPager"></div>
+    <div class="card-nav" id="cardNav">
+      <button class="card-nav-btn" onclick="prevCard()"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+      <button class="card-nav-btn" onclick="nextCard()"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></button>
+    </div>
+    <div class="card-frame" id="cardFrame"></div>
+  </div>
+  <div class="card-footer">
+    <button class="card-send-btn" onclick="sendToCustomer()">손님에게 보내기</button>
+  </div>
+</div>
+
+<!-- 공유 시트 -->
+<div class="share-overlay" id="shareOverlay" onclick="closeShareSheet()"></div>
+<div class="share-sheet" id="shareSheet">
+  <div class="share-sheet-handle"></div>
+  <div class="share-sheet-title" id="shareSheetTitle">매물 공유하기</div>
+  <div class="share-sheet-btns">
+    <button class="share-opt kakao" onclick="shareKakao()">
+      <div class="share-opt-icon"><img src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_medium.png" style="width:32px;height:32px;"></div>
+      <div class="share-opt-label">카카오톡</div>
+    </button>
+    <button class="share-opt copy" onclick="copyLink()">
+      <div class="share-opt-icon">🔗</div>
+      <div class="share-opt-label">링크 공유</div>
+    </button>
+  </div>
+  <button class="share-sheet-cancel" onclick="closeShareSheet()">취소</button>
+</div>
+
+<div class="detail-modal" id="detailModal">
+  <div class="dm-header">
+    <button class="dm-back" onclick="closeDetail()">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span class="dm-title">매물 상세</span>
+    <span style="width:36px"></span>
+  </div>
+  <div class="dm-body">
+    <!-- 거래유형 + 계약상태 + 가격 -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+      <span class="dm-type-badge" id="dmType"></span>
+      <span class="li-trade" id="dmTrade"></span>
+    </div>
+    <div id="dmPrice" style="font-size:28px;font-weight:900;color:#4ECDC4;margin-bottom:16px;"></div>
+
+    <!-- 건물명 + 위치 -->
+    <div id="dmName" style="font-size:17px;font-weight:700;color:#fff;margin-bottom:4px;"></div>
+    <div id="dmLocation" style="font-size:13px;color:#888;margin-bottom:16px;"></div>
+
+    <!-- 평수/층수 -->
+    <div id="dmSizeFloor" style="display:flex;gap:12px;margin-bottom:12px;"></div>
+
+    <!-- 방구조/향 -->
+    <div id="dmRoomsDirection" style="display:flex;gap:12px;margin-bottom:12px;"></div>
+
+    <!-- 태그 -->
+    <div id="dmTags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;"></div>
+
+    <!-- 비공개 메모 -->
+    <div id="dmPrivateField" style="margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:700;color:#f87171;margin-bottom:6px;">🔒 비공개 메모</div>
+      <div id="dmMemoPrivate" style="font-size:13px;color:#ccc;background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.15);border-radius:8px;padding:10px 12px;line-height:1.5;"></div>
+    </div>
+
+    <!-- 손님에게 한마디 -->
+    <div id="dmPublicField" style="margin-bottom:20px;">
+      <div style="font-size:11px;font-weight:700;color:#facc15;margin-bottom:6px;">💬 손님에게 한마디</div>
+      <div id="dmMemoPublic" style="font-size:13px;color:#ccc;background:rgba(250,204,21,0.06);border:1px solid rgba(250,204,21,0.15);border-radius:8px;padding:10px 12px;line-height:1.5;"></div>
+    </div>
+
+    <!-- 하단 공유 버튼 -->
+    <div class="dm-actions">
+      <button class="dm-act act-cancel" onclick="closeDetail()">닫기</button>
+      <button class="dm-act act-save" id="dmActShare" onclick="shareFromDetail()">
+        <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;margin-right:4px;"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13"/></svg>
+        공유하기
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js"></script>
+<script>
+  // ── 플레이스홀더 순환 ──
+  const container = document.getElementById('container');
+  const searchInput = document.getElementById('searchInput');
+  const dropdown = document.getElementById('dropdown');
+  const results = document.getElementById('results');
+
+// ── Supabase + Kakao 초기화 ──
+  const SUPABASE_URL = HWIK_CONFIG.SUPABASE_URL;
+  const SUPABASE_KEY = HWIK_CONFIG.SUPABASE_KEY;
+  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // 카카오 SDK 초기화 (my_cards.html 동일 패턴)
+  window.addEventListener('load', function() {
+    if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
+      Kakao.init(HWIK_CONFIG.KAKAO_JS_KEY);
+    }
+  });
+
+  const overlay = document.getElementById('overlay');
+  const loginSheet = document.getElementById('loginSheet');
+  let currentUser = null;
+  let searchData = [];
+  let searchController = null;
+
+  // 로그인 상태 확인
+  supabaseClient.auth.getSession().then(({ data: { session } }) => {
+    if (session?.user) { currentUser = session.user; onLoggedIn(); }
+  });
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (session?.user) { currentUser = session.user; onLoggedIn(); }
+    else { currentUser = null; }
+  });
+
+  async function onLoggedIn() {
+    closeLogin();
+    showHomeWidgets();
+    await loadMyCount();
+  }
+
+  async function loadMyCount() {
+    if (!currentUser) return;
+    updateTabBadges();
+  }
+
+  // 검색창 포커스
+  searchInput.addEventListener('focus', () => {
+    if (!currentUser) { searchInput.blur(); showLogin(); return; }
+    // 키보드 올라올 때 검색창이 보이도록 스크롤
+    setTimeout(() => {
+      searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
+    openDropdown();
+  });
+  searchInput.addEventListener('input', () => {
+    if (searchInput.value.trim()) closeDropdown(); else openDropdown();
+  });
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-wrap')) closeDropdown();
+  });
+
+  function openDropdown() {
+    if (container.classList.contains('active')) return;
+    renderRecent();
+    dropdown.classList.add('show');
+    searchInput.classList.add('dropdown-open');
+  }
+  function closeDropdown() {
+    dropdown.classList.remove('show');
+    searchInput.classList.remove('dropdown-open');
+  }
+  function pickSuggest(el) {
+    searchInput.value = el.querySelector('.suggest-text').textContent;
+    closeDropdown(); doSearch();
+  }
+
+  // ── 로그인 ──
+  function showLogin() {
+    overlay.classList.add('show');
+    setTimeout(() => loginSheet.classList.add('show'), 10);
+  }
+  function closeLogin() {
+    loginSheet.classList.remove('show');
+    setTimeout(() => overlay.classList.remove('show'), 300);
+  }
+  function doKakaoLogin() {
+    supabaseClient.auth.signInWithOAuth({
+      provider: 'kakao',
+      options: { redirectTo: window.location.href }
+    });
+  }
+  function showHomeWidgets() {
+    document.getElementById('bottomTabBar').classList.add('visible');
+    renderRecent();
+    updateTabBadges();
+  }
+
+  // ── 하단 탭 전환 ──
+  function switchTab(tab) {
+    // 탭 버튼 active 처리
+    ['home','my','shared','memo'].forEach(t => {
+      document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1))?.classList.toggle('active', t === tab);
+    });
+    if (tab === 'home') {
+      resetAll();
+    } else if (tab === 'my') {
+      doQuickSearch('my');
+    } else if (tab === 'shared') {
+      doQuickSearch('shared');
+    } else if (tab === 'memo') {
+      goRegister();
+      // 메모 탭 클릭 시 뱃지 제거
+      const badge = document.getElementById('badgeMemo');
+      badge.textContent = '';
+      badge.classList.remove('show');
+    }
+  }
+
+  async function updateTabBadges() {
+    if (!currentUser) return;
+    try {
+      // 내 매물 수
+      const { count: myCount } = await supabaseClient.from('cards').select('*', { count: 'exact', head: true }).eq('agent_id', currentUser.id);
+      setBadge('badgeMy', myCount);
+
+      // 미확인 메모 수
+      const { count: memoCount } = await supabaseClient.from('memos').select('id', { count: 'exact', head: true }).eq('agent_id', currentUser.id).eq('is_read', false);
+      setBadge('badgeMemo', memoCount);
+    } catch(e) {}
+  }
+
+  function setBadge(id, count) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (count > 0) {
+      el.textContent = count > 99 ? '99+' : count;
+      el.classList.add('show');
+    } else {
+      el.textContent = '';
+      el.classList.remove('show');
+    }
+  }
+
+  // ── 최근 검색 ──
+  let recentSearches = JSON.parse(localStorage.getItem('hwik_recent') || '[]');
+
+  function addRecent(query) {
+    recentSearches = recentSearches.filter(q => q !== query);
+    recentSearches.unshift(query);
+    if (recentSearches.length > 3) recentSearches = recentSearches.slice(0, 3);
+    localStorage.setItem('hwik_recent', JSON.stringify(recentSearches));
+  }
+  function renderRecent() {
+    const recentEl = document.getElementById('recentInDropdown');
+    const staticEl = document.getElementById('suggestStatic');
+    if (!recentEl) return;
+    if (!recentSearches.length) {
+      recentEl.innerHTML = '';
+      if (staticEl) staticEl.style.display = '';
+      return;
+    }
+    if (staticEl) staticEl.style.display = 'none';
+    recentEl.innerHTML = `
+      <div class="recent-header" style="padding:10px 16px 4px;">
+        <span class="recent-title">최근 검색</span>
+        <button class="recent-clear" onclick="clearAllRecent()">전체 삭제</button>
+      </div>
+      ${recentSearches.map((q, i) => `
+        <div class="suggest-item" onclick="pickRecent(${i})">
+          <div class="suggest-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg></div>
+          <span class="suggest-text">${esc(q)}</span>
+          <button class="recent-item-del" onclick="event.stopPropagation();deleteRecent(${i})">×</button>
+        </div>
+      `).join('')}
+    `;
+  }
+  function pickRecent(idx) { searchInput.value = recentSearches[idx] || ''; doSearch(); }
+  function deleteRecent(idx) {
+    recentSearches.splice(idx, 1);
+    localStorage.setItem('hwik_recent', JSON.stringify(recentSearches));
+    renderRecent();
+  }
+  function clearAllRecent() {
+    recentSearches = [];
+    localStorage.removeItem('hwik_recent');
+    renderRecent();
+  }
+  function doQuickSearch(cat) {
+    searchInput.value = cat === 'my' ? '내 매물 전체' : '공유받은 매물';
+    doSearch(true);
+  }
+
+  // ── 검색 ──
+  searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSearch(); });
+
+  async function doSearch(skipRecent = false) {
+    if (!currentUser) { showLogin(); return; }
+    const query = searchInput.value.trim();
+    if (!query) return;
+    if (!skipRecent) addRecent(query);
+    closeDropdown();
+    container.classList.add('active');
+    searchInput.blur();
+    // 이전 검색 취소
+    if (searchController) searchController.abort();
+    searchController = new AbortController();
+    results.innerHTML = `
+      <div class="searching">
+        <div class="dot-pulse"><span></span><span></span><span></span></div>
+        "${query}" 검색 중
+      </div>`;
+    try {
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/search-property`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+        body: JSON.stringify({ query, agent_id: currentUser.id, limit: 30, search_mode: 'my' }),
+        signal: searchController.signal
+      });
+      const data = await res.json();
+      showResults(data.results || []);
+    } catch(e) {
+      if (e.name === 'AbortError') return; // 이전 검색 취소된 것
+      results.innerHTML = `<div class="results-status" style="text-align:center;padding:32px 0;color:#f87171">검색 오류가 발생했어요</div>`;
+    }
+  }
+
+  function resetAll() {
+    container.classList.remove('active');
+    searchInput.value = '';
+    results.innerHTML = '';
+    searchData = [];
+    closeDropdown();
+    checkedSet.clear();
+    hideFloatBtn();
+    if (currentUser) showHomeWidgets();
+  }
+
+  let myFirst = false;
+  function toggleMyFirst() {
+    myFirst = !myFirst;
+    document.getElementById('sortToggleBtn')?.classList.toggle('active', myFirst);
+    renderResults(searchData);
+  }
+
+  function showResults(cards) {
+    searchData = cards;
+    checkedSet.clear();
+    updateFloatBtn();
+    myFirst = false;
+    if (!cards.length) {
+      results.innerHTML = `<div class="results-status" style="text-align:center;padding:32px 0">검색 결과가 없어요</div>`;
+      return;
+    }
+    renderResults(cards);
+  }
+
+  function renderResults(data) {
+    let sorted = [...data];
+    if (myFirst) sorted = [...sorted.filter(i => i._cat === 'my'), ...sorted.filter(i => i._cat !== 'my')];
+    let html = `
+      <div class="results-status">
+        <strong>${data.length}건</strong>
+        <button class="sort-toggle ${myFirst ? 'active' : ''}" id="sortToggleBtn" onclick="toggleMyFirst()">
+          <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+          내 매물 위로
+        </button>
+      </div>`;
+    sorted.forEach((item, idx) => {
+      const p = item.property || {};
+      const type = esc(p.type || '');
+      const typeClass = (p.type || '') === '매매' ? 'type-sale' : (p.type || '') === '전세' ? 'type-jeonse' : 'type-rent';
+      const tradeStatus = item.trade_status === '계약중' ? '계약중' : item.trade_status === '완료' ? '완료' : '계약가능';
+      const tradeClass = tradeStatus === '계약가능' ? 'trade-available' : tradeStatus === '계약중' ? 'trade-ongoing' : 'trade-done';
+      const fromLabel = item._cat === 'my' ? '내 매물' : esc(item.agent?.business_name || '공유');
+      const fromClass = item._cat === 'my' ? 'from-my' : 'from-shared';
+      const name = esc(p.complex || p.location || '매물');
+      const loc = esc(p.location || '');
+      const detail = [p.area, p.floor].filter(Boolean).map(v => esc(v)).join(' · ');
+      const safeId = esc(item.id);
+      const safeCat = esc(item._cat || 'my');
+      html += `
+        <div class="li ${item._cat === 'my' ? 'my' : 'shared'}" id="li-${idx}" onclick="toggleCheck(${idx})">
+          <div class="li-row1">
+            <div class="li-check"><svg viewBox="0 0 24 24"><polyline points="4 12 9 17 20 6"/></svg></div>
+            <span class="li-type ${typeClass}">${type}</span>
+            <span class="li-price">${esc(p.price || '')}</span>
+            <span class="li-trade ${tradeClass}">${tradeStatus}</span>
+            <span style="flex:1"></span>
+            <button class="li-btn-detail" onclick="event.stopPropagation(); openDetailById('${safeId}', '${safeCat}')">상세</button>
+          </div>
+          <div class="li-row2">
+            <div class="li-name">${name}${loc && loc !== name ? ' · ' + loc : ''}</div>
+            <div class="li-detail">${detail}</div>
+          </div>
+        </div>`;
+    });
+    results.innerHTML = html;
+  }
+
+  function goRegister() {
+    if (!currentUser) { showLogin(); return; }
+    document.getElementById('regInput').value = '';
+    document.getElementById('regOverlay').classList.add('show');
+    document.getElementById('regModal').classList.add('show');
+    setTimeout(() => document.getElementById('regInput').focus(), 300);
+  }
+  function closeRegister() {
+    document.getElementById('regModal').classList.remove('show');
+    setTimeout(() => document.getElementById('regOverlay').classList.remove('show'), 300);
+  }
+  async function saveMemo() {
+    const text = document.getElementById('regInput').value.trim();
+    if (!text) { showToast('메모 내용을 입력해주세요'); return; }
+    const btn = document.querySelector('.reg-save-bottom');
+    btn.textContent = '저장 중...'; btn.disabled = true;
+    const { error } = await supabaseClient.from('memos').insert({
+      agent_id: currentUser.id,
+      content: text,
+      is_read: false
+    });
+    btn.textContent = '저장하기'; btn.disabled = false;
+    if (error) { showToast('저장 실패: ' + error.message); return; }
+    closeRegister();
+    showToast('✅ 메모 저장됨! PC에서 확인하세요');
+  }
+
+  // ── 체크 선택 ──
+  const checkedSet = new Set();
+  const floatBtn = document.getElementById('floatCardBtn');
+  const floatCount = document.getElementById('floatCount');
+
+  function toggleCheck(idx) {
+    const el = document.getElementById('li-' + idx);
+    if (checkedSet.has(idx)) { checkedSet.delete(idx); el.classList.remove('checked'); }
+    else { checkedSet.add(idx); el.classList.add('checked'); }
+    updateFloatBtn();
+  }
+  function updateFloatBtn() {
+    if (checkedSet.size > 0) { floatBtn.classList.add('visible','active'); floatCount.textContent = '(' + checkedSet.size + '건)'; }
+    else { floatBtn.classList.remove('visible','active'); floatCount.textContent = ''; }
+  }
+  function showFloatBtn() { floatBtn.classList.add('visible'); }
+  function hideFloatBtn() { floatBtn.classList.remove('visible','active'); }
+
+  let cardItems = [];
+  let cardIdx = 0;
+
+  function makeCards() {
+    if (checkedSet.size === 0) return;
+    cardItems = [];
+    checkedSet.forEach(idx => { if (searchData[idx]) cardItems.push(searchData[idx]); });
+    cardIdx = 0;
+    renderCard();
+    document.getElementById('cardOverlay').classList.add('show');
+  }
+
+  function renderCard() {
+    if (!cardItems.length) return;
+    const item = cardItems[cardIdx];
+    const p = item.property || {};
+    const agent = item.agent || {};
+    document.getElementById('cardPager').innerHTML = `<strong>${cardIdx + 1}</strong> / ${cardItems.length}`;
+    document.getElementById('cardNav').style.display = cardItems.length > 1 ? 'flex' : 'none';
+    const typeClass = (p.type || '') === '매매' ? 'sale' : (p.type || '') === '전세' ? 'jeonse' : 'rent';
+    const tags = (p.features || []).map(t => `<span class="cf-tag">${esc(t)}</span>`).join('');
+    const agentName = esc(agent.business_name || agent.name || '');
+    const memo = item.agent_comment ? `<div class="cf-memo"><div class="cf-memo-label">💬 ${agentName}의 한마디</div><div class="cf-memo-text">${esc(item.agent_comment)}</div></div>` : '';
+    document.getElementById('cardFrame').innerHTML = `
+      <div class="cf-top"><span class="cf-type ${typeClass}">${esc(p.type || '')}</span><span class="cf-size">${esc(p.area || '')}</span></div>
+      <div class="cf-name">${esc(p.complex || p.location || '')}</div>
+      <div class="cf-location">${esc(p.location || '')}</div>
+      <div class="cf-price">${esc(p.price || '')}</div>
+      <div class="cf-specs">
+        <div class="cf-spec"><div class="cf-spec-label">면적</div><div class="cf-spec-value">${esc(p.area || '-')}</div></div>
+        <div class="cf-spec"><div class="cf-spec-label">층수</div><div class="cf-spec-value">${esc(p.floor || '-')}</div></div>
+      </div>
+      ${tags ? `<div class="cf-tags">${tags}</div>` : ''}
+      <div class="cf-agent"><span class="cf-agent-name">${agentName}</span><span class="cf-agent-phone">${esc(agent.phone || '')}</span></div>
+      ${memo}`;
+  }
+
+  function prevCard() { if (cardIdx > 0) { cardIdx--; renderCard(); } }
+  function nextCard() { if (cardIdx < cardItems.length - 1) { cardIdx++; renderCard(); } }
+  function closeCardPreview() { document.getElementById('cardOverlay').classList.remove('show'); }
+
+  // ── 공유 시트 ──
+  function sendToCustomer() {
+    openShareSheet();
+  }
+
+  function openShareSheet() {
+    const count = cardItems.length;
+    document.getElementById('shareSheetTitle').textContent = `매물 ${count}개 공유하기`;
+    document.getElementById('shareOverlay').classList.add('show');
+    setTimeout(() => document.getElementById('shareSheet').classList.add('show'), 10);
+  }
+  function closeShareSheet() {
+    document.getElementById('shareSheet').classList.remove('show');
+    setTimeout(() => document.getElementById('shareOverlay').classList.remove('show'), 300);
+  }
+
+  function getShareLink() {
+    const ids = cardItems.map(c => c.id);
+    const agentParam = currentUser ? '&agent=' + currentUser.id : '';
+    const base = 'https://kangmin79.github.io/hwik-web/property_view.html';
+    return ids.length === 1 ? `${base}?id=${ids[0]}${agentParam}` : `${base}?ids=${ids.join(',')}${agentParam}`;
+  }
+
+  async function shareKakao() {
+    const link = getShareLink();
+    const first = cardItems[0]?.property || {};
+    const agent = cardItems[0]?.agent || {};
+    const agentName = agent.business_name || agent.name || '중개사';
+    const name = first.complex || first.location || '매물';
+    const title = cardItems.length === 1 ? `${name} 매물` : `${name} 외 ${cardItems.length}개 매물`;
+    const desc = cardItems.length === 1
+      ? [first.type, first.price, first.area, first.floor].filter(Boolean).join(' · ')
+      : `${agentName}이 보내는 매물 ${cardItems.length}개`;
+    const imageUrl = currentUser ? `${SUPABASE_URL}/storage/v1/object/public/og-images/agents/${currentUser.id}.png?t=${Date.now()}` : '';
+    const content = { title, description: desc, link: { mobileWebUrl: link, webUrl: link } };
+    if (imageUrl) { content.imageUrl = imageUrl; content.imageWidth = 800; content.imageHeight = 420; }
+    closeShareSheet();
+    if (typeof Kakao === 'undefined' || !Kakao.isInitialized()) {
+      showToast('카카오 SDK 로드 중입니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+    Kakao.Share.sendDefault({ objectType: 'feed', content, buttons: [{ title: '카드로 보기', link: { mobileWebUrl: link, webUrl: link } }] });
+  }
+
+  function copyLink() {
+    const link = getShareLink();
+    navigator.clipboard.writeText(link).then(() => {
+      closeShareSheet();
+      showToast('🔗 링크 복사됨!');
+    });
+  }
+
+  function showToast(msg) {
+    let t = document.getElementById('mobileToast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'mobileToast';
+      t.style.cssText = 'position:fixed;bottom:110px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:9999;border:1px solid rgba(255,255,255,0.2);white-space:nowrap;transition:opacity 0.3s;';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg; t.style.opacity = '1';
+    setTimeout(() => { t.style.opacity = '0'; }, 2000);
+  }
+
+  async function openDetailById(cardId, cat = 'my') {
+    try {
+      const { data } = await supabaseClient.from('cards').select('*').eq('id', cardId).maybeSingle();
+      if (!data) return;
+      const p = data.property || {};
+      const item = {
+        ...data,
+        type: p.type || '',
+        shortPrice: p.price || '',
+        name: p.complex || p.location || '',
+        location: p.location || '',
+        size: p.area || '',
+        floor: p.floor || '',
+        rooms: p.room || '',
+        direction: (p.features || []).join(', ') || '',
+        status: data.trade_status || '',
+        memo: data.private_note?.memo || '',
+        memoPrivate: data.private_note?.memo || '',
+        tags: p.features || [],
+        cat: cat,
+      };
+      openDetail(item);
+    } catch(e) { console.error(e); }
+  }
+
+  // ── 검색창 포커스 → 드롭다운 (구글 방식 — 로그인 체크는 검색 시점에)
+  // 입력 중이면 드롭다운 닫기
+  searchInput.addEventListener('input', () => {
+    if (searchInput.value.trim()) {
+      closeDropdown();
+    } else {
+      openDropdown();
+    }
+  });
+
+  // 바깥 터치하면 드롭다운 닫기
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-wrap')) {
+      closeDropdown();
+    }
+  });
+
+  function openDropdown() {
+    if (container.classList.contains('active')) return; // 검색 결과 상태에서는 안 열기
+    dropdown.classList.add('show');
+    searchInput.classList.add('dropdown-open');
+  }
+
+  function closeDropdown() {
+    dropdown.classList.remove('show');
+    searchInput.classList.remove('dropdown-open');
+  }
+
+  // 추천 항목 선택
+  function pickSuggest(el) {
+    const text = el.querySelector('.suggest-text').textContent;
+    searchInput.value = text;
+    closeDropdown();
+    doSearch();
+  }
+
+  // ── 로그인 ──
+
+
+  // ── 빠른 검색 (현황 바 탭) ──
+  function doQuickSearch(cat) {
+    searchInput.value = cat === 'my' ? '내 매물 전체' : '공유받은 매물';
+    doSearch(true);
+  }
+
+
+  // ── 검색 ──
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') doSearch();
+  });
+
+    // ── 상세 모달 ──
+  const detailOverlay = document.getElementById('detailOverlay');
+  const detailModal = document.getElementById('detailModal');
+  let currentItem = null;
+
+  let currentTags = [];
+
+  function openDetail(item) {
+    currentItem = item;
+    const isShared = item.cat === 'shared';
+    const typeClass = item.type === '매매' ? 'type-sale' : item.type === '전세' ? 'type-jeonse' : 'type-rent';
+
+    // 거래유형 + 상태
+    document.getElementById('dmType').className = 'dm-type-badge ' + typeClass;
+    document.getElementById('dmType').textContent = item.type || '';
+    const tradeStatus = item.status === '계약중' ? '계약중' : item.status === '완료' ? '완료' : '계약가능';
+    const tradeClass = tradeStatus === '계약가능' ? 'trade-available' : tradeStatus === '계약중' ? 'trade-ongoing' : 'trade-done';
+    const dmTrade = document.getElementById('dmTrade');
+    dmTrade.className = 'li-trade ' + tradeClass;
+    dmTrade.textContent = tradeStatus;
+
+    // 가격, 이름, 위치
+    document.getElementById('dmPrice').textContent = item.shortPrice || '-';
+    document.getElementById('dmName').textContent = item.name || '-';
+    document.getElementById('dmLocation').textContent = item.location || '';
+
+    // 평수/층수 - 있는 것만 표시
+    const sizeFloor = [];
+    if (item.size) sizeFloor.push(`<div style="background:rgba(255,255,255,0.07);border-radius:8px;padding:8px 14px;font-size:13px;color:#ccc;"><span style="font-size:10px;color:#888;display:block;margin-bottom:2px;">평수</span>${esc(item.size)}</div>`);
+    if (item.floor) sizeFloor.push(`<div style="background:rgba(255,255,255,0.07);border-radius:8px;padding:8px 14px;font-size:13px;color:#ccc;"><span style="font-size:10px;color:#888;display:block;margin-bottom:2px;">층수</span>${esc(item.floor)}</div>`);
+    document.getElementById('dmSizeFloor').innerHTML = sizeFloor.join('');
+
+    // 방구조/향 - 있는 것만 표시
+    const roomsDir = [];
+    if (item.rooms) roomsDir.push(`<div style="background:rgba(255,255,255,0.07);border-radius:8px;padding:8px 14px;font-size:13px;color:#ccc;"><span style="font-size:10px;color:#888;display:block;margin-bottom:2px;">방구조</span>${esc(item.rooms)}</div>`);
+    if (item.direction) roomsDir.push(`<div style="background:rgba(255,255,255,0.07);border-radius:8px;padding:8px 14px;font-size:13px;color:#ccc;"><span style="font-size:10px;color:#888;display:block;margin-bottom:2px;">향</span>${esc(item.direction)}</div>`);
+    document.getElementById('dmRoomsDirection').innerHTML = roomsDir.join('');
+
+    // 태그
+    const tags = item.tags || [];
+    document.getElementById('dmTags').innerHTML = tags.map(t =>
+      `<span style="background:rgba(78,205,196,0.12);color:#4ecdc4;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;">${esc(t)}</span>`
+    ).join('');
+
+    // 비공개 메모 (내 매물만)
+    const privateField = document.getElementById('dmPrivateField');
+    if (isShared || !item.memoPrivate) {
+      privateField.style.display = 'none';
+    } else {
+      privateField.style.display = 'block';
+      document.getElementById('dmMemoPrivate').textContent = item.memoPrivate;
+    }
+
+    // 손님에게 한마디
+    const publicField = document.getElementById('dmPublicField');
+    if (!item.memo) {
+      publicField.style.display = 'none';
+    } else {
+      publicField.style.display = 'block';
+      document.getElementById('dmMemoPublic').textContent = item.memo;
+    }
+
+    // 공유 버튼 - 공유 매물이면 숨김
+    const shareBtn = document.getElementById('dmActShare');
+    if (shareBtn) shareBtn.style.display = isShared ? 'none' : 'flex';
+
+    document.querySelector('.dm-title').textContent = isShared ? '공유 매물' : '매물 상세';
+
+    detailOverlay.classList.add('show');
+    setTimeout(() => detailModal.classList.add('show'), 10);
+    // 뒤로가기 가로채기
+    history.pushState({ detail: true }, '');
+  }
+
+  function renderTags() {
+    const container = document.getElementById('dmTags');
+    const isShared = currentItem?.cat === 'shared';
+    container.innerHTML = currentTags.map((t, i) => 
+      isShared 
+        ? `<span class="dm-tag" style="cursor:default">${esc(t)}</span>`
+        : `<button class="dm-tag" onclick="removeTag(${i})">${esc(t)}<span class="tag-x">×</span></button>`
+    ).join('');
+  }
+
+  function addTag() {
+    const input = document.getElementById('dmTagInput');
+    const val = input.value.trim();
+    if (!val) return;
+    if (currentTags.includes(val)) { input.value = ''; return; }
+    currentTags.push(val);
+    input.value = '';
+    renderTags();
+  }
+
+  function removeTag(idx) {
+    currentTags.splice(idx, 1);
+    renderTags();
+  }
+
+  function shareFromDetail() {
+    if (!currentItem) return;
+    openShareSheet([currentItem]);
+  }
+
+  function closeDetail() {
+    detailModal.classList.remove('show');
+    setTimeout(() => detailOverlay.classList.remove('show'), 300);
+  }
+
+  // 뒤로가기 → 모달 닫기
+  window.addEventListener('popstate', (e) => {
+    if (detailModal.classList.contains('show')) {
+      detailModal.classList.remove('show');
+      setTimeout(() => detailOverlay.classList.remove('show'), 300);
+    }
+  });
+
+  function saveDetail() {
+    alert('저장되었습니다');
+    closeDetail();
+  }
+
+  // ── PWA 설치 ──
+  let _pwaPrompt = null;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    _pwaPrompt = e;
+    if (!window.matchMedia('(display-mode: standalone)').matches) {
+      document.getElementById('pwaInstallTab').classList.add('visible');
+    }
+  });
+
+  window.addEventListener('appinstalled', () => {
+    _pwaPrompt = null;
+    document.getElementById('pwaInstallTab').classList.remove('visible');
+  });
+
+  function triggerPwaInstall() {
+    if (_pwaPrompt) {
+      // 바로 네이티브 팝업
+      _pwaPrompt.prompt();
+      _pwaPrompt.userChoice.then((result) => {
+        if (result.outcome === 'accepted') {
+          document.getElementById('pwaInstallTab').classList.remove('visible');
+        }
+        _pwaPrompt = null;
+      });
+    } else {
+      showToast('브라우저 메뉴(⋮) → "홈 화면에 추가"를 탭하세요');
+    }
+  }
+
+</script>
+
+</body>
+</html>
