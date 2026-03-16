@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>휙 길찾기 경로 테스트</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, sans-serif; background: #0f1117; color: #e2e8f0; }
+  #map { width: 100%; height: 100vh; }
+  #panel {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #1a1d27; border-top: 1px solid rgba(255,255,255,0.1);
+    padding: 16px; z-index: 999;
+  }
+  .title { font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+  .btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    padding: 8px 14px; border-radius: 20px; border: none;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .btn:active { opacity: 0.7; }
+  .btn-subway { background: rgba(226,75,74,0.2); color: #e24b4a; border: 1px solid rgba(226,75,74,0.4); }
+  .btn-school { background: rgba(29,158,117,0.2); color: #1d9e75; border: 1px solid rgba(29,158,117,0.4); }
+  .btn-bus    { background: rgba(55,138,221,0.2); color: #378add; border: 1px solid rgba(55,138,221,0.4); }
+  .btn-clear  { background: rgba(255,255,255,0.05); color: #6b7280; border: 1px solid rgba(255,255,255,0.1); }
+  #status { font-size: 12px; color: #6b7280; margin-top: 8px; min-height: 18px; }
+  .info-box {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    background: #1a1d27; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px; padding: 10px 16px;
+    font-size: 13px; z-index: 999; white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+<div class="info-box" id="infoBox">📍 매물: 마포구 공덕동 삼성래미안</div>
+
+<div id="panel">
+  <div class="title">도로따라 경로 표시</div>
+  <div class="btns">
+    <button class="btn btn-subway" onclick="drawRoute('subway')">🚇 공덕역</button>
+    <button class="btn btn-school" onclick="drawRoute('school')">🏫 공덕초등학교</button>
+    <button class="btn btn-bus"    onclick="drawRoute('bus')">🚌 버스정류장</button>
+    <button class="btn btn-clear"  onclick="clearRoutes()">✕ 초기화</button>
+  </div>
+  <div id="status">버튼을 누르면 도로따라 경로가 그려집니다</div>
+</div>
+
+<script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=124cd68b3419bde24e03efa4f1ca2830&libraries=services"></script>
+<script>
+const KAKAO_REST_KEY = '8b7ecadf67aaed392e75605093efb2c4';
+
+// 매물 좌표 (마포구 공덕동 삼성래미안)
+const PROPERTY = { lat: 37.5449, lng: 126.9514, name: '삼성래미안(매물)' };
+
+const POIS = {
+  subway: { lat: 37.5443, lng: 126.9521, name: '공덕역', color: '#e24b4a' },
+  school: { lat: 37.5462, lng: 126.9488, name: '공덕초등학교', color: '#1d9e75' },
+  bus:    { lat: 37.5435, lng: 126.9500, name: '공덕동버스정류장', color: '#378add' },
+};
+
+let map, polylines = [], markers = [];
+
+kakao.maps.load(() => {
+  const center = new kakao.maps.LatLng(PROPERTY.lat, PROPERTY.lng);
+  map = new kakao.maps.Map(document.getElementById('map'), {
+    center, level: 4
+  });
+
+  // 매물 마커
+  const propMarker = new kakao.maps.Marker({
+    position: center,
+    map,
+    title: PROPERTY.name
+  });
+
+  // 매물 인포윈도우
+  const iw = new kakao.maps.InfoWindow({
+    content: `<div style="padding:6px 10px;font-size:12px;font-weight:600;">📍 ${PROPERTY.name}</div>`
+  });
+  iw.open(map, propMarker);
+  markers.push(propMarker);
+});
+
+async function drawRoute(type) {
+  const poi = POIS[type];
+  const status = document.getElementById('status');
+  status.textContent = `${poi.name} 경로 계산 중...`;
+
+  // 카카오 모빌리티 도보 경로 API 시도
+  const url = `https://apis-navi.kakaomobility.com/v1/directions?origin=${PROPERTY.lng},${PROPERTY.lat}&destination=${poi.lng},${poi.lat}&priority=RECOMMEND&car_fuel=GASOLINE&car_hipass=false&alternatives=false&road_details=false`;
+
+  try {
+    const res = await fetch(url, {
+      headers: { 'Authorization': `KakaoAK ${KAKAO_REST_KEY}` }
+    });
+    const data = await res.json();
+
+    if (data.routes && data.routes[0] && data.routes[0].result_code === 0) {
+      // 경로 좌표 추출
+      const sections = data.routes[0].sections;
+      const coords = [];
+      sections.forEach(section => {
+        section.roads.forEach(road => {
+          const vx = road.vertexes;
+          for (let i = 0; i < vx.length; i += 2) {
+            coords.push(new kakao.maps.LatLng(vx[i+1], vx[i]));
+          }
+        });
+      });
+
+      drawPolyline(coords, poi.color, poi.name);
+      addPoiMarker(poi);
+
+      const dist = Math.round(data.routes[0].summary.distance);
+      const mins = Math.round(data.routes[0].summary.duration / 60);
+      status.textContent = `✅ ${poi.name} — ${mins}분 (${dist}m)`;
+    } else {
+      // 자동차 API 안 되면 OSRM 도보로 폴백
+      fallbackOSRM(poi);
+    }
+  } catch (e) {
+    fallbackOSRM(poi);
+  }
+}
+
+async function fallbackOSRM(poi) {
+  const status = document.getElementById('status');
+  status.textContent = `OSRM 도보 경로로 대체 중...`;
+
+  try {
+    const url = `https://router.project-osrm.org/route/v1/foot/${PROPERTY.lng},${PROPERTY.lat};${poi.lng},${poi.lat}?overview=full&geometries=geojson`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data.routes && data.routes[0]) {
+      const coords = data.routes[0].geometry.coordinates.map(c =>
+        new kakao.maps.LatLng(c[1], c[0])
+      );
+      drawPolyline(coords, poi.color, poi.name);
+      addPoiMarker(poi);
+
+      const dist = Math.round(data.routes[0].distance);
+      const mins = Math.round(data.routes[0].duration / 60);
+      status.textContent = `✅ ${poi.name} — 도보 ${mins}분 (${dist}m)`;
+    }
+  } catch (e) {
+    status.textContent = `❌ 경로 조회 실패`;
+  }
+}
+
+function drawPolyline(coords, color, name) {
+  const polyline = new kakao.maps.Polyline({
+    path: coords,
+    strokeWeight: 5,
+    strokeColor: color,
+    strokeOpacity: 0.9,
+    strokeStyle: 'solid'
+  });
+  polyline.setMap(map);
+  polylines.push(polyline);
+
+  // 지도 범위 맞추기
+  const bounds = new kakao.maps.LatLngBounds();
+  coords.forEach(c => bounds.extend(c));
+  map.setBounds(bounds);
+}
+
+function addPoiMarker(poi) {
+  const marker = new kakao.maps.Marker({
+    position: new kakao.maps.LatLng(poi.lat, poi.lng),
+    map,
+    title: poi.name
+  });
+  const iw = new kakao.maps.InfoWindow({
+    content: `<div style="padding:5px 8px;font-size:11px;font-weight:600;">${poi.name}</div>`
+  });
+  iw.open(map, marker);
+  markers.push(marker);
+}
+
+function clearRoutes() {
+  polylines.forEach(p => p.setMap(null));
+  polylines = [];
+  markers.forEach((m, i) => { if (i > 0) m.setMap(null); });
+  markers = markers.slice(0, 1);
+  document.getElementById('status').textContent = '초기화됨';
+
+  const center = new kakao.maps.LatLng(PROPERTY.lat, PROPERTY.lng);
+  map.setCenter(center);
+  map.setLevel(4);
+}
+</script>
+</body>
+</html>
