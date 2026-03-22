@@ -246,17 +246,17 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         
         .input-box {
-            background: rgba(255,255,255,0.05);
+            background: var(--bg-input);
             border: 2px solid rgba(250,204,21,0.25);
             border-radius: 16px;
             padding: 24px;
             transition: all 0.3s;
         }
-        
+
         .input-box:focus-within {
             border-color: rgba(250,204,21,0.7);
             box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.12), 0 0 20px rgba(250,204,21,0.08);
-            background: rgba(255,255,255,0.07);
+            background: var(--bg-card);
         }
         
         .input-box textarea {
@@ -1375,7 +1375,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             border-radius: 4px 16px 16px 16px;
             padding: 10px 14px;
             font-size: 13px;
-            color: #cbd5e1;
+            color: var(--text-white);
             line-height: 1.65;
         }
 
@@ -1383,7 +1383,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
         .input-box {
             position: relative;
-            background: rgba(255,255,255,0.05) !important;
+            background: var(--bg-input) !important;
             border: 1.5px solid rgba(250,204,21,0.3) !important;
             border-radius: 16px !important;
             padding: 0 !important;
@@ -1395,7 +1395,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .input-box:focus-within {
             border-color: rgba(250,204,21,0.7) !important;
             box-shadow: 0 0 0 3px rgba(250,204,21,0.1), 0 0 24px rgba(250,204,21,0.08) !important;
-            background: rgba(255,255,255,0.07) !important;
+            background: var(--bg-card) !important;
         }
 
         .input-box-header {
@@ -1418,7 +1418,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
         .input-box-label {
             font-size: 11px;
-            color: rgba(255,255,255,0.25);
+            color: var(--text-gray-light);
             margin-left: 6px;
         }
 
@@ -1434,11 +1434,11 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             align-items: center;
             justify-content: space-between;
             padding: 10px 16px;
-            border-top: 1px solid rgba(255,255,255,0.06);
-            background: rgba(0,0,0,0.25);
+            border-top: 1px solid rgba(128,128,128,0.12);
+            background: rgba(128,128,128,0.06);
         }
 
-        .input-tip { font-size: 11px; color: rgba(255,255,255,0.2); }
+        .input-tip { font-size: 11px; color: var(--text-gray-light); }
 
         /* 입력창 우상단 사진 아이콘 버튼 */
         .btn-image-icon {
@@ -1509,18 +1509,18 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             align-items: center;
             gap: 10px;
             font-size: 13px;
-            color: rgba(255,255,255,0.3);
+            color: var(--text-gray-light);
             transition: all 0.4s ease;
         }
 
         .ai-step.done { color: #4ecdc4; }
-        .ai-step.current { color: #fff; }
+        .ai-step.current { color: var(--text-white); }
 
         .ai-step-icon {
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            border: 1.5px solid rgba(255,255,255,0.15);
+            border: 1.5px solid rgba(128,128,128,0.25);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1564,7 +1564,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             gap: 10px;
             font-size: 11px;
             font-weight: 700;
-            color: rgba(255,255,255,0.55);
+            color: var(--text-gray);
             margin-bottom: 20px;
             letter-spacing: 2px;
             text-transform: uppercase;
@@ -1577,7 +1577,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             content: '';
             flex: 1;
             height: 1px;
-            background: rgba(255,255,255,0.1);
+            background: rgba(128,128,128,0.2);
         }
 
         .phone-frame {
@@ -2008,15 +2008,15 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .btn-logout {
             padding: 6px 12px;
             background: transparent;
-            border: 1px solid rgba(255,255,255,0.15);
+            border: 1px solid rgba(128,128,128,0.2);
             color: var(--text-gray);
             border-radius: 6px;
             font-size: 12px;
             cursor: pointer;
         }
         .btn-logout:hover {
-            border-color: rgba(255,255,255,0.3);
-            color: white;
+            border-color: rgba(128,128,128,0.3);
+            color: var(--text-white);
         }
 
         /* ===== 등록 모드 카드 선택 ===== */
@@ -2030,8 +2030,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             position: relative;
             padding: 18px 20px;
             border-radius: 16px;
-            border: 1.5px solid rgba(255,255,255,0.07);
-            background: rgba(255,255,255,0.03);
+            border: 1.5px solid rgba(128,128,128,0.15);
+            background: var(--bg-input);
             cursor: pointer;
             transition: all 0.22s cubic-bezier(.4,0,.2,1);
             text-align: left;
@@ -2049,8 +2049,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             transition: opacity 0.22s;
         }
         .register-mode-card:hover {
-            border-color: rgba(255,255,255,0.15);
-            background: rgba(255,255,255,0.05);
+            border-color: rgba(128,128,128,0.25);
+            background: var(--bg-card);
             transform: translateY(-2px);
         }
         /* 단건 - 골드 */
@@ -2081,7 +2081,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .rmc-title {
             font-size: 14px;
             font-weight: 700;
-            color: #e2e8f0;
+            color: var(--text-white);
             display: flex;
             align-items: center;
             gap: 6px;
@@ -2097,7 +2097,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         .rmc-desc {
             font-size: 11px;
-            color: #6b7280;
+            color: var(--text-gray);
             line-height: 1.5;
         }
         .rmc-check {
@@ -2107,7 +2107,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             width: 18px;
             height: 18px;
             border-radius: 50%;
-            border: 1.5px solid rgba(255,255,255,0.15);
+            border: 1.5px solid rgba(128,128,128,0.25);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -2133,13 +2133,13 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         #singleSection.hidden { display: none; }
 
         .fi-upload-zone {
-            border: 2px dashed rgba(255,255,255,0.12);
+            border: 2px dashed rgba(128,128,128,0.2);
             border-radius: 16px;
             padding: 40px 24px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
-            background: rgba(255,255,255,0.02);
+            background: var(--bg-input);
             margin-bottom: 14px;
         }
         .fi-upload-zone:hover, .fi-upload-zone.dragover {
@@ -2152,20 +2152,20 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             padding: 20px 24px;
         }
         .fi-upload-icon { font-size: 36px; margin-bottom: 10px; }
-        .fi-upload-text { color: #9ca3af; font-size: 14px; }
+        .fi-upload-text { color: var(--text-gray); font-size: 14px; }
         .fi-upload-text b { color: #facc15; }
-        .fi-upload-hint { color: #6b7280; font-size: 12px; margin-top: 6px; }
+        .fi-upload-hint { color: var(--text-gray-light); font-size: 12px; margin-top: 6px; }
         .fi-upload-filename { color: #4ecdc4; font-weight: 700; font-size: 15px; }
-        .fi-upload-meta { color: #9ca3af; font-size: 12px; margin-top: 3px; }
+        .fi-upload-meta { color: var(--text-gray); font-size: 12px; margin-top: 3px; }
 
         .fi-or-divider {
-            text-align: center; color: #6b7280; font-size: 11px;
+            text-align: center; color: var(--text-gray-light); font-size: 11px;
             margin: 10px 0; position: relative;
         }
         .fi-or-divider::before, .fi-or-divider::after {
             content: ''; position: absolute; top: 50%;
             width: calc(50% - 20px); height: 1px;
-            background: rgba(255,255,255,0.07);
+            background: rgba(128,128,128,0.15);
         }
         .fi-or-divider::before { left: 0; }
         .fi-or-divider::after { right: 0; }
@@ -2173,9 +2173,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .fi-direct-input {
             width: 100%; min-height: 120px; max-height: 220px;
             padding: 14px; border-radius: 12px;
-            border: 2px solid rgba(255,255,255,0.08);
-            background: rgba(255,255,255,0.04);
-            color: white; font-size: 13px; line-height: 1.6;
+            border: 2px solid rgba(128,128,128,0.15);
+            background: var(--bg-input);
+            color: var(--text-white); font-size: 13px; line-height: 1.6;
             resize: none; outline: none;
             transition: border-color 0.2s;
             font-family: inherit;
@@ -2183,7 +2183,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             box-sizing: border-box;
         }
         .fi-direct-input:focus { border-color: rgba(250,204,21,0.4); }
-        .fi-direct-input::placeholder { color: #374151; }
+        .fi-direct-input::placeholder { color: var(--text-gray-light); }
         .fi-direct-input::-webkit-scrollbar { width: 4px; }
         .fi-direct-input::-webkit-scrollbar-track { background: transparent; }
         .fi-direct-input::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
@@ -2225,7 +2225,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             letter-spacing: -0.3px;
         }
         .fi-progress-track {
-            height: 8px; background: rgba(255,255,255,0.08);
+            height: 8px; background: rgba(128,128,128,0.15);
             border-radius: 4px; overflow: hidden;
         }
         .fi-progress-fill {
@@ -2234,7 +2234,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             border-radius: 4px; transition: width 0.3s ease;
             box-shadow: 0 0 8px rgba(250,204,21,0.4);
         }
-        .fi-progress-status { font-size: 12px; color: #d1d5db; margin-top: 10px; font-weight: 500; }
+        .fi-progress-status { font-size: 12px; color: var(--text-gray); margin-top: 10px; font-weight: 500; }
 
         /* 결과 영역 */
         .fi-result-section { display: none; margin-top: 24px; }
@@ -2249,8 +2249,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .fi-filter-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
         .fi-filter-btn {
             padding: 6px 14px; border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: transparent; color: #9ca3af;
+            border: 1px solid rgba(128,128,128,0.2);
+            background: transparent; color: var(--text-gray);
             font-size: 12px; cursor: pointer; transition: all 0.15s;
         }
         .fi-filter-btn.active {
@@ -2261,7 +2261,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             display: flex; align-items: center;
             justify-content: space-between; margin-bottom: 12px;
         }
-        .fi-card-count { font-size: 12px; color: #9ca3af; }
+        .fi-card-count { font-size: 12px; color: var(--text-gray); }
         .fi-save-all-btn {
             padding: 10px 20px; background: #4ecdc4;
             color: #0a0a12; border: none; border-radius: 10px;
@@ -2277,15 +2277,15 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             to { opacity: 1; transform: translateY(0); }
         }
         .fi-card {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.07);
+            background: var(--bg-input);
+            border: 1px solid rgba(128,128,128,0.15);
             border-radius: 12px; padding: 14px 16px;
             margin-bottom: 10px; transition: border-color 0.15s;
         }
         .fi-card.animate-in {
             animation: fiCardIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
-        .fi-card:hover { border-color: rgba(255,255,255,0.12); }
+        .fi-card:hover { border-color: rgba(128,128,128,0.25); }
         .fi-card.duplicate { border-color: rgba(251,146,60,0.3); background: rgba(251,146,60,0.04); }
         .fi-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
         .fi-badge {
@@ -2296,9 +2296,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .fi-badge.sale { background: rgba(249,115,22,0.15); color: #f97316; }
         .fi-badge.rent { background: rgba(167,139,250,0.15); color: #a78bfa; }
         .fi-badge.client { background: rgba(251,146,60,0.15); color: #fb923c; }
-        .fi-card-price { font-size: 16px; font-weight: 700; color: #fff; }
-        .fi-card-name { font-size: 13px; color: #9ca3af; }
-        .fi-card-meta { font-size: 11px; color: #6b7280; margin-top: 4px; }
+        .fi-card-price { font-size: 16px; font-weight: 700; color: var(--text-white); }
+        .fi-card-name { font-size: 13px; color: var(--text-gray); }
+        .fi-card-meta { font-size: 11px; color: var(--text-gray-light); margin-top: 4px; }
         .fi-dup-badge {
             margin-left: auto; font-size: 10px; padding: 2px 8px;
             border-radius: 6px; background: rgba(251,146,60,0.2); color: #fb923c;
@@ -2343,17 +2343,17 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.3; transform: scale(0.7); }
         }
-        .fi-detail-area { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); }
+        .fi-detail-area { display: none; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(128,128,128,0.12); }
         .fi-detail-area.open { display: block; }
-        .fi-detail-row { font-size: 11px; color: #9ca3af; margin-bottom: 4px; }
+        .fi-detail-row { font-size: 11px; color: var(--text-gray); margin-bottom: 4px; }
         .fi-detail-comment { font-size: 12px; color: #facc15; background: rgba(250,204,21,0.06); border-left: 2px solid rgba(250,204,21,0.3); padding: 6px 10px; border-radius: 6px; margin-top: 6px; }
         .fi-detail-memo { font-size: 12px; color: #f87171; background: rgba(248,113,113,0.06); border-left: 2px solid rgba(248,113,113,0.3); padding: 6px 10px; border-radius: 6px; margin-top: 6px; }
-        .fi-detail-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #9ca3af; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; }
-        .fi-detail-btn:hover { background: rgba(255,255,255,0.1); color: #e2e8f0; }
+        .fi-detail-btn { background: var(--bg-input); border: 1px solid rgba(128,128,128,0.2); color: var(--text-gray); padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; }
+        .fi-detail-btn:hover { background: var(--bg-card); color: var(--text-white); }
         .fi-edit-btn, .fi-del-btn {
             padding: 5px 12px; border-radius: 8px; font-size: 12px;
-            border: 1px solid rgba(255,255,255,0.1); background: transparent;
-            color: #9ca3af; cursor: pointer; transition: all 0.15s;
+            border: 1px solid rgba(128,128,128,0.2); background: transparent;
+            color: var(--text-gray); cursor: pointer; transition: all 0.15s;
         }
         .fi-edit-btn:hover { border-color: #facc15; color: #facc15; }
         .fi-del-btn:hover { border-color: #ef4444; color: #ef4444; }
@@ -2572,7 +2572,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 <h1 class="input-title">
                     매물 정보를 <span class="highlight">말하듯이</span> 적어보세요
                 </h1>
-                <p style="color: rgba(255,255,255,0.35); font-size: 15px; margin-bottom: 24px; letter-spacing: -0.3px;">
+                <p style="color: var(--text-gray-light); font-size: 15px; margin-bottom: 24px; letter-spacing: -0.3px;">
                     아파트·빌라·오피스텔·상가 — 어떤 형식이든 AI가 읽고 카드로 만들어드려요
                 </p>
 
