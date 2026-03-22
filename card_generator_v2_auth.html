@@ -246,19 +246,28 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         
         .input-box {
-            background: var(--bg-input);
-            border: 2px solid rgba(250,204,21,0.25);
+            background: var(--bg-card);
+            border: 2px solid #e5e7eb;
             border-radius: 16px;
             padding: 24px;
             transition: all 0.3s;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        body.dark .input-box {
+            background: rgba(255,255,255,0.05);
+            border-color: rgba(250,204,21,0.25);
+            box-shadow: none;
         }
 
         .input-box:focus-within {
-            border-color: rgba(250,204,21,0.7);
-            box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.12), 0 0 20px rgba(250,204,21,0.08);
-            background: var(--bg-card);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(250,204,21,0.12);
         }
-        
+        body.dark .input-box:focus-within {
+            border-color: rgba(250,204,21,0.7);
+            box-shadow: 0 0 0 4px rgba(250,204,21,0.12), 0 0 20px rgba(250,204,21,0.08);
+        }
+
         .input-box textarea {
             width: 100%;
             min-height: 200px;
@@ -1383,18 +1392,24 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
         .input-box {
             position: relative;
-            background: var(--bg-input) !important;
-            border: 1.5px solid rgba(250,204,21,0.3) !important;
+            background: var(--bg-card) !important;
+            border: 1.5px solid #e5e7eb !important;
             border-radius: 16px !important;
             padding: 0 !important;
             overflow: hidden;
             backdrop-filter: blur(12px);
             transition: border-color 0.3s, box-shadow 0.3s !important;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        body.dark .input-box {
+            background: rgba(255,255,255,0.05) !important;
+            border-color: rgba(250,204,21,0.3) !important;
+            box-shadow: none;
         }
 
         .input-box:focus-within {
-            border-color: rgba(250,204,21,0.7) !important;
-            box-shadow: 0 0 0 3px rgba(250,204,21,0.1), 0 0 24px rgba(250,204,21,0.08) !important;
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 0 3px rgba(250,204,21,0.1) !important;
             background: var(--bg-card) !important;
         }
 
@@ -2572,7 +2587,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 <h1 class="input-title">
                     매물 정보를 <span class="highlight">말하듯이</span> 적어보세요
                 </h1>
-                <p style="color: var(--text-gray-light); font-size: 15px; margin-bottom: 24px; letter-spacing: -0.3px;">
+                <p style="color: var(--text-gray); font-size: 15px; margin-bottom: 24px; letter-spacing: -0.3px;">
                     아파트·빌라·오피스텔·상가 — 어떤 형식이든 AI가 읽고 카드로 만들어드려요
                 </p>
 
