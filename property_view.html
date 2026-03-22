@@ -20,6 +20,8 @@
     <meta name="kakao:description" content="중개사가 직접 보내는 매물 카드예요 🏠">
     <meta name="description" content="중개사가 직접 보내는 매물 카드예요. 눌러서 확인하세요 🏠">
 
+    <!-- 폰트 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;800&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
@@ -94,12 +96,10 @@
         
         /* 카드 컨테이너 */
         .card-container {
-            width: 100%;
-            max-width: 300px;
-            margin-bottom: 24px;
-            touch-action: pan-y;
+            width: 300px;
+            margin-bottom: 16px;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
         }
 
         /* ========== 스토리 프로그레스 바 ========== */
@@ -167,18 +167,10 @@
             opacity: 0.9;
         }
         
-        /* ========== 사진 영역 ========== */
+        /* ========== 사진 영역 (갤러리용) ========== */
         .card-photo-area {
             width: 100%; height: 120px; position: relative; overflow: hidden;
-            cursor: pointer; background: #111;
-        }
-        .card-photo-area img {
-            width: 100%; height: 100%; object-fit: cover;
-        }
-        .card-photo-count {
-            position: absolute; bottom: 8px; right: 8px;
-            background: rgba(0,0,0,0.6); color: #fff; font-size: 11px;
-            padding: 3px 8px; border-radius: 10px;
+            cursor: pointer; background: #111; display: none;
         }
         
         /* 풀스크린 갤러리 (슬라이드 방식) */
@@ -240,25 +232,193 @@
         .gallery-tap-left { left: 0; }
         .gallery-tap-right { right: 0; }
         
-        /* ========== 타입 A: 미니멀 다크 ========== */
-        .card-a { background: #1a1a2e; }
-        .card-a .card-header { padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; }
-        .card-a .badge { padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; }
-        .card-a .area-badge { color: #888; font-size: 9px; }
-        .card-a .body { padding: 10px 12px; }
-        .card-a .complex-name { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 1px; }
-        .card-a .location { font-size: 10px; color: #666; margin-bottom: 8px; }
-        .card-a .price { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
-        .card-a .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 8px; }
-        .card-a .info-grid.single { grid-template-columns: 1fr; }
-        .card-a .info-item { background: rgba(255,255,255,0.05); padding: 5px; border-radius: 5px; }
-        .card-a .info-label { font-size: 7px; color: #666; margin-bottom: 1px; }
-        .card-a .info-value { font-size: 11px; color: #fff; font-weight: 600; }
-        .card-a .features { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 8px; }
-        .card-a .feature-tag { padding: 2px 6px; border-radius: 8px; font-size: 8px; }
-        .card-a .agent { background: rgba(255,255,255,0.03); padding: 8px; border-radius: 7px; display: flex; justify-content: space-between; align-items: center; }
-        .card-a .agent-name { font-size: 11px; color: #fff; font-weight: 600; }
-        .card-a .agent-phone { font-size: 10px; }
+        /* ========== 새 카드 공통 (card-full) ========== */
+        .card-full {
+          width: 300px; height: 500px; border-radius: 24px;
+          overflow: hidden; position: relative;
+          box-shadow: 0 40px 100px rgba(0,0,0,0.7);
+          margin: 0 auto;
+        }
+        /* 카드 내부 슬라이더 공통 */
+        .card-inner-slider {
+          position: absolute; inset: 0; display: flex;
+          transition: transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94);
+          z-index: 0; will-change: transform;
+        }
+        /* 사진 슬라이드 */
+        .photo-slide {
+          min-width: 100%; height: 100%; object-fit: cover;
+          filter: brightness(0.97) contrast(1.04) saturate(1.06);
+          pointer-events: none;
+        }
+        /* 메모 슬라이드 (중개사 코멘트) */
+        .memo-slide {
+          min-width: 100%; height: 100%; position: relative;
+          display: flex; flex-direction: column;
+          align-items: center; justify-content: center;
+          padding: 40px 32px;
+          background: linear-gradient(160deg,#0d1117 0%,#151c27 40%,#0a0f1a 100%);
+          overflow: hidden;
+        }
+        .memo-slide::before {
+          content:''; position:absolute; width:300px; height:300px; border-radius:50%;
+          background:radial-gradient(circle,rgba(78,205,196,0.06) 0%,transparent 70%);
+          top:-50px; right:-80px;
+        }
+        .memo-quote { font-family:'Noto Serif KR',serif; font-size:72px; line-height:0.6; color:rgba(255,255,255,0.08); align-self:flex-start; margin-bottom:20px; position:relative; z-index:1; }
+        .memo-text { font-family:'Noto Serif KR',serif; font-size:17px; color:rgba(255,255,255,0.9); line-height:1.9; text-align:center; letter-spacing:0.01em; position:relative; z-index:1; margin-bottom:32px; word-break:keep-all; }
+        .memo-divider { width:32px; height:1px; background:rgba(255,255,255,0.15); margin-bottom:20px; position:relative; z-index:1; }
+        .memo-agent { display:flex; flex-direction:column; align-items:center; gap:4px; position:relative; z-index:1; }
+        .memo-agent-name { font-size:12px; color:rgba(255,255,255,0.4); font-weight:300; letter-spacing:0.05em; }
+        .memo-agent-phone { font-size:14px; font-weight:600; color:rgba(255,255,255,0.7); letter-spacing:0.03em; }
+
+        /* 상단 오버레이 */
+        .card-top-info {
+          position:absolute; top:0; left:0; right:0; padding:18px 18px 40px;
+          background:linear-gradient(to bottom,rgba(0,0,0,0.55) 0%,transparent 100%);
+          display:flex; justify-content:space-between; align-items:flex-start;
+          z-index:10; pointer-events:none;
+        }
+        .card-badge { font-size:11px; font-weight:500; padding:5px 12px; border-radius:8px; color:rgba(255,255,255,0.85); background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); letter-spacing:0.04em; display:inline-flex; align-items:center; gap:6px; pointer-events:all; }
+        .card-badge-dot { width:6px; height:6px; border-radius:50%; display:inline-block; flex-shrink:0; }
+        .card-dots { display:flex; gap:5px; align-items:center; margin-top:4px; }
+        .card-dot { height:4px; border-radius:3px; background:rgba(255,255,255,0.35); transition:all 0.25s; width:4px; }
+        .card-dot.active { background:#fff; width:14px; }
+
+        /* 하단 오버레이 */
+        .card-bottom {
+          position:absolute; bottom:0; left:0; right:0;
+          background:linear-gradient(to top,rgba(0,0,0,0.92) 0%,rgba(0,0,0,0.72) 38%,rgba(0,0,0,0.2) 65%,transparent 100%);
+          padding:50px 18px 18px; z-index:10; transition:opacity 0.3s;
+        }
+        .card-bottom.hidden { opacity:0; pointer-events:none; }
+        .card-price { font-size:30px; font-weight:800; color:#fff; letter-spacing:-0.03em; margin-bottom:2px; }
+        .card-name { font-size:12px; color:rgba(255,255,255,0.55); margin-bottom:10px; }
+        .card-specs { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:14px; }
+        .card-spec { font-size:11px; padding:4px 9px; border-radius:20px; background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.8); border:1px solid rgba(255,255,255,0.12); }
+        .card-divider { height:1px; background:rgba(255,255,255,0.1); margin-bottom:14px; }
+        /* 액션 바 */
+        .card-action-bar { display:flex; gap:8px; }
+        .card-action-btn {
+          flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+          gap:5px; padding:10px 4px; border-radius:14px; cursor:pointer; text-decoration:none;
+          background:rgba(255,255,255,0.08); backdrop-filter:blur(20px);
+          border:1px solid rgba(255,255,255,0.12); box-shadow:inset 0 1px 0 rgba(255,255,255,0.1);
+          transition:all 0.15s;
+        }
+        .card-action-btn:active { transform:scale(0.93); }
+        .card-action-btn svg { width:20px; height:20px; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+        .card-action-btn span { font-size:10px; font-weight:500; }
+        .card-action-btn.act-call { border-color:rgba(78,205,196,0.3); }
+        .card-action-btn.act-call svg { stroke:#4ecdc4; }
+        .card-action-btn.act-call span { color:rgba(78,205,196,0.9); }
+        .card-action-btn.act-kakao { border-color:rgba(250,204,21,0.25); }
+        .card-action-btn.act-kakao svg { stroke:#facc15; }
+        .card-action-btn.act-kakao span { color:rgba(250,204,21,0.9); }
+        .card-action-btn.act-map svg { stroke:rgba(255,255,255,0.9); }
+        .card-action-btn.act-map span { color:rgba(255,255,255,0.7); }
+        /* 좌우 화살표 */
+        .card-arrow {
+          position:absolute; top:50%; transform:translateY(-50%);
+          width:36px; height:36px; border-radius:50%;
+          background:rgba(255,255,255,0.15); backdrop-filter:blur(8px);
+          border:1px solid rgba(255,255,255,0.2);
+          color:#fff; font-size:18px; cursor:pointer;
+          display:flex; align-items:center; justify-content:center;
+          z-index:20; transition:background 0.2s; user-select:none;
+        }
+        .card-arrow:hover { background:rgba(255,255,255,0.25); }
+        .card-arrow.arr-left { left:10px; }
+        .card-arrow.arr-right { right:10px; }
+        /* 중개사 하단 */
+        .agent-below {
+          display: flex; align-items: center; gap: 12px;
+          padding: 14px 20px; border-radius: 16px;
+          background: rgba(255,255,255,0.08);
+          border: 1.5px solid rgba(255,255,255,0.25);
+          width: 300px; margin: 8px auto 0;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+        .agent-below-avatar {
+          width: 40px; height: 40px; border-radius: 50%;
+          background: rgba(78,205,196,0.2); border: 2px solid #4ecdc4;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 14px; font-weight: 800; color: #4ecdc4; flex-shrink: 0;
+          overflow: hidden;
+        }
+        .agent-below-avatar img { width:100%; height:100%; object-fit:cover; }
+        .agent-below-info { display: flex; align-items: center; gap: 10px; }
+        .agent-below-name { font-size: 15px; font-weight: 800; color: #fff; }
+        .agent-below-phone { font-size: 14px; font-weight: 600; color: #4ecdc4; }
+
+        /* ========== noimg 전용 ========== */
+        .info-slide {
+          min-width: 100%; height: 100%; position: relative;
+          display: flex; flex-direction: column;
+          align-items: center; justify-content: center;
+          padding: 60px 28px 100px; overflow: hidden;
+        }
+        .info-slide.bg-dark-1 {
+          background: linear-gradient(160deg, #0d1b2a 0%, #1b2838 30%, #162032 60%, #0a1628 100%);
+          background-image:
+            linear-gradient(160deg, #0d1b2a 0%, #1b2838 30%, #162032 60%, #0a1628 100%),
+            repeating-linear-gradient(45deg, transparent, transparent 30px, rgba(255,255,255,0.015) 30px, rgba(255,255,255,0.015) 31px);
+        }
+        .info-slide.bg-dark-1::before {
+          content: ''; position: absolute; width: 350px; height: 350px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(78,205,196,0.12) 0%, transparent 70%);
+          top: -80px; right: -100px;
+        }
+        .info-slide.bg-dark-1::after {
+          content: ''; position: absolute; width: 250px; height: 250px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(250,204,21,0.08) 0%, transparent 70%);
+          bottom: -60px; left: -80px;
+        }
+        .info-slide.bg-dark-2 {
+          background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+          background-image:
+            linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%),
+            repeating-linear-gradient(135deg, transparent, transparent 30px, rgba(255,255,255,0.015) 30px, rgba(255,255,255,0.015) 31px);
+        }
+        .info-slide.bg-dark-2::before {
+          content: ''; position: absolute; width: 300px; height: 300px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(96,165,250,0.1) 0%, transparent 70%);
+          top: -60px; left: -80px;
+        }
+        .info-complex {
+          font-size: 36px; font-weight: 800; color: #fff;
+          letter-spacing: -0.03em; line-height: 1.2;
+          text-align: center; position: relative; z-index: 1;
+          margin-bottom: 12px; text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+        }
+        .info-location {
+          font-size: 14px; color: rgba(255,255,255,0.45);
+          font-weight: 400; letter-spacing: 0.05em;
+          position: relative; z-index: 1; margin-bottom: 24px;
+        }
+        .info-divider {
+          width: 40px; height: 1.5px; background: rgba(255,255,255,0.15);
+          position: relative; z-index: 1; margin-bottom: 24px;
+        }
+        .info-type-price {
+          display: flex; align-items: baseline; gap: 8px;
+          position: relative; z-index: 1;
+        }
+        .info-type {
+          font-size: 13px; font-weight: 500; color: rgba(78,205,196,0.8);
+          padding: 3px 10px; border-radius: 6px;
+          background: rgba(78,205,196,0.1); border: 1px solid rgba(78,205,196,0.2);
+        }
+        .info-price {
+          font-size: 28px; font-weight: 800; color: #fff; letter-spacing: -0.02em;
+        }
+        .hwik-watermark {
+          position: absolute; bottom: 12px; right: 14px;
+          font-size: 11px; font-weight: 800; color: rgba(250,204,21,0.15);
+          letter-spacing: -0.5px; z-index: 2;
+        }
+
+        /* (기존 A/F/J 색상 스타일 삭제됨) */
 
         /* ===== 풀스크린 지도 오버레이 ===== */
         .map-fullscreen-overlay {
@@ -301,197 +461,9 @@
             pointer-events: none;
         }
 
-        /* A 색상 */
-        .card-a.mint { border: 2px solid rgba(78,205,196,0.3); }
-        .card-a.mint .card-header { background: rgba(78,205,196,0.15); }
-        .card-a.mint .badge { background: #4ecdc4; color: #1a1a2e; }
-        .card-a.mint .price { color: #4ecdc4; }
-        .card-a.mint .feature-tag { background: rgba(78,205,196,0.1); color: #4ecdc4; }
-        .card-a.mint .agent-phone { color: #4ecdc4; }
+        /* (기존 A/F/J 색상 스타일 삭제됨) */
 
-        .card-a.purple { border: 2px solid rgba(167,139,250,0.3); }
-        .card-a.purple .card-header { background: rgba(167,139,250,0.15); }
-        .card-a.purple .badge { background: #a78bfa; color: #1a1a2e; }
-        .card-a.purple .price { color: #a78bfa; }
-        .card-a.purple .feature-tag { background: rgba(167,139,250,0.1); color: #a78bfa; }
-        .card-a.purple .agent-phone { color: #a78bfa; }
-
-        .card-a.blue { border: 2px solid rgba(96,165,250,0.3); }
-        .card-a.blue .card-header { background: rgba(96,165,250,0.15); }
-        .card-a.blue .badge { background: #60a5fa; color: #1a1a2e; }
-        .card-a.blue .price { color: #60a5fa; }
-        .card-a.blue .feature-tag { background: rgba(96,165,250,0.1); color: #60a5fa; }
-        .card-a.blue .agent-phone { color: #60a5fa; }
-
-        .card-a.orange { border: 2px solid rgba(251,146,60,0.3); }
-        .card-a.orange .card-header { background: rgba(251,146,60,0.15); }
-        .card-a.orange .badge { background: #fb923c; color: #1a1a2e; }
-        .card-a.orange .price { color: #fb923c; }
-        .card-a.orange .feature-tag { background: rgba(251,146,60,0.1); color: #fb923c; }
-        .card-a.orange .agent-phone { color: #fb923c; }
-
-        .card-a.pink { border: 2px solid rgba(244,114,182,0.3); }
-        .card-a.pink .card-header { background: rgba(244,114,182,0.15); }
-        .card-a.pink .badge { background: #f472b6; color: #1a1a2e; }
-        .card-a.pink .price { color: #f472b6; }
-        .card-a.pink .feature-tag { background: rgba(244,114,182,0.1); color: #f472b6; }
-        .card-a.pink .agent-phone { color: #f472b6; }
-
-        .card-a.gold { border: 2px solid rgba(251,191,36,0.3); }
-        .card-a.gold .card-header { background: rgba(251,191,36,0.15); }
-        .card-a.gold .badge { background: #fbbf24; color: #1a1a2e; }
-        .card-a.gold .price { color: #fbbf24; }
-        .card-a.gold .feature-tag { background: rgba(251,191,36,0.1); color: #fbbf24; }
-        .card-a.gold .agent-phone { color: #fbbf24; }
-
-
-
-
-
-
-        /* ========== 타입 F: 네온 테두리 ========== */
-        .card-f { background: #0a0a12; border-radius: 16px; padding: 10px 12px; }
-        .card-f .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .card-f .badge { padding: 3px 8px; border-radius: 12px; font-size: 9px; font-weight: 700; }
-        .card-f .area-badge { font-size: 9px; }
-        .card-f .complex-name { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 1px; }
-        .card-f .location { font-size: 10px; color: #666; margin-bottom: 8px; }
-        .card-f .price { font-size: 20px; font-weight: 800; margin-bottom: 8px; }
-        .card-f .info-row { display: flex; gap: 6px; margin-bottom: 8px; }
-        .card-f .info-row.single { justify-content: center; }
-        .card-f .info-row.single .info-item { flex: 0 0 auto; min-width: 90px; }
-        .card-f .info-item { flex: 1; border: 1px solid rgba(255,255,255,0.1); padding: 5px; border-radius: 5px; text-align: center; }
-        .card-f .info-value { font-size: 11px; color: #fff; font-weight: 600; }
-        .card-f .info-label { font-size: 7px; color: #666; margin-top: 1px; }
-        .card-f .agent { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .card-f .agent-name { font-size: 11px; color: #888; }
-        .card-f .agent-phone { font-size: 11px; font-weight: 600; }
-        .card-f .features { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 8px; }
-        .card-f .feature-tag { padding: 2px 6px; border-radius: 8px; font-size: 8px; }
-
-        .card-f.mint { border: 3px solid #4ecdc4; box-shadow: 0 0 20px rgba(78,205,196,0.3); }
-        .card-f.mint .badge { background: #4ecdc4; color: #0a0a12; }
-        .card-f.mint .area-badge, .card-f.mint .price, .card-f.mint .agent-phone { color: #4ecdc4; }
-        .card-f.mint .feature-tag { background: rgba(78,205,196,0.1); color: #4ecdc4; }
-        .card-f.purple { border: 3px solid #a78bfa; box-shadow: 0 0 20px rgba(167,139,250,0.3); }
-        .card-f.purple .badge { background: #a78bfa; color: #0a0a12; }
-        .card-f.purple .area-badge, .card-f.purple .price, .card-f.purple .agent-phone { color: #a78bfa; }
-        .card-f.purple .feature-tag { background: rgba(167,139,250,0.1); color: #a78bfa; }
-        .card-f.blue { border: 3px solid #60a5fa; box-shadow: 0 0 20px rgba(96,165,250,0.3); }
-        .card-f.blue .badge { background: #60a5fa; color: #0a0a12; }
-        .card-f.blue .area-badge, .card-f.blue .price, .card-f.blue .agent-phone { color: #60a5fa; }
-        .card-f.blue .feature-tag { background: rgba(96,165,250,0.1); color: #60a5fa; }
-        .card-f.orange { border: 3px solid #fb923c; box-shadow: 0 0 20px rgba(251,146,60,0.3); }
-        .card-f.orange .badge { background: #fb923c; color: #0a0a12; }
-        .card-f.orange .area-badge, .card-f.orange .price, .card-f.orange .agent-phone { color: #fb923c; }
-        .card-f.orange .feature-tag { background: rgba(251,146,60,0.1); color: #fb923c; }
-        .card-f.pink { border: 3px solid #f472b6; box-shadow: 0 0 20px rgba(244,114,182,0.3); }
-        .card-f.pink .badge { background: #f472b6; color: #0a0a12; }
-        .card-f.pink .area-badge, .card-f.pink .price, .card-f.pink .agent-phone { color: #f472b6; }
-        .card-f.pink .feature-tag { background: rgba(244,114,182,0.1); color: #f472b6; }
-        .card-f.gold { border: 3px solid #fbbf24; box-shadow: 0 0 20px rgba(251,191,36,0.3); }
-        .card-f.gold .badge { background: #fbbf24; color: #0a0a12; }
-        .card-f.gold .area-badge, .card-f.gold .price, .card-f.gold .agent-phone { color: #fbbf24; }
-        .card-f.gold .feature-tag { background: rgba(251,191,36,0.1); color: #fbbf24; }
-
-        /* ========== 타입 J: 테이블형 ========== */
-        .card-j { background: #1a1a2e; }
-        .card-j .card-header { padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; }
-        .card-j .badge { padding: 3px 8px; border-radius: 12px; font-size: 9px; font-weight: 700; }
-        .card-j .price { font-size: 18px; font-weight: 800; }
-        .card-j .body { padding: 0 12px 10px; }
-        .card-j .complex-name { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 1px; }
-        .card-j .location { font-size: 9px; color: #666; margin-bottom: 8px; }
-        .card-j table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
-        .card-j td { padding: 5px 0; font-size: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .card-j td:first-child { color: #666; width: 50px; }
-        .card-j td:last-child { color: #fff; font-weight: 500; }
-        .card-j .agent { padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; font-size: 10px; }
-        .card-j .agent-name { color: #888; }
-        .card-j .agent-phone { font-weight: 600; }
-
-        .card-j.mint { border-top: 3px solid #4ecdc4; }
-        .card-j.mint .card-header { background: rgba(78,205,196,0.1); }
-        .card-j.mint .badge { background: #4ecdc4; color: #1a1a2e; }
-        .card-j.mint .price, .card-j.mint .agent-phone { color: #4ecdc4; }
-        .card-j.purple { border-top: 3px solid #a78bfa; }
-        .card-j.purple .card-header { background: rgba(167,139,250,0.1); }
-        .card-j.purple .badge { background: #a78bfa; color: #1a1a2e; }
-        .card-j.purple .price, .card-j.purple .agent-phone { color: #a78bfa; }
-        .card-j.blue { border-top: 3px solid #60a5fa; }
-        .card-j.blue .card-header { background: rgba(96,165,250,0.1); }
-        .card-j.blue .badge { background: #60a5fa; color: #1a1a2e; }
-        .card-j.blue .price, .card-j.blue .agent-phone { color: #60a5fa; }
-        .card-j.orange { border-top: 3px solid #fb923c; }
-        .card-j.orange .card-header { background: rgba(251,146,60,0.1); }
-        .card-j.orange .badge { background: #fb923c; color: #1a1a2e; }
-        .card-j.orange .price, .card-j.orange .agent-phone { color: #fb923c; }
-        .card-j.pink { border-top: 3px solid #f472b6; }
-        .card-j.pink .card-header { background: rgba(244,114,182,0.1); }
-        .card-j.pink .badge { background: #f472b6; color: #1a1a2e; }
-        .card-j.pink .price, .card-j.pink .agent-phone { color: #f472b6; }
-        .card-j.gold { border-top: 3px solid #fbbf24; }
-        .card-j.gold .card-header { background: rgba(251,191,36,0.1); }
-        .card-j.gold .badge { background: #fbbf24; color: #1a1a2e; }
-        .card-j.gold .price, .card-j.gold .agent-phone { color: #fbbf24; }
-
-        /* 액션 버튼 */
-        .actions {
-            width: 100%;
-            max-width: 300px;
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            gap: 10px;
-            margin-top: 4px;
-        }
-        
-        .action-btn-call {
-            flex: 3;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-            padding: 10px 12px;
-            border-radius: 10px;
-            font-size: 13px;
-            font-weight: 700;
-            text-decoration: none;
-            background: #4ecdc4;
-            color: #0a0a12;
-            transition: all 0.2s;
-            border: none;
-            cursor: pointer;
-        }
-        .action-btn-call:hover {
-            background: #3dbdb5;
-            transform: translateY(-1px);
-        }
-
-        .action-btn-kakao {
-            flex: 2;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-            padding: 10px 12px;
-            border-radius: 10px;
-            background: #FEE500;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-            font-size: 12px;
-            font-weight: 700;
-            color: #3C1E1E;
-        }
-        .action-btn-kakao:hover {
-            background: #f0d800;
-            transform: translateY(-1px);
-        }
-        .action-btn-kakao img {
-            width: 20px;
-            height: 20px;
-        }
+        /* (기존 외부 액션 버튼 삭제됨 — 카드 내부로 이동) */
 
         /* 푸터 */
         .footer {
@@ -541,16 +513,7 @@
 
         </div>
         
-        <!-- 액션 버튼 -->
-        <div class="actions">
-            <a href="tel:010-1234-5678" class="action-btn-call" id="callBtn">
-                📞 전화하기
-            </a>
-            <button onclick="goBackToKakao()" class="action-btn-kakao" id="kakaoBtn">
-                <img src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_medium.png">
-                카톡
-            </button>
-        </div>
+        <!-- 액션 버튼은 카드 내부로 이동됨 -->
     </main>
     
     <!-- 푸터 -->
@@ -643,8 +606,8 @@
                     <div style="font-size: 15px; line-height: 1.6;">${message}</div>
                 </div>
             `;
-            const actionsEl = document.querySelector('.actions');
-            if (actionsEl) actionsEl.style.display = 'none';
+            const cardSlot = document.getElementById('cardSlot');
+            if (cardSlot) cardSlot.style.display = 'block';
         }
         
         // 7일 만료 체크
@@ -756,179 +719,258 @@
             el.setAttribute('content', content);
         }
 
-        // 카드 렌더링
+        // ===== 템플릿 레지스트리 =====
+        // 새 디자인 추가 시: CARD_TEMPLATES에 함수 하나만 추가하면 됩니다
+        const CARD_TEMPLATES = {
+            memo: buildMemoCard,   // 사진 있는 카드
+            noimg: buildNoImgCard  // 사진 없는 카드
+        };
+
+        function resolveTemplate(data) {
+            const photos = data.photos || [];
+            return photos.length > 0 ? 'memo' : 'noimg';
+        }
+
+        // 공통 액션바 HTML
+        function _actionBarHtml(agentPhone) {
+            const tel = agentPhone ? agentPhone.replace(/-/g, '') : '';
+            return `
+              <div class="card-action-bar">
+                <a class="card-action-btn act-call" href="${tel ? 'tel:' + tel : '#'}">
+                  <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  <span>전화</span>
+                </a>
+                <a class="card-action-btn act-kakao" href="#" onclick="goBackToKakao();return false;">
+                  <svg viewBox="0 0 24 24"><path d="M12 3c5.8 0 10.5 3.66 10.5 8.17 0 4.51-4.7 8.17-10.5 8.17-.87 0-1.72-.08-2.54-.24l-4.14 2.82.93-4.08C3.92 16.13 1.5 13.37 1.5 11.17 1.5 6.66 6.2 3 12 3z"/></svg>
+                  <span>카톡</span>
+                </a>
+                <a class="card-action-btn act-map" href="#" onclick="openKakaoMap();return false;">
+                  <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  <span>지도</span>
+                </a>
+              </div>`;
+        }
+
+        // 공통 메모 슬라이드 HTML
+        function _memoSlideHtml(agentComment, agentName, agentPhone) {
+            if (!agentComment) return '';
+            return `
+              <div class="memo-slide">
+                <div class="memo-quote">"</div>
+                <div class="memo-text">${esc(agentComment).replace(/\n/g, '<br>')}</div>
+                <div class="memo-divider"></div>
+                <div class="memo-agent">
+                  <div class="memo-agent-name">${agentName}</div>
+                  <div class="memo-agent-phone">${agentPhone}</div>
+                </div>
+              </div>`;
+        }
+
+        // 공통 상단 오버레이 HTML
+        function _topInfoHtml(type, totalSlides) {
+            const dotColor = (type === '매매') ? '#fb923c' : '#4ecdc4';
+            let dots = '';
+            for (let i = 0; i < totalSlides; i++) {
+                dots += `<div class="card-dot ${i === 0 ? 'active' : ''}"></div>`;
+            }
+            return `
+              <div class="card-top-info">
+                <span class="card-badge"><span class="card-badge-dot" style="background:${dotColor}"></span>${type}</span>
+                <div class="card-dots" id="cardDots">${dots}</div>
+              </div>`;
+        }
+
+        // 공통 하단 오버레이 HTML
+        function _bottomHtml(price, name, location, area, specs, agentPhone) {
+            const cardNameStr = [location, name, area].filter(Boolean).join(' · ');
+            const specsHtml = specs.map(s => `<span class="card-spec">${s}</span>`).join('');
+            return `
+              <div class="card-bottom" id="cardBottom">
+                <div class="card-price">${price}</div>
+                <div class="card-name">${cardNameStr}</div>
+                ${specsHtml ? `<div class="card-specs">${specsHtml}</div>` : ''}
+                <div class="card-divider"></div>
+                ${_actionBarHtml(agentPhone)}
+              </div>`;
+        }
+
+        // 공통 중개사 하단 HTML
+        function _agentBelowHtml(agentName, agentPhone, agentPhoto) {
+            const initial = agentName.charAt(0);
+            const avatarInner = agentPhoto
+                ? `<img src="${esc(agentPhoto)}">`
+                : initial;
+            return `
+              <div class="agent-below">
+                <div class="agent-below-avatar">${avatarInner}</div>
+                <div class="agent-below-info">
+                  <div class="agent-below-name">${agentName}</div>
+                  <div class="agent-below-phone">${agentPhone}</div>
+                </div>
+              </div>`;
+        }
+
+        // ===== memo 템플릿 (사진 있는 카드) =====
+        function buildMemoCard(ctx) {
+            const { type, price, name, location, area, floor, features, agentName, agentPhone, agentPhoto, photos, agentComment } = ctx;
+            const hasComment = !!agentComment;
+            const totalSlides = photos.length + (hasComment ? 1 : 0);
+            const specs = [floor, ...features].filter(Boolean);
+
+            const slidesHtml = photos.map((url, i) =>
+                `<img class="photo-slide" src="${esc(url)}" loading="${i === 0 ? 'eager' : 'lazy'}" fetchpriority="${i === 0 ? 'high' : 'auto'}" onclick="openGallery()">`
+            ).join('') + _memoSlideHtml(agentComment, agentName, agentPhone);
+
+            const cardHtml = `
+              <div class="card card-full" id="activeCard" data-template="memo" data-total="${totalSlides}">
+                <div class="card-inner-slider" id="cardSlider">${slidesHtml}</div>
+                ${_topInfoHtml(type, totalSlides)}
+                ${_bottomHtml(price, name, location, area, specs, agentPhone)}
+                <button class="card-arrow arr-left" onclick="_moveInternalSlide(-1)">‹</button>
+                <button class="card-arrow arr-right" onclick="_moveInternalSlide(1)">›</button>
+              </div>
+              ${_agentBelowHtml(agentName, agentPhone, agentPhoto)}`;
+            return cardHtml;
+        }
+
+        // ===== noimg 템플릿 (사진 없는 카드) =====
+        function buildNoImgCard(ctx) {
+            const { type, price, name, location, area, floor, features, agentName, agentPhone, agentPhoto, agentComment } = ctx;
+            const hasComment = !!agentComment;
+            const totalSlides = 2 + (hasComment ? 1 : 0);
+            const specs = [floor, ...features].filter(Boolean);
+
+            // 단지명 줄바꿈 처리
+            const nameParts = name.length > 6 ? name.replace(/\s/g, '<br>') : name;
+
+            const slide1 = `
+              <div class="info-slide bg-dark-1">
+                <div class="info-complex">${nameParts}</div>
+                <div class="info-location">${location}</div>
+                <div class="info-divider"></div>
+                <div class="info-type-price">
+                  <span class="info-type">${type}</span>
+                  <span class="info-price">${price}</span>
+                </div>
+                <div class="hwik-watermark">휙</div>
+              </div>`;
+
+            const slide2 = `
+              <div class="info-slide bg-dark-2">
+                <div class="info-complex" style="font-size:28px;">${[area, floor].filter(Boolean).join(' · ')}</div>
+                <div class="info-location">${area ? area : ''}</div>
+                <div class="info-divider"></div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;position:relative;z-index:1;">
+                  ${features.map(f => `<span class="card-spec">${f}</span>`).join('')}
+                </div>
+                <div class="hwik-watermark">휙</div>
+              </div>`;
+
+            const cardHtml = `
+              <div class="card card-full" id="activeCard" data-template="noimg" data-total="${totalSlides}">
+                <div class="card-inner-slider" id="cardSlider">
+                  ${slide1}${slide2}${_memoSlideHtml(agentComment, agentName, agentPhone)}
+                </div>
+                ${_topInfoHtml(type, totalSlides)}
+                <div class="card-bottom" id="cardBottom">
+                  ${_actionBarHtml(agentPhone)}
+                </div>
+                <button class="card-arrow arr-left" onclick="_moveInternalSlide(-1)">‹</button>
+                <button class="card-arrow arr-right" onclick="_moveInternalSlide(1)">›</button>
+              </div>
+              ${_agentBelowHtml(agentName, agentPhone, agentPhoto)}`;
+            return cardHtml;
+        }
+
+        // ===== 내부 슬라이더 제어 =====
+        let _internalSlideIndex = 0;
+
+        function _moveInternalSlide(dir) {
+            const card = document.getElementById('activeCard');
+            if (!card) return;
+            const total = parseInt(card.dataset.total) || 1;
+            _internalSlideIndex = (_internalSlideIndex + dir + total) % total;
+            _renderInternalSlide();
+        }
+
+        function _renderInternalSlide() {
+            const slider = document.getElementById('cardSlider');
+            const bottom = document.getElementById('cardBottom');
+            const dots = document.getElementById('cardDots');
+            const card = document.getElementById('activeCard');
+            if (!slider || !card) return;
+
+            const total = parseInt(card.dataset.total) || 1;
+            const template = card.dataset.template;
+            const isMemoSlide = (_internalSlideIndex === total - 1) && card.querySelector('.memo-slide');
+
+            slider.style.transform = `translateX(-${_internalSlideIndex * 100}%)`;
+
+            // 메모 슬라이드에서는 하단 숨김
+            if (bottom) bottom.classList.toggle('hidden', !!isMemoSlide);
+
+            // 도트 업데이트
+            if (dots) {
+                dots.querySelectorAll('.card-dot').forEach((d, i) =>
+                    d.classList.toggle('active', i === _internalSlideIndex)
+                );
+            }
+        }
+
+        function _initInternalSwipe() {
+            const card = document.getElementById('activeCard');
+            if (!card) return;
+            let startX = 0;
+            card.addEventListener('touchstart', e => {
+                if (e.target.closest('.card-arrow, .card-action-btn')) return;
+                startX = e.touches[0].clientX;
+            }, { passive: true });
+            card.addEventListener('touchend', e => {
+                if (e.target.closest('.card-arrow, .card-action-btn')) return;
+                const diff = startX - e.changedTouches[0].clientX;
+                if (Math.abs(diff) > 40) _moveInternalSlide(diff > 0 ? 1 : -1);
+            }, { passive: true });
+        }
+
+        // ===== renderCard (리팩토링) =====
         function renderCard(data, silent = false) {
             const container = document.getElementById('cardContainer');
-            const { style: rawStyle, color, property } = data;
             const agent = overrideAgent || data.agent || {};
-            const style = (rawStyle === 'd' || rawStyle === 'e') ? 'a' : (rawStyle || 'a'); // 삭제된 스타일 대체
-            const p = property;
-            
-            const type = esc(p.type) || '전세';
-            const price = esc(p.price) || '-';
-            const name = esc(p.complex || p.location) || '-';
-            const location = p.complex ? esc(p.location || '') : '';
-            const area = esc(p.area) || '';
-            const floor = esc(p.floor) || '';
-            const room = esc(p.room) || '';
-            const features = (p.features || p.tags || []).map(f => esc(f));
-            const agentName = esc(agent?.name) || '부동산';
-            const agentPhone = esc(agent?.phone) || '';
-            const agentPhoto = agent?.profile_photo || null;
-            const photos = data.photos || [];
+            const p = data.property || {};
 
-            // ★ OG 태그 동적 업데이트 (카카오 크롤러는 JS 미실행 → og_image_url은 서버 사이드로 주입 필요)
+            const ctx = {
+                type: esc(p.type) || '전세',
+                price: esc(p.price) || '-',
+                name: esc(p.complex || p.location) || '-',
+                location: p.complex ? esc(p.location || '') : '',
+                area: esc(p.area) || '',
+                floor: esc(p.floor) || '',
+                room: esc(p.room) || '',
+                features: (p.features || p.tags || []).map(f => esc(f)),
+                agentName: esc(agent?.name) || '부동산',
+                agentPhone: esc(agent?.phone) || '',
+                agentPhoto: agent?.profile_photo || null,
+                photos: data.photos || [],
+                agentComment: data.agent_comment || '',
+            };
+
             updateOGTags(data);
-            
-            // 프로필 사진 HTML (URL 이스케이프)
-            const agentPhotoHtml = agentPhoto 
-                ? `<img src="${esc(agentPhoto)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1.5px solid #facc15;">`
-                : '';
-            
-            // 사진 영역 HTML (URL 이스케이프)
-            const photoHtml = photos.length > 0 ? `
-                <div class="card-photo-area" onclick="openGallery()">
-                    <img src="${esc(photos[0])}" loading="eager" fetchpriority="high">
-                    ${photos.length > 1 ? `<div class="card-photo-count">📷 ${photos.length}</div>` : ''}
-                </div>
-            ` : '';
-            
-            let html = '';
-            
-            if (style === 'a') {
-                const infoItems = [];
-                if (area) infoItems.push(`<div class="info-item"><div class="info-label">면적</div><div class="info-value">${area}</div></div>`);
-                if (floor) infoItems.push(`<div class="info-item"><div class="info-label">층수</div><div class="info-value">${floor}</div></div>`);
-                const gridClass = infoItems.length === 1 ? 'info-grid single' : 'info-grid';
-                
-                const commentHtml = data.agent_comment ? `
-                    <div style="margin-top:8px;padding:8px 10px;background:rgba(250,204,21,0.06);border:1.5px solid rgba(250,204,21,0.25);border-radius:10px;">
-                        <div style="font-size:9px;font-weight:700;color:#facc15;margin-bottom:3px;">💬 ${agentName}의 한마디</div>
-                        <div style="font-size:11px;color:#e2e8f0;line-height:1.5;white-space:pre-wrap;">${esc(data.agent_comment)}</div>
-                    </div>` : '';
-                
-                html = `
-                    <div class="card card-a ${color}">
-                        ${photoHtml}
-                        <div class="card-header">
-                            <span class="badge">${type}</span>
-                            <span class="area-badge">${area}</span>
-                        </div>
-                        <div class="body">
-                            <div class="card-map-row">
-                                <div class="map-text">
-                                    <div class="complex-name">${name}</div>
-                                    ${location ? `<div class="location">${location}</div>` : ''}
-                                    <div class="price">${price}</div>
-                                </div>
-                                <div class="card-minimap" id="minimap" onclick="openKakaoMap()" style="cursor:pointer">
-                                    
-                                </div>
-                            </div>
-                            ${infoItems.length ? `<div class="${gridClass}">${infoItems.join('')}</div>` : ''}
-                            ${features.length ? `<div class="features">${features.map(f => `<span class="feature-tag">${f}</span>`).join('')}</div>` : ''}
-                            <div class="agent">
-                                ${agentPhotoHtml ? `<span style="margin-right:6px;">${agentPhotoHtml}</span>` : ''}
-                                <span class="agent-name">${agentName}</span>
-                                <span class="agent-phone">${agentPhone}</span>
-                            </div>
-                            ${commentHtml}
-                        </div>
-                    </div>
-                `;
-            } else if (style === 'f') {
-                const infoItemsF = [];
-                if (area) infoItemsF.push(`<div class="info-item"><div class="info-value">${area}</div><div class="info-label">면적</div></div>`);
-                if (floor) infoItemsF.push(`<div class="info-item"><div class="info-value">${floor}</div><div class="info-label">층수</div></div>`);
-                const rowClassF = infoItemsF.length === 1 ? 'info-row single' : 'info-row';
-                
-                const commentHtmlF = data.agent_comment ? `
-                    <div style="margin-top:8px;padding:8px 10px;background:rgba(250,204,21,0.06);border:1.5px solid rgba(250,204,21,0.25);border-radius:10px;">
-                        <div style="font-size:9px;font-weight:700;color:#facc15;margin-bottom:3px;">💬 ${agentName}의 한마디</div>
-                        <div style="font-size:11px;color:#e2e8f0;line-height:1.5;white-space:pre-wrap;">${esc(data.agent_comment)}</div>
-                    </div>` : '';
-                
-                html = `
-                    <div class="card card-f ${color}">
-                        ${photoHtml}
-                        <div class="card-header">
-                            <span class="badge">${type}</span>
-                            <span class="area-badge">${area}</span>
-                        </div>
-                        <div class="card-map-row" style="padding:0 16px;">
-                            <div class="map-text">
-                                <div class="complex-name">${name}</div>
-                                ${location ? `<div class="location">${location}</div>` : ''}
-                                <div class="price">${price}</div>
-                            </div>
-                            <div class="card-minimap" id="minimap" onclick="openKakaoMap()" style="cursor:pointer">
-                                
-                            </div>
-                        </div>
-                        ${infoItemsF.length ? `<div class="${rowClassF}">${infoItemsF.join('')}</div>` : ''}
-                        ${features.length ? `<div class="features">${features.map(f => `<span class="feature-tag">${f}</span>`).join('')}</div>` : ''}
-                        <div class="agent">
-                            ${agentPhotoHtml ? `<span style="margin-right:6px;">${agentPhotoHtml}</span>` : ''}
-                            <span class="agent-name">${agentName}</span>
-                            <span class="agent-phone">${agentPhone}</span>
-                        </div>
-                        ${commentHtmlF}
-                    </div>
-                `;
-            } else if (style === 'j') {
-                const commentHtmlJ = data.agent_comment ? `
-                    <div style="margin-top:8px;padding:8px 10px;background:rgba(250,204,21,0.06);border:1.5px solid rgba(250,204,21,0.25);border-radius:10px;">
-                        <div style="font-size:9px;font-weight:700;color:#facc15;margin-bottom:3px;">💬 ${agentName}의 한마디</div>
-                        <div style="font-size:11px;color:#e2e8f0;line-height:1.5;white-space:pre-wrap;">${esc(data.agent_comment)}</div>
-                    </div>` : '';
-                
-                html = `
-                    <div class="card card-j ${color}">
-                        ${photoHtml}
-                        <div class="card-header">
-                            <span class="badge">${type}</span>
-                            <span class="price">${price}</span>
-                        </div>
-                        <div class="body">
-                            <div class="card-map-row">
-                                <div class="map-text">
-                                    <div class="complex-name">${name}</div>
-                                    ${location ? `<div class="location">${location}</div>` : ''}
-                                </div>
-                                <div class="card-minimap" id="minimap" onclick="openKakaoMap()" style="cursor:pointer">
-                                    
-                                </div>
-                            </div>
-                            <table>
-                                ${area ? `<tr><td>면적</td><td>${area}</td></tr>` : ''}
-                                ${floor ? `<tr><td>층수</td><td>${floor}</td></tr>` : ''}
-                                ${features.length ? `<tr><td>특징</td><td>${features.join(', ')}</td></tr>` : ''}
-                            </table>
-                            <div class="agent">
-                                ${agentPhotoHtml ? `<span style="margin-right:6px;">${agentPhotoHtml}</span>` : ''}
-                                <span class="agent-name">${agentName}</span>
-                                <span class="agent-phone">${agentPhone}</span>
-                            </div>
-                            ${commentHtmlJ}
-                        </div>
-                    </div>
-                `;
-            }
-            
-            container.querySelector('#cardSlot').innerHTML = html;
+
+            const templateName = resolveTemplate(data);
+            const buildFn = CARD_TEMPLATES[templateName];
+            if (!buildFn) { console.error('Unknown template:', templateName); return; }
+
+            container.querySelector('#cardSlot').innerHTML = buildFn(ctx);
+            _internalSlideIndex = 0;
+
             if (silent) return;
 
-            // ★ 미니맵 초기화
+            // 좌표 저장 (지도용)
             initMinimap(p, data.lat, data.lng);
-
-            if (agentPhone) {
-                document.getElementById('callBtn').href = `tel:${agentPhone.replace(/-/g, '')}`;
-            }
 
             updateNavigation();
             setupSwipe();
-
-            // ★ 인접 카드 썸네일 선제 preload (스와이프 끊김 방지)
+            _initInternalSwipe();
             _preloadAdjacentCards();
         }
 
@@ -1070,6 +1112,8 @@
                 if (e.target.closest('.contact-wrapper')) return;
                 if (e.target.closest('.card-photo-area')) return;
                 if (e.target.closest('.card-minimap')) return;
+                if (e.target.closest('.card-arrow')) return;
+                if (e.target.closest('.card-action-btn')) return;
                 const touch = e.touches ? e.touches[0] : e;
                 startX = touch.clientX;
                 startY = touch.clientY;
