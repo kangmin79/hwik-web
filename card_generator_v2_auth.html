@@ -32,15 +32,26 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         :root {
             --primary: #facc15;
             --primary-dark: #eab308;
+            --bg-dark: #f6f7f9;
+            --bg-card: #ffffff;
+            --bg-input: #f0f1f3;
+            --text-white: #1a1a2e;
+            --text-gray: #6b7280;
+            --text-gray-light: #9ca3af;
+            --accent-jeonse: #4ecdc4;
+            --accent-sale: #f97316;
+            --accent-rent: #a78bfa;
+        }
+
+        body.dark {
+            --primary: #facc15;
+            --primary-dark: #eab308;
             --bg-dark: #0a1628;
             --bg-card: #111827;
             --bg-input: #1f2937;
             --text-white: #ffffff;
             --text-gray: #9ca3af;
             --text-gray-light: #6b7280;
-            --accent-jeonse: #4ecdc4;
-            --accent-sale: #f97316;
-            --accent-rent: #a78bfa;
         }
         
         body {
@@ -260,7 +271,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             resize: none;
             font-family: inherit;
             scrollbar-width: thin;
-            scrollbar-color: rgba(255,255,255,0.15) transparent;
+            scrollbar-color: #d1d5db transparent;
         }
         .input-box textarea::-webkit-scrollbar {
             width: 4px;
@@ -269,13 +280,16 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             background: transparent;
         }
         .input-box textarea::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.15);
+            background: #d1d5db;
             border-radius: 10px;
             transition: background 0.2s;
         }
         .input-box textarea::-webkit-scrollbar-thumb:hover {
-            background: rgba(255,255,255,0.3);
+            background: #9ca3af;
         }
+        body.dark .input-box textarea { scrollbar-color: rgba(255,255,255,0.15) transparent; }
+        body.dark .input-box textarea::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); }
+        body.dark .input-box textarea::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
         
         .input-box textarea::placeholder {
             color: var(--text-gray-light);
@@ -1889,12 +1903,15 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             max-height: 90vh; overflow-y: auto;
             box-shadow: 0 24px 60px rgba(0,0,0,0.5);
             animation: miSlide 0.25s ease;
-            scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent;
+            scrollbar-width: thin; scrollbar-color: #d1d5db transparent;
         }
         .myinfo-modal::-webkit-scrollbar { width: 4px; }
         .myinfo-modal::-webkit-scrollbar-track { background: transparent; }
-        .myinfo-modal::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
-        .myinfo-modal::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+        .myinfo-modal::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+        .myinfo-modal::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+        body.dark .myinfo-modal { scrollbar-color: rgba(255,255,255,0.15) transparent; }
+        body.dark .myinfo-modal::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); }
+        body.dark .myinfo-modal::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
         @keyframes miSlide { from { transform:translateY(20px); opacity:0; } to { transform:translateY(0); opacity:1; } }
         .myinfo-head {
             display: flex; align-items: center; gap: 10px;
@@ -2169,9 +2186,12 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .fi-direct-input::placeholder { color: #374151; }
         .fi-direct-input::-webkit-scrollbar { width: 4px; }
         .fi-direct-input::-webkit-scrollbar-track { background: transparent; }
-        .fi-direct-input::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 10px; }
-        .fi-direct-input::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
-        .fi-direct-input { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+        .fi-direct-input::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+        .fi-direct-input::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+        .fi-direct-input { scrollbar-width: thin; scrollbar-color: #d1d5db transparent; }
+        body.dark .fi-direct-input::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); }
+        body.dark .fi-direct-input::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+        body.dark .fi-direct-input { scrollbar-color: rgba(255,255,255,0.15) transparent; }
 
         .fi-parse-btn {
             width: 100%; padding: 15px;
@@ -2375,12 +2395,14 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             background: #0f172a; border: 1px solid rgba(255,255,255,0.08);
             border-radius: 24px; padding: 28px; width: 92%; max-width: 460px;
             max-height: 88vh; overflow-y: auto;
-            scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent;
+            scrollbar-width: thin; scrollbar-color: #d1d5db transparent;
             box-shadow: 0 25px 60px rgba(0,0,0,0.5);
             animation: modalSlideUp 0.25s ease;
         }
         .fi-edit-modal::-webkit-scrollbar { width: 4px; }
-        .fi-edit-modal::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        .fi-edit-modal::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+        body.dark .fi-edit-modal { scrollbar-color: rgba(255,255,255,0.1) transparent; }
+        body.dark .fi-edit-modal::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); }
         @keyframes modalSlideUp { from { transform: translateY(20px); opacity:0; } to { transform: translateY(0); opacity:1; } }
         .fi-edit-modal-header {
             display: flex; align-items: center; gap: 10px;
@@ -2527,6 +2549,10 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         <div class="nav-container">
             <a href="#" class="nav-logo">휙</a>
             <div class="nav-buttons" id="navButtons" style="min-width:200px">
+                <div id="themeToggleWrap" style="display:flex;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.15);margin-right:8px;">
+                    <button onclick="toggleTheme('light')" id="btnLight" style="padding:5px 12px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:rgba(255,255,255,0.15);color:#fff;">☀️ 라이트</button>
+                    <button onclick="toggleTheme('dark')" id="btnDark" style="padding:5px 12px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:transparent;color:rgba(255,255,255,0.5);">🌙 다크</button>
+                </div>
                 <!-- 앱으로 설치 버튼 (beforeinstallprompt 시 표시) -->
                 <button id="pwaInstallBtn" onclick="triggerPwaInstall()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -3374,23 +3400,43 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         
         // 네비게이션 인증 상태 업데이트
+        function getThemeToggleHTML() {
+            return `<div id="themeToggleWrap" style="display:flex;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.15);margin-right:8px;">
+                <button onclick="toggleTheme('light')" id="btnLight" style="padding:5px 12px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:transparent;color:rgba(255,255,255,0.5);">☀️ 라이트</button>
+                <button onclick="toggleTheme('dark')" id="btnDark" style="padding:5px 12px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:rgba(255,255,255,0.15);color:#fff;">🌙 다크</button>
+            </div>`;
+        }
         function updateNavAuth() {
             const navButtons = document.getElementById('navButtons');
+            const themeHTML = getThemeToggleHTML();
             if (currentUser && userProfile) {
-                navButtons.innerHTML = `
+                navButtons.innerHTML = themeHTML + `
                     <button class="btn btn-primary" onclick="openMyInfoModal()" id="agentBtn">${userProfile.business_name}님</button>
                     <a href="my_cards.html" class="btn btn-ghost">내 카드</a>
 
                 `;
             } else if (currentUser && !userProfile) {
-                navButtons.innerHTML = `
+                navButtons.innerHTML = themeHTML + `
                     <button class="btn btn-primary" onclick="openProfileModal()">프로필 설정</button>
 
                 `;
             } else {
-                navButtons.innerHTML = `
+                navButtons.innerHTML = themeHTML + `
                     <button class="kakao-nav-btn" onclick="openLoginModal()">💬 카카오로 시작하기</button>
                 `;
+            }
+            // Re-apply theme toggle button styles after innerHTML replacement
+            const saved = localStorage.getItem('hwik-theme');
+            if (saved === 'dark' || !saved) {
+                const btnL = document.getElementById('btnLight');
+                const btnD = document.getElementById('btnDark');
+                if (btnD) { btnD.style.background = 'rgba(255,255,255,0.15)'; btnD.style.color = '#fff'; }
+                if (btnL) { btnL.style.background = 'transparent'; btnL.style.color = 'rgba(255,255,255,0.5)'; }
+            } else {
+                const btnL = document.getElementById('btnLight');
+                const btnD = document.getElementById('btnDark');
+                if (btnL) { btnL.style.background = 'rgba(255,255,255,0.15)'; btnL.style.color = '#fff'; }
+                if (btnD) { btnD.style.background = 'transparent'; btnD.style.color = 'rgba(255,255,255,0.5)'; }
             }
         }
         
@@ -3724,9 +3770,22 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     updatePreviewAgent();
                     updateAgentButton();
                 }
-                document.getElementById('navButtons').innerHTML = `
+                document.getElementById('navButtons').innerHTML = getThemeToggleHTML() + `
                     <button class="kakao-nav-btn" onclick="openLoginModal()">💬 카카오로 시작하기</button>
                 `;
+                // Re-apply theme toggle styles
+                const saved = localStorage.getItem('hwik-theme');
+                if (saved === 'dark' || !saved) {
+                    const btnL = document.getElementById('btnLight');
+                    const btnD = document.getElementById('btnDark');
+                    if (btnD) { btnD.style.background = 'rgba(255,255,255,0.15)'; btnD.style.color = '#fff'; }
+                    if (btnL) { btnL.style.background = 'transparent'; btnL.style.color = 'rgba(255,255,255,0.5)'; }
+                } else {
+                    const btnL = document.getElementById('btnLight');
+                    const btnD = document.getElementById('btnDark');
+                    if (btnL) { btnL.style.background = 'rgba(255,255,255,0.15)'; btnL.style.color = '#fff'; }
+                    if (btnD) { btnD.style.background = 'transparent'; btnD.style.color = 'rgba(255,255,255,0.5)'; }
+                }
             }
             
             // 템플릿 설정 체크
@@ -6050,6 +6109,30 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
       });
     }
   };
+})();
+</script>
+
+<script>
+function toggleTheme(mode) {
+    if (mode === 'dark') {
+        document.body.classList.add('dark');
+        localStorage.setItem('hwik-theme', 'dark');
+    } else {
+        document.body.classList.remove('dark');
+        localStorage.setItem('hwik-theme', 'light');
+    }
+    document.getElementById('btnLight').style.background = mode === 'light' ? 'rgba(255,255,255,0.15)' : 'transparent';
+    document.getElementById('btnLight').style.color = mode === 'light' ? '#fff' : 'rgba(255,255,255,0.5)';
+    document.getElementById('btnDark').style.background = mode === 'dark' ? 'rgba(255,255,255,0.15)' : 'transparent';
+    document.getElementById('btnDark').style.color = mode === 'dark' ? '#fff' : 'rgba(255,255,255,0.5)';
+}
+(function() {
+    const saved = localStorage.getItem('hwik-theme');
+    if (saved === 'light') {
+        // light is default, do nothing
+    } else {
+        toggleTheme('dark');
+    }
 })();
 </script>
 

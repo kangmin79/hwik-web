@@ -23,12 +23,25 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         :root {
             --primary: #facc15;
             --primary-dark: #eab308;
+            --bg-dark: #f6f7f9;
+            --bg-card: #ffffff;
+            --bg-input: #f0f1f3;
+            --text-white: #1a1a2e;
+            --text-gray: #6b7280;
+            --text-gray-light: #9ca3af;
+            --border-color: #e5e7eb;
+        }
+
+        body.dark {
+            --primary: #facc15;
+            --primary-dark: #eab308;
             --bg-dark: #0a1628;
             --bg-card: #111827;
             --bg-input: #1f2937;
             --text-white: #ffffff;
             --text-gray: #9ca3af;
             --text-gray-light: #6b7280;
+            --border-color: rgba(255,255,255,0.1);
         }
         
         body {
@@ -49,11 +62,18 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         
         ::-webkit-scrollbar-thumb {
-            background: rgba(255,255,255,0.15);
+            background: #d1d5db;
             border-radius: 4px;
         }
-        
+
         ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+
+        body.dark ::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.15);
+        }
+        body.dark ::-webkit-scrollbar-thumb:hover {
             background: rgba(255,255,255,0.25);
         }
         
@@ -121,7 +141,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             flex: 1;
             overflow-y: auto;
             padding: 24px;
-            border-right: 1px solid rgba(255,255,255,0.1);
+            border-right: 1px solid var(--border-color);
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
@@ -1989,6 +2009,10 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         <div class="nav-container">
             <a href="card_generator_v2_auth.html" class="nav-logo">휙</a>
             <div id="navButtons">
+                <div style="display:flex;border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.15);margin-right:8px;">
+                    <button onclick="toggleTheme('light')" id="btnLight" style="padding:5px 12px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:rgba(255,255,255,0.15);color:#fff;">☀️ 라이트</button>
+                    <button onclick="toggleTheme('dark')" id="btnDark" style="padding:5px 12px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:transparent;color:rgba(255,255,255,0.5);">🌙 다크</button>
+                </div>
                 <a href="card_generator_v2_auth.html" class="btn btn-primary">+ 새 카드</a>
             </div>
         </div>
@@ -5343,6 +5367,32 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
   });
 
   console.log('[휙 에러수집] v1.2 활성화 ✓');
+})();
+</script>
+
+<script>
+function toggleTheme(mode) {
+    if (mode === 'dark') {
+        document.body.classList.add('dark');
+        localStorage.setItem('hwik-theme', 'dark');
+    } else {
+        document.body.classList.remove('dark');
+        localStorage.setItem('hwik-theme', 'light');
+    }
+    document.getElementById('btnLight').style.background = mode === 'light' ? 'rgba(255,255,255,0.15)' : 'transparent';
+    document.getElementById('btnLight').style.color = mode === 'light' ? '#fff' : 'rgba(255,255,255,0.5)';
+    document.getElementById('btnDark').style.background = mode === 'dark' ? 'rgba(255,255,255,0.15)' : 'transparent';
+    document.getElementById('btnDark').style.color = mode === 'dark' ? '#fff' : 'rgba(255,255,255,0.5)';
+}
+// 저장된 테마 복원
+(function() {
+    const saved = localStorage.getItem('hwik-theme');
+    if (saved === 'light') {
+        // light is default, do nothing
+    } else {
+        // default to dark for existing users
+        toggleTheme('dark');
+    }
 })();
 </script>
 
