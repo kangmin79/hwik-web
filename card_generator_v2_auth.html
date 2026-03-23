@@ -5083,6 +5083,70 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             }
         }
 
+        // ===== 좌표 자동 매칭 (apartments 테이블) =====
+        async function matchCoords(property) {
+            try {
+                const complex = property?.complex || '';
+                const location = property?.location || '';
+                if (!complex && !location) return null;
+
+                // 주소에서 구/동 추출
+                const guMatch = location.match(/(\S+구)/);
+                const dongMatch = location.match(/(\S+동)/);
+                const gu = guMatch ? guMatch[1] : '';
+                const dong = dongMatch ? dongMatch[1] : '';
+
+                let result = null;
+
+                // 1차: 구 + 단지명 정확 매칭
+                if (gu && complex) {
+                    const { data } = await supabaseClient
+                        .from('apartments')
+                        .select('lat,lon,kapt_name,doro_juso')
+                        .eq('sgg', gu)
+                        .ilike('kapt_name', `%${complex}%`)
+                        .limit(1);
+                    if (data && data.length > 0) result = data[0];
+                }
+
+                // 2차: 동 + 단지명 유사 매칭
+                if (!result && dong && complex) {
+                    const { data } = await supabaseClient
+                        .from('apartments')
+                        .select('lat,lon,kapt_name,doro_juso')
+                        .eq('umd_nm', dong)
+                        .ilike('kapt_name', `%${complex}%`)
+                        .limit(1);
+                    if (data && data.length > 0) result = data[0];
+                }
+
+                // 3차: 단지명만으로 매칭 (slug 사용)
+                if (!result && complex) {
+                    const slug = complex.replace(/\s/g, '');
+                    const { data } = await supabaseClient
+                        .from('apartments')
+                        .select('lat,lon,kapt_name,doro_juso')
+                        .ilike('slug', `%${slug}%`)
+                        .limit(3);
+                    // 여러 결과면 주소로 필터
+                    if (data && data.length === 1) {
+                        result = data[0];
+                    } else if (data && data.length > 1 && gu) {
+                        result = data.find(d => d.doro_juso && d.doro_juso.includes(gu)) || null;
+                    }
+                }
+
+                if (result) {
+                    console.log('[휙 좌표매칭]', result.kapt_name, result.lat, result.lon);
+                    return { lat: result.lat, lng: result.lon };
+                }
+                return null;
+            } catch(e) {
+                console.warn('[휙 좌표매칭 실패]', e);
+                return null;
+            }
+        }
+
         async function registerProperty() {
             const input = document.getElementById('propertyInput').value.trim();
             if (!input) {
@@ -5189,14 +5253,24 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     agent_comment: document.getElementById('agentCommentInput')?.value.trim() || parsedResult.agent_comment || null,
                     lat: parsedResult.lat || null,
                     lng: parsedResult.lng || null,
-                    coord_type: parsedResult.coord_type || null,
+                    coord_type: parsedResult.coord_type || 'none',
                     embedding: parsedResult.embedding || null,
                     search_text: parsedResult.search_text || null,
                     search_text_private: parsedResult.search_text_private || null,
                     price_number: parsedResult.price_number || null,
                     photos: photoUrls.length ? photoUrls : null
                 };
-                
+
+                // ★ 좌표 없으면 DB에서 자동 매칭
+                if (!cardData.lat && cardData.property) {
+                    const matched = await matchCoords(cardData.property);
+                    if (matched) {
+                        cardData.lat = matched.lat;
+                        cardData.lng = matched.lng;
+                        cardData.coord_type = 'db_match';
+                    }
+                }
+
                 // ★ 저장 전 세션 직접 확인 (currentUser 타이밍 이슈 방지)
                 if (!currentUser) {
                     const { data: { session: freshSession } } = await supabaseClient.auth.getSession();
@@ -6024,6 +6098,20 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     const cardColor = card.color || getColorByType(card.property?.type);
                     const searchText = [card.property?.type, card.property?.price, card.property?.location, card.property?.complex, card.property?.area, card.property?.floor, ...(card.property?.features||[])].filter(Boolean).join(' ');
                     const privateMemo = card.private_note?.memo || card.property?.privateNote || null;
+
+                    // ★ 좌표 자동 매칭
+                    let cardLat = card.lat || null;
+                    let cardLng = card.lng || null;
+                    let coordType = card.coord_type || null;
+                    if (!cardLat && card.property) {
+                        const matched = await matchCoords(card.property);
+                        if (matched) {
+                            cardLat = matched.lat;
+                            cardLng = matched.lng;
+                            coordType = 'db_match';
+                        }
+                    }
+
                     const { error } = await supabaseClient.from('cards').insert({
                         id: linkId,
                         agent_id: session.user.id,
@@ -6035,6 +6123,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         agent_comment: card.agent_comment || null,
                         search_text: searchText,
                         price_number: card.price_number || card.property?.price_number || null,
+                        lat: cardLat,
+                        lng: cardLng,
+                        coord_type: coordType,
                         created_at: new Date().toISOString()
                     });
                     if (error) {
