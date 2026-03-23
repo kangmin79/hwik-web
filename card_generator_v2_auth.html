@@ -3172,16 +3172,6 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     <input class="myinfo-input" id="miAddress" type="text" placeholder="예: 서울시 중랑구 신내동">
                 </div>
 
-                <div class="myinfo-divider"></div>
-
-                <!-- 카드 스타일 -->
-                <div class="myinfo-style-row">
-                    <div class="myinfo-style-info">
-                        <div class="myinfo-style-label">현재 카드 스타일</div>
-                        <div class="myinfo-style-name" id="miStyleName">미니멀</div>
-                    </div>
-                    <button class="myinfo-style-btn" onclick="goToStyleSelect()">🎨 스타일 변경</button>
-                </div>
             </div>
             <div class="myinfo-foot">
                 <button class="myinfo-cancel" onclick="closeMyInfoModal()">취소</button>
@@ -3737,8 +3727,6 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     document.getElementById('miAgentName').value = data.agent_name || '';
                     document.getElementById('miPhone').value = data.phone || '';
                     document.getElementById('miAddress').value = data.address || '';
-                    const styleName = STYLE_NAMES[data.style] || '미니멀';
-                    document.getElementById('miStyleName').textContent = styleName;
                     // 프로필 사진 로드
                     if (data.profile_photo) {
                         document.getElementById('miPhotoPreview').innerHTML = `<img src="${esc(data.profile_photo)}" style="width:100%;height:100%;object-fit:cover;">`;
@@ -3748,7 +3736,6 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     document.getElementById('miAgentName').value = agentInfo.agent_name || '';
                     document.getElementById('miPhone').value = agentInfo.phone || '';
                     document.getElementById('miAddress').value = '';
-                    document.getElementById('miStyleName').textContent = STYLE_NAMES[selectedStyle] || '미니멀';
                 }
             } catch(e) {
                 console.error('프로필 로드 실패:', e);
@@ -3867,11 +3854,6 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             }
         }
 
-        function goToStyleSelect() {
-            closeMyInfoModal();
-            window.location.href = 'select_template.html?from=generator';
-        }
-        
         // 미리보기 카드의 중개사 정보 업데이트
         function updatePreviewAgent() {
             const agentNameEl = document.getElementById('agentName');
