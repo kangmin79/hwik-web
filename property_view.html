@@ -91,12 +91,13 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 16px 16px 80px;
+            padding: 16px 16px;
         }
         
         /* 카드 컨테이너 */
         .card-container {
-            width: 300px;
+            width: 100%;
+            max-width: min(430px, 100%);
             margin-bottom: 16px;
             position: relative;
             overflow: visible;
@@ -108,7 +109,7 @@
             gap: 4px;
             padding: 0 0 12px;
             width: 100%;
-            max-width: 300px;
+            max-width: min(430px, 100%);
         }
         .story-progress.show { display: flex; }
         .story-bar {
@@ -234,7 +235,7 @@
         
         /* ========== 새 카드 공통 (card-full) ========== */
         .card-full {
-          width: 300px; height: 500px; border-radius: 24px;
+          width: 100%; max-width: min(430px, 100%); aspect-ratio: 3/5; border-radius: 24px;
           overflow: hidden; position: relative;
           box-shadow: 0 40px 100px rgba(0,0,0,0.7);
           margin: 0 auto;
@@ -333,15 +334,12 @@
         /* 중개사 하단 */
         .agent-below {
           display: flex; align-items: center; gap: 12px;
-          padding: 14px 20px; border-radius: 16px 16px 0 0;
-          background: rgba(20,20,35,0.95);
-          backdrop-filter: blur(20px);
-          border: 1.5px solid rgba(255,255,255,0.12);
-          border-bottom: none;
-          position: fixed; bottom: 0; left: 0; right: 0;
-          width: 100%; max-width: 100%;
-          z-index: 100;
-          box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+          padding: 14px 20px; border-radius: 16px;
+          background: rgba(255,255,255,0.08);
+          border: 1.5px solid rgba(255,255,255,0.25);
+          width: 100%; max-width: min(430px, 100%);
+          margin: 8px auto 0;
+          box-shadow: 0 4px 20px rgba(0,0,0,0.4);
         }
         .agent-below-avatar {
           width: 40px; height: 40px; border-radius: 50%;
