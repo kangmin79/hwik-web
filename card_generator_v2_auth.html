@@ -4073,8 +4073,10 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     <button class="photo-thumb-remove" onclick="event.stopPropagation(); removePhoto(${i})">×</button>
                 </div>
             `).join('');
+            // 사진 변경 시 미리보기 카드도 갱신
+            if (parsed && document.getElementById('templatePreview')) renderPreviewCard();
         }
-        
+
         async function uploadPhotos(cardId) {
             if (!pendingPhotos.length) return [];
 
@@ -4241,6 +4243,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             const agentPhone = esc((agent && agent.phone) || '');
             const nameParts = name.length > 6 ? name.replace(/\s/g, '<br>') : name;
             const detailStr = [area, floor].filter(Boolean).join(' · ');
+            const hasPhotos = pendingPhotos && pendingPhotos.length > 0;
+            const photoUrl = hasPhotos ? pendingPhotos[0].previewUrl : null;
             const specs = features.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center;">${features.map(f => '<span style="font-size:10px;padding:3px 7px;border-radius:16px;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.1);">' + f + '</span>').join('')}</div>` : '';
 
             const commentBlock = opts.showComment ? `
@@ -4280,6 +4284,22 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         <div style="font-size:11px;color:#4ecdc4;font-weight:600;">${agentPhone}</div>
                     </div>
                 </div>`;
+
+            // 사진이 있으면 memo 템플릿 (풀스크린 사진)
+            if (hasPhotos) {
+                const cardNameStr = [location, name, area].filter(Boolean).join(' · ');
+                return `<div style="border-radius:16px;overflow:hidden;position:relative;min-height:320px;">
+                    <img src="${photoUrl}" style="width:100%;height:320px;object-fit:cover;display:block;">
+                    <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(0,0,0,0.92) 0%,rgba(0,0,0,0.5) 60%,transparent 100%);padding:40px 16px 16px;">
+                        <div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:2px;">${price}</div>
+                        <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:8px;">${cardNameStr}</div>
+                        ${specs}
+                        ${actionBar}
+                    </div>
+                </div>
+                ${agentBelow}
+                ${commentBlock}`;
+            }
 
             // noimg: 3단 레이아웃 (단지명 위 / 가격 중간 / 태그 하단)
             return `<div style="border-radius:16px;overflow:hidden;position:relative;background:linear-gradient(160deg,#0d1b2a 0%,#1b2838 30%,#162032 60%,#0a1628 100%);min-height:320px;display:flex;flex-direction:column;padding:36px 20px 16px;">
