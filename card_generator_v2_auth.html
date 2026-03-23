@@ -72,9 +72,13 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             left: 0;
             right: 0;
             z-index: 1000;
-            background: rgba(10, 22, 40, 0.95);
+            background: #ffffff;
             backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid #e2e8f0;
+        }
+        body.dark .nav {
+            background: rgba(10, 22, 40, 0.95);
+            border-bottom-color: rgba(255,255,255,0.1);
         }
         
         .nav-container {
@@ -90,7 +94,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .nav-logo {
             font-size: 28px;
             font-weight: 900;
-            color: #facc15;
+            color: #eab308;
             text-decoration: none;
             letter-spacing: -1px;
         }
@@ -134,29 +138,39 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         
         .btn-ghost {
-            background: rgba(255,255,255,0.08);
-            color: #fff;
-            border: 2px solid rgba(255,255,255,0.2);
+            background: transparent;
+            color: #0f172a;
+            border: 1px solid rgba(0,0,0,0.15);
             border-radius: 10px;
             padding: 9px 18px;
             font-weight: 700;
             font-size: 14px;
             transition: all 0.15s;
         }
-        
         .btn-ghost:hover {
+            background: rgba(0,0,0,0.04);
+            border-color: rgba(0,0,0,0.25);
+        }
+        body.dark .btn-ghost {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            border-color: rgba(255,255,255,0.2);
+        }
+        body.dark .btn-ghost:hover {
             background: rgba(255,255,255,0.14);
             border-color: rgba(255,255,255,0.35);
             color: #fff;
         }
-        
+
         .btn-primary {
             background: var(--primary);
-            color: var(--bg-dark);
+            color: #fff;
         }
-        
         .btn-primary:hover {
             background: var(--primary-dark);
+        }
+        body.dark .btn-primary {
+            color: #0a1628;
         }
         
         /* 메인 컨테이너 */
@@ -6253,17 +6267,30 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
 <script>
 function toggleTheme(mode) {
-    if (mode === 'dark') {
+    const isDark = mode === 'dark';
+    if (isDark) {
         document.body.classList.add('dark');
         localStorage.setItem('hwik-theme', 'dark');
     } else {
         document.body.classList.remove('dark');
         localStorage.setItem('hwik-theme', 'light');
     }
-    document.getElementById('btnLight').style.background = mode === 'light' ? 'rgba(255,255,255,0.15)' : 'transparent';
-    document.getElementById('btnLight').style.color = mode === 'light' ? '#fff' : 'rgba(255,255,255,0.5)';
-    document.getElementById('btnDark').style.background = mode === 'dark' ? 'rgba(255,255,255,0.15)' : 'transparent';
-    document.getElementById('btnDark').style.color = mode === 'dark' ? '#fff' : 'rgba(255,255,255,0.5)';
+    const btnL = document.getElementById('btnLight');
+    const btnD = document.getElementById('btnDark');
+    if (!btnL || !btnD) return;
+    // 라이트 네비: 어두운 텍스트, 다크 네비: 밝은 텍스트
+    if (isDark) {
+        btnL.style.cssText = 'padding:5px 12px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:transparent;color:rgba(255,255,255,0.5);';
+        btnD.style.cssText = 'padding:5px 12px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:rgba(255,255,255,0.15);color:#fff;';
+    } else {
+        btnL.style.cssText = 'padding:5px 12px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:rgba(0,0,0,0.08);color:#0f172a;';
+        btnD.style.cssText = 'padding:5px 12px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:transparent;color:rgba(0,0,0,0.4);';
+    }
+    // 토글 컨테이너 테두리도 변경
+    const toggleWrap = btnL.parentElement;
+    if (toggleWrap) {
+        toggleWrap.style.borderColor = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
+    }
 }
 (function() {
     const saved = localStorage.getItem('hwik-theme');
