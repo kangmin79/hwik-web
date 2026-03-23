@@ -21,20 +21,58 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         
         :root {
-            --primary: #facc15;
-            --primary-dark: #eab308;
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-bg: rgba(37,99,235,0.06);
+            --primary-bg2: rgba(37,99,235,0.02);
+            --primary-bg3: rgba(37,99,235,0.03);
+            --primary-bg4: rgba(37,99,235,0.04);
+            --primary-bg5: rgba(37,99,235,0.05);
+            --primary-bg8: rgba(37,99,235,0.08);
+            --primary-bg10: rgba(37,99,235,0.10);
+            --primary-bg12: rgba(37,99,235,0.12);
+            --primary-bg15: rgba(37,99,235,0.15);
+            --primary-bg20: rgba(37,99,235,0.20);
+            --primary-bg25: rgba(37,99,235,0.25);
+            --primary-border: rgba(37,99,235,0.2);
+            --primary-border2: rgba(37,99,235,0.15);
+            --primary-border3: rgba(37,99,235,0.3);
+            --primary-border4: rgba(37,99,235,0.4);
+            --primary-border5: rgba(37,99,235,0.5);
+            --primary-border6: rgba(37,99,235,0.6);
+            --primary-shadow: rgba(37,99,235,0.06);
+            --primary-contrast: #ffffff;
             --bg-dark: #f6f7f9;
             --bg-card: #ffffff;
             --bg-input: #f0f1f3;
             --text-white: #1a1a2e;
             --text-gray: #6b7280;
             --text-gray-light: #9ca3af;
-            --border-color: #e5e7eb;
+            --border-color: #e2e8f0;
         }
 
         body.dark {
             --primary: #facc15;
             --primary-dark: #eab308;
+            --primary-bg: rgba(250,204,21,0.06);
+            --primary-bg2: rgba(250,204,21,0.02);
+            --primary-bg3: rgba(250,204,21,0.03);
+            --primary-bg4: rgba(250,204,21,0.04);
+            --primary-bg5: rgba(250,204,21,0.05);
+            --primary-bg8: rgba(250,204,21,0.08);
+            --primary-bg10: rgba(250,204,21,0.10);
+            --primary-bg12: rgba(250,204,21,0.12);
+            --primary-bg15: rgba(250,204,21,0.15);
+            --primary-bg20: rgba(250,204,21,0.20);
+            --primary-bg25: rgba(250,204,21,0.25);
+            --primary-border: rgba(250,204,21,0.2);
+            --primary-border2: rgba(250,204,21,0.15);
+            --primary-border3: rgba(250,204,21,0.3);
+            --primary-border4: rgba(250,204,21,0.4);
+            --primary-border5: rgba(250,204,21,0.5);
+            --primary-border6: rgba(250,204,21,0.6);
+            --primary-shadow: rgba(250,204,21,0.06);
+            --primary-contrast: #0a1628;
             --bg-dark: #0a1628;
             --bg-card: #111827;
             --bg-input: #1f2937;
@@ -102,7 +140,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .nav-logo {
             font-size: 28px;
             font-weight: 900;
-            color: var(--primary);
+            color: #facc15;
             text-decoration: none;
         }
 
@@ -176,7 +214,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .match-panel {
             position: relative;
             background: var(--bg-card);
-            border: 1px solid rgba(250,204,21,0.2);
+            border: 1px solid var(--primary-border);
             border-radius: 12px;
             margin-bottom: 16px;
             overflow: hidden;
@@ -186,7 +224,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             justify-content: space-between;
             align-items: center;
             padding: 12px 16px;
-            background: rgba(250,204,21,0.05);
+            background: var(--primary-bg5);
             border-bottom: 1px solid rgba(255,255,255,0.06);
             font-size: 13px;
             font-weight: 700;
@@ -219,7 +257,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             background: rgba(78,205,196,0.12);
             color: #4ecdc4;
         }
-        .match-score.high { background: rgba(250,204,21,0.12); color: var(--primary); }
+        .match-score.high { background: var(--primary-bg12); color: var(--primary); }
         .match-info { flex: 1; min-width: 0; }
         .match-client {
             font-size: 12px;
@@ -398,7 +436,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             border-color: rgba(255,255,255,0.15);
         }
         .room-box-slot.filled.owner-room .slot-icon {
-            background: rgba(250, 204, 21, 0.12);
+            background: var(--primary-bg12);
             color: var(--primary);
         }
         .room-box-slot.filled.member-room .slot-icon {
@@ -406,8 +444,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             color: #4ecdc4;
         }
         .room-box-slot.filled.active {
-            background: rgba(250, 204, 21, 0.08);
-            border-color: rgba(250, 204, 21, 0.4);
+            background: var(--primary-bg8);
+            border-color: var(--primary-border4);
         }
         .room-box-slot.filled.active .slot-name {
             color: var(--primary);
@@ -420,8 +458,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             min-height: 48px;
         }
         .room-box-slot.empty:hover {
-            border-color: rgba(250, 204, 21, 0.4);
-            background: rgba(250, 204, 21, 0.04);
+            border-color: var(--primary-border4);
+            background: var(--primary-bg4);
         }
         .room-box-slot.empty .slot-icon {
             width: 24px;
@@ -466,7 +504,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         .mine-badge {
             font-size: 9px;
-            background: rgba(250,204,21,0.15);
+            background: var(--primary-bg15);
             color: var(--primary);
             padding: 2px 6px;
             border-radius: 4px;
@@ -553,7 +591,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             justify-content: center;
             flex-shrink: 0;
         }
-        .room-card-icon.owner { background: rgba(250,204,21,0.1); color: var(--primary); }
+        .room-card-icon.owner { background: var(--primary-bg10); color: var(--primary); }
         .room-card-icon.member { background: rgba(78,205,196,0.1); color: #4ecdc4; }
         .room-card-info {
             flex: 1;
@@ -607,8 +645,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             position: relative;
         }
         .room-card-btn:hover { background: rgba(255,255,255,0.08); color: var(--text-white); }
-        .room-card-btn.invite { background: rgba(250,204,21,0.1); border-color: rgba(250,204,21,0.2); color: var(--primary); }
-        .room-card-btn.invite:hover { background: rgba(250,204,21,0.2); }
+        .room-card-btn.invite { background: var(--primary-bg10); border-color: var(--primary-border); color: var(--primary); }
+        .room-card-btn.invite:hover { background: var(--primary-bg20); }
         .room-card-btn.danger:hover { background: rgba(239,68,68,0.1); color: #ef4444; border-color: rgba(239,68,68,0.3); }
         .room-card-btn::after {
             content: attr(data-tip);
@@ -641,7 +679,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             font-size: 13px;
             background: transparent;
         }
-        .room-card-new:hover { border-color: rgba(250,204,21,0.3); color: var(--primary); background: rgba(250,204,21,0.03); }
+        .room-card-new:hover { border-color: var(--primary-border3); color: var(--primary); background: var(--primary-bg3); }
         .room-card-new-icon {
             width: 40px;
             height: 40px;
@@ -653,7 +691,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             font-size: 18px;
             color: var(--text-gray-light);
         }
-        .room-card-new:hover .room-card-new-icon { background: rgba(250,204,21,0.08); color: var(--primary); }
+        .room-card-new:hover .room-card-new-icon { background: var(--primary-bg8); color: var(--primary); }
         /* 새 공유방 입력 */
         .room-create-inline {
             display: none;
@@ -661,7 +699,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             padding: 14px;
             border: 1.5px solid var(--primary);
             border-radius: 12px;
-            background: rgba(250,204,21,0.04);
+            background: var(--primary-bg4);
         }
         .room-create-inline.show { display: flex; }
         .room-create-inline input {
@@ -690,8 +728,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             align-items: center;
             justify-content: space-between;
             padding: 14px 16px;
-            background: rgba(250,204,21,0.04);
-            border: 1px solid rgba(250,204,21,0.15);
+            background: var(--primary-bg4);
+            border: 1px solid var(--primary-border2);
             border-radius: 10px;
             margin-bottom: 8px;
         }
@@ -803,8 +841,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         /* 검색 결과 정보 */
         .search-info {
             padding: 10px 14px;
-            background: rgba(250, 204, 21, 0.1);
-            border: 1px solid rgba(250, 204, 21, 0.3);
+            background: var(--primary-bg10);
+            border: 1px solid var(--primary-border3);
             border-radius: 8px;
             font-size: 13px;
             color: var(--primary);
@@ -852,8 +890,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         
         .property-item.selected {
-            background: rgba(250, 204, 21, 0.1);
-            border-color: rgba(250, 204, 21, 0.4);
+            background: var(--primary-bg10);
+            border-color: var(--primary-border4);
         }
         
         /* 체크박스 */
@@ -982,16 +1020,16 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             padding: 6px 10px;
             border-radius: 6px;
             font-size: 11px;
-            background: rgba(250, 204, 21, 0.1);
-            color: #fbbf24;
-            border: 1px solid rgba(250, 204, 21, 0.2);
+            background: var(--primary-bg10);
+            color: var(--primary);
+            border: 1px solid var(--primary-border);
             cursor: pointer;
             transition: all 0.15s;
         }
-        
+
         .property-edit:hover {
-            background: rgba(250, 204, 21, 0.25);
-            border-color: rgba(250, 204, 21, 0.4);
+            background: var(--primary-bg25);
+            border-color: var(--primary-border4);
         }
         
         .property-delete:hover {
@@ -1106,7 +1144,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             font-size: 15px; box-sizing: border-box; outline: none;
             transition: border-color 0.2s; font-family: inherit;
         }
-        .myinfo-input:focus { border-color: rgba(250,204,21,0.5); }
+        .myinfo-input:focus { border-color: var(--primary-border5); }
         .myinfo-input:read-only { opacity: 0.5; cursor: not-allowed; }
         .myinfo-divider {
             height: 1px; background: rgba(255,255,255,0.07); margin: 4px 0;
@@ -1119,19 +1157,19 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         .myinfo-style-info { display: flex; flex-direction: column; gap: 3px; }
         .myinfo-style-label { font-size: 11px; color: #6b7280; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        .myinfo-style-name { font-size: 15px; color: #facc15; font-weight: 700; }
+        .myinfo-style-name { font-size: 15px; color: var(--primary); font-weight: 700; }
         .myinfo-style-btn {
             padding: 8px 16px; border-radius: 10px;
-            background: rgba(250,204,21,0.1); border: 1px solid rgba(250,204,21,0.3);
-            color: #facc15; font-size: 13px; font-weight: 600; cursor: pointer;
+            background: var(--primary-bg10); border: 1px solid var(--primary-border3);
+            color: var(--primary); font-size: 13px; font-weight: 600; cursor: pointer;
             transition: all 0.2s; white-space: nowrap;
         }
-        .myinfo-style-btn:hover { background: rgba(250,204,21,0.2); }
+        .myinfo-style-btn:hover { background: var(--primary-bg20); }
         .myinfo-foot {
             padding: 16px 24px 24px; display: flex; gap: 10px;
         }
         .myinfo-save {
-            flex: 1; padding: 14px; background: #facc15; color: #0a1628;
+            flex: 1; padding: 14px; background: var(--primary); color: var(--primary-contrast);
             border: none; border-radius: 14px; font-size: 15px;
             font-weight: 800; cursor: pointer; transition: opacity 0.15s;
         }
@@ -1302,11 +1340,11 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             background: rgba(78,205,196,0.04);
         }
         .edit-memo.yellow:focus {
-            border-color: rgba(250,204,21,0.4);
-            box-shadow: 0 0 0 3px rgba(250,204,21,0.06);
-            background: rgba(250,204,21,0.02);
+            border-color: var(--primary-border4);
+            box-shadow: 0 0 0 3px var(--primary-shadow);
+            background: var(--primary-bg2);
         }
-        .edit-memo.yellow { border-color: rgba(250,204,21,0.15); }
+        .edit-memo.yellow { border-color: var(--primary-border2); }
 
         /* 버튼 영역 */
         .edit-btns {
@@ -2647,7 +2685,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 }
                 if (subText) html += `<div class="detail-info">📐 ${subText}</div>`;
                 if (pn.memo) html += `<div class="detail-memo">🔒 ${esc(pn.memo)}</div>`;
-                if (card.agent_comment) html += `<div class="detail-memo" style="color:#facc15;background:rgba(250,204,21,0.06);border-left:2px solid rgba(250,204,21,0.3);padding-left:10px;">💬 ${esc(card.agent_comment)}</div>`;
+                if (card.agent_comment) html += `<div class="detail-memo" style="color:var(--primary);background:var(--primary-bg);border-left:2px solid var(--primary-border3);padding-left:10px;">💬 ${esc(card.agent_comment)}</div>`;
                 // 상태 변경
                 html += `<div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);">
                     <span style="font-size:11px;color:#666;">거래상태</span>
@@ -2770,7 +2808,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     ${p.area ? `<div style="font-size:13px;color:#94a3b8;margin-bottom:4px;">📐 ${esc(p.area)}</div>` : ''}
                     ${tags ? `<div style="margin:8px 0;">${tags}</div>` : ''}
                     ${p.rawText ? `<div style="margin-top:12px;padding:10px;background:rgba(255,255,255,0.04);border-radius:8px;font-size:12px;color:#94a3b8;white-space:pre-wrap;word-break:break-all;">${esc(p.rawText)}</div>` : ''}
-                    ${pn.memo ? `<div style="margin-top:8px;padding:8px 10px;background:rgba(250,204,21,0.05);border:1px solid rgba(250,204,21,0.2);border-radius:8px;font-size:12px;color:#facc15;">🔒 ${esc(pn.memo)}</div>` : ''}
+                    ${pn.memo ? `<div style="margin-top:8px;padding:8px 10px;background:var(--primary-bg5);border:1px solid var(--primary-border);border-radius:8px;font-size:12px;color:var(--primary);">🔒 ${esc(pn.memo)}</div>` : ''}
                 </div>`;
                 return;
             }
@@ -2859,8 +2897,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             }
             
             if (card.agent_comment) {
-                html += `<div style="margin-top:10px;padding:10px 12px;background:rgba(250,204,21,0.06);border:1.5px solid rgba(250,204,21,0.25);border-radius:10px;">`;
-                html += `<div style="font-size:9px;font-weight:700;color:#facc15;margin-bottom:4px;">💬 ${esc(agent.name) || '중개사'}의 한마디</div>`;
+                html += `<div style="margin-top:10px;padding:10px 12px;background:var(--primary-bg);border:1.5px solid var(--primary-border3);border-radius:10px;">`;
+                html += `<div style="font-size:9px;font-weight:700;color:var(--primary);margin-bottom:4px;">💬 ${esc(agent.name) || '중개사'}의 한마디</div>`;
                 html += `<div style="font-size:11px;color:#e2e8f0;line-height:1.6;white-space:pre-wrap;">${esc(card.agent_comment)}</div>`;
                 html += `</div>`;
             }
@@ -3337,7 +3375,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             });
             // 새 사진
             editNewPhotos.forEach((p, i) => {
-                html += `<div style="position:relative;width:64px;height:64px;border-radius:6px;overflow:hidden;border:1px solid rgba(250,204,21,0.3);">
+                html += `<div style="position:relative;width:64px;height:64px;border-radius:6px;overflow:hidden;border:1px solid var(--primary-border3);">
                     <img src="${p.previewUrl}" style="width:100%;height:100%;object-fit:cover;">
                     <button onclick="URL.revokeObjectURL(editNewPhotos[${i}].previewUrl);editNewPhotos.splice(${i},1);renderEditPhotos()" style="position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(239,68,68,0.9);color:#fff;border:none;border-radius:50%;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
                 </div>`;
@@ -3746,7 +3784,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 const agentInfo = getAgentInfo();
                 const displayName = agentInfo.name || '내 정보';
                 nav.innerHTML = `
-                    <button onclick="openMyInfoModal()" style="background:rgba(250,204,21,0.1);border:1px solid rgba(250,204,21,0.35);color:var(--primary);font-weight:700;font-size:14px;padding:8px 18px;border-radius:8px;cursor:pointer;margin-right:8px;transition:all 0.2s;" onmouseover="this.style.background='rgba(250,204,21,0.2)'" onmouseout="this.style.background='rgba(250,204,21,0.1)'">${displayName}님</button>
+                    <button onclick="openMyInfoModal()" style="background:var(--primary-bg10);border:1px solid var(--primary-border3);color:var(--primary);font-weight:700;font-size:14px;padding:8px 18px;border-radius:8px;cursor:pointer;margin-right:8px;transition:all 0.2s;" onmouseover="this.style.background='var(--primary-bg20)'" onmouseout="this.style.background='var(--primary-bg10)'">${displayName}님</button>
                     <a href="card_generator_v2_auth.html" class="btn btn-primary">+ 새 카드</a>
                 `;
             }
@@ -4041,7 +4079,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 renderClientList();
             } else if (tab === 'memo') {
                 document.getElementById('pageTitle').textContent = '모바일 메모';
-                document.getElementById('pageTitle').style.color = '#facc15';
+                document.getElementById('pageTitle').style.color = 'var(--primary)';
                 document.getElementById('pageCount').textContent = '';
                 loadMemosPc();
             }
@@ -5087,7 +5125,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             <div class="myinfo-body">
                 <!-- 프로필 사진 -->
                 <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
-                    <div id="miPhotoPreview" style="width:52px;height:52px;border-radius:50%;background:#243050;border:2px solid #facc15;overflow:hidden;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;" onclick="document.getElementById('miPhotoInput').click()">
+                    <div id="miPhotoPreview" style="width:52px;height:52px;border-radius:50%;background:#243050;border:2px solid var(--primary);overflow:hidden;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;" onclick="document.getElementById('miPhotoInput').click()">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="#4a7ab5"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
                     </div>
                     <input type="file" id="miPhotoInput" accept="image/*" style="display:none" onchange="handleProfilePhoto(event)">
@@ -5184,10 +5222,10 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     <input class="edit-input" id="editComplex" placeholder="래미안, 아크로 등">
                 </div>
                 <div class="edit-row">
-                    <label>주소 <span style="font-size:11px;color:#facc15;font-weight:600;">📍 정확한 주소 입력 시 지도 등록 + 검색 노출이 돼요</span></label>
+                    <label>주소 <span style="font-size:11px;color:var(--primary);font-weight:600;">📍 정확한 주소 입력 시 지도 등록 + 검색 노출이 돼요</span></label>
                     <div style="display:flex;gap:8px;">
                         <input class="edit-input" id="editLocation" placeholder="예: 서울 마포구 공덕동 푸르지오" style="flex:1;">
-                        <button onclick="searchEditAddress()" style="padding:0 14px;background:#facc15;color:#1a1a2e;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">검색</button>
+                        <button onclick="searchEditAddress()" style="padding:0 14px;background:var(--primary);color:var(--primary-contrast);border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;">검색</button>
                     </div>
                     <div id="editAddressResult" style="font-size:11px;color:#4ecdc4;margin-top:4px;"></div>
                 </div>
@@ -5228,7 +5266,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 <div class="edit-row">
                     <div id="editPhotoRow" style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;"></div>
                     <div style="margin-top:10px;text-align:center;">
-                        <label style="display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#facc15;cursor:pointer;padding:12px 28px;border:1.5px dashed rgba(250,204,21,0.4);border-radius:12px;background:rgba(250,204,21,0.05);transition:all 0.2s;" onmouseover="this.style.background='rgba(250,204,21,0.12)'" onmouseout="this.style.background='rgba(250,204,21,0.05)'" onclick="document.getElementById('editPhotoInput').click()">📷 사진 추가</label>
+                        <label style="display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--primary);cursor:pointer;padding:12px 28px;border:1.5px dashed var(--primary-border4);border-radius:12px;background:var(--primary-bg5);transition:all 0.2s;" onmouseover="this.style.background='var(--primary-bg12)'" onmouseout="this.style.background='var(--primary-bg5)'" onclick="document.getElementById('editPhotoInput').click()">📷 사진 추가</label>
                         <input type="file" id="editPhotoInput" accept="image/*" multiple style="display:none" onchange="handleEditPhotoAdd(event)">
                     </div>
                 </div>
@@ -5422,13 +5460,13 @@ function toggleTheme(mode) {
         <input type="hidden" id="clientMemoId">
         <p style="font-size:12px;color:#888;margin-bottom:10px;">내용을 수정하면 AI가 다시 분석해서 저장해요.</p>
         <textarea id="clientMemoText"
-            style="width:100%;min-height:180px;background:rgba(255,255,255,0.05);border:1.5px solid rgba(250,204,21,0.25);border-radius:12px;padding:14px;font-size:15px;color:#e2e8f0;resize:vertical;font-family:inherit;line-height:1.7;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
-            onfocus="this.style.borderColor='rgba(250,204,21,0.6)'"
-            onblur="this.style.borderColor='rgba(250,204,21,0.25)'"
+            style="width:100%;min-height:180px;background:rgba(255,255,255,0.05);border:1.5px solid var(--primary-border3);border-radius:12px;padding:14px;font-size:15px;color:#e2e8f0;resize:vertical;font-family:inherit;line-height:1.7;outline:none;box-sizing:border-box;transition:border-color 0.2s;"
+            onfocus="this.style.borderColor='var(--primary-border6)'"
+            onblur="this.style.borderColor='var(--primary-border3)'"
             placeholder="손님 요청 내용을 입력하세요&#10;예) 강남구 전세 5억 이내 30평 남향 원하는 손님&#10;연락처 010-1234-5678"></textarea>
         <div style="display:flex;gap:10px;margin-top:16px;">
             <button onclick="closeClientMemo()" style="flex:1;padding:12px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:#aaa;font-size:14px;cursor:pointer;">취소</button>
-            <button id="clientMemoSaveBtn" onclick="saveClientMemo()" style="flex:2;padding:12px;background:#facc15;border:none;border-radius:10px;color:#1a1a2e;font-size:14px;font-weight:700;cursor:pointer;">저장</button>
+            <button id="clientMemoSaveBtn" onclick="saveClientMemo()" style="flex:2;padding:12px;background:var(--primary);border:none;border-radius:10px;color:var(--primary-contrast);font-size:14px;font-weight:700;cursor:pointer;">저장</button>
         </div>
     </div>
 </div>
