@@ -2257,9 +2257,6 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         </div>
     </div>
     
-    <!-- 멤버 초대 모달 -->
-    <div class="room-modal-overlay" id="inviteModalOverlay" onclick="if(event.target===this)closeInviteModal()">
-
     <!-- 멤버 관리 모달 -->
     <div class="room-modal-overlay" id="membersModalOverlay" onclick="if(event.target===this)closeMembersModal()">
         <div class="room-modal" style="width:420px">
@@ -2272,6 +2269,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             </div>
         </div>
     </div>
+    <!-- 멤버 초대 모달 -->
+    <div class="room-modal-overlay" id="inviteModalOverlay" onclick="if(event.target===this)closeInviteModal()">
         <div class="room-modal" style="width:360px">
             <div class="room-modal-header">
                 <h3 id="inviteModalTitle">멤버 초대</h3>
