@@ -1245,14 +1245,33 @@
 
         function openKakaoMap() {
             if (!mapCoords) {
-                // 좌표 없으면 주소/단지명으로 카카오맵 검색
+                // 좌표 없으면 주소/단지명으로 카카오맵 SDK 검색 후 풀스크린 표시
                 const card = allCardsData[currentIndex];
                 if (!card) return;
                 const p = card.property || {};
                 const searchQuery = p.complex ? `${p.location || ''} ${p.complex}`.trim() : (p.location || '');
-                if (searchQuery) {
-                    window.open(`https://map.kakao.com/link/search/${encodeURIComponent(searchQuery)}`, '_blank');
-                }
+                if (!searchQuery) return;
+                const overlay = document.getElementById('mapFullscreenOverlay');
+                const title = document.getElementById('mapFullscreenTitle');
+                const container = document.getElementById('mapFullscreen');
+                title.textContent = searchQuery;
+                overlay.classList.add('show');
+                history.pushState({ mapOpen: true }, '');
+                kakao.maps.load(() => {
+                    const map = new kakao.maps.Map(container, {
+                        center: new kakao.maps.LatLng(37.5665, 126.9780), level: 5
+                    });
+                    fullscreenMapInstance = map;
+                    const ps = new kakao.maps.services.Places();
+                    ps.keywordSearch(searchQuery, (data, status) => {
+                        if (status === kakao.maps.services.Status.OK && data.length > 0) {
+                            const pos = new kakao.maps.LatLng(data[0].y, data[0].x);
+                            map.setCenter(pos);
+                            map.setLevel(4);
+                            createHwikMarker(pos, map);
+                        }
+                    });
+                });
                 return;
             }
             const overlay = document.getElementById('mapFullscreenOverlay');
