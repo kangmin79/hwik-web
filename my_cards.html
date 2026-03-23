@@ -904,18 +904,20 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         
         .property-item {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 10px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
             transition: all 0.15s;
             cursor: pointer;
             overflow: hidden;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 16px;
-            margin-bottom: 16px;
         }
         body.dark .property-item {
-            border-bottom-color: rgba(255,255,255,0.06);
+            background: rgba(255,255,255,0.03);
+            border-color: rgba(255,255,255,0.06);
+            box-shadow: none;
         }
         
         .property-item-main {
