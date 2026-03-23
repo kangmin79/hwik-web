@@ -4888,19 +4888,38 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             data.forEach(m => {
                 const isOwner = m.role === 'owner';
                 const isMe = m.member_id === currentUser?.id;
-                const statusText = m.status === 'pending' ? '초대 대기' : '';
-                const badgeColor = isOwner ? 'var(--primary)' : 'rgba(78,205,196,0.8)';
-                const badgeText = isOwner ? '방장' : (m.status === 'pending' ? '대기' : '멤버');
-                
-                html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid rgba(255,255,255,0.06);border-radius:8px;margin-bottom:6px;">
+                const isPending = m.status === 'pending';
+                const badgeColor = isOwner ? 'var(--primary)' : isPending ? 'rgba(251,146,60,0.8)' : 'rgba(78,205,196,0.8)';
+                const badgeText = isOwner ? '방장' : isPending ? '초대 대기중' : '멤버';
+                const phoneDisplay = m.invited_phone || '번호 없음';
+
+                let actionBtn = '';
+                if (!isOwner && !isMe && isPending) {
+                    // 초대 대기중 → 초대 취소 버튼
+                    actionBtn = `<button onclick="cancelInvite('${m.id}')" style="padding:4px 10px;border-radius:6px;font-size:11px;border:1px solid rgba(251,146,60,0.3);background:transparent;color:#fb923c;cursor:pointer;">초대 취소</button>`;
+                } else if (!isOwner && !isMe) {
+                    // 참여중 멤버 → 내보내기 버튼
+                    actionBtn = `<button onclick="kickMember('${m.id}', '${m.invited_phone}')" style="padding:4px 10px;border-radius:6px;font-size:11px;border:1px solid rgba(239,68,68,0.3);background:transparent;color:#ef4444;cursor:pointer;">내보내기</button>`;
+                }
+
+                html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid rgba(255,255,255,0.06);border-radius:8px;margin-bottom:6px;${isPending ? 'opacity:0.7;' : ''}">
                     <div style="display:flex;align-items:center;gap:10px;">
-                        <span style="font-size:13px;font-weight:600">${m.invited_phone}${isMe ? ' <span style="font-size:10px;color:var(--primary)">(나)</span>' : ''}</span>
+                        <span style="font-size:13px;font-weight:600">${phoneDisplay}${isMe ? ' <span style="font-size:10px;color:var(--primary)">(나)</span>' : ''}</span>
                         <span style="font-size:9px;padding:2px 6px;border-radius:6px;background:${badgeColor};color:${isOwner ? 'var(--bg-dark)' : '#fff'};font-weight:600">${badgeText}</span>
                     </div>
-                    ${(!isOwner && !isMe) ? `<button onclick="kickMember('${m.id}', '${m.invited_phone}')" style="padding:4px 10px;border-radius:6px;font-size:11px;border:1px solid rgba(239,68,68,0.3);background:transparent;color:#ef4444;cursor:pointer;">내보내기</button>` : ''}
+                    ${actionBtn}
                 </div>`;
             });
             container.innerHTML = html;
+        }
+
+        async function cancelInvite(memberId) {
+            if (!confirm('이 초대를 취소할까요?')) return;
+            try {
+                await supabaseClient.from('share_room_members').delete().eq('id', memberId);
+                showToast('초대를 취소했어요');
+                loadRoomMembers(membersRoomId);
+            } catch(e) { showToast('❌ 취소 실패: ' + e.message); }
         }
 
         async function kickMember(memberId, phone) {
