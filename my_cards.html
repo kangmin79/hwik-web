@@ -2299,6 +2299,17 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         </div>
     </div>
 
+    <!-- 공유 매물 상세 모달 -->
+    <div class="room-modal-overlay" id="sharedDetailOverlay" onclick="if(event.target===this)closeSharedDetail()">
+        <div class="room-modal" style="width:500px;max-height:80vh;overflow-y:auto;">
+            <div class="room-modal-header">
+                <h3 id="sharedDetailTitle">매물 상세</h3>
+                <button class="room-modal-close" onclick="closeSharedDetail()">×</button>
+            </div>
+            <div id="sharedDetailContent" style="padding:16px;"></div>
+        </div>
+    </div>
+
     <!-- 매물 공유 모달 (내 매물 → 공유방에 올리기) -->
     <div class="room-modal-overlay" id="shareToRoomOverlay" onclick="if(event.target===this)closeShareToRoom()">
         <div class="room-modal" style="width:360px">
@@ -4691,7 +4702,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     html += `</div>`;
                 } else {
                     html += `<div style="display:flex;gap:4px;flex-shrink:0;margin-left:4px;">`;
-                    html += `<button class="property-edit" onclick="event.stopPropagation(); toggleDetail('${card.id}')">상세</button>`;
+                    html += `<button class="property-edit" onclick="event.stopPropagation(); openSharedDetail('${card.id}')">상세</button>`;
                     html += `</div>`;
                 }
                 html += `</div></div>`;
@@ -4897,6 +4908,83 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         // 멤버 초대
         // 멤버 관리
         let membersRoomId = null;
+        // ===== 공유 매물 상세 모달 =====
+        function openSharedDetail(cardId) {
+            // allSharedCards에서 찾기
+            let card = allSharedCards.find(c => c.id === cardId);
+            if (!card) {
+                // allCards에서도 찾기
+                card = allCards.find(c => c.id === cardId);
+            }
+            if (!card) { showToast('매물을 찾을 수 없어요'); return; }
+
+            const p = card.property || {};
+            const agent = card.agent || {};
+            const isMine = card.agent_id === currentUser?.id || card.is_mine;
+            const photos = card.photos || [];
+
+            let html = '';
+
+            // 사진
+            if (photos.length > 0) {
+                html += `<div style="display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;">`;
+                photos.forEach(url => {
+                    html += `<img src="${esc(url)}" style="width:120px;height:90px;object-fit:cover;border-radius:8px;flex-shrink:0;">`;
+                });
+                html += `</div>`;
+            }
+
+            // 기본 정보
+            const typeClass = p.type === '매매' ? 'type-sale' : p.type === '전세' ? 'type-jeonse' : 'type-monthly';
+            html += `<div style="margin-bottom:16px;">`;
+            html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">`;
+            html += `<span class="property-type-badge ${typeClass}">${p.type || ''}</span>`;
+            html += `<span style="font-size:20px;font-weight:800;color:var(--text-white);">${p.price || ''}</span>`;
+            html += `</div>`;
+            html += `<div style="font-size:15px;font-weight:600;color:var(--text-white);margin-bottom:4px;">${esc(p.complex || '')} · ${esc(p.location || '')}</div>`;
+            html += `<div style="font-size:13px;color:var(--text-gray);">${[p.area, p.floor].filter(Boolean).join(' · ')}</div>`;
+            html += `</div>`;
+
+            // 태그
+            const features = p.features || [];
+            if (features.length > 0) {
+                html += `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:16px;">`;
+                features.forEach(f => { html += `<span class="list-tag">${esc(f)}</span>`; });
+                html += `</div>`;
+            }
+
+            // 중개사 코멘트 (손님에게 하는 말)
+            if (card.agent_comment) {
+                html += `<div style="padding:12px;background:rgba(14,165,233,0.06);border:1px solid rgba(14,165,233,0.15);border-radius:10px;margin-bottom:12px;">`;
+                html += `<div style="font-size:11px;font-weight:700;color:#0ea5e9;margin-bottom:6px;">💬 손님에게 한마디</div>`;
+                html += `<div style="font-size:13px;color:var(--text-white);line-height:1.6;">${esc(card.agent_comment)}</div>`;
+                html += `</div>`;
+            }
+
+            // 비공개 메모 (내 매물만)
+            if (isMine && card.private_note?.memo) {
+                html += `<div style="padding:12px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);border-radius:10px;margin-bottom:12px;">`;
+                html += `<div style="font-size:11px;font-weight:700;color:#ef4444;margin-bottom:6px;">🔒 비공개 메모 (나만 보임)</div>`;
+                html += `<div style="font-size:13px;color:var(--text-white);line-height:1.6;">${esc(card.private_note.memo)}</div>`;
+                html += `</div>`;
+            }
+
+            // 중개사 정보
+            html += `<div style="padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;display:flex;align-items:center;gap:10px;">`;
+            html += `<div style="width:36px;height:36px;border-radius:50%;background:rgba(78,205,196,0.2);border:2px solid #4ecdc4;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#4ecdc4;">${(agent.business_name || agent.name || '?').charAt(0)}</div>`;
+            html += `<div style="flex:1;font-size:14px;font-weight:700;color:var(--text-white);">${esc(agent.business_name || agent.name || '')}</div>`;
+            html += `<div style="font-size:13px;color:#4ecdc4;font-weight:600;">${esc(agent.phone || '')}</div>`;
+            html += `</div>`;
+
+            document.getElementById('sharedDetailTitle').textContent = `${p.complex || p.location || '매물'} 상세`;
+            document.getElementById('sharedDetailContent').innerHTML = html;
+            document.getElementById('sharedDetailOverlay').classList.add('show');
+        }
+
+        function closeSharedDetail() {
+            document.getElementById('sharedDetailOverlay').classList.remove('show');
+        }
+
         function openMembersModal(roomId, roomName) {
             membersRoomId = roomId;
             document.getElementById('membersModalTitle').textContent = `${roomName} 멤버`;
