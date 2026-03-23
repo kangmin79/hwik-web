@@ -4933,22 +4933,21 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         async function inviteMember() {
             const phone = document.getElementById('invitePhoneInput').value.trim().replace(/[^0-9-]/g, '');
             if (!phone || !inviteTargetRoomId) { showToast('⚠️ 전화번호를 입력해주세요'); return; }
-            const digits = phone.replace(/-/g, ''); // 숫자만
-            const formatted = digits.replace(/^(\d{3})(\d{4})(\d{4})$/, '$1-$2-$3'); // 하이픈 포함
+            const digits = phone.replace(/-/g, '');
+            const formatted = digits.replace(/^(\d{3})(\d{4})(\d{4})$/, '$1-$2-$3');
 
             try {
                 // 1. 가입된 회원인지 확인 (하이픈 있는 형식 + 없는 형식 모두 검색)
                 let { data: user } = await supabaseClient
                     .from('profiles')
-                    .select('id, business_name, phone')
+                    .select('id, business_name, agent_name, phone')
                     .eq('phone', formatted)
                     .maybeSingle();
 
                 if (!user) {
-                    // 하이픈 없는 형식으로 재검색
                     const { data: user2 } = await supabaseClient
                         .from('profiles')
-                        .select('id, business_name, phone')
+                        .select('id, business_name, agent_name, phone')
                         .eq('phone', digits)
                         .maybeSingle();
                     user = user2;
@@ -4958,37 +4957,68 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     showToast('❌ 가입된 회원이 아닙니다. 먼저 휙 가입을 안내해주세요.');
                     return;
                 }
-                
+
                 // 2. 자기 자신인지 확인
                 if (user.id === currentUser.id) {
                     showToast('⚠️ 본인은 초대할 수 없습니다');
                     return;
                 }
-                
-                // 3. 이미 초대된 멤버인지 확인
-                const { data: existing } = await supabaseClient
+
+                // 3. 이미 초대/참여 중인지 확인 (양쪽 형식 모두)
+                let { data: existing } = await supabaseClient
                     .from('share_room_members')
                     .select('id, status')
                     .eq('room_id', inviteTargetRoomId)
                     .eq('invited_phone', formatted)
                     .maybeSingle();
-                
+
+                if (!existing) {
+                    const { data: existing2 } = await supabaseClient
+                        .from('share_room_members')
+                        .select('id, status')
+                        .eq('room_id', inviteTargetRoomId)
+                        .eq('invited_phone', digits)
+                        .maybeSingle();
+                    existing = existing2;
+                }
+
+                // member_id로도 확인
+                if (!existing) {
+                    const { data: existing3 } = await supabaseClient
+                        .from('share_room_members')
+                        .select('id, status')
+                        .eq('room_id', inviteTargetRoomId)
+                        .eq('member_id', user.id)
+                        .maybeSingle();
+                    existing = existing3;
+                }
+
                 if (existing) {
-                    showToast(existing.status === 'accepted' ? '⚠️ 이미 참여중인 멤버예요' : '⚠️ 이미 초대된 번호예요');
+                    if (existing.status === 'accepted') {
+                        showToast('⚠️ 이미 참여중인 멤버예요');
+                    } else {
+                        showToast('⚠️ 이미 초대가 진행중입니다. 상대방이 수락을 기다리고 있어요.');
+                    }
                     return;
                 }
-                
-                // 4. 초대 (가입자만)
+
+                // 4. 확인 팝업 — 누구를 초대하는지 보여주기
+                const displayName = user.business_name || user.agent_name || '중개사';
+                const confirmed = confirm(`"${displayName}" (${user.phone})님을 이 공유방에 초대할까요?`);
+                if (!confirmed) return;
+
+                // 5. 초대 실행
                 await supabaseClient.from('share_room_members').insert({
                     room_id: inviteTargetRoomId,
                     member_id: user.id,
-                    invited_phone: formatted,
+                    invited_phone: user.phone,
                     status: 'pending',
                     role: 'member'
                 });
-                
-                showToast(`✅ ${user.business_name || '멤버'}님을 초대했습니다!`);
+
+                showToast(`✅ ${displayName}님을 초대했습니다!`);
                 closeInviteModal();
+                renderRoomModal();
             } catch(e) { showToast('❌ 초대 실패: ' + e.message); }
         }
 
