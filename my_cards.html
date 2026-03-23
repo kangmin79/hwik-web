@@ -3683,9 +3683,13 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     return;
                 }
                 
-                // 검색 분석 결과 표시 (선택적)
+                // 검색 분석 결과 표시 — applied_filters 사용 (Edge Function에서 반환)
                 let parsedInfo = '';
-                if (data.parsed) {
+                const af = data.applied_filters || [];
+                if (af.length > 0) {
+                    parsedInfo = `<div class="search-info">🤖 ${af.join(' · ')}</div>`;
+                } else if (data.parsed) {
+                    // 폴백: 기존 방식
                     const p = data.parsed;
                     const filters = [];
                     if (p.filters?.trade_type) filters.push(p.filters.trade_type);

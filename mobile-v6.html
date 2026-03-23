@@ -1759,6 +1759,8 @@
         signal: searchController.signal
       });
       const data = await res.json();
+      // ★ 적용된 필터 저장 (renderResults에서 표시)
+      window._lastAppliedFilters = data.applied_filters || [];
       showResults(data.results || [], isClientSearch);
     } catch(e) {
       if (e.name === 'AbortError') return;
@@ -1802,7 +1804,13 @@
   function renderResults(data, isClientSearch = false) {
     let sorted = [...data];
     if (myFirst) sorted = [...sorted.filter(i => i._cat === 'my'), ...sorted.filter(i => i._cat !== 'my')];
+    // ★ 적용된 필터 표시
+    const af = window._lastAppliedFilters || [];
+    const filterBadge = (af.length > 0 && !isClientSearch)
+      ? `<div style="padding:6px 12px;font-size:11px;color:#facc15;background:rgba(250,204,21,0.08);border-radius:6px;margin-bottom:6px;">🤖 ${af.join(' · ')}</div>`
+      : '';
     let html = `
+      ${filterBadge}
       <div class="results-status">
         <strong>${data.length}건</strong>${isClientSearch ? ' <span style="font-size:11px;color:#4ecdc4;font-weight:600;">🙋 내 손님</span>' : ''}
         ${!isClientSearch ? `<button class="sort-toggle ${myFirst ? 'active' : ''}" id="sortToggleBtn" onclick="toggleMyFirst()">
