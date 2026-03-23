@@ -4938,8 +4938,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             try {
                 // 1. 가입된 회원인지 확인
                 const { data: user } = await supabaseClient
-                    .from('user_profiles')
-                    .select('id, name, phone')
+                    .from('profiles')
+                    .select('id, business_name, phone')
                     .eq('phone', formatted)
                     .maybeSingle();
                 
@@ -4976,7 +4976,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     role: 'member'
                 });
                 
-                showToast(`✅ ${user.name}님을 초대했습니다!`);
+                showToast(`✅ ${user.business_name || '멤버'}님을 초대했습니다!`);
                 closeInviteModal();
             } catch(e) { showToast('❌ 초대 실패: ' + e.message); }
         }
