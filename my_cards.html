@@ -2824,19 +2824,30 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     </div>
                     ${agentBelow}`;
             } else {
-                // NOIMG template (gradient + typography)
-                const nameParts = name.length > 6 ? name.replace(/\\s/g, '<br>') : name;
+                // NOIMG template (gradient + typography) — 3단 배치
+                const nameParts = name.length > 6 ? name.replace(/\s/g, '<br>') : name;
+                const detailStr = [area, floor].filter(Boolean).join(' · ');
+                const tagsHtml = features.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center;">${features.map(f => '<span class="preview-bottom-spec">' + f + '</span>').join('')}</div>` : '';
                 html = `
                     <div class="preview-card-full">
                         <div class="preview-inner-slider">
-                            <div class="preview-info-slide bg-1">
-                                <div class="preview-info-complex">${nameParts}</div>
-                                <div class="preview-info-location">${location}</div>
-                                <div class="preview-info-divider"></div>
-                                <div class="preview-info-type-price">
-                                    <span class="preview-info-type">${type}</span>
-                                    <span class="preview-info-price">${price}</span>
+                            <div class="preview-info-slide bg-1" style="justify-content:flex-start;padding:36px 20px 70px;">
+                                <!-- 상단: 단지명 + 주소 -->
+                                <div style="text-align:center;margin-top:4px;">
+                                    <div class="preview-info-complex">${nameParts}</div>
+                                    <div class="preview-info-location">${location}</div>
                                 </div>
+                                <!-- 중간: 가격/평수 -->
+                                <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;">
+                                    <div class="preview-info-divider"></div>
+                                    <div class="preview-info-type-price" style="margin-bottom:8px;">
+                                        <span class="preview-info-type">${type}</span>
+                                        <span class="preview-info-price">${price}</span>
+                                    </div>
+                                    ${detailStr ? `<div style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.7);">${detailStr}</div>` : ''}
+                                </div>
+                                <!-- 하단: 태그 -->
+                                ${tagsHtml}
                             </div>
                             ${memoSlide}
                         </div>
