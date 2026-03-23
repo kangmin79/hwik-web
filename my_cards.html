@@ -4681,6 +4681,19 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         <img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;">
                     </div>`;
                 }
+                // 버튼: 내 매물이면 공유/상세/수정/삭제, 다른 매물이면 상세만
+                if (card.is_mine) {
+                    html += `<div style="display:flex;gap:4px;flex-shrink:0;margin-left:4px;">`;
+                    html += `<button class="property-share" onclick="event.stopPropagation(); shareOneCard('${card.id}')">공유</button>`;
+                    html += `<button class="property-edit" onclick="event.stopPropagation(); toggleDetail('${card.id}')">상세</button>`;
+                    html += `<button class="property-edit" onclick="event.stopPropagation(); editCard('${card.id}')">수정</button>`;
+                    html += `<button class="property-delete" onclick="event.stopPropagation(); deleteCard('${card.id}')">삭제</button>`;
+                    html += `</div>`;
+                } else {
+                    html += `<div style="display:flex;gap:4px;flex-shrink:0;margin-left:4px;">`;
+                    html += `<button class="property-edit" onclick="event.stopPropagation(); toggleDetail('${card.id}')">상세</button>`;
+                    html += `</div>`;
+                }
                 html += `</div></div>`;
             });
             
