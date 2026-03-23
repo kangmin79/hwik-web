@@ -3,11 +3,11 @@
 const CACHE_VERSION = 'hwik-v1';
 
 const CACHE_FILES = [
-  '/hwik-web/mobile-v6.html',
-  '/hwik-web/config.js',
-  '/hwik-web/manifest.json',
-  '/hwik-web/icon-192.png',
-  '/hwik-web/icon-512.png',
+  'mobile-v6.html',
+  'config.js',
+  'manifest.json',
+  'icon-192.png',
+  'icon-512.png',
 ];
 
 // ── 설치: 핵심 파일 캐시 ──
