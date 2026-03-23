@@ -857,9 +857,10 @@
   /* ── 등록 모달 ── */
   .reg-modal {
     position: fixed; bottom: -100%; left: 0; right: 0;
-    background: #0a0a1a;
-    border-radius: 24px 24px 0 0;
-    border-top: 1px solid rgba(255,255,255,0.08);
+    background: #ffffff;
+    border-radius: 20px 20px 0 0;
+    border-top: 1px solid #e5e7eb;
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.1);
     z-index: 201;
     transform: translateY(0);
     transition: bottom 0.35s cubic-bezier(0.16, 1, 0.3, 1);
@@ -869,38 +870,42 @@
   }
   .reg-modal.show { bottom: 0; }
   .reg-modal::-webkit-scrollbar { display: none; }
+  .reg-modal .dm-header { background: #ffffff; border-bottom: 1px solid #f0f0f3; }
+  .reg-modal .dm-title { color: #1a1a2e; }
+  .reg-modal .dm-back svg { stroke: #1a1a2e; }
 
   .reg-save-btn { display: none; }
 
   .reg-body {
-    padding: 16px 20px;
+    padding: 20px;
     display: flex; flex-direction: column;
   }
 
   .reg-textarea {
     width: 100%;
-    height: 180px;
-    padding: 16px;
-    background: #1a1a2e;
-    border: 1.5px solid rgba(255,255,255,0.08);
-    border-radius: 12px;
+    height: 200px;
+    padding: 18px;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 14px;
     font-size: 16px; font-family: inherit; font-weight: 400;
-    color: #fff;
+    color: #1a1a2e;
     outline: none; resize: none;
     line-height: 1.7;
     letter-spacing: 0.2px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   }
-  .reg-textarea:focus { border-color: #4ECDC4; background: #1e1e36; }
-  .reg-textarea::placeholder { color: #444; font-weight: 300; font-size: 15px; }
+  .reg-textarea:focus { border-color: #0ea5e9; background: #ffffff; box-shadow: 0 0 0 3px rgba(14,165,233,0.1); }
+  .reg-textarea::placeholder { color: #94a3b8; font-weight: 300; font-size: 15px; }
   .reg-textarea::-webkit-scrollbar { display: none; }
   .reg-textarea { scrollbar-width: none; }
 
   .reg-footer {
     padding: 12px 20px 28px;
-    background: #0a0a1a;
+    background: #ffffff;
   }
   .reg-tip {
-    font-size: 13px; color: #999; font-weight: 400;
+    font-size: 13px; color: #94a3b8; font-weight: 400;
     margin-bottom: 12px;
     text-align: center;
   }
@@ -1345,7 +1350,7 @@
 <!-- 매물 메모 모달 -->
 <div class="detail-overlay" id="regOverlay" onclick="closeRegister()"></div>
 <div class="reg-modal" id="regModal">
-  <div style="width:36px;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;margin:12px auto 0;"></div>
+  <div style="width:36px;height:4px;background:#d1d5db;border-radius:2px;margin:12px auto 0;"></div>
   <div class="dm-header">
     <button class="dm-back" onclick="closeRegister()">
       <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
