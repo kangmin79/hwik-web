@@ -1,11 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<script>
-if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-    location.replace('mobile-v6.html');
-}
-</script>
+<!-- 관리자 페이지는 모바일에서도 접속 가능 -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>휙 관리자</title>
@@ -275,7 +271,6 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 </div>
             </div>
         </div>
-    </div>
 
         <!-- 에러 로그 -->
         <div class="section section-anchor" id="sectionErrors">
@@ -365,6 +360,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
         loadAll();
+        // 60초마다 자동 새로고침
+        setInterval(loadAll, 60000);
     }
 
     // ===== 인증 상태 확인 =====
