@@ -2013,7 +2013,19 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     <span class="page-count" id="pageCount"></span>
                 </div>
             </div>
-            
+
+            <!-- 초대 알림 배너 -->
+            <div id="inviteBanner" style="display:none;padding:12px 16px;margin-bottom:12px;background:rgba(99,102,241,0.1);border:1px solid rgba(99,102,241,0.25);border-radius:10px;cursor:pointer;" onclick="switchMainTab('shared'); openRoomModal();">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:20px;">📩</span>
+                    <div style="flex:1;">
+                        <div style="font-size:13px;font-weight:700;color:#6366f1;" id="inviteBannerText">공유방 초대가 도착했어요!</div>
+                        <div style="font-size:11px;color:var(--text-gray);margin-top:2px;">눌러서 확인하기</div>
+                    </div>
+                    <span style="font-size:11px;color:#6366f1;font-weight:600;">확인 →</span>
+                </div>
+            </div>
+
             <!-- ===== 메인 탭 ===== -->
             <div class="main-tabs" style="display:flex;align-items:center;">
                 <button class="main-tab active" onclick="switchMainTab('mine')">
@@ -4368,6 +4380,21 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     badge.style.display = 'inline-flex';
                 } else {
                     badge.style.display = 'none';
+                }
+            }
+
+            // 초대 배너 (상단)
+            const banner = document.getElementById('inviteBanner');
+            if (banner) {
+                if (pendingInvites.length > 0) {
+                    const roomName = pendingInvites[0].share_rooms?.name || '공유방';
+                    document.getElementById('inviteBannerText').textContent =
+                        pendingInvites.length === 1
+                            ? `"${roomName}" 공유방 초대가 도착했어요!`
+                            : `공유방 초대 ${pendingInvites.length}건이 도착했어요!`;
+                    banner.style.display = 'block';
+                } else {
+                    banner.style.display = 'none';
                 }
             }
             
