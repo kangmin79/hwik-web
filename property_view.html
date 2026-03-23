@@ -427,24 +427,40 @@
         .map-fullscreen-overlay {
             display: none; position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
-            z-index: 9999; background: #000; flex-direction: column;
+            z-index: 9999; background: #0a0a12; flex-direction: column;
         }
         .map-fullscreen-overlay.show { display: flex; }
         .map-fullscreen-header {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 12px 16px; background: #1a1a2e; flex-shrink: 0;
+            padding: 16px 20px;
+            background: rgba(10,10,18,0.95);
+            backdrop-filter: blur(20px);
+            flex-shrink: 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
         }
         .map-fullscreen-title {
-            font-size: 14px; font-weight: 700; color: #fff;
+            font-size: 15px; font-weight: 700; color: #fff;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .map-fullscreen-title::before {
+            content: '📍'; font-size: 14px;
         }
         .map-fullscreen-close {
-            background: rgba(255,255,255,0.1); border: none; color: #fff;
-            font-size: 18px; width: 36px; height: 36px; border-radius: 50%;
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+            color: #fff;
+            font-size: 16px; width: 40px; height: 40px; border-radius: 50%;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
             flex-shrink: 0; margin-left: 12px;
+            transition: background 0.15s;
         }
-        #mapFullscreen { flex: 1; width: 100%; }
+        .map-fullscreen-close:hover { background: rgba(255,255,255,0.2); }
+        #mapFullscreen {
+            flex: 1; width: calc(100% - 24px); margin: 12px auto;
+            border-radius: 16px; overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
 
         /* ===== 미니맵 ===== */
         .card-map-row {
