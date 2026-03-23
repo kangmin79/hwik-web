@@ -826,11 +826,11 @@
             const specs = [floor, ...features].filter(Boolean);
 
             const slidesHtml = photos.map((url, i) =>
-                `<img class="photo-slide" src="${esc(url)}" loading="${i === 0 ? 'eager' : 'lazy'}" fetchpriority="${i === 0 ? 'high' : 'auto'}" onclick="openGallery()">`
+                `<img class="photo-slide" src="${esc(url)}" loading="${i === 0 ? 'eager' : 'lazy'}" fetchpriority="${i === 0 ? 'high' : 'auto'}">`
             ).join('') + _memoSlideHtml(agentComment, agentName, agentPhone);
 
             const cardHtml = `
-              <div class="card card-full" id="activeCard" data-template="memo" data-total="${totalSlides}">
+              <div class="card card-full" id="activeCard" data-template="memo" data-total="${totalSlides}" onclick="_onCardTap(event)">
                 <div class="card-inner-slider" id="cardSlider">${slidesHtml}</div>
                 ${_topInfoHtml(type, totalSlides)}
                 ${_bottomHtml(price, name, location, area, specs, agentPhone)}
@@ -914,6 +914,17 @@
                     d.classList.toggle('active', i === _internalSlideIndex)
                 );
             }
+        }
+
+        // 카드 탭 → 갤러리 열기 (버튼 영역 제외)
+        function _onCardTap(e) {
+            if (e.target.closest('.card-arrow')) return;
+            if (e.target.closest('.card-action-btn')) return;
+            if (e.target.closest('.card-bottom .card-action-bar')) return;
+            if (e.target.closest('.memo-slide')) return;
+            if (e.target.closest('a')) return;
+            const card = document.getElementById('activeCard');
+            if (card && card.dataset.template === 'memo') openGallery();
         }
 
         function _initInternalSwipe() {
