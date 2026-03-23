@@ -837,46 +837,37 @@
         function buildNoImgCard(ctx) {
             const { type, price, name, location, area, floor, features, agentName, agentPhone, agentPhoto, agentComment } = ctx;
             const hasComment = !!agentComment;
-            const totalSlides = 2 + (hasComment ? 1 : 0);
-            const specs = [floor, ...features].filter(Boolean);
+            const totalSlides = 1 + (hasComment ? 1 : 0);
 
             // 단지명 줄바꿈 처리
             const nameParts = name.length > 6 ? name.replace(/\s/g, '<br>') : name;
+            const detailStr = [area, floor].filter(Boolean).join(' · ');
+            const tagsHtml = features.length ? `<div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;position:relative;z-index:1;margin-top:2px;">${features.map(f => `<span class="card-spec">${f}</span>`).join('')}</div>` : '';
 
-            const slide1 = `
-              <div class="info-slide bg-dark-1">
-                <div class="info-complex">${nameParts}</div>
+            const slide = `
+              <div class="info-slide bg-dark-1" style="padding:50px 28px 90px;">
+                <div class="info-complex" style="font-size:30px;">${nameParts}</div>
                 <div class="info-location">${location}</div>
                 <div class="info-divider"></div>
-                <div class="info-type-price">
+                <div class="info-type-price" style="margin-bottom:14px;">
                   <span class="info-type">${type}</span>
-                  <span class="info-price">${price}</span>
+                  <span class="info-price" style="font-size:24px;">${price}</span>
                 </div>
-                <div class="hwik-watermark">휙</div>
-              </div>`;
-
-            const slide2 = `
-              <div class="info-slide bg-dark-2">
-                <div class="info-complex" style="font-size:28px;">${[area, floor].filter(Boolean).join(' · ')}</div>
-                <div class="info-location">${area ? area : ''}</div>
-                <div class="info-divider"></div>
-                <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;position:relative;z-index:1;">
-                  ${features.map(f => `<span class="card-spec">${f}</span>`).join('')}
-                </div>
+                ${detailStr ? `<div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.7);position:relative;z-index:1;margin-bottom:10px;">${detailStr}</div>` : ''}
+                ${tagsHtml}
                 <div class="hwik-watermark">휙</div>
               </div>`;
 
             const cardHtml = `
               <div class="card card-full" id="activeCard" data-template="noimg" data-total="${totalSlides}">
                 <div class="card-inner-slider" id="cardSlider">
-                  ${slide1}${slide2}${_memoSlideHtml(agentComment, agentName, agentPhone)}
+                  ${slide}${_memoSlideHtml(agentComment, agentName, agentPhone)}
                 </div>
                 ${_topInfoHtml(type, totalSlides)}
                 <div class="card-bottom" id="cardBottom">
                   ${_actionBarHtml(agentPhone)}
                 </div>
-                <button class="card-arrow arr-left" onclick="_moveInternalSlide(-1)">‹</button>
-                <button class="card-arrow arr-right" onclick="_moveInternalSlide(1)">›</button>
+                ${totalSlides > 1 ? `<button class="card-arrow arr-left" onclick="_moveInternalSlide(-1)">‹</button><button class="card-arrow arr-right" onclick="_moveInternalSlide(1)">›</button>` : ''}
               </div>
               ${_agentBelowHtml(agentName, agentPhone, agentPhoto)}`;
             return cardHtml;
