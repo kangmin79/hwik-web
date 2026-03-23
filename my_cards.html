@@ -4400,7 +4400,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                             <div class="slot-name">${esc(room.name)}<span class="slot-role owner"></span></div>
                             <div class="slot-meta">${members}명 · ${count}개</div>
                         </div>
-                        <div class="slot-member-btn" onclick="event.stopPropagation(); openMembersModal('${room.id}', '${esc(room.name)}')" title="멤버 보기">
+                        <div class="slot-member-btn" onclick="event.stopPropagation(); openRoomModal()" title="공유방 관리">
                             <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                         </div>
                     </div>`;
@@ -4426,7 +4426,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                             <div class="slot-name">${esc(room.name)}<span class="slot-role member"></span></div>
                             <div class="slot-meta">${members}명 · ${count}개</div>
                         </div>
-                        <div class="slot-member-btn" onclick="event.stopPropagation(); openMembersModal('${room.id}', '${esc(room.name)}')" title="멤버 보기">
+                        <div class="slot-member-btn" onclick="event.stopPropagation(); openRoomModal()" title="공유방 관리">
                             <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                         </div>
                     </div>`;
