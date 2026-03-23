@@ -4933,16 +4933,27 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         async function inviteMember() {
             const phone = document.getElementById('invitePhoneInput').value.trim().replace(/[^0-9-]/g, '');
             if (!phone || !inviteTargetRoomId) { showToast('⚠️ 전화번호를 입력해주세요'); return; }
-            const formatted = phone.replace(/-/g, '').replace(/^(\d{3})(\d{4})(\d{4})$/, '$1-$2-$3');
-            
+            const digits = phone.replace(/-/g, ''); // 숫자만
+            const formatted = digits.replace(/^(\d{3})(\d{4})(\d{4})$/, '$1-$2-$3'); // 하이픈 포함
+
             try {
-                // 1. 가입된 회원인지 확인
-                const { data: user } = await supabaseClient
+                // 1. 가입된 회원인지 확인 (하이픈 있는 형식 + 없는 형식 모두 검색)
+                let { data: user } = await supabaseClient
                     .from('profiles')
                     .select('id, business_name, phone')
                     .eq('phone', formatted)
                     .maybeSingle();
-                
+
+                if (!user) {
+                    // 하이픈 없는 형식으로 재검색
+                    const { data: user2 } = await supabaseClient
+                        .from('profiles')
+                        .select('id, business_name, phone')
+                        .eq('phone', digits)
+                        .maybeSingle();
+                    user = user2;
+                }
+
                 if (!user) {
                     showToast('❌ 가입된 회원이 아닙니다. 먼저 휙 가입을 안내해주세요.');
                     return;
