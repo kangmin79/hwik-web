@@ -3599,17 +3599,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             }
             // Re-apply theme toggle button styles after innerHTML replacement
             const saved = localStorage.getItem('hwik-theme');
-            if (saved === 'dark' || !saved) {
-                const btnL = document.getElementById('btnLight');
-                const btnD = document.getElementById('btnDark');
-                if (btnD) { btnD.style.background = 'rgba(255,255,255,0.15)'; btnD.style.color = '#fff'; }
-                if (btnL) { btnL.style.background = 'transparent'; btnL.style.color = 'rgba(255,255,255,0.5)'; }
-            } else {
-                const btnL = document.getElementById('btnLight');
-                const btnD = document.getElementById('btnDark');
-                if (btnL) { btnL.style.background = 'rgba(255,255,255,0.15)'; btnL.style.color = '#fff'; }
-                if (btnD) { btnD.style.background = 'transparent'; btnD.style.color = 'rgba(255,255,255,0.5)'; }
-            }
+            toggleTheme(saved === 'light' ? 'light' : 'dark');
         }
         
         // 인증 상태 확인 (페이지 로드 시)
@@ -6314,7 +6304,7 @@ function toggleTheme(mode) {
 (function() {
     const saved = localStorage.getItem('hwik-theme');
     if (saved === 'light') {
-        // light is default, do nothing
+        toggleTheme('light');
     } else {
         toggleTheme('dark');
     }
