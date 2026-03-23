@@ -869,16 +869,23 @@
             const tagsHtml = features.length ? `<div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;position:relative;z-index:1;margin-top:2px;">${features.map(f => `<span class="card-spec">${f}</span>`).join('')}</div>` : '';
 
             const slide = `
-              <div class="info-slide bg-dark-1" style="padding:50px 28px 90px;">
-                <div class="info-complex" style="font-size:30px;">${nameParts}</div>
-                <div class="info-location">${location}</div>
-                <div class="info-divider"></div>
-                <div class="info-type-price" style="margin-bottom:14px;">
-                  <span class="info-type">${type}</span>
-                  <span class="info-price" style="font-size:24px;">${price}</span>
+              <div class="info-slide bg-dark-1" style="padding:50px 28px 90px;justify-content:flex-start;">
+                <!-- 상단: 단지명 + 주소 -->
+                <div style="position:relative;z-index:1;text-align:center;margin-top:8px;">
+                  <div class="info-complex" style="font-size:30px;margin-bottom:6px;">${nameParts}</div>
+                  <div class="info-location" style="margin-bottom:0;">${location}</div>
                 </div>
-                ${detailStr ? `<div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.7);position:relative;z-index:1;margin-bottom:10px;">${detailStr}</div>` : ''}
-                ${tagsHtml}
+                <!-- 중간: 가격/평수 (세로 중앙) -->
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;z-index:1;width:100%;">
+                  <div class="info-divider"></div>
+                  <div class="info-type-price" style="margin-bottom:12px;">
+                    <span class="info-type">${type}</span>
+                    <span class="info-price" style="font-size:24px;">${price}</span>
+                  </div>
+                  ${detailStr ? `<div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.7);">${detailStr}</div>` : ''}
+                </div>
+                <!-- 하단: 태그 -->
+                ${tagsHtml ? `<div style="position:relative;z-index:1;width:100%;display:flex;flex-wrap:wrap;gap:5px;justify-content:center;">${features.map(f => '<span class="card-spec">' + f + '</span>').join('')}</div>` : ''}
                 <div class="hwik-watermark">휙</div>
               </div>`;
 
