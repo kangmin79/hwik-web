@@ -1199,25 +1199,6 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         .myinfo-input:focus { border-color: var(--primary-border5); }
         .myinfo-input:read-only { opacity: 0.5; cursor: not-allowed; }
-        .myinfo-divider {
-            height: 1px; background: rgba(255,255,255,0.07); margin: 4px 0;
-        }
-        .myinfo-style-row {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 14px 16px; border-radius: 14px;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.07);
-        }
-        .myinfo-style-info { display: flex; flex-direction: column; gap: 3px; }
-        .myinfo-style-label { font-size: 11px; color: #6b7280; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        .myinfo-style-name { font-size: 15px; color: var(--primary); font-weight: 700; }
-        .myinfo-style-btn {
-            padding: 8px 16px; border-radius: 10px;
-            background: var(--primary-bg10); border: 1px solid var(--primary-border3);
-            color: var(--primary); font-size: 13px; font-weight: 600; cursor: pointer;
-            transition: all 0.2s; white-space: nowrap;
-        }
-        .myinfo-style-btn:hover { background: var(--primary-bg20); }
         .myinfo-foot {
             padding: 16px 24px 24px; display: flex; gap: 10px;
         }
@@ -3904,11 +3885,6 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             }
         }
 
-        function goToStyleSelect() {
-            closeMyInfoModal();
-            window.location.href = 'select_template.html?from=my_cards';
-        }
-
         // 로그아웃
         async function logout() {
             await supabaseClient.auth.signOut();
@@ -5112,16 +5088,6 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     <input class="myinfo-input" id="miAddress" type="text" placeholder="예: 서울시 강남구 역삼동">
                 </div>
 
-                <div class="myinfo-divider"></div>
-
-                <!-- 카드 스타일 -->
-                <div class="myinfo-style-row">
-                    <div class="myinfo-style-info">
-                        <div class="myinfo-style-label">현재 카드 스타일</div>
-                        <div class="myinfo-style-name" id="miStyleName">미니멀</div>
-                    </div>
-                    <button class="myinfo-style-btn" onclick="goToStyleSelect()">🎨 스타일 변경</button>
-                </div>
             </div>
             <div class="myinfo-foot">
                 <button class="myinfo-cancel" onclick="closeMyInfoModal()">취소</button>
