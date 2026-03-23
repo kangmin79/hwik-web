@@ -2066,7 +2066,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     </div>
                     
                     <div class="search-box">
-                        <input type="text" id="sharedSearchInput" placeholder="위치, 단지명, 가격 검색..." oninput="renderSharedList()">
+                        <input type="text" id="sharedSearchInput" placeholder="역세권 3억 이하 투룸... 자연어로 검색 (Enter)" oninput="renderSharedList()" onkeypress="if(event.key==='Enter') sharedVectorSearch(this.value.trim())">
                     </div>
                 </div>
                 
@@ -3737,6 +3737,98 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             }
         }
         
+        // ===== 공유 매물 AI 검색 =====
+        async function sharedVectorSearch(query) {
+            if (!query || !currentUser) { renderSharedList(); return; }
+
+            document.getElementById('sharedPropertyList').innerHTML =
+                '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">AI 검색 중...</div></div>';
+
+            try {
+                const response = await fetch(`${SUPABASE_URL}/functions/v1/search-property`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + SUPABASE_KEY
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        agent_id: currentUser.id,
+                        limit: 50,
+                        search_mode: 'shared'
+                    })
+                });
+
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+
+                const results = data.results || [];
+                const af = data.applied_filters || [];
+
+                if (results.length === 0) {
+                    document.getElementById('sharedPropertyList').innerHTML =
+                        '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">조건에 맞는 공유 매물 없음</div></div>';
+                    return;
+                }
+
+                // 검색 결과를 allSharedCards 형식으로 변환
+                const searchedCards = results.map(r => ({
+                    id: r.id,
+                    property: r.property,
+                    agent: r.agent,
+                    photos: r.photos,
+                    agent_comment: r.agent_comment,
+                    style: r.style,
+                    color: r.color,
+                    agent_id: r.agent_id,
+                    is_mine: r.agent_id === currentUser.id,
+                    similarity: r.similarity
+                }));
+
+                // 필터 표시
+                let html = '';
+                if (af.length > 0) {
+                    html += `<div class="search-info">🤖 ${af.join(' · ')}</div>`;
+                }
+
+                searchedCards.forEach(card => {
+                    const p = card.property || {};
+                    const isSelected = selectedCards.some(c => c.id === card.id);
+                    const typeClass = p.type === '매매' ? 'type-sale' : p.type === '전세' ? 'type-jeonse' : p.type === '월세' ? 'type-monthly' : '';
+                    const agentName = card.agent?.business_name || card.agent?.name || '공유';
+                    const similarity = card.similarity > 0 ? Math.round(card.similarity * 100) : 0;
+                    const similarityBadge = similarity > 0 ? `<span class="similarity-badge">${similarity}%</span>` : '';
+
+                    html += `<div class="property-item ${isSelected ? 'selected' : ''}" onclick="toggleSelect('${card.id}')">
+                        <div class="property-item-main">
+                            <div class="property-checkbox ${isSelected ? 'checked' : ''}"></div>
+                            <span class="property-type-badge ${typeClass}">${p.type || '?'}</span>
+                            <div class="property-text">
+                                <div class="item-main">
+                                    <span class="item-price">${p.price || '-'}</span>
+                                    <span class="item-name">${[p.complex, p.location].filter(Boolean).join(' · ')}</span>
+                                </div>
+                                <div class="property-tags-row">
+                                    <span class="list-tag" style="background:rgba(99,102,241,0.1);color:#6366f1;border-color:rgba(99,102,241,0.2);">${agentName}</span>
+                                    ${(p.features||[]).slice(0,3).map(f => `<span class="list-tag">${esc(f)}</span>`).join('')}
+                                </div>
+                            </div>
+                            ${similarityBadge}
+                            <button class="property-detail-btn" onclick="event.stopPropagation(); showDetail('${card.id}')">상세</button>
+                        </div>
+                    </div>`;
+                });
+
+                document.getElementById('sharedPropertyList').innerHTML = html;
+                showToast(`공유 매물 ${searchedCards.length}개 검색됨`);
+
+            } catch(e) {
+                console.error('공유 매물 검색 오류:', e);
+                document.getElementById('sharedPropertyList').innerHTML =
+                    '<div class="empty-state"><div class="empty-icon">❌</div><div class="empty-title">검색 오류</div></div>';
+            }
+        }
+
         // 네비 업데이트
         function updateNav() {
             const nav = document.getElementById('navButtons');
