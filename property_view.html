@@ -91,7 +91,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 16px 16px;
+            padding: 16px 16px 80px;
         }
         
         /* 카드 컨테이너 */
@@ -333,11 +333,15 @@
         /* 중개사 하단 */
         .agent-below {
           display: flex; align-items: center; gap: 12px;
-          padding: 14px 20px; border-radius: 16px;
-          background: rgba(255,255,255,0.08);
-          border: 1.5px solid rgba(255,255,255,0.25);
-          width: 300px; margin: 8px auto 0;
-          box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+          padding: 14px 20px; border-radius: 16px 16px 0 0;
+          background: rgba(20,20,35,0.95);
+          backdrop-filter: blur(20px);
+          border: 1.5px solid rgba(255,255,255,0.12);
+          border-bottom: none;
+          position: fixed; bottom: 0; left: 0; right: 0;
+          width: 100%; max-width: 100%;
+          z-index: 100;
+          box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
         }
         .agent-below-avatar {
           width: 40px; height: 40px; border-radius: 50%;
@@ -502,6 +506,11 @@
                 <div class="gallery-track" id="galleryTrack"></div>
             </div>
             <div class="gallery-dots" id="galleryDots"></div>
+            <!-- 좌우 버튼 -->
+            <button onclick="goGallery(-1)" style="position:fixed;left:12px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:22px;cursor:pointer;z-index:1002;display:flex;align-items:center;justify-content:center;">‹</button>
+            <button onclick="goGallery(1)" style="position:fixed;right:12px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,0.15);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:22px;cursor:pointer;z-index:1002;display:flex;align-items:center;justify-content:center;">›</button>
+            <!-- 하단 닫기 버튼 -->
+            <button onclick="closeGallery()" style="position:fixed;bottom:24px;left:50%;transform:translateX(-50%);padding:14px 40px;border-radius:30px;background:rgba(255,255,255,0.12);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.8);font-size:15px;font-weight:600;cursor:pointer;z-index:1002;font-family:inherit;">닫기</button>
         </div>
         
         <!-- 스토리 프로그레스 바 -->
@@ -1082,21 +1091,19 @@
             attachDragToCard();
         }
         
-        // 현재 카드에 드래그 리스너 연결 (중복 방지)
-        let _dragListenerCard = null; // 이전에 리스너 붙인 카드 참조
+        // 현재 카드에 위아래 스와이프 리스너 연결 (카드 간 이동)
+        let _dragListenerCard = null;
         function attachDragToCard() {
             if (allCardsData.length <= 1) return;
             const container = document.getElementById('cardContainer');
             const card = container.querySelector('.card');
             if (!card) return;
-            // ★ 이미 이 카드에 리스너가 붙어 있으면 스킵 (innerHTML 교체 시 자동 해제됨)
             if (card === _dragListenerCard) return;
             _dragListenerCard = card;
 
-            let startX = 0, startY = 0, currentX = 0, currentY = 0;
+            let startY = 0, deltaY = 0;
             let _dragging = false;
             const threshold = 60;
-            const total = allCardsData.length;
 
             const onStart = (e) => {
                 if (e.target.closest('a')) return;
@@ -1105,39 +1112,34 @@
                 if (e.target.closest('.card-minimap')) return;
                 if (e.target.closest('.card-arrow')) return;
                 if (e.target.closest('.card-action-btn')) return;
+                if (e.target.closest('.gallery-overlay')) return;
                 const touch = e.touches ? e.touches[0] : e;
-                startX = touch.clientX;
                 startY = touch.clientY;
-                currentX = 0; currentY = 0;
+                deltaY = 0;
                 _dragging = true;
                 card.style.transition = 'none';
             };
 
             const onMove = (e) => {
                 if (!_dragging) return;
-                e.preventDefault();
                 const touch = e.touches ? e.touches[0] : e;
-                currentX = touch.clientX - startX;
-                currentY = touch.clientY - startY;
-                const rotate = currentX * 0.04;
-                card.style.transform = `translate(${currentX}px, ${currentY * 0.3}px) rotate(${rotate}deg)`;
-                card.style.opacity = Math.max(0.3, 1 - Math.abs(currentX) / 300);
+                deltaY = touch.clientY - startY;
+                card.style.transform = `translateY(${deltaY * 0.4}px)`;
+                card.style.opacity = Math.max(0.4, 1 - Math.abs(deltaY) / 400);
             };
 
             const onEnd = () => {
                 if (!_dragging) return;
                 _dragging = false;
 
-                if (Math.abs(currentX) > threshold) {
-                    const dir = currentX < 0 ? 1 : -1;
+                if (Math.abs(deltaY) > threshold) {
+                    const dir = deltaY < 0 ? 1 : -1; // 위로 밀면 다음, 아래로 밀면 이전
                     card.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
-                    card.style.transform = `translateX(${currentX < 0 ? '-120%' : '120%'})`;
+                    card.style.transform = `translateY(${deltaY < 0 ? '-120%' : '120%'})`;
                     card.style.opacity = '0';
                     card.addEventListener('transitionend', function h() {
                         card.removeEventListener('transitionend', h);
-                        currentIndex = (currentIndex + dir + allCardsData.length) % allCardsData.length;
-                        renderCard(allCardsData[currentIndex]);
-                        updateProgress();
+                        goCard(dir);
                     });
                 } else {
                     card.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
@@ -1147,12 +1149,8 @@
             };
 
             card.addEventListener('touchstart', onStart, { passive: true });
-            card.addEventListener('touchmove', onMove, { passive: false });
+            card.addEventListener('touchmove', onMove, { passive: true });
             card.addEventListener('touchend', onEnd);
-            card.addEventListener('mousedown', onStart);
-            card.addEventListener('mousemove', (e) => { if (_dragging) onMove(e); });
-            card.addEventListener('mouseup', onEnd);
-            card.addEventListener('mouseleave', onEnd);
         }
 
         // 카드 이동
@@ -1418,74 +1416,32 @@
             newWrap.appendChild(track);
             wrap.parentNode.replaceChild(newWrap, wrap);
 
-            const onStart = (e) => {
-                galDragging = true;
-                galDirection = null;
-                const t = e.touches ? e.touches[0] : e;
-                galStartX = t.clientX;
-                galStartY = t.clientY;
-                galDeltaX = 0; galDeltaY = 0;
+            // 위아래 스와이프로 갤러리 닫기만
+            let galTouchStartY = 0, galTouchDeltaY = 0;
+            const overlay = document.getElementById('galleryOverlay');
+
+            overlay.addEventListener('touchstart', (e) => {
+                galTouchStartY = e.touches[0].clientY;
+                galTouchDeltaY = 0;
                 track.style.transition = 'none';
-            };
+            }, { passive: true });
 
-            const onMove = (e) => {
-                if (!galDragging) return;
-                const t = e.touches ? e.touches[0] : e;
-                galDeltaX = t.clientX - galStartX;
-                galDeltaY = t.clientY - galStartY;
+            overlay.addEventListener('touchmove', (e) => {
+                galTouchDeltaY = e.touches[0].clientY - galTouchStartY;
+                overlay.style.opacity = 1 - Math.abs(galTouchDeltaY) / 300;
+                const base = (galleryIndex + 1) * 100;
+                track.style.transform = `translateX(-${base}%) translateY(${galTouchDeltaY}px)`;
+            }, { passive: true });
 
-                if (!galDirection) {
-                    if (Math.abs(galDeltaX) > 8 || Math.abs(galDeltaY) > 8) {
-                        galDirection = Math.abs(galDeltaX) > Math.abs(galDeltaY) ? 'x' : 'y';
-                    } else return;
-                }
-
-                if (galDirection === 'x') {
-                    e.preventDefault();
-                    const base = (galleryIndex + 1) * 100;
-                    const wrapWidth = newWrap.offsetWidth || window.innerWidth;
-                    const pct = (galDeltaX / wrapWidth) * 100;
-                    track.style.transform = `translateX(${-(base) + pct}%)`;
-                } else {
-                    e.preventDefault();
-                    const overlay = document.getElementById('galleryOverlay');
-                    overlay.style.opacity = 1 - Math.abs(galDeltaY) / 300;
-                    const base = (galleryIndex + 1) * 100;
-                    track.style.transform = `translateX(-${base}%) translateY(${galDeltaY}px)`;
-                }
-            };
-
-            const onEnd = () => {
-                if (!galDragging) return;
-                galDragging = false;
-
-                if (galDirection === 'x') {
-                    const wrapWidth = newWrap.offsetWidth || window.innerWidth;
-                    const threshold = wrapWidth * 0.2;
-                    if (galDeltaX < -threshold) {
-                        goGallery(1);
-                    } else if (galDeltaX > threshold) {
-                        goGallery(-1);
-                    } else {
-                        setGalleryPos(true);
-                    }
-                } else if (galDirection === 'y' && Math.abs(galDeltaY) > 80) {
+            overlay.addEventListener('touchend', () => {
+                if (Math.abs(galTouchDeltaY) > 80) {
                     closeGallery();
-                    document.getElementById('galleryOverlay').style.opacity = '';
+                    overlay.style.opacity = '';
                 } else {
                     setGalleryPos(true);
-                    document.getElementById('galleryOverlay').style.opacity = '';
+                    overlay.style.opacity = '';
                 }
-            };
-
-            const overlay = document.getElementById('galleryOverlay');
-            overlay.addEventListener('touchstart', onStart, { passive: true });
-            overlay.addEventListener('touchmove', onMove, { passive: false });
-            overlay.addEventListener('touchend', onEnd);
-            overlay.addEventListener('mousedown', onStart);
-            overlay.addEventListener('mousemove', (e) => { if (galDragging) onMove(e); });
-            overlay.addEventListener('mouseup', onEnd);
-            overlay.addEventListener('mouseleave', onEnd);
+            });
         }
 
         // URL에서 카드 ID 가져오기
