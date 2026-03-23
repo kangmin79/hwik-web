@@ -942,13 +942,17 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             width: 20px;
             height: 20px;
             border-radius: 4px;
-            border: 2px solid rgba(255,255,255,0.2);
-            background: transparent;
+            border: 2px solid #cbd5e1;
+            background: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
             transition: all 0.15s;
+        }
+        body.dark .property-checkbox {
+            border-color: rgba(255,255,255,0.35);
+            background: transparent;
         }
         
         .property-item.selected .property-checkbox {
@@ -988,8 +992,14 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             font-size: 11px;
             padding: 2px 7px;
             border-radius: 10px;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            color: #475569;
+        }
+        body.dark .list-tag {
             background: rgba(255,255,255,0.08);
-            color: var(--text-gray);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: rgba(255,255,255,0.7);
         }
 
         .property-type-badge {
