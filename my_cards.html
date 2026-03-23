@@ -3737,9 +3737,11 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             if (currentUser) {
                 const agentInfo = getAgentInfo();
                 const displayName = agentInfo.name || '내 정보';
+                const adminBtn = currentUser._isAdmin ? `<a href="admin.html" class="btn btn-primary" style="background:#f87171;font-size:12px;padding:8px 14px;">관리자</a>` : '';
                 nav.innerHTML = `
                     <button onclick="openMyInfoModal()" class="btn-nav-agent">${displayName}님</button>
                     <a href="card_generator_v2_auth.html" class="btn btn-primary">+ 새 카드</a>
+                    ${adminBtn}
                 `;
             }
         }
@@ -3914,12 +3916,13 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 // 프로필에서 전화번호 로드 (공유방 조회에 필요)
                 const { data: profile } = await supabaseClient
                     .from('profiles')
-                    .select('phone, business_name, agent_name')
+                    .select('phone, business_name, agent_name, is_admin')
                     .eq('id', currentUser.id)
                     .maybeSingle();
                 if (profile?.phone) {
                     currentUser.phone = profile.phone;
                 }
+                currentUser._isAdmin = profile?.is_admin === true;
                 
                 updateNav();
                 loadUnreadMemoCount();

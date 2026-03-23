@@ -3582,10 +3582,11 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             const navButtons = document.getElementById('navButtons');
             const themeHTML = getThemeToggleHTML();
             if (currentUser && userProfile) {
+                const adminBtn = userProfile.is_admin ? `<a href="admin.html" class="btn btn-ghost" style="color:#f87171;border-color:rgba(248,113,113,0.3);font-size:12px;padding:8px 14px;">관리자</a>` : '';
                 navButtons.innerHTML = themeHTML + `
                     <button class="btn btn-primary" onclick="openMyInfoModal()" id="agentBtn">${userProfile.business_name}님</button>
                     <a href="my_cards.html" class="btn btn-ghost">내 카드</a>
-
+                    ${adminBtn}
                 `;
             } else if (currentUser && !userProfile) {
                 navButtons.innerHTML = themeHTML + `
