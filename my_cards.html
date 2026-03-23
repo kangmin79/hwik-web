@@ -3754,7 +3754,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         // ============================================================
         // ✦ 내 정보 모달
         // ============================================================
-        const STYLE_NAMES = { a: '미니멀', d: '라이트', e: '그라데이션', f: '네온', j: '테이블' };
+        // STYLE_NAMES 삭제됨 (템플릿 선택 UI 제거)
         let myInfoProfile = null;
 
         async function openMyInfoModal() {
@@ -3782,17 +3782,12 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     if (data.profile_photo) {
                         document.getElementById('miPhotoPreview').innerHTML = `<img src="${esc(data.profile_photo)}" style="width:100%;height:100%;object-fit:cover;">`;
                     }
-                    // 카드 스타일
-                    const styleName = STYLE_NAMES[data.style] || '미니멀';
-                    document.getElementById('miStyleName').textContent = styleName;
                 } else {
                     // localStorage fallback
                     const local = JSON.parse(localStorage.getItem('hwik_agent') || '{}');
                     document.getElementById('miBusinessName').value = local.name || '';
                     document.getElementById('miAgentName').value = local.agent_name || '';
                     document.getElementById('miPhone').value = local.phone || '';
-                    const tpl = JSON.parse(localStorage.getItem('hwik_template') || '{}');
-                    document.getElementById('miStyleName').textContent = STYLE_NAMES[tpl.style] || '미니멀';
                 }
             } catch(e) {
                 console.error('프로필 로드 실패:', e);
