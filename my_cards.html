@@ -416,7 +416,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 10px 14px;
+            padding: 10px 16px;
             border-radius: 12px;
             font-size: 13px;
             transition: all 0.2s;
@@ -424,7 +424,19 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             flex-shrink: 0;
             cursor: pointer;
             min-height: 48px;
+            min-width: 160px;
         }
+        .slot-member-btn {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; flex-shrink: 0; transition: all 0.15s;
+            margin-left: auto;
+        }
+        .slot-member-btn:hover { background: rgba(255,255,255,0.15); }
+        .slot-member-btn svg { width: 14px; height: 14px; stroke: #9ca3af; stroke-width: 2; fill: none; }
+        body.dark .slot-member-btn { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); }
+        body.dark .slot-member-btn:hover { background: rgba(255,255,255,0.15); }
         .slot-icon {
             width: 32px;
             height: 32px;
@@ -4388,6 +4400,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                             <div class="slot-name">${esc(room.name)}<span class="slot-role owner"></span></div>
                             <div class="slot-meta">${members}명 · ${count}개</div>
                         </div>
+                        <div class="slot-member-btn" onclick="event.stopPropagation(); openMembersModal('${room.id}', '${esc(room.name)}')" title="멤버 보기">
+                            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        </div>
                     </div>`;
                 } else {
                     html += `<div class="room-box-slot empty" onclick="openRoomModal()">
@@ -4410,6 +4425,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         <div class="slot-text">
                             <div class="slot-name">${esc(room.name)}<span class="slot-role member"></span></div>
                             <div class="slot-meta">${members}명 · ${count}개</div>
+                        </div>
+                        <div class="slot-member-btn" onclick="event.stopPropagation(); openMembersModal('${room.id}', '${esc(room.name)}')" title="멤버 보기">
+                            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                         </div>
                     </div>`;
                 } else {
