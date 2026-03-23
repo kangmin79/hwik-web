@@ -296,8 +296,10 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .input-box textarea {
             width: 100%;
             min-height: 200px;
-            background: none;
-            border: none;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 14px;
             outline: none;
             color: var(--text-white);
             font-size: 18px;
@@ -321,10 +323,26 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .input-box textarea::-webkit-scrollbar-thumb:hover {
             background: #9ca3af;
         }
-        body.dark .input-box textarea { scrollbar-color: rgba(255,255,255,0.15) transparent; }
+        .input-box textarea:focus {
+            border-color: #0ea5e9;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(14,165,233,0.08);
+        }
+        body.dark .input-box textarea {
+            background: none;
+            border: none;
+            border-radius: 0;
+            padding: 0;
+            scrollbar-color: rgba(255,255,255,0.15) transparent;
+        }
+        body.dark .input-box textarea:focus {
+            border: none;
+            background: none;
+            box-shadow: none;
+        }
         body.dark .input-box textarea::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); }
         body.dark .input-box textarea::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
-        
+
         .input-box textarea::placeholder {
             color: var(--text-gray-light);
         }
@@ -1748,8 +1766,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .photo-upload-area {
             margin-top: 12px;
             padding: 24px 18px;
-            background: var(--primary-bg);
-            border: 1.5px dashed rgba(14,165,233,0.35);
+            background: #f8fafc;
+            border: 1.5px dashed #94a3b8;
             border-radius: 12px;
             cursor: pointer;
             transition: all 0.2s;
@@ -1759,12 +1777,13 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             background: rgba(250,204,21,0.04);
             border-color: rgba(250,204,21,0.35);
         }
-        .photo-upload-area:hover { border-color: var(--primary); background: rgba(14,165,233,0.08); }
+        .photo-upload-area:hover { border-color: #0ea5e9; background: rgba(14,165,233,0.06); }
         body.dark .photo-upload-area:hover { border-color: #facc15; background: rgba(250,204,21,0.08); }
         .photo-upload-label {
             display: flex; align-items: center; justify-content: center; gap: 8px;
-            font-size: 16px; color: var(--primary); cursor: pointer; font-weight: 700;
+            font-size: 16px; color: #64748b; cursor: pointer; font-weight: 700;
         }
+        body.dark .photo-upload-label { color: var(--primary); }
         .photo-preview-row {
             display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; justify-content: center;
         }
@@ -6280,11 +6299,11 @@ function toggleTheme(mode) {
     if (!btnL || !btnD) return;
     // 라이트 네비: 어두운 텍스트, 다크 네비: 밝은 텍스트
     if (isDark) {
-        btnL.style.cssText = 'padding:5px 12px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:transparent;color:rgba(255,255,255,0.5);';
-        btnD.style.cssText = 'padding:5px 12px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:rgba(255,255,255,0.15);color:#fff;';
+        btnL.style.cssText = 'padding:7px 14px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:transparent;color:rgba(255,255,255,0.5);border-radius:6px;';
+        btnD.style.cssText = 'padding:7px 14px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:rgba(255,255,255,0.15);color:#fff;border-radius:6px;';
     } else {
-        btnL.style.cssText = 'padding:5px 12px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:rgba(0,0,0,0.08);color:#0f172a;';
-        btnD.style.cssText = 'padding:5px 12px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:transparent;color:rgba(0,0,0,0.4);';
+        btnL.style.cssText = 'padding:7px 14px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:#0ea5e9;color:#fff;border-radius:6px;';
+        btnD.style.cssText = 'padding:7px 14px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:transparent;color:rgba(0,0,0,0.4);border-radius:6px;';
     }
     // 토글 컨테이너 테두리도 변경
     const toggleWrap = btnL.parentElement;
