@@ -539,11 +539,39 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         .mine-badge {
             font-size: 9px;
-            background: var(--primary-bg15);
-            color: var(--primary);
+            background: rgba(234,179,8,0.15);
+            color: #b8960f;
             padding: 2px 6px;
             border-radius: 4px;
             font-weight: 700;
+        }
+        body.dark .mine-badge {
+            background: var(--primary-bg15);
+            color: var(--primary);
+        }
+        /* 공유 매물 탭 — 내 매물/타인 매물 배경 구분 */
+        .property-item.shared-mine {
+            background: #FFFBEB;
+            border-color: #fde68a;
+        }
+        .property-item.shared-other {
+            background: #F0F1FF;
+            border-color: #c7d2fe;
+        }
+        .property-item.shared-other .shared-agent-name {
+            color: #4A52B5;
+            font-weight: 600;
+        }
+        body.dark .property-item.shared-mine {
+            background: rgba(250,204,21,0.06);
+            border-color: rgba(250,204,21,0.15);
+        }
+        body.dark .property-item.shared-other {
+            background: rgba(99,102,241,0.06);
+            border-color: rgba(99,102,241,0.15);
+        }
+        body.dark .property-item.shared-other .shared-agent-name {
+            color: #a5b4fc;
         }
         
         /* 공유방 관리 모달 */
@@ -4589,7 +4617,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 const roomName = allMyRoomsList.find(r => r.id === card.room_id)?.name || '';
                 const photos = card.photos || [];
                 
-                html += `<div class="property-item ${isSelected ? 'selected' : ''}" id="shared-${card.id}">`;
+                const sharedClass = card.is_mine ? 'shared-mine' : 'shared-other';
+                html += `<div class="property-item ${sharedClass} ${isSelected ? 'selected' : ''}" id="shared-${card.id}">`;
                 html += `<div class="property-item-main" onclick="toggleSelect('${card.id}', true)">`;
                 html += `<div class="property-checkbox"></div>`;
                 html += `<div class="property-text">
