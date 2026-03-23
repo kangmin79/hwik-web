@@ -653,9 +653,9 @@
 
   .card-header {
     text-align: center;
-    padding: 16px 20px 8px;
+    padding: 10px 20px 4px;
     color: #888;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 300;
     position: relative;
   }
@@ -688,11 +688,11 @@
   .card-pager strong { color: var(--hwik-yellow); font-weight: 700; }
 
   .card-frame {
-    background: #1a1a2e;
-    border-radius: 16px;
-    padding: 20px;
+    background: transparent;
+    border-radius: 0;
+    padding: 0 16px;
     width: 100%;
-    max-width: 340px;
+    max-width: 430px;
   }
 
   .cf-top {
@@ -1984,7 +1984,7 @@
       const cardNameStr = [location, name, area].filter(Boolean).join(' · ');
       cardHtml = `
         <div style="border-radius:16px;overflow:hidden;position:relative;min-height:300px;">
-          <img src="${esc(photos[0])}" style="width:100%;height:300px;object-fit:cover;display:block;">
+          <img src="${esc(photos[0])}" style="width:100%;aspect-ratio:3/4;object-fit:cover;display:block;">
           <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(0,0,0,0.92) 0%,rgba(0,0,0,0.5) 60%,transparent 100%);padding:40px 16px 16px;">
             <div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:2px;">${price}</div>
             <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:8px;">${cardNameStr}</div>
@@ -1997,7 +1997,7 @@
       // noimg 템플릿 (사진 없음) — 3단 레이아웃
       const nameParts = name.length > 6 ? name.replace(/\s/g, '<br>') : name;
       cardHtml = `
-        <div style="border-radius:16px;overflow:hidden;position:relative;background:linear-gradient(160deg,#0d1b2a 0%,#1b2838 30%,#162032 60%,#0a1628 100%);min-height:300px;display:flex;flex-direction:column;padding:30px 20px 16px;">
+        <div style="border-radius:16px;overflow:hidden;position:relative;background:linear-gradient(160deg,#0d1b2a 0%,#1b2838 30%,#162032 60%,#0a1628 100%);aspect-ratio:3/4;display:flex;flex-direction:column;padding:30px 20px 16px;">
           <div style="position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(78,205,196,0.1) 0%,transparent 70%);top:-60px;right:-80px;"></div>
           <div style="text-align:center;position:relative;z-index:1;">
             <div style="font-size:24px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:4px;">${nameParts}</div>
