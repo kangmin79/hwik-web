@@ -1567,7 +1567,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         /* ===== 새 카드 미리보기 (폰 안 — 항상 다크) ===== */
         .preview-card-full {
             width: 100%; border-radius: 16px; overflow: hidden; position: relative;
-            background: #1a1a2e; min-height: 360px;
+            background: #1a1a2e; height: 420px;
         }
         
         .preview-inner-slider {
@@ -1576,11 +1576,11 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         
         /* 사진 슬라이드 */
         .preview-photo-slide {
-            min-width: 100%; height: 360px; object-fit: cover;
+            min-width: 100%; height: 420px; object-fit: cover;
         }
         /* 정보 슬라이드 (noimg) */
         .preview-info-slide {
-            min-width: 100%; height: 360px; position: relative;
+            min-width: 100%; height: 420px; position: relative;
             display: flex; flex-direction: column;
             align-items: center; justify-content: center;
             padding: 40px 24px 80px; overflow: hidden;
@@ -1648,19 +1648,20 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .preview-bottom {
             position: absolute; bottom: 0; left: 0; right: 0;
             background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 60%, transparent 100%);
-            padding: 40px 14px 14px; z-index: 5;
+            padding: 30px 12px 10px; z-index: 5;
         }
         .preview-bottom-price {
-            font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 2px;
+            font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 1px;
         }
         .preview-bottom-name {
-            font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 8px;
+            font-size: 10px; color: rgba(255,255,255,0.5); margin-bottom: 6px;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
         .preview-bottom-specs {
-            display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 10px;
+            display: flex; gap: 3px; flex-wrap: wrap; margin-bottom: 8px;
         }
         .preview-bottom-spec {
-            font-size: 10px; padding: 3px 7px; border-radius: 16px;
+            font-size: 9px; padding: 2px 6px; border-radius: 12px;
             background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.8);
             border: 1px solid rgba(255,255,255,0.12);
         }
@@ -1670,7 +1671,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .preview-action-btn {
             flex: 1; display: flex; flex-direction: column;
             align-items: center; justify-content: center;
-            gap: 3px; padding: 8px 4px; border-radius: 10px;
+            gap: 2px; padding: 6px 4px; border-radius: 8px;
             background: rgba(255,255,255,0.08); backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.12);
             color: rgba(255,255,255,0.7); font-size: 9px;
@@ -1691,8 +1692,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         /* 중개사 하단 */
         .preview-agent-below {
-            display: flex; align-items: center; gap: 10px;
-            padding: 10px 14px; margin-top: 8px;
+            display: flex; align-items: center; gap: 8px;
+            padding: 8px 12px; margin-top: 6px;
             background: rgba(255,255,255,0.06);
             border: 1px solid rgba(255,255,255,0.12);
             border-radius: 12px;
