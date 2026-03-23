@@ -1941,24 +1941,83 @@
     const item = cardItems[cardIdx];
     const p = item.property || {};
     const agent = item.agent || {};
+    const photos = item.photos || [];
+    const hasPhotos = photos.length > 0;
     document.getElementById('cardPager').innerHTML = `<strong>${cardIdx + 1}</strong> / ${cardItems.length}`;
     document.getElementById('cardNav').style.display = cardItems.length > 1 ? 'flex' : 'none';
-    const typeClass = (p.type || '') === '매매' ? 'sale' : (p.type || '') === '전세' ? 'jeonse' : 'rent';
-    const tags = (p.features || []).map(t => `<span class="cf-tag">${esc(t)}</span>`).join('');
-    const agentName = esc(agent.business_name || agent.name || '');
-    const memo = item.agent_comment ? `<div class="cf-memo"><div class="cf-memo-label">💬 ${agentName}의 한마디</div><div class="cf-memo-text">${esc(item.agent_comment)}</div></div>` : '';
-    document.getElementById('cardFrame').innerHTML = `
-      <div class="cf-top"><span class="cf-type ${typeClass}">${esc(p.type || '')}</span><span class="cf-size">${esc(p.area || '')}</span></div>
-      <div class="cf-name">${esc(p.complex || p.location || '')}</div>
-      <div class="cf-location">${esc(p.location || '')}</div>
-      <div class="cf-price">${esc(p.price || '')}</div>
-      <div class="cf-specs">
-        <div class="cf-spec"><div class="cf-spec-label">면적</div><div class="cf-spec-value">${esc(p.area || '-')}</div></div>
-        <div class="cf-spec"><div class="cf-spec-label">층수</div><div class="cf-spec-value">${esc(p.floor || '-')}</div></div>
+
+    const agentName = esc(agent.business_name || agent.name || '부동산');
+    const agentPhone = esc(agent.phone || '');
+    const name = esc(p.complex || p.location || '-');
+    const location = p.complex ? esc(p.location || '') : '';
+    const price = esc(p.price || '-');
+    const type = esc(p.type || '');
+    const area = esc(p.area || '');
+    const floor = esc(p.floor || '');
+    const features = (p.features || []).map(f => esc(f));
+    const detailStr = [area, floor].filter(Boolean).join(' · ');
+    const specs = features.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center;">${features.map(f => '<span style="font-size:10px;padding:3px 7px;border-radius:16px;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.1);">' + f + '</span>').join('')}</div>` : '';
+
+    // 액션 바
+    const actionBar = `<div style="display:flex;gap:6px;margin-top:10px;">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(78,205,196,0.3);color:rgba(78,205,196,0.9);font-size:9px;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>전화
       </div>
-      ${tags ? `<div class="cf-tags">${tags}</div>` : ''}
-      <div class="cf-agent"><span class="cf-agent-name">${agentName}</span><span class="cf-agent-phone">${esc(agent.phone || '')}</span></div>
-      ${memo}`;
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(250,204,21,0.25);color:rgba(250,204,21,0.9);font-size:9px;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c5.8 0 10.5 3.66 10.5 8.17 0 4.51-4.7 8.17-10.5 8.17-.87 0-1.72-.08-2.54-.24l-4.14 2.82.93-4.08C3.92 16.13 1.5 13.37 1.5 11.17 1.5 6.66 6.2 3 12 3z"/></svg>카톡
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);font-size:9px;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>지도
+      </div>
+    </div>`;
+
+    // 중개사 정보
+    const agentBelow = `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;margin-top:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;">
+      <div style="width:32px;height:32px;border-radius:50%;background:rgba(78,205,196,0.2);border:1.5px solid #4ecdc4;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#4ecdc4;flex-shrink:0;">${agentName.charAt(0)}</div>
+      <div><div style="font-size:12px;font-weight:700;color:#fff;">${agentName}</div><div style="font-size:11px;color:#4ecdc4;font-weight:600;">${agentPhone}</div></div>
+    </div>`;
+
+    let cardHtml = '';
+
+    if (hasPhotos) {
+      // memo 템플릿 (사진 있음)
+      const cardNameStr = [location, name, area].filter(Boolean).join(' · ');
+      cardHtml = `
+        <div style="border-radius:16px;overflow:hidden;position:relative;min-height:300px;">
+          <img src="${esc(photos[0])}" style="width:100%;height:300px;object-fit:cover;display:block;">
+          <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(0,0,0,0.92) 0%,rgba(0,0,0,0.5) 60%,transparent 100%);padding:40px 16px 16px;">
+            <div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:2px;">${price}</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:8px;">${cardNameStr}</div>
+            ${specs}
+            ${actionBar}
+          </div>
+        </div>
+        ${agentBelow}`;
+    } else {
+      // noimg 템플릿 (사진 없음) — 3단 레이아웃
+      const nameParts = name.length > 6 ? name.replace(/\s/g, '<br>') : name;
+      cardHtml = `
+        <div style="border-radius:16px;overflow:hidden;position:relative;background:linear-gradient(160deg,#0d1b2a 0%,#1b2838 30%,#162032 60%,#0a1628 100%);min-height:300px;display:flex;flex-direction:column;padding:30px 20px 16px;">
+          <div style="position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(78,205,196,0.1) 0%,transparent 70%);top:-60px;right:-80px;"></div>
+          <div style="text-align:center;position:relative;z-index:1;">
+            <div style="font-size:24px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:4px;">${nameParts}</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.4);">${location}</div>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;z-index:1;">
+            <div style="width:32px;height:1px;background:rgba(255,255,255,0.12);margin-bottom:14px;"></div>
+            <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:10px;">
+              <span style="font-size:11px;font-weight:600;color:rgba(78,205,196,0.9);padding:2px 8px;border-radius:6px;background:rgba(78,205,196,0.1);border:1px solid rgba(78,205,196,0.2);">${type}</span>
+              <span style="font-size:20px;font-weight:800;color:#fff;">${price}</span>
+            </div>
+            ${detailStr ? `<div style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.7);">${detailStr}</div>` : ''}
+          </div>
+          <div style="position:relative;z-index:1;">${specs}</div>
+          ${actionBar}
+        </div>
+        ${agentBelow}`;
+    }
+
+    document.getElementById('cardFrame').innerHTML = cardHtml;
   }
 
   function prevCard() { if (cardIdx > 0) { cardIdx--; renderCard(); } }
