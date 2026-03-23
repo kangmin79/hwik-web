@@ -1244,7 +1244,17 @@
         let fullscreenMapInstance = null;
 
         function openKakaoMap() {
-            if (!mapCoords) return;
+            if (!mapCoords) {
+                // 좌표 없으면 주소/단지명으로 카카오맵 검색
+                const card = allCardsData[currentIndex];
+                if (!card) return;
+                const p = card.property || {};
+                const searchQuery = p.complex ? `${p.location || ''} ${p.complex}`.trim() : (p.location || '');
+                if (searchQuery) {
+                    window.open(`https://map.kakao.com/link/search/${encodeURIComponent(searchQuery)}`, '_blank');
+                }
+                return;
+            }
             const overlay = document.getElementById('mapFullscreenOverlay');
             const title = document.getElementById('mapFullscreenTitle');
             const container = document.getElementById('mapFullscreen');
