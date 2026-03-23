@@ -580,6 +580,25 @@
         window.addEventListener('unhandledrejection', (e) => { logError('unhandled_promise', String(e.reason).slice(0, 500)); });
 
         // ★ XSS 방지: esc()는 config.js에서 로드됨
+
+        // ★ 비공개 데이터 제거 (손님 화면에서 중개사 전용 정보 노출 방지)
+        function sanitizeCardForViewer(card) {
+            if (card.property) {
+                delete card.property.memo;           // 중개사 메모 (호수, 집주인 연락처 등)
+                delete card.property.rawText;         // 원본 입력 텍스트
+                delete card.property.search_text;     // 검색용 텍스트
+                delete card.property.search_text_private; // 비공개 검색 텍스트
+                delete card.property.embedding;       // 벡터 임베딩
+                delete card.property.price_number;    // 가격 숫자
+                delete card.property.privateNote;     // 비공개 노트
+                delete card.property.coord_type;      // 좌표 타입
+            }
+            delete card.private_note;                 // 비공개 노트 (별도 컬럼)
+            delete card.search_text;                  // 검색 텍스트
+            delete card.search_text_private;          // 비공개 검색 텍스트
+            delete card.embedding;                    // 벡터 임베딩
+            return card;
+        }
         
         // 여러 카드 상태
         let allCardsData = [];
@@ -671,6 +690,7 @@
                         await supabaseClient.from('cards').update({ view_count: (data.view_count || 0) + 1 }).eq('id', cardId);
                     } catch(e2) { console.warn('조회수 증가 실패:', e2); }
                 }
+                sanitizeCardForViewer(data);
                 allCardsData = [data];
                 currentIndex = 0;
                 renderCard(data);
@@ -1044,6 +1064,7 @@
                 if (!data || data.length === 0) { showError('매물 정보를 찾을 수 없습니다.'); return; }
                 
                 allCardsData = cardIds.map(id => data.find(d => d.id === id)).filter(Boolean);
+                allCardsData.forEach(c => sanitizeCardForViewer(c));
                 const validCards = allCardsData.filter(d => !isExpired(d));
                 allCardsData = validCards;
                 

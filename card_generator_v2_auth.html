@@ -6094,12 +6094,21 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         }
                     }
 
+                    // property에서 비공개 필드 제거 후 저장
+                    const cleanProperty = { ...(card.property || {}) };
+                    delete cleanProperty.memo;
+                    delete cleanProperty.rawText;
+                    delete cleanProperty.search_text;
+                    delete cleanProperty.search_text_private;
+                    delete cleanProperty.embedding;
+                    delete cleanProperty.privateNote;
+
                     const { error } = await supabaseClient.from('cards').insert({
                         id: linkId,
                         agent_id: session.user.id,
                         style: card.style || 'a',
                         color: cardColor,
-                        property: card.property,
+                        property: cleanProperty,
                         agent: agentData,
                         private_note: card.private_note || (privateMemo ? { memo: privateMemo } : null),
                         agent_comment: card.agent_comment || null,
