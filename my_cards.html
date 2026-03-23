@@ -2834,10 +2834,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             const agentBelow = `
                 <div class="preview-agent-below">
                     <div class="preview-agent-avatar">${agentName.charAt(0)}</div>
-                    <div>
-                        <div class="preview-agent-name">${agentName}</div>
-                        <div class="preview-agent-phone">${agentPhone}</div>
-                    </div>
+                    <div class="preview-agent-name" style="flex:1;">${agentName}</div>
+                    <div class="preview-agent-phone">${agentPhone}</div>
                 </div>`;
 
             let html = '';
