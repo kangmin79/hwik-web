@@ -1583,281 +1583,148 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             cursor: grabbing;
         }
         
-        /* 미니 카드 */
-        .mini-card {
+        /* ===== 새 카드 미리보기 (폰 안 — 항상 다크) ===== */
+        .preview-card-full {
+            width: 100%; border-radius: 16px; overflow: hidden; position: relative;
+            background: #1a1a2e; min-height: 360px;
+        }
+        
+        .preview-inner-slider {
+            display: flex; transition: transform 0.35s ease;
+        }
+        
+        /* 사진 슬라이드 */
+        .preview-photo-slide {
+            min-width: 100%; height: 360px; object-fit: cover;
+        }
+        /* 정보 슬라이드 (noimg) */
+        .preview-info-slide {
+            min-width: 100%; height: 360px; position: relative;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 40px 24px 80px; overflow: hidden;
+        }
+        .preview-info-slide.bg-1 {
+            background: linear-gradient(160deg, #0d1b2a 0%, #1b2838 30%, #162032 60%, #0a1628 100%);
+        }
+        .preview-info-slide.bg-1::before {
+            content: ''; position: absolute; width: 300px; height: 300px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(78,205,196,0.12) 0%, transparent 70%);
+            top: -60px; right: -80px;
+        }
+        .preview-info-slide.bg-2 {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+        }
+        .preview-info-complex {
+            font-size: 28px; font-weight: 800; color: #fff;
+            text-align: center; line-height: 1.2; margin-bottom: 8px;
+            position: relative; z-index: 1;
+        }
+        .preview-info-location {
+            font-size: 12px; color: rgba(255,255,255,0.45);
+            position: relative; z-index: 1; margin-bottom: 16px;
+        }
+        .preview-info-divider {
+            width: 32px; height: 1px; background: rgba(255,255,255,0.15);
+            position: relative; z-index: 1; margin-bottom: 16px;
+        }
+        .preview-info-type-price {
+            display: flex; align-items: baseline; gap: 8px;
+            position: relative; z-index: 1;
+        }
+        .preview-info-type {
+            font-size: 11px; font-weight: 500; color: rgba(78,205,196,0.8);
+            padding: 2px 8px; border-radius: 6px;
+            background: rgba(78,205,196,0.1); border: 1px solid rgba(78,205,196,0.2);
+        }
+        .preview-info-price {
+            font-size: 22px; font-weight: 800; color: #fff;
+        }
+        /* 메모 슬라이드 */
+        .preview-memo-slide {
+            min-width: 100%; height: 360px; position: relative;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding: 30px 24px;
+            background: linear-gradient(160deg,#0d1117 0%,#151c27 40%,#0a0f1a 100%);
+        }
+        .preview-memo-quote {
+            font-family: serif; font-size: 48px; line-height: 0.6;
+            color: rgba(255,255,255,0.08); align-self: flex-start;
+            margin-bottom: 16px; position: relative; z-index: 1;
+        }
+        .preview-memo-text {
+            font-size: 13px; color: rgba(255,255,255,0.9);
+            line-height: 1.8; text-align: center;
+            position: relative; z-index: 1; margin-bottom: 20px;
+            word-break: keep-all;
+        }
+        .preview-memo-agent {
+            font-size: 11px; color: rgba(255,255,255,0.4);
+            position: relative; z-index: 1;
+        }
+        /* 하단 오버레이 */
+        .preview-bottom {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.5) 60%, transparent 100%);
+            padding: 40px 14px 14px; z-index: 5;
+        }
+        .preview-bottom-price {
+            font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 2px;
+        }
+        .preview-bottom-name {
+            font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 8px;
+        }
+        .preview-bottom-specs {
+            display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 10px;
+        }
+        .preview-bottom-spec {
+            font-size: 10px; padding: 3px 7px; border-radius: 16px;
+            background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.8);
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+        .preview-action-bar {
+            display: flex; gap: 6px;
+        }
+        .preview-action-btn {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 3px; padding: 8px 4px; border-radius: 10px;
+            background: rgba(255,255,255,0.08); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: rgba(255,255,255,0.7); font-size: 9px;
+        }
+        .preview-action-btn.call { border-color: rgba(78,205,196,0.3); color: rgba(78,205,196,0.9); }
+        .preview-action-btn.kakao { border-color: rgba(250,204,21,0.25); color: rgba(250,204,21,0.9); }
+        /* 도트 */
+        .preview-dots {
+            display: flex; gap: 4px; justify-content: center;
+            margin-top: 8px;
+        }
+        .preview-dot {
+            width: 4px; height: 4px; border-radius: 50%;
+            background: rgba(255,255,255,0.3); transition: all 0.2s;
+        }
+        .preview-dot.active {
+            background: #fff; width: 12px; border-radius: 3px;
+        }
+        /* 중개사 하단 */
+        .preview-agent-below {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 14px; margin-top: 8px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
             border-radius: 12px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
         }
-        
-        .mini-card .card-header {
-            padding: 8px 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .preview-agent-avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: rgba(78,205,196,0.2); border: 1.5px solid #4ecdc4;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 800; color: #4ecdc4; flex-shrink: 0;
         }
-        
-        .mini-card .badge {
-            padding: 4px 10px;
-            border-radius: 10px;
-            font-size: 12px;
-            font-weight: 700;
-        }
-        
-        .mini-card .area-badge {
-            font-size: 11px;
-            color: #888;
-        }
-        
-        .mini-card .body {
-            padding: 10px 12px 12px;
-        }
-        
-        .mini-card .complex-name {
-            font-size: 15px;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 2px;
-        }
-        
-        .mini-card .location {
-            font-size: 11px;
-            color: #666;
-            margin-bottom: 8px;
-        }
-        
-        .mini-card .price {
-            font-size: 20px;
-            font-weight: 800;
-            margin-bottom: 10px;
-        }
-        
-        .mini-card .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-            margin-bottom: 8px;
-        }
-        
-        .mini-card .info-item {
-            background: rgba(255,255,255,0.05);
-            padding: 6px 10px;
-            border-radius: 6px;
-        }
-        
-        .mini-card .info-label {
-            font-size: 9px;
-            color: #666;
-        }
-        
-        .mini-card .info-value {
-            font-size: 12px;
-            color: #fff;
-            font-weight: 600;
-        }
-        
-        .mini-card .features {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-bottom: 10px;
-        }
-        
-        .mini-card .feature-tag {
-            padding: 3px 8px;
-            border-radius: 5px;
-            font-size: 10px;
-        }
-        
-        .mini-card .agent {
-            background: rgba(255,255,255,0.03);
-            padding: 8px 10px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .mini-card .agent-name {
-            font-size: 11px;
-            color: #fff;
-            font-weight: 600;
-        }
-        
-        .mini-card .agent-phone {
-            font-size: 11px;
-        }
+        .preview-agent-name { font-size: 12px; font-weight: 700; color: #fff; }
+        .preview-agent-phone { font-size: 11px; color: #4ecdc4; font-weight: 600; }
 
-        /* ===== 스타일 A: 미니멀 다크 (기본) ===== */
-        .mini-card.style-a { background: #1a1a2e; }
-        .mini-card.style-a.mint { border: 2px solid rgba(78,205,196,0.3); }
-        .mini-card.style-a.mint .card-header { background: rgba(78,205,196,0.15); }
-        .mini-card.style-a.mint .badge { background: #4ecdc4; color: #1a1a2e; }
-        .mini-card.style-a.mint .price { color: #4ecdc4; }
-        .mini-card.style-a.mint .feature-tag { background: rgba(78,205,196,0.15); color: #4ecdc4; }
-        .mini-card.style-a.mint .agent-phone { color: #4ecdc4; }
-        .mini-card.style-a.blue { border: 2px solid rgba(96,165,250,0.3); }
-        .mini-card.style-a.blue .card-header { background: rgba(96,165,250,0.15); }
-        .mini-card.style-a.blue .badge { background: #60a5fa; color: #1a1a2e; }
-        .mini-card.style-a.blue .price { color: #60a5fa; }
-        .mini-card.style-a.blue .feature-tag { background: rgba(96,165,250,0.15); color: #60a5fa; }
-        .mini-card.style-a.blue .agent-phone { color: #60a5fa; }
-        .mini-card.style-a.orange { border: 2px solid rgba(251,146,60,0.3); }
-        .mini-card.style-a.orange .card-header { background: rgba(251,146,60,0.15); }
-        .mini-card.style-a.orange .badge { background: #fb923c; color: #1a1a2e; }
-        .mini-card.style-a.orange .price { color: #fb923c; }
-        .mini-card.style-a.orange .feature-tag { background: rgba(251,146,60,0.15); color: #fb923c; }
-        .mini-card.style-a.orange .agent-phone { color: #fb923c; }
-        .mini-card.style-a.purple { border: 2px solid rgba(167,139,250,0.3); }
-        .mini-card.style-a.purple .card-header { background: rgba(167,139,250,0.15); }
-        .mini-card.style-a.purple .badge { background: #a78bfa; color: #1a1a2e; }
-        .mini-card.style-a.purple .price { color: #a78bfa; }
-        .mini-card.style-a.purple .feature-tag { background: rgba(167,139,250,0.15); color: #a78bfa; }
-        .mini-card.style-a.purple .agent-phone { color: #a78bfa; }
-        .mini-card.style-a.pink { border: 2px solid rgba(244,114,182,0.3); }
-        .mini-card.style-a.pink .card-header { background: rgba(244,114,182,0.15); }
-        .mini-card.style-a.pink .badge { background: #f472b6; color: #1a1a2e; }
-        .mini-card.style-a.pink .price { color: #f472b6; }
-        .mini-card.style-a.pink .feature-tag { background: rgba(244,114,182,0.15); color: #f472b6; }
-        .mini-card.style-a.pink .agent-phone { color: #f472b6; }
-        .mini-card.style-a.gold { border: 2px solid rgba(251,191,36,0.3); }
-        .mini-card.style-a.gold .card-header { background: rgba(251,191,36,0.15); }
-        .mini-card.style-a.gold .badge { background: #fbbf24; color: #1a1a2e; }
-        .mini-card.style-a.gold .price { color: #fbbf24; }
-        .mini-card.style-a.gold .feature-tag { background: rgba(251,191,36,0.15); color: #fbbf24; }
-        .mini-card.style-a.gold .agent-phone { color: #fbbf24; }
-
-        /* ===== 스타일 D: 라이트 ===== */
-        .mini-card.style-d { background: #ffffff; }
-        .mini-card.style-d .complex-name { color: #1a1a2e; }
-        .mini-card.style-d .info-item { background: #f5f5f7; }
-        .mini-card.style-d .info-label { color: #888; }
-        .mini-card.style-d .info-value { color: #1a1a2e; }
-        .mini-card.style-d .agent { background: #f5f5f7; }
-        .mini-card.style-d .agent-name { color: #1a1a2e; }
-        .mini-card.style-d .location { color: #888; }
-        .mini-card.style-d .area-badge { color: #666; }
-        .mini-card.style-d .badge { color: #fff; }
-        .mini-card.style-d.mint .card-header { background: #e8faf8; }
-        .mini-card.style-d.mint .badge { background: #4ecdc4; }
-        .mini-card.style-d.mint .price, .mini-card.style-d.mint .agent-phone { color: #4ecdc4; }
-        .mini-card.style-d.mint .feature-tag { background: #e8faf8; color: #2a9d8f; }
-        .mini-card.style-d.blue .card-header { background: #eff6ff; }
-        .mini-card.style-d.blue .badge { background: #60a5fa; }
-        .mini-card.style-d.blue .price, .mini-card.style-d.blue .agent-phone { color: #60a5fa; }
-        .mini-card.style-d.blue .feature-tag { background: #eff6ff; color: #3b82f6; }
-        .mini-card.style-d.orange .card-header { background: #fff7ed; }
-        .mini-card.style-d.orange .badge { background: #fb923c; }
-        .mini-card.style-d.orange .price, .mini-card.style-d.orange .agent-phone { color: #fb923c; }
-        .mini-card.style-d.orange .feature-tag { background: #fff7ed; color: #ea580c; }
-        .mini-card.style-d.purple .card-header { background: #f3f0ff; }
-        .mini-card.style-d.purple .badge { background: #a78bfa; }
-        .mini-card.style-d.purple .price, .mini-card.style-d.purple .agent-phone { color: #a78bfa; }
-        .mini-card.style-d.purple .feature-tag { background: #f3f0ff; color: #7c3aed; }
-        .mini-card.style-d.pink .card-header { background: #fdf2f8; }
-        .mini-card.style-d.pink .badge { background: #f472b6; }
-        .mini-card.style-d.pink .price, .mini-card.style-d.pink .agent-phone { color: #f472b6; }
-        .mini-card.style-d.pink .feature-tag { background: #fdf2f8; color: #db2777; }
-        .mini-card.style-d.gold .card-header { background: #fefce8; }
-        .mini-card.style-d.gold .badge { background: #fbbf24; }
-        .mini-card.style-d.gold .price, .mini-card.style-d.gold .agent-phone { color: #d97706; }
-        .mini-card.style-d.gold .feature-tag { background: #fefce8; color: #b45309; }
-
-        /* ===== 스타일 E: 그라데이션 ===== */
-        .mini-card.style-e { border: none; padding: 16px; }
-        .mini-card.style-e .card-header { background: none !important; padding: 0 0 8px; }
-        .mini-card.style-e .badge { background: rgba(255,255,255,0.25) !important; color: #fff !important; }
-        .mini-card.style-e .complex-name { color: #fff; }
-        .mini-card.style-e .location { color: rgba(255,255,255,0.7); }
-        .mini-card.style-e .price { color: #fff !important; }
-        .mini-card.style-e .info-item { background: rgba(255,255,255,0.15); }
-        .mini-card.style-e .info-label { color: rgba(255,255,255,0.7); }
-        .mini-card.style-e .info-value { color: #fff; }
-        .mini-card.style-e .feature-tag { background: rgba(255,255,255,0.2) !important; color: #fff !important; }
-        .mini-card.style-e .agent { background: rgba(0,0,0,0.2); }
-        .mini-card.style-e .agent-name { color: #fff; }
-        .mini-card.style-e .agent-phone { color: #fff !important; }
-        .mini-card.style-e .area-badge { color: rgba(255,255,255,0.7); }
-        .mini-card.style-e.mint { background: linear-gradient(135deg, #4ecdc4, #44a08d); }
-        .mini-card.style-e.blue { background: linear-gradient(135deg, #60a5fa, #3b82f6); }
-        .mini-card.style-e.orange { background: linear-gradient(135deg, #fb923c, #ea580c); }
-        .mini-card.style-e.purple { background: linear-gradient(135deg, #a78bfa, #7c3aed); }
-        .mini-card.style-e.pink { background: linear-gradient(135deg, #f472b6, #db2777); }
-        .mini-card.style-e.gold { background: linear-gradient(135deg, #fbbf24, #d97706); }
-
-        /* ===== 스타일 F: 네온 ===== */
-        .mini-card.style-f { background: #0a0a12; }
-        .mini-card.style-f .card-header { background: none !important; padding: 10px 12px; }
-        .mini-card.style-f .info-item { background: none; border: 1px solid rgba(255,255,255,0.1); }
-        .mini-card.style-f .agent { background: none; border-top: 1px solid rgba(255,255,255,0.1); border-radius: 0; padding-top: 10px; }
-        .mini-card.style-f .agent-name { color: #888; }
-        .mini-card.style-f.mint { border: 3px solid #4ecdc4; box-shadow: 0 0 15px rgba(78,205,196,0.3); }
-        .mini-card.style-f.mint .badge { background: #4ecdc4; color: #0a0a12; }
-        .mini-card.style-f.mint .price, .mini-card.style-f.mint .agent-phone, .mini-card.style-f.mint .area-badge { color: #4ecdc4; }
-        .mini-card.style-f.mint .feature-tag { background: rgba(78,205,196,0.1); color: #4ecdc4; }
-        .mini-card.style-f.blue { border: 3px solid #60a5fa; box-shadow: 0 0 15px rgba(96,165,250,0.3); }
-        .mini-card.style-f.blue .badge { background: #60a5fa; color: #0a0a12; }
-        .mini-card.style-f.blue .price, .mini-card.style-f.blue .agent-phone, .mini-card.style-f.blue .area-badge { color: #60a5fa; }
-        .mini-card.style-f.blue .feature-tag { background: rgba(96,165,250,0.1); color: #60a5fa; }
-        .mini-card.style-f.orange { border: 3px solid #fb923c; box-shadow: 0 0 15px rgba(251,146,60,0.3); }
-        .mini-card.style-f.orange .badge { background: #fb923c; color: #0a0a12; }
-        .mini-card.style-f.orange .price, .mini-card.style-f.orange .agent-phone, .mini-card.style-f.orange .area-badge { color: #fb923c; }
-        .mini-card.style-f.orange .feature-tag { background: rgba(251,146,60,0.1); color: #fb923c; }
-        .mini-card.style-f.purple { border: 3px solid #a78bfa; box-shadow: 0 0 15px rgba(167,139,250,0.3); }
-        .mini-card.style-f.purple .badge { background: #a78bfa; color: #0a0a12; }
-        .mini-card.style-f.purple .price, .mini-card.style-f.purple .agent-phone, .mini-card.style-f.purple .area-badge { color: #a78bfa; }
-        .mini-card.style-f.purple .feature-tag { background: rgba(167,139,250,0.1); color: #a78bfa; }
-        .mini-card.style-f.pink { border: 3px solid #f472b6; box-shadow: 0 0 15px rgba(244,114,182,0.3); }
-        .mini-card.style-f.pink .badge { background: #f472b6; color: #0a0a12; }
-        .mini-card.style-f.pink .price, .mini-card.style-f.pink .agent-phone, .mini-card.style-f.pink .area-badge { color: #f472b6; }
-        .mini-card.style-f.pink .feature-tag { background: rgba(244,114,182,0.1); color: #f472b6; }
-        .mini-card.style-f.gold { border: 3px solid #fbbf24; box-shadow: 0 0 15px rgba(251,191,36,0.3); }
-        .mini-card.style-f.gold .badge { background: #fbbf24; color: #0a0a12; }
-        .mini-card.style-f.gold .price, .mini-card.style-f.gold .agent-phone, .mini-card.style-f.gold .area-badge { color: #fbbf24; }
-        .mini-card.style-f.gold .feature-tag { background: rgba(251,191,36,0.1); color: #fbbf24; }
-
-        /* ===== 스타일 J: 테이블형 ===== */
-        .mini-card.style-j { background: #1a1a2e; border: none; }
-        .mini-card.style-j .card-header { padding: 10px 12px; }
-        .mini-card.style-j .price { font-size: 16px; }
-        .mini-card.style-j .info-grid { display: table; width: 100%; border-collapse: collapse; }
-        .mini-card.style-j .info-item { display: table-row; background: none; padding: 0; border-radius: 0; }
-        .mini-card.style-j .info-label { display: table-cell; padding: 5px 0; font-size: 10px; color: #666; width: 50px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .mini-card.style-j .info-value { display: table-cell; padding: 5px 0; font-size: 11px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .mini-card.style-j .agent { background: none; border-top: 1px solid rgba(255,255,255,0.1); border-radius: 0; }
-        .mini-card.style-j .agent-name { color: #888; }
-        .mini-card.style-j.mint { border-top: 3px solid #4ecdc4; }
-        .mini-card.style-j.mint .card-header { background: rgba(78,205,196,0.1); }
-        .mini-card.style-j.mint .badge { background: #4ecdc4; color: #1a1a2e; }
-        .mini-card.style-j.mint .price, .mini-card.style-j.mint .agent-phone { color: #4ecdc4; }
-        .mini-card.style-j.mint .feature-tag { background: rgba(78,205,196,0.1); color: #4ecdc4; }
-        .mini-card.style-j.blue { border-top: 3px solid #60a5fa; }
-        .mini-card.style-j.blue .card-header { background: rgba(96,165,250,0.1); }
-        .mini-card.style-j.blue .badge { background: #60a5fa; color: #1a1a2e; }
-        .mini-card.style-j.blue .price, .mini-card.style-j.blue .agent-phone { color: #60a5fa; }
-        .mini-card.style-j.blue .feature-tag { background: rgba(96,165,250,0.1); color: #60a5fa; }
-        .mini-card.style-j.orange { border-top: 3px solid #fb923c; }
-        .mini-card.style-j.orange .card-header { background: rgba(251,146,60,0.1); }
-        .mini-card.style-j.orange .badge { background: #fb923c; color: #1a1a2e; }
-        .mini-card.style-j.orange .price, .mini-card.style-j.orange .agent-phone { color: #fb923c; }
-        .mini-card.style-j.orange .feature-tag { background: rgba(251,146,60,0.1); color: #fb923c; }
-        .mini-card.style-j.purple { border-top: 3px solid #a78bfa; }
-        .mini-card.style-j.purple .card-header { background: rgba(167,139,250,0.1); }
-        .mini-card.style-j.purple .badge { background: #a78bfa; color: #1a1a2e; }
-        .mini-card.style-j.purple .price, .mini-card.style-j.purple .agent-phone { color: #a78bfa; }
-        .mini-card.style-j.purple .feature-tag { background: rgba(167,139,250,0.1); color: #a78bfa; }
-        .mini-card.style-j.pink { border-top: 3px solid #f472b6; }
-        .mini-card.style-j.pink .card-header { background: rgba(244,114,182,0.1); }
-        .mini-card.style-j.pink .badge { background: #f472b6; color: #1a1a2e; }
-        .mini-card.style-j.pink .price, .mini-card.style-j.pink .agent-phone { color: #f472b6; }
-        .mini-card.style-j.pink .feature-tag { background: rgba(244,114,182,0.1); color: #f472b6; }
-        .mini-card.style-j.gold { border-top: 3px solid #fbbf24; }
-        .mini-card.style-j.gold .card-header { background: rgba(251,191,36,0.1); }
-        .mini-card.style-j.gold .badge { background: #fbbf24; color: #1a1a2e; }
-        .mini-card.style-j.gold .price, .mini-card.style-j.gold .agent-phone { color: #fbbf24; }
-        .mini-card.style-j.gold .feature-tag { background: rgba(251,191,36,0.1); color: #fbbf24; }
-        
         /* 도트 인디케이터 */
         .dots-indicator {
             display: flex;
@@ -2912,9 +2779,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         function renderMiniCard(card) {
             const p = card.property || {};
             const agent = card.agent || {};
-            const color = card.color || 'mint';
-            const style = card.style || 'a';
-            
+            const photos = card.photos || [];
+            const hasPhotos = photos.length > 0;
             const type = esc(p.type) || '매물';
             const price = esc(p.price) || '-';
             const name = esc(p.complex || p.location) || '-';
@@ -2922,45 +2788,84 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             const area = esc(p.area) || '';
             const floor = esc(p.floor) || '';
             const features = (p.features || []).map(f => esc(f));
-            
-            let html = `<div class="mini-card style-${style} ${color}">`;
-            html += `<div class="card-header">`;
-            html += `<span class="badge">${type}</span>`;
-            if (area) html += `<span class="area-badge">${area}</span>`;
-            html += `</div>`;
-            html += `<div class="body">`;
-            html += `<div class="complex-name">${name}</div>`;
-            if (location) html += `<div class="location">${location}</div>`;
-            html += `<div class="price">${price}</div>`;
-            
-            if (area || floor) {
-                html += `<div class="info-grid">`;
-                if (area) html += `<div class="info-item"><div class="info-label">면적</div><div class="info-value">${area}</div></div>`;
-                if (floor) html += `<div class="info-item"><div class="info-label">층수</div><div class="info-value">${floor}</div></div>`;
-                html += `</div>`;
+            const agentName = esc(agent.name) || '부동산';
+            const agentPhone = esc(agent.phone) || '';
+            const comment = card.agent_comment || '';
+            const specs = [floor, ...features].filter(Boolean);
+            const cardNameStr = [location, name, area].filter(Boolean).join(' · ');
+
+            // Action bar HTML
+            const actionBar = `
+                <div class="preview-action-bar">
+                    <div class="preview-action-btn call">📞<span>전화</span></div>
+                    <div class="preview-action-btn kakao">💬<span>카톡</span></div>
+                    <div class="preview-action-btn">📍<span>지도</span></div>
+                </div>`;
+
+            // Memo slide
+            const memoSlide = comment ? `
+                <div class="preview-memo-slide">
+                    <div class="preview-memo-quote">"</div>
+                    <div class="preview-memo-text">${esc(comment).replace(/\\n/g, '<br>')}</div>
+                    <div class="preview-memo-agent">${agentName}</div>
+                </div>` : '';
+
+            // Bottom overlay
+            const bottomHtml = `
+                <div class="preview-bottom">
+                    <div class="preview-bottom-price">${price}</div>
+                    <div class="preview-bottom-name">${cardNameStr}</div>
+                    ${specs.length ? '<div class="preview-bottom-specs">' + specs.map(s => '<span class="preview-bottom-spec">' + s + '</span>').join('') + '</div>' : ''}
+                    ${actionBar}
+                </div>`;
+
+            // Agent below
+            const agentBelow = `
+                <div class="preview-agent-below">
+                    <div class="preview-agent-avatar">${agentName.charAt(0)}</div>
+                    <div>
+                        <div class="preview-agent-name">${agentName}</div>
+                        <div class="preview-agent-phone">${agentPhone}</div>
+                    </div>
+                </div>`;
+
+            let html = '';
+
+            if (hasPhotos) {
+                // MEMO template (with photos)
+                html = `
+                    <div class="preview-card-full">
+                        <div class="preview-inner-slider">
+                            <img class="preview-photo-slide" src="${esc(photos[0])}" loading="lazy">
+                            ${memoSlide}
+                        </div>
+                        ${bottomHtml}
+                    </div>
+                    ${agentBelow}`;
+            } else {
+                // NOIMG template (gradient + typography)
+                const nameParts = name.length > 6 ? name.replace(/\\s/g, '<br>') : name;
+                html = `
+                    <div class="preview-card-full">
+                        <div class="preview-inner-slider">
+                            <div class="preview-info-slide bg-1">
+                                <div class="preview-info-complex">${nameParts}</div>
+                                <div class="preview-info-location">${location}</div>
+                                <div class="preview-info-divider"></div>
+                                <div class="preview-info-type-price">
+                                    <span class="preview-info-type">${type}</span>
+                                    <span class="preview-info-price">${price}</span>
+                                </div>
+                            </div>
+                            ${memoSlide}
+                        </div>
+                        <div class="preview-bottom">
+                            ${actionBar}
+                        </div>
+                    </div>
+                    ${agentBelow}`;
             }
-            
-            if (features.length > 0) {
-                html += `<div class="features">`;
-                features.slice(0, 4).forEach(f => { html += `<span class="feature-tag">${f}</span>`; });
-                html += `</div>`;
-            }
-            
-            if (agent.name || agent.phone) {
-                html += `<div class="agent">`;
-                html += `<span class="agent-name">${esc(agent.name) || ''}</span>`;
-                html += `<span class="agent-phone">${esc(agent.phone) || ''}</span>`;
-                html += `</div>`;
-            }
-            
-            if (card.agent_comment) {
-                html += `<div style="margin-top:10px;padding:10px 12px;background:var(--primary-bg);border:1.5px solid var(--primary-border3);border-radius:10px;">`;
-                html += `<div style="font-size:9px;font-weight:700;color:var(--primary);margin-bottom:4px;">💬 ${esc(agent.name) || '중개사'}의 한마디</div>`;
-                html += `<div style="font-size:11px;color:#e2e8f0;line-height:1.6;white-space:pre-wrap;">${esc(card.agent_comment)}</div>`;
-                html += `</div>`;
-            }
-            
-            html += `</div></div>`;
+
             return html;
         }
         
