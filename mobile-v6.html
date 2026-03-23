@@ -99,11 +99,11 @@
 
   .tagline {
     font-size: 14px;
-    font-weight: 300;
-    color: var(--gray-400);
+    font-weight: 400;
+    color: #94a3b8;
     margin-top: -36px;
     margin-bottom: 40px;
-    letter-spacing: -0.3px;
+    letter-spacing: 0.5px;
     transition: all 0.4s ease;
   }
 
@@ -123,24 +123,25 @@
 
   .search-input {
     width: 100%;
-    padding: 18px 56px 18px 20px;
+    padding: 18px 56px 18px 22px;
     font-size: 17px;
     font-family: 'Noto Sans KR', sans-serif;
     font-weight: 400;
-    border: 2px solid var(--gray-200);
+    border: 1.5px solid #e2e8f0;
     border-radius: 28px;
     outline: none;
-    background: var(--white);
+    background: #ffffff;
     color: var(--text);
     transition: all 0.25s ease;
     -webkit-appearance: none;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.02);
   }
 
-  .search-input::placeholder { color: var(--gray-400); font-weight: 300; opacity: 0.5; }
+  .search-input::placeholder { color: #94a3b8; font-weight: 300; }
 
   .search-input:focus {
-    border-color: var(--hwik-dark);
-    box-shadow: 0 4px 24px rgba(26,26,46,0.1);
+    border-color: #0ea5e9;
+    box-shadow: 0 4px 20px rgba(14,165,233,0.12), 0 0 0 3px rgba(14,165,233,0.08);
   }
 
   /* 드롭다운 열리면 검색창 하단 모서리 제거 */
