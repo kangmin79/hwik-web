@@ -144,8 +144,11 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .nav-logo {
             font-size: 28px;
             font-weight: 900;
-            color: #eab308;
+            color: #0f172a;
             text-decoration: none;
+        }
+        body.dark .nav-logo {
+            color: #eab308;
         }
 
         #navButtons { display: flex; align-items: center; gap: 8px; }
@@ -167,11 +170,36 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         
         .btn-primary {
-            background: var(--primary);
+            background: #0f172a;
             color: #fff;
         }
         body.dark .btn-primary {
+            background: var(--primary);
             color: #0a1628;
+        }
+
+        .nav .btn-nav-agent {
+            background: transparent;
+            color: #334155;
+            border: 1px solid #e2e8f0;
+            font-weight: 700;
+            font-size: 14px;
+            padding: 8px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-right: 8px;
+            transition: all 0.2s;
+        }
+        .nav .btn-nav-agent:hover {
+            background: #f1f5f9;
+        }
+        body.dark .nav .btn-nav-agent {
+            background: var(--primary-bg10);
+            border: 1px solid var(--primary-border3);
+            color: var(--primary);
+        }
+        body.dark .nav .btn-nav-agent:hover {
+            background: var(--primary-bg20);
         }
         
         /* 메인 레이아웃 */
@@ -882,6 +910,12 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             transition: all 0.15s;
             cursor: pointer;
             overflow: hidden;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 16px;
+            margin-bottom: 16px;
+        }
+        body.dark .property-item {
+            border-bottom-color: rgba(255,255,255,0.06);
         }
         
         .property-item-main {
@@ -1385,7 +1419,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .preview-panel {
             width: 380px;
             min-width: 380px;
-            background: #0d1520;
+            background: #f1f5f9;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -1393,7 +1427,11 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             overflow: hidden;
             position: relative;
             opacity: 1;
-            border-left: 1px solid rgba(255,255,255,0.06);
+            border-left: 1px solid #e2e8f0;
+        }
+        body.dark .preview-panel {
+            background: #0d1520;
+            border-left-color: rgba(255,255,255,0.06);
         }
         
         .preview-panel.show {
@@ -3791,7 +3829,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 const agentInfo = getAgentInfo();
                 const displayName = agentInfo.name || '내 정보';
                 nav.innerHTML = `
-                    <button onclick="openMyInfoModal()" style="background:var(--primary-bg10);border:1px solid var(--primary-border3);color:var(--primary);font-weight:700;font-size:14px;padding:8px 18px;border-radius:8px;cursor:pointer;margin-right:8px;transition:all 0.2s;" onmouseover="this.style.background='var(--primary-bg20)'" onmouseout="this.style.background='var(--primary-bg10)'">${displayName}님</button>
+                    <button onclick="openMyInfoModal()" class="btn-nav-agent">${displayName}님</button>
                     <a href="card_generator_v2_auth.html" class="btn btn-primary">+ 새 카드</a>
                 `;
             }
