@@ -2549,8 +2549,10 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
             let filtered = source;
             
-            // 내 매물 탭에서는 손님 항상 제외
-            filtered = filtered.filter(c => c.property && c.property.type !== '손님');
+            // 내 매물 탭에서는 손님 제외 (검색 모드에서는 허용)
+            if (!isSearchMode) {
+                filtered = filtered.filter(c => c.property && c.property.type !== '손님');
+            }
             
             // 거래유형 필터
             if (currentFilter !== '전체') {
