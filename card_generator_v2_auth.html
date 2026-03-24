@@ -4440,8 +4440,19 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 const cardColor = getColorByType(parsed.type);
                 
                 // 저장할 데이터
-                // ★ property에서 비공개 필드(privateNote) 제거
-                const { privateNote, price_number: _pn, ...publicParsed } = parsed;
+                // ★ property: 공개 필드만 화이트리스트 방식으로 추출
+                const publicParsed = {
+                    type: parsed.type || null,
+                    price: parsed.price || null,
+                    location: parsed.location || null,
+                    complex: parsed.complex || null,
+                    area: parsed.area || null,
+                    floor: parsed.floor || null,
+                    room: parsed.room || null,
+                    features: parsed.features || [],
+                    moveIn: parsed.moveIn || null,
+                    category: parsed.category || null,
+                };
                 const cardData = {
                     id: linkId,
                     agent_id: currentUser.id,
