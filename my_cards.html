@@ -2708,6 +2708,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
 
         function toggleSelect(cardId, fromShared) {
+            // 검색 클릭 로그 기록
+            if (isSearchMode && _lastSearchQuery) logClick(_lastSearchQuery, cardId);
             // 검색 모드면 searchResults에서, 공유 탭이면 allSharedCards에서, 아니면 allCards에서 찾기
             let card = null;
             if (fromShared || currentMainTab === 'shared') {
@@ -4220,6 +4222,66 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 return { minPrice, maxPrice, textWords };
             }
 
+            // ★ 검색 학습 시스템
+            let _clickScores = {}; // card_id → 총 클릭수
+            let _queryClickScores = {}; // "query::card_id" → 클릭수
+
+            async function loadSearchScores() {
+                try {
+                    // 클릭 로그에서 매물별 클릭 점수 집계
+                    const { data } = await supabaseClient
+                        .from('search_logs')
+                        .select('query, clicked_card_id')
+                        .not('clicked_card_id', 'is', null)
+                        .limit(5000);
+                    if (!data) return;
+
+                    _clickScores = {};
+                    _queryClickScores = {};
+                    data.forEach(log => {
+                        const cid = log.clicked_card_id;
+                        const q = (log.query || '').toLowerCase();
+                        // 총 클릭수
+                        _clickScores[cid] = (_clickScores[cid] || 0) + 1;
+                        // 검색어별 클릭수
+                        const key = `${q}::${cid}`;
+                        _queryClickScores[key] = (_queryClickScores[key] || 0) + 1;
+                    });
+                    console.log(`[휙 학습] ${data.length}건 로그 → ${Object.keys(_clickScores).length}개 매물 점수`);
+                } catch(e) { console.warn('학습 데이터 로드 실패:', e); }
+            }
+
+            // 검색/클릭 로그 기록
+            function logSearch(query, resultCount) {
+                if (!currentUser) return;
+                supabaseClient.from('search_logs').insert({
+                    agent_id: currentUser.id,
+                    query: query,
+                    result_count: resultCount,
+                    search_mode: 'local'
+                }).then(() => {}).catch(() => {});
+            }
+
+            function logClick(query, cardId) {
+                if (!currentUser) return;
+                supabaseClient.from('search_logs').insert({
+                    agent_id: currentUser.id,
+                    query: query,
+                    clicked_card_id: cardId,
+                    search_mode: 'click'
+                }).then(() => {
+                    // 실시간 점수 업데이트
+                    _clickScores[cardId] = (_clickScores[cardId] || 0) + 1;
+                    const key = `${query.toLowerCase()}::${cardId}`;
+                    _queryClickScores[key] = (_queryClickScores[key] || 0) + 1;
+                }).catch(() => {});
+            }
+
+            let _lastSearchQuery = '';
+
+            // 초기 학습 데이터 로드
+            loadSearchScores();
+
             // 관련도 점수 가중치 (높을수록 중요한 필드)
             const _fieldWeights = { type:10, price:5, complex:8, location:8, address:6, area:4, floor:3, room:4, categoryKo:7, categoryFn:7, features:6, moveIn:3, comment:2, memo:1, status:2, date:1 };
 
@@ -4282,6 +4344,13 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     // 가격 조건 매칭 보너스
                     if (minPrice !== null || maxPrice !== null) score += 5;
 
+                    // ★ 학습 데이터 반영 — 클릭 많은 매물 우선
+                    const clickBonus = _clickScores[c.id] || 0;
+                    const queryKey = `${q}::${c.id}`;
+                    const queryClickBonus = _queryClickScores[queryKey] || 0;
+                    score += Math.min(clickBonus, 20); // 총 클릭 보너스 (최대 20)
+                    score += queryClickBonus * 5; // 같은 검색어 클릭은 5배 가중
+
                     return { card: c, score };
                 }).filter(Boolean);
 
@@ -4290,6 +4359,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
                 searchResults = scored.map(s => s.card);
                 isSearchMode = true;
+                _lastSearchQuery = query; // 클릭 로그용
+                logSearch(query, searchResults.length);
 
                 if (filtered.length === 0) {
                     document.getElementById('propertyList').innerHTML =
