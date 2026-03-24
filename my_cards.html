@@ -5396,6 +5396,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 await loadSharedCards();
                 updateSharedUI();
                 renderRoomBox();
+                renderList();
             } catch(e) { showToast('❌ 공유 실패: ' + e.message); }
         }
 
@@ -5438,6 +5439,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             closeShareToRoom();
             await loadSharedCards();
             updateSharedUI();
+            renderList();
         }
 
         // 초기 로드에 공유 데이터 추가
