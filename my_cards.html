@@ -2569,13 +2569,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 });
             }
             
-            if (searchQuery) {
-                const q = searchQuery.toLowerCase();
-                filtered = filtered.filter(c => {
-                    const p = c.property || {};
-                    return ((p.rawText || '') + (p.complex || '') + (p.location || '')).toLowerCase().includes(q);
-                });
-            }
+            // 검색 필터는 localSearch에서 처리 (searchResults에 이미 반영됨)
             
             // 정렬 적용
             filtered = sortCards(filtered);
@@ -4048,17 +4042,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 }
             });
             
-            let timeout;
-            document.getElementById('searchInput').addEventListener('input', e => {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => {
-                    searchQuery = e.target.value.trim();
-                    if (!searchQuery) {
-                        isSearchMode = false; // 검색어 지우면 검색 모드 해제
-                    }
-                    renderList();
-                }, 200);
-            });
+            // (검색은 localSearch + autoAiSearch에서 처리)
             
             // ★ 검색 시스템: 즉시 로컬 → 자동 AI 보강
             let _localTimer = null;
