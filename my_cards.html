@@ -2534,7 +2534,22 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             loadCards(); // DB에서 다시 가져오기
         }
 
+        // 내 카드 → 공유방 이름 맵 (card_id → [room_name, ...])
+        let _myCardRoomMap = {};
+        function _buildCardRoomMap() {
+            _myCardRoomMap = {};
+            allSharedCards.forEach(sc => {
+                if (!sc.is_mine) return;
+                const cardId = sc.id; // 카드 ID (from ...d.cards spread)
+                const roomName = allMyRoomsList.find(r => r.id === sc.room_id)?.name;
+                if (!roomName) return;
+                if (!_myCardRoomMap[cardId]) _myCardRoomMap[cardId] = [];
+                if (!_myCardRoomMap[cardId].includes(roomName)) _myCardRoomMap[cardId].push(roomName);
+            });
+        }
+
         function renderList() {
+            _buildCardRoomMap();
             const source = isSearchMode ? searchResults : allCards;
             if (source.length === 0 && !isSearchMode) {
                 document.getElementById('pageCount').textContent = '0개';
@@ -2606,13 +2621,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 html += `<div class="property-item-main" onclick="toggleSelect('${card.id}')">`;
                 html += `<div class="property-checkbox"></div>`;
                 const featureTags = (p.features||[]).slice(0,4).map(f=>`<span class="list-tag">${esc(f)}</span>`).join('');
-                // 이 카드가 공유된 방 이름 태그
-                const sharedRoomNames = allSharedCards
-                    .filter(sc => sc.id === card.id && sc.is_mine)
-                    .map(sc => allMyRoomsList.find(r => r.id === sc.room_id)?.name)
-                    .filter(Boolean);
-                const uniqueRooms = [...new Set(sharedRoomNames)];
-                const roomTags = uniqueRooms.map(name => `<span style="display:inline-block;padding:1px 6px;border-radius:4px;background:rgba(78,205,196,0.12);color:#4ecdc4;font-size:10px;font-weight:600;margin-right:3px;">${esc(name)}</span>`).join('');
+                // 이 카드가 공유된 방 이름 태그 (_myCardRoomMap에서 조회)
+                const cardRooms = _myCardRoomMap[card.id] || [];
+                const roomTags = cardRooms.map(name => `<span style="display:inline-block;padding:1px 6px;border-radius:4px;background:rgba(78,205,196,0.12);color:#4ecdc4;font-size:10px;font-weight:600;margin-right:3px;">${esc(name)}</span>`).join('');
                 html += `<div class="property-text">
                     <div class="property-text-row">
                         <span class="property-type-badge ${typeClass}">${esc(p.type)||''}</span>
