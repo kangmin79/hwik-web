@@ -4152,24 +4152,12 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             let _lastSearchQuery = '';
 
             document.getElementById('searchInput').addEventListener('input', e => {
-                clearTimeout(_searchTimer);
                 const q = e.target.value.trim();
                 if (!q) {
                     isSearchMode = false;
                     _lastSearchQuery = '';
                     loadCards();
-                    return;
                 }
-                // 타이핑 멈추면 서버 벡터 검색 (0.5초 디바운스)
-                _searchTimer = setTimeout(() => {
-                    if (q.length >= 1 && q !== _lastSearchQuery) {
-                        _lastSearchQuery = q;
-                        // 로딩 표시
-                        document.getElementById('propertyList').innerHTML =
-                            `<div class="empty-state"><div style="font-size:24px;margin-bottom:8px;">✨</div><div style="color:var(--text-gray);font-size:13px;">"${esc(q)}" 검색 중...</div></div>`;
-                        vectorSearch(q);
-                    }
-                }, 500);
             });
 
             // Enter → 즉시 벡터 검색
