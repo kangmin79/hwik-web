@@ -4684,7 +4684,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     ${featureTags ? `<div class="property-tags-row">${featureTags}</div>` : ''}
                     <div class="shared-agent-name">
                         <span class="shared-agent-dot" style="background:${agentColor}"></span>
-                        ${card.is_mine ? roomName : agentName + ' · ' + roomName}
+                        ${card.is_mine ? roomName : agentName + ' <span style="color:#4ecdc4;font-weight:600;">' + (card.agent?.phone || '') + '</span> · ' + roomName}
                     </div>
                 </div>`;
                 if (photos.length > 0) {
