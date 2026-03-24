@@ -5358,7 +5358,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             if (photos.length > 0) {
                 html += `<div style="display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;">`;
                 photos.forEach(url => {
-                    html += `<img src="${esc(url)}" style="width:120px;height:90px;object-fit:cover;border-radius:8px;flex-shrink:0;">`;
+                    html += `<img src="${esc(url)}" loading="lazy" style="width:120px;height:90px;object-fit:cover;border-radius:8px;flex-shrink:0;">`;
                 });
                 html += `</div>`;
             }
