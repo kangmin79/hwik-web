@@ -4700,6 +4700,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             
             let filtered = [...allSharedCards];
 
+            // 손님 타입 제외
+            filtered = filtered.filter(c => c.property?.type !== '손님');
+
             // 방 필터
             if (sharedRoomFilter !== 'all') {
                 filtered = filtered.filter(c => c.room_id === sharedRoomFilter);
