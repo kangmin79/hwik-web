@@ -3362,7 +3362,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
 
         function editCard(cardId) {
-            const card = allCards.find(c => c.id === cardId);
+            const card = allCards.find(c => c.id === cardId) || allSharedCards.find(c => c.id === cardId);
             if (!card) return;
             const p = card.property || {};
             document.getElementById('editCardId').value = cardId;
@@ -5622,7 +5622,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         // 내 매물 → 공유방에 올리기
         // 개별 매물 공유 버튼
         function shareOneCard(cardId) {
-            const card = allCards.find(c => c.id === cardId);
+            const card = allCards.find(c => c.id === cardId) || allSharedCards.find(c => c.id === cardId);
             if (!card) return;
             if (allMyRoomsList.length === 0) { showToast('⚠️ 공유방을 먼저 만들어주세요'); openRoomModal(); return; }
             
