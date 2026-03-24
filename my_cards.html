@@ -3828,7 +3828,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         
         // 검색 키워드 → 필터 매핑 (전역)
-        const _typeKeywords = { '매매':'매매', '전세':'전세', '월세':'월세' };
+        const _typeKeywords = { '매매':'매매', '전세':'전세', '월세':'월세', '손님':'손님' };
         const _catKeywords = { '아파트':'apartment', '오피스텔':'officetel', '원투룸':'room', '원룸':'room', '투룸':'room', '빌라':'room', '상가':'commercial', '사무실':'office' };
         const _statusKeywords = { '계약가능':'계약가능', '계약중':'계약중', '완료':'완료', '계약중인':'계약중', '거래가능':'계약가능', '거래완료':'완료' };
         const _categoryKo = { apartment:'아파트', officetel:'오피스텔', room:'원투룸', commercial:'상가', office:'사무실' };
@@ -3846,13 +3846,14 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             let serverPropertyType = null;
             let serverStatus = null;
             const cleanWords = [];
+            let isClientSearch = false;
             for (const w of qWords) {
-                if (_typeKeywords[w] && !serverTradeType) serverTradeType = _typeKeywords[w];
+                if (w === '손님') { isClientSearch = true; }
+                else if (_typeKeywords[w] && !serverTradeType) serverTradeType = _typeKeywords[w];
                 else if (_catKeywords[w] && !serverPropertyType) serverPropertyType = _catKeywords[w];
                 else if (_statusKeywords[w] && !serverStatus) serverStatus = _statusKeywords[w];
                 else cleanWords.push(w);
             }
-            // 클린 쿼리 (필터 키워드 제외한 순수 검색어) + 원본 쿼리 둘 다 전달
             const searchQuery = cleanWords.length > 0 ? cleanWords.join(' ') : query;
 
             // 검색 중 표시
@@ -3867,11 +3868,12 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         'Authorization': 'Bearer ' + SUPABASE_KEY
                     },
                     body: JSON.stringify({
-                        query: searchQuery,
+                        query: isClientSearch ? (cleanWords.join(' ') || '손님') : searchQuery,
                         agent_id: currentUser.id,
                         limit: 50,
-                        trade_type: serverTradeType,
-                        property_type: serverPropertyType
+                        search_mode: isClientSearch ? 'client' : 'my',
+                        trade_type: isClientSearch ? null : serverTradeType,
+                        property_type: isClientSearch ? null : serverPropertyType
                     })
                 });
                 
