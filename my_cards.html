@@ -3752,6 +3752,12 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             setTimeout(() => toast.classList.remove('show'), 2500);
         }
         
+        // 검색 키워드 → 필터 매핑 (전역)
+        const _typeKeywords = { '매매':'매매', '전세':'전세', '월세':'월세' };
+        const _catKeywords = { '아파트':'apartment', '오피스텔':'officetel', '원투룸':'room', '원룸':'room', '투룸':'room', '빌라':'room', '상가':'commercial', '사무실':'office' };
+        const _statusKeywords = { '계약가능':'계약가능', '계약중':'계약중', '완료':'완료', '계약중인':'계약중', '거래가능':'계약가능', '거래완료':'완료' };
+        const _categoryKo = { apartment:'아파트', officetel:'오피스텔', room:'원투룸', commercial:'상가', office:'사무실' };
+
         // 벡터 검색 (새로운 search-property API 사용)
         async function vectorSearch(query) {
             if (!query || !currentUser) {
@@ -4174,7 +4180,6 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             });
 
             // ★ 로컬 검색 — 즉시 결과
-            const _categoryKo = { apartment:'아파트', officetel:'오피스텔', room:'원투룸', commercial:'상가', office:'사무실' };
 
             // 날짜 → 검색용 텍스트 ("3월 24일 오늘 이번주 이번달")
             function _dateSearchText(dateStr) {
@@ -4324,11 +4329,6 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
             // 관련도 점수 가중치 (높을수록 중요한 필드)
             const _fieldWeights = { type:10, price:5, complex:8, location:8, address:6, area:4, floor:3, room:4, categoryKo:7, categoryFn:7, features:6, moveIn:3, comment:2, memo:1, status:2, date:1 };
-
-            // ★ 거래유형/카테고리 키워드 → 하드 필터로 분리
-            const _typeKeywords = { '매매':'매매', '전세':'전세', '월세':'월세' };
-            const _catKeywords = { '아파트':'apartment', '오피스텔':'officetel', '원투룸':'room', '원룸':'room', '투룸':'room', '빌라':'room', '상가':'commercial', '사무실':'office' };
-            const _statusKeywords = { '계약가능':'계약가능', '계약중':'계약중', '완료':'완료', '계약중인':'계약중', '거래가능':'계약가능', '거래완료':'완료' };
 
             function localSearch(query) {
                 const q = query.toLowerCase();
