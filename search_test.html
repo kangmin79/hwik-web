@@ -96,10 +96,57 @@
         return '기타';
     }
 
+    // 가격 파싱 (my_cards.html과 동일)
+    function _parsePriceToMan(s) {
+        if (!s) return null;
+        const m1 = s.match(/(\d+)\s*억\s*(\d*)\s*천?/);
+        if (m1) return parseInt(m1[1]) * 10000 + (parseInt(m1[2]) || 0) * (s.includes('천') ? 1000 : 0);
+        const m2 = s.match(/(\d+)\s*만/);
+        if (m2) return parseInt(m2[1]);
+        const m3 = s.match(/(\d+)/);
+        if (m3) return parseInt(m3[1]);
+        return null;
+    }
+
+    const _minWords = ['이상','초과','넘는','부터'];
+    const _maxWords = ['이하','미만','아래','까지'];
+
+    function _extractPriceConditions(words) {
+        let minPrice = null, maxPrice = null;
+        const textWords = [];
+        for (let i = 0; i < words.length; i++) {
+            const w = words[i];
+            if (_minWords.includes(w) && i > 0) {
+                const price = _parsePriceToMan(words[i-1]);
+                if (price) { minPrice = price; textWords.pop(); continue; }
+            }
+            if (_maxWords.includes(w) && i > 0) {
+                const price = _parsePriceToMan(words[i-1]);
+                if (price) { maxPrice = price; textWords.pop(); continue; }
+            }
+            // 붙여쓰기: "3억이상"
+            for (const mw of _minWords) {
+                if (w.endsWith(mw)) {
+                    const price = _parsePriceToMan(w.replace(mw, ''));
+                    if (price) { minPrice = price; continue; }
+                }
+            }
+            for (const mw of _maxWords) {
+                if (w.endsWith(mw)) {
+                    const price = _parsePriceToMan(w.replace(mw, ''));
+                    if (price) { maxPrice = price; continue; }
+                }
+            }
+            textWords.push(w);
+        }
+        return { textWords, minPrice, maxPrice };
+    }
+
     // ★ 매칭 추적 검색 — 어떤 단어가 어떤 필드에서 매칭됐는지 반환
     function localSearchWithTrace(query, cards) {
         const q = query.toLowerCase();
-        const words = q.split(/\s+/).filter(w => w.length > 0);
+        const allWords = q.split(/\s+/).filter(w => w.length > 0);
+        const { textWords: words, minPrice, maxPrice } = _extractPriceConditions(allWords);
 
         return cards.map(c => {
             const p = c.property || {};
@@ -141,7 +188,11 @@
                 if (matchedFields.length === 0) allMatch = false;
             }
 
-            return { card: c, matched: allMatch, wordMatches, fields };
+            // 가격 조건 필터
+            if (allMatch && minPrice !== null && (c.price_number || 0) < minPrice) allMatch = false;
+            if (allMatch && maxPrice !== null && (c.price_number || 0) > maxPrice) allMatch = false;
+
+            return { card: c, matched: allMatch, wordMatches, fields, minPrice, maxPrice };
         }).filter(r => r.matched);
     }
 
@@ -197,6 +248,30 @@
         { group: '손님 검색', query: '손님 강남', expect: '강남 손님 요청', check: r => r.length > 0 },
 
         // 결과 없어야 정상
+        // 가격 조건 검색
+        { group: '가격 조건 검색', query: '3억 이상', expect: '3억 이상 매물', check: r => r.length > 0 && r.every(c => (c.price_number||0) >= 30000) },
+        { group: '가격 조건 검색', query: '5억 이하', expect: '5억 이하 매물', check: r => r.length > 0 && r.every(c => (c.price_number||0) <= 50000) },
+        { group: '가격 조건 검색', query: '3억 이상 아파트', expect: '3억+아파트', check: r => r.length > 0 },
+        { group: '가격 조건 검색', query: '10억 이상 매매', expect: '10억+매매', check: r => r.length > 0 },
+        { group: '가격 조건 검색', query: '2억 미만 전세', expect: '2억 미만+전세', check: r => r.length > 0 },
+        { group: '가격 조건 검색', query: '1억 이하 월세', expect: '1억 이하+월세', check: r => r.length > 0 },
+
+        // 새 지역 검색
+        { group: '새 지역 검색', query: '용산', expect: '용산 매물', check: r => r.length > 0 },
+        { group: '새 지역 검색', query: '노원', expect: '노원 매물', check: r => r.length > 0 },
+        { group: '새 지역 검색', query: '영등포', expect: '영등포 매물', check: r => r.length > 0 },
+        { group: '새 지역 검색', query: '광진', expect: '광진 매물', check: r => r.length > 0 },
+        { group: '새 지역 검색', query: '여의도', expect: '여의도 매물', check: r => r.length > 0 },
+
+        // 특수 태그
+        { group: '특수 태그 검색', query: '초역세권', expect: '초역세권 매물', check: r => r.length > 0 },
+        { group: '특수 태그 검색', query: '더블역세권', expect: '더블역세권 매물', check: r => r.length > 0 },
+        { group: '특수 태그 검색', query: '드레스룸', expect: '드레스룸 매물', check: r => r.length > 0 },
+        { group: '특수 태그 검색', query: '리모델링', expect: '리모델링 매물', check: r => r.length > 0 },
+        { group: '특수 태그 검색', query: '공원뷰', expect: '공원뷰 매물', check: r => r.length > 0 },
+        { group: '특수 태그 검색', query: '산뷰', expect: '산뷰 매물', check: r => r.length > 0 },
+
+        // 결과 없음
         { group: '결과 없음 (정상)', query: '제주도 바다뷰', expect: '0개', check: r => r.length === 0 },
         { group: '결과 없음 (정상)', query: 'xyz123', expect: '0개', check: r => r.length === 0 },
     ];
