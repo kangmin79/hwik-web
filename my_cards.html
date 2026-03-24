@@ -4063,7 +4063,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             }
             
             loadCards();
-            
+            // 공유 데이터도 초기 로드 (내 매물 공유방 태그 표시용)
+            loadSharedData().then(() => renderList()).catch(() => {});
+
             document.getElementById('typeFilter').addEventListener('click', e => {
                 if (e.target.classList.contains('filter-btn')) {
                     document.querySelectorAll('#typeFilter .filter-btn').forEach(b => b.classList.remove('active'));
