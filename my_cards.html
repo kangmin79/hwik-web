@@ -2112,6 +2112,11 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         </div>
                     </div>
                     
+                    <!-- 중개사별 필터 (동적 생성) -->
+                    <div class="filter-row" id="sharedAgentFilterRow" style="display:none;">
+                        <div class="filter-group" id="sharedAgentFilter"></div>
+                    </div>
+
                     <!-- 공유방 박스 (필터 아래, 검색 위) -->
                     <div class="room-box" id="roomBox">
                         <!-- 동적 렌더링 -->
@@ -4144,6 +4149,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         let sharedFilter = '전체';
         let sharedCategoryFilter = '전체';
         let sharedSort = 'newest';
+        let sharedAgentFilter = '전체';
         let sharedRoomFilter = 'all';
         let inviteTargetRoomId = null;
         let roomMemberCounts = {};
@@ -4489,6 +4495,43 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             renderSharedList();
         }
 
+        function _renderAgentFilterButtons() {
+            const row = document.getElementById('sharedAgentFilterRow');
+            const container = document.getElementById('sharedAgentFilter');
+            if (!row || !container) return;
+
+            // 공유 매물에서 중개사 목록 추출 (중복 제거)
+            const agentMap = new Map();
+            allSharedCards.forEach(c => {
+                const name = c.agent?.business_name || c.agent?.name || '';
+                const id = c.shared_by || c.agent_id || '';
+                if (name && !agentMap.has(name)) {
+                    agentMap.set(name, id);
+                }
+            });
+
+            if (agentMap.size <= 1) {
+                row.style.display = 'none';
+                return;
+            }
+
+            row.style.display = '';
+            let html = `<button class="filter-btn ${sharedAgentFilter === '전체' ? 'active' : ''}" onclick="onSharedAgentClick(this)" data-filter="전체">전체</button>`;
+            agentMap.forEach((id, name) => {
+                const color = getAgentColor(id);
+                const isActive = sharedAgentFilter === name ? 'active' : '';
+                html += `<button class="filter-btn ${isActive}" onclick="onSharedAgentClick(this)" data-filter="${esc(name)}" style="${isActive ? '' : 'border-color:' + color + ';color:' + color}">${esc(name)}</button>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function onSharedAgentClick(btn) {
+            document.querySelectorAll('#sharedAgentFilter .filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            sharedAgentFilter = btn.dataset.filter;
+            renderSharedList();
+        }
+
         function onSharedFilterClick(btn) {
             document.querySelectorAll('#sharedTypeFilter .filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
@@ -4614,7 +4657,18 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             if (sharedFilter !== '전체') {
                 filtered = filtered.filter(c => c.property?.type === sharedFilter);
             }
-            
+
+            // 중개사별 필터
+            if (sharedAgentFilter !== '전체') {
+                filtered = filtered.filter(c => {
+                    const name = c.agent?.business_name || c.agent?.name || '';
+                    return name === sharedAgentFilter;
+                });
+            }
+
+            // 중개사 필터 버튼 동적 생성
+            _renderAgentFilterButtons();
+
             // 부동산종류 필터
             if (sharedCategoryFilter !== '전체') {
                 filtered = filtered.filter(c => {
