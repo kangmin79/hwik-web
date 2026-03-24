@@ -691,10 +691,11 @@
                     } catch(e2) { console.warn('조회수 증가 실패:', e2); }
                 }
                 sanitizeCardForViewer(data);
+                injectJsonLd(data);
                 allCardsData = [data];
                 currentIndex = 0;
                 renderCard(data);
-                
+
             } catch (error) {
                 console.error('카드 로딩 오류:', error);
                 logError('load_card', error.message, { cardId });
@@ -702,6 +703,54 @@
             }
         }
         
+        // ★ Schema.org JSON-LD (AI 검색 최적화)
+        function injectJsonLd(data) {
+            const p = data.property || {};
+            const agent = overrideAgent || data.agent || {};
+            const photos = data.photos || [];
+
+            const jsonLd = {
+                "@context": "https://schema.org",
+                "@type": "RealEstateListing",
+                "name": [p.type, p.price, p.complex, p.location].filter(Boolean).join(' · '),
+                "description": data.agent_comment || `${p.type || ''} ${p.price || ''} ${p.complex || ''} ${p.location || ''}`,
+                "url": window.location.href,
+                "datePosted": data.created_at,
+                "image": photos.length > 0 ? photos[0] : undefined,
+                "offers": {
+                    "@type": "Offer",
+                    "priceCurrency": "KRW",
+                    "price": data.price_number ? String(data.price_number * 10000) : undefined,
+                    "availability": data.trade_status === '완료' ? "https://schema.org/SoldOut" : "https://schema.org/InStock"
+                },
+                "address": {
+                    "@type": "PostalAddress",
+                    "addressLocality": p.location || '',
+                    "addressRegion": "서울특별시",
+                    "addressCountry": "KR"
+                },
+                "additionalProperty": [
+                    p.area ? { "@type": "PropertyValue", "name": "면적", "value": p.area } : null,
+                    p.floor ? { "@type": "PropertyValue", "name": "층수", "value": p.floor } : null,
+                    p.room ? { "@type": "PropertyValue", "name": "방구조", "value": p.room } : null,
+                    p.type ? { "@type": "PropertyValue", "name": "거래유형", "value": p.type } : null,
+                    ...(p.features || []).map(f => ({ "@type": "PropertyValue", "name": "특징", "value": f }))
+                ].filter(Boolean),
+                "broker": agent.name ? {
+                    "@type": "RealEstateAgent",
+                    "name": agent.business_name || agent.name,
+                    "telephone": agent.phone || undefined
+                } : undefined
+            };
+
+            // 기존 JSON-LD 제거 후 삽입
+            document.querySelectorAll('script[type="application/ld+json"]').forEach(s => s.remove());
+            const script = document.createElement('script');
+            script.type = 'application/ld+json';
+            script.textContent = JSON.stringify(jsonLd, null, 0);
+            document.head.appendChild(script);
+        }
+
         // ★ OG 태그 동적 업데이트
         // 주의: 카카오톡 크롤러는 JS를 실행하지 않으므로, 이 함수로 업데이트한 OG 태그는
         // 카카오톡 미리보기에 반영되지 않습니다. 카카오톡 미리보기를 위해서는:

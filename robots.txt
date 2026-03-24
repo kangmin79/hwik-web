@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Allow: /property_view.html
+Allow: /llms.txt
+
+Disallow: /my_cards.html
+Disallow: /card_generator_v2_auth.html
+Disallow: /admin.html
+Disallow: /seed_test_data.py
+Disallow: /.env
+
+Sitemap: https://hwik.kr/sitemap.xml

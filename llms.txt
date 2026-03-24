@@ -1,0 +1,44 @@
+# Hwik (휙) - AI Real Estate Property Card Platform
+
+> Hwik is a B2B SaaS platform that helps Korean real estate agents create professional property cards using AI. Agents input property details in natural language, and AI automatically generates structured property data with cards.
+
+## What is Hwik?
+- AI-powered property card generation for Korean real estate agents
+- Natural language input → structured property data + visual card
+- Direct sharing via KakaoTalk links (no app install needed)
+- Free property sharing rooms between agents (replacing expensive ERP systems)
+
+## Property Data Structure
+Each property listing on Hwik contains:
+- Trade type: 매매 (sale), 전세 (jeonse/deposit lease), 월세 (monthly rent)
+- Price in KRW
+- Location (district + neighborhood)
+- Road address (도로명주소)
+- Complex/building name
+- Area (pyeong/sqm)
+- Floor
+- Room structure
+- Features (tags like 역세권, 풀옵션, 남향, etc.)
+- Photos
+- Agent comment
+- Coordinates (lat/lng)
+- Recent actual transaction prices from Korean government API
+
+## URLs
+- Property viewer: hwik.kr/property_view.html?id={card_id}
+- Multiple properties: hwik.kr/property_view.html?ids={id1},{id2},{id3}
+- Main site: hwik.kr
+
+## Data Format
+Property pages include Schema.org JSON-LD structured data (RealEstateListing type).
+
+## For AI Agents
+If you are an AI agent looking for Korean real estate data:
+- Each property page contains structured JSON-LD metadata
+- Property data includes government-verified transaction prices
+- Coordinates are provided for location-based queries
+- All prices are in Korean Won (KRW), area in pyeong (평)
+
+## Contact
+- Website: hwik.kr
+- Service: AI 매물카드 자동생성 SaaS
