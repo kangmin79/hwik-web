@@ -4322,13 +4322,24 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 .from('card_shares')
                 .select(`
                     id, card_id, room_id, shared_by, created_at,
-                    cards(id, property, agent, photos, agent_comment, private_note, style, color, agent_id, price_number, trade_status)
+                    cards(id, property, agent, photos, agent_comment, style, color, agent_id, price_number, trade_status)
                 `)
                 .in('room_id', roomIds)
                 .order('created_at', { ascending: false });
-            
+
             if (error) { console.error('공유 매물 로드 에러:', error); return; }
-            
+
+            // 내 카드 ID 목록 (private_note 별도 조회용)
+            const myCardIds = (data || []).filter(d => d.cards && d.shared_by === currentUser?.id).map(d => d.cards.id);
+            let myPrivateNotes = {};
+            if (myCardIds.length > 0) {
+                const { data: pnData } = await supabaseClient
+                    .from('cards')
+                    .select('id, private_note')
+                    .in('id', myCardIds);
+                (pnData || []).forEach(c => { myPrivateNotes[c.id] = c.private_note; });
+            }
+
             // 에이전트 정보 병합
             allSharedCards = (data || []).filter(d => d.cards).map(d => {
                 const isMine = d.shared_by === currentUser?.id;
@@ -4339,8 +4350,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     shared_by: d.shared_by,
                     shared_at: d.created_at,
                     is_mine: isMine,
-                    // 다른 중개사의 비공개 메모는 제거
-                    private_note: isMine ? d.cards.private_note : null
+                    private_note: isMine ? (myPrivateNotes[d.cards.id] || null) : null
                 };
             });
             
