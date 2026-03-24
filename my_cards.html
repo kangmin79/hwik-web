@@ -3846,9 +3846,10 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             let serverPropertyType = null;
             let serverStatus = null;
             const cleanWords = [];
+            const _clientKeywords = ['손님','찾는분','구하는분','구합니다','구해요','찾습니다','찾아요','구함','요청'];
             let isClientSearch = false;
             for (const w of qWords) {
-                if (w === '손님') { isClientSearch = true; }
+                if (_clientKeywords.includes(w)) { isClientSearch = true; }
                 else if (_typeKeywords[w] && !serverTradeType) serverTradeType = _typeKeywords[w];
                 else if (_catKeywords[w] && !serverPropertyType) serverPropertyType = _catKeywords[w];
                 else if (_statusKeywords[w] && !serverStatus) serverStatus = _statusKeywords[w];
