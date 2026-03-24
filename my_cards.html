@@ -4101,6 +4101,25 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
             // ★ 로컬 검색 — 즉시 결과
             const _categoryKo = { apartment:'아파트', officetel:'오피스텔', room:'원투룸', commercial:'상가', office:'사무실' };
+
+            // 날짜 → 검색용 텍스트 ("3월 24일 오늘 이번주 이번달")
+            function _dateSearchText(dateStr) {
+                if (!dateStr) return '';
+                const d = new Date(dateStr);
+                const now = new Date();
+                const parts = [`${d.getMonth()+1}월`, `${d.getDate()}일`, `${d.getFullYear()}년`];
+
+                const diffMs = now - d;
+                const diffDays = Math.floor(diffMs / 86400000);
+                if (diffDays === 0) parts.push('오늘');
+                else if (diffDays === 1) parts.push('어제');
+                else if (diffDays <= 3) parts.push('최근');
+                if (diffDays <= 7) parts.push('이번주');
+                if (d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()) parts.push('이번달');
+
+                return parts.join(' ');
+            }
+
             function localSearch(query) {
                 const q = query.toLowerCase();
                 const words = q.split(/\s+/).filter(w => w.length > 0);
@@ -4110,13 +4129,14 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     const pn = c.private_note || {};
                     const categoryKo = _categoryKo[p.category] || '';
                     const categoryFromFn = categorizeProperty([p.complex, p.location, p.price, p.type].filter(Boolean).join(' '), p.room, p.area, p.floor);
+                    const dateText = _dateSearchText(c.created_at);
                     const text = [
                         p.type, p.price, p.complex, p.location, p.address,
                         p.area, p.floor, p.room, p.category, categoryKo, categoryFromFn,
                         ...(p.features || []), ...(p.tags || []),
                         p.moveIn, c.agent_comment, pn.memo,
                         c.trade_status || '계약가능',
-                        c.search_text,
+                        c.search_text, dateText,
                     ].filter(Boolean).join(' ').toLowerCase();
 
                     return words.every(w => text.includes(w));
