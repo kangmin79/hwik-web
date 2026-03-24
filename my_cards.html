@@ -4150,9 +4150,80 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 return parts.join(' ');
             }
 
+            // 가격 문자열 → 만원 단위 숫자 파싱
+            function _parsePriceToMan(s) {
+                // "3억5천" → 35000, "3억" → 30000, "5000만" → 5000, "5000" → 5000
+                let total = 0;
+                const ek = s.match(/([\d.]+)\s*억/);
+                const chun = s.match(/([\d.]+)\s*천/);
+                const man = s.match(/([\d.]+)\s*만/);
+                if (ek) total += parseFloat(ek[1]) * 10000;
+                if (chun) total += parseFloat(chun[1]) * 1000;
+                if (man) total += parseFloat(man[1]);
+                if (total > 0) return total;
+                // 순수 숫자만 있을 경우 만원 단위로 가정
+                const num = parseFloat(s.replace(/,/g, ''));
+                return isNaN(num) ? null : num;
+            }
+
+            // 검색 쿼리에서 가격 조건 추출
+            function _extractPriceConditions(words) {
+                const minKeywords = ['이상', '초과', '넘는', '부터'];
+                const maxKeywords = ['이하', '미만', '아래', '까지'];
+                const allCondKeywords = [...minKeywords, ...maxKeywords];
+                const pricePattern = /[\d]+[\d,.]*\s*(억|천|만)?[\d,.]*\s*(억|천|만)?/;
+
+                let minPrice = null;
+                let maxPrice = null;
+                const textWords = []; // 가격 조건 아닌 일반 텍스트 단어
+                const usedIndices = new Set();
+
+                for (let i = 0; i < words.length; i++) {
+                    if (usedIndices.has(i)) continue;
+                    const w = words[i];
+
+                    // 현재 단어가 조건어인지 체크 (앞 단어가 가격)
+                    if (allCondKeywords.includes(w) && i > 0) {
+                        const prev = words[i - 1];
+                        const price = _parsePriceToMan(prev);
+                        if (price !== null) {
+                            if (minKeywords.includes(w)) minPrice = price;
+                            else maxPrice = price;
+                            usedIndices.add(i);     // 조건어 제외
+                            usedIndices.add(i - 1); // 가격 단어 제외
+                            continue;
+                        }
+                    }
+
+                    // "3억이상" 같이 붙어있는 경우
+                    for (const kw of allCondKeywords) {
+                        if (w.endsWith(kw)) {
+                            const pricePart = w.slice(0, -kw.length);
+                            if (pricePart) {
+                                const price = _parsePriceToMan(pricePart);
+                                if (price !== null) {
+                                    if (minKeywords.includes(kw)) minPrice = price;
+                                    else maxPrice = price;
+                                    usedIndices.add(i);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 사용되지 않은 단어들은 텍스트 매칭용
+                for (let i = 0; i < words.length; i++) {
+                    if (!usedIndices.has(i)) textWords.push(words[i]);
+                }
+
+                return { minPrice, maxPrice, textWords };
+            }
+
             function localSearch(query) {
                 const q = query.toLowerCase();
                 const words = q.split(/\s+/).filter(w => w.length > 0);
+                const { minPrice, maxPrice, textWords } = _extractPriceConditions(words);
 
                 const filtered = allCards.filter(c => {
                     const p = c.property || {};
@@ -4169,7 +4240,15 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         dateText,
                     ].filter(Boolean).join(' ').toLowerCase();
 
-                    return words.every(w => text.includes(w));
+                    // 가격 필터 적용
+                    if (minPrice !== null || maxPrice !== null) {
+                        const pNum = p.price_number || _parsePriceToMan(p.price || '');
+                        if (pNum === null) return false;
+                        if (minPrice !== null && pNum < minPrice) return false;
+                        if (maxPrice !== null && pNum > maxPrice) return false;
+                    }
+
+                    return textWords.every(w => text.includes(w));
                 });
 
                 searchResults = filtered;

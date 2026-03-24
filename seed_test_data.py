@@ -188,6 +188,57 @@ CARDS_DATA = [
     {"agent_idx":1,"type":"월세","complex":"강남 공유오피스","location":"강남구 신사동","area":"8평","floor":"5층","price":"보증금없음/월60","price_number":60,"features":["역세권","엘리베이터"],"category":"office","comment":"신사역 가로수길, 1~2인 프리랜서 적합.","memo":""},
     {"agent_idx":2,"type":"전세","complex":"천호 사무실","location":"강동구 천호동","area":"22평","floor":"5층","price":"1억 2,000","price_number":12000,"features":["역세권","엘리베이터","주차가능"],"category":"office","comment":"천호역 초역세권, 강동구 사무실 가성비.","memo":""},
 
+    # ── 다양한 가격대/지역/특징 추가 30개 ──
+    # 용산구
+    {"agent_idx":0,"type":"매매","complex":"용산 센트럴파크","location":"용산구 이촌동","area":"42평","floor":"103동 25층","price":"30억","price_number":300000,"features":["한강뷰","남향","고층","시스템에어컨","드레스룸"],"category":"apartment","comment":"이촌역 도보 3분, 탁트인전망 한강뷰가 일품이에요.","memo":"2502호, 즉시입주 가능"},
+    {"agent_idx":1,"type":"전세","complex":"용산 푸르지오","location":"용산구 한남동","area":"35평","floor":"106동 18층","price":"15억","price_number":150000,"features":["남향","리모델링","역세권","경비실"],"category":"apartment","comment":"한남역 도보 5분, 최근 리모델링 완료. 경비실 24시간 운영.","memo":"1803호, 입주협의"},
+    # 서대문구
+    {"agent_idx":2,"type":"매매","complex":"서대문 래미안","location":"서대문구 연희동","area":"28평","floor":"102동 10층","price":"7억","price_number":70000,"features":["남향","공원뷰","올수리","즉시입주"],"category":"apartment","comment":"연희동 안산자락길 공원뷰, 자연환경 좋아요. 홍대입구역 버스 10분.","memo":"1005호"},
+    {"agent_idx":0,"type":"전세","complex":"연희 자이","location":"서대문구 연희동","area":"33평","floor":"105동 7층","price":"5억","price_number":50000,"features":["학원가","주차가능","올수리"],"category":"apartment","comment":"연희동 학원가 인접, 쓰리룸 구조로 아이 방 분리 가능.","memo":"702호, 2026년 5월 입주"},
+    # 은평구
+    {"agent_idx":1,"type":"매매","complex":"은평 뉴타운 힐스테이트","location":"은평구 진관동","area":"34평","floor":"108동 20층","price":"10억","price_number":100000,"features":["남향","산뷰","초역세권","시스템에어컨"],"category":"apartment","comment":"연신내역 초역세권, 북한산 산뷰가 시원해요. 3호선+6호선 더블역세권.","memo":"2003호, 즉시입주"},
+    {"agent_idx":2,"type":"전세","complex":"은평 롯데캐슬","location":"은평구 응암동","area":"25평","floor":"103동 5층","price":"3억","price_number":30000,"features":["역세권","올수리","주차가능"],"category":"apartment","comment":"응암역 도보 3분, 가성비 좋은 전세예요.","memo":"503호, 즉시입주"},
+    # 노원구
+    {"agent_idx":0,"type":"매매","complex":"노원 중계 래미안","location":"노원구 중계동","area":"32평","floor":"105동 12층","price":"5000만","price_number":5000,"features":["학원가","남향","올수리"],"category":"apartment","comment":"중계동 은행사거리 학원가 도보권, 가격 대비 넓은 평수.","memo":"1205호, 입주협의"},
+    {"agent_idx":1,"type":"전세","complex":"노원 포레스트","location":"노원구 상계동","area":"24평","floor":"102동 8층","price":"2억","price_number":20000,"features":["역세권","올수리","주차가능"],"category":"apartment","comment":"노원역 도보 5분, 4호선+7호선 더블역세권.","memo":"803호, 2026년 4월 입주"},
+    # 중랑구
+    {"agent_idx":2,"type":"매매","complex":"중랑 포레나","location":"중랑구 면목동","area":"25평","floor":"103동 15층","price":"5억","price_number":50000,"features":["신축","역세권","남향","시스템에어컨"],"category":"apartment","comment":"사가정역 도보 3분, 신축이라 모든 게 새거예요.","memo":"1502호, 즉시입주"},
+    {"agent_idx":0,"type":"월세","complex":"중랑 투룸빌라","location":"중랑구 상봉동","area":"14평","floor":"3층","price":"보증금500/월45","price_number":45,"features":["투룸","올수리","역세권"],"category":"room","comment":"상봉역 도보 5분, 경춘선+경의중앙선 환승역.","memo":"3층, 입주협의"},
+    # 광진구
+    {"agent_idx":1,"type":"매매","complex":"광진 자이","location":"광진구 구의동","area":"30평","floor":"104동 22층","price":"10억","price_number":100000,"features":["남향","고층","탁트인전망","역세권"],"category":"apartment","comment":"구의역 도보 3분, 고층이라 탁트인전망이에요.","memo":"2201호, 2026년 5월 입주"},
+    {"agent_idx":2,"type":"전세","complex":"건대 스타시티","location":"광진구 자양동","area":"22평","floor":"107동 10층","price":"5억","price_number":50000,"features":["역세권","풀옵션","베란다확장"],"category":"apartment","comment":"건대입구역 도보 5분, 2호선+7호선 더블역세권.","memo":"1008호, 즉시입주"},
+    # 동작구
+    {"agent_idx":0,"type":"매매","complex":"동작 래미안 에버리치","location":"동작구 사당동","area":"35평","floor":"106동 16층","price":"13억","price_number":130000,"features":["남향","역세권","올수리","드레스룸"],"category":"apartment","comment":"사당역 초역세권, 2호선+4호선 환승. 드레스룸 넓어요.","memo":"1603호, 입주협의"},
+    {"agent_idx":1,"type":"전세","complex":"이수 힐스테이트","location":"동작구 사당동","area":"28평","floor":"103동 9층","price":"5억","price_number":50000,"features":["역세권","올수리","주차가능"],"category":"apartment","comment":"이수역 도보 3분, 7호선 여의도 출퇴근 편리.","memo":"903호, 2026년 4월 입주"},
+    # 관악구
+    {"agent_idx":2,"type":"매매","complex":"관악 드림타운","location":"관악구 봉천동","area":"20평","floor":"102동 8층","price":"5억","price_number":50000,"features":["역세권","올수리","원룸"],"category":"apartment","comment":"봉천역 도보 5분, 서울대입구 생활권.","memo":"805호, 즉시입주"},
+    {"agent_idx":0,"type":"월세","complex":"신림 복층 원룸","location":"관악구 신림동","area":"10평","floor":"3~4층","price":"보증금500/월50","price_number":50,"features":["복층","풀옵션","역세권"],"category":"room","comment":"신림역 3분, 복층 구조라 공간 활용 좋아요.","memo":"즉시입주, 대학생/사회초년생 추천"},
+    # 영등포구
+    {"agent_idx":1,"type":"매매","complex":"여의도 자이","location":"영등포구 여의도동","area":"45평","floor":"110동 30층","price":"20억","price_number":200000,"features":["한강뷰","고층","풀옵션","시스템에어컨","정원"],"category":"apartment","comment":"여의도역 도보 5분, 한강뷰+여의도공원 정원뷰 듀얼. 금융권 직장인 추천.","memo":"3002호, 입주협의"},
+    {"agent_idx":2,"type":"전세","complex":"영등포 센트럴파크","location":"영등포구 당산동","area":"28평","floor":"105동 12층","price":"5억","price_number":50000,"features":["역세권","올수리","주차가능"],"category":"apartment","comment":"당산역 2호선+9호선 더블역세권, 여의도 출퇴근 최적.","memo":"1203호, 즉시입주"},
+    # 구로구
+    {"agent_idx":0,"type":"매매","complex":"구로 파크푸르지오","location":"구로구 구로동","area":"32평","floor":"106동 18층","price":"7억","price_number":70000,"features":["남향","역세권","올수리","경비실"],"category":"apartment","comment":"구로디지털단지역 도보 5분, IT기업 출퇴근 편리. 24시간 경비실.","memo":"1802호, 2026년 5월 입주"},
+    {"agent_idx":1,"type":"전세","complex":"구로 래미안","location":"구로구 고척동","area":"25평","floor":"103동 6층","price":"3억","price_number":30000,"features":["올수리","주차가능","남향"],"category":"apartment","comment":"고척돔 인근, 조용한 주거환경.","memo":"603호, 즉시입주"},
+    # 강서구
+    {"agent_idx":2,"type":"매매","complex":"마곡 힐스테이트","location":"강서구 마곡동","area":"34평","floor":"107동 22층","price":"12억","price_number":120000,"features":["신축","남향","고층","시스템에어컨","드레스룸"],"category":"apartment","comment":"마곡나루역 도보 3분, 마곡 LG사이언스파크 직주근접.","memo":"2203호, 즉시입주"},
+    {"agent_idx":0,"type":"전세","complex":"강서 힐스테이트","location":"강서구 화곡동","area":"28평","floor":"104동 10층","price":"3억 5,000","price_number":35000,"features":["역세권","올수리","주차가능"],"category":"apartment","comment":"화곡역 도보 5분, 5호선 여의도/광화문 출퇴근 편리.","memo":"1003호, 2026년 4월 입주"},
+    # 고가 매물
+    {"agent_idx":1,"type":"매매","complex":"한남 더힐","location":"용산구 한남동","area":"65평","floor":"B동 15층","price":"50억","price_number":500000,"features":["한강뷰","고층","풀옵션","정원","경비실","시스템에어컨"],"category":"apartment","comment":"한남동 최고급 주거단지, 정원과 한강뷰 프리미엄. 강남역 15분.","memo":"즉시입주, VIP 고객 전용"},
+    # 합정역 주변
+    {"agent_idx":2,"type":"월세","complex":"합정 포룸 빌라","location":"마포구 합정동","area":"25평","floor":"3층","price":"보증금2,000/월100","price_number":100,"features":["포룸","올수리","역세권"],"category":"room","comment":"합정역 도보 5분, 포룸 구조라 가족 거주 가능. 망원시장 가까워요.","memo":"3층, 즉시입주"},
+    # 강남역 주변
+    {"agent_idx":0,"type":"매매","complex":"강남 르네상스","location":"강남구 역삼동","area":"38평","floor":"108동 20층","price":"15억","price_number":150000,"features":["남향","역세권","올수리","리모델링"],"category":"apartment","comment":"강남역 도보 7분, 전체 리모델링 완료. 학원가 인접.","memo":"2005호, 입주협의"},
+    # 잠실역 주변
+    {"agent_idx":1,"type":"전세","complex":"잠실 시그니처","location":"송파구 잠실동","area":"30평","floor":"104동 15층","price":"8억","price_number":80000,"features":["역세권","신축","남향","베란다확장"],"category":"apartment","comment":"잠실역 도보 3분, 롯데타워 생활권. 석촌호수 산책 가능.","memo":"1503호, 2026년 5월 입주"},
+    # 여의도역 주변
+    {"agent_idx":2,"type":"월세","complex":"여의도 오피스텔","location":"영등포구 여의도동","area":"14평","floor":"12층","price":"보증금3,000/월120","price_number":120,"features":["역세권","풀옵션","고층","시스템에어컨"],"category":"officetel","comment":"여의도역 초역세권, 금융권 직장인 출퇴근 1분.","memo":"즉시입주"},
+    # 홍대입구역 주변
+    {"agent_idx":0,"type":"전세","complex":"홍대 쓰리룸","location":"마포구 서교동","area":"20평","floor":"4층","price":"3억","price_number":30000,"features":["쓰리룸","올수리","역세권"],"category":"room","comment":"홍대입구역 도보 5분, 쓰리룸이라 룸메이트와 같이 살기 좋아요.","memo":"4층, 2026년 4월 입주"},
+    # 1억 미만 저가
+    {"agent_idx":1,"type":"전세","complex":"도봉 원룸","location":"노원구 상계동","area":"7평","floor":"2층","price":"5000만","price_number":5000,"features":["원룸","풀옵션","역세권"],"category":"room","comment":"노원역 도보 7분, 5000만원 초저가 전세. 사회초년생 추천.","memo":"즉시입주"},
+    # 1억대
+    {"agent_idx":2,"type":"전세","complex":"관악 원룸","location":"관악구 봉천동","area":"8평","floor":"3층","price":"1억","price_number":10000,"features":["원룸","풀옵션","역세권"],"category":"room","comment":"봉천역 3분, 서울대 생활권 원룸 전세.","memo":"즉시입주"},
+
     # ══════ 손님 요청 (type: 손님) ══════
     {"agent_idx":0, "type":"손님","complex":"","location":"마포구","area":"20~30평","floor":"","price":"전세 5억 이내","price_number":50000,"features":["역세권","올수리","아파트"],"category":"apartment","comment":"","memo":"김OO 손님, 010-1234-5678, 4월 입주 희망, 초등학교 근처 원함"},
     {"agent_idx":0, "type":"손님","complex":"","location":"마포구 합정동","area":"10평 이내","floor":"","price":"월세 보증금 1000 이하/월50 이하","price_number":50,"features":["원룸","풀옵션","역세권"],"category":"room","comment":"","memo":"이OO 손님(대학생), 010-2345-6789, 3월 말 입주, 여성전용 선호"},
