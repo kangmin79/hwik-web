@@ -3587,11 +3587,16 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 card.photos = allPhotoUrls.length ? allPhotoUrls : null;
                 
                 // 좌표 업데이트 (새로 검색했으면)
+                // ★ search_text 재생성
+                const p = card.property;
+                const newSearchText = [p.type, p.price, p.location, p.complex, p.area, p.floor, ...(p.features||[])].filter(Boolean).join(' ');
+
                 const updateData = {
                     property: card.property,
                     private_note: card.private_note,
                     agent_comment: card.agent_comment || null,
                     photos: card.photos,
+                    search_text: newSearchText,
                 };
                 if (editNewLat && editNewLng) {
                     updateData.lat = editNewLat;
@@ -3602,8 +3607,22 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
                 const { error } = await supabaseClient.from('cards').update(updateData)
                     .eq('id', cardId)
-                    .eq('agent_id', currentUser.id);  // ★ 본인 카드만 수정
+                    .eq('agent_id', currentUser.id);
                 if (error) throw error;
+
+                // ★ 임베딩 재생성 (Edge Function 경유 — API키 보호)
+                try {
+                    const embedText = [p.type, p.price, p.location, p.complex, p.area, p.floor, p.room, p.category, ...(p.features||[]), p.moveIn, card.agent_comment].filter(Boolean).join(' ');
+                    const { data: sess } = await supabaseClient.auth.getSession();
+                    const token = sess?.session?.access_token || SUPABASE_KEY;
+                    const embedResp = await fetch(`${SUPABASE_URL}/functions/v1/embed-card`, {
+                        method: 'POST',
+                        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ card_id: cardId, text: embedText })
+                    });
+                    if (!embedResp.ok) console.warn('임베딩 재생성:', embedResp.status);
+                } catch(e) { console.warn('임베딩 재생성 실패:', e); }
+
                 closeEditModal();
                 renderList();
                 showToast(editNewLat ? '✅ 수정 완료! (지도 좌표 업데이트됨)' : '✅ 수정 완료!');
@@ -4288,6 +4307,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             // ★ 거래유형/카테고리 키워드 → 하드 필터로 분리
             const _typeKeywords = { '매매':'매매', '전세':'전세', '월세':'월세' };
             const _catKeywords = { '아파트':'apartment', '오피스텔':'officetel', '원투룸':'room', '원룸':'room', '투룸':'room', '빌라':'room', '상가':'commercial', '사무실':'office' };
+            const _statusKeywords = { '계약가능':'계약가능', '계약중':'계약중', '완료':'완료', '계약중인':'계약중', '거래가능':'계약가능', '거래완료':'완료' };
 
             function localSearch(query) {
                 const q = query.toLowerCase();
@@ -4297,11 +4317,13 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 // ★ 거래유형/카테고리 필터 분리 (텍스트 매칭에서 제외)
                 let filterType = null;
                 let filterCategory = null;
+                let filterStatus = null;
                 const searchWords = [];
 
                 for (const w of textWords) {
                     if (_typeKeywords[w] && !filterType) { filterType = _typeKeywords[w]; }
                     else if (_catKeywords[w] && !filterCategory) { filterCategory = _catKeywords[w]; }
+                    else if (_statusKeywords[w] && !filterStatus) { filterStatus = _statusKeywords[w]; }
                     else { searchWords.push(w); }
                 }
 
@@ -4321,6 +4343,12 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         const catFromFn = categoryFromFn.toLowerCase();
                         const catKoMatch = (_categoryKo[filterCategory] || '').toLowerCase();
                         if (cardCat !== filterCategory && catFromFn !== catKoMatch && catFromFn !== (_categoryKo[filterCategory]||'')) return null;
+                    }
+
+                    // ★ 하드 필터: 거래상태
+                    if (filterStatus) {
+                        const cardStatus = c.trade_status || '계약가능';
+                        if (cardStatus !== filterStatus) return null;
                     }
 
                     // 필드별 값
@@ -4434,6 +4462,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     let filteredAi = aiCards;
                     for (const w of qWords) {
                         if (_typeKeywords[w]) filteredAi = filteredAi.filter(c => c.property?.type === _typeKeywords[w]);
+                        if (_statusKeywords[w]) filteredAi = filteredAi.filter(c => (c.trade_status || '계약가능') === _statusKeywords[w]);
                         if (_catKeywords[w]) {
                             const cat = _catKeywords[w];
                             filteredAi = filteredAi.filter(c => {
