@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>휙 검색 테스트</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0f172a; color: #e2e8f0; font-family: -apple-system, sans-serif; padding: 20px; }
+        h1 { color: #facc15; margin-bottom: 20px; }
+        h2 { color: #0ea5e9; margin: 20px 0 10px; font-size: 16px; }
+        .test-group { background: #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+        .test-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid #334155; }
+        .test-row:last-child { border-bottom: none; }
+        .query { font-weight: 700; color: #facc15; min-width: 180px; }
+        .expect { color: #94a3b8; font-size: 13px; min-width: 200px; }
+        .result { font-weight: 600; }
+        .pass { color: #4ade80; }
+        .fail { color: #f87171; }
+        .detail { color: #64748b; font-size: 12px; }
+        .summary { background: #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 20px; display: flex; gap: 30px; }
+        .summary-item { text-align: center; }
+        .summary-num { font-size: 32px; font-weight: 800; }
+        .summary-label { font-size: 13px; color: #94a3b8; }
+        button { padding: 12px 24px; border-radius: 8px; border: none; background: #facc15; color: #0f172a; font-weight: 700; cursor: pointer; font-size: 15px; }
+        button:hover { background: #fbbf24; }
+        .loading { color: #94a3b8; padding: 20px; text-align: center; }
+        #log { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; margin-top: 16px; font-size: 12px; color: #94a3b8; max-height: 300px; overflow-y: auto; white-space: pre-wrap; display: none; }
+    </style>
+</head>
+<body>
+    <h1>휙 검색 기능 테스트</h1>
+    <div style="margin-bottom:16px;">
+        <button onclick="runAllTests()">전체 테스트 실행</button>
+        <button onclick="document.getElementById('log').style.display = document.getElementById('log').style.display === 'none' ? 'block' : 'none'" style="background:#334155;color:#e2e8f0;margin-left:8px">로그 보기</button>
+    </div>
+    <div class="summary" id="summary" style="display:none">
+        <div class="summary-item"><div class="summary-num" id="totalCount">0</div><div class="summary-label">전체</div></div>
+        <div class="summary-item"><div class="summary-num pass" id="passCount">0</div><div class="summary-label">통과</div></div>
+        <div class="summary-item"><div class="summary-num fail" id="failCount">0</div><div class="summary-label">실패</div></div>
+    </div>
+    <div id="results"></div>
+    <div id="log"></div>
+
+<script>
+    const SUPABASE_URL = 'https://jqaxejgzkchxbfzgzyzi.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxYXhlamd6a2NoeGJmemd6eXppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2MzI3NTIsImV4cCI6MjA4MjIwODc1Mn0.OxyRp5fG2HnRnJbVjF5XsMt7M9ZdDFsMgIlBpj8zSxA';
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let allCards = [];
+    let testResults = [];
+
+    // ========== 카테고리 판별 (my_cards.html과 동일) ==========
+    function categorizeProperty(text, roomField, area, floor) {
+        const r = (roomField || '').toLowerCase();
+        if (r.includes('아파트') || r.includes('apt')) return '아파트';
+        if (r.includes('오피스텔') || r.includes('officetel')) return '오피스텔';
+        if (r.includes('상가') || r.includes('점포')) return '상가';
+        if (r.includes('사무실') || r.includes('오피스')) return '사무실';
+        if (r.includes('원룸') || r.includes('투룸') || r.includes('빌라') || r.includes('주택')) return '원투룸';
+
+        const t = (text || '').toLowerCase();
+        if (t.includes('상가') || t.includes('점포') || t.includes('매장')) return '상가';
+        if (t.includes('사무실') || t.includes('업무용')) return '사무실';
+        if (t.includes('오피스텔')) return '오피스텔';
+
+        const aptBrands = ['아파트','자이','래미안','힐스테이트','푸르지오','더샵','롯데캐슬',
+            'e편한세상','아이파크','sk뷰','엘스','리센츠','트리지움','헬리오시티',
+            '올림픽파크','아크로','반포자이','은마','주공','현대아파트','파크리오',
+            '한화꿈에그린','우남푸루미아','두산위브','한진한화','어울림','파밀리에','블루밍'];
+
+        if (aptBrands.some(b => t.includes(b))) return '아파트';
+        if (t.includes('원룸') || t.includes('투룸') || t.includes('빌라') || t.includes('연립') || t.includes('주택')) return '원투룸';
+
+        return '기타';
+    }
+
+    // ========== 로컬 검색 (my_cards.html과 동일 로직) ==========
+    const _categoryKo = { apartment:'아파트', officetel:'오피스텔', room:'원투룸', commercial:'상가', office:'사무실' };
+
+    function localSearch(query, cards) {
+        const q = query.toLowerCase();
+        const words = q.split(/\s+/).filter(w => w.length > 0);
+
+        return cards.filter(c => {
+            const p = c.property || {};
+            const pn = c.private_note || {};
+            const categoryKo = _categoryKo[p.category] || '';
+            const categoryFromFn = categorizeProperty(
+                [p.complex, p.location, p.price, p.type].filter(Boolean).join(' '),
+                p.room, p.area, p.floor
+            );
+            const text = [
+                p.type, p.price, p.complex, p.location, p.address,
+                p.area, p.floor, p.room, p.category, categoryKo, categoryFromFn,
+                ...(p.features || []), ...(p.tags || []),
+                p.moveIn, c.agent_comment, pn?.memo,
+                c.trade_status || '계약가능',
+                c.search_text,
+            ].filter(Boolean).join(' ').toLowerCase();
+
+            return words.every(w => text.includes(w));
+        });
+    }
+
+    // ========== 테스트 케이스 ==========
+    const TEST_CASES = [
+        // 거래유형
+        { group: '거래유형 검색', query: '매매', expect: 'type이 매매인 매물', check: r => r.length > 0 && r.every(c => c.property?.type === '매매') },
+        { group: '거래유형 검색', query: '전세', expect: 'type이 전세인 매물', check: r => r.length > 0 && r.every(c => c.property?.type === '전세') },
+        { group: '거래유형 검색', query: '월세', expect: 'type이 월세인 매물', check: r => r.length > 0 && r.every(c => c.property?.type === '월세') },
+
+        // 카테고리 (한글)
+        { group: '카테고리 검색', query: '아파트', expect: '아파트 매물', check: r => r.length > 0 },
+        { group: '카테고리 검색', query: '오피스텔', expect: '오피스텔 매물', check: r => r.length > 0 },
+        { group: '카테고리 검색', query: '원투룸', expect: '원투룸/빌라 매물', check: r => r.length > 0 },
+
+        // 가격
+        { group: '가격 검색', query: '3억', expect: '3억 포함 매물', check: r => r.length > 0 },
+        { group: '가격 검색', query: '12억', expect: '12억 포함 매물', check: r => r.length > 0 },
+        { group: '가격 검색', query: '1억', expect: '1억 포함 매물', check: r => r.length > 0 },
+
+        // 지역
+        { group: '지역 검색', query: '마포', expect: '마포 지역 매물', check: r => r.length > 0 },
+        { group: '지역 검색', query: '강남', expect: '강남 지역 매물', check: r => r.length > 0 },
+        { group: '지역 검색', query: '송파', expect: '송파 지역 매물', check: r => r.length > 0 },
+        { group: '지역 검색', query: '반포', expect: '반포 지역 매물', check: r => r.length > 0 },
+        { group: '지역 검색', query: '합정', expect: '합정 지역 매물', check: r => r.length > 0 },
+
+        // 단지명
+        { group: '단지명 검색', query: '래미안', expect: '래미안 매물', check: r => r.length > 0 },
+        { group: '단지명 검색', query: '푸르지오', expect: '푸르지오 매물', check: r => r.length > 0 },
+        { group: '단지명 검색', query: '아크로', expect: '아크로 매물', check: r => r.length > 0 },
+
+        // 특징/태그
+        { group: '특징 검색', query: '역세권', expect: '역세권 태그 매물', check: r => r.length > 0 },
+        { group: '특징 검색', query: '풀옵션', expect: '풀옵션 태그 매물', check: r => r.length > 0 },
+        { group: '특징 검색', query: '남향', expect: '남향 태그 매물', check: r => r.length > 0 },
+        { group: '특징 검색', query: '즉시입주', expect: '즉시입주 태그 매물', check: r => r.length > 0 },
+        { group: '특징 검색', query: '올수리', expect: '올수리 태그 매물', check: r => r.length > 0 },
+        { group: '특징 검색', query: '한강뷰', expect: '한강뷰 태그 매물', check: r => r.length > 0 },
+        { group: '특징 검색', query: '주차', expect: '주차 관련 매물', check: r => r.length > 0 },
+        { group: '특징 검색', query: '신축', expect: '신축 태그 매물', check: r => r.length > 0 },
+
+        // 거래상태
+        { group: '거래상태 검색', query: '계약가능', expect: '계약가능 매물', check: r => r.length > 0 },
+
+        // 복합 검색 (AND)
+        { group: '복합 검색', query: '매매 마포', expect: '매매+마포 매물', check: r => r.length > 0 && r.every(c => c.property?.type === '매매') },
+        { group: '복합 검색', query: '전세 강남', expect: '전세+강남 매물', check: r => r.length > 0 },
+        { group: '복합 검색', query: '매매 아파트', expect: '매매+아파트 매물', check: r => r.length > 0 },
+        { group: '복합 검색', query: '역세권 풀옵션', expect: '역세권+풀옵션 매물', check: r => r.length > 0 },
+        { group: '복합 검색', query: '전세 역세권', expect: '전세+역세권 매물', check: r => r.length > 0 },
+
+        // 면적/층
+        { group: '면적/층 검색', query: '32평', expect: '32평 매물', check: r => r.length > 0 },
+        { group: '면적/층 검색', query: '15층', expect: '15층 매물', check: r => r.length > 0 },
+
+        // 빈 결과 확인
+        { group: '예외 검색', query: '제주도', expect: '결과 없음 (정상)', check: r => r.length === 0 },
+        { group: '예외 검색', query: 'xyz123', expect: '결과 없음 (정상)', check: r => r.length === 0 },
+    ];
+
+    // ========== 로그 ==========
+    function log(msg) {
+        const el = document.getElementById('log');
+        el.textContent += msg + '\n';
+        el.scrollTop = el.scrollHeight;
+    }
+
+    // ========== 테스트 실행 ==========
+    async function runAllTests() {
+        const resultsEl = document.getElementById('results');
+        resultsEl.innerHTML = '<div class="loading">매물 데이터 로드 중...</div>';
+
+        // 모든 카드 로드
+        const { data, error } = await supabase
+            .from('cards')
+            .select('id, property, agent, agent_comment, private_note, trade_status, search_text, price_number, created_at')
+            .order('created_at', { ascending: false })
+            .limit(500);
+
+        if (error) {
+            resultsEl.innerHTML = `<div class="fail">DB 로드 실패: ${error.message}</div>`;
+            return;
+        }
+
+        allCards = data || [];
+        log(`매물 ${allCards.length}개 로드 완료`);
+        log(`거래유형: 매매 ${allCards.filter(c=>c.property?.type==='매매').length}, 전세 ${allCards.filter(c=>c.property?.type==='전세').length}, 월세 ${allCards.filter(c=>c.property?.type==='월세').length}`);
+
+        // 각 카드의 카테고리 로그
+        const catCount = {};
+        allCards.forEach(c => {
+            const p = c.property || {};
+            const cat = categorizeProperty([p.complex, p.location, p.price, p.type].filter(Boolean).join(' '), p.room, p.area, p.floor);
+            catCount[cat] = (catCount[cat] || 0) + 1;
+        });
+        log(`카테고리: ${JSON.stringify(catCount)}`);
+
+        // 테스트 실행
+        let pass = 0, fail = 0;
+        const groups = {};
+
+        for (const tc of TEST_CASES) {
+            const results = localSearch(tc.query, allCards);
+            const ok = tc.check(results);
+            if (ok) pass++; else fail++;
+
+            if (!groups[tc.group]) groups[tc.group] = [];
+            groups[tc.group].push({ ...tc, results, ok });
+
+            log(`${ok ? 'PASS' : 'FAIL'} | "${tc.query}" → ${results.length}개 | ${tc.expect}`);
+            if (!ok && results.length > 0) {
+                log(`  → 반환된 매물: ${results.slice(0,3).map(c => `${c.property?.type} ${c.property?.price} ${c.property?.complex||c.property?.location}`).join(', ')}`);
+            }
+        }
+
+        // 결과 표시
+        document.getElementById('summary').style.display = 'flex';
+        document.getElementById('totalCount').textContent = TEST_CASES.length;
+        document.getElementById('passCount').textContent = pass;
+        document.getElementById('failCount').textContent = fail;
+
+        let html = '';
+        for (const [groupName, tests] of Object.entries(groups)) {
+            html += `<div class="test-group"><h2>${groupName}</h2>`;
+            for (const t of tests) {
+                html += `<div class="test-row">
+                    <span class="query">"${t.query}"</span>
+                    <span class="expect">${t.expect}</span>
+                    <span class="result ${t.ok ? 'pass' : 'fail'}">${t.ok ? 'PASS' : 'FAIL'}</span>
+                    <span class="detail">${t.results.length}개 반환${!t.ok && t.results.length > 0 ? ' — ' + t.results.slice(0,2).map(c => c.property?.complex || c.property?.location).join(', ') : ''}</span>
+                </div>`;
+            }
+            html += '</div>';
+        }
+
+        // 전체 매물 데이터 확인
+        html += `<div class="test-group"><h2>전체 매물 데이터 (${allCards.length}개)</h2>`;
+        allCards.forEach(c => {
+            const p = c.property || {};
+            const cat = categorizeProperty([p.complex, p.location, p.price, p.type].filter(Boolean).join(' '), p.room, p.area, p.floor);
+            html += `<div class="test-row">
+                <span style="color:#facc15;min-width:50px">${p.type||'?'}</span>
+                <span style="min-width:80px">${p.price||''}</span>
+                <span style="min-width:150px">${p.complex||''} · ${p.location||''}</span>
+                <span style="color:#4ade80;min-width:70px">${cat}</span>
+                <span style="color:#94a3b8;font-size:12px">${(p.features||[]).join(', ')}</span>
+                <span style="color:#64748b;font-size:11px">status: ${c.trade_status || 'null'} | cat: ${p.category || 'null'}</span>
+            </div>`;
+        });
+        html += '</div>';
+
+        resultsEl.innerHTML = html;
+    }
+</script>
+</body>
+</html>
