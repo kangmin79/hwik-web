@@ -4285,10 +4285,25 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             // 관련도 점수 가중치 (높을수록 중요한 필드)
             const _fieldWeights = { type:10, price:5, complex:8, location:8, address:6, area:4, floor:3, room:4, categoryKo:7, categoryFn:7, features:6, moveIn:3, comment:2, memo:1, status:2, date:1 };
 
+            // ★ 거래유형/카테고리 키워드 → 하드 필터로 분리
+            const _typeKeywords = { '매매':'매매', '전세':'전세', '월세':'월세' };
+            const _catKeywords = { '아파트':'apartment', '오피스텔':'officetel', '원투룸':'room', '원룸':'room', '투룸':'room', '빌라':'room', '상가':'commercial', '사무실':'office' };
+
             function localSearch(query) {
                 const q = query.toLowerCase();
                 const words = q.split(/\s+/).filter(w => w.length > 0);
                 const { minPrice, maxPrice, textWords } = _extractPriceConditions(words);
+
+                // ★ 거래유형/카테고리 필터 분리 (텍스트 매칭에서 제외)
+                let filterType = null;
+                let filterCategory = null;
+                const searchWords = [];
+
+                for (const w of textWords) {
+                    if (_typeKeywords[w] && !filterType) { filterType = _typeKeywords[w]; }
+                    else if (_catKeywords[w] && !filterCategory) { filterCategory = _catKeywords[w]; }
+                    else { searchWords.push(w); }
+                }
 
                 const scored = allCards.map(c => {
                     const p = c.property || {};
@@ -4297,9 +4312,19 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     const categoryFromFn = categorizeProperty([p.complex, p.location, p.price, p.type].filter(Boolean).join(' '), p.room, p.area, p.floor);
                     const dateText = _dateSearchText(c.created_at);
 
+                    // ★ 하드 필터: 거래유형
+                    if (filterType && p.type !== filterType) return null;
+
+                    // ★ 하드 필터: 카테고리
+                    if (filterCategory) {
+                        const cardCat = p.category || '';
+                        const catFromFn = categoryFromFn.toLowerCase();
+                        const catKoMatch = (_categoryKo[filterCategory] || '').toLowerCase();
+                        if (cardCat !== filterCategory && catFromFn !== catKoMatch && catFromFn !== (_categoryKo[filterCategory]||'')) return null;
+                    }
+
                     // 필드별 값
                     const fields = {
-                        type: (p.type || '').toLowerCase(),
                         price: (p.price || '').toLowerCase(),
                         complex: (p.complex || '').toLowerCase(),
                         location: (p.location || '').toLowerCase(),
@@ -4307,8 +4332,6 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         area: (p.area || '').toLowerCase(),
                         floor: (p.floor || '').toLowerCase(),
                         room: (p.room || '').toLowerCase(),
-                        categoryKo: categoryKo.toLowerCase(),
-                        categoryFn: categoryFromFn.toLowerCase(),
                         features: (p.features || []).join(' ').toLowerCase(),
                         moveIn: (p.moveIn || '').toLowerCase(),
                         comment: (c.agent_comment || '').toLowerCase(),
@@ -4327,29 +4350,31 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         if (maxPrice !== null && pNum > maxPrice) return null;
                     }
 
-                    // 텍스트 매칭 확인
-                    if (!textWords.every(w => allText.includes(w))) return null;
+                    // 텍스트 매칭 (남은 검색어만)
+                    if (searchWords.length > 0 && !searchWords.every(w => allText.includes(w))) return null;
 
                     // ★ 관련도 점수 계산
                     let score = 0;
-                    for (const w of textWords) {
+                    // 필터 매칭 기본 점수
+                    if (filterType) score += 10;
+                    if (filterCategory) score += 7;
+                    if (minPrice !== null || maxPrice !== null) score += 5;
+
+                    for (const w of searchWords) {
                         for (const [fname, fval] of Object.entries(fields)) {
                             if (fval.includes(w)) {
                                 score += _fieldWeights[fname] || 1;
-                                // 정확 매칭 보너스 (필드 값이 검색어와 동일)
                                 if (fval === w || fval.split(' ').includes(w)) score += 3;
                             }
                         }
                     }
-                    // 가격 조건 매칭 보너스
-                    if (minPrice !== null || maxPrice !== null) score += 5;
 
-                    // ★ 학습 데이터 반영 — 클릭 많은 매물 우선
+                    // ★ 학습 데이터 반영 (텍스트 점수의 보조 역할)
                     const clickBonus = _clickScores[c.id] || 0;
                     const queryKey = `${q}::${c.id}`;
                     const queryClickBonus = _queryClickScores[queryKey] || 0;
-                    score += Math.min(clickBonus, 20); // 총 클릭 보너스 (최대 20)
-                    score += queryClickBonus * 5; // 같은 검색어 클릭은 5배 가중
+                    score += Math.min(clickBonus, 5); // 총 클릭 보너스 (최대 5, 축소)
+                    score += Math.min(queryClickBonus * 2, 10); // 검색어별 클릭 (최대 10)
 
                     return { card: c, score };
                 }).filter(Boolean);
