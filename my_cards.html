@@ -5081,7 +5081,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         ${card.is_mine ? `<span class="mine-badge">내 매물</span>` : ''}
                     </div>
                     ${featureTags ? `<div class="property-tags-row">${featureTags}</div>` : ''}
-                    ${card.is_mine ? '' : `<div class="shared-agent-name">
+                    ${card.is_mine
+                        ? (roomName ? `<div style="margin-top:2px"><span style="display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:4px;background:rgba(78,205,196,0.12);color:#4ecdc4;font-size:10px;font-weight:600;">${roomName}</span></div>` : '')
+                        : `<div class="shared-agent-name">
                         <span class="shared-agent-dot" style="background:${agentColor}"></span>
                         <span style="display:inline-block;padding:1px 6px;border-radius:4px;background:${agentColor}20;color:${agentColor};font-size:10px;font-weight:600;margin-right:4px;">${roomName} 공유방</span>
                         <span style="color:${agentColor};font-weight:600;">${agentName}</span> <span style="color:var(--text-gray);font-size:11px;margin-left:8px;">${card.agent?.phone || ''}</span>
