@@ -4136,7 +4136,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         ...(p.features || []), ...(p.tags || []),
                         p.moveIn, c.agent_comment, pn.memo,
                         c.trade_status || '계약가능',
-                        c.search_text, dateText,
+                        dateText,
                     ].filter(Boolean).join(' ').toLowerCase();
 
                     return words.every(w => text.includes(w));
