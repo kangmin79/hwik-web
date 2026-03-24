@@ -2041,7 +2041,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     손님 <span class="tab-count" id="clientTabCount"></span>
                     <span class="tab-badge" id="clientMatchBadge" style="display:none">0</span>
                 </button>
-                <button id="showCompletedBtn" onclick="toggleShowCompleted()" class="main-tab" style="margin-left:4px;">완료 보기 <span id="completedCount"></span></button>
+                <button id="showCompletedBtn" class="main-tab" onclick="switchMainTab('completed')" style="margin-left:4px;">완료 보기 <span class="tab-count" id="completedCount"></span></button>
                 <button class="main-tab memo-tab" onclick="switchMainTab('memo')" style="margin-left:4px;">메모 <span class="tab-count" id="memoTabCount"></span></button>
             </div>
             
@@ -2083,6 +2083,16 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             </div>
             
             </div><!-- /tabMine -->
+
+            <!-- ===== 탭: 완료 매물 ===== -->
+            <div class="tab-panel" id="tabCompleted">
+                <div class="property-list" id="completedPropertyList">
+                    <div class="empty-state">
+                        <div class="empty-icon">✅</div>
+                        <div class="empty-title">완료된 매물이 없어요</div>
+                    </div>
+                </div>
+            </div><!-- /tabCompleted -->
 
             <!-- ===== 탭2: 공유 매물 ===== -->
             <div class="tab-panel" id="tabShared">
@@ -2605,9 +2615,10 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
             let filtered = source;
             
-            // 내 매물 탭에서는 손님 제외 (검색 모드에서는 허용)
+            // 내 매물 탭에서는 손님 제외 + 완료 매물 제외 (검색 모드에서는 완료도 표시)
             if (!isSearchMode) {
                 filtered = filtered.filter(c => c.property && c.property.type !== '손님');
+                filtered = filtered.filter(c => c.trade_status !== '완료');
             }
             
             // 거래유형 필터
@@ -2633,7 +2644,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             // 완료 매물 개수 업데이트
             const completedCount = allCards.filter(c => c.trade_status === '완료').length;
             const countEl = document.getElementById('completedCount');
-            if (countEl) countEl.textContent = completedCount > 0 ? '(' + completedCount + ')' : '';
+            if (countEl) countEl.textContent = completedCount > 0 ? completedCount : '';
             
             if (filtered.length === 0) {
                 document.getElementById('propertyList').innerHTML = 
@@ -2719,8 +2730,11 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         
         // 선택 토글
-        function toggleDetail(cardId) {
-            const detail = document.getElementById('detail-' + cardId);
+        function toggleDetail(idOrCardId) {
+            // detail- 접두사가 이미 있으면 그대로, 없으면 붙임
+            const elId = idOrCardId.startsWith('detail-') || idOrCardId.startsWith('completed-detail-')
+                ? idOrCardId : ('detail-' + idOrCardId);
+            const detail = document.getElementById(elId);
             if (!detail) return;
             detail.classList.toggle('open');
         }
@@ -3651,7 +3665,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         
         // 삭제
         let statusPopoverCardId = null;
-        let showCompleted = false;
+        // showCompleted 변수 제거됨 — 완료 매물은 별도 탭으로 이동
 
         function openStatusPopover(e, cardId) {
             const statusPopover = document.getElementById('statusPopover');
@@ -3693,12 +3707,23 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     .eq('id', cardId)
                     .eq('agent_id', currentUser.id);  // ★ 본인 카드만 상태 변경
                 if (error) throw error;
+
+                // ★ 완료 시 card_shares에서 해당 카드의 모든 공유 기록 삭제
+                if (newStatus === '완료') {
+                    const { error: shareErr } = await supabaseClient
+                        .from('card_shares')
+                        .delete()
+                        .eq('card_id', cardId);
+                    if (shareErr) console.warn('card_shares 삭제 실패:', shareErr.message);
+                }
+
                 // id 타입 불일치 방지 (string vs number)
                 const card = allCards.find(c => String(c.id) === String(cardId));
                 if (card) card.trade_status = newStatus;
                 renderList();
-                if (showCompleted) {
-                    document.querySelectorAll('.property-item.trade-completed').forEach(el => el.classList.add('show-completed'));
+                // 완료 탭이면 다시 렌더링
+                if (currentMainTab === 'completed') {
+                    renderCompletedList();
                 }
                 showToast(`${newStatus}으로 변경됐어요`);
             } catch (e) {
@@ -3706,18 +3731,67 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             }
         }
 
-        function toggleShowCompleted() {
-            showCompleted = !showCompleted;
-            const btn = document.getElementById('showCompletedBtn');
-            if (showCompleted) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
+        // 완료 매물 탭 렌더링
+        function renderCompletedList() {
+            const completedCards = allCards
+                .filter(c => c.trade_status === '완료')
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            const count = completedCards.length;
+            document.getElementById('pageCount').textContent = count + '개';
+            const countEl = document.getElementById('completedCount');
+            if (countEl) countEl.textContent = count > 0 ? count : '';
+
+            if (count === 0) {
+                document.getElementById('completedPropertyList').innerHTML =
+                    '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">완료된 매물이 없어요</div></div>';
+                return;
             }
-            document.querySelectorAll('.property-item.trade-completed').forEach(el => {
-                if (showCompleted) el.classList.add('show-completed');
-                else el.classList.remove('show-completed');
+
+            let html = '';
+            completedCards.forEach(card => {
+                const p = card.property || {};
+                const pn = card.private_note || {};
+                const typeClass = p.type === '매매' ? 'type-sale' : p.type === '전세' ? 'type-jeonse' : p.type === '월세' ? 'type-monthly' : 'type-client';
+                const mainText = [p.complex, p.location].filter(Boolean).map(v => esc(v)).join(' · ');
+                const subText = [p.area, p.floor].filter(Boolean).map(v => esc(v)).join(' · ');
+                const featureTags = (p.features || []).slice(0, 4).map(f => `<span class="list-tag">${esc(f)}</span>`).join('');
+                const photos = card.photos || [];
+
+                html += `<div class="property-item" style="opacity:0.65;" id="completed-item-${card.id}">`;
+                html += `<div class="property-item-main" onclick="toggleDetail('completed-detail-${card.id}')">`;
+                html += `<div style="width:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span class="trade-badge trade-done">완료</span></div>`;
+                html += `<div class="property-text">
+                    <div class="property-text-row">
+                        <span class="property-type-badge ${typeClass}">${esc(p.type) || ''}</span>
+                        <strong>${esc(p.price) || ''}</strong>
+                        ${mainText ? `<span style="color:var(--text-gray);font-size:13px;margin-left:6px">${mainText}</span>` : ''}
+                        ${subText ? `<span style="color:var(--text-gray-light);font-size:12px;margin-left:4px">· ${subText}</span>` : ''}
+                    </div>
+                    ${featureTags ? `<div class="property-tags-row">${featureTags}</div>` : ''}
+                </div>`;
+                if (photos.length > 0) {
+                    html += `<div style="width:44px;height:44px;border-radius:6px;overflow:hidden;flex-shrink:0;margin-right:4px;">
+                        <img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;">
+                    </div>`;
+                }
+                // 되돌리기 버튼
+                html += `<button class="property-edit" onclick="event.stopPropagation(); confirmStatusChange('계약가능', '${card.id}')">되돌리기</button>`;
+                html += `<button class="property-delete" onclick="event.stopPropagation(); deleteCard('${card.id}')">삭제</button>`;
+                html += `</div>`;
+                // 상세 펼치기
+                html += `<div class="property-detail" id="completed-detail-${card.id}">`;
+                if (p.features && p.features.length) {
+                    html += `<div class="detail-tags">${p.features.map(f => `<span class="detail-tag">${esc(f)}</span>`).join('')}</div>`;
+                }
+                if (subText) html += `<div class="detail-info">📐 ${subText}</div>`;
+                if (pn.memo) html += `<div class="detail-memo">🔒 ${esc(pn.memo)}</div>`;
+                if (card.agent_comment) html += `<div class="detail-memo" style="color:var(--primary);background:var(--primary-bg);border-left:2px solid var(--primary-border3);padding-left:10px;">💬 ${esc(card.agent_comment)}</div>`;
+                html += `</div>`;
+                html += `</div>`;
             });
+
+            document.getElementById('completedPropertyList').innerHTML = html;
         }
 
         async function deleteCard(cardId) {
@@ -3733,8 +3807,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 allCards = allCards.filter(c => c.id !== cardId);
                 selectedCards = selectedCards.filter(c => c.id !== cardId);
                 currentSlideIndex = 0;
-                
+
                 renderList();
+                if (currentMainTab === 'completed') renderCompletedList();
                 renderPreview();
                 updateSendButton();
                 showToast('삭제됨');
@@ -4567,21 +4642,27 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 const isActive = (t.textContent.includes('내 매물') && tab === 'mine')
                     || (t.textContent.includes('공유 매물') && tab === 'shared')
                     || (t.classList.contains('client') && tab === 'client')
-                    || (t.classList.contains('memo-tab') && tab === 'memo');
+                    || (t.classList.contains('memo-tab') && tab === 'memo')
+                    || (t.id === 'showCompletedBtn' && tab === 'completed');
                 t.classList.toggle('active', isActive);
             });
-            // 완료 보기 버튼 내 매물 탭에서만 표시
+            // 완료 보기 버튼: 내 매물 탭 또는 완료 탭에서만 표시
             const completedBtn = document.getElementById('showCompletedBtn');
-            if (completedBtn) completedBtn.style.display = tab === 'mine' ? '' : 'none';
+            if (completedBtn) completedBtn.style.display = (tab === 'mine' || tab === 'completed') ? '' : 'none';
             document.getElementById('tabMine').classList.toggle('active', tab === 'mine');
+            document.getElementById('tabCompleted').classList.toggle('active', tab === 'completed');
             document.getElementById('tabShared').classList.toggle('active', tab === 'shared');
             document.getElementById('tabClient').classList.toggle('active', tab === 'client');
             document.getElementById('tabMemo').classList.toggle('active', tab === 'memo');
-            
+
             if (tab === 'mine') {
                 document.getElementById('pageTitle').textContent = '내 매물';
                 document.getElementById('pageTitle').style.color = '';
                 document.getElementById('pageCount').textContent = (totalMyCardsCount > 999 ? '999+' : totalMyCardsCount) + '개';
+            } else if (tab === 'completed') {
+                document.getElementById('pageTitle').textContent = '완료 매물';
+                document.getElementById('pageTitle').style.color = 'var(--text-gray)';
+                renderCompletedList();
             } else if (tab === 'shared') {
                 document.getElementById('pageTitle').textContent = '공유 매물';
                 document.getElementById('pageTitle').style.color = '';
