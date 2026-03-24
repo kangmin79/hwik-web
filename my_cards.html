@@ -4114,7 +4114,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         p.type, p.price, p.complex, p.location, p.address,
                         p.area, p.floor, p.room, p.category, categoryKo, categoryFromFn,
                         ...(p.features || []), ...(p.tags || []),
-                        p.moveIn, c.agent_comment, pn.memo, c.trade_status,
+                        p.moveIn, c.agent_comment, pn.memo,
+                        c.trade_status || '계약가능',
                         c.search_text,
                     ].filter(Boolean).join(' ').toLowerCase();
 
@@ -4707,11 +4708,12 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     const p = c.property || {};
                     const catKo = _catKo[p.category] || '';
                     const agentName = c.agent?.business_name || c.agent?.name || '';
+                    const catFromFn = categorizeProperty([p.complex, p.location, p.price, p.type].filter(Boolean).join(' '), p.room, p.area, p.floor);
                     const text = [
                         p.type, p.price, p.complex, p.location, p.address,
-                        p.area, p.floor, p.room, p.category, catKo,
+                        p.area, p.floor, p.room, p.category, catKo, catFromFn,
                         ...(p.features || []), ...(p.tags || []),
-                        p.moveIn, c.agent_comment, c.trade_status, agentName,
+                        p.moveIn, c.agent_comment, c.trade_status || '계약가능', agentName,
                     ].filter(Boolean).join(' ').toLowerCase();
                     return words.every(w => text.includes(w));
                 });
