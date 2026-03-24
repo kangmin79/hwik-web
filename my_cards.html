@@ -3515,7 +3515,13 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             card.private_note = { memo: document.getElementById('editMemo').value };
             card.agent_comment = document.getElementById('editAgentComment').value.trim() || null;
 
-
+            // property에서 민감 정보 제거
+            delete card.property.memo;
+            delete card.property.rawText;
+            delete card.property.privateNote;
+            delete card.property.search_text;
+            delete card.property.search_text_private;
+            delete card.property.embedding;
 
             try {
                 // 새 사진 업로드
