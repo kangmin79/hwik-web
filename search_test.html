@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>휙 검색 테스트</title>
+    <script src="config.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #0f172a; color: #e2e8f0; font-family: -apple-system, sans-serif; padding: 20px; }
@@ -31,6 +33,11 @@
 </head>
 <body>
     <h1>휙 검색 기능 테스트</h1>
+    <div id="loginArea" style="margin-bottom:16px;padding:16px;background:#1e293b;border-radius:12px;">
+        <span style="color:#94a3b8">로그인 필요 →</span>
+        <button onclick="kakaoLogin()" style="background:#FEE500;color:#000">카카오 로그인</button>
+        <span id="loginStatus" style="margin-left:12px;color:#94a3b8"></span>
+    </div>
     <div style="margin-bottom:16px;">
         <button onclick="runAllTests()">전체 테스트 실행</button>
         <button onclick="document.getElementById('log').style.display = document.getElementById('log').style.display === 'none' ? 'block' : 'none'" style="background:#334155;color:#e2e8f0;margin-left:8px">로그 보기</button>
@@ -44,9 +51,33 @@
     <div id="log"></div>
 
 <script>
-    const SUPABASE_URL = 'https://jqaxejgzkchxbfzgzyzi.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxYXhlamd6a2NoeGJmemd6eXppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2MzI3NTIsImV4cCI6MjA4MjIwODc1Mn0.OxyRp5fG2HnRnJbVjF5XsMt7M9ZdDFsMgIlBpj8zSxA';
+    const SUPABASE_URL = HWIK_CONFIG.SUPABASE_URL;
+    const SUPABASE_KEY = HWIK_CONFIG.SUPABASE_KEY;
     const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 카카오 로그인
+    Kakao.init(HWIK_CONFIG.KAKAO_JS_KEY);
+
+    async function kakaoLogin() {
+        document.getElementById('loginStatus').textContent = '로그인 중...';
+        try {
+            const { data, error } = await sbClient.auth.signInWithOAuth({
+                provider: 'kakao',
+                options: { redirectTo: window.location.href }
+            });
+            if (error) throw error;
+        } catch(e) {
+            document.getElementById('loginStatus').textContent = '로그인 실패: ' + e.message;
+        }
+    }
+
+    // 세션 확인
+    sbClient.auth.getSession().then(({ data }) => {
+        if (data.session) {
+            document.getElementById('loginStatus').textContent = '로그인됨';
+            document.getElementById('loginArea').style.background = '#1a3a2a';
+        }
+    });
 
     let allCards = [];
     let testResults = [];
