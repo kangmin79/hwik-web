@@ -4177,7 +4177,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
                 if (filtered.length === 0) {
                     document.getElementById('propertyList').innerHTML =
-                        `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">"${esc(query)}" 로컬 검색 중...</div><div style="margin-top:6px;font-size:12px;color:var(--text-gray)">AI 검색 자동 실행 중</div></div>`;
+                        `<div class="empty-state"><div style="font-size:24px;margin-bottom:8px;">✨</div><div style="color:var(--text-gray);font-size:13px;">AI가 "${esc(query)}" 검색 중...</div></div>`;
                     return;
                 }
 
@@ -4220,14 +4220,25 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         results.forEach(r => { if (!existingIds.has(r.id)) aiCards.push(r); });
                     }
 
-                    // 로컬 결과가 없을 때만 AI 결과로 보강
-                    if (searchResults.length === 0 && aiCards.length > 0) {
-                        searchResults = aiCards;
-                        isSearchMode = true;
-                        renderList();
+                    // 로컬 결과가 없을 때 AI 결과로 보강
+                    if (searchResults.length === 0) {
+                        if (aiCards.length > 0) {
+                            searchResults = aiCards;
+                            isSearchMode = true;
+                            renderList();
+                        } else {
+                            // AI도 결과 없음
+                            document.getElementById('propertyList').innerHTML =
+                                `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">"${query}" 결과 없음</div><div style="margin-top:6px;font-size:12px;color:var(--text-gray)">다른 키워드로 검색해보세요</div></div>`;
+                        }
                     }
                 } catch(e) {
                     console.warn('자동 AI 검색 실패:', e);
+                    // AI 실패 시 결과 없음 표시
+                    if (searchResults.length === 0) {
+                        document.getElementById('propertyList').innerHTML =
+                            `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">검색 결과 없음</div></div>`;
+                    }
                 }
             }
 
