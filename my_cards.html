@@ -3727,7 +3727,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 }
 
                 renderList();
-                showToast(`${searchedCards.length}개 검색됨`);
+                // 토스트 제거
                 
             } catch (error) {
                 console.error('벡터 검색 오류:', error); logError('vector_search', error.message);
@@ -3819,7 +3819,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 });
 
                 document.getElementById('sharedPropertyList').innerHTML = html;
-                showToast(`공유 매물 ${searchedCards.length}개 검색됨`);
+                // 토스트 제거
 
             } catch(e) {
                 console.error('공유 매물 검색 오류:', e);
