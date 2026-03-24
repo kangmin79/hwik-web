@@ -2072,7 +2072,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     </div>
                 </div>
                 <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="단어 하나로 검색, 복잡한 조건은 Enter" oninput="onSearchInput(this.value)">
+                    <input type="text" id="searchInput" placeholder="단어 하나로 검색, 복잡한 조건은 Enter">
                 </div>
             </div>
             
@@ -3706,80 +3706,31 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     throw new Error(data.error);
                 }
                 
-                // 검색 결과
+                // 검색 결과를 allCards와 매칭하여 전체 데이터 유지
                 const results = data.results || [];
-                
-                // allCards 업데이트 (검색 결과로)
-                // 기존 allCards에서 검색된 ID와 매칭
-                const searchedCards = results.map(r => {
-                    // results에서 직접 카드 데이터 사용
-                    return {
-                        id: r.id,
-                        property: r.property,
-                        agent: r.agent,
-                        lat: r.lat,
-                        lng: r.lng,
-                        created_at: r.created_at,
-                        similarity: r.similarity
-                    };
-                });
-                
-                // 검색 결과 저장
+                const resultIds = new Set(results.map(r => r.id));
+
+                // allCards에서 매칭되는 카드 찾기 (기존 데이터 구조 유지)
+                let searchedCards = allCards.filter(c => resultIds.has(c.id));
+
+                // allCards에 없는 결과는 API 데이터로 보충
+                if (searchedCards.length < results.length) {
+                    const existingIds = new Set(searchedCards.map(c => c.id));
+                    results.forEach(r => {
+                        if (!existingIds.has(r.id)) searchedCards.push(r);
+                    });
+                }
+
                 searchResults = searchedCards;
                 isSearchMode = true;
-                
-                document.getElementById('pageCount').textContent = searchedCards.length + '개';
-                
+
                 if (searchedCards.length === 0) {
-                    document.getElementById('propertyList').innerHTML = 
+                    document.getElementById('propertyList').innerHTML =
                         '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">조건에 맞는 매물 없음</div></div>';
                     return;
                 }
-                
-                // 검색 분석 결과 표시 — applied_filters 사용 (Edge Function에서 반환)
-                let parsedInfo = '';
-                const af = data.applied_filters || [];
-                if (af.length > 0) {
-                    parsedInfo = `<div class="search-info">🤖 ${af.join(' · ')}</div>`;
-                } else if (data.parsed) {
-                    // 폴백: 기존 방식
-                    const p = data.parsed;
-                    const filters = [];
-                    if (p.filters?.trade_type) filters.push(p.filters.trade_type);
-                    if (p.filters?.property_type) filters.push(p.filters.property_type);
-                    if (p.filters?.max_price) filters.push(`${(p.filters.max_price/10000).toFixed(0)}억 이하`);
-                    if (p.filters?.location) filters.push(p.filters.location);
-                    if (p.semantic) filters.push(`"${p.semantic}"`);
-                    if (filters.length > 0) {
-                        parsedInfo = `<div class="search-info">🤖 ${filters.join(' · ')}</div>`;
-                    }
-                }
-                
-                let html = parsedInfo;
-                searchedCards.forEach(card => {
-                    const p = card.property || {};
-                    const isSelected = selectedCards.some(c => c.id === card.id);
-                    const typeClass = p.type === '매매' ? 'type-sale' : p.type === '전세' ? 'type-jeonse' : p.type === '월세' ? 'type-monthly' : 'type-client';
-                    const similarity = card.similarity > 0 ? Math.round(card.similarity * 100) : 0;
-                    const similarityBadge = similarity > 0 ? `<span class="similarity-badge">${similarity}%</span>` : '';
-                    const priceText = p.price ? `<span class="item-price">${p.price}</span>` : '';
-                    const nameText = [p.complex, p.location].filter(Boolean).join(' · ');
-                    const detailText = [p.area, p.floor].filter(Boolean).join(' · ');
-                    const category = categorizeProperty(p.rawText||'', p.room, p.area, p.floor);
-                    
-                    html += `<div class="property-item ${isSelected ? 'selected' : ''}" onclick="toggleSelect('${card.id}')">`;
-                    html += `<div class="property-checkbox"></div>`;
-                    html += `<div class="property-text">`;
-                    html += `<div class="item-main"><span class="item-type ${typeClass}">${p.type||'?'}</span>${priceText}<span class="item-name">${nameText}</span>${detailText ? `<span class="item-detail"> · ${detailText}</span>` : ''}</div>`;
-                    html += `</div>`;
-                    html += similarityBadge;
-                    html += `<button class="property-detail-btn" onclick="event.stopPropagation(); showDetail('${card.id}')">상세</button>`;
-                    html += `<button class="property-edit" onclick="event.stopPropagation(); editCard('${card.id}')">수정</button>`;
-                    html += `<button class="property-delete" onclick="event.stopPropagation(); deleteCard('${card.id}')">삭제</button>`;
-                    html += `</div>`;
-                });
-                
-                document.getElementById('propertyList').innerHTML = html;
+
+                renderList();
                 showToast(`${searchedCards.length}개 검색됨`);
                 
             } catch (error) {
@@ -4109,17 +4060,16 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             
             // ★ 실시간 로컬 검색 (타이핑하면서 바로 필터)
             let _searchTimer = null;
-            function onSearchInput(value) {
+            document.getElementById('searchInput').addEventListener('input', e => {
                 clearTimeout(_searchTimer);
-                const q = value.trim();
+                const q = e.target.value.trim();
                 if (!q) {
                     isSearchMode = false;
                     renderList();
                     return;
                 }
-                // 약간의 디바운스 (빠른 타이핑 시 깜빡임 방지)
                 _searchTimer = setTimeout(() => localSearch(q), 100);
-            }
+            });
 
             // Enter 키 → AI 검색 (복잡한 조건)
             document.getElementById('searchInput').addEventListener('keypress', async e => {
