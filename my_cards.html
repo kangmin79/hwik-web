@@ -2102,7 +2102,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     </div>
                     
                     <div class="search-box">
-                        <input type="text" id="sharedSearchInput" placeholder="역세권 3억 이하 투룸... 자연어로 검색 (Enter)" oninput="renderSharedList()" onkeypress="if(event.key==='Enter') sharedVectorSearch(this.value.trim())">
+                        <input type="text" id="sharedSearchInput" placeholder="단어 하나로 검색, 복잡한 조건은 Enter">
                     </div>
                 </div>
                 
@@ -4176,6 +4176,38 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     console.warn('자동 AI 검색 실패:', e);
                 }
             }
+
+            // ★ 공유매물 검색: 즉시 로컬 + 자동 AI
+            let _sharedLocalTimer = null;
+            let _sharedAiTimer = null;
+            let _lastSharedAiQuery = '';
+
+            document.getElementById('sharedSearchInput')?.addEventListener('input', e => {
+                clearTimeout(_sharedLocalTimer);
+                clearTimeout(_sharedAiTimer);
+                const q = e.target.value.trim();
+                if (!q) {
+                    renderSharedList();
+                    return;
+                }
+                _sharedLocalTimer = setTimeout(() => renderSharedList(), 100);
+                _sharedAiTimer = setTimeout(() => {
+                    if (q.length >= 2 && q !== _lastSharedAiQuery) {
+                        _lastSharedAiQuery = q;
+                        sharedVectorSearch(q);
+                    }
+                }, 1200);
+            });
+
+            document.getElementById('sharedSearchInput')?.addEventListener('keypress', e => {
+                if (e.key === 'Enter') {
+                    clearTimeout(_sharedAiTimer);
+                    const q = e.target.value.trim();
+                    if (!q) { renderSharedList(); return; }
+                    _lastSharedAiQuery = q;
+                    sharedVectorSearch(q);
+                }
+            });
         });
 
         // ================================================================
