@@ -433,8 +433,13 @@ Deno.serve(async (req) => {
       if (featFiltered.length > 0) results = featFiltered;
     }
 
-    // ★ 정렬 적용
-    results = sortResults(results, parsed.filters?.sort);
+    // ★ 정렬 적용 — 명시적 sort 없으면 필터 기반 자동 정렬
+    let autoSort = parsed.filters?.sort || null;
+    if (!autoSort) {
+      if (parsed.filters?.date_filter) autoSort = 'newest';
+      else if (parsed.filters?.min_price || parsed.filters?.max_price) autoSort = 'price_asc';
+    }
+    results = sortResults(results, autoSort);
 
     results = results.slice(0, limit);
 
@@ -468,7 +473,7 @@ Deno.serve(async (req) => {
     if (parsed.filters?.rooms) appliedFilters.push(`${parsed.filters.rooms}룸`);
     if (parsed.filters?.nearby) appliedFilters.push(`${parsed.filters.nearby} 근처`);
     if (parsed.features?.length) appliedFilters.push(...parsed.features);
-    if (parsed.filters?.sort) {
+    if (autoSort) {
       const sortLabels = { newest: '최신순', price_asc: '가격↓', price_desc: '가격↑', views: '인기순' };
       appliedFilters.push(sortLabels[parsed.filters.sort] || '');
     }
