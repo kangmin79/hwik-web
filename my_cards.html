@@ -2561,8 +2561,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             if (currentCategory !== '전체') {
                 filtered = filtered.filter(c => {
                     const p = c.property || {};
-                    const rawText = p.rawText || '';
-                    const category = categorizeProperty(rawText, p.room, p.area, p.floor);
+                    const text = [p.complex, p.location, p.price, p.type].filter(Boolean).join(' ');
+                    const category = categorizeProperty(text, p.room, p.area, p.floor);
                     return category === currentCategory;
                 });
             }
@@ -4109,7 +4109,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     const p = c.property || {};
                     const pn = c.private_note || {};
                     const categoryKo = _categoryKo[p.category] || '';
-                    const categoryFromFn = categorizeProperty(p.rawText||'', p.room, p.area, p.floor);
+                    const categoryFromFn = categorizeProperty([p.complex, p.location, p.price, p.type].filter(Boolean).join(' '), p.room, p.area, p.floor);
                     const text = [
                         p.type, p.price, p.complex, p.location, p.address,
                         p.area, p.floor, p.room, p.category, categoryKo, categoryFromFn,
