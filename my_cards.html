@@ -2356,6 +2356,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         let cardsOffset = 0;
         const CARDS_PER_PAGE = 30;
         let totalMyCardsCount = 0; // DB 총 매물 수
+        let totalClientCount = 0; // DB 총 손님 수
         let searchResults = [];  // 검색 결과 저장
         let isSearchMode = false; // 검색 모드 여부
         let currentFilter = '전체';      // 거래유형 필터
@@ -2475,6 +2476,12 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         .eq('agent_id', currentUser.id)
                         .neq('property->>type', '손님');
                     totalMyCardsCount = count || 0;
+                    const { count: cCount } = await supabaseClient
+                        .from('cards')
+                        .select('id', { count: 'exact', head: true })
+                        .eq('agent_id', currentUser.id)
+                        .eq('property->>type', '손님');
+                    totalClientCount = cCount || 0;
                 }
 
                 if (reset) {
@@ -4575,12 +4582,12 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             } else if (tab === 'shared') {
                 document.getElementById('pageTitle').textContent = '공유 매물';
                 document.getElementById('pageTitle').style.color = '';
-                document.getElementById('pageCount').textContent = allSharedCards.length + '개';
+                document.getElementById('pageCount').textContent = (allSharedCards.length > 999 ? '999+' : allSharedCards.length) + '개';
                 if (allSharedCards.length === 0 && allMyRoomsList.length > 0) loadSharedCards();
             } else if (tab === 'client') {
                 document.getElementById('pageTitle').textContent = '손님';
                 document.getElementById('pageTitle').style.color = '#4ecdc4';
-                document.getElementById('pageCount').textContent = allCards.filter(c => c.property?.type === '손님').length + '개';
+                document.getElementById('pageCount').textContent = (totalClientCount > 999 ? '999+' : totalClientCount) + '개';
                 // ★ 손님 탭 진입 시 선택 초기화 + 버튼 상태 갱신
                 selectedCards = [];
                 updateSendButton();
@@ -4799,8 +4806,10 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             const displayCount = totalMyCardsCount > 999 ? '999+' : totalMyCardsCount;
             const clientOnly = allCards.filter(c => c.property?.type === '손님').length;
             if (myCount) myCount.textContent = `(${displayCount})`;
-            if (sharedCount) sharedCount.textContent = `(${allSharedCards.length})`;
-            if (clientCount) clientCount.textContent = `(${clientOnly})`;
+            const sharedDisplay = allSharedCards.length > 999 ? '999+' : allSharedCards.length;
+            if (sharedCount) sharedCount.textContent = `(${sharedDisplay})`;
+            const clientDisplay = totalClientCount > 999 ? '999+' : totalClientCount;
+            if (clientCount) clientCount.textContent = `(${clientDisplay})`;
             
             // 초대 배지
             const badge = document.getElementById('sharedNewBadge');
