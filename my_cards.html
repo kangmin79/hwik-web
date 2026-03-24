@@ -4429,9 +4429,24 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         results.forEach(r => { if (!existingIds.has(r.id)) aiCards.push(r); });
                     }
 
-                    // ★ 벡터 검색 결과로 교체 (임베딩 기반이 더 정확)
-                    if (aiCards.length > 0) {
-                        searchResults = aiCards;
+                    // ★ 벡터 결과에도 하드필터 적용 (거래유형/카테고리)
+                    const qWords = query.toLowerCase().split(/\s+/);
+                    let filteredAi = aiCards;
+                    for (const w of qWords) {
+                        if (_typeKeywords[w]) filteredAi = filteredAi.filter(c => c.property?.type === _typeKeywords[w]);
+                        if (_catKeywords[w]) {
+                            const cat = _catKeywords[w];
+                            filteredAi = filteredAi.filter(c => {
+                                const pc = c.property?.category || '';
+                                if (pc === cat) return true;
+                                const fn = categorizeProperty([c.property?.complex,c.property?.location,c.property?.price,c.property?.type].filter(Boolean).join(' '), c.property?.room, c.property?.area, c.property?.floor);
+                                return fn === (_categoryKo[cat] || '');
+                            });
+                        }
+                    }
+
+                    if (filteredAi.length > 0) {
+                        searchResults = filteredAi;
                         isSearchMode = true;
                         renderList();
                     } else if (searchResults.length === 0) {
