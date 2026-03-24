@@ -46,7 +46,7 @@
 <script>
     const SUPABASE_URL = 'https://jqaxejgzkchxbfzgzyzi.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxYXhlamd6a2NoeGJmemd6eXppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2MzI3NTIsImV4cCI6MjA4MjIwODc1Mn0.OxyRp5fG2HnRnJbVjF5XsMt7M9ZdDFsMgIlBpj8zSxA';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let allCards = [];
     let testResults = [];
@@ -175,7 +175,7 @@
         resultsEl.innerHTML = '<div class="loading">매물 데이터 로드 중...</div>';
 
         // 모든 카드 로드
-        const { data, error } = await supabase
+        const { data, error } = await sbClient
             .from('cards')
             .select('id, property, agent, agent_comment, private_note, trade_status, search_text, price_number, created_at')
             .order('created_at', { ascending: false })
