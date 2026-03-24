@@ -269,7 +269,7 @@ Deno.serve(async (req) => {
 
     if (!ANTHROPIC_API_KEY) throw new Error('서버 설정 오류');
 
-    const { query, agent_id, limit = 10, search_mode = 'my' } = await req.json();
+    const { query, agent_id, limit = 10, search_mode = 'my', trade_type = null, property_type = null } = await req.json();
     if (!query) throw new Error('검색어가 필요합니다');
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -312,12 +312,16 @@ Deno.serve(async (req) => {
     if (parsed.features?.length) postFilterCount++;
     const multiplier = postFilterCount <= 1 ? 3 : postFilterCount <= 3 ? 5 : 10;
 
+    // ★ 클라이언트가 직접 보낸 필터가 있으면 우선 사용
+    const finalTradeType = trade_type || parsed.filters?.trade_type || null;
+    const finalPropertyType = property_type || parsed.filters?.property_type || null;
+
     const { data, error } = await supabase.rpc('search_cards_advanced', {
       p_agent_id: agent_id || '',
       p_search_text: null,
       p_embedding: embedding,
-      p_property_type: parsed.filters?.property_type || null,
-      p_trade_type: parsed.filters?.trade_type || null,
+      p_property_type: finalPropertyType,
+      p_trade_type: finalTradeType,
       p_min_price: parsed.filters?.min_price || null,
       p_max_price: parsed.filters?.max_price || null,
       p_days_ago: null,

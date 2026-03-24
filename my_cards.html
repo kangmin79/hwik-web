@@ -3758,7 +3758,22 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 renderList();
                 return;
             }
-            
+
+            // ★ 검색어에서 거래유형/카테고리 추출 → 서버에 직접 전달
+            const qWords = query.toLowerCase().split(/\s+/);
+            let serverTradeType = null;
+            let serverPropertyType = null;
+            let serverStatus = null;
+            const cleanWords = [];
+            for (const w of qWords) {
+                if (_typeKeywords[w] && !serverTradeType) serverTradeType = _typeKeywords[w];
+                else if (_catKeywords[w] && !serverPropertyType) serverPropertyType = _catKeywords[w];
+                else if (_statusKeywords[w] && !serverStatus) serverStatus = _statusKeywords[w];
+                else cleanWords.push(w);
+            }
+            // 클린 쿼리 (필터 키워드 제외한 순수 검색어) + 원본 쿼리 둘 다 전달
+            const searchQuery = cleanWords.length > 0 ? cleanWords.join(' ') : query;
+
             // 검색 중 표시
             document.getElementById('propertyList').innerHTML = 
                 '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">AI 검색 중...</div></div>';
@@ -3770,10 +3785,12 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ' + SUPABASE_KEY
                     },
-                    body: JSON.stringify({ 
-                        query: query,
+                    body: JSON.stringify({
+                        query: searchQuery,
                         agent_id: currentUser.id,
-                        limit: 50
+                        limit: 50,
+                        trade_type: serverTradeType,
+                        property_type: serverPropertyType
                     })
                 });
                 
