@@ -2823,7 +2823,6 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         // 미니 카드 렌더링
         function renderMiniCard(card) {
             const p = card.property || {};
-            const agent = card.agent || {};
             const photos = card.photos || [];
             const hasPhotos = photos.length > 0;
             const type = esc(p.type) || '매물';
@@ -2833,8 +2832,10 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             const area = esc(p.area) || '';
             const floor = esc(p.floor) || '';
             const features = (p.features || []).map(f => esc(f));
-            const agentName = esc(agent.name) || '부동산';
-            const agentPhone = esc(agent.phone) || '';
+            // 미리보기는 손님에게 보이는 화면 → 항상 내 정보로 표시
+            const myAgent = getAgentInfo();
+            const agentName = esc(myAgent.name || myAgent.business_name || '부동산');
+            const agentPhone = esc(myAgent.phone || '');
             const comment = card.agent_comment || '';
             const specs = [floor, ...features].filter(Boolean);
             const cardNameStr = [location, name, area].filter(Boolean).join(' · ');
