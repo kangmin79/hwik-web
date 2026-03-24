@@ -285,18 +285,28 @@ Deno.serve(async (req) => {
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // ★ 기존 my / shared 모드
-    const [parsed, earlyEmbedding] = await Promise.all([
-      parseSearchQuery(query, ANTHROPIC_API_KEY),
-      OPENAI_API_KEY ? generateEmbedding(query, OPENAI_API_KEY) : Promise.resolve(null)
-    ]);
+    // ★ 단순 검색 판별: 숫자/조건어 없으면 Claude 건너뛰기
+    const needsParsing = /\d|이하|이상|미만|초과|근처|주변|이번주|이번달|오늘|어제|최근/.test(query);
 
-    console.log('PARSED:', JSON.stringify(parsed));
-    console.log(`파싱+임베딩 동시: ${Date.now() - startTime}ms`);
+    let parsed = { semantic: null, filters: {}, features: null };
+    let embedding = null;
 
-    let embedding = earlyEmbedding;
-    if (parsed.semantic && parsed.semantic !== query && OPENAI_API_KEY) {
-      embedding = await generateEmbedding(parsed.semantic, OPENAI_API_KEY);
+    if (needsParsing) {
+      // 복잡한 검색: Claude 파싱 + 임베딩 동시
+      const [parsedResult, earlyEmbedding] = await Promise.all([
+        parseSearchQuery(query, ANTHROPIC_API_KEY),
+        OPENAI_API_KEY ? generateEmbedding(query, OPENAI_API_KEY) : Promise.resolve(null)
+      ]);
+      parsed = parsedResult;
+      embedding = earlyEmbedding;
+      if (parsed.semantic && parsed.semantic !== query && OPENAI_API_KEY) {
+        embedding = await generateEmbedding(parsed.semantic, OPENAI_API_KEY);
+      }
+      console.log(`복잡 검색 (파싱+임베딩): ${Date.now() - startTime}ms`);
+    } else {
+      // 단순 검색: 임베딩만 (Claude 건너뛰기 → 0.5초)
+      embedding = OPENAI_API_KEY ? await generateEmbedding(query, OPENAI_API_KEY) : null;
+      console.log(`단순 검색 (임베딩만): ${Date.now() - startTime}ms`);
     }
 
     // ★ 날짜 필터 계산
