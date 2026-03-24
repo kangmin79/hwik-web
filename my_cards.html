@@ -4058,34 +4058,48 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 }, 200);
             });
             
-            // ★ 실시간 로컬 검색 (타이핑하면서 바로 필터)
-            let _searchTimer = null;
+            // ★ 검색 시스템: 즉시 로컬 → 자동 AI 보강
+            let _localTimer = null;
+            let _aiTimer = null;
+            let _lastAiQuery = '';
+
             document.getElementById('searchInput').addEventListener('input', e => {
-                clearTimeout(_searchTimer);
+                clearTimeout(_localTimer);
+                clearTimeout(_aiTimer);
                 const q = e.target.value.trim();
                 if (!q) {
                     isSearchMode = false;
+                    _lastAiQuery = '';
                     renderList();
                     return;
                 }
-                _searchTimer = setTimeout(() => localSearch(q), 100);
+                // 즉시 로컬 필터 (0.1초 디바운스)
+                _localTimer = setTimeout(() => localSearch(q), 100);
+                // 타이핑 멈추면 AI 검색 자동 실행 (1.2초 후)
+                _aiTimer = setTimeout(() => {
+                    if (q.length >= 2 && q !== _lastAiQuery) {
+                        _lastAiQuery = q;
+                        autoAiSearch(q);
+                    }
+                }, 1200);
             });
 
-            // Enter 키 → AI 검색 (복잡한 조건)
+            // Enter → 즉시 AI 검색
             document.getElementById('searchInput').addEventListener('keypress', async e => {
                 if (e.key === 'Enter') {
+                    clearTimeout(_aiTimer);
                     const query = e.target.value.trim();
                     if (!query) {
                         isSearchMode = false;
                         loadCards();
                         return;
                     }
-                    // Enter = 항상 AI 검색 (더 정밀한 결과)
+                    _lastAiQuery = query;
                     vectorSearch(query);
                 }
             });
 
-            // ★ 로컬 검색 — 모든 필드에서 단어 하나로도 찾기
+            // ★ 로컬 검색 — 즉시 결과
             function localSearch(query) {
                 const q = query.toLowerCase();
                 const words = q.split(/\s+/).filter(w => w.length > 0);
@@ -4093,32 +4107,74 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 const filtered = allCards.filter(c => {
                     const p = c.property || {};
                     const pn = c.private_note || {};
-                    // 모든 검색 가능한 필드 결합
                     const text = [
                         p.type, p.price, p.complex, p.location, p.address,
                         p.area, p.floor, p.room, p.category,
                         ...(p.features || []), ...(p.tags || []),
-                        p.moveIn,
-                        c.agent_comment,
-                        pn.memo,
-                        c.trade_status,
+                        p.moveIn, c.agent_comment, pn.memo, c.trade_status,
+                        c.search_text,
                     ].filter(Boolean).join(' ').toLowerCase();
 
-                    // 모든 단어가 포함되어야 함 (AND 검색)
                     return words.every(w => text.includes(w));
                 });
 
                 searchResults = filtered;
                 isSearchMode = true;
-                document.getElementById('pageCount').textContent = filtered.length + '개';
 
                 if (filtered.length === 0) {
                     document.getElementById('propertyList').innerHTML =
-                        `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">"${esc(query)}" 결과 없음</div><div style="margin-top:6px;font-size:12px;color:var(--text-gray)">Enter로 AI 검색 시도해보세요</div></div>`;
+                        `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">"${esc(query)}" 로컬 검색 중...</div><div style="margin-top:6px;font-size:12px;color:var(--text-gray)">AI 검색 자동 실행 중</div></div>`;
                     return;
                 }
 
                 renderList();
+            }
+
+            // ★ 자동 AI 검색 — 로컬 결과 보강
+            async function autoAiSearch(query) {
+                const currentQuery = document.getElementById('searchInput')?.value.trim();
+                if (currentQuery !== query) return; // 입력이 바뀌었으면 취소
+
+                try {
+                    const response = await fetch(`${SUPABASE_URL}/functions/v1/search-property`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + SUPABASE_KEY
+                        },
+                        body: JSON.stringify({
+                            query: query,
+                            agent_id: currentUser?.id,
+                            limit: 50
+                        })
+                    });
+                    const data = await response.json();
+                    if (data.error) return;
+
+                    // 입력이 바뀌었으면 결과 무시
+                    const nowQuery = document.getElementById('searchInput')?.value.trim();
+                    if (nowQuery !== query) return;
+
+                    const results = data.results || [];
+                    if (results.length === 0) return;
+
+                    // allCards와 매칭 (기존 데이터 구조 유지)
+                    const resultIds = new Set(results.map(r => r.id));
+                    let aiCards = allCards.filter(c => resultIds.has(c.id));
+                    if (aiCards.length < results.length) {
+                        const existingIds = new Set(aiCards.map(c => c.id));
+                        results.forEach(r => { if (!existingIds.has(r.id)) aiCards.push(r); });
+                    }
+
+                    // AI 결과가 더 많으면 교체
+                    if (aiCards.length > searchResults.length) {
+                        searchResults = aiCards;
+                        isSearchMode = true;
+                        renderList();
+                    }
+                } catch(e) {
+                    console.warn('자동 AI 검색 실패:', e);
+                }
             }
         });
 
