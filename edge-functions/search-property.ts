@@ -33,8 +33,8 @@ async function parseSearchQuery(query, anthropicKey) {
 ■ 가격 변환 (만원 단위): "3억"→30000, "3억5천"→35000, "1000만원"→1000
 ■ "3억 정도/쯤/근처" → min_price: 25000, max_price: 35000 (±15% 범위)
 ■ "5억~7억" → min_price: 50000, max_price: 70000
-■ "3억 이하" → max_price: 30000 (min_price는 null)
-■ "3억 이상" → min_price: 30000 (max_price는 null)
+■ "3억 이하/미만/아래/까지" → max_price: 30000 (min_price는 null)
+■ "3억 이상/초과/넘는/부터" → min_price: 30000 (max_price는 null)
 
 ■ 월세 가격:
 - "월세 50만원 이하" → trade_type: "월세", max_price: 50 (월세금 기준)
