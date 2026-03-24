@@ -2447,8 +2447,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             
             try {
                 let query = supabaseClient
-                    .from('cards_view')
-                    .select('*')
+                    .from('cards')
+                    .select('id, property, agent, agent_comment, private_note, photos, lat, lng, trade_status, price_number, created_at, agent_id')
                     .eq('agent_id', currentUser.id)
                     .range(cardsOffset, cardsOffset + CARDS_PER_PAGE - 1);
 
