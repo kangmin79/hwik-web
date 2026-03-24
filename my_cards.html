@@ -1198,6 +1198,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             backdrop-filter: blur(6px);
         }
         .myinfo-overlay.show { display: flex; animation: miIn 0.22s ease; }
+        @keyframes shimmer { 0% { opacity:0.5; } 50% { opacity:1; } 100% { opacity:0.5; } }
         @keyframes miIn { from { opacity:0; } to { opacity:1; } }
         .myinfo-modal {
             background: #0f172a; border: 1px solid rgba(255,255,255,0.1);
@@ -3857,9 +3858,20 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             }
             const searchQuery = cleanWords.length > 0 ? cleanWords.join(' ') : query;
 
-            // 검색 중 표시
-            document.getElementById('propertyList').innerHTML = 
-                '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">AI 검색 중...</div></div>';
+            // 스켈레톤 로딩 표시
+            document.getElementById('propertyList').innerHTML = Array(5).fill(0).map(() =>
+                `<div style="padding:16px;border:1px solid rgba(255,255,255,0.06);border-radius:10px;margin-bottom:8px;animation:shimmer 1.5s infinite">
+                    <div style="display:flex;gap:10px;align-items:center">
+                        <div style="width:50px;height:14px;background:rgba(255,255,255,0.08);border-radius:4px"></div>
+                        <div style="width:80px;height:16px;background:rgba(255,255,255,0.1);border-radius:4px"></div>
+                        <div style="width:180px;height:14px;background:rgba(255,255,255,0.06);border-radius:4px"></div>
+                    </div>
+                    <div style="display:flex;gap:6px;margin-top:8px">
+                        <div style="width:50px;height:20px;background:rgba(255,255,255,0.05);border-radius:10px"></div>
+                        <div style="width:50px;height:20px;background:rgba(255,255,255,0.05);border-radius:10px"></div>
+                    </div>
+                </div>`
+            ).join('');
             
             try {
                 const response = await fetch(`${SUPABASE_URL}/functions/v1/search-property`, {
