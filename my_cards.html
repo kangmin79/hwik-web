@@ -2085,36 +2085,15 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             <!-- ===== 탭2: 공유 매물 ===== -->
             <div class="tab-panel" id="tabShared">
                 
-                <!-- 필터 (거래유형 + 정렬 + 검색) -->
+                <!-- 정렬 + 중개사 모아보기 -->
                 <div class="filter-section">
-                    <div class="filter-row">
-                        <div class="filter-group" id="sharedTypeFilter">
-                            <button class="filter-btn active" data-filter="전체" onclick="onSharedFilterClick(this)">전체</button>
-                            <button class="filter-btn" data-filter="매매" onclick="onSharedFilterClick(this)">매매</button>
-                            <button class="filter-btn" data-filter="전세" onclick="onSharedFilterClick(this)">전세</button>
-                            <button class="filter-btn" data-filter="월세" onclick="onSharedFilterClick(this)">월세</button>
-                        </div>
-                    </div>
-                    <div class="filter-row" style="display:flex;justify-content:space-between;align-items:center">
-                        <div class="filter-group" id="sharedCategoryFilter">
-                            <button class="filter-btn active" data-filter="전체" onclick="onSharedCategoryClick(this)">전체</button>
-                            <button class="filter-btn" data-filter="아파트" onclick="onSharedCategoryClick(this)">아파트</button>
-                            <button class="filter-btn" data-filter="오피스텔" onclick="onSharedCategoryClick(this)">오피스텔</button>
-                            <button class="filter-btn" data-filter="원투룸" onclick="onSharedCategoryClick(this)">원투룸</button>
-                            <button class="filter-btn" data-filter="상가" onclick="onSharedCategoryClick(this)">상가</button>
-                            <button class="filter-btn" data-filter="사무실" onclick="onSharedCategoryClick(this)">사무실</button>
-                        </div>
-                        <div style="display:flex;gap:5px;flex-shrink:0">
-                            <button class="sort-tag active" data-sort="newest" onclick="onSharedSortChange(this)">최근순</button>
-                            <button class="sort-tag" data-sort="oldest" onclick="onSharedSortChange(this)">오래된순</button>
-                            <button class="sort-tag" data-sort="price_high" onclick="onSharedSortChange(this)">가격↓</button>
-                            <button class="sort-tag" data-sort="price_low" onclick="onSharedSortChange(this)">가격↑</button>
-                        </div>
-                    </div>
-                    
-                    <!-- 중개사별 필터 (동적 생성) -->
-                    <div class="filter-row" id="sharedAgentFilterRow" style="display:none;">
-                        <div class="filter-group" id="sharedAgentFilter"></div>
+                    <div class="filter-row" style="display:flex;justify-content:flex-end;align-items:center;gap:5px">
+                        <button class="sort-tag active" data-sort="newest" onclick="onSharedSortChange(this)">최근순</button>
+                        <button class="sort-tag" data-sort="oldest" onclick="onSharedSortChange(this)">오래된순</button>
+                        <button class="sort-tag" data-sort="price_high" onclick="onSharedSortChange(this)">가격↓</button>
+                        <button class="sort-tag" data-sort="price_low" onclick="onSharedSortChange(this)">가격↑</button>
+                        <span style="width:1px;height:16px;background:var(--border-color);margin:0 2px"></span>
+                        <button class="sort-tag" id="btnGroupByAgent" onclick="toggleGroupByAgent()">중개사 모아보기</button>
                     </div>
 
                     <!-- 공유방 박스 (필터 아래, 검색 위) -->
@@ -4146,11 +4125,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         let joinedRooms = [];
         let allMyRoomsList = []; // 내가 속한 전체 방 목록
         let pendingInvites = [];
-        let sharedFilter = '전체';
-        let sharedCategoryFilter = '전체';
         let sharedSort = 'newest';
-        let sharedAgentFilter = '전체';
         let sharedRoomFilter = 'all';
+        let groupByAgent = false;
         let inviteTargetRoomId = null;
         let roomMemberCounts = {};
 
@@ -4495,59 +4472,15 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             renderSharedList();
         }
 
-        function _renderAgentFilterButtons() {
-            const row = document.getElementById('sharedAgentFilterRow');
-            const container = document.getElementById('sharedAgentFilter');
-            if (!row || !container) return;
-
-            // 공유 매물에서 중개사 목록 추출 (중복 제거)
-            const agentMap = new Map();
-            allSharedCards.forEach(c => {
-                const name = c.agent?.business_name || c.agent?.name || '';
-                const id = c.shared_by || c.agent_id || '';
-                if (name && !agentMap.has(name)) {
-                    agentMap.set(name, id);
-                }
-            });
-
-            if (agentMap.size <= 1) {
-                row.style.display = 'none';
-                return;
-            }
-
-            row.style.display = '';
-            let html = `<button class="filter-btn ${sharedAgentFilter === '전체' ? 'active' : ''}" onclick="onSharedAgentClick(this)" data-filter="전체">전체</button>`;
-            agentMap.forEach((id, name) => {
-                const color = getAgentColor(id);
-                const isActive = sharedAgentFilter === name ? 'active' : '';
-                html += `<button class="filter-btn ${isActive}" onclick="onSharedAgentClick(this)" data-filter="${esc(name)}" style="${isActive ? '' : 'border-color:' + color + ';color:' + color}">${esc(name)}</button>`;
-            });
-            container.innerHTML = html;
-        }
-
-        function onSharedAgentClick(btn) {
-            document.querySelectorAll('#sharedAgentFilter .filter-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            sharedAgentFilter = btn.dataset.filter;
-            renderSharedList();
-        }
-
-        function onSharedFilterClick(btn) {
-            document.querySelectorAll('#sharedTypeFilter .filter-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            sharedFilter = btn.dataset.filter;
-            renderSharedList();
-        }
-
-        function onSharedCategoryClick(btn) {
-            document.querySelectorAll('#sharedCategoryFilter .filter-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            sharedCategoryFilter = btn.dataset.filter;
+        function toggleGroupByAgent() {
+            groupByAgent = !groupByAgent;
+            const btn = document.getElementById('btnGroupByAgent');
+            if (btn) btn.classList.toggle('active', groupByAgent);
             renderSharedList();
         }
 
         function onSharedSortChange(btn) {
-            btn.parentElement.querySelectorAll('.sort-tag').forEach(b => b.classList.remove('active'));
+            btn.parentElement.querySelectorAll('.sort-tag[data-sort]').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             sharedSort = btn.dataset.sort;
             renderSharedList();
@@ -4647,38 +4580,12 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             if (!container) return;
             
             let filtered = [...allSharedCards];
-            
+
             // 방 필터
             if (sharedRoomFilter !== 'all') {
                 filtered = filtered.filter(c => c.room_id === sharedRoomFilter);
             }
-            
-            // 거래유형 필터
-            if (sharedFilter !== '전체') {
-                filtered = filtered.filter(c => c.property?.type === sharedFilter);
-            }
 
-            // 중개사별 필터
-            if (sharedAgentFilter !== '전체') {
-                filtered = filtered.filter(c => {
-                    const name = c.agent?.business_name || c.agent?.name || '';
-                    return name === sharedAgentFilter;
-                });
-            }
-
-            // 중개사 필터 버튼 동적 생성
-            _renderAgentFilterButtons();
-
-            // 부동산종류 필터
-            if (sharedCategoryFilter !== '전체') {
-                filtered = filtered.filter(c => {
-                    const p = c.property || {};
-                    const rawText = p.rawText || '';
-                    const category = categorizeProperty(rawText, p.room, p.area, p.floor);
-                    return category === sharedCategoryFilter;
-                });
-            }
-            
             // 검색
             const q = (document.getElementById('sharedSearchInput')?.value || '').trim().toLowerCase();
             if (q) {
@@ -4713,8 +4620,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 return;
             }
             
-            let html = '';
-            filtered.forEach(card => {
+            // 카드 한 줄 HTML 생성 헬퍼
+            function _cardItemHTML(card) {
                 const p = card.property || {};
                 const isSelected = selectedCards.some(c => c.id === card.id);
                 const typeClass = p.type === '매매' ? 'type-sale' : p.type === '전세' ? 'type-jeonse' : p.type === '월세' ? 'type-monthly' : 'type-client';
@@ -4724,12 +4631,11 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 const agentName = card.agent?.name || '중개사';
                 const roomName = allMyRoomsList.find(r => r.id === card.room_id)?.name || '';
                 const photos = card.photos || [];
-                
                 const sharedClass = card.is_mine ? 'shared-mine' : 'shared-other';
-                html += `<div class="property-item ${sharedClass} ${isSelected ? 'selected' : ''}" id="shared-${card.id}">`;
-                html += `<div class="property-item-main" onclick="toggleSelect('${card.id}', true)">`;
-                html += `<div class="property-checkbox"></div>`;
-                html += `<div class="property-text">
+                let h = `<div class="property-item ${sharedClass} ${isSelected ? 'selected' : ''}" id="shared-${card.id}">`;
+                h += `<div class="property-item-main" onclick="toggleSelect('${card.id}', true)">`;
+                h += `<div class="property-checkbox"></div>`;
+                h += `<div class="property-text">
                     <div class="property-text-row">
                         <span class="property-type-badge ${typeClass}">${p.type||''}</span>
                         <strong>${p.price||''}</strong>
@@ -4744,27 +4650,53 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     </div>
                 </div>`;
                 if (photos.length > 0) {
-                    html += `<div style="position:relative;width:44px;height:44px;border-radius:6px;overflow:hidden;flex-shrink:0;margin-right:4px;">
+                    h += `<div style="position:relative;width:44px;height:44px;border-radius:6px;overflow:hidden;flex-shrink:0;margin-right:4px;">
                         <img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;">
                         ${photos.length > 1 ? `<span style="position:absolute;bottom:1px;right:2px;font-size:9px;color:#fff;background:rgba(0,0,0,0.6);padding:1px 4px;border-radius:3px;">${photos.length}</span>` : ''}
                     </div>`;
                 }
-                // 버튼: 내 매물이면 공유/상세/수정/삭제, 다른 매물이면 상세만
                 if (card.is_mine) {
-                    html += `<div style="display:flex;gap:4px;flex-shrink:0;margin-left:4px;">`;
-                    html += `<button class="property-share" onclick="event.stopPropagation(); shareOneCard('${card.id}')">공유</button>`;
-                    html += `<button class="property-edit" onclick="event.stopPropagation(); toggleDetail('${card.id}')">상세</button>`;
-                    html += `<button class="property-edit" onclick="event.stopPropagation(); editCard('${card.id}')">수정</button>`;
-                    html += `<button class="property-delete" onclick="event.stopPropagation(); deleteCard('${card.id}')">삭제</button>`;
-                    html += `</div>`;
+                    h += `<div style="display:flex;gap:4px;flex-shrink:0;margin-left:4px;">`;
+                    h += `<button class="property-share" onclick="event.stopPropagation(); shareOneCard('${card.id}')">공유</button>`;
+                    h += `<button class="property-edit" onclick="event.stopPropagation(); toggleDetail('${card.id}')">상세</button>`;
+                    h += `<button class="property-edit" onclick="event.stopPropagation(); editCard('${card.id}')">수정</button>`;
+                    h += `<button class="property-delete" onclick="event.stopPropagation(); deleteCard('${card.id}')">삭제</button>`;
+                    h += `</div>`;
                 } else {
-                    html += `<div style="display:flex;gap:4px;flex-shrink:0;margin-left:4px;">`;
-                    html += `<button class="property-edit" onclick="event.stopPropagation(); openSharedDetail('${card.id}')">상세</button>`;
-                    html += `</div>`;
+                    h += `<div style="display:flex;gap:4px;flex-shrink:0;margin-left:4px;">`;
+                    h += `<button class="property-edit" onclick="event.stopPropagation(); openSharedDetail('${card.id}')">상세</button>`;
+                    h += `</div>`;
                 }
-                html += `</div></div>`;
-            });
-            
+                h += `</div></div>`;
+                return h;
+            }
+
+            let html = '';
+
+            if (groupByAgent) {
+                // 중개사별 그룹핑
+                const groups = new Map();
+                filtered.forEach(card => {
+                    const agentId = card.shared_by || card.agent_id || 'unknown';
+                    const agentName = card.agent?.business_name || card.agent?.name || '알 수 없음';
+                    const key = agentId;
+                    if (!groups.has(key)) groups.set(key, { name: agentName, id: agentId, cards: [] });
+                    groups.get(key).cards.push(card);
+                });
+
+                groups.forEach(group => {
+                    const color = getAgentColor(group.id);
+                    html += `<div class="agent-group-header" style="display:flex;align-items:center;gap:8px;padding:10px 12px 6px;margin-top:4px;">
+                        <span style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0"></span>
+                        <span style="font-weight:700;font-size:14px;color:${color}">${esc(group.name)}</span>
+                        <span style="font-size:12px;color:var(--text-gray)">${group.cards.length}개</span>
+                    </div>`;
+                    group.cards.forEach(card => { html += _cardItemHTML(card); });
+                });
+            } else {
+                filtered.forEach(card => { html += _cardItemHTML(card); });
+            }
+
             container.innerHTML = html;
         }
 
