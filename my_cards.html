@@ -4339,7 +4339,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 .from('card_shares')
                 .select(`
                     id, card_id, room_id, shared_by, created_at,
-                    cards(id, property, agent, photos, agent_comment, style, color, agent_id, price_number)
+                    cards(id, property, agent, photos, agent_comment, private_note, style, color, agent_id, price_number, trade_status)
                 `)
                 .in('room_id', roomIds)
                 .order('created_at', { ascending: false });
