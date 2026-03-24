@@ -479,7 +479,7 @@ Deno.serve(async (req) => {
     if (parsed.features?.length) appliedFilters.push(...parsed.features);
     if (autoSort) {
       const sortLabels = { newest: '최신순', price_asc: '가격↓', price_desc: '가격↑', views: '인기순' };
-      appliedFilters.push(sortLabels[parsed.filters.sort] || '');
+      appliedFilters.push(sortLabels[autoSort] || '');
     }
 
     console.log(`총 소요: ${Date.now() - startTime}ms | 결과: ${results.length}건 | mode: ${search_mode} | filters: ${appliedFilters.join(', ')}`);
