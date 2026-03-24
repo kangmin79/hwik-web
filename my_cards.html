@@ -4100,6 +4100,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             });
 
             // ★ 로컬 검색 — 즉시 결과
+            const _categoryKo = { apartment:'아파트', officetel:'오피스텔', room:'원투룸', commercial:'상가', office:'사무실' };
             function localSearch(query) {
                 const q = query.toLowerCase();
                 const words = q.split(/\s+/).filter(w => w.length > 0);
@@ -4107,9 +4108,11 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 const filtered = allCards.filter(c => {
                     const p = c.property || {};
                     const pn = c.private_note || {};
+                    const categoryKo = _categoryKo[p.category] || '';
+                    const categoryFromFn = categorizeProperty(p.rawText||'', p.room, p.area, p.floor);
                     const text = [
                         p.type, p.price, p.complex, p.location, p.address,
-                        p.area, p.floor, p.room, p.category,
+                        p.area, p.floor, p.room, p.category, categoryKo, categoryFromFn,
                         ...(p.features || []), ...(p.tags || []),
                         p.moveIn, c.agent_comment, pn.memo, c.trade_status,
                         c.search_text,
