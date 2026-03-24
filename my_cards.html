@@ -2606,6 +2606,13 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 html += `<div class="property-item-main" onclick="toggleSelect('${card.id}')">`;
                 html += `<div class="property-checkbox"></div>`;
                 const featureTags = (p.features||[]).slice(0,4).map(f=>`<span class="list-tag">${esc(f)}</span>`).join('');
+                // 이 카드가 공유된 방 이름 태그
+                const sharedRoomNames = allSharedCards
+                    .filter(sc => sc.id === card.id && sc.is_mine)
+                    .map(sc => allMyRoomsList.find(r => r.id === sc.room_id)?.name)
+                    .filter(Boolean);
+                const uniqueRooms = [...new Set(sharedRoomNames)];
+                const roomTags = uniqueRooms.map(name => `<span style="display:inline-block;padding:1px 6px;border-radius:4px;background:rgba(78,205,196,0.12);color:#4ecdc4;font-size:10px;font-weight:600;margin-right:3px;">${esc(name)}</span>`).join('');
                 html += `<div class="property-text">
                     <div class="property-text-row">
                         <span class="property-type-badge ${typeClass}">${esc(p.type)||''}</span>
@@ -2615,6 +2622,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         ${subText ? `<span style="color:var(--text-gray-light);font-size:12px;margin-left:4px">· ${subText}</span>` : ''}
                     </div>
                     ${featureTags ? `<div class="property-tags-row">${featureTags}</div>` : ''}
+                    ${roomTags ? `<div style="margin-top:2px">${roomTags}</div>` : ''}
                 </div>`;
                 // 사진 썸네일
                 const photos = card.photos || [];
