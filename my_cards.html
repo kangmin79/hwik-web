@@ -2072,7 +2072,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     </div>
                 </div>
                 <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="역세권 3억 이하 투룸... 자연어로 검색">
+                    <input type="text" id="searchInput" placeholder="단어 하나로 검색, 복잡한 조건은 Enter" oninput="onSearchInput(this.value)">
                 </div>
             </div>
             
@@ -2535,9 +2535,10 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
 
         function renderList() {
-            if (allCards.length === 0) {
+            const source = isSearchMode ? searchResults : allCards;
+            if (source.length === 0 && !isSearchMode) {
                 document.getElementById('pageCount').textContent = '0개';
-                document.getElementById('propertyList').innerHTML = 
+                document.getElementById('propertyList').innerHTML =
                     '<div class="empty-state">' +
                         '<div class="empty-icon">📝</div>' +
                         '<div class="empty-title">등록된 매물이 없어요</div>' +
@@ -2545,8 +2546,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     '</div>';
                 return;
             }
-            
-            let filtered = allCards;
+
+            let filtered = source;
             
             // 내 매물 탭에서는 손님 항상 제외
             filtered = filtered.filter(c => c.property && c.property.type !== '손님');
@@ -4106,7 +4107,21 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 }, 200);
             });
             
-            // Enter 키 → 단순 키워드면 로컬 필터, 복잡하면 AI 검색
+            // ★ 실시간 로컬 검색 (타이핑하면서 바로 필터)
+            let _searchTimer = null;
+            function onSearchInput(value) {
+                clearTimeout(_searchTimer);
+                const q = value.trim();
+                if (!q) {
+                    isSearchMode = false;
+                    renderList();
+                    return;
+                }
+                // 약간의 디바운스 (빠른 타이핑 시 깜빡임 방지)
+                _searchTimer = setTimeout(() => localSearch(q), 100);
+            }
+
+            // Enter 키 → AI 검색 (복잡한 조건)
             document.getElementById('searchInput').addEventListener('keypress', async e => {
                 if (e.key === 'Enter') {
                     const query = e.target.value.trim();
@@ -4115,27 +4130,32 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         loadCards();
                         return;
                     }
-
-                    // ★ 단순 키워드 판별: 2단어 이하 & 숫자/조건 없음 → 로컬 필터
-                    const isSimple = query.split(/\s+/).length <= 2
-                        && !/\d/.test(query)
-                        && !/(이하|이상|근처|정도|쯤|역세권|학군|풀옵|올수리|즉시|투룸|쓰리룸|원룸)/.test(query);
-
-                    if (isSimple) {
-                        localSearch(query);
-                    } else {
-                        vectorSearch(query);
-                    }
+                    // Enter = 항상 AI 검색 (더 정밀한 결과)
+                    vectorSearch(query);
                 }
             });
 
-            // ★ 로컬 검색 (단순 키워드용 — 즉시 결과)
+            // ★ 로컬 검색 — 모든 필드에서 단어 하나로도 찾기
             function localSearch(query) {
                 const q = query.toLowerCase();
+                const words = q.split(/\s+/).filter(w => w.length > 0);
+
                 const filtered = allCards.filter(c => {
                     const p = c.property || {};
-                    const text = [p.type, p.price, p.complex, p.location, p.area, p.floor, p.room, ...(p.features||[])].filter(Boolean).join(' ').toLowerCase();
-                    return text.includes(q);
+                    const pn = c.private_note || {};
+                    // 모든 검색 가능한 필드 결합
+                    const text = [
+                        p.type, p.price, p.complex, p.location, p.address,
+                        p.area, p.floor, p.room, p.category,
+                        ...(p.features || []), ...(p.tags || []),
+                        p.moveIn,
+                        c.agent_comment,
+                        pn.memo,
+                        c.trade_status,
+                    ].filter(Boolean).join(' ').toLowerCase();
+
+                    // 모든 단어가 포함되어야 함 (AND 검색)
+                    return words.every(w => text.includes(w));
                 });
 
                 searchResults = filtered;
@@ -4144,29 +4164,11 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
                 if (filtered.length === 0) {
                     document.getElementById('propertyList').innerHTML =
-                        '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">조건에 맞는 매물 없음</div></div>';
+                        `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">"${esc(query)}" 결과 없음</div><div style="margin-top:6px;font-size:12px;color:var(--text-gray)">Enter로 AI 검색 시도해보세요</div></div>`;
                     return;
                 }
 
-                let html = `<div class="search-info">🔍 "${query}" 검색 — ${filtered.length}개</div>`;
-                filtered.forEach(card => {
-                    const p = card.property || {};
-                    const isSelected = selectedCards.some(c => c.id === card.id);
-                    const typeClass = p.type === '매매' ? 'type-sale' : p.type === '전세' ? 'type-jeonse' : p.type === '월세' ? 'type-monthly' : 'type-client';
-                    const nameText = [p.complex, p.location].filter(Boolean).join(' · ');
-                    const detailText = [p.area, p.floor].filter(Boolean).join(' · ');
-
-                    html += `<div class="property-item ${isSelected ? 'selected' : ''}" onclick="toggleSelect('${card.id}')">`;
-                    html += `<div class="property-checkbox"></div>`;
-                    html += `<div class="property-text">`;
-                    html += `<div class="item-main"><span class="item-type ${typeClass}">${p.type||'?'}</span><span class="item-price">${p.price||''}</span><span class="item-name">${nameText}</span>${detailText ? `<span class="item-detail"> · ${detailText}</span>` : ''}</div>`;
-                    html += `</div>`;
-                    html += `<button class="property-detail-btn" onclick="event.stopPropagation(); showDetail('${card.id}')">상세</button>`;
-                    html += `<button class="property-edit" onclick="event.stopPropagation(); editCard('${card.id}')">수정</button>`;
-                    html += `<button class="property-delete" onclick="event.stopPropagation(); deleteCard('${card.id}')">삭제</button>`;
-                    html += `</div>`;
-                });
-                document.getElementById('propertyList').innerHTML = html;
+                renderList();
             }
         });
 
