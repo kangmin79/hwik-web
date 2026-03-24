@@ -4369,18 +4369,15 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         }
                     }
 
-                    // ★ 학습 데이터 반영 (텍스트 점수의 보조 역할)
-                    const clickBonus = _clickScores[c.id] || 0;
-                    const queryKey = `${q}::${c.id}`;
-                    const queryClickBonus = _queryClickScores[queryKey] || 0;
-                    score += Math.min(clickBonus, 5); // 총 클릭 보너스 (최대 5, 축소)
-                    score += Math.min(queryClickBonus * 2, 10); // 검색어별 클릭 (최대 10)
-
-                    return { card: c, score };
+                    return { card: c, score, created: c.created_at };
                 }).filter(Boolean);
 
                 // 점수순 정렬 (높은 점수 = 더 관련있는 매물)
-                scored.sort((a, b) => b.score - a.score);
+                // 정확도순 → 동점이면 최신순
+                scored.sort((a, b) => {
+                    if (b.score !== a.score) return b.score - a.score;
+                    return new Date(b.created || 0) - new Date(a.created || 0);
+                });
 
                 searchResults = scored.map(s => s.card);
                 isSearchMode = true;
