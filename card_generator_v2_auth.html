@@ -5079,6 +5079,22 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
 
         // ===== 좌표 자동 매칭 (apartments 테이블) =====
+        // 카카오 API로 좌표 조회 (DB 매칭 실패 시 폴백)
+        async function kakaoGeocode(query) {
+            if (!query || query.trim().length < 2) return null;
+            try {
+                const KAKAO_KEY = HWIK_CONFIG.KAKAO_REST_KEY || '8b7ecadf67aaed392e75605093efb2c4';
+                const res = await fetch(`https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}`, {
+                    headers: { Authorization: `KakaoAK ${KAKAO_KEY}` }
+                });
+                const data = await res.json();
+                if (data.documents?.length > 0) {
+                    return { lat: parseFloat(data.documents[0].y), lng: parseFloat(data.documents[0].x) };
+                }
+            } catch(e) { console.warn('[휙 카카오좌표 실패]', e); }
+            return null;
+        }
+
         async function matchCoords(property) {
             try {
                 const complex = property?.complex || '';
@@ -5089,9 +5105,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 const dongMatch = location.match(/(\S+동)/);
                 const gu = guMatch ? guMatch[1] : '';
                 const dong = dongMatch ? dongMatch[1] : '';
-                const slug = complex.replace(/\s/g, '');
+                const slug = complex ? complex.replace(/\s/g, '') : '';
 
-                // ★ 3개 쿼리 동시 실행 (순차 → 병렬)
+                // ★ 1단계: DB 병렬 쿼리 (빠름 ~0.1초)
                 const queries = [];
                 if (gu && complex) {
                     queries.push(supabaseClient.from('apartments').select('lat,lon,kapt_name,doro_juso').eq('sgg', gu).ilike('kapt_name', `%${complex}%`).limit(1));
@@ -5099,13 +5115,12 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 if (dong && complex) {
                     queries.push(supabaseClient.from('apartments').select('lat,lon,kapt_name,doro_juso').eq('umd_nm', dong).ilike('kapt_name', `%${complex}%`).limit(1));
                 } else { queries.push(Promise.resolve({ data: null })); }
-                if (complex) {
+                if (slug) {
                     queries.push(supabaseClient.from('apartments').select('lat,lon,kapt_name,doro_juso').ilike('slug', `%${slug}%`).limit(3));
                 } else { queries.push(Promise.resolve({ data: null })); }
 
                 const [r1, r2, r3] = await Promise.all(queries);
 
-                // 우선순위: 1차(구+단지) > 2차(동+단지) > 3차(slug)
                 let result = null;
                 if (r1.data?.length > 0) result = r1.data[0];
                 else if (r2.data?.length > 0) result = r2.data[0];
@@ -5113,9 +5128,28 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 else if (r3.data?.length > 1 && gu) result = r3.data.find(d => d.doro_juso?.includes(gu)) || null;
 
                 if (result) {
-                    console.log('[휙 좌표매칭]', result.kapt_name, result.lat, result.lon);
-                    return { lat: result.lat, lng: result.lon };
+                    console.log('[휙 좌표매칭] DB:', result.kapt_name, result.lat, result.lon);
+                    return { lat: result.lat, lng: result.lon, coord_type: 'db_match' };
                 }
+
+                // ★ 2단계: DB에 없으면 카카오 API 폴백 (빌라, 상가 등)
+                console.log('[휙 좌표매칭] DB 실패 → 카카오 API 폴백');
+                const searchQuery = complex ? `${location} ${complex}` : location;
+                const kakaoResult = await kakaoGeocode(searchQuery);
+                if (kakaoResult) {
+                    console.log('[휙 좌표매칭] 카카오:', kakaoResult.lat, kakaoResult.lng);
+                    return { ...kakaoResult, coord_type: 'kakao' };
+                }
+
+                // 단지명만으로 재시도
+                if (complex && complex !== searchQuery) {
+                    const retry = await kakaoGeocode(complex);
+                    if (retry) {
+                        console.log('[휙 좌표매칭] 카카오(단지명):', retry.lat, retry.lng);
+                        return { ...retry, coord_type: 'kakao' };
+                    }
+                }
+
                 return null;
             } catch(e) {
                 console.warn('[휙 좌표매칭 실패]', e);
@@ -5210,7 +5244,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     category: parsedResult.category || null,
                 };
 
-                const needCoordMatch = !parsedResult.lat && parsedProperty.complex;
+                // ★ 사진 업로드 + 좌표 매칭 동시 실행
+                const needCoordMatch = !parsedResult.lat && (parsedProperty.complex || parsedProperty.location);
                 const [photoUrls, coordResult] = await Promise.all([
                     uploadPhotos(linkId),
                     needCoordMatch ? matchCoords(parsedProperty) : Promise.resolve(null)
@@ -5219,10 +5254,10 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 // 거래유형에 따른 색상 자동 결정
                 const cardColor = getColorByType(parsedResult.type);
 
-                // 좌표: Edge Function 결과 우선, 없으면 DB 매칭 결과
+                // 좌표: Edge Function 결과 우선 → DB 매칭 → 카카오 API
                 const finalLat = parsedResult.lat || (coordResult?.lat) || null;
                 const finalLng = parsedResult.lng || (coordResult?.lng) || null;
-                const finalCoordType = parsedResult.lat ? (parsedResult.coord_type || 'api') : coordResult ? 'db_match' : 'none';
+                const finalCoordType = parsedResult.lat ? (parsedResult.coord_type || 'api') : (coordResult?.coord_type) || 'none';
 
                 const cardData = {
                     id: linkId,
