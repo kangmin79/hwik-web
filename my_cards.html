@@ -2534,18 +2534,39 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             loadCards(); // DB에서 다시 가져오기
         }
 
-        // 내 카드 → 공유방 이름 맵 (card_id → [room_name, ...])
+        // 내 카드 → 공유방 맵 (card_id → [{name, roomId}, ...])
         let _myCardRoomMap = {};
         function _buildCardRoomMap() {
             _myCardRoomMap = {};
             allSharedCards.forEach(sc => {
                 if (!sc.is_mine) return;
-                const cardId = sc.id; // 카드 ID (from ...d.cards spread)
-                const roomName = allMyRoomsList.find(r => r.id === sc.room_id)?.name;
-                if (!roomName) return;
+                const cardId = sc.id;
+                const room = allMyRoomsList.find(r => r.id === sc.room_id);
+                if (!room) return;
                 if (!_myCardRoomMap[cardId]) _myCardRoomMap[cardId] = [];
-                if (!_myCardRoomMap[cardId].includes(roomName)) _myCardRoomMap[cardId].push(roomName);
+                if (!_myCardRoomMap[cardId].some(r => r.roomId === room.id)) {
+                    _myCardRoomMap[cardId].push({ name: room.name, roomId: room.id });
+                }
             });
+        }
+
+        // 공유 해제
+        async function unshareCard(cardId, roomId, roomName) {
+            if (!confirm(`"${roomName}" 공유방에서 이 매물을 해제할까요?`)) return;
+            try {
+                const { error } = await supabaseClient
+                    .from('card_shares')
+                    .delete()
+                    .eq('card_id', cardId)
+                    .eq('room_id', roomId);
+                if (error) throw error;
+                showToast('공유 해제됨');
+                await loadSharedCards();
+                updateSharedUI();
+                renderList();
+            } catch(e) {
+                showToast('해제 실패: ' + e.message);
+            }
         }
 
         function renderList() {
@@ -2623,7 +2644,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 const featureTags = (p.features||[]).slice(0,4).map(f=>`<span class="list-tag">${esc(f)}</span>`).join('');
                 // 이 카드가 공유된 방 이름 태그 (_myCardRoomMap에서 조회)
                 const cardRooms = _myCardRoomMap[card.id] || [];
-                const roomTags = cardRooms.map(name => `<span style="display:inline-block;padding:1px 6px;border-radius:4px;background:rgba(78,205,196,0.12);color:#4ecdc4;font-size:10px;font-weight:600;margin-right:3px;">${esc(name)}</span>`).join('');
+                const roomTags = cardRooms.map(r => `<span style="display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:4px;background:rgba(78,205,196,0.12);color:#4ecdc4;font-size:10px;font-weight:600;margin-right:3px;cursor:default;">${esc(r.name)}<span onclick="event.stopPropagation(); unshareCard('${card.id}','${r.roomId}','${esc(r.name)}')" style="cursor:pointer;opacity:0.6;font-size:11px;margin-left:2px;" title="공유 해제">✕</span></span>`).join('');
                 html += `<div class="property-text">
                     <div class="property-text-row">
                         <span class="property-type-badge ${typeClass}">${esc(p.type)||''}</span>
