@@ -4147,8 +4147,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             
             // (검색은 localSearch + autoAiSearch에서 처리)
             
-            // ★ 검색 시스템: 서버 벡터 검색 (전체 매물 대상)
-            let _searchTimer = null;
+            // ★ 검색 시스템: Enter → 서버 벡터 검색
             let _lastSearchQuery = '';
 
             document.getElementById('searchInput').addEventListener('input', e => {
@@ -4163,7 +4162,6 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             // Enter → 즉시 벡터 검색
             document.getElementById('searchInput').addEventListener('keypress', async e => {
                 if (e.key === 'Enter') {
-                    clearTimeout(_searchTimer);
                     const query = e.target.value.trim();
                     if (!query) {
                         isSearchMode = false;
