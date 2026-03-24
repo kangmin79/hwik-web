@@ -4106,20 +4106,68 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 }, 200);
             });
             
-            // Enter 키 → 벡터 검색 실행
+            // Enter 키 → 단순 키워드면 로컬 필터, 복잡하면 AI 검색
             document.getElementById('searchInput').addEventListener('keypress', async e => {
                 if (e.key === 'Enter') {
                     const query = e.target.value.trim();
                     if (!query) {
-                        // 검색어 없으면 전체 목록 표시
+                        isSearchMode = false;
                         loadCards();
                         return;
                     }
-                    
-                    // 벡터 검색 실행
-                    vectorSearch(query);
+
+                    // ★ 단순 키워드 판별: 2단어 이하 & 숫자/조건 없음 → 로컬 필터
+                    const isSimple = query.split(/\s+/).length <= 2
+                        && !/\d/.test(query)
+                        && !/(이하|이상|근처|정도|쯤|역세권|학군|풀옵|올수리|즉시|투룸|쓰리룸|원룸)/.test(query);
+
+                    if (isSimple) {
+                        localSearch(query);
+                    } else {
+                        vectorSearch(query);
+                    }
                 }
             });
+
+            // ★ 로컬 검색 (단순 키워드용 — 즉시 결과)
+            function localSearch(query) {
+                const q = query.toLowerCase();
+                const filtered = allCards.filter(c => {
+                    const p = c.property || {};
+                    const text = [p.type, p.price, p.complex, p.location, p.area, p.floor, p.room, ...(p.features||[])].filter(Boolean).join(' ').toLowerCase();
+                    return text.includes(q);
+                });
+
+                searchResults = filtered;
+                isSearchMode = true;
+                document.getElementById('pageCount').textContent = filtered.length + '개';
+
+                if (filtered.length === 0) {
+                    document.getElementById('propertyList').innerHTML =
+                        '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">조건에 맞는 매물 없음</div></div>';
+                    return;
+                }
+
+                let html = `<div class="search-info">🔍 "${query}" 검색 — ${filtered.length}개</div>`;
+                filtered.forEach(card => {
+                    const p = card.property || {};
+                    const isSelected = selectedCards.some(c => c.id === card.id);
+                    const typeClass = p.type === '매매' ? 'type-sale' : p.type === '전세' ? 'type-jeonse' : p.type === '월세' ? 'type-monthly' : 'type-client';
+                    const nameText = [p.complex, p.location].filter(Boolean).join(' · ');
+                    const detailText = [p.area, p.floor].filter(Boolean).join(' · ');
+
+                    html += `<div class="property-item ${isSelected ? 'selected' : ''}" onclick="toggleSelect('${card.id}')">`;
+                    html += `<div class="property-checkbox"></div>`;
+                    html += `<div class="property-text">`;
+                    html += `<div class="item-main"><span class="item-type ${typeClass}">${p.type||'?'}</span><span class="item-price">${p.price||''}</span><span class="item-name">${nameText}</span>${detailText ? `<span class="item-detail"> · ${detailText}</span>` : ''}</div>`;
+                    html += `</div>`;
+                    html += `<button class="property-detail-btn" onclick="event.stopPropagation(); showDetail('${card.id}')">상세</button>`;
+                    html += `<button class="property-edit" onclick="event.stopPropagation(); editCard('${card.id}')">수정</button>`;
+                    html += `<button class="property-delete" onclick="event.stopPropagation(); deleteCard('${card.id}')">삭제</button>`;
+                    html += `</div>`;
+                });
+                document.getElementById('propertyList').innerHTML = html;
+            }
         });
 
         // ================================================================
