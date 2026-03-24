@@ -4445,6 +4445,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     type: parsed.type || null,
                     price: parsed.price || null,
                     location: parsed.location || null,
+                    address: parsed.address || null,
                     complex: parsed.complex || null,
                     area: parsed.area || null,
                     floor: parsed.floor || null,
@@ -5099,54 +5100,59 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             try {
                 const complex = property?.complex || '';
                 const location = property?.location || '';
-                if (!complex && !location) return null;
+                const address = property?.address || ''; // 도로명주소
+                const category = property?.category || '';
+                if (!complex && !location && !address) return null;
 
-                const guMatch = location.match(/(\S+구)/);
-                const dongMatch = location.match(/(\S+동)/);
-                const gu = guMatch ? guMatch[1] : '';
-                const dong = dongMatch ? dongMatch[1] : '';
-                const slug = complex ? complex.replace(/\s/g, '') : '';
+                // ★ 아파트/오피스텔만 DB 매칭 시도 (빌라/원투룸/상가는 DB에 없음)
+                const useDb = (category === 'apartment' || category === 'officetel') && complex;
 
-                // ★ 1단계: DB 병렬 쿼리 (빠름 ~0.1초)
-                const queries = [];
-                if (gu && complex) {
-                    queries.push(supabaseClient.from('apartments').select('lat,lon,kapt_name,doro_juso').eq('sgg', gu).ilike('kapt_name', `%${complex}%`).limit(1));
-                } else { queries.push(Promise.resolve({ data: null })); }
-                if (dong && complex) {
-                    queries.push(supabaseClient.from('apartments').select('lat,lon,kapt_name,doro_juso').eq('umd_nm', dong).ilike('kapt_name', `%${complex}%`).limit(1));
-                } else { queries.push(Promise.resolve({ data: null })); }
-                if (slug) {
-                    queries.push(supabaseClient.from('apartments').select('lat,lon,kapt_name,doro_juso').ilike('slug', `%${slug}%`).limit(3));
-                } else { queries.push(Promise.resolve({ data: null })); }
+                if (useDb) {
+                    const guMatch = location.match(/(\S+구)/);
+                    const dongMatch = location.match(/(\S+동)/);
+                    const gu = guMatch ? guMatch[1] : '';
+                    const dong = dongMatch ? dongMatch[1] : '';
+                    const slug = complex.replace(/\s/g, '');
 
-                const [r1, r2, r3] = await Promise.all(queries);
+                    const queries = [];
+                    if (gu && complex) {
+                        queries.push(supabaseClient.from('apartments').select('lat,lon,kapt_name,doro_juso').eq('sgg', gu).ilike('kapt_name', `%${complex}%`).limit(1));
+                    } else { queries.push(Promise.resolve({ data: null })); }
+                    if (dong && complex) {
+                        queries.push(supabaseClient.from('apartments').select('lat,lon,kapt_name,doro_juso').eq('umd_nm', dong).ilike('kapt_name', `%${complex}%`).limit(1));
+                    } else { queries.push(Promise.resolve({ data: null })); }
+                    if (slug) {
+                        queries.push(supabaseClient.from('apartments').select('lat,lon,kapt_name,doro_juso').ilike('slug', `%${slug}%`).limit(3));
+                    } else { queries.push(Promise.resolve({ data: null })); }
 
-                let result = null;
-                if (r1.data?.length > 0) result = r1.data[0];
-                else if (r2.data?.length > 0) result = r2.data[0];
-                else if (r3.data?.length === 1) result = r3.data[0];
-                else if (r3.data?.length > 1 && gu) result = r3.data.find(d => d.doro_juso?.includes(gu)) || null;
+                    const [r1, r2, r3] = await Promise.all(queries);
 
-                if (result) {
-                    console.log('[휙 좌표매칭] DB:', result.kapt_name, result.lat, result.lon);
-                    return { lat: result.lat, lng: result.lon, coord_type: 'db_match' };
+                    let result = null;
+                    if (r1.data?.length > 0) result = r1.data[0];
+                    else if (r2.data?.length > 0) result = r2.data[0];
+                    else if (r3.data?.length === 1) result = r3.data[0];
+                    else if (r3.data?.length > 1 && gu) result = r3.data.find(d => d.doro_juso?.includes(gu)) || null;
+
+                    if (result) {
+                        console.log('[휙 좌표매칭] DB:', result.kapt_name, result.lat, result.lon);
+                        return { lat: result.lat, lng: result.lon, coord_type: 'db_match' };
+                    }
                 }
 
-                // ★ 2단계: DB에 없으면 카카오 API 폴백 (빌라, 상가 등)
-                console.log('[휙 좌표매칭] DB 실패 → 카카오 API 폴백');
-                const searchQuery = complex ? `${location} ${complex}` : location;
-                const kakaoResult = await kakaoGeocode(searchQuery);
-                if (kakaoResult) {
-                    console.log('[휙 좌표매칭] 카카오:', kakaoResult.lat, kakaoResult.lng);
-                    return { ...kakaoResult, coord_type: 'kakao' };
-                }
+                // ★ 카카오 API — 도로명주소 > 위치+단지 > 단지명 > 위치
+                console.log('[휙 좌표매칭] 카카오 API');
+                const searchPriority = [
+                    address,                                          // 1순위: 도로명주소
+                    (location && complex) ? `${location} ${complex}` : null,  // 2순위: 위치+단지
+                    complex,                                          // 3순위: 단지명
+                    location,                                         // 4순위: 위치
+                ].filter(Boolean);
 
-                // 단지명만으로 재시도
-                if (complex && complex !== searchQuery) {
-                    const retry = await kakaoGeocode(complex);
-                    if (retry) {
-                        console.log('[휙 좌표매칭] 카카오(단지명):', retry.lat, retry.lng);
-                        return { ...retry, coord_type: 'kakao' };
+                for (const query of searchPriority) {
+                    const result = await kakaoGeocode(query);
+                    if (result) {
+                        console.log('[휙 좌표매칭] 카카오:', query, '→', result.lat, result.lng);
+                        return { ...result, coord_type: 'kakao' };
                     }
                 }
 
@@ -5235,6 +5241,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     type: parsedResult.type || null,
                     price: parsedResult.price || null,
                     location: parsedResult.location || null,
+                    address: parsedResult.address || null,
                     complex: parsedResult.complex || null,
                     area: parsedResult.area || null,
                     floor: parsedResult.floor || null,
