@@ -5096,7 +5096,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 if (card.is_mine) {
                     h += `<div style="display:flex;gap:4px;flex-shrink:0;margin-left:4px;">`;
                     h += `<button class="property-share" onclick="event.stopPropagation(); shareOneCard('${card.id}')">공유</button>`;
-                    h += `<button class="property-edit" onclick="event.stopPropagation(); toggleDetail('${card.id}')">상세</button>`;
+                    h += `<button class="property-edit" onclick="event.stopPropagation(); openSharedDetail('${card.id}')">상세</button>`;
                     h += `<button class="property-edit" onclick="event.stopPropagation(); editCard('${card.id}')">수정</button>`;
                     h += `<button class="property-delete" onclick="event.stopPropagation(); deleteCard('${card.id}')">삭제</button>`;
                     h += `</div>`;
