@@ -4646,7 +4646,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     <div class="shared-agent-name">
                         <span class="shared-agent-dot" style="background:${agentColor}"></span>
                         <span style="display:inline-block;padding:1px 6px;border-radius:4px;background:${agentColor}20;color:${agentColor};font-size:10px;font-weight:600;margin-right:4px;">${roomName} 공유방</span>
-                        ${card.is_mine ? '' : '<span style="color:' + agentColor + ';font-weight:600;">' + agentName + '</span> <span style="color:' + agentColor + ';opacity:0.8;">' + (card.agent?.phone || '') + '</span>'}
+                        ${card.is_mine ? '' : '<span style="color:' + agentColor + ';font-weight:600;">' + agentName + '</span> <span style="color:var(--text-gray);font-size:11px;">' + (card.agent?.phone || '') + '</span>'}
                     </div>
                 </div>`;
                 if (photos.length > 0) {
