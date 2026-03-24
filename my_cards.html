@@ -4698,12 +4698,22 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 filtered = filtered.filter(c => c.room_id === sharedRoomFilter);
             }
 
-            // 검색
+            // 검색 — 모든 필드 + 카테고리 한글 + AND 검색
+            const _catKo = { apartment:'아파트', officetel:'오피스텔', room:'원투룸', commercial:'상가', office:'사무실' };
             const q = (document.getElementById('sharedSearchInput')?.value || '').trim().toLowerCase();
             if (q) {
+                const words = q.split(/\s+/).filter(w => w.length > 0);
                 filtered = filtered.filter(c => {
                     const p = c.property || {};
-                    return [p.price, p.complex, p.location, p.area, p.type].filter(Boolean).join(' ').toLowerCase().includes(q);
+                    const catKo = _catKo[p.category] || '';
+                    const agentName = c.agent?.business_name || c.agent?.name || '';
+                    const text = [
+                        p.type, p.price, p.complex, p.location, p.address,
+                        p.area, p.floor, p.room, p.category, catKo,
+                        ...(p.features || []), ...(p.tags || []),
+                        p.moveIn, c.agent_comment, c.trade_status, agentName,
+                    ].filter(Boolean).join(' ').toLowerCase();
+                    return words.every(w => text.includes(w));
                 });
             }
             
