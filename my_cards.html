@@ -2355,6 +2355,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         let allCards = [];
         let cardsOffset = 0;
         const CARDS_PER_PAGE = 30;
+        let totalMyCardsCount = 0; // DB 총 매물 수
         let searchResults = [];  // 검색 결과 저장
         let isSearchMode = false; // 검색 모드 여부
         let currentFilter = '전체';      // 거래유형 필터
@@ -2463,9 +2464,19 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 }
 
                 const { data, error } = await query;
-                
+
                 if (error) throw error;
-                
+
+                // 총 매물 수 (첫 로드 시만)
+                if (reset) {
+                    const { count } = await supabaseClient
+                        .from('cards')
+                        .select('id', { count: 'exact', head: true })
+                        .eq('agent_id', currentUser.id)
+                        .neq('property->>type', '손님');
+                    totalMyCardsCount = count || 0;
+                }
+
                 if (reset) {
                     allCards = data || [];
                 } else {
@@ -4560,7 +4571,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             if (tab === 'mine') {
                 document.getElementById('pageTitle').textContent = '내 매물';
                 document.getElementById('pageTitle').style.color = '';
-                document.getElementById('pageCount').textContent = allCards.filter(c => c.property?.type !== '손님').length + '개';
+                document.getElementById('pageCount').textContent = (totalMyCardsCount > 999 ? '999+' : totalMyCardsCount) + '개';
             } else if (tab === 'shared') {
                 document.getElementById('pageTitle').textContent = '공유 매물';
                 document.getElementById('pageTitle').style.color = '';
@@ -4785,9 +4796,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             const myCount = document.getElementById('myTabCount');
             const sharedCount = document.getElementById('sharedTabCount');
             const clientCount = document.getElementById('clientTabCount');
-            const mineOnly = allCards.filter(c => c.property?.type !== '손님').length;
+            const displayCount = totalMyCardsCount > 999 ? '999+' : totalMyCardsCount;
             const clientOnly = allCards.filter(c => c.property?.type === '손님').length;
-            if (myCount) myCount.textContent = `(${mineOnly})`;
+            if (myCount) myCount.textContent = `(${displayCount})`;
             if (sharedCount) sharedCount.textContent = `(${allSharedCards.length})`;
             if (clientCount) clientCount.textContent = `(${clientOnly})`;
             
