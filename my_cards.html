@@ -6336,7 +6336,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             _showMatchedOnly = true;
             currentMainTab = 'client';
             document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
-            document.querySelector('.main-tab.client')?.classList.add('active');
+            document.getElementById('clientMatchBadge')?.classList.add('active');
             document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
             document.getElementById('tabClient')?.classList.add('active');
             document.getElementById('pageTitle').textContent = '매칭된 손님';
