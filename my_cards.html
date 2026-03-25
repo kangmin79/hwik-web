@@ -2849,24 +2849,29 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             }
             if (!card) return;
             
-            const idx = selectedCards.findIndex(c => c.id === cardId);
-            if (idx >= 0) {
-                selectedCards.splice(idx, 1);
-                // 삭제 후 인덱스 범위 초과 방지
-                currentSlideIndex = Math.max(0, Math.min(currentSlideIndex, selectedCards.length - 1));
+            // 손님 탭: 하나만 선택 (토글 대신 교체)
+            if (currentMainTab === 'client') {
+                const isSame = selectedCards.length === 1 && selectedCards[0].id === cardId;
+                selectedCards = isSame ? [] : [card];
+                currentSlideIndex = 0;
+                renderClientList();
             } else {
-                selectedCards.push(card);
-                // 새로 선택한 카드로 바로 이동
-                currentSlideIndex = selectedCards.length - 1;
-            }
-            
-            // 검색 모드면 검색 결과 다시 렌더링
-            if (currentMainTab === 'shared') {
-                renderSharedList();
-            } else if (isSearchMode) {
-                renderSearchResults();
-            } else {
-                renderList();
+                const idx = selectedCards.findIndex(c => c.id === cardId);
+                if (idx >= 0) {
+                    selectedCards.splice(idx, 1);
+                    currentSlideIndex = Math.max(0, Math.min(currentSlideIndex, selectedCards.length - 1));
+                } else {
+                    selectedCards.push(card);
+                    currentSlideIndex = selectedCards.length - 1;
+                }
+
+                if (currentMainTab === 'shared') {
+                    renderSharedList();
+                } else if (isSearchMode) {
+                    renderSearchResults();
+                } else {
+                    renderList();
+                }
             }
             renderPreview();
             updateSendButton();
