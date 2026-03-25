@@ -5528,6 +5528,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         </div>
                     </div>
                     <div class="room-card-actions">
+                        <button class="room-card-btn" data-tip="이름변경" onclick="renameShareRoom('${room.id}', '${esc(room.name)}')" style="font-size:11px;">✏️</button>
                         <button class="room-card-btn" data-tip="멤버" onclick="openMembersModal('${room.id}', '${esc(room.name)}')">${svgUser}</button>
                         <button class="room-card-btn invite" data-tip="초대" onclick="openInviteModal('${room.id}', '${esc(room.name)}')">${svgInvite}</button>
                         <button class="room-card-btn danger" data-tip="삭제" onclick="deleteShareRoom('${room.id}')">${svgTrash}</button>
@@ -5630,6 +5631,26 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 renderRoomModal();
                 updateSharedUI();
             } catch(e) { showToast('❌ 생성 실패: ' + e.message); }
+        }
+
+        async function renameShareRoom(roomId, currentName) {
+            const newName = prompt('공유방 이름을 수정해주세요', currentName);
+            if (!newName || newName.trim() === '' || newName === currentName) return;
+            try {
+                const { error } = await supabaseClient
+                    .from('share_rooms')
+                    .update({ name: newName.trim() })
+                    .eq('id', roomId)
+                    .eq('owner_id', currentUser.id);
+                if (error) throw error;
+                showToast('공유방 이름 변경 완료');
+                await loadSharedData();
+                renderRoomModal();
+                renderRoomBox();
+                renderSharedList();
+            } catch(e) {
+                showToast('이름 변경 실패: ' + e.message);
+            }
         }
 
         async function deleteShareRoom(roomId) {
