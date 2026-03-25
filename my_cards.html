@@ -6659,7 +6659,7 @@ async function loadInlineMatch(clientCardId) {
             body: JSON.stringify({
                 client_card_id: clientCardId,
                 agent_id: currentUser?.id || '',
-                limit: 20,
+                limit: 10,
                 threshold: 0.3
             })
         });

@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    const { client_card_id, agent_id, limit = 20, threshold = 0.2 } = await req.json();
+    const { client_card_id, agent_id, limit = 10, threshold = 0.2 } = await req.json();
     if (!client_card_id) throw new Error('client_card_id가 필요합니다');
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -168,7 +168,14 @@ Deno.serve(async (req) => {
       return status === '계약가능';
     });
 
-    // 상위 N개
+    // ★ 정확도순 → 동점이면 최신순
+    results.sort((a: any, b: any) => {
+      const simDiff = (b.similarity || 0) - (a.similarity || 0);
+      if (Math.abs(simDiff) > 0.01) return simDiff;
+      return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+    });
+
+    // 상위 10개
     results = results.slice(0, limit).map((r: any) => ({
       id: r.id,
       property: r.property,
