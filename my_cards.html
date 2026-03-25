@@ -2924,46 +2924,35 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 const tags = (p.features || []).map(f => `<span style="display:inline-block;padding:4px 10px;border-radius:6px;background:rgba(78,205,196,0.1);color:#4ecdc4;font-size:11px;font-weight:600;margin:2px 3px;border:1px solid rgba(78,205,196,0.15);">${esc(f)}</span>`).join('');
                 const dateStr = card.created_at ? new Date(card.created_at).toLocaleDateString('ko-KR', {month:'long', day:'numeric'}) : '';
 
-                body.innerHTML = `<div style="padding:20px;color:#e2e8f0;">
-                    <!-- 헤더 -->
-                    <div style="text-align:center;margin-bottom:16px;">
-                        <div style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;background:linear-gradient(135deg,rgba(78,205,196,0.15),rgba(78,205,196,0.05));border:1px solid rgba(78,205,196,0.2);">
-                            <span style="font-size:14px;">🙋</span>
-                            <span style="font-size:13px;font-weight:700;color:#4ecdc4;">손님 요청</span>
-                        </div>
-                    </div>
+                body.innerHTML = `<div style="padding:16px;color:#e2e8f0;">
+                    <div style="background:linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);border-radius:16px;padding:24px 20px;border:1px solid rgba(78,205,196,0.15);box-shadow:0 8px 32px rgba(0,0,0,0.3);">
 
-                    <!-- 메인 카드 -->
-                    <div style="background:linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:20px;margin-bottom:12px;">
-                        <!-- 거래유형 + 카테고리 -->
-                        <div style="display:flex;gap:6px;margin-bottom:12px;">
-                            ${p.price ? `<span style="padding:3px 10px;border-radius:4px;background:rgba(78,205,196,0.12);color:#4ecdc4;font-size:11px;font-weight:700;">${esc(p.price.split(' ')[0] || '희망')}</span>` : ''}
-                            ${catLabel ? `<span style="padding:3px 10px;border-radius:4px;background:rgba(250,204,21,0.1);color:#facc15;font-size:11px;font-weight:700;">${catLabel}</span>` : ''}
+                        <!-- 상단: 손님 뱃지 + 날짜 -->
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                            <span style="padding:4px 12px;border-radius:20px;background:rgba(78,205,196,0.15);color:#4ecdc4;font-size:11px;font-weight:700;border:1px solid rgba(78,205,196,0.2);">🙋 손님 요청</span>
+                            ${dateStr ? `<span style="font-size:10px;color:#64748b;">${dateStr}</span>` : ''}
                         </div>
 
                         <!-- 지역 -->
-                        ${p.location ? `<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;"><span style="color:#f87171;font-size:14px;">📍</span><span style="font-size:15px;font-weight:600;color:#e2e8f0;">${esc(p.location)}</span></div>` : ''}
+                        ${p.location ? `<div style="font-size:13px;color:#94a3b8;margin-bottom:6px;">📍 ${esc(p.location)}</div>` : ''}
 
-                        <!-- 가격 -->
-                        ${p.price ? `<div style="font-size:24px;font-weight:800;background:linear-gradient(135deg,#4ecdc4,#45b7aa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:12px;letter-spacing:-0.5px;">${esc(p.price)}</div>` : ''}
+                        <!-- 가격 (큰 글씨) -->
+                        ${p.price ? `<div style="font-size:28px;font-weight:800;color:#4ecdc4;margin-bottom:4px;letter-spacing:-0.5px;">${esc(p.price)}</div>` : ''}
 
-                        <!-- 면적 -->
-                        ${p.area ? `<div style="font-size:13px;color:#94a3b8;margin-bottom:8px;">📐 ${esc(p.area)}</div>` : ''}
+                        <!-- 카테고리 + 면적 -->
+                        <div style="font-size:13px;color:#94a3b8;margin-bottom:14px;">
+                            ${[catLabel, p.area].filter(Boolean).map(v => esc(v)).join(' · ')}
+                        </div>
+
+                        <!-- 구분선 -->
+                        <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(78,205,196,0.2),transparent);margin-bottom:14px;"></div>
 
                         <!-- 태그 -->
-                        ${tags ? `<div style="margin-top:8px;display:flex;flex-wrap:wrap;">${tags}</div>` : ''}
-                    </div>
+                        ${tags ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px;">${tags}</div>` : ''}
 
-                    <!-- 요청 상세 -->
-                    ${pn.memo ? `<div style="background:linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px;margin-bottom:12px;">
-                        <div style="font-size:10px;font-weight:700;color:#94a3b8;margin-bottom:6px;letter-spacing:0.5px;">📝 요청 내용</div>
-                        <div style="font-size:13px;color:#e2e8f0;line-height:1.7;white-space:pre-wrap;">${esc(pn.memo)}</div>
-                    </div>` : ''}
+                        <!-- 요청 내용 -->
+                        ${pn.memo ? `<div style="font-size:13px;color:#cbd5e1;line-height:1.7;white-space:pre-wrap;padding:12px;background:rgba(0,0,0,0.2);border-radius:10px;">${esc(pn.memo)}</div>` : ''}
 
-                    <!-- 하단 정보 -->
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06);">
-                        ${dateStr ? `<span style="font-size:11px;color:#64748b;">📅 ${dateStr} 등록</span>` : ''}
-                        <span style="font-size:11px;color:#64748b;">상태: ${esc(card.trade_status || '계약가능')}</span>
                     </div>
                 </div>`;
                 return;
