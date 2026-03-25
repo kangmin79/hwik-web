@@ -6353,7 +6353,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             // 미완료 (지난 것 포함) + 앞으로 7일
             const { data: alerts } = await supabaseClient
                 .from('client_notes')
-                .select('id, client_card_id, type, content, alert_date, alert_done, created_at')
+                .select('id, client_card_id, type, content, alert_date, alert_done, created_at, cards:client_card_id(property)')
                 .eq('agent_id', currentUser.id)
                 .eq('alert_done', false)
                 .not('alert_date', 'is', null)
@@ -6452,12 +6452,14 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             };
             const c = colors[status];
             const dateLabel = status === 'overdue' ? `⚠️ ${a.alert_date} (지연)` : status === 'today' ? '오늘' : a.alert_date;
+            const clientProp = a.cards?.property || {};
+            const clientName = [clientProp.price, clientProp.location].filter(Boolean).join(' · ') || '손님';
             return `<div style="padding:10px 14px;margin-bottom:6px;background:${c.bg};border:1px solid ${c.border};border-radius:8px;display:flex;align-items:center;gap:10px;">
                 <input type="checkbox" onchange="completeAlert('${a.id}')" style="width:18px;height:18px;cursor:pointer;flex-shrink:0;accent-color:#4ecdc4;">
                 <div style="flex:1;">
                     <div style="display:flex;justify-content:space-between;align-items:center;">
                         <span style="font-size:12px;color:${c.dateColor};font-weight:600;">${dateLabel}</span>
-                        <span style="font-size:10px;color:#64748b;">${a.type}</span>
+                        <span style="font-size:11px;color:#4ecdc4;font-weight:600;">${esc(clientName)}</span>
                     </div>
                     <div style="font-size:14px;color:#e2e8f0;margin-top:3px;">${esc(a.content)}</div>
                 </div>
