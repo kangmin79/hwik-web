@@ -7272,16 +7272,10 @@ function renderClientTimeline(container, card, notes, cardId) {
     const p = card.property || {};
     const pn = card.private_note || {};
 
-    // 메모 입력 UI
-    let html = `<div class="crm-note-input">
-        <select id="crm-type-${cardId}">
-            <option value="메모">메모</option>
-            <option value="상담">상담</option>
-            <option value="방문">방문</option>
-            <option value="계약">계약</option>
-        </select>
-        <input type="text" id="crm-input-${cardId}" placeholder="내용 입력..." onkeydown="if(event.key==='Enter')saveClientNote('${cardId}')">
-        <button onclick="saveClientNote('${cardId}')">저장</button>
+    // 메모 입력 UI (심플)
+    let html = `<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
+        <input type="text" id="crm-input-${cardId}" placeholder="메모 입력..." style="flex:1;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#e2e8f0;font-size:13px;outline:none;" onkeydown="if(event.key==='Enter')saveClientNote('${cardId}')">
+        <button onclick="saveClientNote('${cardId}')" style="padding:10px 18px;border-radius:8px;border:none;background:var(--primary);color:var(--bg-dark);font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0;">저장</button>
     </div>`;
 
     // 타임라인 아이템들 (최신이 위)
@@ -7345,11 +7339,14 @@ function renderClientTimeline(container, card, notes, cardId) {
 }
 
 async function saveClientNote(cardId) {
-    const typeEl = document.getElementById('crm-type-' + cardId);
     const inputEl = document.getElementById('crm-input-' + cardId);
-    if (!typeEl || !inputEl) return;
-    const type = typeEl.value;
+    if (!inputEl) return;
     const content = inputEl.value.trim();
+    // 내용에서 타입 자동 판별
+    let type = '메모';
+    if (/방문|현장|보러|봤/.test(content)) type = '방문';
+    else if (/상담|전화|통화|연락/.test(content)) type = '상담';
+    else if (/계약|사인|도장|잔금/.test(content)) type = '계약';
     if (!content) { showToast('내용을 입력하세요'); return; }
 
     const { error } = await supabaseClient.from('client_notes').insert({
