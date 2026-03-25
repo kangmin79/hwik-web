@@ -1233,6 +1233,37 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .detail-info { font-size: 12px; color: var(--text-gray); margin-bottom: 4px; }
         .detail-memo { font-size: 12px; color: #f87171; background: rgba(248,113,113,0.06); padding: 6px 10px; border-radius: 8px; margin-top: 4px; }
 
+        /* CRM 타임라인 */
+        .crm-timeline { padding: 12px 0 4px 0; }
+        .crm-note-input { display:flex; gap:8px; align-items:center; margin-bottom:14px; flex-wrap:wrap; }
+        .crm-note-input select { padding:6px 8px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-white); font-size:12px; font-family:inherit; }
+        .crm-note-input input { flex:1; min-width:120px; padding:7px 10px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-white); font-size:12px; font-family:inherit; }
+        .crm-note-input button { padding:7px 14px; border-radius:8px; border:none; background:var(--primary); color:var(--primary-contrast); font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap; }
+        .crm-tl-item { position:relative; padding-left:22px; padding-bottom:16px; }
+        .crm-tl-item:last-child { padding-bottom:4px; }
+        .crm-tl-item::before { content:''; position:absolute; left:5px; top:8px; bottom:0; width:2px; background:var(--border-color); }
+        .crm-tl-item:last-child::before { display:none; }
+        .crm-tl-dot { position:absolute; left:0; top:5px; width:12px; height:12px; border-radius:50%; border:2px solid var(--primary); background:var(--bg-card); z-index:1; }
+        .crm-tl-dot.type-memo { border-color:#9ca3af; }
+        .crm-tl-dot.type-consult { border-color:#60a5fa; }
+        .crm-tl-dot.type-visit { border-color:#34d399; }
+        .crm-tl-dot.type-contract { border-color:#f87171; }
+        .crm-tl-dot.type-intro { border-color:#fb923c; }
+        .crm-tl-dot.type-register { border-color:var(--primary); background:var(--primary); }
+        .crm-tl-box { background:var(--bg-input); border:1px solid var(--border-color); border-radius:10px; padding:10px 12px; }
+        .crm-tl-head { display:flex; align-items:center; gap:6px; margin-bottom:4px; }
+        .crm-tl-type { font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; }
+        .crm-tl-type.t-memo { background:rgba(156,163,175,0.15); color:#9ca3af; }
+        .crm-tl-type.t-consult { background:rgba(96,165,250,0.15); color:#60a5fa; }
+        .crm-tl-type.t-visit { background:rgba(52,211,153,0.15); color:#34d399; }
+        .crm-tl-type.t-contract { background:rgba(248,113,113,0.15); color:#f87171; }
+        .crm-tl-type.t-intro { background:rgba(251,146,60,0.15); color:#fb923c; }
+        .crm-tl-type.t-register { background:var(--primary-bg15); color:var(--primary); }
+        .crm-tl-date { font-size:11px; color:var(--text-gray-light); }
+        .crm-tl-content { font-size:12px; color:var(--text-gray); line-height:1.6; word-break:break-all; white-space:pre-wrap; }
+        .crm-tl-delete { margin-left:auto; font-size:10px; color:var(--text-gray-light); cursor:pointer; background:none; border:none; padding:2px 4px; font-family:inherit; }
+        .crm-tl-delete:hover { color:#f87171; }
+
         /* 손님 카드 텍스트 - 한 줄 말줄임 */
         .client-raw-text {
             flex: 1;
@@ -3392,6 +3423,11 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 content: content,
                 buttons: [{ title: '카드로 보기', link: { mobileWebUrl: link, webUrl: link } }],
             });
+
+            // 손님 탭에서 보낸 경우 매물소개 자동 기록
+            if (currentMainTab === 'client' && _expandedClientId) {
+                recordPropertyIntro(_expandedClientId, cards);
+            }
         }
 
         // 링크 복사 (순수 URL 클립보드 복사)
@@ -3400,6 +3436,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             navigator.clipboard.writeText(link).then(() => {
                 closeShareSheet();
                 showToast('🔗 링크 복사됨!');
+                if (currentMainTab === 'client' && _expandedClientId) {
+                    recordPropertyIntro(_expandedClientId, selectedCards);
+                }
             });
         }
 
@@ -3409,6 +3448,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             navigator.clipboard.writeText(link).then(() => {
                 closeShareSheet();
                 showToast('📋 링크 복사됨! 자신에게 카톡으로 보낸 후 모바일에서 열어주세요');
+                if (currentMainTab === 'client' && _expandedClientId) {
+                    recordPropertyIntro(_expandedClientId, selectedCards);
+                }
             });
         }
 
@@ -3445,6 +3487,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
             window.location.href = `sms:?body=${encodeURIComponent(msg)}`;
             closeShareSheet();
+            if (currentMainTab === 'client' && _expandedClientId) {
+                recordPropertyIntro(_expandedClientId, cards);
+            }
         }
         
         // 미리보기 닫기 (모바일)
@@ -5276,10 +5321,14 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             renderClientList();
         }
 
-        function toggleClientDetail(cardId) {
+        async function toggleClientDetail(cardId) {
             const detail = document.getElementById('client-detail-' + cardId);
             if (!detail) return;
+            const wasOpen = detail.classList.contains('open');
             detail.classList.toggle('open');
+            if (!wasOpen) {
+                await loadClientTimeline(cardId);
+            }
         }
 
         let allClientCards = [];
@@ -5376,9 +5425,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         <button class="property-delete" onclick="event.stopPropagation(); deleteCard('${card.id}')">삭제</button>
                     </div>
                     <div class="property-detail" id="client-detail-${card.id}">
-                        ${p.rawText ? `<div style="font-size:13px;color:var(--text-gray);line-height:1.7;white-space:pre-wrap;word-break:break-all;">${esc(p.rawText)}</div>` : ''}
-                        ${pn.memo ? `<div class="detail-memo" style="margin-top:8px;">🔒 ${esc(pn.memo)}</div>` : ''}
-                        <div style="font-size:11px;color:var(--text-gray-light);margin-top:6px;">${timeAgo}</div>
+                        <div class="crm-timeline" id="crm-timeline-${card.id}">
+                            <div style="font-size:12px;color:var(--text-gray-light);padding:8px 0;">불러오는 중...</div>
+                        </div>
                     </div>
                     <div class="client-match-area ${_expandedClientId === card.id ? 'open' : ''}" id="client-match-${card.id}"></div>
                 </div>`;
@@ -6965,6 +7014,173 @@ function renderMatchResults(result) {
 
 function closeMatchModal() {
     document.getElementById('matchModalOverlay').classList.remove('show');
+}
+
+// === CRM 타임라인 ===
+const NOTE_TYPE_MAP = {
+    '메모': { cls: 'memo', label: '메모' },
+    '상담': { cls: 'consult', label: '상담' },
+    '방문': { cls: 'visit', label: '방문' },
+    '계약': { cls: 'contract', label: '계약' },
+    '매물소개': { cls: 'intro', label: '매물소개' },
+    '등록': { cls: 'register', label: '첫 등록' },
+};
+
+function formatNoteDate(dateStr) {
+    const d = new Date(dateStr);
+    const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
+    const h = String(d.getHours()).padStart(2,'0'), min = String(d.getMinutes()).padStart(2,'0');
+    return `${y}.${m}.${day} ${h}:${min}`;
+}
+
+async function loadClientTimeline(cardId) {
+    const container = document.getElementById('crm-timeline-' + cardId);
+    if (!container) return;
+
+    // 카드 데이터 찾기
+    const card = allClientCards.find(c => c.id === cardId);
+    if (!card) return;
+
+    // client_notes 로드
+    const { data: notes, error } = await supabaseClient
+        .from('client_notes')
+        .select('*')
+        .eq('client_card_id', cardId)
+        .order('created_at', { ascending: true });
+
+    if (error) {
+        console.error('타임라인 로드 에러:', error);
+        container.innerHTML = '<div style="font-size:12px;color:#f87171;padding:8px 0;">타임라인 로드 실패</div>';
+        return;
+    }
+
+    renderClientTimeline(container, card, notes || [], cardId);
+}
+
+function renderClientTimeline(container, card, notes, cardId) {
+    const p = card.property || {};
+    const pn = card.private_note || {};
+
+    // 메모 입력 UI
+    let html = `<div class="crm-note-input">
+        <select id="crm-type-${cardId}">
+            <option value="메모">메모</option>
+            <option value="상담">상담</option>
+            <option value="방문">방문</option>
+            <option value="계약">계약</option>
+        </select>
+        <input type="text" id="crm-input-${cardId}" placeholder="내용 입력..." onkeydown="if(event.key==='Enter')saveClientNote('${cardId}')">
+        <button onclick="saveClientNote('${cardId}')">저장</button>
+    </div>`;
+
+    // 타임라인 아이템들 (최신이 위)
+    let items = [];
+
+    // 첫 번째: 등록 정보
+    const regContent = [
+        p.rawText,
+        pn.memo ? '🔒 ' + pn.memo : ''
+    ].filter(Boolean).join('\n');
+    items.push({
+        type: '등록',
+        date: card.created_at,
+        content: regContent || '손님 등록',
+        isRegister: true
+    });
+
+    // 메모들
+    notes.forEach(n => {
+        items.push({
+            id: n.id,
+            type: n.type || '메모',
+            date: n.created_at,
+            content: n.content || '',
+            linkedCardId: n.linked_card_id
+        });
+    });
+
+    // 최신순 정렬 (최신이 위, 등록은 항상 맨 아래)
+    items.sort((a, b) => {
+        if (a.isRegister) return 1;
+        if (b.isRegister) return -1;
+        return new Date(b.date) - new Date(a.date);
+    });
+
+    items.forEach(item => {
+        const t = NOTE_TYPE_MAP[item.type] || NOTE_TYPE_MAP['메모'];
+        const deleteBtn = item.id ? `<button class="crm-tl-delete" onclick="event.stopPropagation();deleteClientNote('${item.id}','${cardId}')">삭제</button>` : '';
+        html += `<div class="crm-tl-item">
+            <div class="crm-tl-dot type-${t.cls}"></div>
+            <div class="crm-tl-box">
+                <div class="crm-tl-head">
+                    <span class="crm-tl-type t-${t.cls}">${t.label}</span>
+                    <span class="crm-tl-date">${formatNoteDate(item.date)}</span>
+                    ${deleteBtn}
+                </div>
+                <div class="crm-tl-content">${esc(item.content)}</div>
+            </div>
+        </div>`;
+    });
+
+    container.innerHTML = html;
+}
+
+async function saveClientNote(cardId) {
+    const typeEl = document.getElementById('crm-type-' + cardId);
+    const inputEl = document.getElementById('crm-input-' + cardId);
+    if (!typeEl || !inputEl) return;
+    const type = typeEl.value;
+    const content = inputEl.value.trim();
+    if (!content) { showToast('내용을 입력하세요'); return; }
+
+    const { error } = await supabaseClient.from('client_notes').insert({
+        client_card_id: cardId,
+        agent_id: currentUser.id,
+        type: type,
+        content: content
+    });
+
+    if (error) {
+        console.error('메모 저장 에러:', error);
+        showToast('저장 실패');
+        return;
+    }
+
+    showToast('메모 저장됨');
+    await loadClientTimeline(cardId);
+}
+
+async function deleteClientNote(noteId, cardId) {
+    if (!confirm('이 메모를 삭제할까요?')) return;
+    const { error } = await supabaseClient.from('client_notes').delete().eq('id', noteId);
+    if (error) {
+        console.error('메모 삭제 에러:', error);
+        showToast('삭제 실패');
+        return;
+    }
+    showToast('메모 삭제됨');
+    await loadClientTimeline(cardId);
+}
+
+// 매물소개 자동 기록
+async function recordPropertyIntro(clientCardId, propertyCards) {
+    if (!currentUser || !clientCardId || !propertyCards || propertyCards.length === 0) return;
+    const descriptions = propertyCards.map(c => {
+        const p = c.property || {};
+        return [p.type, p.price, p.complex, p.location, p.area].filter(Boolean).join(' ');
+    });
+    const content = propertyCards.length === 1
+        ? '매물 소개: ' + descriptions[0]
+        : `매물 ${propertyCards.length}개 소개:\n` + descriptions.map((d, i) => `${i+1}. ${d}`).join('\n');
+
+    // 1건만 기록 (첫 번째 매물 ID를 linked_card_id로)
+    await supabaseClient.from('client_notes').insert([{
+        client_card_id: clientCardId,
+        agent_id: currentUser.id,
+        type: '매물소개',
+        content: content,
+        linked_card_id: propertyCards[0].id
+    }]);
 }
 
 function scrollToCard(cardId) {
