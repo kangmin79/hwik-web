@@ -350,14 +350,14 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            min-width: 18px;
-            height: 18px;
-            padding: 0 5px;
-            border-radius: 9px;
-            background: #ef4444;
-            color: #fff;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: rgba(250,204,21,0.15);
+            color: #facc15;
             font-size: 10px;
             font-weight: 700;
+            border: 1px solid rgba(250,204,21,0.3);
+            cursor: pointer;
             margin-left: 6px;
         }
         .tab-panel { display: none; }
@@ -2188,7 +2188,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 </button>
                 <button class="main-tab client" onclick="switchMainTab('client')">
                     손님 <span class="tab-count" id="clientTabCount"></span>
-                    <span class="tab-badge" id="clientMatchBadge" style="display:none">0</span>
+                    <span class="tab-badge" id="clientMatchBadge" style="display:none" onclick="event.stopPropagation(); showMatchedClientsOnly()">매칭 0</span>
                 </button>
                 <button id="showCompletedBtn" class="main-tab" onclick="switchMainTab('completed')" style="margin-left:4px;">완료 보기 <span class="tab-count" id="completedCount"></span></button>
                 <button class="main-tab memo-tab" onclick="switchMainTab('memo')" style="margin-left:4px;">메모 <span class="tab-count" id="memoTabCount"></span></button>
@@ -4007,12 +4007,11 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             }).then(r => r.json()).then(data => {
                 if (data.matched > 0) {
                     showToast(`🔔 손님 ${data.matched}명과 매칭됨!`);
-                    // 손님 탭 뱃지 갱신
                     const badge = document.getElementById('clientMatchBadge');
                     if (badge) {
-                        const cur = parseInt(badge.textContent || '0');
-                        badge.textContent = cur + data.matched;
-                        badge.style.display = '';
+                        const cur = parseInt(badge.textContent?.replace('매칭 ','') || '0');
+                        badge.textContent = `매칭 ${cur + data.matched}`;
+                        badge.style.display = 'inline-flex';
                     }
                 }
             }).catch(() => {});
@@ -6097,12 +6096,43 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             } catch(e) { console.log('매칭 체크 에러:', e); }
         }
         
+        // 매칭 뱃지 클릭 → 매칭된 손님만 보여주기
+        async function showMatchedClientsOnly() {
+            switchMainTab('client');
+            // 매칭된 손님 ID 목록
+            const matchedClientIds = new Set(matchResults.map(m => m.client_card_id));
+            if (matchedClientIds.size === 0) return;
+
+            // 손님 로드 후 매칭된 것만 필터
+            await loadClientCards();
+            const matched = allClientCards.filter(c => matchedClientIds.has(c.id));
+            if (matched.length === 0) return;
+
+            // 매칭된 손님만 표시
+            const container = document.getElementById('clientPropertyList');
+            if (!container) return;
+
+            // 임시로 allClientCards를 매칭된 것만으로 교체
+            const backup = allClientCards;
+            allClientCards = matched;
+            renderClientList();
+            allClientCards = backup;
+
+            // 첫 번째 손님 자동 펼침
+            if (matched.length > 0) {
+                _expandedClientId = matched[0].id;
+                selectedCards = [matched[0]];
+                loadInlineMatch(matched[0].id);
+                renderPreview();
+            }
+        }
+
         function updateMatchBell() {
             const badge = document.getElementById('clientMatchBadge');
             if (!badge) return;
-            
+
             if (matchResults.length > 0) {
-                badge.textContent = matchResults.length;
+                badge.textContent = `매칭 ${matchResults.length}`;
                 badge.style.display = 'inline-flex';
             } else {
                 badge.style.display = 'none';
