@@ -1071,6 +1071,61 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             pointer-events: none;
         }
 
+        /* 인라인 매칭 결과 영역 */
+        .client-match-area {
+            display: none;
+            padding: 8px 14px 12px 14px;
+            border-top: 1px solid rgba(251,146,60,0.15);
+            background: rgba(251,146,60,0.03);
+        }
+        .client-match-area.open { display: block; }
+        .client-match-area .match-area-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: #fb923c;
+            font-weight: 600;
+        }
+        .client-match-area .match-area-count {
+            font-size: 11px;
+            color: var(--text-gray-light);
+            font-weight: 400;
+        }
+        .client-match-area .matched-property-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            margin-bottom: 4px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.06);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .client-match-area .matched-property-item:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: rgba(255,255,255,0.12);
+        }
+        .client-match-area .matched-property-item.selected {
+            background: rgba(78,205,196,0.08);
+            border-color: rgba(78,205,196,0.25);
+        }
+        .match-skeleton {
+            height: 40px;
+            border-radius: 8px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+            background-size: 200% 100%;
+            animation: skeletonShimmer 1.5s infinite;
+            margin-bottom: 4px;
+        }
+        @keyframes skeletonShimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
         /* 매칭 모달 */
         .match-modal-overlay {
             display: none;
@@ -2849,12 +2904,27 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             }
             if (!card) return;
             
-            // 손님 탭: 하나만 선택 (토글 대신 교체)
+            // 손님 탭: 클릭하면 매칭 결과를 인라인으로 펼침
             if (currentMainTab === 'client') {
-                const isSame = selectedCards.length === 1 && selectedCards[0].id === cardId;
-                selectedCards = isSame ? [] : [card];
+                const isSame = _expandedClientId === cardId;
+                if (isSame) {
+                    // 같은 손님 다시 클릭 → 접기
+                    _expandedClientId = null;
+                    selectedCards = [];
+                } else {
+                    // 다른 손님 클릭 → 펼치고 매칭 호출
+                    _expandedClientId = cardId;
+                    selectedCards = [];
+                }
                 currentSlideIndex = 0;
                 renderClientList();
+                renderPreview();
+                updateSendButton();
+                if (!isSame) {
+                    // 매칭 호출
+                    loadInlineMatch(cardId);
+                }
+                return;
             } else {
                 const idx = selectedCards.findIndex(c => c.id === cardId);
                 if (idx >= 0) {
@@ -2915,55 +2985,26 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             const dots = document.getElementById('dotsIndicator');
             const previewTitle = document.querySelector('.preview-title');
 
-            // ★ 손님 탭: 요청 요약 패널로 전환
+            // ★ 손님 탭: 매칭 매물이 선택되면 일반 카드 미리보기, 아니면 빈 상태
             if (currentMainTab === 'client') {
                 if (selectedCards.length === 0) {
-                    panel.classList.remove('show');
+                    if (_expandedClientId) {
+                        // 손님은 펼쳐져 있지만 매물은 미선택
+                        panel.classList.add('show');
+                        if (previewTitle) previewTitle.textContent = '매물 미리보기';
+                        indicator.innerHTML = '';
+                        dots.innerHTML = '';
+                        body.innerHTML = `<div class="phone-empty">
+                            <div class="phone-empty-icon">👆</div>
+                            <div class="phone-empty-text">매칭 매물을<br>선택해주세요</div>
+                        </div>`;
+                    } else {
+                        panel.classList.remove('show');
+                    }
                     return;
                 }
-                panel.classList.add('show');
-                if (previewTitle) previewTitle.textContent = '요청 요약';
-                indicator.innerHTML = '';
-                dots.innerHTML = '';
-                const card = selectedCards[0];
-                const p = card.property || {};
-                const pn = card.private_note || {};
-                const catLabel = _categoryKo[p.category] || '';
-                const tags = (p.features || []).map(f => `<span style="display:inline-block;padding:4px 10px;border-radius:6px;background:rgba(78,205,196,0.1);color:#4ecdc4;font-size:11px;font-weight:600;margin:2px 3px;border:1px solid rgba(78,205,196,0.15);">${esc(f)}</span>`).join('');
-                const dateStr = card.created_at ? new Date(card.created_at).toLocaleDateString('ko-KR', {month:'long', day:'numeric'}) : '';
-
-                body.innerHTML = `<div style="padding:16px;color:#e2e8f0;">
-                    <div style="background:linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);border-radius:16px;padding:24px 20px;border:1px solid rgba(78,205,196,0.15);box-shadow:0 8px 32px rgba(0,0,0,0.3);">
-
-                        <!-- 상단: 손님 뱃지 + 날짜 -->
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                            <span style="padding:4px 12px;border-radius:20px;background:rgba(78,205,196,0.15);color:#4ecdc4;font-size:11px;font-weight:700;border:1px solid rgba(78,205,196,0.2);">🙋 손님 요청</span>
-                            ${dateStr ? `<span style="font-size:10px;color:#64748b;">${dateStr}</span>` : ''}
-                        </div>
-
-                        <!-- 지역 -->
-                        ${p.location ? `<div style="font-size:13px;color:#94a3b8;margin-bottom:6px;">📍 ${esc(p.location)}</div>` : ''}
-
-                        <!-- 가격 (큰 글씨) -->
-                        ${p.price ? `<div style="font-size:28px;font-weight:800;color:#4ecdc4;margin-bottom:4px;letter-spacing:-0.5px;">${esc(p.price)}</div>` : ''}
-
-                        <!-- 카테고리 + 면적 -->
-                        <div style="font-size:13px;color:#94a3b8;margin-bottom:14px;">
-                            ${[catLabel, p.area].filter(Boolean).map(v => esc(v)).join(' · ')}
-                        </div>
-
-                        <!-- 구분선 -->
-                        <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(78,205,196,0.2),transparent);margin-bottom:14px;"></div>
-
-                        <!-- 태그 -->
-                        ${tags ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px;">${tags}</div>` : ''}
-
-                        <!-- 요청 내용 -->
-                        ${pn.memo ? `<div style="font-size:13px;color:#cbd5e1;line-height:1.7;white-space:pre-wrap;padding:12px;background:rgba(0,0,0,0.2);border-radius:10px;">${esc(pn.memo)}</div>` : ''}
-
-                    </div>
-                </div>`;
-                return;
+                // 매칭 매물이 선택됨 → 일반 카드 미리보기 모드로 진행 (아래 일반 탭 코드 사용)
+                if (previewTitle) previewTitle.textContent = '손님에게 보이는 화면';
             }
 
             // 일반 탭: 제목 원복
@@ -5186,6 +5227,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
         let allClientCards = [];
         let clientOffset = 0;
+        let _expandedClientId = null;  // 현재 매칭 결과가 펼쳐진 손님 ID
+        let _matchCache = {};  // 매칭 결과 캐시 { clientCardId: result }
 
         async function loadClientCards(reset = true) {
             if (!currentUser) return;
@@ -5257,16 +5300,16 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             clients.forEach(card => {
                 const p = card.property || {};
                 const pn = card.private_note || {};
-                const selected = selectedCards.some(sc => sc.id === card.id);
+                const isExpanded = _expandedClientId === card.id;
                 const mainText = [p.complex, p.location].filter(Boolean).map(v => esc(v)).join(' · ');
                 const featureTags = (p.features || []).slice(0, 4).map(f => `<span class="list-tag">${esc(f)}</span>`).join('');
                 const timeAgo = getTimeAgo(card.created_at);
 
                 const clientSubText = [p.area, p.location].filter(Boolean).map(v => esc(v)).join(' · ');
                 const rawTextDisplay = esc(p.rawText || [p.price, mainText, clientSubText, (p.features||[]).join(' ')].filter(Boolean).join(' '));
-                html += `<div class="property-item ${selected ? 'selected' : ''}" id="item-${card.id}">
+                html += `<div class="property-item ${isExpanded ? 'selected' : ''}" id="item-${card.id}">
                     <div class="property-item-main" style="align-items:center;" onclick="toggleSelect('${card.id}')">
-                        <div class="property-checkbox">${selected ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="#4ecdc4" stroke="#4ecdc4" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</div>
+                        <div class="property-checkbox">${isExpanded ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="#fb923c" stroke="#fb923c" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</div>
                         <span class="property-type-badge" style="flex-shrink:0;background:rgba(78,205,196,0.15);color:#4ecdc4;border-color:rgba(78,205,196,0.3);margin-right:8px;">손님</span>
                         <div class="client-raw-text">${rawTextDisplay}</div>
                         <button class="match-btn" id="matchBtn-${card.id}" onclick="event.stopPropagation(); matchPropertiesForClient('${card.id}')">매칭</button>
@@ -5279,9 +5322,15 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         ${pn.memo ? `<div class="detail-memo" style="margin-top:8px;">🔒 ${esc(pn.memo)}</div>` : ''}
                         <div style="font-size:11px;color:var(--text-gray-light);margin-top:6px;">${timeAgo}</div>
                     </div>
+                    <div class="client-match-area ${_expandedClientId === card.id ? 'open' : ''}" id="client-match-${card.id}"></div>
                 </div>`;
             });
             container.innerHTML = html;
+
+            // 펼쳐진 손님의 캐시된 매칭 결과 복원
+            if (_expandedClientId && _matchCache[_expandedClientId]) {
+                renderInlineMatchResults(_expandedClientId, _matchCache[_expandedClientId]);
+            }
         }
 
         function renderSharedList() {
@@ -6486,31 +6535,21 @@ function toggleTheme(mode) {
 <script>
 // ========== 매칭 기능 ==========
 
-async function matchPropertiesForClient(clientCardId) {
-    const btn = document.getElementById('matchBtn-' + clientCardId);
-    if (btn) { btn.classList.add('loading'); btn.textContent = '검색중...'; }
+// 인라인 매칭 로드 (손님 클릭 시)
+async function loadInlineMatch(clientCardId) {
+    const area = document.getElementById('client-match-' + clientCardId);
+    if (!area) return;
+    area.classList.add('open');
 
-    // 모달 열기 (로딩 상태)
-    const overlay = document.getElementById('matchModalOverlay');
-    overlay.classList.add('show');
-    document.getElementById('matchCountBadge').textContent = '...';
-    document.getElementById('matchResultsBody').innerHTML = `
-        <div class="match-empty">
-            <div style="font-size:28px;margin-bottom:12px;">&#x23F3;</div>
-            <div>AI가 매물을 매칭하고 있어요...</div>
-        </div>`;
-
-    // 손님 카드 정보 표시
-    const clientCard = allCards.find(c => c.id === clientCardId);
-    const clientInfoEl = document.getElementById('matchClientInfo');
-    if (clientCard) {
-        const p = clientCard.property || {};
-        const rawText = p.rawText || [p.price, p.location, p.complex, p.area].filter(Boolean).join(' ');
-        clientInfoEl.innerHTML = `<div style="padding:8px 12px;border-radius:8px;background:rgba(78,205,196,0.08);border:1px solid rgba(78,205,196,0.15);margin-bottom:4px;">
-            <span style="color:#4ecdc4;font-weight:700;font-size:11px;">&#x1F64B; &#xC190;&#xB2D8; &#xC694;&#xCCAD;</span>
-            <div style="margin-top:4px;color:#e2e8f0;font-size:13px;line-height:1.5;">${esc(rawText)}</div>
-        </div>`;
+    // 캐시 확인
+    if (_matchCache[clientCardId]) {
+        renderInlineMatchResults(clientCardId, _matchCache[clientCardId]);
+        return;
     }
+
+    // 스켈레톤 표시
+    area.innerHTML = `<div class="match-area-header">매칭 매물 검색 중...</div>
+        <div class="match-skeleton"></div><div class="match-skeleton"></div><div class="match-skeleton"></div>`;
 
     try {
         const { data: sess } = await supabaseClient.auth.getSession();
@@ -6528,21 +6567,102 @@ async function matchPropertiesForClient(clientCardId) {
         });
 
         const result = await resp.json();
+        if (!resp.ok || result.error) throw new Error(result.error || '매칭 실패');
 
-        if (!resp.ok || result.error) {
-            throw new Error(result.error || '매칭 실패');
+        _matchCache[clientCardId] = result;
+        // 아직 펼쳐진 상태인지 확인
+        if (_expandedClientId === clientCardId) {
+            renderInlineMatchResults(clientCardId, result);
         }
-
-        renderMatchResults(result);
-
     } catch (e) {
         console.error('매칭 오류:', e);
-        document.getElementById('matchResultsBody').innerHTML = `
-            <div class="match-empty">
-                <div class="match-empty-icon">&#x26A0;&#xFE0F;</div>
-                <div>${esc(e.message || '매칭 중 오류가 발생했습니다')}</div>
-            </div>`;
-        document.getElementById('matchCountBadge').textContent = '오류';
+        if (_expandedClientId === clientCardId && area) {
+            area.innerHTML = `<div style="padding:12px;text-align:center;color:#f87171;font-size:13px;">${esc(e.message || '매칭 중 오류가 발생했습니다')}</div>`;
+        }
+    }
+}
+
+// 인라인 매칭 결과 렌더링
+function renderInlineMatchResults(clientCardId, result) {
+    const area = document.getElementById('client-match-' + clientCardId);
+    if (!area) return;
+
+    const results = result.results || [];
+    if (results.length === 0) {
+        area.innerHTML = `<div style="padding:12px;text-align:center;color:var(--text-gray);font-size:13px;">매칭되는 매물이 없어요</div>`;
+        return;
+    }
+
+    let html = `<div class="match-area-header">매칭 매물 <span class="match-area-count">${results.length}건</span></div>`;
+    if (result.wanted_trade_type) {
+        html += `<div style="font-size:11px;color:#fb923c;margin-bottom:8px;">${esc(result.wanted_trade_type)} 매물 기준</div>`;
+    }
+
+    results.forEach(item => {
+        const p = item.property || {};
+        const sim = item.similarity ? Math.round(item.similarity * 100) : null;
+        const simClass = sim >= 70 ? 'match-sim-high' : sim >= 50 ? 'match-sim-mid' : 'match-sim-low';
+        const typeClass = p.type === '매매' ? 'type-sale' : p.type === '전세' ? 'type-jeonse' : p.type === '월세' ? 'type-monthly' : '';
+        const mainText = [p.complex, p.location].filter(Boolean).map(v => esc(v)).join(' · ');
+        const subText = [p.area, p.floor].filter(Boolean).map(v => esc(v)).join(' · ');
+        const featureTags = (p.features || []).slice(0, 3).map(f => `<span class="list-tag">${esc(f)}</span>`).join('');
+        const isSelected = selectedCards.some(c => c.id === item.id);
+        const status = item.trade_status || '계약가능';
+        const tradeBadgeClass = status === '계약가능' ? 'trade-available' : status === '계약중' ? 'trade-ongoing' : 'trade-done';
+
+        html += `<div class="matched-property-item ${isSelected ? 'selected' : ''}" onclick="event.stopPropagation(); selectMatchedProperty('${item.id}', '${clientCardId}')">
+            <div class="property-checkbox" style="width:20px;height:20px;flex-shrink:0;">${isSelected ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="#4ecdc4" stroke="#4ecdc4" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</div>
+            ${sim !== null ? `<span class="similarity-badge ${simClass}" style="flex-shrink:0;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;min-width:32px;text-align:center;">${sim}%</span>` : ''}
+            <div style="flex:1;min-width:0;">
+                <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+                    <span class="property-type-badge ${typeClass}" style="margin:0;font-size:10px;padding:1px 6px;">${esc(p.type || '')}</span>
+                    <span class="trade-badge ${tradeBadgeClass}" style="font-size:9px;">${esc(status)}</span>
+                    <strong style="font-size:13px;color:#e2e8f0;">${esc(p.price || '')}</strong>
+                </div>
+                ${mainText ? `<div style="font-size:12px;color:var(--text-gray);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${mainText}${subText ? ' · ' + subText : ''}</div>` : ''}
+                ${featureTags ? `<div style="margin-top:3px;">${featureTags}</div>` : ''}
+            </div>
+        </div>`;
+    });
+
+    area.innerHTML = html;
+}
+
+// 매칭된 매물 선택 → 카드 미리보기에 표시
+function selectMatchedProperty(matchedCardId, clientCardId) {
+    // results에서 해당 매물 찾기
+    const result = _matchCache[clientCardId];
+    if (!result) return;
+    const matchedItem = (result.results || []).find(r => r.id === matchedCardId);
+    if (!matchedItem) return;
+
+    const idx = selectedCards.findIndex(c => c.id === matchedCardId);
+    if (idx >= 0) {
+        selectedCards.splice(idx, 1);
+        currentSlideIndex = Math.max(0, Math.min(currentSlideIndex, selectedCards.length - 1));
+    } else {
+        selectedCards.push(matchedItem);
+        currentSlideIndex = selectedCards.length - 1;
+    }
+
+    // 인라인 결과 다시 렌더링 (선택 상태 갱신)
+    renderInlineMatchResults(clientCardId, result);
+    renderPreview();
+    updateSendButton();
+}
+
+// 매칭 버튼 (수동 재매칭) — 인라인으로 동작
+async function matchPropertiesForClient(clientCardId) {
+    const btn = document.getElementById('matchBtn-' + clientCardId);
+    if (btn) { btn.classList.add('loading'); btn.textContent = '검색중...'; }
+
+    // 캐시 삭제하고 펼치기
+    delete _matchCache[clientCardId];
+    _expandedClientId = clientCardId;
+    renderClientList();
+
+    try {
+        await loadInlineMatch(clientCardId);
     } finally {
         if (btn) { btn.classList.remove('loading'); btn.textContent = '매칭'; }
     }
