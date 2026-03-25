@@ -6482,7 +6482,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             const lastDay = new Date(_calYear, _calMonth + 1, 0);
             const lastDayStr = `${_calYear}-${String(_calMonth + 1).padStart(2, '0')}-${String(lastDay.getDate()).padStart(2, '0')}`;
 
-            const { data } = await supabaseClient
+            // 해당 월 알림 + 미완료 지연 알림 (이전 달 포함)
+            const { data: monthData } = await supabaseClient
                 .from('client_notes')
                 .select('id, client_card_id, type, content, alert_date, alert_done, created_at, cards:client_card_id(property)')
                 .eq('agent_id', currentUser.id)
@@ -6491,7 +6492,16 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 .lte('alert_date', lastDayStr)
                 .order('alert_date', { ascending: true });
 
-            _calMonthAlerts = data || [];
+            const { data: overdueData } = await supabaseClient
+                .from('client_notes')
+                .select('id, client_card_id, type, content, alert_date, alert_done, created_at, cards:client_card_id(property)')
+                .eq('agent_id', currentUser.id)
+                .eq('alert_done', false)
+                .not('alert_date', 'is', null)
+                .lt('alert_date', firstDay)
+                .order('alert_date', { ascending: true });
+
+            _calMonthAlerts = [...(overdueData || []), ...(monthData || [])];
         }
 
         // 왼쪽 알림 목록 렌더링
