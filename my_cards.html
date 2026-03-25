@@ -2190,7 +2190,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     손님 <span class="tab-count" id="clientTabCount"></span>
                 </button>
                 <button class="main-tab" id="clientMatchBadge" style="display:none;margin-left:4px;" onclick="showMatchedClientsOnly()">매칭 <span class="tab-count" id="matchTabCount"></span></button>
-                <button id="showCompletedBtn" class="main-tab" onclick="switchMainTab('completed')" style="margin-left:4px;">완료 보기 <span class="tab-count" id="completedCount"></span></button>
+                <button id="showCompletedBtn" class="main-tab" onclick="switchMainTab('completed')" style="margin-left:4px;">실적 <span class="tab-count" id="completedCount"></span></button>
                 <button class="main-tab memo-tab" onclick="switchMainTab('memo')" style="margin-left:4px;">메모 <span class="tab-count" id="memoTabCount"></span></button>
             </div>
             
@@ -3862,23 +3862,86 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
 
         // 완료 매물 탭 렌더링
-        function renderCompletedList() {
-            const completedCards = allCards
-                .filter(c => c.trade_status === '완료')
-                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        async function renderCompletedList() {
+            const container = document.getElementById('completedPropertyList');
+            if (!container) return;
+            container.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8">로딩 중...</div>';
 
-            const count = completedCards.length;
-            document.getElementById('pageCount').textContent = count + '개';
-            const countEl = document.getElementById('completedCount');
-            if (countEl) countEl.textContent = count > 0 ? count : '';
+            // ★ DB에서 완료 매물 직접 조회
+            const { data: completedCards, error } = await supabaseClient
+                .from('cards')
+                .select('id, property, agent, agent_comment, private_note, photos, trade_status, price_number, created_at, agent_id')
+                .eq('agent_id', currentUser.id)
+                .eq('trade_status', '완료')
+                .order('created_at', { ascending: false })
+                .limit(50);
 
-            if (count === 0) {
-                document.getElementById('completedPropertyList').innerHTML =
-                    '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">완료된 매물이 없어요</div></div>';
+            if (error || !completedCards) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div><div class="empty-title">로드 실패</div></div>';
                 return;
             }
 
+            const count = completedCards.length;
+            document.getElementById('pageCount').textContent = count + '건';
+            const countEl = document.getElementById('completedCount');
+            if (countEl) countEl.textContent = count > 0 ? count : '';
+
+            // ★ 통계 계산
+            const now = new Date();
+            const thisMonth = completedCards.filter(c => {
+                const d = new Date(c.created_at);
+                return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+            });
+            const lastMonth = completedCards.filter(c => {
+                const d = new Date(c.created_at);
+                const lm = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                return d.getMonth() === lm.getMonth() && d.getFullYear() === lm.getFullYear();
+            });
+
+            const typeCount = { '매매': 0, '전세': 0, '월세': 0 };
+            let totalAmount = 0;
+            thisMonth.forEach(c => {
+                const t = c.property?.type;
+                if (typeCount[t] !== undefined) typeCount[t]++;
+                totalAmount += (c.price_number || 0);
+            });
+
+            const diff = thisMonth.length - lastMonth.length;
+            const diffText = diff > 0 ? `↑ ${diff}건` : diff < 0 ? `↓ ${Math.abs(diff)}건` : '동일';
+
+            // 금액 포맷
+            const formatAmount = (n) => {
+                if (n >= 10000) return `${Math.round(n / 10000 * 10) / 10}억`;
+                if (n >= 1000) return `${Math.round(n / 1000 * 10) / 10}천만`;
+                return `${n}만`;
+            };
+
             let html = '';
+
+            // ★ 통계 카드
+            html += `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
+                <div style="background:rgba(78,205,196,0.08);border:1px solid rgba(78,205,196,0.15);border-radius:12px;padding:14px;text-align:center;">
+                    <div style="font-size:28px;font-weight:800;color:#4ecdc4;">${thisMonth.length}</div>
+                    <div style="font-size:11px;color:#94a3b8;">이번 달 계약</div>
+                </div>
+                <div style="background:rgba(250,204,21,0.08);border:1px solid rgba(250,204,21,0.15);border-radius:12px;padding:14px;text-align:center;">
+                    <div style="font-size:16px;font-weight:700;color:#facc15;margin-bottom:2px;">${typeCount['매매']}·${typeCount['전세']}·${typeCount['월세']}</div>
+                    <div style="font-size:10px;color:#94a3b8;">매매·전세·월세</div>
+                </div>
+                <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px;text-align:center;">
+                    <div style="font-size:14px;font-weight:700;color:#e2e8f0;">${totalAmount > 0 ? formatAmount(totalAmount) : '-'}</div>
+                    <div style="font-size:10px;color:#94a3b8;">총 거래금액</div>
+                    <div style="font-size:10px;color:${diff >= 0 ? '#4ade80' : '#f87171'};margin-top:2px;">전월 대비 ${diffText}</div>
+                </div>
+            </div>`;
+
+            if (count === 0) {
+                html += '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">완료된 거래가 없어요</div></div>';
+                container.innerHTML = html;
+                return;
+            }
+
+            html += `<div style="font-size:13px;font-weight:600;color:#94a3b8;margin-bottom:8px;">📋 완료 목록 (${count}건)</div>`;
             completedCards.forEach(card => {
                 const p = card.property || {};
                 const pn = card.private_note || {};
@@ -4828,8 +4891,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 document.getElementById('pageTitle').style.color = '';
                 document.getElementById('pageCount').textContent = (totalMyCardsCount > 999 ? '999+' : totalMyCardsCount) + '개';
             } else if (tab === 'completed') {
-                document.getElementById('pageTitle').textContent = '완료 매물';
-                document.getElementById('pageTitle').style.color = 'var(--text-gray)';
+                document.getElementById('pageTitle').textContent = '실적';
+                document.getElementById('pageTitle').style.color = '#4ecdc4';
                 renderCompletedList();
             } else if (tab === 'shared') {
                 document.getElementById('pageTitle').textContent = '공유 매물';
