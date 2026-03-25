@@ -1050,6 +1050,98 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .type-monthly { background: rgba(167,139,250,0.12); color: #a78bfa; }
         .type-client { background: rgba(78,205,196,0.12); color: #4ecdc4; }
 
+        /* 매칭 버튼 */
+        .match-btn {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(251,146,60,0.12);
+            color: #fb923c;
+            border: 1px solid rgba(251,146,60,0.25);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .match-btn:hover {
+            background: rgba(251,146,60,0.25);
+            border-color: rgba(251,146,60,0.4);
+        }
+        .match-btn.loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        /* 매칭 모달 */
+        .match-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(4px);
+            z-index: 5000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .match-modal-overlay.show { display: flex; }
+        .match-modal {
+            background: #141c2b;
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 20px;
+            width: 100%; max-width: 520px;
+            max-height: 85vh; overflow-y: auto;
+            scrollbar-width: none;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+        }
+        .match-modal::-webkit-scrollbar { display: none; }
+        .match-modal-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .match-modal-header h3 {
+            font-size: 17px; font-weight: 700; margin: 0;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .match-modal-body { padding: 16px 24px 24px; }
+        .match-result-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .match-result-item:hover {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(255,255,255,0.12);
+        }
+        .match-similarity {
+            flex-shrink: 0;
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 800;
+        }
+        .match-sim-high { background: rgba(34,197,94,0.15); color: #22c55e; }
+        .match-sim-mid  { background: rgba(251,146,60,0.15); color: #fb923c; }
+        .match-sim-low  { background: rgba(120,120,120,0.15); color: #888; }
+        .match-info { flex: 1; min-width: 0; }
+        .match-info-row1 { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .match-info-row2 { font-size: 12px; color: var(--text-gray); margin-top: 4px; }
+        .match-empty {
+            text-align: center; padding: 40px 20px;
+            color: var(--text-gray);
+        }
+        .match-empty-icon { font-size: 40px; margin-bottom: 12px; }
+        .match-count-badge {
+            font-size: 12px; font-weight: 600;
+            padding: 2px 8px; border-radius: 10px;
+            background: rgba(251,146,60,0.15); color: #fb923c;
+        }
+
         /* 거래 상태 뱃지 */
         .trade-badge {
             font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; flex-shrink: 0;
@@ -5104,6 +5196,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         <div class="property-checkbox">${selected ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="#4ecdc4" stroke="#4ecdc4" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</div>
                         <span class="property-type-badge" style="flex-shrink:0;background:rgba(78,205,196,0.15);color:#4ecdc4;border-color:rgba(78,205,196,0.3);margin-right:8px;">손님</span>
                         <div class="client-raw-text">${rawTextDisplay}</div>
+                        <button class="match-btn" id="matchBtn-${card.id}" onclick="event.stopPropagation(); matchPropertiesForClient('${card.id}')">매칭</button>
                         <button class="property-edit" onclick="event.stopPropagation(); toggleClientDetail('${card.id}')">상세</button>
                         <button class="property-edit" onclick="event.stopPropagation(); editClientCard('${card.id}')">수정</button>
                         <button class="property-delete" onclick="event.stopPropagation(); deleteCard('${card.id}')">삭제</button>
@@ -6296,5 +6389,170 @@ function toggleTheme(mode) {
         </div>
     </div>
 </div>
+
+<!-- 매칭 결과 모달 -->
+<div class="match-modal-overlay" id="matchModalOverlay" onclick="if(event.target===this)closeMatchModal()">
+    <div class="match-modal">
+        <div class="match-modal-header">
+            <h3>
+                <span style="font-size:20px;">&#x1F50D;</span> 매칭 결과
+                <span class="match-count-badge" id="matchCountBadge">0건</span>
+            </h3>
+            <button onclick="closeMatchModal()" style="background:none;border:none;color:#888;font-size:22px;cursor:pointer;padding:4px 8px;line-height:1;">&times;</button>
+        </div>
+        <div id="matchClientInfo" style="padding:8px 24px 0;font-size:13px;color:var(--text-gray);"></div>
+        <div class="match-modal-body" id="matchResultsBody">
+            <div class="match-empty">
+                <div class="match-empty-icon">&#x1F50E;</div>
+                <div>매칭 중...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ========== 매칭 기능 ==========
+
+async function matchPropertiesForClient(clientCardId) {
+    const btn = document.getElementById('matchBtn-' + clientCardId);
+    if (btn) { btn.classList.add('loading'); btn.textContent = '검색중...'; }
+
+    // 모달 열기 (로딩 상태)
+    const overlay = document.getElementById('matchModalOverlay');
+    overlay.classList.add('show');
+    document.getElementById('matchCountBadge').textContent = '...';
+    document.getElementById('matchResultsBody').innerHTML = `
+        <div class="match-empty">
+            <div style="font-size:28px;margin-bottom:12px;">&#x23F3;</div>
+            <div>AI가 매물을 매칭하고 있어요...</div>
+        </div>`;
+
+    // 손님 카드 정보 표시
+    const clientCard = allCards.find(c => c.id === clientCardId);
+    const clientInfoEl = document.getElementById('matchClientInfo');
+    if (clientCard) {
+        const p = clientCard.property || {};
+        const rawText = p.rawText || [p.price, p.location, p.complex, p.area].filter(Boolean).join(' ');
+        clientInfoEl.innerHTML = `<div style="padding:8px 12px;border-radius:8px;background:rgba(78,205,196,0.08);border:1px solid rgba(78,205,196,0.15);margin-bottom:4px;">
+            <span style="color:#4ecdc4;font-weight:700;font-size:11px;">&#x1F64B; &#xC190;&#xB2D8; &#xC694;&#xCCAD;</span>
+            <div style="margin-top:4px;color:#e2e8f0;font-size:13px;line-height:1.5;">${esc(rawText)}</div>
+        </div>`;
+    }
+
+    try {
+        const { data: sess } = await supabaseClient.auth.getSession();
+        const token = sess?.session?.access_token || SUPABASE_KEY;
+
+        const resp = await fetch(`${SUPABASE_URL}/functions/v1/match-properties`, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                client_card_id: clientCardId,
+                agent_id: currentUser?.id || '',
+                limit: 20,
+                threshold: 0.3
+            })
+        });
+
+        const result = await resp.json();
+
+        if (!resp.ok || result.error) {
+            throw new Error(result.error || '매칭 실패');
+        }
+
+        renderMatchResults(result);
+
+    } catch (e) {
+        console.error('매칭 오류:', e);
+        document.getElementById('matchResultsBody').innerHTML = `
+            <div class="match-empty">
+                <div class="match-empty-icon">&#x26A0;&#xFE0F;</div>
+                <div>${esc(e.message || '매칭 중 오류가 발생했습니다')}</div>
+            </div>`;
+        document.getElementById('matchCountBadge').textContent = '오류';
+    } finally {
+        if (btn) { btn.classList.remove('loading'); btn.textContent = '매칭'; }
+    }
+}
+
+function renderMatchResults(result) {
+    const body = document.getElementById('matchResultsBody');
+    const countBadge = document.getElementById('matchCountBadge');
+    const results = result.results || [];
+
+    countBadge.textContent = results.length + '건';
+
+    if (results.length === 0) {
+        body.innerHTML = `
+            <div class="match-empty">
+                <div class="match-empty-icon">&#x1F614;</div>
+                <div style="font-size:15px;font-weight:600;margin-bottom:6px;">매칭되는 매물이 없어요</div>
+                <div style="font-size:13px;color:var(--text-gray-light);">
+                    ${result.wanted_trade_type ? result.wanted_trade_type + ' 매물 중 ' : ''}유사도 30% 이상인 매물이 없습니다.
+                    <br>매물을 더 등록하거나 손님 요청을 수정해보세요.
+                </div>
+            </div>`;
+        return;
+    }
+
+    let html = '';
+    if (result.wanted_trade_type) {
+        html += `<div style="font-size:12px;color:#fb923c;margin-bottom:12px;font-weight:600;">&#x1F3AF; ${esc(result.wanted_trade_type)} &#xB9E4;&#xBB3C; &#xAE30;&#xC900;&#xC73C;&#xB85C; &#xB9E4;&#xCE6D;&#xD588;&#xC5B4;&#xC694;</div>`;
+    }
+
+    results.forEach((item, idx) => {
+        const p = item.property || {};
+        const sim = item.similarity ? Math.round(item.similarity * 100) : null;
+        const simClass = sim >= 70 ? 'match-sim-high' : sim >= 50 ? 'match-sim-mid' : 'match-sim-low';
+        const typeClass = p.type === '매매' ? 'type-sale' : p.type === '전세' ? 'type-jeonse' : p.type === '월세' ? 'type-monthly' : '';
+        const mainText = [p.complex, p.location].filter(Boolean).join(' · ');
+        const features = (p.features || []).slice(0, 3).map(f => `<span class="list-tag">${esc(f)}</span>`).join('');
+        const status = item.trade_status || '계약가능';
+        const statusClass = status === '계약가능' ? 'trade-available' : status === '계약중' ? 'trade-ongoing' : 'trade-done';
+
+        html += `<div class="match-result-item" onclick="closeMatchModal(); scrollToCard('${item.id}')">
+            <div class="match-similarity ${simClass}">${sim !== null ? sim + '%' : '-'}</div>
+            <div class="match-info">
+                <div class="match-info-row1">
+                    <span class="property-type-badge ${typeClass}" style="margin:0;">${esc(p.type || '')}</span>
+                    <strong style="font-size:14px;">${esc(p.price || '')}</strong>
+                    <span class="trade-badge ${statusClass}" style="font-size:9px;">${esc(status)}</span>
+                </div>
+                <div class="match-info-row2">
+                    ${mainText ? esc(mainText) : ''}
+                    ${p.area ? ' · ' + esc(p.area) : ''}
+                    ${p.floor ? ' · ' + esc(p.floor) : ''}
+                </div>
+                ${features ? `<div style="margin-top:4px;">${features}</div>` : ''}
+                ${item.agent_comment ? `<div style="font-size:11px;color:var(--text-gray-light);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(item.agent_comment)}</div>` : ''}
+            </div>
+        </div>`;
+    });
+
+    body.innerHTML = html;
+}
+
+function closeMatchModal() {
+    document.getElementById('matchModalOverlay').classList.remove('show');
+}
+
+function scrollToCard(cardId) {
+    // 내 매물 탭으로 전환 후 해당 카드로 스크롤
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const myTab = tabBtns[0]; // 첫 번째 탭이 내 매물
+    if (myTab && !myTab.classList.contains('active')) {
+        myTab.click();
+    }
+    setTimeout(() => {
+        const el = document.getElementById('item-' + cardId);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.style.outline = '2px solid #fb923c';
+            el.style.outlineOffset = '2px';
+            setTimeout(() => { el.style.outline = 'none'; }, 3000);
+        }
+    }, 200);
+}
+</script>
 </body>
 </html>
