@@ -1250,7 +1250,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .crm-tl-dot.type-contract { border-color:#f87171; }
         .crm-tl-dot.type-intro { border-color:#fb923c; }
         .crm-tl-dot.type-register { border-color:var(--primary); background:var(--primary); }
-        .crm-tl-box { background:var(--bg-input); border:1px solid var(--border-color); border-radius:10px; padding:10px 12px; }
+        .crm-tl-box { background:var(--bg-input); border:1px solid var(--border-color); border-radius:10px; padding:14px 16px; }
         .crm-tl-head { display:flex; align-items:center; gap:6px; margin-bottom:4px; }
         .crm-tl-type { font-size:10px; font-weight:700; padding:2px 6px; border-radius:4px; }
         .crm-tl-type.t-memo { background:rgba(156,163,175,0.15); color:#9ca3af; }
@@ -1260,7 +1260,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .crm-tl-type.t-intro { background:rgba(251,146,60,0.15); color:#fb923c; }
         .crm-tl-type.t-register { background:var(--primary-bg15); color:var(--primary); }
         .crm-tl-date { font-size:11px; color:var(--text-gray-light); }
-        .crm-tl-content { font-size:12px; color:var(--text-gray); line-height:1.6; word-break:break-all; white-space:pre-wrap; }
+        .crm-tl-content { font-size:14px; color:var(--text-white); line-height:1.7; word-break:break-all; white-space:pre-wrap; }
         .crm-tl-delete { margin-left:auto; font-size:10px; color:var(--text-gray-light); cursor:pointer; background:none; border:none; padding:2px 4px; font-family:inherit; }
         .crm-tl-delete:hover { color:#f87171; }
 
@@ -6855,7 +6855,7 @@ async function loadClientFullView(cardId) {
     const pn = card.private_note || {};
     const features = p.features || [];
     const regDate = card.created_at ? new Date(card.created_at).toLocaleDateString('ko-KR', {month:'long', day:'numeric'}) : '';
-    const featureTags = features.map(f => `<span style="display:inline-block;padding:2px 8px;border-radius:4px;background:rgba(78,205,196,0.1);color:#4ecdc4;font-size:11px;font-weight:600;margin:2px;">${esc(f)}</span>`).join('');
+    const featureTags = features.map(f => `<span style="display:inline-block;padding:4px 10px;border-radius:6px;background:rgba(78,205,196,0.12);color:#4ecdc4;font-size:13px;font-weight:600;margin:2px;border:1px solid rgba(78,205,196,0.2);">${esc(f)}</span>`).join('');
     const memoText = pn.memo || '';
 
     // 통합 뷰: 타임라인 + 메모입력 + 매칭
@@ -7290,12 +7290,12 @@ function renderClientTimeline(container, card, notes, cardId) {
     // 첫 번째: 손님 정보 (타임라인 첫 박스)
     const featureTags = (p.features || []).map(f => `<span style="display:inline-block;padding:1px 6px;border-radius:4px;background:rgba(78,205,196,0.1);color:#4ecdc4;font-size:10px;margin:1px 2px;">${f}</span>`).join('');
     const infoLines = [
-        p.price ? `💰 ${p.price}` : '',
-        p.location ? `📍 ${p.location}` : '',
-        p.complex ? `🏢 ${p.complex}` : '',
-        p.area ? `📐 ${p.area}` : '',
-        featureTags ? `${featureTags}` : '',
-        pn.memo ? `\n📝 ${pn.memo}` : ''
+        p.price ? `<span style="font-size:18px;font-weight:700;color:#4ecdc4;">💰 ${p.price}</span>` : '',
+        p.location ? `<span style="font-size:15px;color:#e2e8f0;">📍 ${p.location}</span>` : '',
+        p.complex ? `<span style="font-size:14px;color:#cbd5e1;">🏢 ${p.complex}</span>` : '',
+        p.area ? `<span style="font-size:14px;color:#cbd5e1;">📐 ${p.area}</span>` : '',
+        featureTags ? `<div style="margin-top:6px;">${featureTags}</div>` : '',
+        pn.memo ? `<div style="margin-top:8px;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:13px;color:#94a3b8;">📝 ${pn.memo}</div>` : ''
     ].filter(Boolean).join('\n');
     items.push({
         type: '등록',
