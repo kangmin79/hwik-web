@@ -28,10 +28,32 @@ Deno.serve(async (req) => {
       .single();
 
     if (cardErr || !card) throw new Error('매물을 찾을 수 없습니다');
+
+    // ★ 임베딩 없으면 즉시 생성
     if (!card.embedding) {
-      return new Response(JSON.stringify({ success: true, matched: 0, reason: '임베딩 없음' }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+      if (!OPENAI_API_KEY) {
+        return new Response(JSON.stringify({ success: true, matched: 0, reason: '임베딩 생성 불가' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      const cp = card.property || {};
+      const embedText = [cp.type, cp.price, cp.location, cp.complex, cp.area, cp.floor, cp.room, cp.category, ...(cp.features || [])].filter(Boolean).join(' ');
+      const embedResp = await fetch('https://api.openai.com/v1/embeddings', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'text-embedding-3-small', input: embedText })
       });
+      const embedData = await embedResp.json();
+      const embedding = embedData.data?.[0]?.embedding;
+      if (!embedding) {
+        return new Response(JSON.stringify({ success: true, matched: 0, reason: '임베딩 생성 실패' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      await supabase.from('cards').update({ embedding, search_text: embedText }).eq('id', card_id);
+      card.embedding = embedding;
+      console.log('매물 임베딩 즉시 생성 완료');
     }
 
     const p = card.property || {};
