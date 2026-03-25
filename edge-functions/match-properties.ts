@@ -30,6 +30,11 @@ Deno.serve(async (req) => {
     if (clientCard.property?.type !== '손님') throw new Error('손님 카드가 아닙니다');
     if (!clientCard.embedding) throw new Error('손님 카드에 임베딩이 없습니다');
 
+    // ★ 보안: 본인 손님만 조회 가능
+    if (agent_id && clientCard.agent_id !== agent_id) {
+      throw new Error('권한이 없습니다');
+    }
+
     // 2. 손님의 원하는 거래유형 파악 (property.price 텍스트에서 추출)
     const clientProperty = clientCard.property || {};
     const clientText = [
