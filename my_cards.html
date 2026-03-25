@@ -7284,12 +7284,13 @@ function renderClientTimeline(container, card, notes, cardId) {
     // 첫 번째: 손님 정보 (타임라인 첫 박스)
     const featureTags = (p.features || []).map(f => `<span style="display:inline-block;padding:1px 6px;border-radius:4px;background:rgba(78,205,196,0.1);color:#4ecdc4;font-size:10px;margin:1px 2px;">${f}</span>`).join('');
     const infoLines = [
-        p.price ? `<span style="font-size:18px;font-weight:700;color:#4ecdc4;">💰 ${p.price}</span>` : '',
-        p.location ? `<span style="font-size:15px;color:#e2e8f0;">📍 ${p.location}</span>` : '',
-        p.complex ? `<span style="font-size:14px;color:#cbd5e1;">🏢 ${p.complex}</span>` : '',
-        p.area ? `<span style="font-size:14px;color:#cbd5e1;">📐 ${p.area}</span>` : '',
-        featureTags ? `<div style="margin-top:6px;">${featureTags}</div>` : '',
-        pn.memo ? `<div style="margin-top:8px;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:13px;color:#94a3b8;">📝 ${pn.memo}</div>` : ''
+        `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">${[
+            p.price ? `<span style="font-size:16px;font-weight:700;color:#4ecdc4;">${p.price}</span>` : '',
+            p.location ? `<span style="color:#e2e8f0;">· ${p.location}</span>` : '',
+            p.complex ? `<span style="color:#cbd5e1;">· ${p.complex}</span>` : '',
+            p.area ? `<span style="color:#cbd5e1;">· ${p.area}</span>` : '',
+        ].filter(Boolean).join('')} ${featureTags}</div>`,
+        pn.memo ? `<div style="margin-top:6px;font-size:13px;color:#94a3b8;line-height:1.6;">📝 ${pn.memo}</div>` : ''
     ].filter(Boolean).join('\n');
     items.push({
         type: '등록',
