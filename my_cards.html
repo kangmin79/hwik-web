@@ -6620,11 +6620,6 @@ function renderInlineMatchResults(clientCardId, result) {
         const p = item.property || {};
         const isMine = myIds.has(item.id);
         const isShared = sharedIds.has(item.id) && !isMine;
-        const sourceTag = isMine
-            ? '<span style="padding:1px 6px;border-radius:3px;background:rgba(250,204,21,0.15);color:#facc15;font-size:9px;font-weight:700;">내 매물</span>'
-            : isShared
-            ? '<span style="padding:1px 6px;border-radius:3px;background:rgba(78,205,196,0.15);color:#4ecdc4;font-size:9px;font-weight:700;">공유</span>'
-            : '';
         const typeClass = p.type === '매매' ? 'type-sale' : p.type === '전세' ? 'type-jeonse' : p.type === '월세' ? 'type-monthly' : '';
         const mainText = [p.complex, p.location].filter(Boolean).map(v => esc(v)).join(' · ');
         const subText = [p.area, p.floor].filter(Boolean).map(v => esc(v)).join(' · ');
@@ -6633,6 +6628,26 @@ function renderInlineMatchResults(clientCardId, result) {
         const status = item.trade_status || '계약가능';
         const tradeBadgeClass = status === '계약가능' ? 'trade-available' : status === '계약중' ? 'trade-ongoing' : 'trade-done';
 
+        // 공유 매물 정보 (공유방 이름 + 중개사)
+        let sharedInfoHtml = '';
+        if (isMine) {
+            sharedInfoHtml = '<span style="padding:1px 6px;border-radius:3px;background:rgba(250,204,21,0.15);color:#facc15;font-size:9px;font-weight:700;">내 매물</span>';
+        } else if (isShared) {
+            const sharedCard = allSharedCards.find(c => c.id === item.id);
+            if (sharedCard) {
+                const agentColor = getAgentColor(sharedCard.shared_by || sharedCard.agent_id);
+                const roomName = allMyRoomsList.find(r => r.id === sharedCard.room_id)?.name || '';
+                const agentName = sharedCard.agent?.name || sharedCard.agent?.business_name || '';
+                const agentPhone = sharedCard.agent?.phone || '';
+                sharedInfoHtml = `<div class="shared-agent-name" style="margin-top:3px;">
+                    <span class="shared-agent-dot" style="background:${agentColor}"></span>
+                    <span style="display:inline-block;padding:1px 6px;border-radius:4px;background:${agentColor}20;color:${agentColor};font-size:10px;font-weight:600;margin-right:4px;">${esc(roomName)} 공유방</span>
+                    <span style="color:${agentColor};font-weight:600;">${esc(agentName)}</span>
+                    <span style="color:var(--text-gray);font-size:11px;margin-left:8px;">${esc(agentPhone)}</span>
+                </div>`;
+            }
+        }
+
         html += `<div class="matched-property-item ${isSelected ? 'selected' : ''}" onclick="event.stopPropagation(); selectMatchedProperty('${item.id}', '${clientCardId}')">
             <div class="property-checkbox" style="width:20px;height:20px;flex-shrink:0;">${isSelected ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="#4ecdc4" stroke="#4ecdc4" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</div>
             <div style="flex:1;min-width:0;">
@@ -6640,10 +6655,11 @@ function renderInlineMatchResults(clientCardId, result) {
                     <span class="property-type-badge ${typeClass}" style="margin:0;font-size:10px;padding:1px 6px;">${esc(p.type || '')}</span>
                     <span class="trade-badge ${tradeBadgeClass}" style="font-size:9px;">${esc(status)}</span>
                     <strong style="font-size:13px;color:#e2e8f0;">${esc(p.price || '')}</strong>
-                    ${sourceTag}
+                    ${isMine ? sharedInfoHtml : ''}
                 </div>
                 ${mainText ? `<div style="font-size:12px;color:var(--text-gray);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${mainText}${subText ? ' · ' + subText : ''}</div>` : ''}
                 ${featureTags ? `<div style="margin-top:3px;">${featureTags}</div>` : ''}
+                ${isShared ? sharedInfoHtml : ''}
             </div>
         </div>`;
     });
