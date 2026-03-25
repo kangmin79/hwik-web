@@ -7385,6 +7385,51 @@ async function saveClientNote(cardId) {
 
     showToast('메모 저장됨');
     await loadClientTimeline(cardId);
+
+    // ★ 손님 임베딩 재생성 (메모 포함 — 백그라운드)
+    updateClientEmbedding(cardId);
+}
+
+// 손님 카드 임베딩 업데이트 (property + 모든 메모 + 날짜 포함)
+async function updateClientEmbedding(cardId) {
+    try {
+        // 손님 카드 정보
+        const { data: card } = await supabaseClient
+            .from('cards')
+            .select('property, private_note')
+            .eq('id', cardId).single();
+        if (!card) return;
+
+        // 모든 메모 조회
+        const { data: notes } = await supabaseClient
+            .from('client_notes')
+            .select('type, content, created_at')
+            .eq('client_card_id', cardId)
+            .order('created_at', { ascending: true });
+
+        // 임베딩 텍스트 생성 (property + memo + 모든 노트 + 날짜)
+        const p = card.property || {};
+        const memo = card.private_note?.memo || '';
+        const noteTexts = (notes || []).map(n => {
+            const d = new Date(n.created_at);
+            const dateStr = `${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일`;
+            return `${dateStr} ${n.type}: ${n.content}`;
+        });
+
+        const embedText = [
+            p.type, p.price, p.location, p.complex, p.area,
+            ...(p.features || []), memo, ...noteTexts
+        ].filter(Boolean).join(' ');
+
+        // Edge Function으로 임베딩 생성
+        const { data: sess } = await supabaseClient.auth.getSession();
+        const token = sess?.session?.access_token || SUPABASE_KEY;
+        await fetch(`${SUPABASE_URL}/functions/v1/embed-card`, {
+            method: 'POST',
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ card_id: cardId, text: embedText })
+        });
+    } catch(e) { console.warn('손님 임베딩 업데이트 실패:', e); }
 }
 
 async function deleteClientNote(noteId, cardId) {
@@ -7397,6 +7442,7 @@ async function deleteClientNote(noteId, cardId) {
     }
     showToast('메모 삭제됨');
     await loadClientTimeline(cardId);
+    updateClientEmbedding(cardId);
 }
 
 // 매물소개 자동 기록
