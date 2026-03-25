@@ -7503,8 +7503,12 @@ async function saveClientNote(cardId) {
     // ★ 날짜 자동 감지
     let alertDate = null;
     const now = new Date();
+    // "오늘" → 오늘 날짜
+    if (/오늘/.test(content)) {
+        alertDate = now.toISOString().slice(0, 10);
+    }
     // "내일" → 내일 날짜
-    if (/내일/.test(content)) {
+    else if (/내일/.test(content)) {
         const d = new Date(now); d.setDate(d.getDate() + 1);
         alertDate = d.toISOString().slice(0, 10);
     }
