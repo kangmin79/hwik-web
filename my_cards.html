@@ -6097,34 +6097,69 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         
         // 매칭 뱃지 클릭 → 매칭된 손님만 보여주기
+        let _showMatchedOnly = false;
+
         async function showMatchedClientsOnly() {
-            switchMainTab('client');
-            // 매칭된 손님 ID 목록
+            _showMatchedOnly = true;
+            // 손님 탭으로 전환
+            currentMainTab = 'client';
+            document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector('.main-tab.client')?.classList.add('active');
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('tabClient')?.classList.add('active');
+            document.getElementById('pageTitle').textContent = '매칭된 손님';
+            document.getElementById('pageTitle').style.color = '#facc15';
+
+            // 손님 로드
+            if (allClientCards.length === 0) await loadClientCards();
+
+            // 매칭된 손님만 필터
             const matchedClientIds = new Set(matchResults.map(m => m.client_card_id));
-            if (matchedClientIds.size === 0) return;
-
-            // 손님 로드 후 매칭된 것만 필터
-            await loadClientCards();
             const matched = allClientCards.filter(c => matchedClientIds.has(c.id));
-            if (matched.length === 0) return;
 
-            // 매칭된 손님만 표시
+            // 직접 렌더링
             const container = document.getElementById('clientPropertyList');
             if (!container) return;
 
-            // 임시로 allClientCards를 매칭된 것만으로 교체
-            const backup = allClientCards;
-            allClientCards = matched;
-            renderClientList();
-            allClientCards = backup;
+            document.getElementById('pageCount').textContent = matched.length + '명';
 
-            // 첫 번째 손님 자동 펼침
-            if (matched.length > 0) {
-                _expandedClientId = matched[0].id;
-                selectedCards = [matched[0]];
-                loadInlineMatch(matched[0].id);
-                renderPreview();
+            if (matched.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">매칭된 손님이 없어요</div></div>';
+                return;
             }
+
+            // 매칭된 손님 렌더링 + 자동 펼침
+            let html = '';
+            matched.forEach((card, idx) => {
+                const p = card.property || {};
+                const rawText = esc(p.rawText || [p.price, p.location, (p.features||[]).join(' ')].filter(Boolean).join(' '));
+                html += `<div class="property-item" id="item-${card.id}" style="border-left:3px solid #facc15;">
+                    <div class="property-item-main" onclick="toggleSelect('${card.id}')" style="align-items:center;">
+                        <span class="property-type-badge" style="flex-shrink:0;background:rgba(78,205,196,0.15);color:#4ecdc4;border-color:rgba(78,205,196,0.3);margin-right:8px;">손님</span>
+                        <div class="client-raw-text">${rawText}</div>
+                        <button class="match-btn" onclick="event.stopPropagation(); matchPropertiesForClient('${card.id}')">매칭</button>
+                    </div>
+                    <div class="client-match-area open" id="matchArea-${card.id}">
+                        <div class="match-area-header">매칭 매물 검색 중...</div>
+                        <div class="match-skeleton"></div>
+                    </div>
+                </div>`;
+            });
+            container.innerHTML = html;
+
+            // 더보기 버튼 제거
+            const loadMoreEl = document.getElementById('clientLoadMoreBtn');
+            if (loadMoreEl) loadMoreEl.remove();
+
+            // 전체 자동 매칭 로드
+            matched.forEach(card => {
+                _expandedClientId = card.id;
+                loadInlineMatch(card.id);
+            });
+
+            // 첫 손님 선택
+            selectedCards = [matched[0]];
+            renderPreview();
         }
 
         function updateMatchBell() {
