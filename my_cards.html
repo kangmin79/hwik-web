@@ -2840,6 +2840,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             if (fromShared || currentMainTab === 'shared') {
                 card = allSharedCards.find(c => c.id === cardId);
             }
+            if (!card && currentMainTab === 'client') {
+                card = allClientCards.find(c => c.id === cardId);
+            }
             if (!card) {
                 const sourceCards = isSearchMode ? searchResults : allCards;
                 card = sourceCards.find(c => c.id === cardId);
