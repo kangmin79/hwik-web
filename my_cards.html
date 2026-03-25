@@ -4088,6 +4088,24 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             document.getElementById('completedPropertyList').innerHTML = html;
         }
 
+        // 손님 완료 처리 (삭제 아님, 숨김)
+        async function completeClient(cardId) {
+            if (!confirm('이 손님을 완료 처리할까요?\n목록에서 숨겨지지만 검색으로 찾을 수 있어요.')) return;
+            try {
+                await supabaseClient.from('cards').update({ trade_status: '완료' }).eq('id', cardId).eq('agent_id', currentUser.id);
+                // 타임라인에 자동 기록
+                await supabaseClient.from('client_notes').insert({
+                    client_card_id: cardId,
+                    agent_id: currentUser.id,
+                    type: '완료',
+                    content: '손님 관리 완료 처리'
+                });
+                showToast('손님 완료 처리됨');
+                allClientCards = allClientCards.filter(c => c.id !== cardId);
+                renderClientList();
+            } catch(e) { showToast('완료 처리 실패'); }
+        }
+
         async function deleteCard(cardId) {
             if (!confirm('삭제하시겠습니까?')) return;
             
@@ -5410,6 +5428,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 .select('id, property, agent, agent_comment, private_note, photos, trade_status, price_number, created_at, agent_id')
                 .eq('agent_id', currentUser.id)
                 .eq('property->>type', '손님')
+                .neq('trade_status', '완료')
                 .order('created_at', { ascending: false })
                 .range(clientOffset, clientOffset + CARDS_PER_PAGE - 1);
             if (error) { console.error('손님 카드 로드 에러:', error); return; }
@@ -5487,7 +5506,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         <span class="property-type-badge" style="flex-shrink:0;background:rgba(78,205,196,0.15);color:#4ecdc4;border-color:rgba(78,205,196,0.3);margin-right:8px;">손님</span>
                         <div class="client-raw-text">${rawTextDisplay}</div>
                         <button class="property-edit" onclick="event.stopPropagation(); toggleClientDetail('${card.id}')">상세</button>
-                        <button class="property-delete" onclick="event.stopPropagation(); deleteCard('${card.id}')">삭제</button>
+                        <button style="padding:4px 10px;border-radius:6px;border:1px solid rgba(148,163,184,0.3);background:transparent;color:#94a3b8;font-size:11px;cursor:pointer;" onclick="event.stopPropagation(); completeClient('${card.id}')">완료</button>
                     </div>
                     <div class="property-detail ${isDetailOpen ? 'open' : ''}" id="client-detail-${card.id}">
                         <div id="client-fullview-${card.id}">
