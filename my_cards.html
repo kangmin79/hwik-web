@@ -6485,7 +6485,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             // 해당 월 알림 + 미완료 지연 알림 (이전 달 포함)
             const { data: monthData } = await supabaseClient
                 .from('client_notes')
-                .select('id, client_card_id, type, content, alert_date, alert_done, created_at, cards:client_card_id(property)')
+                .select('id, client_card_id, type, content, alert_date, alert_done, created_at')
                 .eq('agent_id', currentUser.id)
                 .not('alert_date', 'is', null)
                 .gte('alert_date', firstDay)
@@ -6494,7 +6494,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
             const { data: overdueData } = await supabaseClient
                 .from('client_notes')
-                .select('id, client_card_id, type, content, alert_date, alert_done, created_at, cards:client_card_id(property)')
+                .select('id, client_card_id, type, content, alert_date, alert_done, created_at')
                 .eq('agent_id', currentUser.id)
                 .eq('alert_done', false)
                 .not('alert_date', 'is', null)
@@ -6741,7 +6741,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             };
             const c = colors[status];
             const dateLabel = status === 'overdue' ? `⚠️ ${a.alert_date} (지연)` : status === 'today' ? '오늘' : status === 'done' ? `✅ ${a.alert_date}` : a.alert_date;
-            const clientProp = a.cards?.property || {};
+            // 손님 정보: allClientCards에서 찾기
+            const clientCard = allClientCards.find(c => c.id === a.client_card_id);
+            const clientProp = clientCard?.property || {};
             const clientName = [clientProp.price, clientProp.location].filter(Boolean).join(' · ') || '손님';
             const checked = a.alert_done ? 'checked disabled' : '';
             const textDeco = a.alert_done ? 'text-decoration:line-through;opacity:0.6;' : '';
