@@ -269,7 +269,7 @@ Deno.serve(async (req) => {
 
     if (!ANTHROPIC_API_KEY) throw new Error('서버 설정 오류');
 
-    const { query, agent_id, limit = 10, search_mode = 'my', trade_type = null, property_type = null } = await req.json();
+    const { query, agent_id, limit = 10, search_mode = 'my', trade_type = null, property_type = null, min_price = null, max_price = null } = await req.json();
     if (!query) throw new Error('검색어가 필요합니다');
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -285,8 +285,9 @@ Deno.serve(async (req) => {
       }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // ★ 단순 검색 판별: 숫자/조건어 없으면 Claude 건너뛰기
-    const needsParsing = /\d|이하|이상|미만|초과|근처|주변|이번주|이번달|오늘|어제|최근/.test(query);
+    // ★ 클라이언트가 가격을 이미 파싱해서 보냈으면 Claude 불필요
+    const clientParsedPrice = min_price !== null || max_price !== null;
+    const needsParsing = !clientParsedPrice && /\d|이하|이상|미만|초과|근처|주변|이번주|이번달|오늘|어제|최근/.test(query);
 
     let parsed = { semantic: null, filters: {}, features: null };
     let embedding = null;
@@ -332,8 +333,8 @@ Deno.serve(async (req) => {
       p_embedding: embedding,
       p_property_type: finalPropertyType,
       p_trade_type: finalTradeType,
-      p_min_price: parsed.filters?.min_price || null,
-      p_max_price: parsed.filters?.max_price || null,
+      p_min_price: min_price || parsed.filters?.min_price || null,
+      p_max_price: max_price || parsed.filters?.max_price || null,
       p_days_ago: null,
       p_limit: limit * multiplier,
       p_search_mode: search_mode

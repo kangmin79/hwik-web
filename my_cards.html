@@ -4005,7 +4005,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 else if (_statusKeywords[w] && !serverStatus) serverStatus = _statusKeywords[w];
                 else cleanWords.push(w);
             }
-            const searchQuery = cleanWords.length > 0 ? cleanWords.join(' ') : query;
+            // ★ 가격 조건도 클라이언트에서 추출 → Claude 파싱 불필요
+            const { minPrice: serverMinPrice, maxPrice: serverMaxPrice, textWords: finalWords } = _extractPriceConditions(cleanWords);
+            const searchQuery = finalWords.length > 0 ? finalWords.join(' ') : query;
 
             // 스켈레톤 로딩 표시
             document.getElementById('propertyList').innerHTML = Array(5).fill(0).map(() =>
@@ -4030,12 +4032,14 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         'Authorization': 'Bearer ' + SUPABASE_KEY
                     },
                     body: JSON.stringify({
-                        query: isClientSearch ? (cleanWords.join(' ') || '손님') : searchQuery,
+                        query: isClientSearch ? (finalWords.join(' ') || '손님') : searchQuery,
                         agent_id: currentUser.id,
                         limit: 50,
                         search_mode: isClientSearch ? 'client' : 'my',
                         trade_type: isClientSearch ? null : serverTradeType,
-                        property_type: isClientSearch ? null : serverPropertyType
+                        property_type: isClientSearch ? null : serverPropertyType,
+                        min_price: serverMinPrice,
+                        max_price: serverMaxPrice
                     })
                 });
                 
