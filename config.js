@@ -22,3 +22,92 @@ function esc(str) {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#39;');
 }
+
+/**
+ * 부동산 종류 분류 (통합)
+ * - 반환값: '아파트','오피스텔','원투룸','상가','사무실','기타'
+ * - room 필드 → rawText → 가격 → 면적+층 순으로 추론
+ */
+const _categoryCache = {};
+const _aptBrands = ['아파트','자이','래미안','힐스테이트','푸르지오','더샵','롯데캐슬',
+    'e편한세상','아이파크','sk뷰','sk view','엘스','리센츠','트리지움','헬리오시티',
+    '올림픽파크','아크로','반포자이','은마','주공','현대아파트','삼성아파트','대림아파트',
+    '동아아파트','미도아파트','우성아파트','경남아파트','한신아파트','쌍용아파트',
+    '서초아이파크','잠실엘스','잠실리센츠','잠실트리지움','레이크팰리스','파크리오',
+    '청담자이','도곡렉슬','타워팰리스','갤러리아팰리스','목동아이파크','목동신시가지',
+    '신반포','반포한양','반포주공','개포주공','개포자이','일원현대','대치아이파크',
+    '대치은마','대치미도','역삼자이','역삼래미안','서초래미안','잠원한신','압구정현대',
+    '압구정로데오','성수자이','용산파크타워','마포래미안','공덕자이','광장현대',
+    '하이페리온','센트럴파크','베라체','센트레빌','자이더스타','포레나','우미린',
+    '중흥s클래스','금호어울림','두산위브','한화포레나','대방노블랜드','신동아파밀리에',
+    '벽산블루밍','한진한화','두산','위브','어울림','파밀리에','블루밍'];
+
+function categorizeProperty(text, roomField, area, floor) {
+    const cacheKey = `${text||''}|${roomField||''}|${area||''}|${floor||''}`;
+    if (_categoryCache[cacheKey]) return _categoryCache[cacheKey];
+
+    const result = _categorizePropertyInner(text, roomField, area, floor);
+    _categoryCache[cacheKey] = result;
+    return result;
+}
+
+function _categorizePropertyInner(text, roomField, area, floor) {
+    // 1. AI가 파싱한 room 필드 우선 사용
+    const r = (roomField || '').toLowerCase();
+    if (r.includes('아파트') || r.includes('apt')) return '아파트';
+    if (r.includes('오피스텔') || r.includes('officetel')) return '오피스텔';
+    if (r.includes('상가') || r.includes('점포')) return '상가';
+    if (r.includes('사무실') || r.includes('오피스')) return '사무실';
+    if (r.includes('원룸') || r.includes('투룸') || r.includes('빌라') || r.includes('주택')) return '원투룸';
+
+    // 2. rawText 텍스트 추론
+    const t = (text || '').toLowerCase();
+    if (t.includes('상가') || t.includes('점포') || t.includes('매장')) return '상가';
+    if (t.includes('사무실') || t.includes('업무용')) return '사무실';
+    if (t.includes('오피스텔')) return '오피스텔';
+
+    if (_aptBrands.some(b => t.includes(b))) return '아파트';
+    if (t.includes('원룸') || t.includes('투룸') || t.includes('빌라') || t.includes('연립') || t.includes('주택')) return '원투룸';
+
+    // 3. 월세 금액으로 추론
+    if (text && text.includes('/')) {
+        const parts = text.match(/([\d,]+)\s*\/\s*([\d,]+)/);
+        if (parts) {
+            const deposit = parseInt(parts[1].replace(/,/g, ''));
+            const monthly = parseInt(parts[2].replace(/,/g, ''));
+            if (deposit <= 5000 && monthly <= 150) return '원투룸';
+        }
+    }
+
+    // 4. 평수 + 층수로 추론
+    const areaNum = parseInt((area || '').replace(/[^0-9]/g, '')) || 0;
+    const floorNum = parseInt((floor || '').replace(/[^0-9]/g, '')) || 0;
+    if (areaNum >= 20 && floorNum >= 5) return '아파트';
+    if (areaNum >= 30) return '아파트';
+
+    return '원투룸';
+}
+
+/**
+ * 영문 카테고리 → 한글 매핑
+ * - card_generator 등에서 서버가 반환한 영문 category를 한글로 변환할 때 사용
+ */
+const CATEGORY_KO = {
+    'apartment': '아파트',
+    'officetel': '오피스텔',
+    'room': '원투룸',
+    'commercial': '상가',
+    'office': '사무실'
+};
+
+/**
+ * 한글 카테고리 → 영문 매핑
+ */
+const CATEGORY_EN = {
+    '아파트': 'apartment',
+    '오피스텔': 'officetel',
+    '원투룸': 'room',
+    '상가': 'commercial',
+    '사무실': 'office',
+    '기타': 'room'
+};

@@ -80,7 +80,7 @@ async function fetchRecentSales(complex: string, lawdCd: string, months = 12): P
 }
 
 // ========== lawdCd 추출 (bjdCode 앞 5자리) ==========
-const KAKAO_API_KEY = "8b7ecadf67aaed392e75605093efb2c4";
+const KAKAO_API_KEY = Deno.env.get('KAKAO_API_KEY') || '';
 
 async function getLawdCd(address: string): Promise<string | null> {
   if (!address) return null;

@@ -2525,59 +2525,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         let selectedCards = [];
         let currentSlideIndex = 0;
         
-        // 부동산종류 분류 - property.room 우선, 없으면 텍스트 추론
-        function categorizeProperty(text, roomField, area, floor) {
-            // 1. AI가 파싱한 room 필드 우선 사용
-            const r = (roomField || '').toLowerCase();
-            if (r.includes('아파트') || r.includes('apt')) return '아파트';
-            if (r.includes('오피스텔') || r.includes('officetel')) return '오피스텔';
-            if (r.includes('상가') || r.includes('점포')) return '상가';
-            if (r.includes('사무실') || r.includes('오피스')) return '사무실';
-            if (r.includes('원룸') || r.includes('투룸') || r.includes('빌라') || r.includes('주택')) return '원투룸';
-
-            // 2. rawText 텍스트 추론
-            const t = (text || '').toLowerCase();
-            if (t.includes('상가') || t.includes('점포') || t.includes('매장')) return '상가';
-            if (t.includes('사무실') || t.includes('업무용')) return '사무실';
-            if (t.includes('오피스텔')) return '오피스텔';
-            
-            // 아파트 브랜드 목록 (확장)
-            const aptBrands = ['아파트','자이','래미안','힐스테이트','푸르지오','더샵','롯데캐슬',
-                'e편한세상','아이파크','sk뷰','sk view','엘스','리센츠','트리지움','헬리오시티',
-                '올림픽파크','아크로','반포자이','은마','주공','현대아파트','삼성아파트','대림아파트',
-                '동아아파트','미도아파트','우성아파트','경남아파트','한신아파트','쌍용아파트',
-                '서초아이파크','잠실엘스','잠실리센츠','잠실트리지움','레이크팰리스','파크리오',
-                '청담자이','도곡렉슬','타워팰리스','갤러리아팰리스','목동아이파크','목동신시가지',
-                '신반포','반포한양','반포주공','개포주공','개포자이','일원현대','대치아이파크',
-                '대치은마','대치미도','역삼자이','역삼래미안','서초래미안','잠원한신','압구정현대',
-                '압구정로데오','성수자이','용산파크타워','마포래미안','공덕자이','광장현대',
-                '하이페리온','센트럴파크','베라체','센트레빌','자이더스타','포레나','우미린',
-                '중흥s클래스','금호어울림','두산위브','한화포레나','대방노블랜드','신동아파밀리에',
-                '벽산블루밍','한진한화','두산','위브','어울림','파밀리에','블루밍'];
-            
-            if (aptBrands.some(b => t.includes(b))) return '아파트';
-            if (t.includes('원룸') || t.includes('투룸') || t.includes('빌라') || t.includes('연립') || t.includes('주택')) return '원투룸';
-            
-            // 3. 월세 금액으로 추론
-            // 가격 파싱: "3000/80" → 보증금 3000만, 월세 80만
-            if (text && text.includes('/')) {
-                const parts = text.match(/([\d,]+)\s*\/\s*([\d,]+)/);
-                if (parts) {
-                    const deposit = parseInt(parts[1].replace(/,/g, ''));
-                    const monthly = parseInt(parts[2].replace(/,/g, ''));
-                    // 보증금 5000만 이하, 월세 150만 이하 → 원투룸/오피스텔
-                    if (deposit <= 5000 && monthly <= 150) return '원투룸';
-                }
-            }
-
-            // 4. 평수 + 층수로 추론
-            const areaNum = parseInt((area || '').replace(/[^0-9]/g, '')) || 0;
-            const floorNum = parseInt((floor || '').replace(/[^0-9]/g, '')) || 0;
-            if (areaNum >= 20 && floorNum >= 5) return '아파트';
-            if (areaNum >= 30) return '아파트';
-            
-            return '원투룸';
-        }
+        // 부동산종류 분류 → config.js의 categorizeProperty() 사용
         
         // 스와이프 상태
         let isDragging = false;
@@ -2590,12 +2538,17 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         
         // 매물 로드
+        let _isLoadingCards = false; // race condition 방지 플래그
+
         async function loadMore() {
             cardsOffset += CARDS_PER_PAGE;
             await loadCards(false);
         }
 
         async function loadCards(reset = true) {
+            if (_isLoadingCards) return; // 중복 호출 무시
+            _isLoadingCards = true;
+            try {
             if (reset) cardsOffset = 0;
             // 검색 모드 해제
             isSearchMode = false;
@@ -2627,20 +2580,18 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
                 if (error) throw error;
 
-                // 총 매물 수 (첫 로드 시만)
+                // 총 매물 수 (첫 로드 시만) - 병렬 조회
                 if (reset) {
-                    const { count } = await supabaseClient
-                        .from('cards')
-                        .select('id', { count: 'exact', head: true })
-                        .eq('agent_id', currentUser.id)
-                        .neq('property->>type', '손님');
-                    totalMyCardsCount = count || 0;
-                    const { count: cCount } = await supabaseClient
-                        .from('cards')
-                        .select('id', { count: 'exact', head: true })
-                        .eq('agent_id', currentUser.id)
-                        .eq('property->>type', '손님');
-                    totalClientCount = cCount || 0;
+                    const [myCountRes, clientCountRes] = await Promise.all([
+                        supabaseClient.from('cards').select('id', { count: 'exact', head: true })
+                            .eq('agent_id', currentUser.id).neq('property->>type', '손님'),
+                        supabaseClient.from('cards').select('id', { count: 'exact', head: true })
+                            .eq('agent_id', currentUser.id).eq('property->>type', '손님')
+                    ]);
+                    if (myCountRes.error) console.error('매물 수 조회 에러:', myCountRes.error);
+                    if (clientCountRes.error) console.error('손님 수 조회 에러:', clientCountRes.error);
+                    totalMyCardsCount = myCountRes.count || 0;
+                    totalClientCount = clientCountRes.count || 0;
                 }
 
                 if (reset) {
@@ -2668,9 +2619,10 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 
             } catch (error) {
                 console.error('로딩 오류:', error); logError('load_cards', error.message);
-                document.getElementById('propertyList').innerHTML = 
+                document.getElementById('propertyList').innerHTML =
                     '<div class="empty-state"><div class="empty-icon">❌</div><div class="empty-title">오류 발생</div></div>';
             }
+            } finally { _isLoadingCards = false; }
         }
         
         // 로그인 필요 상태
@@ -4903,11 +4855,12 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
         // ── 미확인 메모 수 미리 표시 ──
         async function loadUnreadMemoCount() {
-            const { count } = await supabaseClient
+            const { count, error } = await supabaseClient
                 .from('memos')
                 .select('id', { count: 'exact', head: true })
                 .eq('agent_id', currentUser.id)
                 .eq('is_read', false);
+            if (error) { console.error('미확인 메모 수 로드 에러:', error); return; }
             if (count > 0) {
                 const countEl = document.getElementById('memoTabCount');
                 countEl.textContent = count;
@@ -4990,8 +4943,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             if (!currentUser) return;
             try {
                 await Promise.all([loadMyRoomsData(), loadPendingInvites()]);
-                await loadSharedCards();
-                await loadRoomMemberCounts();
+                await Promise.all([loadSharedCards(), loadRoomMemberCounts()]);
                 updateSharedUI();
                 // 손님 매칭 체크
                 checkClientMatches();
@@ -5001,11 +4953,12 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         async function loadRoomMemberCounts() {
             if (allMyRoomsList.length === 0) { roomMemberCounts = {}; return; }
             const roomIds = allMyRoomsList.map(r => r.id);
-            const { data } = await supabaseClient
+            const { data, error } = await supabaseClient
                 .from('share_room_members')
                 .select('room_id')
                 .in('room_id', roomIds)
                 .eq('status', 'accepted');
+            if (error) console.error('방 멤버 수 로드 에러:', error);
             roomMemberCounts = {};
             (data || []).forEach(d => {
                 roomMemberCounts[d.room_id] = (roomMemberCounts[d.room_id] || 0) + 1;
@@ -5060,10 +5013,11 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             const myCardIds = (data || []).filter(d => d.cards && d.shared_by === currentUser?.id).map(d => d.cards.id);
             let myPrivateNotes = {};
             if (myCardIds.length > 0) {
-                const { data: pnData } = await supabaseClient
+                const { data: pnData, error: pnError } = await supabaseClient
                     .from('cards')
                     .select('id, private_note')
                     .in('id', myCardIds);
+                if (pnError) console.error('private_note 로드 에러:', pnError);
                 (pnData || []).forEach(c => { myPrivateNotes[c.id] = c.private_note; });
             }
 
@@ -5269,13 +5223,14 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         async function loadClientCards(reset = true) {
             if (!currentUser) return;
             if (reset) clientOffset = 0;
-            const { data } = await supabaseClient
+            const { data, error } = await supabaseClient
                 .from('cards')
                 .select('id, property, agent, agent_comment, private_note, photos, trade_status, price_number, created_at, agent_id')
                 .eq('agent_id', currentUser.id)
                 .eq('property->>type', '손님')
                 .order('created_at', { ascending: false })
                 .range(clientOffset, clientOffset + CARDS_PER_PAGE - 1);
+            if (error) { console.error('손님 카드 로드 에러:', error); return; }
             if (reset) {
                 allClientCards = data || [];
             } else {

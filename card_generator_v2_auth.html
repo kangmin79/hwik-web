@@ -4895,24 +4895,13 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         let properties = JSON.parse(localStorage.getItem('hwik_properties') || '[]');
         let currentFilter = 'all';
         
-        // 카테고리 분류
-        function categorizeProperty(text) {
-            const lowerText = text.toLowerCase();
-            if (lowerText.includes('상가') || lowerText.includes('점포') || lowerText.includes('매장')) return 'commercial';
-            if (lowerText.includes('사무실') || lowerText.includes('오피스') || lowerText.includes('업무용')) return 'office';
-            if (lowerText.includes('아파트')) return 'apartment';
-            if (lowerText.includes('오피스텔') || lowerText.includes('오피')) return 'officetel';
-            return 'room'; // 원룸, 투룸, 빌라, 주택 등
+        // 카테고리 분류 → config.js의 categorizeProperty() + CATEGORY_EN/CATEGORY_KO 사용
+        // card_generator는 영문 카테고리 키를 사용하므로 래퍼 함수 제공
+        function categorizePropertyEN(text, roomField, area, floor) {
+            const ko = categorizeProperty(text, roomField, area, floor);
+            return CATEGORY_EN[ko] || 'room';
         }
-        
-        // 카테고리 이름
-        const categoryNames = {
-            'apartment': '아파트',
-            'officetel': '오피스텔',
-            'room': '원투룸',
-            'commercial': '상가',
-            'office': '사무실'
-        };
+        const categoryNames = CATEGORY_KO;
         
         // 매물 등록
         // AI 분석 스텝 애니메이션
