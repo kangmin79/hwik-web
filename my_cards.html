@@ -6066,18 +6066,40 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         
         async function checkClientMatches() {
             if (!currentUser) return;
-            if (allMyRoomsList.length === 0) return;
-            
+
             try {
-                const { data, error } = await supabaseClient.rpc('match_shared_to_clients', {
-                    p_agent_id: currentUser.id,
-                    p_days: 7,
-                    p_threshold: 0.72
-                });
-                
-                if (error) { console.log('매칭 RPC 에러:', error.message); return; }
-                
-                matchResults = data || [];
+                // ★ 손님 카드 최대 20개 조회 (임베딩 있는 것만)
+                const { data: clients } = await supabaseClient
+                    .from('cards')
+                    .select('id, property, private_note, embedding')
+                    .eq('agent_id', currentUser.id)
+                    .eq('property->>type', '손님')
+                    .not('embedding', 'is', null)
+                    .order('created_at', { ascending: false })
+                    .limit(20);
+
+                if (!clients || clients.length === 0) { matchResults = []; updateMatchBell(); return; }
+
+                // ★ 각 손님별 매칭 체크 (내 매물 대상, threshold 0.35)
+                const results = [];
+                for (const client of clients) {
+                    const { data: matches } = await supabaseClient.rpc('match_properties_for_client', {
+                        p_client_embedding: client.embedding,
+                        p_agent_id: currentUser.id,
+                        p_trade_type: null,
+                        p_threshold: 0.35,
+                        p_limit: 3
+                    });
+                    if (matches && matches.length > 0) {
+                        results.push({
+                            client_card_id: client.id,
+                            client_summary: [client.property?.price, client.property?.location].filter(Boolean).join(' '),
+                            match_count: matches.length
+                        });
+                    }
+                }
+
+                matchResults = results;
                 updateMatchBell();
             } catch(e) { console.log('매칭 체크 에러:', e); }
         }
