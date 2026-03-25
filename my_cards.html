@@ -2224,6 +2224,111 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             font-size: 20px;
             cursor: pointer;
         }
+        /* ===== 알림 달력 ===== */
+        .alert-calendar {
+            width: 100%;
+            max-width: 340px;
+            margin: 0 auto;
+        }
+        .cal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .cal-header-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+        .cal-nav-btn {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #e2e8f0;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .cal-nav-btn:hover { background: rgba(255,255,255,0.1); }
+        .cal-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            margin-bottom: 4px;
+        }
+        .cal-weekday {
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            padding: 4px 0;
+        }
+        .cal-weekday:first-child { color: #ef4444; }
+        .cal-weekday:last-child { color: #3b82f6; }
+        .cal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+        }
+        .cal-day {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            cursor: pointer;
+            position: relative;
+            font-size: 13px;
+            color: #94a3b8;
+            transition: background 0.15s;
+        }
+        .cal-day:hover { background: rgba(255,255,255,0.06); }
+        .cal-day.other-month { color: #334155; cursor: default; }
+        .cal-day.other-month:hover { background: transparent; }
+        .cal-day.today {
+            background: rgba(250,204,21,0.12);
+            color: #facc15;
+            font-weight: 700;
+        }
+        .cal-day.selected {
+            background: rgba(78,205,196,0.2);
+            color: #4ecdc4;
+            font-weight: 700;
+            box-shadow: inset 0 0 0 1.5px #4ecdc4;
+        }
+        .cal-day .cal-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            margin-top: 2px;
+        }
+        .cal-dot.red { background: #ef4444; }
+        .cal-dot.yellow { background: #facc15; }
+        .cal-dot.blue { background: #3b82f6; }
+        .cal-dot.green { background: #22c55e; }
+        .cal-today-btn {
+            display: block;
+            margin: 12px auto 0;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #94a3b8;
+            font-size: 12px;
+            padding: 4px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .cal-today-btn:hover { background: rgba(255,255,255,0.06); color: #e2e8f0; }
+        .cal-date-label {
+            text-align: center;
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -3019,6 +3124,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         
         // 미리보기 렌더링
         function renderPreview() {
+            // 알림 달력 활성 시 미리보기 렌더링 건너뜀
+            if (_alertIsActive) return;
+
             const panel = document.querySelector('.preview-panel');
             const body = document.getElementById('phoneBody');
             const indicator = document.getElementById('phoneIndicator');
@@ -5002,6 +5110,11 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         let roomMemberCounts = {};
 
         function switchMainTab(tab) {
+            // 알림 탭에서 나갈 때 오른쪽 패널 복원
+            if (_alertIsActive) {
+                _alertIsActive = false;
+                _restorePreviewPanel();
+            }
             currentMainTab = tab;
             document.querySelectorAll('.main-tab').forEach(t => {
                 const isActive = (t.textContent.includes('내 매물') && tab === 'mine')
@@ -6331,7 +6444,15 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         // 매칭 뱃지 클릭 → 매칭된 손님만 보여주기
         let _showMatchedOnly = false;
 
+        // ===== 알림 달력 상태 =====
+        let _calYear = new Date().getFullYear();
+        let _calMonth = new Date().getMonth(); // 0-based
+        let _calSelectedDate = null; // 'YYYY-MM-DD' or null (전체)
+        let _calMonthAlerts = []; // 해당 월 전체 알림 데이터
+        let _alertIsActive = false; // 알림 탭 활성 여부
+
         async function showAlerts() {
+            _alertIsActive = true;
             currentMainTab = 'client';
             document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
             document.getElementById('clientMatchBadge')?.classList.add('active');
@@ -6340,108 +6461,265 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             document.getElementById('pageTitle').textContent = '알림';
             document.getElementById('pageTitle').style.color = '#facc15';
 
-            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-            document.getElementById('tabClient')?.classList.add('active');
-
             const container = document.getElementById('clientPropertyList');
             if (!container) return;
             container.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8">알림 로드 중...</div>';
 
-            // ★ 1. 일정 알림 (미완료 전체 + 오늘~7일 내)
-            const today = new Date().toISOString().slice(0, 10);
-            const weekLater = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
-            // 미완료 (지난 것 포함) + 앞으로 7일
-            const { data: alerts } = await supabaseClient
+            // 달력 초기화: 오늘 기준
+            _calYear = new Date().getFullYear();
+            _calMonth = new Date().getMonth();
+            _calSelectedDate = null;
+
+            // 월 데이터 로드 + 알림 목록 렌더 + 달력 렌더
+            await _loadCalMonthAlerts();
+            _renderAlertList(container);
+            _renderCalendar();
+        }
+
+        // 해당 월의 모든 alert_date 데이터 로드 (완료/미완료 모두)
+        async function _loadCalMonthAlerts() {
+            const firstDay = `${_calYear}-${String(_calMonth + 1).padStart(2, '0')}-01`;
+            const lastDay = new Date(_calYear, _calMonth + 1, 0);
+            const lastDayStr = `${_calYear}-${String(_calMonth + 1).padStart(2, '0')}-${String(lastDay.getDate()).padStart(2, '0')}`;
+
+            const { data } = await supabaseClient
                 .from('client_notes')
                 .select('id, client_card_id, type, content, alert_date, alert_done, created_at, cards:client_card_id(property)')
                 .eq('agent_id', currentUser.id)
-                .eq('alert_done', false)
                 .not('alert_date', 'is', null)
-                .lte('alert_date', weekLater)
+                .gte('alert_date', firstDay)
+                .lte('alert_date', lastDayStr)
                 .order('alert_date', { ascending: true });
 
-            // ★ 2. 매칭 알림
-            const matchedClientIds = [...new Set(matchResults.map(m => m.client_card_id))];
+            _calMonthAlerts = data || [];
+        }
 
-            // ★ 3. 후속 필요 (3일 이상 메모 없는 손님)
-            const threeDaysAgo = new Date(Date.now() - 3 * 86400000).toISOString();
-            const { data: recentNotes } = await supabaseClient
-                .from('client_notes')
-                .select('client_card_id, created_at')
-                .eq('agent_id', currentUser.id)
-                .gte('created_at', threeDaysAgo);
-            const recentClientIds = new Set((recentNotes || []).map(n => n.client_card_id));
+        // 왼쪽 알림 목록 렌더링
+        function _renderAlertList(container) {
+            if (!container) container = document.getElementById('clientPropertyList');
+            if (!container) return;
+
+            const today = new Date().toISOString().slice(0, 10);
+            let filtered = _calMonthAlerts;
+
+            // 날짜 선택 시 필터
+            let dateLabel = '';
+            if (_calSelectedDate) {
+                filtered = _calMonthAlerts.filter(a => a.alert_date === _calSelectedDate);
+                dateLabel = _calSelectedDate;
+            }
 
             let html = '';
-            let totalAlerts = 0;
 
-            // 📅 일정 알림
-            if (alerts && alerts.length > 0) {
-                const overdue = alerts.filter(a => a.alert_date < today);
-                const todayItems = alerts.filter(a => a.alert_date === today);
-                const upcoming = alerts.filter(a => a.alert_date > today);
+            if (_calSelectedDate) {
+                html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0 12px;">
+                    <span style="font-size:14px;font-weight:700;color:#e2e8f0;">📅 ${dateLabel}</span>
+                    <span style="font-size:12px;color:#4ecdc4;cursor:pointer;" onclick="_calSelectedDate=null;_renderAlertList();_renderCalendar();">전체 보기</span>
+                </div>`;
+            }
 
-                html += `<div style="padding:12px 0;">`;
+            if (filtered.length === 0) {
+                if (_calSelectedDate) {
+                    html += '<div style="text-align:center;padding:30px 0;color:#64748b;font-size:13px;">이 날짜에 알림이 없습니다</div>';
+                } else {
+                    html += '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">이번 달 알림이 없어요</div></div>';
+                }
+            } else {
+                const undone = filtered.filter(a => !a.alert_done);
+                const done = filtered.filter(a => a.alert_done);
 
-                // 지연 (빨간)
+                // 미완료: 지연 / 오늘 / 예정 분류
+                const overdue = undone.filter(a => a.alert_date < today);
+                const todayItems = undone.filter(a => a.alert_date === today);
+                const upcoming = undone.filter(a => a.alert_date > today);
+
                 if (overdue.length > 0) {
                     html += `<div style="font-size:14px;font-weight:700;color:#ef4444;margin-bottom:8px;">🔴 지연 (${overdue.length}건)</div>`;
-                    overdue.forEach(a => {
-                        html += _alertItemHtml(a, 'overdue');
-                    });
+                    overdue.forEach(a => { html += _alertItemHtml(a, 'overdue'); });
                 }
-
-                // 오늘
                 if (todayItems.length > 0) {
                     html += `<div style="font-size:14px;font-weight:700;color:#facc15;margin:12px 0 8px;">📅 오늘 (${todayItems.length}건)</div>`;
-                    todayItems.forEach(a => {
-                        html += _alertItemHtml(a, 'today');
-                    });
+                    todayItems.forEach(a => { html += _alertItemHtml(a, 'today'); });
                 }
-
-                // 예정
                 if (upcoming.length > 0) {
                     html += `<div style="font-size:14px;font-weight:700;color:#94a3b8;margin:12px 0 8px;">🗓 예정 (${upcoming.length}건)</div>`;
-                    upcoming.forEach(a => {
-                        html += _alertItemHtml(a, 'upcoming');
-                    });
+                    upcoming.forEach(a => { html += _alertItemHtml(a, 'upcoming'); });
+                }
+                if (done.length > 0) {
+                    html += `<div style="font-size:14px;font-weight:700;color:#22c55e;margin:12px 0 8px;">✅ 완료 (${done.length}건)</div>`;
+                    done.forEach(a => { html += _alertItemHtml(a, 'done'); });
+                }
+            }
+
+            const totalUndone = _calMonthAlerts.filter(a => !a.alert_done).length;
+            document.getElementById('pageCount').textContent = totalUndone + '건';
+            container.innerHTML = html;
+        }
+
+        // 오른쪽 패널에 달력 렌더링 (기존 요소는 숨기고, 달력 div 삽입)
+        function _renderCalendar() {
+            const panel = document.querySelector('.preview-panel');
+            const previewInner = document.querySelector('.preview-inner');
+            if (!panel || !previewInner) return;
+
+            panel.classList.add('show');
+
+            // 기존 미리보기 요소들 숨기기
+            const previewTitle = previewInner.querySelector('.preview-title');
+            const phoneMockup = previewInner.querySelector('.phone-mockup');
+            const dotsInd = previewInner.querySelector('.dots-indicator');
+            const sendSection = previewInner.querySelector('.send-section');
+            if (previewTitle) previewTitle.style.display = 'none';
+            if (phoneMockup) phoneMockup.style.display = 'none';
+            if (dotsInd) dotsInd.style.display = 'none';
+            if (sendSection) sendSection.style.display = 'none';
+
+            // 달력 컨테이너 생성/업데이트
+            let calContainer = document.getElementById('alertCalendarContainer');
+            if (!calContainer) {
+                calContainer = document.createElement('div');
+                calContainer.id = 'alertCalendarContainer';
+                calContainer.style.width = '100%';
+                // preview-inner의 첫 번째 자식으로 삽입
+                previewInner.insertBefore(calContainer, previewInner.firstChild);
+            }
+            calContainer.style.display = '';
+
+            const today = new Date().toISOString().slice(0, 10);
+            const year = _calYear;
+            const month = _calMonth;
+            const monthNames = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+
+            // 날짜별 상태 맵 생성
+            const dateStatusMap = {};
+            _calMonthAlerts.forEach(a => {
+                const d = a.alert_date;
+                if (!dateStatusMap[d]) dateStatusMap[d] = { total: 0, done: 0 };
+                dateStatusMap[d].total++;
+                if (a.alert_done) dateStatusMap[d].done++;
+            });
+
+            // 달력 그리드 생성
+            const firstDayOfMonth = new Date(year, month, 1).getDay(); // 0=일
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+            let daysHtml = '';
+            // 이전 달 채우기
+            for (let i = firstDayOfMonth - 1; i >= 0; i--) {
+                const d = daysInPrevMonth - i;
+                daysHtml += `<div class="cal-day other-month">${d}</div>`;
+            }
+            // 이번 달
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const isToday = dateStr === today;
+                const isSelected = dateStr === _calSelectedDate;
+                let cls = 'cal-day';
+                if (isToday) cls += ' today';
+                if (isSelected) cls += ' selected';
+
+                let dotHtml = '';
+                const status = dateStatusMap[dateStr];
+                if (status) {
+                    if (status.done === status.total) {
+                        dotHtml = '<div class="cal-dot green"></div>';
+                    } else if (dateStr < today) {
+                        dotHtml = '<div class="cal-dot red"></div>';
+                    } else if (dateStr === today) {
+                        dotHtml = '<div class="cal-dot yellow"></div>';
+                    } else {
+                        dotHtml = '<div class="cal-dot blue"></div>';
+                    }
                 }
 
-                html += `</div>`;
-                totalAlerts += alerts.length;
+                daysHtml += `<div class="${cls}" onclick="_selectCalDate('${dateStr}')">${d}${dotHtml}</div>`;
+            }
+            // 다음 달 채우기
+            const totalCells = firstDayOfMonth + daysInMonth;
+            const remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+            for (let i = 1; i <= remaining; i++) {
+                daysHtml += `<div class="cal-day other-month">${i}</div>`;
             }
 
-            // 🔔 매칭 알림
-            if (matchedClientIds.length > 0) {
-                html += `<div style="padding:12px 0;"><div style="font-size:14px;font-weight:700;color:#4ecdc4;margin-bottom:8px;">🔔 새 매칭 (${matchedClientIds.length}명)</div>`;
-                html += `<div style="padding:10px 14px;background:rgba(78,205,196,0.05);border:1px solid rgba(78,205,196,0.15);border-radius:8px;font-size:13px;color:#e2e8f0;">
-                    매칭된 손님 ${matchedClientIds.length}명 — <span style="color:#4ecdc4;cursor:pointer;text-decoration:underline;" onclick="switchMainTab('client')">손님 탭에서 확인</span>
-                </div></div>`;
-                totalAlerts += matchedClientIds.length;
-            }
+            calContainer.innerHTML = `
+                <div style="font-size:14px;color:#64748b;margin-bottom:12px;text-align:center;">알림 달력</div>
+                <div class="alert-calendar">
+                    <div class="cal-header">
+                        <button class="cal-nav-btn" onclick="_calNav(-1)">&#8249;</button>
+                        <div class="cal-header-title">${year}년 ${monthNames[month]}</div>
+                        <button class="cal-nav-btn" onclick="_calNav(1)">&#8250;</button>
+                    </div>
+                    <div class="cal-weekdays">
+                        <div class="cal-weekday">일</div><div class="cal-weekday">월</div><div class="cal-weekday">화</div>
+                        <div class="cal-weekday">수</div><div class="cal-weekday">목</div><div class="cal-weekday">금</div>
+                        <div class="cal-weekday">토</div>
+                    </div>
+                    <div class="cal-grid">
+                        ${daysHtml}
+                    </div>
+                    <button class="cal-today-btn" onclick="_calGoToday()">오늘</button>
+                    <div class="cal-date-label" style="margin-top:14px;">
+                        <span style="display:inline-flex;align-items:center;gap:6px;margin-right:10px;"><span class="cal-dot red" style="display:inline-block;position:static;"></span>지연</span>
+                        <span style="display:inline-flex;align-items:center;gap:6px;margin-right:10px;"><span class="cal-dot yellow" style="display:inline-block;position:static;"></span>오늘</span>
+                        <span style="display:inline-flex;align-items:center;gap:6px;margin-right:10px;"><span class="cal-dot blue" style="display:inline-block;position:static;"></span>예정</span>
+                        <span style="display:inline-flex;align-items:center;gap:6px;"><span class="cal-dot green" style="display:inline-block;position:static;"></span>완료</span>
+                    </div>
+                </div>
+            `;
+        }
 
-            // ⏰ 후속 필요
-            if (allClientCards.length === 0) await loadClientCards();
-            const needFollowUp = allClientCards.filter(c => !recentClientIds.has(c.id)).slice(0, 5);
-            if (needFollowUp.length > 0) {
-                html += `<div style="padding:12px 0;"><div style="font-size:14px;font-weight:700;color:#fb923c;margin-bottom:8px;">⏰ 후속 필요 (${needFollowUp.length}명)</div>`;
-                needFollowUp.forEach(c => {
-                    const p = c.property || {};
-                    html += `<div style="padding:10px 14px;margin-bottom:6px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px;cursor:pointer;" onclick="switchMainTab('client');setTimeout(()=>toggleClientDetail('${c.id}'),300)">
-                        <span style="font-size:13px;color:#e2e8f0;">${esc([p.price, p.location].filter(Boolean).join(' · '))}</span>
-                        <span style="font-size:11px;color:#94a3b8;margin-left:8px;">3일 이상 메모 없음</span>
-                    </div>`;
-                });
-                html += `</div>`;
-                totalAlerts += needFollowUp.length;
-            }
+        // 달력 월 이동
+        async function _calNav(dir) {
+            _calMonth += dir;
+            if (_calMonth < 0) { _calMonth = 11; _calYear--; }
+            if (_calMonth > 11) { _calMonth = 0; _calYear++; }
+            _calSelectedDate = null;
+            await _loadCalMonthAlerts();
+            _renderAlertList();
+            _renderCalendar();
+        }
 
-            if (totalAlerts === 0) {
-                html = '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">확인할 알림이 없어요</div></div>';
-            }
+        // 오늘로 이동
+        async function _calGoToday() {
+            const now = new Date();
+            _calYear = now.getFullYear();
+            _calMonth = now.getMonth();
+            _calSelectedDate = null;
+            await _loadCalMonthAlerts();
+            _renderAlertList();
+            _renderCalendar();
+        }
 
-            document.getElementById('pageCount').textContent = totalAlerts + '건';
-            container.innerHTML = html;
+        // 오른쪽 패널을 원래 폰 미리보기로 복원
+        function _restorePreviewPanel() {
+            const previewInner = document.querySelector('.preview-inner');
+            if (!previewInner) return;
+
+            // 달력 숨기기
+            const calContainer = document.getElementById('alertCalendarContainer');
+            if (calContainer) calContainer.style.display = 'none';
+
+            // 기존 요소 복원
+            const previewTitle = previewInner.querySelector('.preview-title');
+            const phoneMockup = previewInner.querySelector('.phone-mockup');
+            const dotsInd = previewInner.querySelector('.dots-indicator');
+            const sendSection = previewInner.querySelector('.send-section');
+            if (previewTitle) previewTitle.style.display = '';
+            if (phoneMockup) phoneMockup.style.display = '';
+            if (dotsInd) dotsInd.style.display = '';
+            if (sendSection) sendSection.style.display = '';
+        }
+
+        // 날짜 클릭
+        function _selectCalDate(dateStr) {
+            if (_calSelectedDate === dateStr) {
+                _calSelectedDate = null; // 토글: 다시 클릭하면 전체 보기
+            } else {
+                _calSelectedDate = dateStr;
+            }
+            _renderAlertList();
+            _renderCalendar();
         }
 
         function _alertItemHtml(a, status) {
@@ -6449,14 +6727,17 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 overdue: { bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.25)', label: '#f87171', dateColor: '#f87171' },
                 today: { bg: 'rgba(250,204,21,0.06)', border: 'rgba(250,204,21,0.2)', label: '#facc15', dateColor: '#facc15' },
                 upcoming: { bg: 'rgba(255,255,255,0.03)', border: 'rgba(255,255,255,0.08)', label: '#94a3b8', dateColor: '#94a3b8' },
+                done: { bg: 'rgba(34,197,94,0.06)', border: 'rgba(34,197,94,0.15)', label: '#22c55e', dateColor: '#22c55e' },
             };
             const c = colors[status];
-            const dateLabel = status === 'overdue' ? `⚠️ ${a.alert_date} (지연)` : status === 'today' ? '오늘' : a.alert_date;
+            const dateLabel = status === 'overdue' ? `⚠️ ${a.alert_date} (지연)` : status === 'today' ? '오늘' : status === 'done' ? `✅ ${a.alert_date}` : a.alert_date;
             const clientProp = a.cards?.property || {};
             const clientName = [clientProp.price, clientProp.location].filter(Boolean).join(' · ') || '손님';
+            const checked = a.alert_done ? 'checked disabled' : '';
+            const textDeco = a.alert_done ? 'text-decoration:line-through;opacity:0.6;' : '';
             return `<div style="padding:10px 14px;margin-bottom:6px;background:${c.bg};border:1px solid ${c.border};border-radius:8px;display:flex;align-items:center;gap:10px;">
-                <input type="checkbox" onchange="completeAlert('${a.id}')" style="width:18px;height:18px;cursor:pointer;flex-shrink:0;accent-color:#4ecdc4;">
-                <div style="flex:1;">
+                <input type="checkbox" ${checked} onchange="completeAlert('${a.id}')" style="width:18px;height:18px;cursor:pointer;flex-shrink:0;accent-color:#4ecdc4;">
+                <div style="flex:1;${textDeco}">
                     <div style="display:flex;justify-content:space-between;align-items:center;">
                         <span style="font-size:12px;color:${c.dateColor};font-weight:600;">${dateLabel}</span>
                         <span style="font-size:11px;color:#4ecdc4;font-weight:600;">${esc(clientName)}</span>
@@ -6469,7 +6750,14 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         async function completeAlert(noteId) {
             await supabaseClient.from('client_notes').update({ alert_done: true }).eq('id', noteId);
             showToast('✅ 완료');
-            showAlerts(); // 새로고침
+            if (_alertIsActive) {
+                // 달력 모드: 현재 월 데이터만 리로드
+                await _loadCalMonthAlerts();
+                _renderAlertList();
+                _renderCalendar();
+            } else {
+                showAlerts();
+            }
         }
 
         function updateMatchBell() {
