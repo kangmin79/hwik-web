@@ -5947,12 +5947,22 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 html += `</div>`;
             }
 
+            // 내 매물이면 수정 버튼
+            if (isMine) {
+                html += `<div style="display:flex;gap:8px;margin-bottom:12px;">`;
+                html += `<button onclick="closeSharedDetail(); editCard('${card.id}')" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--primary);color:var(--bg-dark);font-weight:700;font-size:13px;cursor:pointer;">수정</button>`;
+                html += `<button onclick="closeSharedDetail(); shareOneCard('${card.id}')" style="flex:1;padding:10px;border-radius:8px;border:1px solid var(--primary);background:transparent;color:var(--primary);font-weight:700;font-size:13px;cursor:pointer;">공유</button>`;
+                html += `</div>`;
+            }
+
             // 중개사 정보
-            html += `<div style="padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;display:flex;align-items:center;gap:10px;">`;
-            html += `<div style="width:36px;height:36px;border-radius:50%;background:rgba(78,205,196,0.2);border:2px solid #4ecdc4;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#4ecdc4;">${(agent.business_name || agent.name || '?').charAt(0)}</div>`;
-            html += `<div style="flex:1;font-size:14px;font-weight:700;color:var(--text-white);">${esc(agent.business_name || agent.name || '')}</div>`;
-            html += `<div style="font-size:13px;color:#4ecdc4;font-weight:600;">${esc(agent.phone || '')}</div>`;
-            html += `</div>`;
+            if (!isMine || (agent.name || agent.business_name)) {
+                html += `<div style="padding:10px 12px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;display:flex;align-items:center;gap:10px;">`;
+                html += `<div style="width:36px;height:36px;border-radius:50%;background:rgba(78,205,196,0.2);border:2px solid #4ecdc4;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#4ecdc4;">${(agent.business_name || agent.name || '?').charAt(0)}</div>`;
+                html += `<div style="flex:1;font-size:14px;font-weight:700;color:var(--text-white);">${esc(agent.business_name || agent.name || '')}</div>`;
+                html += `<div style="font-size:13px;color:#4ecdc4;font-weight:600;">${esc(agent.phone || '')}</div>`;
+                html += `</div>`;
+            }
 
             document.getElementById('sharedDetailTitle').textContent = `${p.complex || p.location || '매물'} 상세`;
             document.getElementById('sharedDetailContent').innerHTML = html;
