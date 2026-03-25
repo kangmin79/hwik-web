@@ -6750,7 +6750,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             const doneBtn = a.alert_done
                 ? '<span style="padding:3px 10px;border-radius:5px;background:rgba(34,197,94,0.1);color:#22c55e;font-size:11px;">완료</span>'
                 : `<button onclick="event.stopPropagation();if(confirm('완료 처리할까요?'))completeAlert('${a.id}')" style="padding:3px 10px;border-radius:5px;border:1px solid rgba(78,205,196,0.3);background:rgba(78,205,196,0.08);color:#4ecdc4;font-size:11px;cursor:pointer;">완료</button>`;
-            return `<div style="padding:10px 14px;margin-bottom:6px;background:${c.bg};border:1px solid ${c.border};border-radius:8px;display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="goToClientDetail('${a.client_card_id}')">
+            return `<div style="padding:10px 14px;margin-bottom:6px;background:${c.bg};border:1px solid ${c.border};border-radius:8px;display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="goToClientDetail('${a.client_card_id}','${a.id}')">
                 <div style="flex:1;${textDeco}">
                     <div style="display:flex;justify-content:space-between;align-items:center;">
                         <span style="font-size:12px;color:${c.dateColor};font-weight:600;">${dateLabel}</span>
@@ -6762,13 +6762,14 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             </div>`;
         }
 
-        // 알림 클릭 → 손님 탭 → 해당 손님 상세 펼침 (맨 위로)
-        function goToClientDetail(clientCardId) {
+        // 알림 클릭 → 손님 탭 → 해당 손님 상세 펼침 (맨 위로 + 메모 하이라이트)
+        let _highlightNoteId = null;
+        function goToClientDetail(clientCardId, noteId) {
+            _highlightNoteId = noteId || null;
             _restorePreviewPanel();
             switchMainTab('client');
             setTimeout(async () => {
                 await loadClientCards();
-                // 해당 손님을 맨 위로
                 const idx = allClientCards.findIndex(c => c.id === clientCardId);
                 if (idx > 0) {
                     const card = allClientCards.splice(idx, 1)[0];
@@ -6777,8 +6778,13 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 renderClientList();
                 setTimeout(() => {
                     toggleClientDetail(clientCardId);
-                    // 스크롤 맨 위로
                     document.getElementById('item-' + clientCardId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // 손님 카드 하이라이트
+                    const itemEl = document.getElementById('item-' + clientCardId);
+                    if (itemEl) {
+                        itemEl.style.boxShadow = '0 0 0 2px #facc15';
+                        setTimeout(() => { itemEl.style.boxShadow = ''; }, 3000);
+                    }
                 }, 300);
             }, 200);
         }
@@ -7790,7 +7796,7 @@ function renderClientTimeline(container, card, notes, cardId) {
         const contentHtml = item.isHtml ? item.content : esc(item.content);
         return `<div class="crm-tl-item" ${hidden ? 'style="display:none;" data-hidden-note="' + cardId + '"' : ''}>
             <div class="crm-tl-dot type-${t.cls}"></div>
-            <div class="crm-tl-box" ${item.isRegister ? 'style="border-color:rgba(78,205,196,0.3);background:rgba(78,205,196,0.03);"' : ''}>
+            <div class="crm-tl-box" id="note-${item.id || 'reg'}" style="${item.isRegister ? 'border-color:rgba(78,205,196,0.3);background:rgba(78,205,196,0.03);' : ''}${_highlightNoteId && item.id === _highlightNoteId ? 'border-color:#facc15;background:rgba(250,204,21,0.08);box-shadow:0 0 0 1px #facc15;' : ''}">
                 <div class="crm-tl-head">
                     <span class="crm-tl-type t-${t.cls}">${t.label}</span>
                     <span class="crm-tl-date">${formatNoteDate(item.date)}</span>
