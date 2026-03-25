@@ -6143,11 +6143,11 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             const loadMoreEl = document.getElementById('clientLoadMoreBtn');
             if (loadMoreEl) loadMoreEl.remove();
 
-            // 전체 자동 매칭 로드
-            matched.forEach(card => {
+            // 전체 자동 매칭 로드 (순차 — _expandedClientId 덮어쓰기 방지)
+            for (const card of matched) {
                 _expandedClientId = card.id;
-                loadInlineMatch(card.id);
-            });
+                await loadInlineMatch(card.id);
+            }
 
             // 첫 손님 선택
             selectedCards = [matched[0]];
@@ -6655,10 +6655,7 @@ async function loadInlineMatch(clientCardId) {
         if (!resp.ok || result.error) throw new Error(result.error || '매칭 실패');
 
         _matchCache[clientCardId] = result;
-        // 아직 펼쳐진 상태인지 확인
-        if (_expandedClientId === clientCardId) {
-            renderInlineMatchResults(clientCardId, result);
-        }
+        renderInlineMatchResults(clientCardId, result);
     } catch (e) {
         console.error('매칭 오류:', e);
         if (_expandedClientId === clientCardId && area) {
