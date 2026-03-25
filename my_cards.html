@@ -3249,11 +3249,19 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             const hint = document.getElementById('sendHint');
             const shareRoomBtn = document.getElementById('shareToRoomBtn');
 
-            // ★ 손님 탭: 보내기 버튼 영역 숨김
+            // ★ 손님 탭: 매칭 매물 선택 시에만 보내기 표시
             if (currentMainTab === 'client') {
-                btn.style.display = 'none';
-                if (shareRoomBtn) shareRoomBtn.style.display = 'none';
-                if (hint) hint.style.display = 'none';
+                if (selectedCards.length > 0 && selectedCards[0].property?.type !== '손님') {
+                    btn.style.display = '';
+                    btn.disabled = false;
+                    btn.textContent = selectedCards.length === 1 ? '이 매물 손님에게 보내기' : `${selectedCards.length}개 묶어서 보내기`;
+                    if (hint) { hint.style.display = ''; hint.textContent = '카카오톡/링크로 보낼 수 있어요'; }
+                    if (shareRoomBtn) shareRoomBtn.style.display = 'none';
+                } else {
+                    btn.style.display = 'none';
+                    if (shareRoomBtn) shareRoomBtn.style.display = 'none';
+                    if (hint) { hint.style.display = ''; hint.textContent = '매칭 매물을 선택하면 손님에게 보낼 수 있어요'; }
+                }
                 return;
             }
 
