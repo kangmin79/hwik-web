@@ -2188,8 +2188,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 </button>
                 <button class="main-tab client" onclick="switchMainTab('client')">
                     손님 <span class="tab-count" id="clientTabCount"></span>
-                    <span class="tab-badge" id="clientMatchBadge" style="display:none" onclick="event.stopPropagation(); showMatchedClientsOnly()">매칭 0</span>
                 </button>
+                <span class="tab-badge" id="clientMatchBadge" style="display:none;margin-left:6px;cursor:pointer;" onclick="showMatchedClientsOnly()">매칭 0</span>
                 <button id="showCompletedBtn" class="main-tab" onclick="switchMainTab('completed')" style="margin-left:4px;">완료 보기 <span class="tab-count" id="completedCount"></span></button>
                 <button class="main-tab memo-tab" onclick="switchMainTab('memo')" style="margin-left:4px;">메모 <span class="tab-count" id="memoTabCount"></span></button>
             </div>
@@ -6101,7 +6101,6 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
         async function showMatchedClientsOnly() {
             _showMatchedOnly = true;
-            // 손님 탭으로 전환
             currentMainTab = 'client';
             document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
             document.querySelector('.main-tab.client')?.classList.add('active');
@@ -6110,12 +6109,19 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             document.getElementById('pageTitle').textContent = '매칭된 손님';
             document.getElementById('pageTitle').style.color = '#facc15';
 
-            // 손님 로드
-            if (allClientCards.length === 0) await loadClientCards();
+            // 매칭된 손님 ID 목록
+            const matchedClientIds = [...new Set(matchResults.map(m => m.client_card_id))];
+            if (matchedClientIds.length === 0) return;
 
-            // 매칭된 손님만 필터
-            const matchedClientIds = new Set(matchResults.map(m => m.client_card_id));
-            const matched = allClientCards.filter(c => matchedClientIds.has(c.id));
+            // ★ DB에서 직접 매칭된 손님 조회 (allClientCards 30개 제한 우회)
+            let matched = allClientCards.filter(c => matchedClientIds.includes(c.id));
+            if (matched.length < matchedClientIds.length) {
+                const { data } = await supabaseClient
+                    .from('cards')
+                    .select('id, property, agent, agent_comment, private_note, photos, trade_status, price_number, created_at, agent_id')
+                    .in('id', matchedClientIds);
+                if (data) matched = data;
+            }
 
             // 직접 렌더링
             const container = document.getElementById('clientPropertyList');
