@@ -13,16 +13,16 @@ Deno.serve(async (req) => {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    const { client_card_id, agent_id, limit = 20, threshold = 0.3 } = await req.json();
+    const { client_card_id, agent_id, limit = 20, threshold = 0.2 } = await req.json();
     if (!client_card_id) throw new Error('client_card_id가 필요합니다');
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const startTime = Date.now();
 
-    // 1. 손님 카드 조회 (임베딩 + property 포함)
+    // 1. 손님 카드 조회
     const { data: clientCard, error: clientError } = await supabase
       .from('cards')
-      .select('id, property, embedding, agent_id')
+      .select('id, property, private_note, embedding, agent_id')
       .eq('id', client_card_id)
       .single();
 
@@ -35,89 +35,115 @@ Deno.serve(async (req) => {
       throw new Error('권한이 없습니다');
     }
 
-    // 2. 손님의 원하는 거래유형 파악 (property.price 텍스트에서 추출)
-    const clientProperty = clientCard.property || {};
-    const clientText = [
-      clientProperty.price, clientProperty.rawText,
-      ...(clientProperty.features || [])
-    ].filter(Boolean).join(' ');
+    // 2. ★ 손님 조건 상세 분석 (모든 텍스트에서 추출)
+    const cp = clientCard.property || {};
+    const memo = clientCard.private_note?.memo || '';
+    const allText = [cp.price, cp.location, cp.complex, cp.area, memo, ...(cp.features || [])].filter(Boolean).join(' ');
 
+    // 거래유형
     let wantedTradeType: string | null = null;
-    if (/매매|매도|분양/.test(clientText)) wantedTradeType = '매매';
-    else if (/전세/.test(clientText)) wantedTradeType = '전세';
-    else if (/월세|임대/.test(clientText)) wantedTradeType = '월세';
+    if (/매매|매도|분양/.test(allText)) wantedTradeType = '매매';
+    else if (/전세/.test(allText)) wantedTradeType = '전세';
+    else if (/월세|임대/.test(allText)) wantedTradeType = '월세';
 
-    // 3. 벡터 유사도 검색 (RPC 사용)
-    //    match_properties_for_client 함수가 DB에 없을 수 있으므로
-    //    search_cards_advanced를 활용하거나 직접 쿼리
+    // 카테고리
+    let wantedCategory: string | null = null;
+    if (/사무실|오피스$|코워킹/.test(allText)) wantedCategory = 'office';
+    else if (/상가|점포|매장|카페|음식점|식당/.test(allText)) wantedCategory = 'commercial';
+    else if (/오피스텔/.test(allText)) wantedCategory = 'officetel';
+    else if (/원룸|투룸|빌라|다세대|주택|쓰리룸/.test(allText)) wantedCategory = 'room';
+    else if (/아파트|주상복합/.test(allText)) wantedCategory = 'apartment';
+
+    // 가격 범위
+    let minPrice: number | null = null;
+    let maxPrice: number | null = null;
+
+    // "3억 이내/이하" → maxPrice
+    const maxMatch = allText.match(/(\d+)\s*억\s*(?:\d*천?)?\s*(?:이내|이하|미만|까지)/);
+    if (maxMatch) {
+      maxPrice = parseInt(maxMatch[1]) * 10000;
+      const chunMatch = allText.match(/(\d+)\s*억\s*(\d+)\s*천/);
+      if (chunMatch) maxPrice = parseInt(chunMatch[1]) * 10000 + parseInt(chunMatch[2]) * 1000;
+    }
+    // "3억~5억" → min, max
+    const rangeMatch = allText.match(/(\d+)\s*억\s*~\s*(\d+)\s*억/);
+    if (rangeMatch) {
+      minPrice = parseInt(rangeMatch[1]) * 10000;
+      maxPrice = parseInt(rangeMatch[2]) * 10000;
+    }
+    // 월세: "월세 80 이하" → maxPrice (월세 기준)
+    if (wantedTradeType === '월세') {
+      const monthlyMax = allText.match(/월(?:세)?\s*(\d+)\s*이하/);
+      if (monthlyMax) maxPrice = parseInt(monthlyMax[1]);
+    }
+
+    // 지역 (구 단위)
+    let wantedLocation: string | null = null;
+    const guMatch = allText.match(/(강남|서초|송파|마포|용산|성동|광진|영등포|강동|동작|관악|종로|중구|강서|양천|구로|노원|서대문|은평|중랑|도봉|동대문|성북|금천|강북)/);
+    if (guMatch) wantedLocation = guMatch[1];
+
     const effectiveAgentId = agent_id || clientCard.agent_id || '';
 
-    // pgvector cosine distance 검색: 1 - (embedding <=> target) as similarity
-    // cards 테이블에서 매물만 검색
+    console.log(`매칭 조건: trade=${wantedTradeType} cat=${wantedCategory} loc=${wantedLocation} price=${minPrice}~${maxPrice}`);
+
+    // 3. ★ 벡터 검색 (넓게) + 후필터 (정확하게)
     const { data: matches, error: matchError } = await supabase.rpc('match_properties_for_client', {
       p_client_embedding: clientCard.embedding,
       p_agent_id: effectiveAgentId,
       p_trade_type: wantedTradeType,
       p_threshold: threshold,
-      p_limit: limit
+      p_limit: limit * 5  // 넓게 가져와서 후필터
     });
 
-    if (matchError) {
-      // RPC가 없으면 폴백: search_cards_advanced 활용
-      console.warn('match_properties_for_client RPC 없음, 폴백 사용:', matchError.message);
+    let results = matches || [];
 
-      const { data: fallbackData, error: fbError } = await supabase.rpc('search_cards_advanced', {
+    if (matchError) {
+      // 폴백
+      console.warn('RPC 실패, 폴백:', matchError.message);
+      const { data: fbData } = await supabase.rpc('search_cards_advanced', {
         p_agent_id: effectiveAgentId,
         p_search_text: null,
         p_embedding: clientCard.embedding,
-        p_property_type: null,
+        p_property_type: wantedCategory,
         p_trade_type: wantedTradeType,
-        p_min_price: null,
-        p_max_price: null,
+        p_min_price: minPrice,
+        p_max_price: maxPrice,
         p_days_ago: null,
-        p_limit: limit * 2,
+        p_limit: limit * 3,
         p_search_mode: 'my'
       });
-
-      if (fbError) throw new Error('매칭 검색 실패: ' + fbError.message);
-
-      // 손님 카드 제외 + 유사도 필터
-      const filtered = (fallbackData || [])
-        .filter((r: any) => {
-          if (r.property?.type === '손님') return false;
-          if (r.similarity !== undefined && r.similarity < threshold) return false;
-          return true;
-        })
-        .slice(0, limit)
-        .map((r: any) => ({
-          id: r.id,
-          property: r.property,
-          agent_comment: r.agent_comment,
-          price_number: r.price_number,
-          trade_status: r.trade_status,
-          photos: r.photos,
-          lat: r.lat,
-          lng: r.lng,
-          created_at: r.created_at,
-          similarity: r.similarity ? Math.round(r.similarity * 100) / 100 : null
-        }));
-
-      console.log(`매칭 완료 (폴백): ${Date.now() - startTime}ms | ${filtered.length}건`);
-
-      return new Response(JSON.stringify({
-        success: true,
-        client_card_id,
-        wanted_trade_type: wantedTradeType,
-        results: filtered,
-        count: filtered.length,
-        mode: 'fallback'
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      results = (fbData || []).filter((r: any) => r.property?.type !== '손님');
     }
 
-    // RPC 성공 시
-    const results = (matches || []).map((r: any) => ({
+    // 4. ★ 후필터: 카테고리, 가격, 지역
+    if (wantedCategory) {
+      const catFiltered = results.filter((r: any) => r.property?.category === wantedCategory);
+      if (catFiltered.length >= 3) results = catFiltered; // 3개 이상이면 필터 적용
+    }
+
+    if (maxPrice && wantedTradeType !== '월세') {
+      const priceFiltered = results.filter((r: any) => {
+        const pn = r.price_number || 0;
+        if (minPrice && pn < minPrice) return false;
+        if (maxPrice && pn > maxPrice * 1.2) return false; // 20% 여유
+        return true;
+      });
+      if (priceFiltered.length >= 2) results = priceFiltered;
+    }
+
+    if (wantedLocation) {
+      const locFiltered = results.filter((r: any) => {
+        const loc = r.property?.location || '';
+        return loc.includes(wantedLocation);
+      });
+      if (locFiltered.length >= 2) results = locFiltered;
+    }
+
+    // 완료 매물 제외
+    results = results.filter((r: any) => r.trade_status !== '완료');
+
+    // 상위 N개
+    results = results.slice(0, limit).map((r: any) => ({
       id: r.id,
       property: r.property,
       agent_comment: r.agent_comment,
@@ -127,18 +153,20 @@ Deno.serve(async (req) => {
       lat: r.lat,
       lng: r.lng,
       created_at: r.created_at,
-      similarity: Math.round(r.similarity * 100) / 100
+      similarity: r.similarity ? Math.round(r.similarity * 100) / 100 : null
     }));
 
-    console.log(`매칭 완료: ${Date.now() - startTime}ms | ${results.length}건 | 거래유형: ${wantedTradeType || '전체'}`);
+    console.log(`매칭 완료: ${Date.now() - startTime}ms | ${results.length}건`);
 
     return new Response(JSON.stringify({
       success: true,
       client_card_id,
       wanted_trade_type: wantedTradeType,
+      wanted_category: wantedCategory,
+      wanted_location: wantedLocation,
+      wanted_price: { min: minPrice, max: maxPrice },
       results,
       count: results.length,
-      mode: 'rpc'
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
