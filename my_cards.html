@@ -5517,7 +5517,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 const isDetailOpen = document.getElementById('client-detail-' + card.id)?.classList.contains('open');
                 html += `<div class="property-item ${isExpanded ? 'selected' : ''}" id="item-${card.id}">
                     <div class="property-item-main" style="align-items:center;cursor:pointer;" onclick="toggleClientDetail('${card.id}')">
-                        <div class="property-checkbox">${isExpanded ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="#fb923c" stroke="#fb923c" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</div>
+                        <div style="width:20px;flex-shrink:0;text-align:center;color:#94a3b8;font-size:12px;">${isExpanded ? '▼' : '▶'}</div>
                         <span class="property-type-badge" style="flex-shrink:0;background:rgba(78,205,196,0.15);color:#4ecdc4;border-color:rgba(78,205,196,0.3);margin-right:8px;">손님</span>
                         <div class="client-raw-text">${rawTextDisplay}</div>
                         <button class="property-edit" onclick="event.stopPropagation(); toggleClientDetail('${card.id}')">상세</button>
