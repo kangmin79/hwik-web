@@ -2375,7 +2375,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 <div class="filter-section">
                     <div class="filter-row" style="display:flex;justify-content:space-between;align-items:center">
                         <div class="search-box" style="flex:1;margin:0">
-                            <input type="text" id="clientSearchInput" placeholder="손님 요청 검색..." oninput="renderClientList()">
+                            <input type="text" id="clientSearchInput" placeholder="단어 하나로 검색, 복잡한 조건은 Enter">
                         </div>
                         <div style="display:flex;gap:5px;flex-shrink:0;margin-left:12px">
                             <button class="sort-tag active" data-sort="newest" onclick="onClientSortChange(this)">최근순</button>
@@ -4600,6 +4600,21 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         return;
                     }
                     _lastSearchQuery = query;
+                    vectorSearch(query);
+                }
+            });
+
+            // ★ 손님 검색: Enter → 벡터 검색 (내 매물 검색과 동일)
+            document.getElementById('clientSearchInput')?.addEventListener('input', e => {
+                if (!e.target.value.trim()) {
+                    loadClientCards();
+                }
+            });
+            document.getElementById('clientSearchInput')?.addEventListener('keypress', async e => {
+                if (e.key === 'Enter') {
+                    const query = e.target.value.trim();
+                    if (!query) { loadClientCards(); return; }
+                    // 손님 검색은 client 모드
                     vectorSearch(query);
                 }
             });
