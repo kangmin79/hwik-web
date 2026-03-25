@@ -6741,6 +6741,14 @@ function renderInlineMatchResults(clientCardId, result) {
             }
         }
 
+        const photos = item.photos || [];
+        const photoHtml = photos.length > 0
+            ? `<div style="position:relative;width:44px;height:44px;border-radius:6px;overflow:hidden;flex-shrink:0;">
+                <img src="${photos[0]}" loading="lazy" style="width:100%;height:100%;object-fit:cover;">
+                ${photos.length > 1 ? `<span style="position:absolute;bottom:1px;right:2px;font-size:9px;color:#fff;background:rgba(0,0,0,0.6);padding:1px 4px;border-radius:3px;">${photos.length}</span>` : ''}
+               </div>`
+            : '';
+
         html += `<div class="matched-property-item ${isSelected ? 'selected' : ''}" onclick="event.stopPropagation(); selectMatchedProperty('${item.id}', '${clientCardId}')">
             <div class="property-checkbox" style="width:20px;height:20px;flex-shrink:0;">${isSelected ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="#4ecdc4" stroke="#4ecdc4" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</div>
             <div style="flex:1;min-width:0;">
@@ -6754,6 +6762,8 @@ function renderInlineMatchResults(clientCardId, result) {
                 ${featureTags ? `<div style="margin-top:3px;">${featureTags}</div>` : ''}
                 ${isShared ? sharedInfoHtml : ''}
             </div>
+            ${photoHtml}
+            <button class="property-edit" onclick="event.stopPropagation(); openSharedDetail('${item.id}')" style="flex-shrink:0;">상세</button>
         </div>`;
     });
 
