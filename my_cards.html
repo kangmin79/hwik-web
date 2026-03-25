@@ -6347,15 +6347,16 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             if (!container) return;
             container.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8">알림 로드 중...</div>';
 
-            // ★ 1. 일정 알림 (alert_date가 오늘~7일 내)
+            // ★ 1. 일정 알림 (미완료 전체 + 오늘~7일 내)
             const today = new Date().toISOString().slice(0, 10);
             const weekLater = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+            // 미완료 (지난 것 포함) + 앞으로 7일
             const { data: alerts } = await supabaseClient
                 .from('client_notes')
-                .select('id, client_card_id, type, content, alert_date, created_at')
+                .select('id, client_card_id, type, content, alert_date, alert_done, created_at')
                 .eq('agent_id', currentUser.id)
+                .eq('alert_done', false)
                 .not('alert_date', 'is', null)
-                .gte('alert_date', today)
                 .lte('alert_date', weekLater)
                 .order('alert_date', { ascending: true });
 
@@ -6376,17 +6377,36 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
             // 📅 일정 알림
             if (alerts && alerts.length > 0) {
-                html += `<div style="padding:12px 0;"><div style="font-size:14px;font-weight:700;color:#facc15;margin-bottom:8px;">📅 일정 (${alerts.length}건)</div>`;
-                alerts.forEach(a => {
-                    const isToday = a.alert_date === today;
-                    html += `<div style="padding:10px 14px;margin-bottom:6px;background:${isToday ? 'rgba(239,68,68,0.08)' : 'rgba(255,255,255,0.03)'};border:1px solid ${isToday ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)'};border-radius:8px;">
-                        <div style="display:flex;justify-content:space-between;align-items:center;">
-                            <span style="font-size:13px;color:#e2e8f0;">${isToday ? '🔴 오늘' : '📅 ' + a.alert_date}</span>
-                            <span style="font-size:11px;color:#94a3b8;">${a.type}</span>
-                        </div>
-                        <div style="font-size:14px;color:#e2e8f0;margin-top:4px;font-weight:600;">${esc(a.content)}</div>
-                    </div>`;
-                });
+                const overdue = alerts.filter(a => a.alert_date < today);
+                const todayItems = alerts.filter(a => a.alert_date === today);
+                const upcoming = alerts.filter(a => a.alert_date > today);
+
+                html += `<div style="padding:12px 0;">`;
+
+                // 지연 (빨간)
+                if (overdue.length > 0) {
+                    html += `<div style="font-size:14px;font-weight:700;color:#ef4444;margin-bottom:8px;">🔴 지연 (${overdue.length}건)</div>`;
+                    overdue.forEach(a => {
+                        html += _alertItemHtml(a, 'overdue');
+                    });
+                }
+
+                // 오늘
+                if (todayItems.length > 0) {
+                    html += `<div style="font-size:14px;font-weight:700;color:#facc15;margin:12px 0 8px;">📅 오늘 (${todayItems.length}건)</div>`;
+                    todayItems.forEach(a => {
+                        html += _alertItemHtml(a, 'today');
+                    });
+                }
+
+                // 예정
+                if (upcoming.length > 0) {
+                    html += `<div style="font-size:14px;font-weight:700;color:#94a3b8;margin:12px 0 8px;">🗓 예정 (${upcoming.length}건)</div>`;
+                    upcoming.forEach(a => {
+                        html += _alertItemHtml(a, 'upcoming');
+                    });
+                }
+
                 html += `</div>`;
                 totalAlerts += alerts.length;
             }
@@ -6422,6 +6442,32 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
             document.getElementById('pageCount').textContent = totalAlerts + '건';
             container.innerHTML = html;
+        }
+
+        function _alertItemHtml(a, status) {
+            const colors = {
+                overdue: { bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.25)', label: '#f87171', dateColor: '#f87171' },
+                today: { bg: 'rgba(250,204,21,0.06)', border: 'rgba(250,204,21,0.2)', label: '#facc15', dateColor: '#facc15' },
+                upcoming: { bg: 'rgba(255,255,255,0.03)', border: 'rgba(255,255,255,0.08)', label: '#94a3b8', dateColor: '#94a3b8' },
+            };
+            const c = colors[status];
+            const dateLabel = status === 'overdue' ? `⚠️ ${a.alert_date} (지연)` : status === 'today' ? '오늘' : a.alert_date;
+            return `<div style="padding:10px 14px;margin-bottom:6px;background:${c.bg};border:1px solid ${c.border};border-radius:8px;display:flex;align-items:center;gap:10px;">
+                <input type="checkbox" onchange="completeAlert('${a.id}')" style="width:18px;height:18px;cursor:pointer;flex-shrink:0;accent-color:#4ecdc4;">
+                <div style="flex:1;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:12px;color:${c.dateColor};font-weight:600;">${dateLabel}</span>
+                        <span style="font-size:10px;color:#64748b;">${a.type}</span>
+                    </div>
+                    <div style="font-size:14px;color:#e2e8f0;margin-top:3px;">${esc(a.content)}</div>
+                </div>
+            </div>`;
+        }
+
+        async function completeAlert(noteId) {
+            await supabaseClient.from('client_notes').update({ alert_done: true }).eq('id', noteId);
+            showToast('✅ 완료');
+            showAlerts(); // 새로고침
         }
 
         function updateMatchBell() {
