@@ -6851,54 +6851,25 @@ async function loadClientFullView(cardId) {
     const p = card.property || {};
     const pn = card.private_note || {};
     const features = p.features || [];
+    const regDate = card.created_at ? new Date(card.created_at).toLocaleDateString('ko-KR', {month:'long', day:'numeric'}) : '';
+    const featureTags = features.map(f => `<span style="display:inline-block;padding:2px 8px;border-radius:4px;background:rgba(78,205,196,0.1);color:#4ecdc4;font-size:11px;font-weight:600;margin:2px;">${esc(f)}</span>`).join('');
+    const memoText = pn.memo || '';
 
-    // 섹션1: 손님 정보 (인라인 편집)
+    // 통합 뷰: 타임라인 + 메모입력 + 매칭
     let infoHtml = `<div class="client-full-view">
-        <div class="client-full-section">
-            <div class="client-section-title">손님 정보</div>
-            <div class="client-info-grid">
-                <div class="client-info-field">
-                    <span class="client-info-label">가격</span>
-                    <input class="client-info-input" id="cfv-price-${cardId}" value="${esc(p.price || '')}" placeholder="예: 전세 3억">
-                </div>
-                <div class="client-info-field">
-                    <span class="client-info-label">지역</span>
-                    <input class="client-info-input" id="cfv-location-${cardId}" value="${esc(p.location || '')}" placeholder="예: 강남구">
-                </div>
-                <div class="client-info-field">
-                    <span class="client-info-label">단지/건물</span>
-                    <input class="client-info-input" id="cfv-complex-${cardId}" value="${esc(p.complex || '')}" placeholder="예: 래미안">
-                </div>
-                <div class="client-info-field">
-                    <span class="client-info-label">면적</span>
-                    <input class="client-info-input" id="cfv-area-${cardId}" value="${esc(p.area || '')}" placeholder="예: 30평대">
-                </div>
-            </div>
-            <div class="client-info-field" style="margin-top:6px;">
-                <span class="client-info-label">특징 태그</span>
-                <div class="client-info-tags" id="cfv-tags-${cardId}">
-                    ${features.map((f, i) => `<span class="client-info-tag">${esc(f)}<span class="tag-remove" onclick="removeClientTag('${cardId}', ${i})">×</span></span>`).join('')}
-                    <input class="client-tag-add-input" id="cfv-tag-input-${cardId}" placeholder="+ 태그" onkeydown="if(event.key==='Enter'){addClientTag('${cardId}');event.preventDefault();}">
-                </div>
-            </div>
-            <div class="client-save-row">
-                <button class="client-save-btn" id="cfv-save-btn-${cardId}" onclick="saveClientInlineEdit('${cardId}')">저장</button>
-            </div>
-        </div>`;
 
-    // 섹션2: 매칭 매물 영역
-    infoHtml += `<div class="client-full-section">
+        <!-- 타임라인 (손님 정보가 첫 박스) -->
+        <div class="client-full-section">
+            <div class="crm-timeline" id="crm-timeline-${cardId}">
+                <div style="font-size:12px;color:var(--text-gray-light);padding:8px 0;">불러오는 중...</div>
+            </div>
+        </div>
+
+        <!-- 매칭 매물 -->
+        <div class="client-full-section">
             <div class="client-section-title">매칭 매물</div>
             <div class="client-match-area open" id="client-match-${cardId}">
                 <div style="font-size:12px;color:var(--text-gray-light);padding:8px 0;">매칭 검색 중...</div>
-            </div>
-        </div>`;
-
-    // 섹션3: 메모 + 타임라인 영역
-    infoHtml += `<div class="client-full-section">
-            <div class="client-section-title">메모 / 타임라인</div>
-            <div class="crm-timeline" id="crm-timeline-${cardId}">
-                <div style="font-size:12px;color:var(--text-gray-light);padding:8px 0;">불러오는 중...</div>
             </div>
         </div>
     </div>`;
@@ -7313,16 +7284,22 @@ function renderClientTimeline(container, card, notes, cardId) {
     // 타임라인 아이템들 (최신이 위)
     let items = [];
 
-    // 첫 번째: 등록 정보
-    const regContent = [
-        p.rawText,
-        pn.memo ? '🔒 ' + pn.memo : ''
+    // 첫 번째: 손님 정보 (타임라인 첫 박스)
+    const featureTags = (p.features || []).map(f => `<span style="display:inline-block;padding:1px 6px;border-radius:4px;background:rgba(78,205,196,0.1);color:#4ecdc4;font-size:10px;margin:1px 2px;">${f}</span>`).join('');
+    const infoLines = [
+        p.price ? `💰 ${p.price}` : '',
+        p.location ? `📍 ${p.location}` : '',
+        p.complex ? `🏢 ${p.complex}` : '',
+        p.area ? `📐 ${p.area}` : '',
+        featureTags ? `${featureTags}` : '',
+        pn.memo ? `\n📝 ${pn.memo}` : ''
     ].filter(Boolean).join('\n');
     items.push({
         type: '등록',
         date: card.created_at,
-        content: regContent || '손님 등록',
-        isRegister: true
+        content: infoLines || '손님 등록',
+        isRegister: true,
+        isHtml: true
     });
 
     // 메모들
@@ -7336,25 +7313,27 @@ function renderClientTimeline(container, card, notes, cardId) {
         });
     });
 
-    // 최신순 정렬 (최신이 위, 등록은 항상 맨 아래)
+    // 등록은 맨 위, 나머지는 최신순
     items.sort((a, b) => {
-        if (a.isRegister) return 1;
-        if (b.isRegister) return -1;
+        if (a.isRegister) return -1;
+        if (b.isRegister) return 1;
         return new Date(b.date) - new Date(a.date);
     });
 
     items.forEach(item => {
         const t = NOTE_TYPE_MAP[item.type] || NOTE_TYPE_MAP['메모'];
         const deleteBtn = item.id ? `<button class="crm-tl-delete" onclick="event.stopPropagation();deleteClientNote('${item.id}','${cardId}')">삭제</button>` : '';
+        const editBtn = item.isRegister ? `<button class="crm-tl-delete" style="color:#facc15;" onclick="event.stopPropagation();editClientCard('${cardId}')">수정</button>` : '';
+        const contentHtml = item.isHtml ? item.content : esc(item.content);
         html += `<div class="crm-tl-item">
             <div class="crm-tl-dot type-${t.cls}"></div>
-            <div class="crm-tl-box">
+            <div class="crm-tl-box" ${item.isRegister ? 'style="border-color:rgba(78,205,196,0.3);background:rgba(78,205,196,0.03);"' : ''}>
                 <div class="crm-tl-head">
                     <span class="crm-tl-type t-${t.cls}">${t.label}</span>
                     <span class="crm-tl-date">${formatNoteDate(item.date)}</span>
-                    ${deleteBtn}
+                    ${editBtn}${deleteBtn}
                 </div>
-                <div class="crm-tl-content">${esc(item.content)}</div>
+                <div class="crm-tl-content" style="white-space:pre-wrap;">${contentHtml}</div>
             </div>
         </div>`;
     });
