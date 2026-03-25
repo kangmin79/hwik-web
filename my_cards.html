@@ -5898,7 +5898,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
             const p = card.property || {};
             const agent = card.agent || {};
-            const isMine = card.agent_id === currentUser?.id || card.is_mine;
+            // is_mine이 명시적으로 false면 다른 중개사 매물 (공유매물)
+            const isMine = card.is_mine === false ? false : (card.agent_id === currentUser?.id);
             const photos = card.photos || [];
 
             let html = '';
