@@ -6640,19 +6640,47 @@ async function loadInlineMatch(clientCardId) {
         <div class="match-skeleton"></div><div class="match-skeleton"></div><div class="match-skeleton"></div>`;
 
     try {
-        const resp = await fetch(`${SUPABASE_URL}/functions/v1/match-properties`, {
-            method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                client_card_id: clientCardId,
-                agent_id: currentUser?.id || '',
-                limit: 10,
-                threshold: 0.3
-            })
+        // ★ 손님 카드의 임베딩 가져오기
+        const { data: clientCard } = await supabaseClient
+            .from('cards')
+            .select('id, property, private_note, embedding')
+            .eq('id', clientCardId)
+            .single();
+
+        if (!clientCard || !clientCard.embedding) throw new Error('임베딩 없음');
+
+        // ★ 손님 조건에서 거래유형 추출
+        const cp = clientCard.property || {};
+        const memo = clientCard.private_note?.memo || '';
+        const allText = [cp.price, cp.location, memo, ...(cp.features || [])].join(' ');
+        let wantedType = null;
+        if (/매매|매도/.test(allText)) wantedType = '매매';
+        else if (/전세/.test(allText)) wantedType = '전세';
+        else if (/월세|임대/.test(allText)) wantedType = '월세';
+
+        // ★ RPC 직접 호출 (Edge Function 거치지 않아 ~500ms 절약)
+        const { data: matches, error: matchErr } = await supabaseClient.rpc('match_properties_for_client', {
+            p_client_embedding: clientCard.embedding,
+            p_agent_id: currentUser?.id || '',
+            p_trade_type: wantedType,
+            p_threshold: 0.2,
+            p_limit: 50
         });
 
-        const result = await resp.json();
-        if (!resp.ok || result.error) throw new Error(result.error || '매칭 실패');
+        let results = matches || [];
+        if (matchErr) throw new Error(matchErr.message);
+
+        // ★ 후필터: 계약가능만
+        results = results.filter(r => (r.trade_status || '계약가능') === '계약가능');
+        results = results.slice(0, 10);
+
+        const result = {
+            success: true,
+            client_card_id: clientCardId,
+            wanted_trade_type: wantedType,
+            results: results.map(r => ({...r, similarity: r.similarity ? Math.round(r.similarity * 100) / 100 : null})),
+            count: results.length,
+        };
 
         _matchCache[clientCardId] = result;
         renderInlineMatchResults(clientCardId, result);
