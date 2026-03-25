@@ -7445,6 +7445,19 @@ async function loadInlineMatch(clientCardId) {
         // ★ 후필터: 계약가능만
         results = results.filter(r => (r.trade_status || '계약가능') === '계약가능');
 
+        // ★ 카테고리 필터: 손님이 원하는 카테고리 감지
+        let wantedCat = null;
+        if (/사무실|오피스(?!텔)/.test(allText)) wantedCat = 'office';
+        else if (/상가|점포|매장|카페|음식점/.test(allText)) wantedCat = 'commercial';
+        else if (/오피스텔/.test(allText)) wantedCat = 'officetel';
+        else if (/원룸|투룸|빌라|다세대/.test(allText)) wantedCat = 'room';
+        else if (/아파트/.test(allText)) wantedCat = 'apartment';
+
+        if (wantedCat) {
+            const catFiltered = results.filter(r => r.property?.category === wantedCat);
+            if (catFiltered.length >= 1) results = catFiltered;
+        }
+
         // ★ 가격 필터: 손님 예산에서 추출
         let maxBudget = null;
         const priceMatch = allText.match(/(\d+)\s*억/);
