@@ -2954,10 +2954,10 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         ${tags ? `<div style="margin-top:8px;display:flex;flex-wrap:wrap;">${tags}</div>` : ''}
                     </div>
 
-                    <!-- 메모 (비공개) -->
-                    ${pn.memo ? `<div style="background:linear-gradient(145deg,rgba(239,68,68,0.06),rgba(239,68,68,0.02));border:1px solid rgba(239,68,68,0.12);border-radius:12px;padding:14px;margin-bottom:12px;">
-                        <div style="font-size:10px;font-weight:700;color:#ef4444;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px;">🔒 비공개 메모</div>
-                        <div style="font-size:12px;color:#fca5a5;line-height:1.6;white-space:pre-wrap;">${esc(pn.memo)}</div>
+                    <!-- 요청 상세 -->
+                    ${pn.memo ? `<div style="background:linear-gradient(145deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01));border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:14px;margin-bottom:12px;">
+                        <div style="font-size:10px;font-weight:700;color:#94a3b8;margin-bottom:6px;letter-spacing:0.5px;">📝 요청 내용</div>
+                        <div style="font-size:13px;color:#e2e8f0;line-height:1.7;white-space:pre-wrap;">${esc(pn.memo)}</div>
                     </div>` : ''}
 
                     <!-- 하단 정보 -->
