@@ -5067,7 +5067,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 (pnData || []).forEach(c => { myPrivateNotes[c.id] = c.private_note; });
             }
 
-            // 에이전트 정보 병합
+            // 에이전트 정보 병합 + 같은 중개사의 중복 제거
+            const seen = new Set();
             allSharedCards = (data || []).filter(d => d.cards).map(d => {
                 const isMine = d.shared_by === currentUser?.id;
                 return {
@@ -5079,6 +5080,11 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     is_mine: isMine,
                     private_note: isMine ? (myPrivateNotes[d.cards.id] || null) : null
                 };
+            }).filter(c => {
+                const key = `${c.id}_${c.shared_by || c.agent_id}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
             });
             
             renderSharedList();
