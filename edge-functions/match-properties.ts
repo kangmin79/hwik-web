@@ -28,7 +28,30 @@ Deno.serve(async (req) => {
 
     if (clientError || !clientCard) throw new Error('손님 카드를 찾을 수 없습니다');
     if (clientCard.property?.type !== '손님') throw new Error('손님 카드가 아닙니다');
-    if (!clientCard.embedding) throw new Error('손님 카드에 임베딩이 없습니다');
+
+    // ★ 임베딩 없으면 즉시 생성
+    if (!clientCard.embedding) {
+      const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+      if (!OPENAI_API_KEY) throw new Error('임베딩 생성 불가 (API 키 없음)');
+
+      const cp = clientCard.property || {};
+      const memo = clientCard.private_note?.memo || '';
+      const embedText = [cp.type, cp.price, cp.location, cp.complex, cp.area, ...(cp.features || []), memo].filter(Boolean).join(' ');
+
+      const embedResp = await fetch('https://api.openai.com/v1/embeddings', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'text-embedding-3-small', input: embedText })
+      });
+      const embedData = await embedResp.json();
+      const embedding = embedData.data?.[0]?.embedding;
+      if (!embedding) throw new Error('임베딩 생성 실패');
+
+      // DB 업데이트
+      await supabase.from('cards').update({ embedding, search_text: embedText }).eq('id', client_card_id);
+      clientCard.embedding = embedding;
+      console.log('임베딩 즉시 생성 완료');
+    }
 
     // ★ 보안: 본인 손님만 조회 가능
     if (agent_id && clientCard.agent_id !== agent_id) {
@@ -139,8 +162,11 @@ Deno.serve(async (req) => {
       if (locFiltered.length >= 2) results = locFiltered;
     }
 
-    // 완료 매물 제외
-    results = results.filter((r: any) => r.trade_status !== '완료');
+    // ★ 계약가능 매물만 (계약중/완료 제외 — 손님에게 추천 가능한 매물만)
+    results = results.filter((r: any) => {
+      const status = r.trade_status || '계약가능';
+      return status === '계약가능';
+    });
 
     // 상위 N개
     results = results.slice(0, limit).map((r: any) => ({
