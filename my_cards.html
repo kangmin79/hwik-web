@@ -2276,7 +2276,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 <button class="main-tab client" onclick="switchMainTab('client')">
                     손님 <span class="tab-count" id="clientTabCount"></span>
                 </button>
-                <button class="main-tab" id="clientMatchBadge" style="display:none;margin-left:4px;" onclick="showMatchedClientsOnly()">매칭 <span class="tab-count" id="matchTabCount"></span></button>
+                <button class="main-tab" id="clientMatchBadge" style="margin-left:4px;" onclick="showAlerts()">알림 <span class="tab-count" id="matchTabCount"></span></button>
                 <!-- 완료 탭 삭제 — 검색으로 찾기 가능 -->
                 <button class="main-tab memo-tab" onclick="switchMainTab('memo')" style="margin-left:4px;">메모 <span class="tab-count" id="memoTabCount"></span></button>
             </div>
@@ -6331,84 +6331,108 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         // 매칭 뱃지 클릭 → 매칭된 손님만 보여주기
         let _showMatchedOnly = false;
 
-        async function showMatchedClientsOnly() {
-            _showMatchedOnly = true;
+        async function showAlerts() {
             currentMainTab = 'client';
             document.querySelectorAll('.main-tab').forEach(t => t.classList.remove('active'));
             document.getElementById('clientMatchBadge')?.classList.add('active');
             document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
             document.getElementById('tabClient')?.classList.add('active');
-            document.getElementById('pageTitle').textContent = '매칭된 손님';
+            document.getElementById('pageTitle').textContent = '알림';
             document.getElementById('pageTitle').style.color = '#facc15';
 
-            // 매칭된 손님 ID 목록
-            const matchedClientIds = [...new Set(matchResults.map(m => m.client_card_id))];
-            if (matchedClientIds.length === 0) return;
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.getElementById('tabClient')?.classList.add('active');
 
-            // ★ DB에서 직접 매칭된 손님 조회 (allClientCards 30개 제한 우회)
-            let matched = allClientCards.filter(c => matchedClientIds.includes(c.id));
-            if (matched.length < matchedClientIds.length) {
-                const { data } = await supabaseClient
-                    .from('cards')
-                    .select('id, property, agent, agent_comment, private_note, photos, trade_status, price_number, created_at, agent_id')
-                    .in('id', matchedClientIds);
-                if (data) matched = data;
-            }
-
-            // 직접 렌더링
             const container = document.getElementById('clientPropertyList');
             if (!container) return;
+            container.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8">알림 로드 중...</div>';
 
-            document.getElementById('pageCount').textContent = matched.length + '명';
+            // ★ 1. 일정 알림 (alert_date가 오늘~7일 내)
+            const today = new Date().toISOString().slice(0, 10);
+            const weekLater = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+            const { data: alerts } = await supabaseClient
+                .from('client_notes')
+                .select('id, client_card_id, type, content, alert_date, created_at')
+                .eq('agent_id', currentUser.id)
+                .not('alert_date', 'is', null)
+                .gte('alert_date', today)
+                .lte('alert_date', weekLater)
+                .order('alert_date', { ascending: true });
 
-            if (matched.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">매칭된 손님이 없어요</div></div>';
-                return;
-            }
+            // ★ 2. 매칭 알림
+            const matchedClientIds = [...new Set(matchResults.map(m => m.client_card_id))];
 
-            // 매칭된 손님 렌더링 + 자동 펼침
+            // ★ 3. 후속 필요 (3일 이상 메모 없는 손님)
+            const threeDaysAgo = new Date(Date.now() - 3 * 86400000).toISOString();
+            const { data: recentNotes } = await supabaseClient
+                .from('client_notes')
+                .select('client_card_id, created_at')
+                .eq('agent_id', currentUser.id)
+                .gte('created_at', threeDaysAgo);
+            const recentClientIds = new Set((recentNotes || []).map(n => n.client_card_id));
+
             let html = '';
-            matched.forEach((card, idx) => {
-                const p = card.property || {};
-                const rawText = esc(p.rawText || [p.price, p.location, (p.features||[]).join(' ')].filter(Boolean).join(' '));
-                html += `<div class="property-item" id="item-${card.id}" style="border-left:3px solid #facc15;">
-                    <div class="property-item-main" onclick="toggleSelect('${card.id}')" style="align-items:center;">
-                        <span class="property-type-badge" style="flex-shrink:0;background:rgba(78,205,196,0.15);color:#4ecdc4;border-color:rgba(78,205,196,0.3);margin-right:8px;">손님</span>
-                        <div class="client-raw-text">${rawText}</div>
-                        <button class="match-btn" onclick="event.stopPropagation(); matchPropertiesForClient('${card.id}')">매칭</button>
-                    </div>
-                    <div class="client-match-area open" id="client-match-${card.id}">
-                        <div class="match-area-header">매칭 매물 검색 중...</div>
-                        <div class="match-skeleton"></div>
-                    </div>
-                </div>`;
-            });
-            container.innerHTML = html;
+            let totalAlerts = 0;
 
-            // 더보기 버튼 제거
-            const loadMoreEl = document.getElementById('clientLoadMoreBtn');
-            if (loadMoreEl) loadMoreEl.remove();
-
-            // 전체 자동 매칭 로드 (순차 — _expandedClientId 덮어쓰기 방지)
-            for (const card of matched) {
-                _expandedClientId = card.id;
-                await loadInlineMatch(card.id);
+            // 📅 일정 알림
+            if (alerts && alerts.length > 0) {
+                html += `<div style="padding:12px 0;"><div style="font-size:14px;font-weight:700;color:#facc15;margin-bottom:8px;">📅 일정 (${alerts.length}건)</div>`;
+                alerts.forEach(a => {
+                    const isToday = a.alert_date === today;
+                    html += `<div style="padding:10px 14px;margin-bottom:6px;background:${isToday ? 'rgba(239,68,68,0.08)' : 'rgba(255,255,255,0.03)'};border:1px solid ${isToday ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.06)'};border-radius:8px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-size:13px;color:#e2e8f0;">${isToday ? '🔴 오늘' : '📅 ' + a.alert_date}</span>
+                            <span style="font-size:11px;color:#94a3b8;">${a.type}</span>
+                        </div>
+                        <div style="font-size:14px;color:#e2e8f0;margin-top:4px;font-weight:600;">${esc(a.content)}</div>
+                    </div>`;
+                });
+                html += `</div>`;
+                totalAlerts += alerts.length;
             }
 
-            // 첫 손님 선택
-            selectedCards = [matched[0]];
-            renderPreview();
+            // 🔔 매칭 알림
+            if (matchedClientIds.length > 0) {
+                html += `<div style="padding:12px 0;"><div style="font-size:14px;font-weight:700;color:#4ecdc4;margin-bottom:8px;">🔔 새 매칭 (${matchedClientIds.length}명)</div>`;
+                html += `<div style="padding:10px 14px;background:rgba(78,205,196,0.05);border:1px solid rgba(78,205,196,0.15);border-radius:8px;font-size:13px;color:#e2e8f0;">
+                    매칭된 손님 ${matchedClientIds.length}명 — <span style="color:#4ecdc4;cursor:pointer;text-decoration:underline;" onclick="switchMainTab('client')">손님 탭에서 확인</span>
+                </div></div>`;
+                totalAlerts += matchedClientIds.length;
+            }
+
+            // ⏰ 후속 필요
+            if (allClientCards.length === 0) await loadClientCards();
+            const needFollowUp = allClientCards.filter(c => !recentClientIds.has(c.id)).slice(0, 5);
+            if (needFollowUp.length > 0) {
+                html += `<div style="padding:12px 0;"><div style="font-size:14px;font-weight:700;color:#fb923c;margin-bottom:8px;">⏰ 후속 필요 (${needFollowUp.length}명)</div>`;
+                needFollowUp.forEach(c => {
+                    const p = c.property || {};
+                    html += `<div style="padding:10px 14px;margin-bottom:6px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px;cursor:pointer;" onclick="switchMainTab('client');setTimeout(()=>toggleClientDetail('${c.id}'),300)">
+                        <span style="font-size:13px;color:#e2e8f0;">${esc([p.price, p.location].filter(Boolean).join(' · '))}</span>
+                        <span style="font-size:11px;color:#94a3b8;margin-left:8px;">3일 이상 메모 없음</span>
+                    </div>`;
+                });
+                html += `</div>`;
+                totalAlerts += needFollowUp.length;
+            }
+
+            if (totalAlerts === 0) {
+                html = '<div class="empty-state"><div class="empty-icon">✅</div><div class="empty-title">확인할 알림이 없어요</div></div>';
+            }
+
+            document.getElementById('pageCount').textContent = totalAlerts + '건';
+            container.innerHTML = html;
         }
 
         function updateMatchBell() {
             const badge = document.getElementById('clientMatchBadge');
             if (!badge) return;
-
+            // 알림 탭은 항상 표시
+            badge.style.display = '';
             if (matchResults.length > 0) {
                 document.getElementById('matchTabCount').textContent = `(${matchResults.length})`;
-                badge.style.display = '';
             } else {
-                badge.style.display = 'none';
+                document.getElementById('matchTabCount').textContent = '';
             }
         }
         
@@ -7430,12 +7454,52 @@ async function saveClientNote(cardId) {
     else if (/계약|사인|도장|잔금/.test(content)) type = '계약';
     if (!content) { showToast('내용을 입력하세요'); return; }
 
-    const { error } = await supabaseClient.from('client_notes').insert({
+    // ★ 날짜 자동 감지
+    let alertDate = null;
+    const now = new Date();
+    // "내일" → 내일 날짜
+    if (/내일/.test(content)) {
+        const d = new Date(now); d.setDate(d.getDate() + 1);
+        alertDate = d.toISOString().slice(0, 10);
+    }
+    // "모레" → 모레 날짜
+    else if (/모레/.test(content)) {
+        const d = new Date(now); d.setDate(d.getDate() + 2);
+        alertDate = d.toISOString().slice(0, 10);
+    }
+    // "다음주" → 7일 후
+    else if (/다음\s*주/.test(content)) {
+        const d = new Date(now); d.setDate(d.getDate() + 7);
+        alertDate = d.toISOString().slice(0, 10);
+    }
+    // "N월 N일" → 해당 날짜
+    else {
+        const dateMatch = content.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
+        if (dateMatch) {
+            const m = parseInt(dateMatch[1]) - 1;
+            const d = parseInt(dateMatch[2]);
+            const year = m < now.getMonth() ? now.getFullYear() + 1 : now.getFullYear();
+            alertDate = new Date(year, m, d).toISOString().slice(0, 10);
+        }
+        // "N/N" 형식
+        const slashMatch = content.match(/(\d{1,2})\/(\d{1,2})/);
+        if (!alertDate && slashMatch) {
+            const m = parseInt(slashMatch[1]) - 1;
+            const d = parseInt(slashMatch[2]);
+            const year = m < now.getMonth() ? now.getFullYear() + 1 : now.getFullYear();
+            alertDate = new Date(year, m, d).toISOString().slice(0, 10);
+        }
+    }
+
+    const insertData = {
         client_card_id: cardId,
         agent_id: currentUser.id,
         type: type,
-        content: content
-    });
+        content: content,
+    };
+    if (alertDate) insertData.alert_date = alertDate;
+
+    const { error } = await supabaseClient.from('client_notes').insert(insertData);
 
     if (error) {
         console.error('메모 저장 에러:', error);
@@ -7443,7 +7507,7 @@ async function saveClientNote(cardId) {
         return;
     }
 
-    showToast('메모 저장됨');
+    showToast(alertDate ? `메모 저장됨 · 📅 ${alertDate} 알림 등록` : '메모 저장됨');
     await loadClientTimeline(cardId);
 
     // ★ 손님 임베딩 재생성 (메모 포함 — 백그라운드)
