@@ -6762,14 +6762,24 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             </div>`;
         }
 
-        // 알림 클릭 → 손님 탭 → 해당 손님 상세 펼침
+        // 알림 클릭 → 손님 탭 → 해당 손님 상세 펼침 (맨 위로)
         function goToClientDetail(clientCardId) {
             _restorePreviewPanel();
             switchMainTab('client');
             setTimeout(async () => {
                 await loadClientCards();
+                // 해당 손님을 맨 위로
+                const idx = allClientCards.findIndex(c => c.id === clientCardId);
+                if (idx > 0) {
+                    const card = allClientCards.splice(idx, 1)[0];
+                    allClientCards.unshift(card);
+                }
                 renderClientList();
-                setTimeout(() => toggleClientDetail(clientCardId), 300);
+                setTimeout(() => {
+                    toggleClientDetail(clientCardId);
+                    // 스크롤 맨 위로
+                    document.getElementById('item-' + clientCardId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 300);
             }, 200);
         }
 
