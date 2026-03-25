@@ -6750,7 +6750,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             const doneBtn = a.alert_done
                 ? '<span style="padding:3px 10px;border-radius:5px;background:rgba(34,197,94,0.1);color:#22c55e;font-size:11px;">완료</span>'
                 : `<button onclick="event.stopPropagation();if(confirm('완료 처리할까요?'))completeAlert('${a.id}')" style="padding:3px 10px;border-radius:5px;border:1px solid rgba(78,205,196,0.3);background:rgba(78,205,196,0.08);color:#4ecdc4;font-size:11px;cursor:pointer;">완료</button>`;
-            return `<div style="padding:10px 14px;margin-bottom:6px;background:${c.bg};border:1px solid ${c.border};border-radius:8px;display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="_selectCalDate('${a.alert_date}')">
+            return `<div style="padding:10px 14px;margin-bottom:6px;background:${c.bg};border:1px solid ${c.border};border-radius:8px;display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="goToClientDetail('${a.client_card_id}')">
                 <div style="flex:1;${textDeco}">
                     <div style="display:flex;justify-content:space-between;align-items:center;">
                         <span style="font-size:12px;color:${c.dateColor};font-weight:600;">${dateLabel}</span>
@@ -6760,6 +6760,17 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 </div>
                 ${doneBtn}
             </div>`;
+        }
+
+        // 알림 클릭 → 손님 탭 → 해당 손님 상세 펼침
+        function goToClientDetail(clientCardId) {
+            _restorePreviewPanel();
+            switchMainTab('client');
+            setTimeout(async () => {
+                await loadClientCards();
+                renderClientList();
+                setTimeout(() => toggleClientDetail(clientCardId), 300);
+            }, 200);
         }
 
         async function completeAlert(noteId) {
