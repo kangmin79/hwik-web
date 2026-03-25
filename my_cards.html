@@ -7129,7 +7129,10 @@ function renderInlineMatchResults(clientCardId, result) {
                 ${isShared ? sharedInfoHtml : ''}
             </div>
             ${photoHtml}
-            <button class="property-edit" onclick="event.stopPropagation(); openSharedDetail('${item.id}')" style="flex-shrink:0;">상세</button>
+            ${isMine
+                ? `<button class="property-edit" onclick="event.stopPropagation(); editCard('${item.id}')" style="flex-shrink:0;">수정</button>`
+                : `<button class="property-edit" onclick="event.stopPropagation(); openSharedDetail('${item.id}')" style="flex-shrink:0;">상세</button>`
+            }
         </div>`;
     });
 
@@ -7330,8 +7333,8 @@ function renderClientTimeline(container, card, notes, cardId) {
 
     items.forEach(item => {
         const t = NOTE_TYPE_MAP[item.type] || NOTE_TYPE_MAP['메모'];
-        const deleteBtn = item.id ? `<button class="crm-tl-delete" onclick="event.stopPropagation();deleteClientNote('${item.id}','${cardId}')">삭제</button>` : '';
-        const editBtn = item.isRegister ? `<button class="crm-tl-delete" style="color:#facc15;" onclick="event.stopPropagation();editClientCard('${cardId}')">수정</button>` : '';
+        const deleteBtn = item.id ? `<button onclick="event.stopPropagation();deleteClientNote('${item.id}','${cardId}')" style="margin-left:auto;padding:3px 10px;border-radius:5px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.08);color:#f87171;font-size:11px;cursor:pointer;">삭제</button>` : '';
+        const editBtn = item.isRegister ? `<button onclick="event.stopPropagation();editClientCard('${cardId}')" style="margin-left:auto;padding:3px 10px;border-radius:5px;border:1px solid rgba(250,204,21,0.3);background:rgba(250,204,21,0.08);color:#facc15;font-size:11px;cursor:pointer;">수정</button>` : '';
         const contentHtml = item.isHtml ? item.content : esc(item.content);
         html += `<div class="crm-tl-item">
             <div class="crm-tl-dot type-${t.cls}"></div>
