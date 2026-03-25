@@ -2189,7 +2189,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 <button class="main-tab client" onclick="switchMainTab('client')">
                     손님 <span class="tab-count" id="clientTabCount"></span>
                 </button>
-                <span class="tab-badge" id="clientMatchBadge" style="display:none;margin-left:6px;cursor:pointer;" onclick="showMatchedClientsOnly()">매칭 0</span>
+                <button class="main-tab" id="clientMatchBadge" style="display:none;margin-left:4px;" onclick="showMatchedClientsOnly()">매칭 <span style="display:inline-block;padding:1px 5px;border-radius:8px;background:#facc15;color:#0f172a;font-size:9px;font-weight:700;margin-left:3px;line-height:1.3;">new</span></button>
                 <button id="showCompletedBtn" class="main-tab" onclick="switchMainTab('completed')" style="margin-left:4px;">완료 보기 <span class="tab-count" id="completedCount"></span></button>
                 <button class="main-tab memo-tab" onclick="switchMainTab('memo')" style="margin-left:4px;">메모 <span class="tab-count" id="memoTabCount"></span></button>
             </div>
@@ -4009,9 +4009,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     showToast(`🔔 손님 ${data.matched}명과 매칭됨!`);
                     const badge = document.getElementById('clientMatchBadge');
                     if (badge) {
-                        const cur = parseInt(badge.textContent?.replace('매칭 ','') || '0');
-                        badge.textContent = `매칭 ${cur + data.matched}`;
-                        badge.style.display = 'inline-flex';
+                        badge.innerHTML = `매칭 <span style="display:inline-block;padding:1px 5px;border-radius:8px;background:#facc15;color:#0f172a;font-size:9px;font-weight:700;margin-left:3px;line-height:1.3;">new</span>`;
+                        badge.style.display = '';
                     }
                 }
             }).catch(() => {});
@@ -6173,8 +6172,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             if (!badge) return;
 
             if (matchResults.length > 0) {
-                badge.textContent = `매칭 ${matchResults.length}`;
-                badge.style.display = 'inline-flex';
+                badge.innerHTML = `매칭 <span style="display:inline-block;padding:1px 5px;border-radius:8px;background:#facc15;color:#0f172a;font-size:9px;font-weight:700;margin-left:3px;line-height:1.3;">new</span>`;
+                badge.style.display = '';
             } else {
                 badge.style.display = 'none';
             }
