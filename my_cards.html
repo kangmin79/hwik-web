@@ -6552,12 +6552,9 @@ async function loadInlineMatch(clientCardId) {
         <div class="match-skeleton"></div><div class="match-skeleton"></div><div class="match-skeleton"></div>`;
 
     try {
-        const { data: sess } = await supabaseClient.auth.getSession();
-        const token = sess?.session?.access_token || SUPABASE_KEY;
-
         const resp = await fetch(`${SUPABASE_URL}/functions/v1/match-properties`, {
             method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            headers: { 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 client_card_id: clientCardId,
                 agent_id: currentUser?.id || '',
