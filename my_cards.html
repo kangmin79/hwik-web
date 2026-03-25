@@ -1264,6 +1264,62 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .crm-tl-delete { margin-left:auto; font-size:10px; color:var(--text-gray-light); cursor:pointer; background:none; border:none; padding:2px 4px; font-family:inherit; }
         .crm-tl-delete:hover { color:#f87171; }
 
+        /* 손님 통합 뷰 */
+        .client-full-view { padding: 4px 0; }
+        .client-full-section { margin-bottom: 16px; }
+        .client-full-section:last-child { margin-bottom: 4px; }
+        .client-section-title {
+            font-size: 12px; font-weight: 700; color: var(--text-gray);
+            margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
+        }
+        .client-section-title::before {
+            content: ''; width: 3px; height: 14px; border-radius: 2px; background: var(--primary);
+        }
+        .client-info-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px;
+        }
+        .client-info-field {
+            display: flex; flex-direction: column; gap: 2px;
+        }
+        .client-info-label {
+            font-size: 10px; color: var(--text-gray-light); font-weight: 600;
+        }
+        .client-info-input {
+            padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border-color);
+            background: var(--bg-input); color: var(--text-white); font-size: 12px;
+            font-family: inherit; width: 100%;
+        }
+        .client-info-input:focus {
+            outline: none; border-color: var(--primary-border4);
+        }
+        .client-info-tags {
+            display: flex; flex-wrap: wrap; gap: 4px; margin-top: 2px;
+        }
+        .client-info-tag {
+            display: inline-flex; align-items: center; gap: 3px;
+            padding: 2px 8px; border-radius: 6px; background: rgba(78,205,196,0.1);
+            color: #4ecdc4; font-size: 11px; cursor: default;
+        }
+        .client-info-tag .tag-remove {
+            cursor: pointer; opacity: 0.6; font-size: 12px; margin-left: 2px;
+        }
+        .client-info-tag .tag-remove:hover { opacity: 1; }
+        .client-tag-add-input {
+            padding: 2px 8px; border-radius: 6px; border: 1px dashed var(--border-color);
+            background: transparent; color: var(--text-white); font-size: 11px;
+            font-family: inherit; width: 80px;
+        }
+        .client-tag-add-input::placeholder { color: var(--text-gray-light); }
+        .client-save-row {
+            display: flex; justify-content: flex-end; margin-top: 8px;
+        }
+        .client-save-btn {
+            padding: 5px 16px; border-radius: 6px; border: none;
+            background: var(--primary); color: var(--primary-contrast);
+            font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit;
+        }
+        .client-save-btn:hover { opacity: 0.9; }
+
         /* 손님 카드 텍스트 - 한 줄 말줄임 */
         .client-raw-text {
             flex: 1;
@@ -5325,9 +5381,19 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             const detail = document.getElementById('client-detail-' + cardId);
             if (!detail) return;
             const wasOpen = detail.classList.contains('open');
+            // 다른 열린 디테일 닫기
+            document.querySelectorAll('.property-detail.open').forEach(el => {
+                if (el.id !== 'client-detail-' + cardId) el.classList.remove('open');
+            });
             detail.classList.toggle('open');
+            // _expandedClientId 업데이트 (매칭 선택 등에서 사용)
+            _expandedClientId = wasOpen ? null : cardId;
             if (!wasOpen) {
-                await loadClientTimeline(cardId);
+                selectedCards = [];
+                currentSlideIndex = 0;
+                renderPreview();
+                updateSendButton();
+                await loadClientFullView(cardId);
             }
         }
 
@@ -5414,30 +5480,29 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
                 const clientSubText = [p.area, p.location].filter(Boolean).map(v => esc(v)).join(' · ');
                 const rawTextDisplay = esc(p.rawText || [p.price, mainText, clientSubText, (p.features||[]).join(' ')].filter(Boolean).join(' '));
+                const isDetailOpen = document.getElementById('client-detail-' + card.id)?.classList.contains('open');
                 html += `<div class="property-item ${isExpanded ? 'selected' : ''}" id="item-${card.id}">
-                    <div class="property-item-main" style="align-items:center;" onclick="toggleSelect('${card.id}')">
+                    <div class="property-item-main" style="align-items:center;cursor:pointer;" onclick="toggleClientDetail('${card.id}')">
                         <div class="property-checkbox">${isExpanded ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="#fb923c" stroke="#fb923c" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</div>
                         <span class="property-type-badge" style="flex-shrink:0;background:rgba(78,205,196,0.15);color:#4ecdc4;border-color:rgba(78,205,196,0.3);margin-right:8px;">손님</span>
                         <div class="client-raw-text">${rawTextDisplay}</div>
-                        <button class="match-btn" id="matchBtn-${card.id}" onclick="event.stopPropagation(); matchPropertiesForClient('${card.id}')">매칭</button>
                         <button class="property-edit" onclick="event.stopPropagation(); toggleClientDetail('${card.id}')">상세</button>
-                        <button class="property-edit" onclick="event.stopPropagation(); editClientCard('${card.id}')">수정</button>
                         <button class="property-delete" onclick="event.stopPropagation(); deleteCard('${card.id}')">삭제</button>
                     </div>
-                    <div class="property-detail" id="client-detail-${card.id}">
-                        <div class="crm-timeline" id="crm-timeline-${card.id}">
+                    <div class="property-detail ${isDetailOpen ? 'open' : ''}" id="client-detail-${card.id}">
+                        <div id="client-fullview-${card.id}">
                             <div style="font-size:12px;color:var(--text-gray-light);padding:8px 0;">불러오는 중...</div>
                         </div>
                     </div>
-                    <div class="client-match-area ${_expandedClientId === card.id ? 'open' : ''}" id="client-match-${card.id}"></div>
                 </div>`;
             });
             container.innerHTML = html;
 
-            // 펼쳐진 손님의 캐시된 매칭 결과 복원
-            if (_expandedClientId && _matchCache[_expandedClientId]) {
-                renderInlineMatchResults(_expandedClientId, _matchCache[_expandedClientId]);
-            }
+            // 펼쳐진 손님의 통합 뷰 복원
+            document.querySelectorAll('.property-detail.open').forEach(el => {
+                const cid = el.id.replace('client-detail-', '');
+                if (cid) loadClientFullView(cid);
+            });
         }
 
         function renderSharedList() {
@@ -6755,6 +6820,159 @@ function toggleTheme(mode) {
 </div>
 
 <script>
+// ========== 손님 통합 뷰 ==========
+
+async function loadClientFullView(cardId) {
+    const container = document.getElementById('client-fullview-' + cardId);
+    if (!container) return;
+
+    const card = allClientCards.find(c => c.id === cardId);
+    if (!card) return;
+
+    const p = card.property || {};
+    const pn = card.private_note || {};
+    const features = p.features || [];
+
+    // 섹션1: 손님 정보 (인라인 편집)
+    let infoHtml = `<div class="client-full-view">
+        <div class="client-full-section">
+            <div class="client-section-title">손님 정보</div>
+            <div class="client-info-grid">
+                <div class="client-info-field">
+                    <span class="client-info-label">가격</span>
+                    <input class="client-info-input" id="cfv-price-${cardId}" value="${esc(p.price || '')}" placeholder="예: 전세 3억">
+                </div>
+                <div class="client-info-field">
+                    <span class="client-info-label">지역</span>
+                    <input class="client-info-input" id="cfv-location-${cardId}" value="${esc(p.location || '')}" placeholder="예: 강남구">
+                </div>
+                <div class="client-info-field">
+                    <span class="client-info-label">단지/건물</span>
+                    <input class="client-info-input" id="cfv-complex-${cardId}" value="${esc(p.complex || '')}" placeholder="예: 래미안">
+                </div>
+                <div class="client-info-field">
+                    <span class="client-info-label">면적</span>
+                    <input class="client-info-input" id="cfv-area-${cardId}" value="${esc(p.area || '')}" placeholder="예: 30평대">
+                </div>
+            </div>
+            <div class="client-info-field" style="margin-top:6px;">
+                <span class="client-info-label">특징 태그</span>
+                <div class="client-info-tags" id="cfv-tags-${cardId}">
+                    ${features.map((f, i) => `<span class="client-info-tag">${esc(f)}<span class="tag-remove" onclick="removeClientTag('${cardId}', ${i})">×</span></span>`).join('')}
+                    <input class="client-tag-add-input" id="cfv-tag-input-${cardId}" placeholder="+ 태그" onkeydown="if(event.key==='Enter'){addClientTag('${cardId}');event.preventDefault();}">
+                </div>
+            </div>
+            <div class="client-save-row">
+                <button class="client-save-btn" id="cfv-save-btn-${cardId}" onclick="saveClientInlineEdit('${cardId}')">저장</button>
+            </div>
+        </div>`;
+
+    // 섹션2: 매칭 매물 영역
+    infoHtml += `<div class="client-full-section">
+            <div class="client-section-title">매칭 매물</div>
+            <div class="client-match-area open" id="client-match-${cardId}">
+                <div style="font-size:12px;color:var(--text-gray-light);padding:8px 0;">매칭 검색 중...</div>
+            </div>
+        </div>`;
+
+    // 섹션3: 메모 + 타임라인 영역
+    infoHtml += `<div class="client-full-section">
+            <div class="client-section-title">메모 / 타임라인</div>
+            <div class="crm-timeline" id="crm-timeline-${cardId}">
+                <div style="font-size:12px;color:var(--text-gray-light);padding:8px 0;">불러오는 중...</div>
+            </div>
+        </div>
+    </div>`;
+
+    container.innerHTML = infoHtml;
+
+    // 매칭 + 타임라인 동시 로드
+    await Promise.all([
+        loadInlineMatch(cardId),
+        loadClientTimeline(cardId)
+    ]);
+}
+
+// 태그 편집용 임시 저장소
+const _clientEditTags = {};
+
+function removeClientTag(cardId, index) {
+    const card = allClientCards.find(c => c.id === cardId);
+    if (!card) return;
+    const features = _clientEditTags[cardId] || [...(card.property?.features || [])];
+    features.splice(index, 1);
+    _clientEditTags[cardId] = features;
+    // 태그 영역만 리렌더
+    const tagsEl = document.getElementById('cfv-tags-' + cardId);
+    if (tagsEl) {
+        tagsEl.innerHTML = features.map((f, i) => `<span class="client-info-tag">${esc(f)}<span class="tag-remove" onclick="removeClientTag('${cardId}', ${i})">×</span></span>`).join('')
+            + `<input class="client-tag-add-input" id="cfv-tag-input-${cardId}" placeholder="+ 태그" onkeydown="if(event.key==='Enter'){addClientTag('${cardId}');event.preventDefault();}">`;
+    }
+}
+
+function addClientTag(cardId) {
+    const input = document.getElementById('cfv-tag-input-' + cardId);
+    if (!input) return;
+    const val = input.value.trim();
+    if (!val) return;
+    const card = allClientCards.find(c => c.id === cardId);
+    if (!card) return;
+    const features = _clientEditTags[cardId] || [...(card.property?.features || [])];
+    if (!features.includes(val)) features.push(val);
+    _clientEditTags[cardId] = features;
+    input.value = '';
+    // 태그 영역만 리렌더
+    const tagsEl = document.getElementById('cfv-tags-' + cardId);
+    if (tagsEl) {
+        tagsEl.innerHTML = features.map((f, i) => `<span class="client-info-tag">${esc(f)}<span class="tag-remove" onclick="removeClientTag('${cardId}', ${i})">×</span></span>`).join('')
+            + `<input class="client-tag-add-input" id="cfv-tag-input-${cardId}" placeholder="+ 태그" onkeydown="if(event.key==='Enter'){addClientTag('${cardId}');event.preventDefault();}">`;
+    }
+}
+
+async function saveClientInlineEdit(cardId) {
+    const card = allClientCards.find(c => c.id === cardId);
+    if (!card) return;
+
+    const btn = document.getElementById('cfv-save-btn-' + cardId);
+    if (btn) { btn.textContent = '저장 중...'; btn.disabled = true; }
+
+    try {
+        const price = document.getElementById('cfv-price-' + cardId)?.value.trim() || '';
+        const location = document.getElementById('cfv-location-' + cardId)?.value.trim() || '';
+        const complex = document.getElementById('cfv-complex-' + cardId)?.value.trim() || '';
+        const area = document.getElementById('cfv-area-' + cardId)?.value.trim() || '';
+        const features = _clientEditTags[cardId] || [...(card.property?.features || [])];
+
+        const updatedProperty = {
+            ...(card.property || {}),
+            price, location, complex, area, features,
+            rawText: [price, location, complex, area, ...features].filter(Boolean).join(' ')
+        };
+
+        const { error } = await supabaseClient
+            .from('cards')
+            .update({ property: updatedProperty })
+            .eq('id', cardId)
+            .eq('agent_id', currentUser.id);
+        if (error) throw error;
+
+        // 로컬 업데이트
+        card.property = updatedProperty;
+        delete _clientEditTags[cardId];
+        // 매칭 캐시 무효화 (조건 변경)
+        delete _matchCache[cardId];
+
+        showToast('손님 정보 저장됨');
+        // 리스트 행 텍스트 갱신 (detail은 열린 상태 유지)
+        renderClientList();
+    } catch(e) {
+        console.error('손님 정보 저장 에러:', e);
+        showToast('저장 실패: ' + (e.message || ''));
+    } finally {
+        if (btn) { btn.textContent = '저장'; btn.disabled = false; }
+    }
+}
+
 // ========== 매칭 기능 ==========
 
 // 인라인 매칭 로드 (손님 클릭 시)
