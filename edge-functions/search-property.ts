@@ -347,6 +347,26 @@ Deno.serve(async (req) => {
 
     let results = data || [];
 
+    // ★ 하이브리드: 벡터 결과가 3건 미만이면 키워드 폴백 추가
+    if (results.length < 3 && query.length >= 2) {
+      console.log(`벡터 결과 ${results.length}건 → 키워드 폴백 실행`);
+      const { data: kwData } = await supabase
+        .from('cards')
+        .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number')
+        .eq('agent_id', agent_id)
+        .neq('property->>type', '손님')
+        .ilike('search_text', `%${query}%`)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+
+      if (kwData && kwData.length > 0) {
+        const existingIds = new Set(results.map(r => r.id));
+        const newResults = kwData.filter(r => !existingIds.has(r.id)).map(r => ({ ...r, similarity: 0 }));
+        results = [...results, ...newResults];
+        console.log(`키워드 폴백: +${newResults.length}건 추가 (총 ${results.length}건)`);
+      }
+    }
+
     // ★ 거래상태 필터
     if (parsed.filters?.trade_status) {
       const ts = parsed.filters.trade_status;
