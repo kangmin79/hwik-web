@@ -3835,6 +3835,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 closeEditModal();
                 renderList();
                 showToast(editNewLat ? '✅ 수정 완료! (지도 좌표 업데이트됨)' : '✅ 수정 완료!');
+                triggerAutoMatch(cardId);
             } catch(e) {
                 alert('수정 실패: ' + e.message);
             }
@@ -3996,6 +3997,27 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             }
         }
         
+        // ★ 자동 매칭 (매물 등록/수정 후 백그라운드 실행)
+        function triggerAutoMatch(cardId) {
+            if (!currentUser) return;
+            fetch(`${SUPABASE_URL}/functions/v1/auto-match`, {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ card_id: cardId, agent_id: currentUser.id })
+            }).then(r => r.json()).then(data => {
+                if (data.matched > 0) {
+                    showToast(`🔔 손님 ${data.matched}명과 매칭됨!`);
+                    // 손님 탭 뱃지 갱신
+                    const badge = document.getElementById('clientMatchBadge');
+                    if (badge) {
+                        const cur = parseInt(badge.textContent || '0');
+                        badge.textContent = cur + data.matched;
+                        badge.style.display = '';
+                    }
+                }
+            }).catch(() => {});
+        }
+
         // 토스트
         function showToast(msg) {
             const toast = document.getElementById('toast');
