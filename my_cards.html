@@ -6599,15 +6599,32 @@ function renderInlineMatchResults(clientCardId, result) {
         return;
     }
 
-    let html = `<div class="match-area-header">매칭 매물 <span class="match-area-count">${results.length}건</span></div>`;
+    // ★ 내 매물 우선 정렬 (내 매물 → 공유 매물)
+    const myIds = new Set(allCards.map(c => c.id));
+    const sharedIds = new Set(allSharedCards.map(c => c.id));
+    results.sort((a, b) => {
+        const aIsMine = myIds.has(a.id) ? 0 : 1;
+        const bIsMine = myIds.has(b.id) ? 0 : 1;
+        return aIsMine - bIsMine;
+    });
+
+    const myCount = results.filter(r => myIds.has(r.id)).length;
+    const sharedCount = results.filter(r => sharedIds.has(r.id) && !myIds.has(r.id)).length;
+
+    let html = `<div class="match-area-header">매칭 매물 <span class="match-area-count">${results.length}건</span> <span style="font-size:10px;color:#64748b;margin-left:4px;">내 매물 ${myCount} · 공유 ${sharedCount}</span></div>`;
     if (result.wanted_trade_type) {
         html += `<div style="font-size:11px;color:#fb923c;margin-bottom:8px;">${esc(result.wanted_trade_type)} 매물 기준</div>`;
     }
 
     results.forEach(item => {
         const p = item.property || {};
-        const sim = item.similarity ? Math.round(item.similarity * 100) : null;
-        const simClass = sim >= 70 ? 'match-sim-high' : sim >= 50 ? 'match-sim-mid' : 'match-sim-low';
+        const isMine = myIds.has(item.id);
+        const isShared = sharedIds.has(item.id) && !isMine;
+        const sourceTag = isMine
+            ? '<span style="padding:1px 6px;border-radius:3px;background:rgba(250,204,21,0.15);color:#facc15;font-size:9px;font-weight:700;">내 매물</span>'
+            : isShared
+            ? '<span style="padding:1px 6px;border-radius:3px;background:rgba(78,205,196,0.15);color:#4ecdc4;font-size:9px;font-weight:700;">공유</span>'
+            : '';
         const typeClass = p.type === '매매' ? 'type-sale' : p.type === '전세' ? 'type-jeonse' : p.type === '월세' ? 'type-monthly' : '';
         const mainText = [p.complex, p.location].filter(Boolean).map(v => esc(v)).join(' · ');
         const subText = [p.area, p.floor].filter(Boolean).map(v => esc(v)).join(' · ');
@@ -6618,12 +6635,12 @@ function renderInlineMatchResults(clientCardId, result) {
 
         html += `<div class="matched-property-item ${isSelected ? 'selected' : ''}" onclick="event.stopPropagation(); selectMatchedProperty('${item.id}', '${clientCardId}')">
             <div class="property-checkbox" style="width:20px;height:20px;flex-shrink:0;">${isSelected ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="#4ecdc4" stroke="#4ecdc4" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</div>
-            ${sim !== null ? `<span class="similarity-badge ${simClass}" style="flex-shrink:0;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;min-width:32px;text-align:center;">${sim}%</span>` : ''}
             <div style="flex:1;min-width:0;">
                 <div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
                     <span class="property-type-badge ${typeClass}" style="margin:0;font-size:10px;padding:1px 6px;">${esc(p.type || '')}</span>
                     <span class="trade-badge ${tradeBadgeClass}" style="font-size:9px;">${esc(status)}</span>
                     <strong style="font-size:13px;color:#e2e8f0;">${esc(p.price || '')}</strong>
+                    ${sourceTag}
                 </div>
                 ${mainText ? `<div style="font-size:12px;color:var(--text-gray);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${mainText}${subText ? ' · ' + subText : ''}</div>` : ''}
                 ${featureTags ? `<div style="margin-top:3px;">${featureTags}</div>` : ''}
