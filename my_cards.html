@@ -5490,9 +5490,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 return clientSort === 'oldest' ? da - db : db - da;
             });
 
-            // 탭 카운트 갱신
-            const countEl = document.getElementById('clientTabCount');
-            if (countEl) countEl.textContent = `(${clients.length})`;
+            // 탭 카운트: 총 수 유지 (로드된 수가 아닌 DB 총 수)
+            // totalClientCount는 loadCards에서 설정됨
 
             if (clients.length === 0) {
                 container.innerHTML = `<div class="empty-state">
