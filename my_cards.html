@@ -4779,11 +4779,15 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 document.getElementById('pageTitle').textContent = '손님';
                 document.getElementById('pageTitle').style.color = '#4ecdc4';
                 document.getElementById('pageCount').textContent = (totalClientCount > 999 ? '999+' : totalClientCount) + '개';
-                // ★ 손님 탭 진입 시 선택 초기화 + 버튼 상태 갱신
                 selectedCards = [];
                 updateSendButton();
                 renderPreview();
-                renderClientList();
+                // ★ 손님 데이터 DB에서 로드
+                if (allClientCards.length === 0) {
+                    loadClientCards().then(() => renderClientList());
+                } else {
+                    renderClientList();
+                }
             } else if (tab === 'memo') {
                 document.getElementById('pageTitle').textContent = '모바일 메모';
                 document.getElementById('pageTitle').style.color = 'var(--primary)';
@@ -5146,11 +5150,25 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             detail.classList.toggle('open');
         }
 
+        let allClientCards = []; // 손님 전용 배열
+
+        async function loadClientCards() {
+            if (!currentUser) return;
+            const { data } = await supabaseClient
+                .from('cards')
+                .select('id, property, agent, agent_comment, private_note, photos, trade_status, price_number, created_at, agent_id')
+                .eq('agent_id', currentUser.id)
+                .eq('property->>type', '손님')
+                .order('created_at', { ascending: false })
+                .limit(100);
+            allClientCards = data || [];
+        }
+
         function renderClientList() {
             const container = document.getElementById('clientPropertyList');
             if (!container) return;
 
-            let clients = allCards.filter(c => c.property?.type === '손님');
+            let clients = allClientCards;
 
             // 검색
             const searchQuery = (document.getElementById('clientSearchInput')?.value || '').trim().toLowerCase();
