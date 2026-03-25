@@ -7332,12 +7332,21 @@ function renderClientTimeline(container, card, notes, cardId) {
         return new Date(b.date) - new Date(a.date);
     });
 
-    items.forEach(item => {
+    const VISIBLE_COUNT = 3; // 첫 등록 제외, 메모 3개까지 보임
+    const registerItem = items.find(i => i.isRegister);
+    const noteItems = items.filter(i => !i.isRegister);
+    const visibleNotes = noteItems.slice(0, VISIBLE_COUNT);
+    const hiddenNotes = noteItems.slice(VISIBLE_COUNT);
+
+    // 첫 등록 항상 표시
+    const allVisible = registerItem ? [registerItem, ...visibleNotes] : visibleNotes;
+
+    function renderItem(item, hidden) {
         const t = NOTE_TYPE_MAP[item.type] || NOTE_TYPE_MAP['메모'];
         const deleteBtn = item.id ? `<button onclick="event.stopPropagation();deleteClientNote('${item.id}','${cardId}')" style="margin-left:auto;padding:3px 10px;border-radius:5px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.08);color:#f87171;font-size:11px;cursor:pointer;">삭제</button>` : '';
         const editBtn = item.isRegister ? `<button onclick="event.stopPropagation();editClientCard('${cardId}')" style="margin-left:auto;padding:3px 10px;border-radius:5px;border:1px solid rgba(250,204,21,0.3);background:rgba(250,204,21,0.08);color:#facc15;font-size:11px;cursor:pointer;">수정</button>` : '';
         const contentHtml = item.isHtml ? item.content : esc(item.content);
-        html += `<div class="crm-tl-item">
+        return `<div class="crm-tl-item" ${hidden ? 'style="display:none;" data-hidden-note="' + cardId + '"' : ''}>
             <div class="crm-tl-dot type-${t.cls}"></div>
             <div class="crm-tl-box" ${item.isRegister ? 'style="border-color:rgba(78,205,196,0.3);background:rgba(78,205,196,0.03);"' : ''}>
                 <div class="crm-tl-head">
@@ -7348,7 +7357,18 @@ function renderClientTimeline(container, card, notes, cardId) {
                 <div class="crm-tl-content" style="white-space:pre-wrap;">${contentHtml}</div>
             </div>
         </div>`;
-    });
+    }
+
+    // 보이는 아이템 렌더
+    allVisible.forEach(item => { html += renderItem(item, false); });
+
+    // 더보기 버튼 + 숨겨진 아이템
+    if (hiddenNotes.length > 0) {
+        html += `<div style="text-align:center;padding:6px 0;">
+            <button onclick="document.querySelectorAll('[data-hidden-note=\\'${cardId}\\']').forEach(e=>e.style.display='');this.parentElement.style.display='none';" style="padding:6px 16px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:#94a3b8;font-size:12px;cursor:pointer;">이전 메모 ${hiddenNotes.length}개 더보기 ▼</button>
+        </div>`;
+        hiddenNotes.forEach(item => { html += renderItem(item, true); });
+    }
 
     container.innerHTML = html;
 }
