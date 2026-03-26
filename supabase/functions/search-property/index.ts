@@ -2,7 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': '*',  // TODO: 프로덕션에서 'https://hwik.kr'로 제한
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
@@ -649,9 +649,11 @@ Deno.serve(async (req) => {
         if (max_price !== null) parsed.filters.max_price = max_price;
       }
       // ★ 구조화된 필터가 2개 이상이면 임베딩 생략 (SQL만으로 충분)
+      // 클라이언트가 보낸 필터도 포함 (my_cards.html에서 미리 파싱해서 보냄)
       const structuredFilterCount = [
-        parsed.filters.trade_type, parsed.filters.property_type,
-        parsed.filters.min_price || parsed.filters.max_price,
+        trade_type || parsed.filters.trade_type,
+        property_type || parsed.filters.property_type,
+        min_price || max_price || parsed.filters.min_price || parsed.filters.max_price,
         parsed.filters.location
       ].filter(Boolean).length;
       if (structuredFilterCount >= 2) {
