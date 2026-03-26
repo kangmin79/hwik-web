@@ -719,22 +719,30 @@ Deno.serve(async (req) => {
     }
 
     if (searchMethod === 'sql') {
+      // ★ 검색어 단어별 AND 매칭 (구/동/단지명 전부 커버)
+      // "역삼 래미안 전세" → search_text에 "역삼" AND "래미안" AND "전세" 포함
+      const searchWords = query.split(/\s+/).filter(w => w.length >= 1);
+
       let sqlQuery = supabase
         .from('cards')
         .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number, agent_comment')
         .eq('agent_id', agent_id)
         .neq('property->>type', '손님');
 
+      // 구조화 필터 (파서가 추출한 것)
       if (finalTradeType) sqlQuery = sqlQuery.eq('property->>type', finalTradeType);
       if (finalPropertyType) sqlQuery = sqlQuery.eq('property->>category', finalPropertyType);
       if (parsed.filters?.min_price) sqlQuery = sqlQuery.gte('price_number', parsed.filters.min_price);
       if (parsed.filters?.max_price) sqlQuery = sqlQuery.lte('price_number', Math.round(parsed.filters.max_price * 1.1));
 
-      // ★ 위치 필터 — property.location 텍스트로 직접 필터 (가장 정확)
-      if (parsed.filters?.location) {
-        const loc = parsed.filters.location;
-        // "강남" → "강남구" 또는 "강남동" 매칭
-        sqlQuery = sqlQuery.or(`property->>location.ilike.%${loc}%,search_text.ilike.%${loc}%`);
+      // ★ 검색어 단어별 텍스트 매칭 (AND)
+      for (const word of searchWords) {
+        // 거래유형/카테고리/가격 키워드는 이미 구조화 필터로 처리됨 → 스킵
+        if (['매매','전세','월세','아파트','오피스텔','원룸','투룸','빌라','상가','사무실','원투룸'].includes(word)) continue;
+        if (/^\d+억|^\d+천|^\d+이하|^\d+이상/.test(word)) continue;
+        if (word.length < 2) continue;
+        // 나머지 단어 = 지역명/단지명/특징 → search_text에서 매칭
+        sqlQuery = sqlQuery.ilike('search_text', `%${word}%`);
       }
 
       sqlQuery = sqlQuery.order('created_at', { ascending: false }).limit(limit * multiplier);
@@ -744,17 +752,32 @@ Deno.serve(async (req) => {
         console.error('SQL 검색 에러:', sqlError.message);
       } else {
         results = (sqlData || []).map(r => ({ ...r, similarity: 0 }));
-        // SQL에서 이미 텍스트 필터 적용됨 → 거리순 정렬만
-        if (parsed.filters?.location && DISTRICT_COORDS[parsed.filters.location]) {
-          const lc = DISTRICT_COORDS[parsed.filters.location];
-          results.sort((a, b) => {
-            const distA = (a.lat && a.lng) ? haversineDistance(lc.lat, lc.lng, a.lat, a.lng) : 999;
-            const distB = (b.lat && b.lng) ? haversineDistance(lc.lat, lc.lng, b.lat, b.lng) : 999;
-            return distA - distB;
-          });
+      }
+
+      // ★ AND로 0건이면 OR로 재시도 ("강남 서초" → 강남 OR 서초)
+      if (results.length === 0 && searchWords.filter(w => w.length >= 2 && !['매매','전세','월세','아파트','오피스텔','원룸','투룸','빌라','상가','사무실','원투룸'].includes(w) && !/^\d/.test(w)).length >= 2) {
+        const locWords = searchWords.filter(w => w.length >= 2 && !['매매','전세','월세','아파트','오피스텔','원룸','투룸','빌라','상가','사무실','원투룸'].includes(w) && !/^\d/.test(w));
+        const orCondition = locWords.map(w => `search_text.ilike.%${w}%`).join(',');
+        console.log(`AND 0건 → OR 재시도: ${orCondition}`);
+        let orQuery = supabase
+          .from('cards')
+          .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number, agent_comment')
+          .eq('agent_id', agent_id)
+          .neq('property->>type', '손님');
+        if (finalTradeType) orQuery = orQuery.eq('property->>type', finalTradeType);
+        if (finalPropertyType) orQuery = orQuery.eq('property->>category', finalPropertyType);
+        if (parsed.filters?.min_price) orQuery = orQuery.gte('price_number', parsed.filters.min_price);
+        if (parsed.filters?.max_price) orQuery = orQuery.lte('price_number', Math.round(parsed.filters.max_price * 1.1));
+        orQuery = orQuery.or(orCondition);
+        orQuery = orQuery.order('created_at', { ascending: false }).limit(limit * multiplier);
+        const { data: orData } = await orQuery;
+        if (orData && orData.length > 0) {
+          results = orData.map(r => ({ ...r, similarity: 0 }));
+          console.log(`OR 재시도: ${results.length}건`);
         }
       }
-      console.log(`SQL 직접 검색: ${results.length}건 | ${Date.now() - startTime}ms`);
+
+      console.log(`SQL 검색: ${results.length}건 | ${Date.now() - startTime}ms`);
     }
 
     // ★ SQL 결과 없거나 벡터/공유 검색 모드면 RPC 사용
