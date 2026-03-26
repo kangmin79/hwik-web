@@ -210,10 +210,15 @@ Deno.serve(async (req) => {
     let minPrice: number | null = null;
     let maxPrice: number | null = null;
 
-    // "3억5천 이내" → 35000
-    const priceMatch1 = allText.match(/(\d+)\s*억\s*(\d+)?\s*천?\s*(?:이내|이하|미만|까지)/);
+    // "3억5천 이내/이하/미만/까지/밑으로/내로" → 35000
+    const priceMatch1 = allText.match(/(\d+)\s*억\s*(\d+)?\s*천?\s*(?:이내|이하|미만|까지|밑으로|내로|안넘는|못넘는)/);
     if (priceMatch1) {
       maxPrice = parseInt(priceMatch1[1]) * 10000 + (priceMatch1[2] ? parseInt(priceMatch1[2]) * 1000 : 0);
+    }
+    // "3억 이상/초과/넘는/부터/위로" → minPrice
+    if (!minPrice) {
+      const minMatch = allText.match(/(\d+)\s*억\s*(?:이상|초과|넘는|부터|위로|넘게)/);
+      if (minMatch) minPrice = parseInt(minMatch[1]) * 10000;
     }
     // "3억~5억"
     const rangeMatch = allText.match(/(\d+)\s*억\s*~\s*(\d+)\s*억/);
@@ -222,18 +227,27 @@ Deno.serve(async (req) => {
       maxPrice = parseInt(rangeMatch[2]) * 10000;
     }
     // "5천만원 이내"
-    const chun = allText.match(/(\d+)\s*천\s*(?:만원?)?\s*(?:이내|이하)/);
+    const chun = allText.match(/(\d+)\s*천\s*(?:만원?)?\s*(?:이내|이하|밑으로)/);
     if (chun && !maxPrice) maxPrice = parseInt(chun[1]) * 1000;
-    // "3억 정도/쯤" → ±15%
-    const approx = allText.match(/(\d+)\s*억\s*(?:정도|쯤|선|대)/);
+    // "3억 정도/쯤/선/대/내외/안팎/전후" → ±15%
+    const approx = allText.match(/(\d+)\s*억\s*(?:정도|쯤|선|대|내외|안팎|전후|언저리)/);
     if (approx && !maxPrice && !minPrice) {
       const base = parseInt(approx[1]) * 10000;
       minPrice = Math.round(base * 0.85);
       maxPrice = Math.round(base * 1.15);
     }
+    // 가격만 단독 ("3억" 키워드만) → ±15%
+    if (!maxPrice && !minPrice) {
+      const barePrice = allText.match(/(\d+)\s*억/);
+      if (barePrice) {
+        const base = parseInt(barePrice[1]) * 10000;
+        minPrice = Math.round(base * 0.85);
+        maxPrice = Math.round(base * 1.15);
+      }
+    }
     // 월세: "월세 80 이하" or "월 50"
     if (wantedTradeType === '월세') {
-      const monthlyMax = allText.match(/월(?:세)?\s*(\d+)\s*(?:이하|이내|만원)?/);
+      const monthlyMax = allText.match(/월(?:세)?\s*(\d+)\s*(?:이하|이내|밑으로|만원)?/);
       if (monthlyMax) maxPrice = parseInt(monthlyMax[1]);
       const depositMatch = allText.match(/보증금\s*(\d+)/);
       if (depositMatch && !maxPrice) maxPrice = parseInt(depositMatch[1]);
