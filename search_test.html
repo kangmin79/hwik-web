@@ -77,7 +77,7 @@ tr:hover td { background: rgba(59,130,246,0.05); }
 <div class="card">
   <h2 style="margin-top:0">2. 테스트 데이터 (삽입 + 임베딩 자동)</h2>
   <div class="row">
-    <button class="btn-green" id="btnGenMy" onclick="generateAll()" disabled>매물 150개 + 손님 50명 생성</button>
+    <button class="btn-green" id="btnGenMy" onclick="generateAll()" disabled>매물 3000개 + 손님 200명 생성</button>
     <button class="btn-red" onclick="cleanupTestData()" id="btnCleanup">테스트 데이터 삭제</button>
     <span id="genCount" style="font-size:13px;color:#888"></span>
   </div>
@@ -173,30 +173,40 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 });
 
-// ===== 데이터 정의 =====
+// ===== 데이터 정의 (서울 25개구 전체) =====
 var DISTRICTS = [
-    { gu:'강남구', dongs:['역삼동','삼성동','청담동','대치동','논현동','신사동','압구정동','개포동','도곡동'], lat:37.497, lng:127.028 },
-    { gu:'서초구', dongs:['서초동','반포동','잠원동','방배동','양재동'], lat:37.483, lng:127.009 },
-    { gu:'마포구', dongs:['합정동','망원동','연남동','서교동','상수동','공덕동','성산동'], lat:37.554, lng:126.910 },
-    { gu:'용산구', dongs:['이태원동','한남동','용산동','원효로','후암동'], lat:37.532, lng:126.979 },
-    { gu:'성동구', dongs:['성수동','옥수동','왕십리동','금호동','행당동'], lat:37.563, lng:127.037 },
-    { gu:'송파구', dongs:['잠실동','가락동','문정동','석촌동','방이동','오금동'], lat:37.514, lng:127.106 },
-    { gu:'영등포구', dongs:['여의도동','당산동','양평동','영등포동','신길동'], lat:37.526, lng:126.896 },
-    { gu:'강서구', dongs:['화곡동','등촌동','마곡동','발산동'], lat:37.551, lng:126.849 },
-    { gu:'노원구', dongs:['상계동','중계동','하계동','공릉동'], lat:37.654, lng:127.056 },
-    { gu:'관악구', dongs:['신림동','봉천동','남현동'], lat:37.478, lng:126.951 },
-    { gu:'동작구', dongs:['노량진동','상도동','흑석동','사당동'], lat:37.497, lng:126.939 },
-    { gu:'광진구', dongs:['구의동','자양동','화양동','중곡동'], lat:37.538, lng:127.082 },
-    { gu:'종로구', dongs:['종로동','혜화동','평창동','삼청동'], lat:37.573, lng:126.979 },
-    { gu:'중구', dongs:['명동','충무로','신당동','약수동'], lat:37.563, lng:126.997 },
-    { gu:'강동구', dongs:['천호동','길동','둔촌동','명일동','고덕동'], lat:37.530, lng:127.124 },
+    { gu:'강남구', dongs:['역삼동','삼성동','청담동','대치동','논현동','신사동','압구정동','개포동','도곡동','일원동','수서동'], lat:37.497, lng:127.028 },
+    { gu:'서초구', dongs:['서초동','반포동','잠원동','방배동','양재동','내곡동','우면동'], lat:37.483, lng:127.009 },
+    { gu:'마포구', dongs:['합정동','망원동','연남동','서교동','상수동','공덕동','성산동','대흥동','신수동','도화동'], lat:37.554, lng:126.910 },
+    { gu:'용산구', dongs:['이태원동','한남동','용산동','원효로','후암동','보광동','서빙고동','동빙고동','청파동'], lat:37.532, lng:126.979 },
+    { gu:'성동구', dongs:['성수동','옥수동','왕십리동','금호동','행당동','응봉동','송정동','마장동'], lat:37.563, lng:127.037 },
+    { gu:'송파구', dongs:['잠실동','가락동','문정동','석촌동','방이동','오금동','풍납동','삼전동','송파동','장지동','거여동','마천동'], lat:37.514, lng:127.106 },
+    { gu:'영등포구', dongs:['여의도동','당산동','양평동','영등포동','신길동','대림동','도림동','문래동'], lat:37.526, lng:126.896 },
+    { gu:'강서구', dongs:['화곡동','등촌동','마곡동','발산동','내발산동','외발산동','공항동','방화동','개화동'], lat:37.551, lng:126.849 },
+    { gu:'노원구', dongs:['상계동','중계동','하계동','공릉동','월계동'], lat:37.654, lng:127.056 },
+    { gu:'관악구', dongs:['신림동','봉천동','남현동','조원동','미성동','청림동'], lat:37.478, lng:126.951 },
+    { gu:'동작구', dongs:['노량진동','상도동','흑석동','사당동','대방동','동작동','본동'], lat:37.497, lng:126.939 },
+    { gu:'광진구', dongs:['구의동','자양동','화양동','중곡동','능동','군자동'], lat:37.538, lng:127.082 },
+    { gu:'종로구', dongs:['종로동','혜화동','평창동','삼청동','부암동','명륜동','이화동','창신동','교남동'], lat:37.573, lng:126.979 },
+    { gu:'중구', dongs:['명동','충무로','신당동','약수동','황학동','중림동','회현동','필동'], lat:37.563, lng:126.997 },
+    { gu:'강동구', dongs:['천호동','길동','둔촌동','명일동','고덕동','암사동','성내동','강일동'], lat:37.530, lng:127.124 },
+    { gu:'강북구', dongs:['미아동','번동','수유동','우이동','삼양동','송중동','삼각산동'], lat:37.640, lng:127.011 },
+    { gu:'구로구', dongs:['구로동','신도림동','가리봉동','고척동','개봉동','오류동','항동'], lat:37.495, lng:126.858 },
+    { gu:'금천구', dongs:['가산동','독산동','시흥동'], lat:37.457, lng:126.895 },
+    { gu:'도봉구', dongs:['도봉동','방학동','쌍문동','창동'], lat:37.669, lng:127.032 },
+    { gu:'동대문구', dongs:['전농동','답십리동','장안동','청량리동','회기동','이문동','휘경동'], lat:37.574, lng:127.040 },
+    { gu:'서대문구', dongs:['신촌동','연희동','홍은동','홍제동','남가좌동','북가좌동','충정로'], lat:37.579, lng:126.937 },
+    { gu:'성북구', dongs:['성북동','삼선동','동소문동','안암동','보문동','정릉동','길음동','하월곡동','상월곡동','장위동','석관동'], lat:37.589, lng:127.017 },
+    { gu:'양천구', dongs:['목동','신월동','신정동'], lat:37.517, lng:126.867 },
+    { gu:'은평구', dongs:['응암동','역촌동','신사동','녹번동','불광동','갈현동','구산동','대조동','진관동'], lat:37.603, lng:126.929 },
+    { gu:'중랑구', dongs:['면목동','상봉동','중화동','묵동','신내동','망우동'], lat:37.607, lng:127.093 },
 ];
-var APT_NAMES = ['래미안','자이','힐스테이트','푸르지오','더샵','아이파크','롯데캐슬','e편한세상','SK뷰','엘크루','포레나','트리지움','리센츠','헬리오시티','파크리오','센트레빌','두산위브','한화포레나','금호어울림'];
-var OFFICETEL_NAMES = ['스카이뷰','리버파크','시티타워','센트럴','그랑시티','디오빌','트윈타워','메트로','프라임','하이시티'];
-var VILLA_NAMES = ['행복빌라','한빛빌라','그린빌라','태양빌라','미래빌라','하나빌라','신축빌라','해오름빌라'];
-var FEATURES_POOL = ['올수리','풀옵션','남향','동남향','역세권','주차가능','베란다확장','복층','탑층','저층','엘리베이터','보안','공원뷰','한강뷰','산뷰','대로변','학군우수','대형마트인근','반려동물가능'];
-var COMMERCIAL_TYPES = ['카페','음식점','편의점','미용실','학원','병원','약국','세탁소','치킨집','베이커리','네일샵'];
-var OFFICE_DESCS = ['코너사무실','독립사무실','공유오피스','단독사무실','IT사무실','법인사무실','소호사무실'];
+var APT_NAMES = ['래미안','자이','힐스테이트','푸르지오','더샵','아이파크','롯데캐슬','e편한세상','SK뷰','엘크루','포레나','트리지움','리센츠','헬리오시티','파크리오','센트레빌','두산위브','한화포레나','금호어울림','대우푸르지오','현대아이파크','롯데캐슬골드','자이엘라','래미안퍼스티지','더샵파크프레스티지','힐스테이트클래스','아크로리버파크','반포자이','은마아파트','미도아파트','목동신시가지','레이크팰리스','디에이치','한양수자인','동부센트레빌'];
+var OFFICETEL_NAMES = ['스카이뷰','리버파크','시티타워','센트럴','그랑시티','디오빌','트윈타워','메트로','프라임','하이시티','골든타워','아크로텔','씨티플라자','빌리브','비즈스퀘어'];
+var VILLA_NAMES = ['행복빌라','한빛빌라','그린빌라','태양빌라','미래빌라','하나빌라','신축빌라','해오름빌라','동아빌라','삼익빌라','청구빌라','현대빌라','새마을빌라','에덴빌라','우리빌라','장미빌라','신한빌라','대동빌라'];
+var FEATURES_POOL = ['올수리','풀옵션','남향','동남향','서향','북향','남서향','동향','역세권','주차가능','주차2대','베란다확장','복층','탑층','저층','1층','고층','로열층','엘리베이터','보안','CCTV','공원뷰','한강뷰','산뷰','시티뷰','대로변','학군우수','대형마트인근','반려동물가능','즉시입주','신축','10년이내','테라스','루프탑','정원','분리형원룸','드레스룸','펜트리','식세기','건조기'];
+var COMMERCIAL_TYPES = ['카페','음식점','편의점','미용실','학원','병원','약국','세탁소','치킨집','베이커리','네일샵','피부관리실','세차장','코인세탁','무인아이스크림','반찬가게','꽃집','부동산','PC방','당구장','노래방','헬스장','요가','필라테스'];
+var OFFICE_DESCS = ['코너사무실','독립사무실','공유오피스','단독사무실','IT사무실','법인사무실','소호사무실','스타트업사무실','창고형사무실','교육용사무실','미팅룸포함','탕비실포함'];
 
 function rand(a){return a[Math.floor(Math.random()*a.length)]} function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a} function randFloat(a,b){return+(Math.random()*(b-a)+a).toFixed(3)} function uuid(){return crypto.randomUUID()}
 function shuffle(a){var b=a.slice();for(var i=b.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=b[i];b[i]=b[j];b[j]=t}return b}
@@ -218,12 +228,59 @@ function makeProperty(agentId, category, tradeType) {
 }
 
 function makeClient(agentId) {
-    var dist=rand(DISTRICTS),tt=rand(['매매','전세','월세']),cat=rand(['apartment','officetel','room','commercial','office']);
-    var catKo=CATEGORY_KO[cat]||cat,priceRange='',memo='';
-    if(tt==='매매'){var b=cat==='apartment'?randInt(20000,200000):randInt(5000,50000);priceRange=priceText(b)+'~'+priceText(Math.round(b*1.3));memo=dist.gu+' '+catKo+' '+tt+' '+priceRange+' 원함. '+rand(['신혼부부','투자','실거주','학군','직장근처'])}
-    else if(tt==='전세'){var b=cat==='apartment'?randInt(10000,100000):randInt(3000,20000);priceRange=priceText(b)+' 이내';memo=dist.gu+' 근처 '+catKo+' '+tt+' '+priceRange+'. '+rand(['급구','내년 2월 만기','이번달 입주','가족 거주'])}
-    else{var d=randInt(200,5000),mn=randInt(20,150);priceRange='보증금 '+d+' 월세 '+mn+' 이내';memo=dist.gu+' '+catKo+' '+tt+' '+priceRange+'. '+rand(['1인가구','사무용','자취','통학'])}
-    return {id:uuid(),agent_id:agentId,property:{type:'손님',price:priceRange,location:dist.gu,complex:null,area:null,floor:null,room:null,features:[],moveIn:null,category:cat},agent_comment:null,price_number:null,trade_status:'계약가능',lat:dist.lat+randFloat(-0.005,0.005),lng:dist.lng+randFloat(-0.005,0.005),search_text:'손님 '+tt+' '+catKo+' '+dist.gu+' '+priceRange+' '+memo,private_note:{memo:memo,rawText:memo},style:'a',color:'#3b82f6',photos:[],status:'active'};
+    var dist=rand(DISTRICTS),dong=rand(dist.dongs),tt=rand(['매매','전세','월세']),cat=rand(['apartment','officetel','room','commercial','office']);
+    var catKo=CATEGORY_KO[cat]||cat,priceRange='',memo='',feats=shuffle(FEATURES_POOL).slice(0,randInt(0,3));
+    var locDetail=randInt(1,3)===1?(dist.gu+' '+dong):dist.gu; // 가끔 동까지 포함
+    if(tt==='매매'){var b=cat==='apartment'?randInt(15000,300000):randInt(5000,80000);priceRange=priceText(b)+'~'+priceText(Math.round(b*1.3));memo=locDetail+' '+catKo+' '+tt+' '+priceRange+' 원함. '+rand(['신혼부부','투자','실거주','학군','직장근처','은퇴자금','갈아타기','상속','증여'])}
+    else if(tt==='전세'){var b=cat==='apartment'?randInt(10000,150000):randInt(2000,30000);priceRange=priceText(b)+' 이내';memo=locDetail+' 근처 '+catKo+' '+tt+' '+priceRange+'. '+rand(['급구','내년 2월 만기','이번달 입주','가족 거주','회사근처','학교근처','6월까지','다음달 만기'])}
+    else{var d=randInt(100,8000),mn=randInt(15,200);priceRange='보증금 '+priceText(d)+' 월세 '+mn+' 이내';memo=locDetail+' '+catKo+' '+tt+' '+priceRange+'. '+rand(['1인가구','사무용','자취','통학','신입사원','프리랜서','외국인','커플','반려동물 있음'])}
+    if(feats.length>0) memo+=' '+feats.join(' ')+' 선호';
+    return {id:uuid(),agent_id:agentId,property:{type:'손님',price:priceRange,location:locDetail,complex:null,area:null,floor:null,room:null,features:feats,moveIn:rand(['즉시','협의','2026.04','2026.05','2026.06','2026.07']),category:cat},agent_comment:null,price_number:null,trade_status:'계약가능',lat:dist.lat+randFloat(-0.008,0.008),lng:dist.lng+randFloat(-0.008,0.008),search_text:'손님 '+tt+' '+catKo+' '+locDetail+' '+priceRange+' '+memo,private_note:{memo:memo,rawText:memo},style:'a',color:'#3b82f6',photos:[],status:'active'};
+}
+
+// ===== 지저분한 손님 (실전 중개사 스타일) =====
+var MESSY_TEMPLATES = [
+    // 카톡 복붙 스타일
+    function(d,g) { return '손님 한분 계신데 '+g+'쪽 '+rand(['아파트','오피스텔','빌라'])+' '+rand(['매매','전세','월세'])+' 알아보고계세요 예산은 '+rand(['3억정도','5억안쪽','2억이내','1억초반','7천~1억','10억이하'])+' '+rand(['급해요','천천히','빨리좀','가능하면 이번달']); },
+    // 오타+약어 스타일
+    function(d,g) { var dong=rand(d.dongs); return rand(['ㅈㅅ','전세','젼세'])+' '+g.replace('구','')+' '+dong.replace('동','')+' '+rand(['래미안','자이','힐스','푸르지오','아무거나'])+' '+rand(['3억이하','5억이하','2억선','4억안쪽'])+' '+rand(['있나요?','좀 보내주세요','급구','ㄱㄱ']); },
+    // 장문 스타일
+    function(d,g) { return '안녕하세요 저희가 지금 '+g+' '+rand(d.dongs)+' 살고있는데 '+rand(['전세만기가 다가와서','이사를 하려고','결혼을 해서','아이가 커서'])+' '+rand(['좀 더 넓은집','학군좋은곳','회사근처','강남쪽'])+' 알아보고 있거든요. 예산은 '+rand(['한 5억정도','3~4억','넉넉잡아 7억','2억 초중반'])+' 생각하고있고 '+rand(['남향이면 좋겠고','역세권이면 좋고','주차 꼭 필요하고','올수리면 좋겠고'])+' '+rand(['방3개','방2개이상','넓은거','30평대'])+' 찾아주세요~'; },
+    // 초간단 스타일
+    function(d,g) { return rand([g,g.replace('구',''),rand(d.dongs).replace('동','')])+' '+rand(['매매','전세','월세'])+' '+rand(['아파트','오피스텔','원룸','투룸','상가','사무실'])+' '+rand(['3억','5억','1억','2000','5000','8000']); },
+    // 전화 메모 스타일
+    function(d,g) { return rand(['김','이','박','최','정','홍','조','윤','장','한'])+rand(['사장','선생','씨','대표','님'])+' / '+g+' '+rand(d.dongs)+' / '+rand(['매매','전세','월세'])+' / '+rand(['아파트 30평대','오피스텔 원룸','투룸이상','상가 1층','사무실 20평'])+' / '+rand(['3억이내','5억까지','보증금5천 월50','1억선','2억정도'])+' / '+rand(['급구','천천히','이번달','내년초','6월입주']); },
+    // 요구사항 나열 스타일
+    function(d,g) { return g+' '+rand(d.dongs)+'\n- '+rand(['매매','전세','월세'])+'\n- '+rand(['아파트','오피스텔','빌라','상가'])+'\n- '+rand(['3억이하','5~7억','2억정도','보증금3천 월세80이하'])+'\n- '+rand(['남향','역세권','주차필수','올수리','학군','한강뷰'])+'\n- '+rand(['30평이상','20평대','원룸','투룸이상'])+'\n- '+rand(['즉시입주','내년2월','협의가능']); },
+    // 부정확한 가격 스타일
+    function(d,g) { return g+' '+rand(['아파트','오피스텔','원룸'])+' '+rand(['전세','매매'])+' '+rand(['한 3억?','3~4억쯤','5억 안넘게','2억 초반대','1억 중반','넉넉잡아 6억','많아야 4억'])+' '+rand(['알아봐주세요','가능한거 있으면','좀 찾아주세요','연락주세요']); },
+    // 이모지+줄임말 스타일
+    function(d,g) { return rand(['ㅎㅇ','안뇽','사장님~','형'])+' '+g.replace('구','')+' '+rand(['ㅈㅅ','ㅁㅁ','ㅇㅅ','전세','매매'])+' '+rand(['아파트','옵텔','원룸','빌라','상가'])+' '+rand(['3억↓','5억이하','2억쯤','보3천/월50'])+' '+rand(['ㄱㄱ','급','좀빨리','천천히도됨','이번주안에'])+rand([' ㅋㅋ',' ㅎㅎ',' 🙏',' ㅠㅠ','']); },
+    // 조건 변경 스타일
+    function(d,g) { return '아 그리고 저번에 말씀드린 '+g+' '+rand(['전세','매매'])+' 건이요 예산을 좀 '+rand(['올려서 5억까지','낮춰서 3억이내로','조정해서 4억정도로'])+' 해주시고 '+rand(['강남쪽도 괜찮고','서초도 봐주시고','마포 용산도 괜찮'])+' '+rand(['남향 필수요','역세권으로만','주차되는곳으로','올수리된곳'])+' '+rand(['부탁드려요','감사합니다','연락주세요']); },
+    // 복합 지역 스타일
+    function(d,g) { var g2=rand(DISTRICTS).gu; return rand(['전세','매매','월세'])+' '+rand(['아파트','오피스텔','원룸'])+' '+g.replace('구','')+' 아니면 '+g2.replace('구','')+' '+rand(['둘다 괜찮','어디든','상관없이'])+' '+rand(['3억이하','5억안쪽','2억정도'])+' '+rand(['찾아주세요','보내주세요','있으면요']); },
+    // 외국인/서툰 한국어
+    function(d,g) { return rand(['Hello','안녕'])+' '+g+' '+rand(['apartment','아파트','officetel'])+' '+rand(['rent','전세','월세'])+' '+rand(['budget','예산'])+' '+rand(['3억','200만','500만원'])+' '+rand(['please','부탁','감사']); },
+    // 음성인식 오류 스타일
+    function(d,g) { var dong=rand(d.dongs); return rand(['강남','마포','서초','용산','송파'])+rand(['역','구','에서'])+' '+rand(['전세','매매','웜ㄴ세'])+' '+rand(['아빠트','오피스탤','원룸','상과'])+' '+rand(['삼억','오억','이억'])+rand(['이하','정도','까지'])+' '+rand(['알아봐요','찾아줘요','급해요']); },
+];
+
+function makeMessyClient(agentId) {
+    var dist=rand(DISTRICTS), gu=dist.gu;
+    var template=rand(MESSY_TEMPLATES);
+    var memo=template(dist, gu);
+    // 지저분한 메모에서 최소한의 정보 추출 시도 (일부러 불완전하게)
+    var tt=null,cat=null;
+    if(/매매|ㅁㅁ/.test(memo)) tt='매매';
+    else if(/전세|ㅈㅅ|젼세/.test(memo)) tt='전세';
+    else if(/월세|ㅇㅅ|웜세/.test(memo)) tt='월세';
+    if(/아파트|아빠트|apt/i.test(memo)) cat='apartment';
+    else if(/오피스텔|옵텔|officetel/i.test(memo)) cat='officetel';
+    else if(/원룸|투룸|빌라/.test(memo)) cat='room';
+    else if(/상가|상과|점포|매장/.test(memo)) cat='commercial';
+    else if(/사무실|오피스/.test(memo)) cat='office';
+    return {id:uuid(),agent_id:agentId,property:{type:'손님',price:'',location:gu,complex:null,area:null,floor:null,room:null,features:[],moveIn:null,category:cat},agent_comment:null,price_number:null,trade_status:'계약가능',lat:dist.lat+randFloat(-0.008,0.008),lng:dist.lng+randFloat(-0.008,0.008),search_text:'손님 '+(tt||'')+' '+(CATEGORY_KO[cat]||'')+' '+gu+' '+memo,private_note:{memo:memo,rawText:memo},style:'a',color:'#3b82f6',photos:[],status:'active'};
 }
 
 // ===== 로그 =====
@@ -239,65 +296,109 @@ async function generateAll() {
     var token = sess.data && sess.data.session ? sess.data.session.access_token : null;
     if(!token) return alert('세션 토큰 없음 - 다시 로그인');
 
-    // 1단계: 매물 150개 생성
-    document.getElementById('genLog').textContent = '=== 매물 150개 생성 중... ===';
+    var TOTAL_PROPERTIES = 3000;
+    var TOTAL_CLIENTS_CLEAN = 100;
+    var TOTAL_CLIENTS_MESSY = 100;
+    var TOTAL_ALL = TOTAL_PROPERTIES + TOTAL_CLIENTS_CLEAN + TOTAL_CLIENTS_MESSY;
+
+    // ===== 1단계: 매물 3000개 생성 (25개 구 × 5카테고리 × 3거래유형 × ~8개씩) =====
+    document.getElementById('genLog').textContent = '=== 매물 ' + TOTAL_PROPERTIES + '개 생성 중... ===';
     var cats=['apartment','officetel','room','commercial','office'];
     var types=['매매','전세','월세'];
+    // 카테고리별 비중: 아파트 40%, 오피스텔 20%, 원투룸 20%, 상가 10%, 사무실 10%
+    var catWeights = {apartment:40, officetel:20, room:20, commercial:10, office:10};
     var cards=[];
-    for(var ci=0;ci<cats.length;ci++) for(var ti=0;ti<types.length;ti++) for(var i=0;i<10;i++) cards.push(makeProperty(currentUser.id,cats[ci],types[ti]));
+    for(var ci=0;ci<cats.length;ci++){
+        var catCount = Math.round(TOTAL_PROPERTIES * catWeights[cats[ci]] / 100);
+        for(var i=0;i<catCount;i++){
+            var tt = types[i % 3]; // 거래유형 균등 분배
+            cards.push(makeProperty(currentUser.id, cats[ci], tt));
+        }
+    }
+    // 정확히 3000개 맞추기
+    while(cards.length < TOTAL_PROPERTIES) cards.push(makeProperty(currentUser.id, rand(cats), rand(types)));
+    cards = shuffle(cards);
 
-    var batchSize=25, inserted=0;
+    var batchSize=50, inserted=0;
     for(var i=0;i<cards.length;i+=batchSize){
         var batch=cards.slice(i,i+batchSize);
         var res=await sb.from('cards').insert(batch);
         if(res.error){addLog('X 오류: '+res.error.message)}
         else{inserted+=batch.length;for(var j=0;j<batch.length;j++)insertedCardIds.push(batch[j].id)}
-        setProgress(Math.round(inserted/200*30)); // 0~30%
-        addLog('  매물 '+inserted+'/150');
+        if(inserted % 200 === 0 || inserted === cards.length) {
+            setProgress(Math.round(inserted/TOTAL_ALL*30)); // 0~30%
+            addLog('  매물 '+inserted+'/'+TOTAL_PROPERTIES);
+        }
     }
-    addLog('매물 '+inserted+'개 삽입 완료');
+    addLog('매물 '+inserted+'개 삽입 완료\n');
 
-    // 2단계: 손님 50명 생성
-    addLog('\n=== 손님 50명 생성 중... ===');
-    var clients=[];
-    for(var i=0;i<50;i++) clients.push(makeClient(currentUser.id));
+    // ===== 2단계: 깔끔한 손님 100명 =====
+    addLog('=== 깔끔한 손님 '+TOTAL_CLIENTS_CLEAN+'명 생성 중... ===');
+    var cleanClients=[];
+    for(var i=0;i<TOTAL_CLIENTS_CLEAN;i++) cleanClients.push(makeClient(currentUser.id));
     var clientInserted=0;
-    for(var i=0;i<clients.length;i+=batchSize){
-        var batch=clients.slice(i,i+batchSize);
+    for(var i=0;i<cleanClients.length;i+=batchSize){
+        var batch=cleanClients.slice(i,i+batchSize);
         var res=await sb.from('cards').insert(batch);
         if(res.error){addLog('X 손님 오류: '+res.error.message)}
         else{clientInserted+=batch.length;for(var j=0;j<batch.length;j++)insertedCardIds.push(batch[j].id)}
-        setProgress(30+Math.round(clientInserted/50*10)); // 30~40%
+        setProgress(30+Math.round(clientInserted/(TOTAL_CLIENTS_CLEAN+TOTAL_CLIENTS_MESSY)*10)); // 30~40%
     }
-    addLog('손님 '+clientInserted+'명 삽입 완료');
+    addLog('깔끔한 손님 '+clientInserted+'명 삽입 완료\n');
 
-    // 3단계: 임베딩 자동 생성
-    addLog('\n=== 임베딩 생성 중 (200개)... ===');
-    var allCards = cards.concat(clients);
+    // ===== 3단계: 지저분한 손님 100명 =====
+    addLog('=== 지저분한 손님 '+TOTAL_CLIENTS_MESSY+'명 생성 중... ===');
+    var messyClients=[];
+    for(var i=0;i<TOTAL_CLIENTS_MESSY;i++) messyClients.push(makeMessyClient(currentUser.id));
+    var messyInserted=0;
+    for(var i=0;i<messyClients.length;i+=batchSize){
+        var batch=messyClients.slice(i,i+batchSize);
+        var res=await sb.from('cards').insert(batch);
+        if(res.error){addLog('X 지저분 손님 오류: '+res.error.message)}
+        else{messyInserted+=batch.length;for(var j=0;j<batch.length;j++)insertedCardIds.push(batch[j].id)}
+        setProgress(35+Math.round(messyInserted/TOTAL_CLIENTS_MESSY*5)); // 35~40%
+    }
+    addLog('지저분한 손님 '+messyInserted+'명 삽입 완료\n');
+
+    // ===== 4단계: 임베딩 자동 생성 (3200개) =====
+    var allCards = cards.concat(cleanClients).concat(messyClients);
+    addLog('=== 임베딩 생성 중 ('+allCards.length+'개, 약 '+(Math.round(allCards.length*0.15/60))+'분 소요)... ===');
     var embedDone=0, embedFail=0;
-    for(var i=0;i<allCards.length;i++){
-        try{
-            var r = await fetch(SUPABASE_URL+'/functions/v1/embed-card',{
+    // 동시 요청 3개씩 (속도 3배)
+    var concurrency = 3;
+    for(var i=0;i<allCards.length;i+=concurrency){
+        var batch = allCards.slice(i, i+concurrency);
+        var promises = batch.map(function(card) {
+            return fetch(SUPABASE_URL+'/functions/v1/embed-card',{
                 method:'POST',
                 headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-                body:JSON.stringify({card_id:allCards[i].id,text:allCards[i].search_text})
-            });
-            var d = await r.json();
-            if(d.error) throw new Error(d.error);
-            embedDone++;
-        }catch(e){embedFail++;if(embedFail<=3)addLog('X 임베딩실패: '+e.message)}
-        if((embedDone+embedFail)%20===0){
+                body:JSON.stringify({card_id:card.id,text:card.search_text})
+            }).then(function(r){return r.json()}).then(function(d){
+                if(d.error) throw new Error(d.error);
+                embedDone++;
+            }).catch(function(e){embedFail++;if(embedFail<=5)addLog('X 임베딩실패: '+e.message)});
+        });
+        await Promise.all(promises);
+        if((embedDone+embedFail)%100===0 || i+concurrency>=allCards.length){
             addLog('  임베딩 '+(embedDone+embedFail)+'/'+allCards.length+' (성공:'+embedDone+' 실패:'+embedFail+')');
             setProgress(40+Math.round((embedDone+embedFail)/allCards.length*60)); // 40~100%
         }
-        await new Promise(function(r){setTimeout(r,150)});
+        await new Promise(function(r){setTimeout(r,50)});
     }
 
     setProgress(100);
+    var totalClients = clientInserted + messyInserted;
     addLog('\n==============================');
-    addLog('완료! 매물:'+inserted+' 손님:'+clientInserted+' 임베딩:'+embedDone+'/'+(inserted+clientInserted));
+    addLog('완료! 매물:'+inserted+' 손님:'+totalClients+'(깔끔:'+clientInserted+' 지저분:'+messyInserted+') 임베딩:'+embedDone+'/'+allCards.length);
     addLog('==============================');
-    document.getElementById('genCount').textContent = '삽입: '+(inserted+clientInserted)+'개 | 임베딩: '+embedDone+'개';
+    addLog('\n카테고리 분포:');
+    addLog('  아파트: ~1200개 (40%)');
+    addLog('  오피스텔: ~600개 (20%)');
+    addLog('  원투룸: ~600개 (20%)');
+    addLog('  상가: ~300개 (10%)');
+    addLog('  사무실: ~300개 (10%)');
+    addLog('  지역: 서울 25개구 전체');
+    document.getElementById('genCount').textContent = '삽입: '+(inserted+totalClients)+'개 | 임베딩: '+embedDone+'개';
     document.getElementById('btnGenMy').disabled = false;
 }
 
