@@ -1184,17 +1184,18 @@ Deno.serve(async (req) => {
         score += roomScore;
         detail.room = { score: roomScore, reason: roomReason };
 
-        // ④ 위치 (0~10점)
+        // ④ 위치 — 가격 조건 없으면 위치가 핵심 (0~40점), 있으면 보조 (0~10점)
+        const locWeight = (targetMaxPrice || targetMinPrice) ? 1 : 4; // 가격 없으면 4배
         let locScore = 0;
         let locReason = '';
         if (locCoord && r.lat && r.lng) {
           const dist = haversineDistance(locCoord.lat, locCoord.lng, r.lat, r.lng);
           const distKm = Math.round(dist * 10) / 10;
-          if (dist <= 0.5) { locScore = 10; locReason = `${distKm}km (매우 가까움)`; }
-          else if (dist <= 1.0) { locScore = 8; locReason = `${distKm}km`; }
-          else if (dist <= 2.0) { locScore = 5; locReason = `${distKm}km`; }
-          else if (dist <= 3.0) { locScore = 2; locReason = `${distKm}km (먼 편)`; }
-          else { locReason = `${distKm}km (멀다)`; }
+          if (dist <= 0.5) { locScore = 10 * locWeight; locReason = `${distKm}km (매우 가까움)`; }
+          else if (dist <= 1.0) { locScore = 8 * locWeight; locReason = `${distKm}km`; }
+          else if (dist <= 2.0) { locScore = 5 * locWeight; locReason = `${distKm}km`; }
+          else if (dist <= 3.0) { locScore = 2 * locWeight; locReason = `${distKm}km (먼 편)`; }
+          else { locScore = -10 * locWeight; locReason = `${distKm}km (다른 지역)`; }
         }
         score += locScore;
         detail.location = { score: locScore, reason: locReason };
