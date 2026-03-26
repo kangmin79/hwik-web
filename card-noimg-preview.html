@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>휙 카드 — 이미지 없는 버전 (통합)</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;800&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: #0a0a0a; min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: safe center;
+  padding: 24px 20px; gap: 8px;
+  overflow-y: auto;
+}
+
+/* ===== 카드 ===== */
+.card-full {
+  width: 300px; height: 500px; border-radius: 24px;
+  overflow: hidden; position: relative;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.7);
+}
+
+/* 슬라이더 */
+.card-slider {
+  position: absolute; inset: 0; display: flex;
+  transition: transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94);
+  z-index: 0; will-change: transform;
+}
+
+/* ===== 통합 정보 슬라이드 (한 장에 모든 정보) ===== */
+.info-slide {
+  min-width: 100%; height: 100%; position: relative;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 50px 28px 90px;
+  overflow: hidden;
+  background: linear-gradient(160deg, #0d1b2a 0%, #1b2838 30%, #162032 60%, #0a1628 100%);
+  background-image:
+    linear-gradient(160deg, #0d1b2a 0%, #1b2838 30%, #162032 60%, #0a1628 100%),
+    repeating-linear-gradient(45deg, transparent, transparent 30px, rgba(255,255,255,0.015) 30px, rgba(255,255,255,0.015) 31px);
+}
+.info-slide::before {
+  content: ''; position: absolute; width: 350px; height: 350px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(78,205,196,0.1) 0%, transparent 70%);
+  top: -80px; right: -100px;
+}
+.info-slide::after {
+  content: ''; position: absolute; width: 250px; height: 250px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(250,204,21,0.06) 0%, transparent 70%);
+  bottom: -60px; left: -80px;
+}
+
+/* 단지명 */
+.info-complex {
+  font-size: 30px; font-weight: 800; color: #fff;
+  letter-spacing: -0.03em; line-height: 1.2;
+  text-align: center; position: relative; z-index: 1;
+  margin-bottom: 6px;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+}
+/* 위치 */
+.info-location {
+  font-size: 13px; color: rgba(255,255,255,0.4);
+  font-weight: 400; letter-spacing: 0.03em;
+  position: relative; z-index: 1;
+  margin-bottom: 16px;
+}
+/* 구분선 */
+.info-divider {
+  width: 32px; height: 1px;
+  background: rgba(255,255,255,0.12);
+  position: relative; z-index: 1;
+  margin-bottom: 16px;
+}
+/* 거래유형 + 가격 */
+.info-type-price {
+  display: flex; align-items: baseline; gap: 8px;
+  position: relative; z-index: 1;
+  margin-bottom: 14px;
+}
+.info-type {
+  font-size: 12px; font-weight: 600;
+  color: rgba(78,205,196,0.9);
+  padding: 3px 10px; border-radius: 6px;
+  background: rgba(78,205,196,0.1); border: 1px solid rgba(78,205,196,0.2);
+}
+.info-price {
+  font-size: 24px; font-weight: 800; color: #fff;
+  letter-spacing: -0.02em;
+}
+/* 면적·층수 */
+.info-detail {
+  font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.7);
+  position: relative; z-index: 1;
+  margin-bottom: 12px;
+  letter-spacing: -0.01em;
+}
+/* 태그 */
+.info-tags {
+  display: flex; flex-wrap: wrap; gap: 5px;
+  justify-content: center;
+  position: relative; z-index: 1;
+}
+.info-tag {
+  font-size: 11px; padding: 3px 9px; border-radius: 16px;
+  background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.7);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+/* 워터마크 */
+.hwik-watermark {
+  position: absolute; bottom: 10px; right: 14px;
+  font-size: 10px; font-weight: 800; color: rgba(250,204,21,0.12);
+  letter-spacing: -0.5px; z-index: 2;
+}
+
+/* ===== 메모 슬라이드 ===== */
+.memo-slide {
+  min-width: 100%; height: 100%; position: relative;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 40px 32px;
+  background: linear-gradient(160deg,#0d1117 0%,#151c27 40%,#0a0f1a 100%);
+  overflow: hidden;
+}
+.memo-slide::before {
+  content:''; position:absolute; width:300px; height:300px; border-radius:50%;
+  background:radial-gradient(circle,rgba(78,205,196,0.06) 0%,transparent 70%);
+  top:-50px; right:-80px;
+}
+.memo-quote { font-family:'Noto Serif KR',serif; font-size:72px; line-height:0.6; color:rgba(255,255,255,0.08); align-self:flex-start; margin-bottom:20px; position:relative; z-index:1; }
+.memo-text { font-family:'Noto Serif KR',serif; font-size:17px; color:rgba(255,255,255,0.9); line-height:1.9; text-align:center; letter-spacing:0.01em; position:relative; z-index:1; margin-bottom:32px; word-break:keep-all; }
+.memo-divider { width:32px; height:1px; background:rgba(255,255,255,0.15); margin-bottom:20px; position:relative; z-index:1; }
+.memo-agent { display:flex; flex-direction:column; align-items:center; gap:4px; position:relative; z-index:1; }
+.memo-agent-name { font-size:12px; color:rgba(255,255,255,0.4); font-weight:300; letter-spacing:0.05em; }
+.memo-agent-phone { font-size:14px; font-weight:600; color:rgba(255,255,255,0.7); letter-spacing:0.03em; }
+
+/* ===== 상단 오버레이 ===== */
+.top-info {
+  position:absolute; top:0; left:0; right:0; padding:18px 18px 40px;
+  background:linear-gradient(to bottom,rgba(0,0,0,0.35) 0%,transparent 100%);
+  display:flex; justify-content:space-between; align-items:flex-start;
+  z-index:10; pointer-events:none;
+}
+.badge { font-size:11px; font-weight:500; padding:5px 12px; border-radius:8px; color:rgba(255,255,255,0.85); background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); letter-spacing:0.04em; display:inline-flex; align-items:center; gap:6px; }
+.badge-dot { width:6px; height:6px; border-radius:50%; display:inline-block; flex-shrink:0; }
+.dots { display:flex; gap:5px; align-items:center; margin-top:4px; }
+.dot { height:4px; border-radius:3px; background:rgba(255,255,255,0.35); transition:all 0.25s; width:4px; }
+.dot.active { background:#fff; width:14px; }
+
+/* ===== 하단 오버레이 ===== */
+.bottom-wrap {
+  position:absolute; bottom:0; left:0; right:0;
+  background:linear-gradient(to top,rgba(0,0,0,0.88) 0%,rgba(0,0,0,0.4) 60%,transparent 100%);
+  padding:40px 18px 18px; z-index:10; transition:opacity 0.3s;
+}
+.bottom-wrap.hidden { opacity:0; pointer-events:none; }
+.action-bar { display:flex; gap:8px; }
+.action-btn {
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:5px; padding:10px 4px; border-radius:14px; cursor:pointer; text-decoration:none;
+  background:rgba(255,255,255,0.08); backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,0.12); box-shadow:inset 0 1px 0 rgba(255,255,255,0.1);
+  transition:all 0.15s;
+}
+.action-btn:active { transform:scale(0.93); }
+.action-btn svg { width:20px; height:20px; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.action-btn span { font-size:10px; font-weight:500; }
+.action-btn.call { border-color:rgba(78,205,196,0.3); }
+.action-btn.call svg { stroke:#4ecdc4; }
+.action-btn.call span { color:rgba(78,205,196,0.9); }
+.action-btn.kakao { border-color:rgba(250,204,21,0.25); }
+.action-btn.kakao svg { stroke:#facc15; }
+.action-btn.kakao span { color:rgba(250,204,21,0.9); }
+.action-btn.map-btn svg { stroke:rgba(255,255,255,0.9); }
+.action-btn.map-btn span { color:rgba(255,255,255,0.7); }
+
+/* 좌우 화살표 */
+.arrow-btn {
+  position:absolute; top:50%; transform:translateY(-50%);
+  width:36px; height:36px; border-radius:50%;
+  background:rgba(255,255,255,0.15); backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,0.2);
+  color:#fff; font-size:18px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  z-index:20; transition:background 0.2s; user-select:none;
+}
+.arrow-btn:hover { background:rgba(255,255,255,0.25); }
+.arrow-btn.left { left:10px; }
+.arrow-btn.right { right:10px; }
+
+/* 중개사 하단 */
+.agent-below {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 20px; border-radius: 16px;
+  background: rgba(255,255,255,0.08);
+  border: 1.5px solid rgba(255,255,255,0.25);
+  width: 300px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+.agent-below-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(78,205,196,0.2); border: 2px solid #4ecdc4;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; color: #4ecdc4; flex-shrink: 0;
+}
+.agent-below-info { display: flex; align-items: center; gap: 10px; }
+.agent-below-name { font-size: 15px; font-weight: 800; color: #fff; }
+.agent-below-phone { font-size: 14px; font-weight: 600; color: #4ecdc4; }
+</style>
+</head>
+<body>
+
+<!-- ===== 카드 ===== -->
+<div class="card-full" id="card">
+  <div class="card-slider" id="slider">
+
+    <!-- 슬라이드 1: 모든 정보 통합 -->
+    <div class="info-slide">
+      <div class="info-complex">삼성래미안<br>공덕</div>
+      <div class="info-location">마포구 공덕동</div>
+      <div class="info-divider"></div>
+      <div class="info-type-price">
+        <span class="info-type">매매</span>
+        <span class="info-price">8억 5,000</span>
+      </div>
+      <div class="info-detail">32평 · 8층</div>
+      <div class="info-tags">
+        <span class="info-tag">남향</span>
+        <span class="info-tag">풀옵션</span>
+        <span class="info-tag">올수리</span>
+        <span class="info-tag">역세권</span>
+      </div>
+      <div class="hwik-watermark">휙</div>
+    </div>
+
+    <!-- 슬라이드 2: 중개사 메모 (있을 때만) -->
+    <div class="memo-slide">
+      <div class="memo-quote">"</div>
+      <div class="memo-text">채광이 정말 좋아요.<br>공덕역 도보 3분이라<br>출퇴근도 편하고요.<br>올수리라 입주 후<br>바로 생활 가능합니다.</div>
+      <div class="memo-divider"></div>
+      <div class="memo-agent">
+        <div class="memo-agent-name">스마일부동산</div>
+        <div class="memo-agent-phone">010-1234-5678</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 상단 -->
+  <div class="top-info">
+    <span class="badge"><span class="badge-dot" style="background:#fb923c;"></span>매매</span>
+    <div class="dots" id="cardDots">
+      <div class="dot active"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+
+  <!-- 하단 -->
+  <div class="bottom-wrap" id="cardBottom">
+    <div class="action-bar">
+      <a class="action-btn call" href="#">
+        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        <span>전화</span>
+      </a>
+      <a class="action-btn kakao" href="#">
+        <svg viewBox="0 0 24 24"><path d="M12 3c5.8 0 10.5 3.66 10.5 8.17 0 4.51-4.7 8.17-10.5 8.17-.87 0-1.72-.08-2.54-.24l-4.14 2.82.93-4.08C3.92 16.13 1.5 13.37 1.5 11.17 1.5 6.66 6.2 3 12 3z"/></svg>
+        <span>카톡</span>
+      </a>
+      <a class="action-btn map-btn" href="#">
+        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span>지도</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- 화살표 -->
+  <button class="arrow-btn left" onclick="move(-1)">‹</button>
+  <button class="arrow-btn right" onclick="move(1)">›</button>
+</div>
+
+<!-- 중개사 정보 -->
+<div class="agent-below">
+  <div class="agent-below-avatar">스</div>
+  <div class="agent-below-info">
+    <div class="agent-below-name">스마일부동산</div>
+    <div class="agent-below-phone">010-1234-5678</div>
+  </div>
+</div>
+
+<script>
+const totalSlides = 2;
+let current = 0;
+
+function move(dir) {
+  current = (current + dir + totalSlides) % totalSlides;
+  document.getElementById('slider').style.transform = `translateX(-${current * 100}%)`;
+  document.getElementById('cardBottom').classList.toggle('hidden', current === 1);
+  document.querySelectorAll('#cardDots .dot').forEach((d, i) => d.classList.toggle('active', i === current));
+}
+
+// 터치 스와이프
+const card = document.getElementById('card');
+let startX = 0;
+card.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+card.addEventListener('touchend', e => {
+  const diff = startX - e.changedTouches[0].clientX;
+  if (Math.abs(diff) > 40) move(diff > 0 ? 1 : -1);
+}, { passive: true });
+</script>
+
+</body>
+</html>

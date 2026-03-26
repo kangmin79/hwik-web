@@ -3422,7 +3422,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             try {
                 const res = await fetch(
                     `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(address)}`,
-                    { headers: { Authorization: `KakaoAK ${HWIK_CONFIG.KAKAO_REST_KEY || "8b7ecadf67aaed392e75605093efb2c4"}` } }
+                    { headers: { Authorization: `KakaoAK ${HWIK_CONFIG.KAKAO_REST_KEY}` } }
                 );
                 const data = await res.json();
                 const doc = data.documents?.[0];
@@ -5073,9 +5073,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         async function kakaoGeocode(query) {
             if (!query || query.trim().length < 2) return null;
             try {
-                const KAKAO_KEY = HWIK_CONFIG.KAKAO_REST_KEY || '8b7ecadf67aaed392e75605093efb2c4';
                 const res = await fetch(`https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}`, {
-                    headers: { Authorization: `KakaoAK ${KAKAO_KEY}` }
+                    headers: { Authorization: `KakaoAK ${HWIK_CONFIG.KAKAO_REST_KEY}` }
                 });
                 const data = await res.json();
                 if (data.documents?.length > 0) {

@@ -1,5 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -609,6 +609,18 @@ Deno.serve(async (req) => {
     if (query.length < 2) throw new Error('검색어는 2글자 이상 입력하세요');
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // ★ 인증 확인 (선택적 — 공유매물 검색은 비인증 허용)
+    const authHeader = req.headers.get('Authorization');
+    let authUser: string | null = null;
+    if (authHeader && authHeader !== `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`) {
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user } } = await supabase.auth.getUser(token);
+        if (user) authUser = user.id;
+      } catch(e) { /* anon access allowed */ }
+    }
+
     const startTime = Date.now();
 
     // ★ 손님 모드 — 별도 처리

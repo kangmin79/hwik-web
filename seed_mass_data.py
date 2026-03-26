@@ -365,9 +365,9 @@ def main():
     print("MASS DATA GENERATOR")
     print("=" * 60)
 
-    # 1. 매물 1000개 생성
-    print(f"\n--- Generating 1000 cards (no images) ---")
-    cards = generate_cards(1000)
+    # 1. 매물 5000개 생성
+    print(f"\n--- Generating 5000 cards (no images) ---")
+    cards = generate_cards(5000)
 
     # 배치 삽입 (50개씩)
     batch_size = 50
@@ -387,9 +387,9 @@ def main():
 
     print(f"\n  Total cards created: {success}")
 
-    # 2. 검색 로그 10000건 생성
-    print(f"\n--- Generating 10000 search logs ---")
-    logs = generate_search_logs(cards, 10000)
+    # 2. 검색 로그 30000건 생성
+    print(f"\n--- Generating 30000 search logs ---")
+    logs = generate_search_logs(cards, 30000)
 
     log_success = 0
     for i in range(0, len(logs), 100):

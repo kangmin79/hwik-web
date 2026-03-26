@@ -2,7 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': '*',  // TODO: 프로덕션에서 'https://hwik.kr'로 제한
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
@@ -107,6 +107,21 @@ Deno.serve(async (req) => {
     if (!client_card_id) throw new Error('client_card_id가 필요합니다');
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // ★ 인증 확인
+    const authHeader = req.headers.get('Authorization');
+    if (authHeader) {
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user } } = await supabase.auth.getUser(token);
+        if (user && agent_id && user.id !== agent_id) {
+          throw new Error('권한이 없습니다');
+        }
+      } catch(e) {
+        if (e.message === '권한이 없습니다') throw e;
+      }
+    }
+
     const startTime = Date.now();
 
     // 1. 손님 카드 조회

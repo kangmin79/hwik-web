@@ -367,7 +367,8 @@
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('dashboard').style.display = 'block';
         loadAll();
-        setInterval(loadAll, 60000);
+        if (window._refreshInterval) clearInterval(window._refreshInterval);
+        window._refreshInterval = setInterval(loadAll, 60000);
     }
 
     // ===== 인증 상태 확인 =====
@@ -393,6 +394,7 @@
             if (isAdmin) {
                 currentUser = session.user;
                 showDashboard();
+            }
         }
     })();
 
@@ -460,24 +462,24 @@
                     : '<span class="badge badge-hold">미완성</span>';
                 
                 html += `<tr class="clickable" onclick="openUserModal('${u.id}')">
-                    <td>${u.kakao_name || '-'}</td>
-                    <td>${u.business_name || '<span style="color:#555">-</span>'}</td>
-                    <td>${u.agent_name || '-'}</td>
-                    <td>${u.phone || '-'}</td>
+                    <td>${esc(u.kakao_name || '-')}</td>
+                    <td>${u.business_name ? esc(u.business_name) : '<span style="color:#555">-</span>'}</td>
+                    <td>${esc(u.agent_name || '-')}</td>
+                    <td>${esc(u.phone || '-')}</td>
                     <td>${profileBadge}</td>
                     <td><span class="${isActive ? 'user-active' : ''}">${u.card_count}</span></td>
                     <td>${u.share_count}</td>
                     <td>${comma(u.total_views)}</td>
                     <td>${joinDate}</td>
                     <td>${lastActive}</td>
-                    <td><button onclick="event.stopPropagation();banUser('${u.id}', '${(u.kakao_name||'').replace(/'/g,'')}')" style="padding:3px 8px;background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);border-radius:4px;font-size:11px;cursor:pointer;">탈퇴</button></td>
+                    <td><button onclick="event.stopPropagation();banUser('${u.id}', '${esc(u.kakao_name||'').replace(/'/g,"\\'")}')" style="padding:3px 8px;background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);border-radius:4px;font-size:11px;cursor:pointer;">탈퇴</button></td>
                 </tr>`;
             });
             document.getElementById('userTableBody').innerHTML = html;
         } catch(e) {
             console.error('Users error:', e);
             document.getElementById('userTableBody').innerHTML = 
-                `<tr><td colspan="10" style="text-align:center;padding:32px;color:#f87171">데이터 로드 실패<br><small>${e.message}</small><br><small>SQL 함수를 먼저 실행하세요</small></td></tr>`;
+                `<tr><td colspan="10" style="text-align:center;padding:32px;color:#f87171">데이터 로드 실패<br><small>${esc(e.message)}</small><br><small>SQL 함수를 먼저 실행하세요</small></td></tr>`;
         }
     }
 
@@ -503,23 +505,23 @@
                     : '<span class="badge badge-active">활성</span>';
                 
                 html += `<tr>
-                    <td>${c.deal_type || '-'}</td>
-                    <td>${c.building_name || '-'}</td>
-                    <td style="font-weight:600">${c.price || '-'}</td>
-                    <td>${truncate(c.address, 20)}</td>
+                    <td>${esc(c.deal_type || '-')}</td>
+                    <td>${esc(c.building_name || '-')}</td>
+                    <td style="font-weight:600">${esc(c.price || '-')}</td>
+                    <td>${esc(truncate(c.address, 20))}</td>
                     <td>${statusBadge}</td>
                     <td>${c.view_count || 0}</td>
-                    <td>${c.business_name || c.agent_name || '-'}</td>
+                    <td>${esc(c.business_name || c.agent_name || '-')}</td>
                     <td>${formatDate(c.created_at)}</td>
-                    <td><a href="https://hwik.kr/property_view.html?id=${c.id}" target="_blank" style="color:#facc15;text-decoration:none;font-size:12px">보기 →</a></td>
-                    <td><button onclick="deleteCard('${c.id}')" style="padding:3px 8px;background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);border-radius:4px;font-size:11px;cursor:pointer;">삭제</button></td>
+                    <td><a href="https://hwik.kr/property_view.html?id=${encodeURIComponent(c.id)}" target="_blank" style="color:#facc15;text-decoration:none;font-size:12px">보기 →</a></td>
+                    <td><button onclick="deleteCard('${esc(c.id)}')" style="padding:3px 8px;background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);border-radius:4px;font-size:11px;cursor:pointer;">삭제</button></td>
                 </tr>`;
             });
             document.getElementById('cardTableBody').innerHTML = html;
         } catch(e) {
             console.error('Cards error:', e);
             document.getElementById('cardTableBody').innerHTML = 
-                `<tr><td colspan="9" style="text-align:center;padding:32px;color:#f87171">데이터 로드 실패<br><small>${e.message}</small></td></tr>`;
+                `<tr><td colspan="9" style="text-align:center;padding:32px;color:#f87171">데이터 로드 실패<br><small>${esc(e.message)}</small></td></tr>`;
         }
     }
 
@@ -556,7 +558,7 @@
             // 작업별 통계 태그
             const byAction = data.by_action || [];
             document.getElementById('errorByAction').innerHTML = byAction.map(a =>
-                `<span class="badge" style="background:rgba(248,113,113,0.15);color:#f87171">${a.action}: ${a.count}</span>`
+                `<span class="badge" style="background:rgba(248,113,113,0.15);color:#f87171">${esc(a.action)}: ${a.count}</span>`
             ).join('');
 
             // 최근 에러 테이블
@@ -569,11 +571,11 @@
 
             let html = '';
             recent.forEach(e => {
-                html += `<tr id="err-${e.id}" style="${e.resolved ? 'opacity:0.4' : ''}">
+                html += `<tr id="err-${esc(e.id)}" style="${e.resolved ? 'opacity:0.4' : ''}">
                     <td>${formatDateTime(e.created_at)}</td>
-                    <td>${e.page}</td>
-                    <td><span class="badge" style="background:rgba(248,113,113,0.15);color:#f87171">${e.action}</span></td>
-                    <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.error_msg}</td>
+                    <td>${esc(e.page)}</td>
+                    <td><span class="badge" style="background:rgba(248,113,113,0.15);color:#f87171">${esc(e.action)}</span></td>
+                    <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.error_msg)}</td>
                     <td>${e.resolved ? '<span style="color:#4ecdc4;font-size:11px">✓ 완료</span>' : `<button onclick="resolveError('${e.id}')" style="padding:3px 8px;background:rgba(78,205,196,0.15);color:#4ecdc4;border:1px solid rgba(78,205,196,0.3);border-radius:4px;font-size:11px;cursor:pointer;">처리</button>`}</td>
                 </tr>`;
             });
@@ -697,19 +699,19 @@
         document.getElementById('modalUserInfo').innerHTML = `
             <div class="user-info-item">
                 <div class="info-label">카카오명</div>
-                <div class="info-value">${user.kakao_name || '-'}</div>
+                <div class="info-value">${esc(user.kakao_name || '-')}</div>
             </div>
             <div class="user-info-item">
                 <div class="info-label">상호명</div>
-                <div class="info-value">${user.business_name || '-'}</div>
+                <div class="info-value">${esc(user.business_name || '-')}</div>
             </div>
             <div class="user-info-item">
                 <div class="info-label">이름</div>
-                <div class="info-value">${user.agent_name || '-'}</div>
+                <div class="info-value">${esc(user.agent_name || '-')}</div>
             </div>
             <div class="user-info-item">
                 <div class="info-label">연락처</div>
-                <div class="info-value">${user.phone || '-'}</div>
+                <div class="info-value">${esc(user.phone || '-')}</div>
             </div>
             <div class="user-info-item">
                 <div class="info-label">가입일</div>
@@ -747,20 +749,20 @@
 
                 html += `<div class="user-card-item">
                     <div class="card-main">
-                        <div class="card-type">${c.deal_type || '-'} ${statusBadge}</div>
-                        <div class="card-price">${c.price || '-'}</div>
-                        <div class="card-addr">${c.address || '-'}</div>
+                        <div class="card-type">${esc(c.deal_type || '-')} ${statusBadge}</div>
+                        <div class="card-price">${esc(c.price || '-')}</div>
+                        <div class="card-addr">${esc(c.address || '-')}</div>
                     </div>
                     <div class="card-meta">
                         조회 ${c.view_count || 0}<br>
                         ${formatDate(c.created_at)}<br>
-                        <a href="https://hwik.kr/property_view.html?id=${c.id}" target="_blank" style="color:#facc15;text-decoration:none;margin-top:4px;display:inline-block">보기 →</a>
+                        <a href="https://hwik.kr/property_view.html?id=${encodeURIComponent(c.id)}" target="_blank" style="color:#facc15;text-decoration:none;margin-top:4px;display:inline-block">보기 →</a>
                     </div>
                 </div>`;
             });
             document.getElementById('modalCardsList').innerHTML = html;
         } catch(e) {
-            document.getElementById('modalCardsList').innerHTML = `<div style="text-align:center;padding:20px;color:#f87171">매물 로드 실패<br><small>${e.message}</small></div>`;
+            document.getElementById('modalCardsList').innerHTML = `<div style="text-align:center;padding:20px;color:#f87171">매물 로드 실패<br><small>${esc(e.message)}</small></div>`;
         }
     }
 
@@ -809,16 +811,16 @@
 
                 if (a.activity_type === 'card') {
                     icon = '<div class="timeline-icon card-icon">📋</div>';
-                    action = `매물 등록 <span style="color:#facc15">${d.deal_type || ''}</span>`;
-                    detail = `${d.price || '-'} · ${d.address || '-'}`;
+                    action = `매물 등록 <span style="color:#facc15">${esc(d.deal_type || '')}</span>`;
+                    detail = `${esc(d.price || '-')} · ${esc(d.address || '-')}`;
                 } else if (a.activity_type === 'share') {
                     icon = '<div class="timeline-icon share-icon">📤</div>';
-                    action = `매물 공유 → <span style="color:#4ecdc4">${d.room_name || '공유방'}</span>`;
-                    detail = `${d.card_price || '-'} · ${d.card_address || '-'}`;
+                    action = `매물 공유 → <span style="color:#4ecdc4">${esc(d.room_name || '공유방')}</span>`;
+                    detail = `${esc(d.card_price || '-')} · ${esc(d.card_address || '-')}`;
                 } else if (a.activity_type === 'room') {
                     icon = '<div class="timeline-icon room-icon">🏠</div>';
                     action = `공유방 생성`;
-                    detail = d.room_name || '-';
+                    detail = esc(d.room_name || '-');
                 }
 
                 const time = formatDateTime(a.created_at);
@@ -835,7 +837,7 @@
             document.getElementById('modalActivityList').innerHTML = html;
             activityLoaded = true;
         } catch(e) {
-            document.getElementById('modalActivityList').innerHTML = `<div style="text-align:center;padding:20px;color:#f87171">로드 실패: ${e.message}</div>`;
+            document.getElementById('modalActivityList').innerHTML = `<div style="text-align:center;padding:20px;color:#f87171">로드 실패: ${esc(e.message)}</div>`;
         }
     }
 

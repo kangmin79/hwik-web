@@ -35,7 +35,7 @@
 </div>
 
 <script>
-const KAKAO_REST_KEY = '8b7ecadf67aaed392e75605093efb2c4';
+const KAKAO_REST_KEY = (typeof HWIK_CONFIG !== 'undefined' && HWIK_CONFIG.KAKAO_REST_KEY) || '8b7ecadf67aaed392e75605093efb2c4';
 const PROPERTY = { lat: 37.5449, lng: 126.9514 };
 const POIS = {
   subway: { lat: 37.5443, lng: 126.9521, name: '공덕역',          color: '#e24b4a' },

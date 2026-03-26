@@ -6,7 +6,8 @@
 const HWIK_CONFIG = {
     SUPABASE_URL: 'https://api.hwik.kr',
     SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxYXhlamd6a2NoeGJmemd6eXppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2MzI3NTIsImV4cCI6MjA4MjIwODc1Mn0.-njNdAKVA7Me60H98AYaf-Z3oi45SfUmeoBNvuRJugE',
-    KAKAO_JS_KEY: '124cd68b3419bde24e03efa4f1ca2830'
+    KAKAO_JS_KEY: '124cd68b3419bde24e03efa4f1ca2830',
+    KAKAO_REST_KEY: '8b7ecadf67aaed392e75605093efb2c4'
 };
 
 /**

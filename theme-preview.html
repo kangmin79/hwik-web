@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>휙 밝은 테마 시안</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+    --primary: #facc15;
+    --primary-dark: #eab308;
+    --primary-bg: rgba(250,204,21,0.08);
+    --bg: #f6f7f9;
+    --bg-white: #ffffff;
+    --bg-nav: #1a1a2e;
+    --border: #e5e7eb;
+    --border-light: #f0f1f3;
+    --text: #1a1a2e;
+    --text-secondary: #6b7280;
+    --text-muted: #9ca3af;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+    --radius: 12px;
+}
+
+body {
+    font-family: 'Noto Sans KR', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+/* ===== 상단 네비게이션 (다크 유지 — 브랜드) ===== */
+.nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    background: var(--bg-nav);
+    border-bottom: none;
+    height: 56px;
+}
+.nav-inner {
+    max-width: 1440px; margin: 0 auto; padding: 0 24px;
+    height: 56px; display: flex; align-items: center; justify-content: space-between;
+}
+.nav-logo {
+    font-size: 26px; font-weight: 900; color: var(--primary);
+    letter-spacing: -1px;
+}
+.nav-right { display: flex; align-items: center; gap: 10px; }
+.nav-user {
+    padding: 8px 16px; border-radius: 8px;
+    background: rgba(255,255,255,0.08); color: #fff;
+    font-size: 13px; font-weight: 600; border: none; cursor: pointer;
+}
+.nav-btn {
+    padding: 8px 18px; border-radius: 8px;
+    background: var(--primary); color: var(--bg-nav);
+    font-size: 13px; font-weight: 700; border: none; cursor: pointer;
+    transition: all 0.15s;
+}
+.nav-btn:hover { background: var(--primary-dark); }
+
+/* 테마 토글 */
+.theme-toggle {
+    display: flex; border-radius: 8px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.15);
+}
+.theme-toggle-btn {
+    padding: 6px 14px; font-size: 12px; font-weight: 600;
+    border: none; cursor: pointer; transition: all 0.2s;
+    background: transparent; color: rgba(255,255,255,0.5);
+    display: flex; align-items: center; gap: 4px;
+}
+.theme-toggle-btn.active {
+    background: rgba(255,255,255,0.15); color: #fff;
+}
+.theme-toggle-btn:hover:not(.active) { color: rgba(255,255,255,0.8); }
+
+/* ===== 다크 테마 오버라이드 ===== */
+body.dark {
+    --bg: #0a1628;
+    --bg-white: #111827;
+    --border: rgba(255,255,255,0.08);
+    --border-light: rgba(255,255,255,0.06);
+    --text: #ffffff;
+    --text-secondary: #9ca3af;
+    --text-muted: #6b7280;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+    --primary-bg: rgba(250,204,21,0.08);
+}
+body.dark ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); }
+body.dark ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+body.dark .filter-btn { border-color: rgba(255,255,255,0.1); color: var(--text-secondary); }
+body.dark .filter-btn:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
+body.dark .filter-btn.active { background: var(--primary); color: #0a1628; border-color: var(--primary); }
+body.dark .sort-tag { border-color: rgba(255,255,255,0.1); color: var(--text-muted); background: transparent; }
+body.dark .sort-tag.active { background: var(--primary); color: #0a1628; border-color: var(--primary); }
+body.dark .search-box input { background: #1f2937; border-color: rgba(255,255,255,0.1); color: #fff; }
+body.dark .search-box::before { border-color: var(--text-muted); }
+body.dark .card-act { border-color: rgba(255,255,255,0.1); background: transparent; color: var(--text-secondary); }
+body.dark .card-act:hover { border-color: var(--primary); color: #fff; }
+body.dark .card-act.delete { color: #f87171; }
+body.dark .card-act.delete:hover { border-color: #f87171; background: rgba(239,68,68,0.1); }
+body.dark .card-tag { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.08); color: var(--text-secondary); }
+body.dark .card-type.sell { background: rgba(220,38,38,0.15); color: #f87171; }
+body.dark .card-type.rent { background: rgba(5,150,105,0.15); color: #4ecdc4; }
+body.dark .card-type.monthly { background: rgba(37,99,235,0.15); color: #60a5fa; }
+body.dark .card-status.available { background: rgba(5,150,105,0.15); color: #4ecdc4; }
+body.dark .card-status.contract { background: rgba(250,204,21,0.15); color: #facc15; }
+body.dark .card-checkbox { border-color: rgba(255,255,255,0.2); }
+body.dark .preview-panel { background: #0f1a2e; border-left-color: rgba(255,255,255,0.08); }
+body.dark .preview-btn.share { background: rgba(255,255,255,0.06); color: #fff; border-color: rgba(255,255,255,0.1); }
+
+/* ===== 메인 레이아웃 ===== */
+.main-layout {
+    display: flex; height: calc(100vh - 56px); margin-top: 56px;
+}
+
+/* ===== 왼쪽 패널 ===== */
+.list-panel {
+    flex: 1; overflow-y: auto; padding: 24px 28px;
+    background: var(--bg);
+}
+
+/* 탭 */
+.main-tabs {
+    display: flex; gap: 0; margin-bottom: 20px;
+    border-bottom: 2px solid var(--border-light);
+}
+.main-tab {
+    padding: 10px 20px; font-size: 14px; font-weight: 600;
+    color: var(--text-muted); background: none; border: none;
+    cursor: pointer; position: relative; transition: color 0.2s;
+}
+.main-tab:hover { color: var(--text); }
+.main-tab.active { color: var(--text); }
+.main-tab.active::after {
+    content: ''; position: absolute; bottom: -2px; left: 0; right: 0;
+    height: 2px; background: var(--primary);
+}
+.tab-count {
+    font-size: 12px; color: var(--text-muted); margin-left: 4px;
+}
+
+/* 필터 */
+.filter-section { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.filter-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.filter-btn {
+    padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500;
+    cursor: pointer; border: 1px solid var(--border);
+    background: var(--bg-white); color: var(--text-secondary);
+    transition: all 0.15s;
+}
+.filter-btn:hover { border-color: #d1d5db; color: var(--text); }
+.filter-btn.active {
+    background: var(--text); color: #fff; border-color: var(--text);
+}
+
+/* 정렬 */
+.sort-row {
+    display: flex; justify-content: flex-end; gap: 6px; margin-bottom: 12px;
+}
+.sort-tag {
+    padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 500;
+    cursor: pointer; border: 1px solid var(--border);
+    background: var(--bg-white); color: var(--text-muted);
+}
+.sort-tag.active { background: var(--text); color: #fff; border-color: var(--text); }
+
+/* 검색 */
+.search-box {
+    flex: 1; min-width: 200px; position: relative;
+}
+.search-box input {
+    width: 100%; padding: 9px 14px 9px 36px; border-radius: 20px;
+    border: 1px solid var(--border); background: var(--bg-white);
+    color: var(--text); font-size: 14px; outline: none;
+    transition: border-color 0.2s;
+}
+.search-box input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(250,204,21,0.12); }
+.search-box input::placeholder { color: var(--text-muted); }
+.search-box::before {
+    content: ''; position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    width: 14px; height: 14px; border: 2px solid var(--text-muted); border-radius: 50%;
+}
+
+/* ===== 카드 목록 ===== */
+.card-list { display: flex; flex-direction: column; gap: 8px; }
+
+.card-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px; border-radius: var(--radius);
+    background: var(--bg-white); border: 1px solid var(--border-light);
+    cursor: pointer; transition: all 0.15s;
+    box-shadow: var(--shadow-sm);
+}
+.card-row:hover { border-color: var(--primary); box-shadow: var(--shadow-md); }
+.card-row.selected { border-color: var(--primary); background: var(--primary-bg); }
+
+.card-checkbox {
+    width: 20px; height: 20px; border-radius: 6px;
+    border: 2px solid #d1d5db; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: all 0.15s;
+}
+.card-checkbox.checked {
+    background: var(--primary); border-color: var(--primary);
+}
+.card-checkbox.checked::after {
+    content: '✓'; color: var(--bg-nav); font-size: 12px; font-weight: 800;
+}
+
+.card-type {
+    padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;
+    flex-shrink: 0;
+}
+.card-type.sell { background: #fef2f2; color: #dc2626; }
+.card-type.rent { background: #ecfdf5; color: #059669; }
+.card-type.monthly { background: #eff6ff; color: #2563eb; }
+
+.card-status {
+    padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600;
+}
+.card-status.available { background: #ecfdf5; color: #059669; }
+.card-status.contract { background: #fef9c3; color: #a16207; }
+
+.card-info { flex: 1; min-width: 0; }
+.card-price { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
+.card-detail { font-size: 12px; color: var(--text-secondary); }
+.card-tags { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+.card-tag {
+    padding: 2px 6px; border-radius: 4px; font-size: 10px;
+    background: var(--bg); color: var(--text-secondary); border: 1px solid var(--border-light);
+}
+
+.card-thumb {
+    width: 52px; height: 52px; border-radius: 8px; overflow: hidden;
+    flex-shrink: 0; background: var(--bg); border: 1px solid var(--border-light);
+}
+.card-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+.card-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.card-act {
+    padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 600;
+    border: 1px solid var(--border); background: var(--bg-white);
+    color: var(--text-secondary); cursor: pointer; transition: all 0.15s;
+}
+.card-act:hover { border-color: var(--primary); color: var(--text); }
+.card-act.delete { color: #ef4444; }
+.card-act.delete:hover { border-color: #ef4444; background: #fef2f2; }
+
+/* ===== 오른쪽 미리보기 패널 ===== */
+.preview-panel {
+    width: 380px; flex-shrink: 0;
+    background: var(--bg-white);
+    border-left: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 24px 20px;
+    overflow-y: auto;
+}
+
+.preview-title {
+    font-size: 12px; color: var(--text-muted); font-weight: 500;
+    margin-bottom: 16px; letter-spacing: 0.05em;
+}
+
+/* 폰 프레임 */
+.phone-frame {
+    width: 280px; border-radius: 32px;
+    background: #000; padding: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+.phone-screen {
+    border-radius: 22px; overflow: hidden;
+    background: #0a0a12;
+}
+
+/* 미리보기 안의 카드 (다크 유지) */
+.preview-card {
+    padding: 16px;
+}
+.pc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.pc-badge { padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+.pc-badge.sell { background: #dc2626; color: #fff; }
+.pc-badge.rent { background: #059669; color: #fff; }
+.pc-area { font-size: 11px; color: rgba(255,255,255,0.5); }
+.pc-name { font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 2px; }
+.pc-location { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 10px; }
+.pc-price { font-size: 22px; font-weight: 800; color: #4ecdc4; margin-bottom: 12px; }
+.pc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+.pc-grid-item { background: rgba(255,255,255,0.06); padding: 8px; border-radius: 8px; }
+.pc-grid-label { font-size: 9px; color: rgba(255,255,255,0.4); margin-bottom: 2px; }
+.pc-grid-value { font-size: 12px; color: #fff; font-weight: 600; }
+.pc-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 12px; }
+.pc-tag { padding: 3px 8px; border-radius: 12px; font-size: 10px; background: rgba(78,205,196,0.1); color: #4ecdc4; }
+.pc-agent { display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); }
+.pc-agent-name { font-size: 12px; color: rgba(255,255,255,0.6); }
+.pc-agent-phone { font-size: 12px; color: #4ecdc4; font-weight: 600; }
+.pc-comment { margin-top: 10px; padding: 10px; background: rgba(250,204,21,0.06); border: 1px solid rgba(250,204,21,0.2); border-radius: 10px; }
+.pc-comment-who { font-size: 9px; font-weight: 700; color: #facc15; margin-bottom: 4px; }
+.pc-comment-text { font-size: 11px; color: rgba(255,255,255,0.85); line-height: 1.6; }
+
+/* 하단 버튼들 */
+.preview-actions {
+    width: 280px; margin-top: 16px;
+    display: flex; flex-direction: column; gap: 8px;
+}
+.preview-btn {
+    width: 100%; padding: 14px; border-radius: 12px;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    border: none; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.preview-btn.send {
+    background: var(--primary); color: var(--bg-nav);
+}
+.preview-btn.send:hover { background: var(--primary-dark); }
+.preview-btn.share {
+    background: var(--bg); color: var(--text);
+    border: 1px solid var(--border);
+}
+.preview-btn.share:hover { border-color: var(--primary); }
+</style>
+</head>
+<body>
+
+<!-- ===== 상단 네비 ===== -->
+<nav class="nav">
+    <div class="nav-inner">
+        <div class="nav-logo">휙</div>
+        <div class="nav-right">
+            <div class="theme-toggle">
+                <button class="theme-toggle-btn active" onclick="setTheme('light')" id="btnLight">☀️ 라이트</button>
+                <button class="theme-toggle-btn" onclick="setTheme('dark')" id="btnDark">🌙 다크</button>
+            </div>
+            <button class="nav-user">스마일부동산님</button>
+            <button class="nav-btn">+ 새 카드</button>
+        </div>
+    </div>
+</nav>
+
+<!-- ===== 메인 ===== -->
+<div class="main-layout">
+
+    <!-- 왼쪽: 매물 리스트 -->
+    <div class="list-panel">
+        <!-- 탭 -->
+        <div class="main-tabs">
+            <button class="main-tab active">내 매물 <span class="tab-count">(11)</span></button>
+            <button class="main-tab">공유 매물 <span class="tab-count">(0)</span></button>
+            <button class="main-tab">손님 <span class="tab-count">(1)</span></button>
+            <button class="main-tab">완료 보기</button>
+            <button class="main-tab">메모</button>
+        </div>
+
+        <!-- 필터 -->
+        <div class="filter-section">
+            <div class="filter-row">
+                <div style="display:flex;gap:6px;">
+                    <button class="filter-btn active">전체</button>
+                    <button class="filter-btn">매매</button>
+                    <button class="filter-btn">전세</button>
+                    <button class="filter-btn">월세</button>
+                </div>
+            </div>
+            <div class="filter-row">
+                <div style="display:flex;gap:6px;">
+                    <button class="filter-btn active">전체</button>
+                    <button class="filter-btn">아파트</button>
+                    <button class="filter-btn">오피스텔</button>
+                    <button class="filter-btn">원투룸</button>
+                    <button class="filter-btn">상가</button>
+                    <button class="filter-btn">사무실</button>
+                </div>
+                <div style="flex:1;"></div>
+                <div class="sort-row" style="margin:0;">
+                    <button class="sort-tag active">최근순</button>
+                    <button class="sort-tag">오래된순</button>
+                    <button class="sort-tag">가격↓</button>
+                    <button class="sort-tag">가격↑</button>
+                </div>
+            </div>
+            <div class="filter-row">
+                <div class="search-box">
+                    <input type="text" placeholder="역세권 3억 이하 투룸... 자연어로 검색">
+                </div>
+            </div>
+        </div>
+
+        <!-- 카드 리스트 -->
+        <div class="card-list">
+            <!-- 카드 1 -->
+            <div class="card-row">
+                <div class="card-checkbox"></div>
+                <span class="card-type sell">매매</span>
+                <span class="card-status available">계약가능</span>
+                <div class="card-info">
+                    <div class="card-price">10억</div>
+                    <div class="card-detail">두산위브 · 강동구 암사동 · 53평 · 105동 10층</div>
+                    <div class="card-tags">
+                        <span class="card-tag">올수리</span>
+                        <span class="card-tag">남향</span>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="card-act">공유</button>
+                    <button class="card-act">상세</button>
+                    <button class="card-act">수정</button>
+                    <button class="card-act delete">삭제</button>
+                </div>
+            </div>
+
+            <!-- 카드 2 (선택됨) -->
+            <div class="card-row selected">
+                <div class="card-checkbox checked"></div>
+                <span class="card-type rent">전세</span>
+                <span class="card-status available">계약가능</span>
+                <div class="card-info">
+                    <div class="card-price">4억5천</div>
+                    <div class="card-detail">과천시 갈현동 · 49.83㎡(15.1평) · 2층</div>
+                    <div class="card-tags">
+                        <span class="card-tag">즉시입주</span>
+                        <span class="card-tag">주차1대</span>
+                    </div>
+                </div>
+                <div class="card-thumb">
+                    <img src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=100&h=100&fit=crop">
+                </div>
+                <div class="card-actions">
+                    <button class="card-act">공유</button>
+                    <button class="card-act">상세</button>
+                    <button class="card-act">수정</button>
+                    <button class="card-act delete">삭제</button>
+                </div>
+            </div>
+
+            <!-- 카드 3 -->
+            <div class="card-row">
+                <div class="card-checkbox"></div>
+                <span class="card-type monthly">월세</span>
+                <span class="card-status available">계약가능</span>
+                <div class="card-info">
+                    <div class="card-price">보증금1억/월세600</div>
+                    <div class="card-detail">과천 갈현동 · 47평</div>
+                </div>
+                <div class="card-actions">
+                    <button class="card-act">공유</button>
+                    <button class="card-act">상세</button>
+                    <button class="card-act">수정</button>
+                    <button class="card-act delete">삭제</button>
+                </div>
+            </div>
+
+            <!-- 카드 4 -->
+            <div class="card-row">
+                <div class="card-checkbox checked"></div>
+                <span class="card-type sell">매매</span>
+                <span class="card-status contract">계약중</span>
+                <div class="card-info">
+                    <div class="card-price">7억8500</div>
+                    <div class="card-detail">삼성래미안2차 · 마포구 공덕동 · 33평 · 105동 12층</div>
+                    <div class="card-tags">
+                        <span class="card-tag">남동향</span>
+                        <span class="card-tag">올수리</span>
+                        <span class="card-tag">엘리베이터</span>
+                        <span class="card-tag">주차2대</span>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="card-act">공유</button>
+                    <button class="card-act">상세</button>
+                    <button class="card-act">수정</button>
+                    <button class="card-act delete">삭제</button>
+                </div>
+            </div>
+
+            <!-- 카드 5 -->
+            <div class="card-row">
+                <div class="card-checkbox"></div>
+                <span class="card-type sell">매매</span>
+                <span class="card-status available">계약가능</span>
+                <div class="card-info">
+                    <div class="card-price">31억</div>
+                    <div class="card-detail">아이파크 · 중랑구 망우동 · 38평 · 119동</div>
+                    <div class="card-tags">
+                        <span class="card-tag">동향</span>
+                        <span class="card-tag">로얄층</span>
+                        <span class="card-tag">즉시입주</span>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="card-act">공유</button>
+                    <button class="card-act">상세</button>
+                    <button class="card-act">수정</button>
+                    <button class="card-act delete">삭제</button>
+                </div>
+            </div>
+
+            <!-- 카드 6 -->
+            <div class="card-row">
+                <div class="card-checkbox"></div>
+                <span class="card-type rent">전세</span>
+                <span class="card-status available">계약가능</span>
+                <div class="card-info">
+                    <div class="card-price">2억</div>
+                    <div class="card-detail">용산구 용산동 · 고층</div>
+                    <div class="card-tags">
+                        <span class="card-tag">베란다확장</span>
+                        <span class="card-tag">엘리베이터</span>
+                        <span class="card-tag">고층</span>
+                        <span class="card-tag">입주협의</span>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="card-act">공유</button>
+                    <button class="card-act">상세</button>
+                    <button class="card-act">수정</button>
+                    <button class="card-act delete">삭제</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 오른쪽: 미리보기 -->
+    <div class="preview-panel">
+        <div class="preview-title">카드 미리보기</div>
+
+        <div class="phone-frame">
+            <div class="phone-screen">
+                <div class="preview-card">
+                    <div class="pc-header">
+                        <span class="pc-badge sell">매매</span>
+                        <span class="pc-area">33평</span>
+                    </div>
+                    <div class="pc-name">삼성래미안2차</div>
+                    <div class="pc-location">마포구 공덕동</div>
+                    <div class="pc-price">7억8500</div>
+                    <div class="pc-grid">
+                        <div class="pc-grid-item">
+                            <div class="pc-grid-label">면적</div>
+                            <div class="pc-grid-value">33평</div>
+                        </div>
+                        <div class="pc-grid-item">
+                            <div class="pc-grid-label">층수</div>
+                            <div class="pc-grid-value">105동 12층</div>
+                        </div>
+                    </div>
+                    <div class="pc-tags">
+                        <span class="pc-tag">남동향</span>
+                        <span class="pc-tag">올수리</span>
+                        <span class="pc-tag">엘리베이터</span>
+                        <span class="pc-tag">주차2대</span>
+                    </div>
+                    <div class="pc-agent">
+                        <span class="pc-agent-name">스마일부동산</span>
+                        <span class="pc-agent-phone">01047632531</span>
+                    </div>
+                    <div class="pc-comment">
+                        <div class="pc-comment-who">● 스마일부동산의 한마디</div>
+                        <div class="pc-comment-text">공덕역 도보 8분, 래미안 브랜드의 희귀 매물입니다. 2022년 올수리로 깔끔하고</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="preview-actions">
+            <button class="preview-btn send">손님에게 보내기</button>
+            <button class="preview-btn share">공유방에 올리기</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function setTheme(mode) {
+    if (mode === 'dark') {
+        document.body.classList.add('dark');
+    } else {
+        document.body.classList.remove('dark');
+    }
+    document.getElementById('btnLight').classList.toggle('active', mode === 'light');
+    document.getElementById('btnDark').classList.toggle('active', mode === 'dark');
+}
+</script>
+</body>
+</html>
