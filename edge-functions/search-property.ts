@@ -233,8 +233,10 @@ function localParseQuery(query: string) {
       filters.min_price = Math.round(priceValue * 0.85);
       filters.max_price = Math.round(priceValue * 1.15);
     } else {
-      // 가격만 단독이면 max_price로 처리
-      filters.max_price = priceValue;
+      // 가격만 단독이면 "정도"로 처리 (±15% 범위)
+      // "4억" = 3.4~4.6억, "전세 3억" = 2.55~3.45억
+      filters.min_price = Math.round(priceValue * 0.85);
+      filters.max_price = Math.round(priceValue * 1.15);
     }
   }
 
