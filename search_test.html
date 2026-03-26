@@ -887,16 +887,114 @@ var SEARCH_TESTS = [
     {query:'서초 반포 아파트 매매 40평 이상 주차가능 남향',cat:'장문',expect:{trade_type:'매매',category:'apartment',location:'반포',min_area:40}},
     {query:'송파 잠실 전세 아파트 3룸 이상 역세권 7억이하',cat:'장문',expect:{trade_type:'전세',category:'apartment',location:'잠실',max_price:70000}},
     {query:'용산 이태원 오피스텔 월세 풀옵션 즉시입주',cat:'장문',expect:{trade_type:'월세',category:'officetel',location:'이태원'}},
+
+    // ===== 28. 실제 UI 테스트 — my_cards.html에서 치는 검색어 (25개 구별) =====
+    {query:'강남구 아파트 매매',cat:'실제UI',expect:{trade_type:'매매',category:'apartment',location:'강남'}},
+    {query:'서초구 아파트 전세',cat:'실제UI',expect:{trade_type:'전세',category:'apartment',location:'서초'}},
+    {query:'송파구 아파트 매매 10억이하',cat:'실제UI',expect:{trade_type:'매매',category:'apartment',location:'송파',max_price:100000}},
+    {query:'마포구 오피스텔 월세',cat:'실제UI',expect:{trade_type:'월세',category:'officetel',location:'마포'}},
+    {query:'용산구 아파트 전세 5억이하',cat:'실제UI',expect:{trade_type:'전세',category:'apartment',location:'용산',max_price:50000}},
+    {query:'성동구 아파트 매매',cat:'실제UI',expect:{trade_type:'매매',category:'apartment',location:'성동'}},
+    {query:'광진구 오피스텔 전세',cat:'실제UI',expect:{trade_type:'전세',category:'officetel',location:'광진'}},
+    {query:'영등포구 상가 매매',cat:'실제UI',expect:{trade_type:'매매',category:'commercial',location:'영등포'}},
+    {query:'강동구 아파트 전세 3억이하',cat:'실제UI',expect:{trade_type:'전세',category:'apartment',location:'강동',max_price:30000}},
+    {query:'동작구 원룸 월세',cat:'실제UI',expect:{trade_type:'월세',category:'room',location:'동작'}},
+    {query:'관악구 원룸 전세',cat:'실제UI',expect:{trade_type:'전세',category:'room',location:'관악'}},
+    {query:'중구 사무실 월세',cat:'실제UI',expect:{trade_type:'월세',category:'office',location:'중구'}},
+    {query:'종로구 오피스텔 매매',cat:'실제UI',expect:{trade_type:'매매',category:'officetel',location:'종로'}},
+    {query:'강서구 아파트 전세',cat:'실제UI',expect:{trade_type:'전세',category:'apartment',location:'강서'}},
+    {query:'양천구 아파트 매매 5억이하',cat:'실제UI',expect:{trade_type:'매매',category:'apartment',location:'양천',max_price:50000}},
+    {query:'구로구 아파트 전세',cat:'실제UI',expect:{trade_type:'전세',category:'apartment',location:'구로'}},
+    {query:'노원구 아파트 매매 3억이상',cat:'실제UI',expect:{trade_type:'매매',category:'apartment',location:'노원',min_price:30000}},
+    {query:'서대문구 오피스텔 월세',cat:'실제UI',expect:{trade_type:'월세',category:'officetel',location:'서대문'}},
+    {query:'은평구 아파트 전세 3억이하',cat:'실제UI',expect:{trade_type:'전세',category:'apartment',location:'은평',max_price:30000}},
+    {query:'중랑구 아파트 매매',cat:'실제UI',expect:{trade_type:'매매',category:'apartment',location:'중랑'}},
+    {query:'도봉구 아파트 전세 2억이하',cat:'실제UI',expect:{trade_type:'전세',category:'apartment',location:'도봉',max_price:20000}},
+    {query:'동대문구 상가 월세',cat:'실제UI',expect:{trade_type:'월세',category:'commercial',location:'동대문'}},
+    {query:'성북구 원룸 월세',cat:'실제UI',expect:{trade_type:'월세',category:'room',location:'성북'}},
+    {query:'금천구 사무실 전세',cat:'실제UI',expect:{trade_type:'전세',category:'office',location:'금천'}},
+    {query:'강북구 아파트 매매 5억이하',cat:'실제UI',expect:{trade_type:'매매',category:'apartment',location:'강북',max_price:50000}},
+
+    // 29. 실전 복합 (가격+평수+구) — UI에서 자주 치는 패턴
+    {query:'강남구 아파트 전세 30평 5억이하',cat:'실제복합',expect:{trade_type:'전세',category:'apartment',location:'강남',max_price:50000}},
+    {query:'마포구 아파트 매매 20평 3억이하',cat:'실제복합',expect:{trade_type:'매매',category:'apartment',location:'마포',max_price:30000}},
+    {query:'송파구 오피스텔 전세 2억이하',cat:'실제복합',expect:{trade_type:'전세',category:'officetel',location:'송파',max_price:20000}},
+    {query:'용산구 아파트 매매 10억이상',cat:'실제복합',expect:{trade_type:'매매',category:'apartment',location:'용산',min_price:100000}},
+    {query:'성동구 원룸 월세',cat:'실제복합',expect:{trade_type:'월세',category:'room',location:'성동'}},
+    {query:'노원구 아파트 전세 4억이하',cat:'실제복합',expect:{trade_type:'전세',category:'apartment',location:'노원',max_price:40000}},
+    {query:'관악구 원룸 월세',cat:'실제복합',expect:{trade_type:'월세',category:'room',location:'관악'}},
+    {query:'강동구 아파트 매매 7억이하',cat:'실제복합',expect:{trade_type:'매매',category:'apartment',location:'강동',max_price:70000}},
+    {query:'서초구 사무실 전세',cat:'실제복합',expect:{trade_type:'전세',category:'office',location:'서초'}},
+    {query:'중랑구 아파트 전세 3억이하',cat:'실제복합',expect:{trade_type:'전세',category:'apartment',location:'중랑',max_price:30000}},
 ];
 
-// ===== 검색 실행 =====
-async function runSingleSearch(query, mode) {
+// ===== 검색 실행 (my_cards.html과 동일한 호출 방식) =====
+var _typeKw = {'매매':'매매','전세':'전세','월세':'월세'};
+var _catKw = {'아파트':'apartment','오피스텔':'officetel','원투룸':'room','원룸':'room','투룸':'room','빌라':'room','상가':'commercial','사무실':'office','쓰리룸':'room'};
+
+function _clientParseQuery(rawQuery) {
+    var words = rawQuery.trim().split(/\s+/);
+    var tradeType = null, propertyType = null, cleanWords = [], isClient = false;
+    var clientKw = ['손님','찾는분','구하는분','구합니다','구해요'];
+    for (var i = 0; i < words.length; i++) {
+        var w = words[i];
+        if (clientKw.indexOf(w) >= 0) { isClient = true; }
+        else if (_typeKw[w] && !tradeType) tradeType = _typeKw[w];
+        else if (_catKw[w] && !propertyType) propertyType = _catKw[w];
+        else cleanWords.push(w);
+    }
+    // 가격 추출
+    var minPrice = null, maxPrice = null, textWords = [];
+    for (var i = 0; i < cleanWords.length; i++) {
+        var w = cleanWords[i];
+        var pm = w.match(/^(\d+)억/);
+        if (pm) {
+            var val = parseInt(pm[1]) * 10000;
+            // 다음 단어가 이하/이상인지 확인
+            var next = cleanWords[i+1] || '';
+            if (/이하|미만|이내|까지/.test(w) || /이하|미만|이내|까지/.test(next)) {
+                maxPrice = val;
+                if (/이하|미만|이내|까지/.test(next)) i++;
+            } else if (/이상|초과|부터/.test(w) || /이상|초과|부터/.test(next)) {
+                minPrice = val;
+                if (/이상|초과|부터/.test(next)) i++;
+            } else {
+                maxPrice = val; // 기본: 이하로 처리
+            }
+        } else if (/^\d+천/.test(w)) {
+            var val2 = parseInt(w) * 1000;
+            if (/이하/.test(cleanWords[i+1]||'')) { maxPrice = val2; i++; }
+            else maxPrice = val2;
+        } else if (/^\d+이하$/.test(w)) {
+            maxPrice = parseInt(w);
+        } else if (/^\d+이상$/.test(w)) {
+            minPrice = parseInt(w);
+        } else {
+            textWords.push(w);
+        }
+    }
+    var searchQuery = textWords.length > 0 ? textWords.join(' ') : rawQuery;
+    return { query: isClient ? (textWords.join(' ') || '손님') : searchQuery, tradeType: tradeType, propertyType: propertyType, minPrice: minPrice, maxPrice: maxPrice, isClient: isClient };
+}
+
+async function runSingleSearch(rawQuery, mode) {
     var start = Date.now();
     try {
+        // ★ my_cards.html과 동일: 클라이언트에서 미리 파싱 후 분리 전송
+        var parsed = _clientParseQuery(rawQuery);
         var resp = await fetch(SUPABASE_URL+'/functions/v1/search-property', {
             method:'POST',
             headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY},
-            body:JSON.stringify({query:query,agent_id:currentUser.id,limit:50,search_mode:mode})
+            body:JSON.stringify({
+                query: parsed.query,
+                agent_id: currentUser.id,
+                limit: 50,
+                search_mode: parsed.isClient ? 'client' : mode,
+                trade_type: parsed.isClient ? null : parsed.tradeType,
+                property_type: parsed.isClient ? null : parsed.propertyType,
+                min_price: parsed.minPrice,
+                max_price: parsed.maxPrice
+            })
         });
         var data = await resp.json();
         return {
@@ -905,6 +1003,8 @@ async function runSingleSearch(query, mode) {
             applied_filters: data.applied_filters||[],
             ranking: data.ranking||'unknown',
             top_score: data.top_score||null,
+            search_method: data.search_method||'unknown',
+            clientParsed: parsed,
             time: Date.now()-start,
             error: data.error||null
         };
