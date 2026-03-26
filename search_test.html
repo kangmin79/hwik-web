@@ -90,7 +90,6 @@ tr:hover td { background: rgba(59,130,246,0.05); }
   <h2 style="margin-top:0">3. 검색 테스트 (100개)</h2>
   <div class="row">
     <button class="btn-blue" id="btnRunTest" onclick="runAllTests()" disabled>전체 테스트 실행</button>
-    <select id="searchMode"><option value="my">내 매물</option><option value="shared">공유 매물</option></select>
     <span id="testProgress" style="font-size:13px;color:#888">0 / 100</span>
   </div>
   <div class="progress-bar"><div class="progress-fill" id="testProgressBar" style="width:0%"></div></div>
@@ -610,7 +609,7 @@ async function runAllTests() {
     if(!currentUser) return alert('먼저 로그인하세요');
     document.getElementById('btnRunTest').disabled = true;
     testResults = [];
-    var mode = document.getElementById('searchMode').value;
+    var mode = 'my';
     var total = SEARCH_TESTS.length;
 
     for(var i=0;i<total;i++){
