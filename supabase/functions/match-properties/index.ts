@@ -2,7 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': '*',  // TODO: 프로덕션에서 'https://hwik.kr'로 제한
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
@@ -550,8 +550,10 @@ Deno.serve(async (req) => {
       return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
     });
 
-    // ★ 30점 미만 제외 (조건 안 맞는 매물은 보여주지 않음)
-    results = results.filter((r: any) => (r._score || 0) >= 30);
+    // ★ 점수 컷오프 (가격 조건 있을 때만 — 없으면 전부 보여줌)
+    if (minPrice || maxPrice) {
+      results = results.filter((r: any) => (r._score || 0) >= 30);
+    }
 
     // 상위 N개
     results = results.slice(0, limit).map((r: any) => ({

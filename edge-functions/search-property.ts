@@ -1252,8 +1252,9 @@ Deno.serve(async (req) => {
       results = sortResults(results, autoSort);
     }
 
-    // ★ 30점 미만 제외 (랭킹 모드일 때만 — 조건 없는 검색은 전부 보여줌)
-    if (hasRankingConditions) {
+    // ★ 점수 컷오프 (가격 조건 있을 때만 적용 — 없으면 전부 보여줌)
+    const hasPriceCondition = !!(parsed.filters?.min_price || parsed.filters?.max_price || min_price || max_price);
+    if (hasRankingConditions && hasPriceCondition) {
       results = results.filter(r => (r._score || 0) >= 30);
     }
 
