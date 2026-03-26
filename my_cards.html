@@ -7492,11 +7492,23 @@ async function loadInlineMatch(clientCardId) {
             if (priceFiltered.length >= 3) results = priceFiltered;
         }
 
-        // ★ 지역 필터
+        // ★ 지역 필터 (구 + 동/역 매핑)
+        const dongToGu = {'홍대':'마포','합정':'마포','상수':'마포','망원':'마포','연남':'마포','공덕':'마포','상암':'마포','잠실':'송파','문정':'송파','가락':'송파','석촌':'송파','역삼':'강남','삼성':'강남','대치':'강남','논현':'강남','신사':'강남','청담':'강남','압구정':'강남','반포':'서초','서초':'서초','방배':'서초','이태원':'용산','한남':'용산','성수':'성동','건대':'광진','여의도':'영등포','당산':'영등포','천호':'강동','사당':'동작','신림':'관악'};
+        let wantedGu = null;
         const guMatch = allText.match(/(강남|서초|송파|마포|용산|성동|광진|영등포|강동|동작|관악|종로|중구|강서|양천|구로|노원|서대문|은평|중랑|도봉|동대문|성북|금천|강북)/);
-        if (guMatch) {
-            const locFiltered = results.filter(r => (r.property?.location || '').includes(guMatch[1]));
-            if (locFiltered.length >= 2) results = locFiltered;
+        if (guMatch) wantedGu = guMatch[1];
+        if (!wantedGu) {
+            for (const [dong, gu] of Object.entries(dongToGu)) {
+                if (allText.includes(dong)) { wantedGu = gu; break; }
+            }
+        }
+        if (wantedGu) {
+            const locFiltered = results.filter(r => (r.property?.location || '').includes(wantedGu));
+            if (locFiltered.length >= 1) {
+                // 지역 매칭 우선, 나머지는 뒤로
+                const others = results.filter(r => !(r.property?.location || '').includes(wantedGu));
+                results = [...locFiltered, ...others];
+            }
         }
 
         // ★ 가격순 정렬 (예산에 가까운 순)
