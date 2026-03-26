@@ -707,7 +707,16 @@ Deno.serve(async (req) => {
 
     // ★ 구조화된 필터가 충분하면 SQL 직접 검색 (빠르고 정확)
     if (!embedding && (finalTradeType || finalPropertyType || parsed.filters?.min_price || parsed.filters?.max_price)) {
-      searchMethod = 'sql';
+      // ★ shared 모드면 SQL 직접 검색 건너뛰기 (RPC가 share_rooms 처리)
+      if (search_mode === 'shared') {
+        searchMethod = 'rpc_shared';
+        console.log('공유 매물 → RPC 경로로 전환');
+      } else {
+        searchMethod = 'sql';
+      }
+    }
+
+    if (searchMethod === 'sql') {
       let sqlQuery = supabase
         .from('cards')
         .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number, agent_comment')
@@ -770,8 +779,8 @@ Deno.serve(async (req) => {
       console.log(`SQL 직접 검색: ${results.length}건 | ${Date.now() - startTime}ms`);
     }
 
-    // ★ SQL 결과 없거나 벡터 검색 모드면 RPC 사용
-    if (results.length === 0) {
+    // ★ SQL 결과 없거나 벡터/공유 검색 모드면 RPC 사용
+    if (results.length === 0 || searchMethod === 'rpc_shared') {
       searchMethod = embedding ? 'vector' : 'rpc';
       const { data, error } = await supabase.rpc('search_cards_advanced', {
         p_agent_id: agent_id || '',
