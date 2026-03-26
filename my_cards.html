@@ -7634,7 +7634,8 @@ async function loadInlineMatch(clientCardId) {
             if (maxBudget) {
                 const diffA = Math.abs((a.price_number || 0) - maxBudget);
                 const diffB = Math.abs((b.price_number || 0) - maxBudget);
-                if (Math.abs(diffA - diffB) > 5000) return diffA - diffB; // 5천만원 이상 차이면 가격 우선
+                const threshold = maxBudget * 0.15; // ±15% 범위는 같은 가격대
+                if (Math.abs(diffA - diffB) > threshold) return diffA - diffB;
             }
             // 2. 거리순 (같은 가격대)
             if (a._distance !== undefined && b._distance !== undefined) {
