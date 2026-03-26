@@ -77,7 +77,7 @@ tr:hover td { background: rgba(59,130,246,0.05); }
 <div class="card">
   <h2 style="margin-top:0">2. 테스트 데이터 (삽입 + 임베딩 자동)</h2>
   <div class="row">
-    <button class="btn-green" id="btnGenMy" onclick="generateAll()" disabled>매물 5000개 (25구×200) + 손님 200명 생성</button>
+    <button class="btn-green" id="btnGenMy" onclick="generateAll()" disabled>매물 3750개 (25구×150) + 손님 250명 생성</button>
     <button class="btn-red" onclick="cleanupTestData()" id="btnCleanup">테스트 데이터 삭제</button>
     <span id="genCount" style="font-size:13px;color:#888"></span>
   </div>
@@ -421,11 +421,12 @@ async function generateAll() {
     var token = sess.data && sess.data.session ? sess.data.session.access_token : null;
     if(!token) return alert('세션 토큰 없음 - 다시 로그인');
 
-    var PER_DISTRICT = 200;  // 구별 200개
-    var TOTAL_PROPERTIES = DISTRICTS.length * PER_DISTRICT;  // 25구 × 200 = 5000
+    var PER_DISTRICT = 150;  // 구별 150개
+    var TOTAL_PROPERTIES = DISTRICTS.length * PER_DISTRICT;  // 25구 × 150 = 3750
     var TOTAL_CLIENTS_CLEAN = 100;
     var TOTAL_CLIENTS_MESSY = 100;
-    var TOTAL_ALL = TOTAL_PROPERTIES + TOTAL_CLIENTS_CLEAN + TOTAL_CLIENTS_MESSY;
+    var TOTAL_CLIENTS_EXTRA = 50;
+    var TOTAL_ALL = TOTAL_PROPERTIES + TOTAL_CLIENTS_CLEAN + TOTAL_CLIENTS_MESSY + TOTAL_CLIENTS_EXTRA;
 
     // ===== 0단계: 실제 DB 데이터 로드 (아파트 단지, 역, 학교) =====
     document.getElementById('genLog').textContent = '=== 실제 DB 데이터 로드 중... ===';
@@ -454,8 +455,8 @@ async function generateAll() {
     document.getElementById('genLog').textContent += '\n=== 매물 ' + TOTAL_PROPERTIES + '개 생성 중 (25구 × '+PER_DISTRICT+'개)... ===';
     var cats=['apartment','officetel','room','commercial','office'];
     var types=['매매','전세','월세'];
-    // 구별 200개: 아파트80 + 오피스텔40 + 원투룸40 + 상가20 + 사무실20
-    var perDistCat = {apartment:80, officetel:40, room:40, commercial:20, office:20};
+    // 구별 150개: 아파트60 + 오피스텔30 + 원투룸30 + 상가15 + 사무실15
+    var perDistCat = {apartment:60, officetel:30, room:30, commercial:15, office:15};
     var cards=[];
     for(var di=0; di<DISTRICTS.length; di++){
         var dist = DISTRICTS[di];
@@ -511,8 +512,22 @@ async function generateAll() {
     }
     addLog('지저분한 손님 '+messyInserted+'명 삽입 완료\n');
 
-    // ===== 4단계: 임베딩 자동 생성 (3200개) =====
-    var allCards = cards.concat(cleanClients).concat(messyClients);
+    // ===== 3.5단계: 추가 손님 50명 (실전 중개사 스타일) =====
+    addLog('=== 추가 손님 50명 생성 중... ===');
+    var extraClients=[];
+    for(var i=0;i<25;i++) extraClients.push(makeClient(currentUser.id));
+    for(var i=0;i<25;i++) extraClients.push(makeMessyClient(currentUser.id));
+    var extraInserted=0;
+    for(var i=0;i<extraClients.length;i+=batchSize){
+        var batch=extraClients.slice(i,i+batchSize);
+        var res=await sb.from('cards').insert(batch);
+        if(res.error){addLog('X 추가 손님 오류: '+res.error.message)}
+        else{extraInserted+=batch.length;for(var j=0;j<batch.length;j++)insertedCardIds.push(batch[j].id)}
+    }
+    addLog('추가 손님 '+extraInserted+'명 삽입 완료\n');
+
+    // ===== 4단계: 임베딩 자동 생성 =====
+    var allCards = cards.concat(cleanClients).concat(messyClients).concat(extraClients);
     addLog('=== 임베딩 생성 중 ('+allCards.length+'개, 약 '+(Math.round(allCards.length*0.15/60))+'분 소요)... ===');
     var embedDone=0, embedFail=0;
     // 동시 요청 3개씩 (속도 3배)
@@ -538,16 +553,16 @@ async function generateAll() {
     }
 
     setProgress(100);
-    var totalClients = clientInserted + messyInserted;
+    var totalClients = clientInserted + messyInserted + extraInserted;
     addLog('\n==============================');
-    addLog('완료! 매물:'+inserted+' 손님:'+totalClients+'(깔끔:'+clientInserted+' 지저분:'+messyInserted+') 임베딩:'+embedDone+'/'+allCards.length);
+    addLog('완료! 매물:'+inserted+' 손님:'+totalClients+'(깔끔:'+clientInserted+' 지저분:'+messyInserted+' 추가:'+extraInserted+') 임베딩:'+embedDone+'/'+allCards.length);
     addLog('==============================');
     addLog('\n구별 '+PER_DISTRICT+'개 분포:');
-    addLog('  아파트: 80개/구 ('+80*DISTRICTS.length+'개) — 실제 단지 '+DB_APARTMENTS.length+'개 활용');
-    addLog('  오피스텔: 40개/구 ('+40*DISTRICTS.length+'개)');
-    addLog('  원투룸: 40개/구 ('+40*DISTRICTS.length+'개)');
-    addLog('  상가: 20개/구 ('+20*DISTRICTS.length+'개)');
-    addLog('  사무실: 20개/구 ('+20*DISTRICTS.length+'개)');
+    addLog('  아파트: 60개/구 ('+60*DISTRICTS.length+'개) — 실제 단지 '+DB_APARTMENTS.length+'개 활용');
+    addLog('  오피스텔: 30개/구 ('+30*DISTRICTS.length+'개)');
+    addLog('  원투룸: 30개/구 ('+30*DISTRICTS.length+'개)');
+    addLog('  상가: 15개/구 ('+15*DISTRICTS.length+'개)');
+    addLog('  사무실: 15개/구 ('+15*DISTRICTS.length+'개)');
     addLog('  총: '+DISTRICTS.length+'개 구 × '+PER_DISTRICT+'개 = '+TOTAL_PROPERTIES+'개');
     addLog('  지하철역: '+DB_SUBWAYS.length+'개 | 학교: '+DB_SCHOOLS.length+'개 참조');
     document.getElementById('genCount').textContent = '삽입: '+(inserted+totalClients)+'개 | 임베딩: '+embedDone+'개';
@@ -1121,6 +1136,27 @@ function analyzeResultDetailed(test, searchResult) {
             allMatch: allMatch,
             whyShown: whyShown.join(' + '),
             whyRank: whyRank,
+            rankReason: (function(){
+                var reasons = [];
+                var sd = r._scoreDetail;
+                if(!sd) return '점수 없음';
+                if(sd.price && sd.price.score >= 40) reasons.push('가격 적합('+sd.price.score+'점)');
+                else if(sd.price && sd.price.score < 0) reasons.push('가격 초과('+sd.price.score+'점)');
+                else if(sd.price) reasons.push('가격('+sd.price.score+'점)');
+                if(sd.area && sd.area.score > 0) reasons.push('면적('+sd.area.score+'점: '+sd.area.reason+')');
+                if(sd.room && sd.room.score > 0) reasons.push('방수('+sd.room.score+'점)');
+                if(sd.location && sd.location.score > 0) reasons.push('위치('+sd.location.score+'점: '+sd.location.reason+')');
+                if(sd.status && sd.status.score > 0) reasons.push(sd.status.value+'('+sd.status.score+'점)');
+                if(sd.fresh && sd.fresh.score > 0) reasons.push('최신('+sd.fresh.score+'점: '+sd.fresh.reason+')');
+                if(sd.features && sd.features.score > 0) reasons.push('특징('+sd.features.reason+')');
+                // What's holding it back
+                var negatives = [];
+                if(sd.price && sd.price.score < 20) negatives.push('가격 부적합');
+                if(sd.location && sd.location.score === 0 && expect.location) negatives.push('위치 불일치');
+                if(sd.status && sd.status.score <= 0) negatives.push(sd.status.value);
+                if(negatives.length > 0) reasons.push('▼ '+negatives.join(', '));
+                return reasons.join(' | ');
+            })(),
             trade_status: r.trade_status||'계약가능',
             area: (r.property||{}).area||'?'
         });
@@ -1262,8 +1298,15 @@ async function runMatchTest() {
             avgAccuracy: avgAccuracy,
             status: status,
             time: elapsed,
-            topResults: matched.slice(0,3).map(function(m){
-                return { type:m.property?.type, cat:m.property?.category, loc:m.property?.location, price:m.price_number, complex:m.property?.complex, score:m._score||null, sim:m.similarity };
+            topResults: matched.slice(0,5).map(function(m){
+                return {
+                    type:m.property?.type, cat:m.property?.category,
+                    loc:m.property?.location, price:m.price_number,
+                    complex:m.property?.complex, score:m._score||null,
+                    sim:m.similarity,
+                    area: m.property?.area,
+                    status: m.trade_status
+                };
             }),
             error: matchData?.error || null
         });
@@ -1428,6 +1471,34 @@ function showResults() {
         '<div class="summary-item"><div class="summary-num">'+avgTop10Match+'%</div><div class="summary-label">평균 Top10 매칭률</div></div>'+
         '<div class="summary-item"><div class="summary-num">'+avgTime+'ms</div><div class="summary-label">평균 응답시간</div></div>'+
         '<div class="summary-item"><div class="summary-num" style="font-size:16px">score:'+rankScore+' / newest:'+rankNewest+' / etc:'+rankOther+'</div><div class="summary-label">랭킹 방식 분포</div></div>';
+
+    // 랭킹 품질 분석
+    var allScores = [];
+    testResults.forEach(function(t){
+        if(t.perItem) t.perItem.forEach(function(p){ if(p.score !== null) allScores.push(p.score); });
+    });
+    allScores.sort(function(a,b){return b-a});
+    var scoreDistribution = {
+        excellent: allScores.filter(function(s){return s>=50}).length,
+        good: allScores.filter(function(s){return s>=30 && s<50}).length,
+        fair: allScores.filter(function(s){return s>=10 && s<30}).length,
+        low: allScores.filter(function(s){return s>=0 && s<10}).length,
+        negative: allScores.filter(function(s){return s<0}).length,
+    };
+    var top5Avg = 0, bot5Avg = 0, separation = 0;
+    if(allScores.length >= 10) {
+        for(var si=0;si<5;si++) top5Avg += allScores[si];
+        top5Avg /= 5;
+        for(var si=allScores.length-5;si<allScores.length;si++) bot5Avg += allScores[si];
+        bot5Avg /= 5;
+        separation = allScores.length > 0 ? ((top5Avg - bot5Avg) / allScores.length) : 0;
+    }
+
+    // 랭킹 품질 표시 추가
+    var rankQualityHtml = '<div class="summary-item"><div class="summary-num" style="font-size:14px">'+scoreDistribution.excellent+'/'+scoreDistribution.good+'/'+scoreDistribution.fair+'/'+scoreDistribution.low+'/'+scoreDistribution.negative+'</div><div class="summary-label">점수분포 (50+/30+/10+/0+/음수)</div></div>';
+    rankQualityHtml += '<div class="summary-item"><div class="summary-num" style="font-size:16px">'+top5Avg.toFixed(1)+' vs '+bot5Avg.toFixed(1)+'</div><div class="summary-label">Top5 vs Bottom5 평균점수</div></div>';
+    rankQualityHtml += '<div class="summary-item"><div class="summary-num">'+separation.toFixed(3)+'</div><div class="summary-label">랭킹 분리도 (높을수록 좋음)</div></div>';
+    document.getElementById('summaryGrid').innerHTML += rankQualityHtml;
 
     // 카테고리별
     var cats={};
