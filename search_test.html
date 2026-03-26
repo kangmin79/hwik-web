@@ -46,7 +46,7 @@ tr:hover td { background: rgba(59,130,246,0.05); }
 .summary-num { font-size: 28px; font-weight: 700; }
 .summary-label { font-size: 12px; color: #888; margin-top: 4px; }
 .detail-box { background: #0d1117; border-radius: 8px; padding: 12px; margin-top: 8px; font-size: 12px; }
-.detail-row { display: grid; grid-template-columns: 30px 1fr 60px 60px 60px 60px 60px 1fr; gap: 4px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.03); align-items: center; }
+.detail-row { display: grid; grid-template-columns: 30px 1fr 60px 50px 60px 60px 60px 60px 1fr; gap: 4px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.03); align-items: center; }
 .detail-row.header { font-weight: 700; color: #8be9fd; border-bottom: 1px solid rgba(255,255,255,0.1); }
 .chk { color: #34d399; }
 .cross { color: #f87171; }
@@ -87,10 +87,10 @@ tr:hover td { background: rgba(59,130,246,0.05); }
 
 <!-- ===== 3. 검색 테스트 ===== -->
 <div class="card">
-  <h2 style="margin-top:0">3. 검색 테스트 (250개)</h2>
+  <h2 style="margin-top:0">3. 검색 테스트</h2>
   <div class="row">
     <button class="btn-blue" id="btnRunTest" onclick="runAllTests()" disabled>전체 테스트 실행</button>
-    <span id="testProgress" style="font-size:13px;color:#888">0 / 250</span>
+    <span id="testProgress" style="font-size:13px;color:#888">0 / --</span>
   </div>
   <div class="progress-bar"><div class="progress-fill" id="testProgressBar" style="width:0%"></div></div>
 </div>
@@ -163,6 +163,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         document.getElementById('localWarning').style.display = '';
         document.getElementById('localWarning').textContent = '로컬 파일 → 로그인 시 hwik.kr/search_test.html 로 이동됩니다';
     }
+
+    // 테스트 수 동적 표시
+    document.getElementById('testProgress').textContent = '0 / ' + SEARCH_TESTS.length;
 
     // 세션 체크
     var res = await sb.auth.getSession();
@@ -880,6 +883,70 @@ async function runSingleSearch(query, mode) {
     }
 }
 
+// ===== 새 평가 기준 함수 =====
+function determineStatus(test, searchResult) {
+    var results = searchResult.results;
+    var expect = test.expect;
+    var parsed = searchResult.parsed;
+
+    // EMPTY: no results
+    if (!results || results.length === 0) return 'empty';
+
+    // Check parsing accuracy
+    var parseOk = true;
+    if (expect.trade_type && (!parsed || !parsed.filters || parsed.filters.trade_type !== expect.trade_type)) parseOk = false;
+    if (expect.category && (!parsed || !parsed.filters || parsed.filters.property_type !== expect.category)) parseOk = false;
+    if (expect.location && (!parsed || !parsed.filters || !parsed.filters.location)) parseOk = false;
+
+    // Check top 10 match rate
+    var top10 = results.slice(0, 10);
+    var matchCount = 0;
+    for (var i = 0; i < top10.length; i++) {
+        if (isResultMatch(top10[i], expect)) matchCount++;
+    }
+    var matchRate = top10.length > 0 ? Math.round(matchCount / top10.length * 100) : 0;
+
+    // Check ranking quality (top 3 price proximity)
+    var rankingOk = true;
+    if (expect.max_price || expect.min_price) {
+        var targetPrice = expect.max_price || expect.min_price;
+        var top3 = results.slice(0, 3);
+        var priceMatchCount = 0;
+        for (var i = 0; i < top3.length; i++) {
+            var pn = top3[i].price_number || 0;
+            if (pn > 0 && Math.abs(pn - targetPrice) / targetPrice <= 0.3) priceMatchCount++;
+        }
+        if (top3.length > 0 && priceMatchCount === 0) rankingOk = false;
+    }
+
+    // Determine status
+    if (matchRate >= 30 && parseOk) return 'ok';
+    if (matchRate > 0 || (parseOk && results.length > 0)) return 'warn';
+    return 'fail';
+}
+
+function isResultMatch(r, expect) {
+    if (expect.trade_type && r.property && r.property.type !== expect.trade_type) return false;
+    if (expect.category && r.property && r.property.category !== expect.category) return false;
+    if (expect.location) {
+        var loc = (r.property && r.property.location) || r.search_text || '';
+        if (!loc.includes(expect.location)) return false;
+    }
+    if (expect.max_price && r.price_number && r.price_number > expect.max_price * 1.1) return false;
+    if (expect.min_price && r.price_number && r.price_number < expect.min_price * 0.9) return false;
+    if (expect.feature) {
+        var feats = (r.property && r.property.features) ? r.property.features.join(' ') : '';
+        var st = r.search_text || '';
+        if (!feats.includes(expect.feature) && !st.includes(expect.feature)) return false;
+    }
+    if (expect.complex) {
+        var complex = (r.property && r.property.complex) || '';
+        var st = r.search_text || '';
+        if (!complex.includes(expect.complex) && !st.includes(expect.complex)) return false;
+    }
+    return true;
+}
+
 // ===== 매물별 노출 이유 분석 =====
 function analyzeResultDetailed(test, searchResult) {
     var results = searchResult.results;
@@ -917,9 +984,29 @@ function analyzeResultDetailed(test, searchResult) {
         }
     }
 
-    // 매물별 상세 분석
+    // 파싱 정확도 체크
+    var parseOk = true;
+    if (expect.trade_type && (!parsed || !parsed.filters || parsed.filters.trade_type !== expect.trade_type)) parseOk = false;
+    if (expect.category && (!parsed || !parsed.filters || parsed.filters.property_type !== expect.category)) parseOk = false;
+    if (expect.location && (!parsed || !parsed.filters || !parsed.filters.location)) parseOk = false;
+
+    // 랭킹 품질 체크 (상위 3개 가격 근접도)
+    var rankingOk = true;
+    if (expect.max_price || expect.min_price) {
+        var targetPrice = expect.max_price || expect.min_price;
+        var top3 = results.slice(0, 3);
+        var priceMatchCount = 0;
+        for (var i = 0; i < top3.length; i++) {
+            var pn = top3[i].price_number || 0;
+            if (pn > 0 && Math.abs(pn - targetPrice) / targetPrice <= 0.3) priceMatchCount++;
+        }
+        if (top3.length > 0 && priceMatchCount === 0) rankingOk = false;
+    }
+
+    // 매물별 상세 분석 (top 10 기준 매칭률)
     var perItem = [];
     var matchCount = 0;
+    var top10MatchCount = 0;
 
     for (var ri = 0; ri < results.length; ri++) {
         var r = results[ri];
@@ -946,17 +1033,17 @@ function analyzeResultDetailed(test, searchResult) {
             checks.category = match;
             if(!match) allMatch=false;
         }
-        // 가격 (±20% 허용)
+        // 가격 (±10% for new criteria)
         if(expect.max_price){
             var pn = r.price_number||0;
-            var match = pn <= expect.max_price * 1.2;
+            var match = pn <= expect.max_price * 1.1;
             checks.price = match;
             checks.price_val = pn;
             if(!match) allMatch=false;
         }
         if(expect.min_price){
             var pn = r.price_number||0;
-            var match = pn >= expect.min_price * 0.8;
+            var match = pn >= expect.min_price * 0.9;
             if(checks.price !== undefined) checks.price = checks.price && match;
             else checks.price = match;
             checks.price_val = pn;
@@ -999,7 +1086,10 @@ function analyzeResultDetailed(test, searchResult) {
         var whyRank = sortMethod;
         if(ri===0) whyRank += ' (최상위)';
 
-        if(allMatch) matchCount++;
+        if(allMatch) {
+            matchCount++;
+            if(ri < 10) top10MatchCount++;
+        }
 
         perItem.push({
             rank: ri+1,
@@ -1010,6 +1100,7 @@ function analyzeResultDetailed(test, searchResult) {
             location: (r.property||{}).location||'?',
             complex: (r.property||{}).complex||'',
             similarity: sim,
+            score: r._score || null,
             checks: checks,
             allMatch: allMatch,
             whyShown: whyShown.join(' + '),
@@ -1018,17 +1109,26 @@ function analyzeResultDetailed(test, searchResult) {
         });
     }
 
+    var top10Count = Math.min(results.length, 10);
+    var top10MatchRate = top10Count > 0 ? Math.round(top10MatchCount / top10Count * 100) : 0;
     var matchRate = results.length > 0 ? Math.round(matchCount/results.length*100) : 0;
-    var status = results.length===0 ? 'empty' : (matchRate>=70?'ok':(matchRate>=40?'warn':'fail'));
+
+    // 새 평가 기준으로 status 결정
+    var status = determineStatus(test, searchResult);
 
     return {
         matchCount: matchCount,
         matchRate: matchRate,
+        top10MatchRate: top10MatchRate,
         status: status,
         totalResults: results.length,
         serverInterpretation: serverInterpretation,
         sortMethod: sortMethod,
         appliedFilters: searchResult.applied_filters,
+        parseAccuracy: parseOk,
+        rankingQuality: rankingOk,
+        ranking: searchResult.ranking || 'unknown',
+        topScore: searchResult.top_score || null,
         perItem: perItem
     };
 }
@@ -1043,7 +1143,7 @@ async function runAllTests() {
 
     for(var i=0;i<total;i++){
         var test = SEARCH_TESTS[i];
-        document.getElementById('testProgress').textContent = (i+1)+'/'+total+' "'+test.query+'"';
+        document.getElementById('testProgress').textContent = (i+1)+' / '+total+' "'+test.query+'"';
         document.getElementById('testProgressBar').style.width = Math.round((i+1)/total*100)+'%';
 
         var searchResult = await runSingleSearch(test.query, mode);
@@ -1057,6 +1157,7 @@ async function runAllTests() {
             totalResults: analysis.totalResults,
             matchCount: analysis.matchCount,
             matchRate: analysis.matchRate,
+            top10MatchRate: analysis.top10MatchRate,
             status: analysis.status,
             time: searchResult.time,
             error: searchResult.error,
@@ -1064,6 +1165,10 @@ async function runAllTests() {
             sortMethod: analysis.sortMethod,
             appliedFilters: analysis.appliedFilters,
             parsed: searchResult.parsed,
+            parseAccuracy: analysis.parseAccuracy,
+            rankingQuality: analysis.rankingQuality,
+            ranking: analysis.ranking,
+            topScore: analysis.topScore,
             perItem: analysis.perItem
         });
 
@@ -1085,21 +1190,39 @@ function showResults() {
     testResults.forEach(function(r){if(r.status==='ok')ok++;else if(r.status==='warn')warn++;else if(r.status==='fail')fail++;else empty++});
     var avgTime = Math.round(testResults.reduce(function(s,r){return s+r.time},0)/total);
     var withR = testResults.filter(function(r){return r.totalResults>0});
-    var avgMatch = withR.length>0 ? Math.round(withR.reduce(function(s,r){return s+r.matchRate},0)/withR.length) : 0;
+    var avgTop10Match = withR.length>0 ? Math.round(withR.reduce(function(s,r){return s+(r.top10MatchRate||0)},0)/withR.length) : 0;
+
+    // 랭킹 방식 집계
+    var rankScore=0, rankNewest=0, rankOther=0;
+    testResults.forEach(function(r){
+        if(r.ranking==='score') rankScore++;
+        else if(r.ranking==='newest') rankNewest++;
+        else rankOther++;
+    });
 
     document.getElementById('summaryGrid').innerHTML =
-        '<div class="summary-item"><div class="summary-num" style="color:#34d399">'+ok+'</div><div class="summary-label">정상 (>=70%)</div></div>'+
-        '<div class="summary-item"><div class="summary-num" style="color:#fbbf24">'+warn+'</div><div class="summary-label">경고 (40~69%)</div></div>'+
-        '<div class="summary-item"><div class="summary-num" style="color:#f87171">'+fail+'</div><div class="summary-label">실패 (&lt;40%)</div></div>'+
-        '<div class="summary-item"><div class="summary-num" style="color:#93c5fd">'+empty+'</div><div class="summary-label">결과없음</div></div>'+
-        '<div class="summary-item"><div class="summary-num">'+avgMatch+'%</div><div class="summary-label">평균 매칭률</div></div>'+
-        '<div class="summary-item"><div class="summary-num">'+avgTime+'ms</div><div class="summary-label">평균 응답시간</div></div>';
+        '<div class="summary-item"><div class="summary-num" style="color:#34d399">'+ok+'</div><div class="summary-label">OK (Top10 >=30% + 파싱OK)</div></div>'+
+        '<div class="summary-item"><div class="summary-num" style="color:#fbbf24">'+warn+'</div><div class="summary-label">WARN (부분 매칭)</div></div>'+
+        '<div class="summary-item"><div class="summary-num" style="color:#f87171">'+fail+'</div><div class="summary-label">FAIL (0% 또는 파싱실패)</div></div>'+
+        '<div class="summary-item"><div class="summary-num" style="color:#93c5fd">'+empty+'</div><div class="summary-label">EMPTY (결과없음)</div></div>'+
+        '<div class="summary-item"><div class="summary-num">'+avgTop10Match+'%</div><div class="summary-label">평균 Top10 매칭률</div></div>'+
+        '<div class="summary-item"><div class="summary-num">'+avgTime+'ms</div><div class="summary-label">평균 응답시간</div></div>'+
+        '<div class="summary-item"><div class="summary-num" style="font-size:16px">score:'+rankScore+' / newest:'+rankNewest+' / etc:'+rankOther+'</div><div class="summary-label">랭킹 방식 분포</div></div>';
 
     // 카테고리별
     var cats={};
-    testResults.forEach(function(r){if(!cats[r.category])cats[r.category]={ok:0,warn:0,fail:0,empty:0,t:0};cats[r.category][r.status]++;cats[r.category].t++});
-    var h='<h3>카테고리별</h3><table><tr><th>카테고리</th><th>수</th><th style="color:#34d399">정상</th><th style="color:#fbbf24">경고</th><th style="color:#f87171">실패</th><th style="color:#93c5fd">없음</th></tr>';
-    Object.keys(cats).forEach(function(c){var d=cats[c];h+='<tr><td>'+c+'</td><td>'+d.t+'</td><td>'+d.ok+'</td><td>'+d.warn+'</td><td>'+d.fail+'</td><td>'+d.empty+'</td></tr>'});
+    testResults.forEach(function(r){
+        if(!cats[r.category]) cats[r.category]={ok:0,warn:0,fail:0,empty:0,t:0,matchSum:0,matchCnt:0};
+        cats[r.category][r.status]++;
+        cats[r.category].t++;
+        if(r.totalResults>0){ cats[r.category].matchSum+=(r.top10MatchRate||0); cats[r.category].matchCnt++; }
+    });
+    var h='<h3>카테고리별</h3><table><tr><th>카테고리</th><th>수</th><th style="color:#34d399">OK</th><th style="color:#fbbf24">WARN</th><th style="color:#f87171">FAIL</th><th style="color:#93c5fd">EMPTY</th><th>평균 Top10 매칭률</th></tr>';
+    Object.keys(cats).forEach(function(c){
+        var d=cats[c];
+        var avgM = d.matchCnt>0 ? Math.round(d.matchSum/d.matchCnt) : 0;
+        h+='<tr><td>'+c+'</td><td>'+d.t+'</td><td>'+d.ok+'</td><td>'+d.warn+'</td><td>'+d.fail+'</td><td>'+d.empty+'</td><td>'+avgM+'%</td></tr>';
+    });
     document.getElementById('catSummary').innerHTML = h+'</table>';
 
     renderResultTable();
@@ -1120,7 +1243,9 @@ function renderResultTable() {
         html += '<div class="card" style="padding:14px;margin-bottom:10px">';
         // 헤더
         html += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">';
-        html += '<div><strong style="font-size:16px">#'+r.index+' "'+r.query+'"</strong> <span class="tag tag-info">'+r.category+'</span> <span class="tag '+sc+'">'+r.matchRate+'% ('+r.matchCount+'/'+r.totalResults+')</span> <span class="tag tag-purple">'+r.time+'ms</span></div>';
+        var parseTag = r.parseAccuracy ? '<span class="tag tag-ok">파싱OK</span>' : '<span class="tag tag-fail">파싱X</span>';
+        var rankTag = r.rankingQuality ? '<span class="tag tag-ok">랭킹OK</span>' : '<span class="tag tag-warn">랭킹X</span>';
+        html += '<div><strong style="font-size:16px">#'+r.index+' "'+r.query+'"</strong> <span class="tag tag-info">'+r.category+'</span> <span class="tag '+sc+'">Top10:'+(r.top10MatchRate||0)+'% (전체:'+r.matchRate+'% '+r.matchCount+'/'+r.totalResults+')</span> '+parseTag+' '+rankTag+' <span class="tag tag-purple">'+r.time+'ms</span></div>';
         html += '</div>';
 
         // 서버 해석
@@ -1137,7 +1262,7 @@ function renderResultTable() {
         // 매물별 상세
         if(r.perItem.length > 0) {
             html += '<div class="detail-box">';
-            html += '<div class="detail-row header"><div>#</div><div>매물정보</div><div>유사도</div><div>거래</div><div>종류</div><div>가격</div><div>지역</div><div>노출이유 / 순위기준</div></div>';
+            html += '<div class="detail-row header"><div>#</div><div>매물정보</div><div>유사도</div><div>점수</div><div>거래</div><div>종류</div><div>가격</div><div>지역</div><div>노출이유 / 순위기준</div></div>';
 
             var maxShow = 10;
             for(var pi=0;pi<Math.min(r.perItem.length,maxShow);pi++){
@@ -1147,6 +1272,7 @@ function renderResultTable() {
                 html += '<div>'+p.rank+'</div>';
                 html += '<div style="font-size:11px"><b>'+p.type+'</b> '+p.category+' '+p.price+' <span style="color:#888">'+p.location+'</span>'+(p.complex?' '+p.complex:'')+'</div>';
                 html += '<div>'+simBar(p.similarity)+'</div>';
+                html += '<div style="font-size:10px;color:#aaa">'+(p.score!==null?p.score.toFixed(2):'-')+'</div>';
                 html += '<div>'+ck(p.checks.trade_type)+'</div>';
                 html += '<div>'+ck(p.checks.category)+'</div>';
                 html += '<div>'+(p.checks.price!==undefined?ck(p.checks.price)+'<span style="font-size:10px;color:#888"> '+priceText(p.price_number||0)+'</span>':'<span class="na">-</span>')+'</div>';
@@ -1184,10 +1310,15 @@ function downloadJSON() {
             return {
                 index:r.index, query:r.query, category:r.category, expect:r.expect,
                 totalResults:r.totalResults, matchCount:r.matchCount, matchRate:r.matchRate,
+                top10MatchRate:r.top10MatchRate,
                 status:r.status, time:r.time, error:r.error,
                 serverInterpretation:r.serverInterpretation, sortMethod:r.sortMethod,
                 appliedFilters:r.appliedFilters,
                 parsed:r.parsed,
+                parseAccuracy:r.parseAccuracy,
+                rankingQuality:r.rankingQuality,
+                ranking:r.ranking,
+                topScore:r.topScore,
                 perItem:r.perItem
             };
         })

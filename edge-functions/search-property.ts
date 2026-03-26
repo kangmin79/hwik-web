@@ -153,11 +153,16 @@ function localParseQuery(query: string) {
     '혜화': '혜화', '평창': '평창', '명동': '명동', '신당': '신당',
     '개포': '개포', '도곡': '도곡', '목동': '목동',
   };
-  // 동 단위 (XX동)
+  // 동 단위 (XX동) — 구 이름(성동, 강동 등)은 제외
   const dongMatch = q.match(/([\uAC00-\uD7A3]{1,4})동(?:\s|$)/);
   if (dongMatch) {
-    filters.location = dongMatch[1];
-    remaining = remaining.replace(dongMatch[0], '');
+    const dongBase = dongMatch[1]; // "성" from "성동", "역삼" from "역삼동"
+    const fullText = dongBase + '동'; // "성동", "역삼동"
+    // Skip if this is a 구 name (성동구, 강동구 etc.)
+    if (!guList.includes(fullText)) {
+      filters.location = dongBase;
+      remaining = remaining.replace(dongMatch[0], '');
+    }
   }
   // 유명 지역명
   if (!filters.location) {
@@ -232,18 +237,21 @@ function localParseQuery(query: string) {
     filters.max_price = parseInt(rangeMatch2[2]) * 10000;
   }
 
-  // 면적
+  // 면적 - only apply 이하/이상 to area if there's no price keyword nearby
   const areaMatch = q.match(/(\d+)\s*평/);
   if (areaMatch) {
     const pyeong = parseInt(areaMatch[1]);
-    if (/대$/.test(q.slice(q.indexOf(areaMatch[0])))) {
+    const afterArea = q.slice(q.indexOf(areaMatch[0]) + areaMatch[0].length);
+    const hasPrice = /\d+\s*억|천|만원|\d{3,}/.test(q.replace(areaMatch[0], ''));
+    if (/대/.test(afterArea.slice(0, 3))) {
       filters.min_area = pyeong;
       filters.max_area = pyeong + 9;
-    } else if (/이상/.test(q)) {
+    } else if (/이상/.test(afterArea.slice(0, 5)) && !hasPrice) {
       filters.min_area = pyeong;
-    } else if (/이하/.test(q)) {
+    } else if (/이하/.test(afterArea.slice(0, 5)) && !hasPrice) {
       filters.max_area = pyeong;
     } else {
+      // Default: ±3평 range
       filters.min_area = pyeong - 3;
       filters.max_area = pyeong + 3;
     }
@@ -500,6 +508,16 @@ function extractAreaNumber(areaStr) {
   return match ? parseInt(match[1]) : null;
 }
 
+function extractAreaNumbers(areaStr: string): { pyeong: number | null; sqm: number | null } {
+  if (!areaStr) return { pyeong: null, sqm: null };
+  const sqmMatch = areaStr.match(/(\d+)㎡/);
+  const pyeongMatch = areaStr.match(/(\d+)평/);
+  return {
+    sqm: sqmMatch ? parseInt(sqmMatch[1]) : null,
+    pyeong: pyeongMatch ? parseInt(pyeongMatch[1]) : null
+  };
+}
+
 // ========== 5. 정렬 함수 ==========
 function sortResults(results, sortType) {
   if (!sortType) return results; // 기본: 유사도순 (DB에서 이미 정렬됨)
@@ -687,7 +705,7 @@ Deno.serve(async (req) => {
 
       for (const kwTerm of kwSearchTerms) {
         if (results.length >= 3) break;
-        const { data: kwData } = await supabase
+        let kwQuery = supabase
           .from('cards')
           .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number')
           .eq('agent_id', agent_id)
@@ -695,6 +713,9 @@ Deno.serve(async (req) => {
           .ilike('search_text', `%${kwTerm}%`)
           .order('created_at', { ascending: false })
           .limit(limit * 3);
+        if (finalTradeType) kwQuery = kwQuery.eq('property->>type', finalTradeType);
+        if (finalPropertyType) kwQuery = kwQuery.eq('property->>category', finalPropertyType);
+        const { data: kwData } = await kwQuery;
 
         if (kwData && kwData.length > 0) {
           const existingIds = new Set(results.map(r => r.id));
@@ -750,14 +771,29 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ★ 면적 필터
+    // ★ 면적 필터 (평수↔㎡ 양방향 매칭)
     if (parsed.filters?.min_area || parsed.filters?.max_area) {
+      // Convert search pyeong to sqm range too
+      const searchMinPyeong = parsed.filters.min_area || null;
+      const searchMaxPyeong = parsed.filters.max_area || null;
+      const searchMinSqm = searchMinPyeong ? Math.round(searchMinPyeong * 3.305 * 0.8) : null;
+      const searchMaxSqm = searchMaxPyeong ? Math.round(searchMaxPyeong * 3.305 * 1.2) : null;
+
       results = results.filter(r => {
-        const area = extractAreaNumber(r.property?.area);
-        if (!area) return false;
-        if (parsed.filters.min_area && area < parsed.filters.min_area) return false;
-        if (parsed.filters.max_area && area > parsed.filters.max_area) return false;
-        return true;
+        const { pyeong, sqm } = extractAreaNumbers(r.property?.area);
+        // Check pyeong match
+        if (pyeong) {
+          if (searchMinPyeong && pyeong < searchMinPyeong) return false;
+          if (searchMaxPyeong && pyeong > searchMaxPyeong) return false;
+          return true;
+        }
+        // Check sqm match
+        if (sqm) {
+          if (searchMinSqm && sqm < searchMinSqm) return false;
+          if (searchMaxSqm && sqm > searchMaxSqm) return false;
+          return true;
+        }
+        return false;
       });
     }
 
@@ -798,7 +834,7 @@ Deno.serve(async (req) => {
           } else {
             // 마지막 수단: 키워드 직접 검색
             console.log(`위치 매칭 0건 → '${loc}' DB 키워드 재검색`);
-            const { data: locData } = await supabase
+            let locQuery1 = supabase
               .from('cards')
               .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number')
               .eq('agent_id', agent_id)
@@ -806,6 +842,9 @@ Deno.serve(async (req) => {
               .ilike('search_text', `%${loc}%`)
               .order('created_at', { ascending: false })
               .limit(limit * multiplier);
+            if (finalTradeType) locQuery1 = locQuery1.eq('property->>type', finalTradeType);
+            if (finalPropertyType) locQuery1 = locQuery1.eq('property->>category', finalPropertyType);
+            const { data: locData } = await locQuery1;
             if (locData && locData.length > 0) {
               results = locData.map(r => ({ ...r, similarity: 0 }));
             } else {
@@ -823,7 +862,7 @@ Deno.serve(async (req) => {
         if (locFiltered.length > 0) {
           results = locFiltered;
         } else {
-          const { data: locData } = await supabase
+          let locQuery2 = supabase
             .from('cards')
             .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number')
             .eq('agent_id', agent_id)
@@ -831,6 +870,9 @@ Deno.serve(async (req) => {
             .ilike('search_text', `%${loc}%`)
             .order('created_at', { ascending: false })
             .limit(limit * multiplier);
+          if (finalTradeType) locQuery2 = locQuery2.eq('property->>type', finalTradeType);
+          if (finalPropertyType) locQuery2 = locQuery2.eq('property->>category', finalPropertyType);
+          const { data: locData } = await locQuery2;
           if (locData && locData.length > 0) {
             results = locData.map(r => ({ ...r, similarity: 0 }));
           } else {
@@ -844,7 +886,7 @@ Deno.serve(async (req) => {
     if (parsed.filters?.nearby && parsed.filters?.nearby_type) {
       const nearbyName = parsed.filters.nearby;
       const nearbyType = parsed.filters.nearby_type;
-      const RADIUS_KM = 1.5; // 반경 1.5km
+      const RADIUS_KM = 2.0; // 반경 2km (이전: 1.5km)
 
       try {
         // facilities 테이블에서 해당 시설 좌표 찾기
