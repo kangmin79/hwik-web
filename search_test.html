@@ -95,6 +95,18 @@ tr:hover td { background: rgba(59,130,246,0.05); }
   <div class="progress-bar"><div class="progress-fill" id="testProgressBar" style="width:0%"></div></div>
 </div>
 
+<!-- ===== 3.5 손님 매칭 테스트 ===== -->
+<div class="card">
+  <h2 style="margin-top:0">3.5 손님 매칭 정확도 테스트</h2>
+  <p style="color:#888;font-size:13px;margin-bottom:12px">손님 메모 → match-properties API → 매칭된 매물이 손님 조건에 맞는지 검증</p>
+  <div class="row">
+    <button class="btn-purple" id="btnMatchTest" onclick="runMatchTest()" disabled>손님 매칭 테스트</button>
+    <span id="matchProgress" style="font-size:13px;color:#888">대기</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="matchProgressBar" style="width:0%"></div></div>
+  <div id="matchResults" style="display:none;margin-top:12px"></div>
+</div>
+
 <!-- ===== 4. 결과 요약 ===== -->
 <div class="card" id="resultSummary" style="display:none">
   <h2 style="margin-top:0">4. 결과 요약</h2>
@@ -154,6 +166,7 @@ function onLoginSuccess() {
 function enableButtons(on) {
     document.getElementById('btnGenMy').disabled = !on;
     document.getElementById('btnRunTest').disabled = !on;
+    document.getElementById('btnMatchTest').disabled = !on;
 }
 
 // 페이지 로드 시 세션 체크
@@ -1134,6 +1147,209 @@ function analyzeResultDetailed(test, searchResult) {
 }
 
 // ===== 전체 테스트 =====
+// ===== 손님 매칭 정확도 테스트 =====
+async function runMatchTest() {
+    if(!currentUser) return alert('먼저 로그인하세요');
+    document.getElementById('btnMatchTest').disabled = true;
+    var prog = document.getElementById('matchProgress');
+    var bar = document.getElementById('matchProgressBar');
+    var resultDiv = document.getElementById('matchResults');
+    prog.textContent = '손님 카드 조회 중...';
+
+    // 1. 내 손님 카드 가져오기
+    var clientRes = await sb.from('cards')
+        .select('id, property, private_note, search_text, lat, lng')
+        .eq('agent_id', currentUser.id)
+        .eq('property->>type', '손님')
+        .order('created_at', {ascending:false})
+        .limit(50);
+    var clients = clientRes.data || [];
+    if(clients.length === 0) { prog.textContent = '손님 카드 없음'; document.getElementById('btnMatchTest').disabled=false; return; }
+
+    prog.textContent = '0 / ' + clients.length + ' 매칭 중...';
+    var results = [];
+    var totalScore = 0;
+
+    for(var i = 0; i < clients.length; i++) {
+        var client = clients[i];
+        var cp = client.property || {};
+        var memo = (client.private_note && client.private_note.memo) || '';
+        var allText = [cp.price, cp.location, memo, (cp.features||[]).join(' ')].filter(Boolean).join(' ');
+
+        // 손님 조건 추출 (테스트 검증용)
+        var expectedTrade = null;
+        if(/매매|ㅁㅁ/.test(allText)) expectedTrade = '매매';
+        else if(/전세|ㅈㅅ/.test(allText)) expectedTrade = '전세';
+        else if(/월세|ㅇㅅ/.test(allText)) expectedTrade = '월세';
+
+        var expectedCat = cp.category || null;
+
+        var expectedLoc = null;
+        var locMatch = allText.match(/(강남|서초|송파|마포|용산|성동|광진|영등포|강동|동작|관악|종로|중구|강서|양천|구로|노원|서대문|은평|중랑|도봉|동대문|성북|금천|강북)/);
+        if(locMatch) expectedLoc = locMatch[1];
+        if(cp.location) { var lm = cp.location.match(/(강남|서초|송파|마포|용산|성동|광진|영등포|강동|동작|관악|종로|중구|강서|양천|구로|노원|서대문|은평|중랑|도봉|동대문|성북|금천|강북)/); if(lm) expectedLoc = lm[1]; }
+
+        var expectedMaxPrice = null;
+        var pm = allText.match(/(\d+)\s*억\s*(?:\d*천?)?\s*(?:이내|이하|미만|까지)/);
+        if(pm) expectedMaxPrice = parseInt(pm[1]) * 10000;
+
+        // 2. match-properties API 호출
+        var start = Date.now();
+        var matchData = null;
+        try {
+            var resp = await fetch(SUPABASE_URL+'/functions/v1/match-properties', {
+                method:'POST',
+                headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY},
+                body:JSON.stringify({client_card_id:client.id, agent_id:currentUser.id, limit:10, threshold:0.15})
+            });
+            matchData = await resp.json();
+        } catch(e) { matchData = {error:e.message}; }
+        var elapsed = Date.now() - start;
+
+        // 3. 매칭 결과 검증
+        var matched = (matchData && matchData.results) || [];
+        var checks = { trade:0, category:0, location:0, price:0, total:matched.length };
+
+        for(var j = 0; j < matched.length; j++) {
+            var m = matched[j];
+            var mp = m.property || {};
+            // 거래유형 일치
+            if(!expectedTrade || mp.type === expectedTrade) checks.trade++;
+            // 카테고리 일치
+            if(!expectedCat || mp.category === expectedCat) checks.category++;
+            // 지역 일치
+            if(!expectedLoc) { checks.location++; }
+            else {
+                var mLoc = mp.location || '';
+                if(mLoc.includes(expectedLoc)) checks.location++;
+            }
+            // 가격 범위 내
+            if(!expectedMaxPrice) { checks.price++; }
+            else {
+                var pn = m.price_number || 0;
+                if(pn <= expectedMaxPrice * 1.2) checks.price++;  // 20% 여유
+            }
+        }
+
+        var accuracy = matched.length > 0 ? {
+            trade: Math.round(checks.trade / matched.length * 100),
+            category: Math.round(checks.category / matched.length * 100),
+            location: Math.round(checks.location / matched.length * 100),
+            price: Math.round(checks.price / matched.length * 100),
+        } : { trade:0, category:0, location:0, price:0 };
+
+        var avgAccuracy = matched.length > 0 ? Math.round((accuracy.trade + accuracy.category + accuracy.location + accuracy.price) / 4) : 0;
+        totalScore += avgAccuracy;
+
+        var status = 'empty';
+        if(matched.length > 0) {
+            if(avgAccuracy >= 70) status = 'ok';
+            else if(avgAccuracy >= 30) status = 'warn';
+            else status = 'fail';
+        }
+
+        results.push({
+            clientId: client.id,
+            memo: memo.slice(0, 80),
+            expected: { trade:expectedTrade, cat:expectedCat, loc:expectedLoc, maxPrice:expectedMaxPrice },
+            serverParsed: { trade:matchData?.wanted_trade_type, cat:matchData?.wanted_category, loc:matchData?.wanted_location, price:matchData?.wanted_price },
+            matchCount: matched.length,
+            accuracy: accuracy,
+            avgAccuracy: avgAccuracy,
+            status: status,
+            time: elapsed,
+            topResults: matched.slice(0,3).map(function(m){
+                return { type:m.property?.type, cat:m.property?.category, loc:m.property?.location, price:m.price_number, complex:m.property?.complex, score:m._score||null, sim:m.similarity };
+            }),
+            error: matchData?.error || null
+        });
+
+        bar.style.width = Math.round((i+1)/clients.length*100)+'%';
+        prog.textContent = (i+1)+' / '+clients.length+' (평균 정확도: '+Math.round(totalScore/(i+1))+'%)';
+        await new Promise(function(r){setTimeout(r,100)});
+    }
+
+    // 4. 결과 표시
+    var okCount = results.filter(function(r){return r.status==='ok'}).length;
+    var warnCount = results.filter(function(r){return r.status==='warn'}).length;
+    var failCount = results.filter(function(r){return r.status==='fail'}).length;
+    var emptyCount = results.filter(function(r){return r.status==='empty'}).length;
+    var avgScore = Math.round(totalScore / results.length);
+
+    var html = '<div class="summary-grid">';
+    html += '<div class="summary-item"><div class="summary-num" style="color:#34d399">'+okCount+'</div><div class="summary-label">정확 (≥70%)</div></div>';
+    html += '<div class="summary-item"><div class="summary-num" style="color:#fbbf24">'+warnCount+'</div><div class="summary-label">부분 (30~69%)</div></div>';
+    html += '<div class="summary-item"><div class="summary-num" style="color:#f87171">'+failCount+'</div><div class="summary-label">부정확 (<30%)</div></div>';
+    html += '<div class="summary-item"><div class="summary-num" style="color:#666">'+emptyCount+'</div><div class="summary-label">매칭 없음</div></div>';
+    html += '<div class="summary-item"><div class="summary-num" style="color:#8be9fd">'+avgScore+'%</div><div class="summary-label">평균 정확도</div></div>';
+    html += '</div>';
+
+    // 항목별 정확도
+    var allTrade=0,allCat=0,allLoc=0,allPrice=0,cnt=0;
+    results.forEach(function(r){ if(r.matchCount>0){ allTrade+=r.accuracy.trade; allCat+=r.accuracy.category; allLoc+=r.accuracy.location; allPrice+=r.accuracy.price; cnt++; }});
+    if(cnt>0){
+        html += '<div style="margin:12px 0;font-size:13px">';
+        html += '<b>항목별 평균:</b> 거래유형 '+Math.round(allTrade/cnt)+'% | 카테고리 '+Math.round(allCat/cnt)+'% | 지역 '+Math.round(allLoc/cnt)+'% | 가격 '+Math.round(allPrice/cnt)+'%';
+        html += '</div>';
+    }
+
+    // 상세 테이블
+    html += '<div class="table-wrap" style="max-height:60vh"><table>';
+    html += '<tr><th>#</th><th>손님 메모</th><th>조건</th><th>서버 파싱</th><th>매칭수</th><th>거래</th><th>카테</th><th>지역</th><th>가격</th><th>평균</th><th>상위 매물</th><th>시간</th></tr>';
+    for(var i=0;i<results.length;i++){
+        var r = results[i];
+        var rowColor = r.status==='ok'?'rgba(16,185,129,0.08)':r.status==='warn'?'rgba(245,158,11,0.08)':r.status==='fail'?'rgba(239,68,68,0.08)':'';
+        var exp = r.expected;
+        var srv = r.serverParsed || {};
+        html += '<tr style="background:'+rowColor+'">';
+        html += '<td>'+(i+1)+'</td>';
+        html += '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+esc(r.memo)+'">'+esc(r.memo.slice(0,50))+'</td>';
+        html += '<td style="font-size:11px">'+(exp.trade||'-')+' '+(exp.cat||'-')+' '+(exp.loc||'-')+' '+(exp.maxPrice?'≤'+exp.maxPrice:'')+'</td>';
+        html += '<td style="font-size:11px">'+(srv.trade||'-')+' '+(srv.cat||'-')+' '+(srv.loc||'-')+'</td>';
+        html += '<td>'+r.matchCount+'</td>';
+        html += '<td><span class="tag '+(r.accuracy.trade>=70?'tag-ok':r.accuracy.trade>=30?'tag-warn':'tag-fail')+'">'+r.accuracy.trade+'%</span></td>';
+        html += '<td><span class="tag '+(r.accuracy.category>=70?'tag-ok':r.accuracy.category>=30?'tag-warn':'tag-fail')+'">'+r.accuracy.category+'%</span></td>';
+        html += '<td><span class="tag '+(r.accuracy.location>=70?'tag-ok':r.accuracy.location>=30?'tag-warn':'tag-fail')+'">'+r.accuracy.location+'%</span></td>';
+        html += '<td><span class="tag '+(r.accuracy.price>=70?'tag-ok':r.accuracy.price>=30?'tag-warn':'tag-fail')+'">'+r.accuracy.price+'%</span></td>';
+        html += '<td><b>'+r.avgAccuracy+'%</b></td>';
+        html += '<td style="font-size:10px">';
+        r.topResults.forEach(function(t){ html += (t.type||'')+' '+(t.loc||'')+' '+(t.complex||'')+' '+(t.price?t.price:'')+'<br>'; });
+        html += '</td>';
+        html += '<td style="font-size:11px">'+r.time+'ms</td>';
+        html += '</tr>';
+    }
+    html += '</table></div>';
+
+    // JSON 저장 버튼
+    html += '<div style="margin-top:12px"><button class="btn-green" onclick="downloadMatchResults()">결과 JSON 저장</button></div>';
+
+    resultDiv.innerHTML = html;
+    resultDiv.style.display = 'block';
+    document.getElementById('btnMatchTest').disabled = false;
+
+    // 결과 저장용
+    window._matchTestResults = {
+        test_date: new Date().toISOString(),
+        agent_id: currentUser.id,
+        total_clients: results.length,
+        summary: { ok:okCount, warn:warnCount, fail:failCount, empty:emptyCount, avgAccuracy:avgScore },
+        accuracy: cnt>0 ? { trade:Math.round(allTrade/cnt), category:Math.round(allCat/cnt), location:Math.round(allLoc/cnt), price:Math.round(allPrice/cnt) } : {},
+        results: results
+    };
+}
+
+function downloadMatchResults() {
+    if(!window._matchTestResults) return alert('테스트 결과 없음');
+    var blob = new Blob([JSON.stringify(window._matchTestResults, null, 2)], {type:'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'hwik_match_analysis_' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// ===== 검색 테스트 =====
 async function runAllTests() {
     if(!currentUser) return alert('먼저 로그인하세요');
     document.getElementById('btnRunTest').disabled = true;
