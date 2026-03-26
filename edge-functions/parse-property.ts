@@ -197,6 +197,55 @@ function createSearchTextPrivate(parsed: any, rawText: string): string {
   return parts.join(' ');
 }
 
+// ========== 입주시기 텍스트 → YYYY-MM 정규화 ==========
+function parseMoveInDate(moveIn: string | null | undefined): string | null {
+  if (!moveIn) return null;
+  const text = moveIn.trim();
+  const now = new Date();
+  const thisYear = now.getFullYear();
+  const thisMonth = now.getMonth() + 1;
+
+  // "즉시입주", "즉시", "공실", "바로", "급구"
+  if (/즉시|공실|바로|급구|당장|비어있/.test(text)) {
+    return `${thisYear}-${String(thisMonth).padStart(2, '0')}`;
+  }
+  // "협의", "미정"
+  if (/협의|미정|상의|조율/.test(text)) return null;
+
+  // "2026년 5월", "2026.05", "2026-05"
+  const fullDate = text.match(/(20\d{2})\s*[년.\-/]\s*(\d{1,2})/);
+  if (fullDate) {
+    return `${fullDate[1]}-${String(parseInt(fullDate[2])).padStart(2, '0')}`;
+  }
+  // "내년 2월", "내년 초"
+  if (/내년/.test(text)) {
+    const monthMatch = text.match(/(\d{1,2})\s*월/);
+    if (monthMatch) return `${thisYear + 1}-${String(parseInt(monthMatch[1])).padStart(2, '0')}`;
+    if (/초/.test(text)) return `${thisYear + 1}-02`;
+    if (/말/.test(text)) return `${thisYear + 1}-12`;
+    return `${thisYear + 1}-06`; // 내년 (시기 불명확)
+  }
+  // "이번달", "이달"
+  if (/이번\s*달|이달|금월/.test(text)) {
+    return `${thisYear}-${String(thisMonth).padStart(2, '0')}`;
+  }
+  // "다음달", "내달"
+  if (/다음\s*달|내달|차월/.test(text)) {
+    const next = thisMonth === 12 ? 1 : thisMonth + 1;
+    const nextYear = thisMonth === 12 ? thisYear + 1 : thisYear;
+    return `${nextYear}-${String(next).padStart(2, '0')}`;
+  }
+  // "5월", "8월" (올해)
+  const monthOnly = text.match(/(\d{1,2})\s*월/);
+  if (monthOnly) {
+    const m = parseInt(monthOnly[1]);
+    const year = m < thisMonth ? thisYear + 1 : thisYear; // 지난 달이면 내년
+    return `${year}-${String(m).padStart(2, '0')}`;
+  }
+
+  return null;
+}
+
 function parsePriceNumber(priceStr: string): number | null {
   if (!priceStr) return null;
   try {
@@ -413,9 +462,11 @@ ${text}`
     const publicData = createPublicData(parsedResult, salesData);
 
     const priceNumber = parsePriceNumber(parsedResult.price);
+    const moveInDate = parseMoveInDate(parsedResult.moveIn);
 
     const result = {
       ...parsedResult,
+      move_in_date: moveInDate, // YYYY-MM 정규화된 입주시기
       // ★ 좌표는 클라이언트에서 DB 매칭 + 카카오 API 폴백으로 처리
       lat: null,
       lng: null,

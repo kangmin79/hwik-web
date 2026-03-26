@@ -287,6 +287,33 @@ Deno.serve(async (req) => {
     else if (/쓰리룸|3룸|방\s*3/.test(allText)) wantedRooms = 3;
     else if (/4룸|방\s*4/.test(allText)) wantedRooms = 4;
 
+    // 입주시기 파싱
+    let wantedMoveBy: string | null = null; // YYYY-MM
+    const now = new Date();
+    const thisYear = now.getFullYear();
+    const thisMonth = now.getMonth() + 1;
+    if (/급구|바로|즉시|이번\s*달|이달|당장/.test(allText)) {
+      wantedMoveBy = `${thisYear}-${String(thisMonth).padStart(2, '0')}`;
+    } else if (/다음\s*달|내달/.test(allText)) {
+      const next = thisMonth === 12 ? 1 : thisMonth + 1;
+      const nextY = thisMonth === 12 ? thisYear + 1 : thisYear;
+      wantedMoveBy = `${nextY}-${String(next).padStart(2, '0')}`;
+    } else if (/내년/.test(allText)) {
+      const mm = allText.match(/(\d{1,2})\s*월/);
+      wantedMoveBy = mm ? `${thisYear+1}-${String(parseInt(mm[1])).padStart(2,'0')}` : `${thisYear+1}-06`;
+    } else {
+      const dateM = allText.match(/(20\d{2})\s*[년.\-/]\s*(\d{1,2})/);
+      if (dateM) wantedMoveBy = `${dateM[1]}-${String(parseInt(dateM[2])).padStart(2,'0')}`;
+      else {
+        const monM = allText.match(/(\d{1,2})\s*월\s*(?:까지|이내|입주|만기)/);
+        if (monM) {
+          const m = parseInt(monM[1]);
+          const y = m < thisMonth ? thisYear + 1 : thisYear;
+          wantedMoveBy = `${y}-${String(m).padStart(2,'0')}`;
+        }
+      }
+    }
+
     const effectiveAgentId = agent_id || clientCard.agent_id || '';
 
     // 구조화 조건 개수 확인
@@ -543,7 +570,38 @@ Deno.serve(async (req) => {
         else if (days <= 14) score += 1;
       }
 
-      // ⑥ 벡터 유사도 보너스 (0~5점)
+      // ⑥ 입주시기 매칭 (0~15점, -10점)
+      if (wantedMoveBy) {
+        const moveIn = r.property?.moveIn || '';
+        // 매물의 moveIn을 YYYY-MM으로 변환
+        let propDate: string | null = null;
+        if (/즉시|공실|바로/.test(moveIn)) {
+          propDate = `${thisYear}-${String(thisMonth).padStart(2,'0')}`;
+        } else if (/협의/.test(moveIn)) {
+          propDate = wantedMoveBy; // 협의 = 맞춰줄 수 있음 → 매칭
+        } else {
+          const dm = moveIn.match(/(20\d{2})\s*[년.\-/]\s*(\d{1,2})/);
+          if (dm) propDate = `${dm[1]}-${String(parseInt(dm[2])).padStart(2,'0')}`;
+          else {
+            const mm = moveIn.match(/(\d{1,2})\s*월/);
+            if (mm) { const m=parseInt(mm[1]); propDate=`${m<thisMonth?thisYear+1:thisYear}-${String(m).padStart(2,'0')}`; }
+          }
+        }
+        if (propDate) {
+          if (propDate <= wantedMoveBy) score += 15;   // 입주 가능일 ≤ 손님 희망 → 가능!
+          else {
+            // 몇 개월 초과인지
+            const pY=parseInt(propDate.slice(0,4)), pM=parseInt(propDate.slice(5));
+            const wY=parseInt(wantedMoveBy.slice(0,4)), wM=parseInt(wantedMoveBy.slice(5));
+            const diff = (pY-wY)*12 + (pM-wM);
+            if (diff <= 1) score += 5;     // 1개월 초과 — 봐줄만함
+            else if (diff <= 3) score -= 5; // 2~3개월 초과
+            else score -= 10;               // 3개월+ 초과 — 의미없음
+          }
+        }
+      }
+
+      // ⑦ 벡터 유사도 보너스 (0~5점)
       score += Math.round((r.similarity || 0) * 5);
 
       return { ...r, _score: score };
@@ -588,6 +646,7 @@ Deno.serve(async (req) => {
       wanted_price: { min: minPrice, max: maxPrice },
       wanted_area: { min: wantedMinArea, max: wantedMaxArea },
       wanted_rooms: wantedRooms,
+      wanted_move_by: wantedMoveBy,
       results,
       count: results.length,
     }), {
