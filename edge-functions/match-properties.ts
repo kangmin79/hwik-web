@@ -290,11 +290,55 @@ Deno.serve(async (req) => {
     }
 
     if (wantedLocation) {
-      const locFiltered = results.filter((r: any) => {
-        const loc = r.property?.location || '';
-        return loc.includes(wantedLocation);
-      });
-      if (locFiltered.length >= 1) results = locFiltered;
+      const coordInfo = DISTRICT_COORDS[wantedLocation];
+
+      if (coordInfo) {
+        // ★ 좌표 기반 하드필터 (가장 정확)
+        const coordFiltered = results.filter((r: any) => {
+          if (!r.lat || !r.lng) return false;
+          return haversineDistance(coordInfo.lat, coordInfo.lng, r.lat, r.lng) <= coordInfo.radius;
+        });
+        if (coordFiltered.length >= 1) {
+          results = coordFiltered;
+          console.log(`좌표 필터 '${wantedLocation}': ${coordFiltered.length}건`);
+        } else {
+          // 좌표 매칭 없으면 텍스트 폴백
+          const textFiltered = results.filter((r: any) => {
+            const loc = r.property?.location || '';
+            const st = r.search_text || '';
+            return loc.includes(wantedLocation) || st.includes(wantedLocation);
+          });
+          if (textFiltered.length >= 1) {
+            results = textFiltered;
+          } else {
+            // 마지막 수단: 해당 지역 매물 직접 검색
+            console.log(`위치 매칭 0건 → '${wantedLocation}' DB 재검색`);
+            let locQuery = supabase
+              .from('cards')
+              .select('id, property, agent_comment, price_number, trade_status, photos, lat, lng, created_at, similarity:created_at')
+              .eq('agent_id', effectiveAgentId)
+              .neq('property->>type', '손님')
+              .ilike('search_text', `%${wantedLocation}%`)
+              .order('created_at', { ascending: false })
+              .limit(limit * 3);
+            if (wantedTradeType) locQuery = locQuery.eq('property->>type', wantedTradeType);
+            if (wantedCategory) locQuery = locQuery.eq('property->>category', wantedCategory);
+            const { data: locData } = await locQuery;
+            if (locData && locData.length > 0) {
+              results = locData.map((r: any) => ({ ...r, similarity: 0 }));
+              console.log(`DB 재검색: ${results.length}건`);
+            }
+          }
+        }
+      } else {
+        // 좌표 사전에 없는 지역 → 텍스트만
+        const locFiltered = results.filter((r: any) => {
+          const loc = r.property?.location || '';
+          const st = r.search_text || '';
+          return loc.includes(wantedLocation) || st.includes(wantedLocation);
+        });
+        if (locFiltered.length >= 1) results = locFiltered;
+      }
     }
 
     // 면적 필터
