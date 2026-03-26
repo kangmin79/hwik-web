@@ -683,6 +683,27 @@ Deno.serve(async (req) => {
 
     let results = data || [];
 
+    // ★ RPC 결과 0건이면 property_type 완화 후 재시도
+    if (results.length === 0 && finalPropertyType) {
+      console.log(`RPC 0건 → property_type '${finalPropertyType}' 제거 후 재검색`);
+      const { data: retryData } = await supabase.rpc('search_cards_advanced', {
+        p_agent_id: agent_id || '',
+        p_search_text: null,
+        p_embedding: embedding,
+        p_property_type: null,  // 카테고리 필터 제거
+        p_trade_type: finalTradeType,
+        p_min_price: min_price || parsed.filters?.min_price || null,
+        p_max_price: max_price || parsed.filters?.max_price || null,
+        p_days_ago: null,
+        p_limit: limit * multiplier,
+        p_search_mode: search_mode
+      });
+      if (retryData && retryData.length > 0) {
+        results = retryData;
+        console.log(`재시도 결과: ${results.length}건 (카테고리 필터 제거)`);
+      }
+    }
+
     // ★ 하이브리드: 벡터 결과가 3건 미만이면 키워드 폴백 추가
     if (results.length < 3 && query.length >= 2) {
       console.log(`벡터 결과 ${results.length}건 → 키워드 폴백 실행`);
@@ -726,31 +747,39 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ★ 단지명 텍스트 매칭 보강 (벡터 유사도가 낮은 브랜드명 검색)
+    // ★ 단지명 텍스트 매칭 (항상 키워드 검색 수행 → 벡터보다 정확)
     if (parsed.semantic && parsed._local) {
       const brandName = parsed.semantic;
-      const brandMatched = results.filter(r => {
-        const st = r.search_text || '';
-        const complex = r.property?.complex || '';
-        return st.includes(brandName) || complex.includes(brandName);
-      });
-      if (brandMatched.length > 0 && brandMatched.length !== results.length) {
-        // 브랜드 매칭 결과를 상위로 올리기
-        const notMatched = results.filter(r => !brandMatched.some(b => b.id === r.id));
-        results = [...brandMatched, ...notMatched];
-      } else if (brandMatched.length === 0) {
-        // 벡터 결과에 브랜드 매칭이 없으면 → 키워드 직접 검색
-        console.log(`단지명 '${brandName}' 벡터 매칭 0건 → 키워드 검색`);
-        const { data: brandData } = await supabase
-          .from('cards')
-          .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number')
-          .eq('agent_id', agent_id)
-          .neq('property->>type', '손님')
-          .ilike('search_text', `%${brandName}%`)
-          .order('created_at', { ascending: false })
-          .limit(limit * 3);
-        if (brandData && brandData.length > 0) {
-          results = brandData.map(r => ({ ...r, similarity: 0 }));
+      // 항상 키워드로 단지명 검색
+      console.log(`단지명 '${brandName}' 키워드 검색`);
+      let brandQuery = supabase
+        .from('cards')
+        .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number')
+        .eq('agent_id', agent_id)
+        .neq('property->>type', '손님')
+        .ilike('search_text', `%${brandName}%`)
+        .order('created_at', { ascending: false })
+        .limit(limit * 5);
+      if (finalTradeType) brandQuery = brandQuery.eq('property->>type', finalTradeType);
+      const { data: brandData } = await brandQuery;
+
+      if (brandData && brandData.length > 0) {
+        // 단지명 매칭 결과를 최상위로, 기존 벡터 결과는 아래로
+        const brandIds = new Set(brandData.map(r => r.id));
+        const brandResults = brandData.map(r => ({ ...r, similarity: 1 })); // 높은 유사도 부여
+        const existingNotBrand = results.filter(r => !brandIds.has(r.id));
+        results = [...brandResults, ...existingNotBrand];
+        console.log(`단지명 매칭: ${brandData.length}건 최상위 배치`);
+      } else {
+        // 키워드 결과도 없으면 기존 벡터 결과에서 필터
+        const brandMatched = results.filter(r => {
+          const st = r.search_text || '';
+          const complex = r.property?.complex || '';
+          return st.includes(brandName) || complex.includes(brandName);
+        });
+        if (brandMatched.length > 0) {
+          const notMatched = results.filter(r => !brandMatched.some(b => b.id === r.id));
+          results = [...brandMatched, ...notMatched];
         }
       }
     }
@@ -935,6 +964,29 @@ Deno.serve(async (req) => {
       }
       // 특징 매칭된 것을 상위로, 나머지는 뒤에 (제거하지 않음)
       results = [...withFeat, ...withoutFeat];
+    }
+
+    // ★ 필터 완화: 후처리 필터 후 결과 0건이면 단계적으로 풀기
+    if (results.length === 0 && (finalTradeType || finalPropertyType)) {
+      console.log('후처리 필터 후 0건 → 키워드 폴백 (필터 완화)');
+      // 검색어 핵심 키워드로 재검색 (필터 없이)
+      const fallbackTerms = [query];
+      if (parsed.semantic) fallbackTerms.unshift(parsed.semantic);
+      for (const term of fallbackTerms) {
+        if (results.length > 0) break;
+        const { data: fbData } = await supabase
+          .from('cards')
+          .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number')
+          .eq('agent_id', agent_id)
+          .neq('property->>type', '손님')
+          .ilike('search_text', `%${term}%`)
+          .order('created_at', { ascending: false })
+          .limit(limit * 3);
+        if (fbData && fbData.length > 0) {
+          results = fbData.map(r => ({ ...r, similarity: 0 }));
+          console.log(`필터 완화 폴백 '${term}': ${results.length}건`);
+        }
+      }
     }
 
     // ★ 점수 기반 랭킹 (조건이 많을수록 정밀 랭킹, 적으면 최신순)
