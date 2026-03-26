@@ -87,10 +87,10 @@ tr:hover td { background: rgba(59,130,246,0.05); }
 
 <!-- ===== 3. 검색 테스트 ===== -->
 <div class="card">
-  <h2 style="margin-top:0">3. 검색 테스트 (100개)</h2>
+  <h2 style="margin-top:0">3. 검색 테스트 (250개)</h2>
   <div class="row">
     <button class="btn-blue" id="btnRunTest" onclick="runAllTests()" disabled>전체 테스트 실행</button>
-    <span id="testProgress" style="font-size:13px;color:#888">0 / 100</span>
+    <span id="testProgress" style="font-size:13px;color:#888">0 / 250</span>
   </div>
   <div class="progress-bar"><div class="progress-fill" id="testProgressBar" style="width:0%"></div></div>
 </div>
@@ -662,6 +662,198 @@ var SEARCH_TESTS = [
     {query:'즉시입주',cat:'엣지케이스',expect:{}},
     {query:'3룸 아파트 매매',cat:'엣지케이스',expect:{trade_type:'매매',category:'apartment'}},
     {query:'전세 아파트 강남 5억이하 남향 역세권',cat:'엣지케이스',expect:{trade_type:'전세',category:'apartment',location:'강남',max_price:50000}},
+
+    // ===== 여기부터 추가 150개 =====
+
+    // 13. 평수/크기 검색 (15)
+    {query:'20평대',cat:'평수',expect:{min_area:20,max_area:29}},
+    {query:'30평대',cat:'평수',expect:{min_area:30,max_area:39}},
+    {query:'40평대',cat:'평수',expect:{min_area:40,max_area:49}},
+    {query:'10평 이하',cat:'평수',expect:{max_area:10}},
+    {query:'50평 이상',cat:'평수',expect:{min_area:50}},
+    {query:'아파트 30평',cat:'평수+카테고리',expect:{category:'apartment',min_area:27,max_area:33}},
+    {query:'오피스텔 10평',cat:'평수+카테고리',expect:{category:'officetel',min_area:7,max_area:13}},
+    {query:'사무실 20평',cat:'평수+카테고리',expect:{category:'office',min_area:17,max_area:23}},
+    {query:'상가 15평',cat:'평수+카테고리',expect:{category:'commercial',min_area:12,max_area:18}},
+    {query:'전세 아파트 30평대',cat:'평수+복합',expect:{trade_type:'전세',category:'apartment',min_area:30,max_area:39}},
+    {query:'강남 아파트 40평',cat:'평수+복합',expect:{category:'apartment',location:'강남',min_area:37,max_area:43}},
+    {query:'마포 전세 20평대',cat:'평수+복합',expect:{trade_type:'전세',location:'마포',min_area:20,max_area:29}},
+    {query:'월세 원룸 5평',cat:'평수+복합',expect:{trade_type:'월세',category:'room'}},
+    {query:'송파 매매 아파트 50평 이상',cat:'평수+복합',expect:{trade_type:'매매',category:'apartment',location:'송파',min_area:50}},
+    {query:'서초 사무실 30평',cat:'평수+복합',expect:{category:'office',location:'서초',min_area:27,max_area:33}},
+
+    // 14. 방 수 검색 (10)
+    {query:'원룸',cat:'방수',expect:{category:'room'}},
+    {query:'투룸',cat:'방수',expect:{category:'room'}},
+    {query:'쓰리룸',cat:'방수',expect:{category:'room'}},
+    {query:'방 3개',cat:'방수',expect:{}},
+    {query:'2룸 오피스텔',cat:'방수+카테고리',expect:{category:'officetel'}},
+    {query:'3룸 아파트',cat:'방수+카테고리',expect:{category:'apartment'}},
+    {query:'4룸 아파트 매매',cat:'방수+카테고리',expect:{trade_type:'매매',category:'apartment'}},
+    {query:'원룸 월세 강남',cat:'방수+복합',expect:{trade_type:'월세',category:'room',location:'강남'}},
+    {query:'투룸 전세 마포',cat:'방수+복합',expect:{trade_type:'전세',category:'room',location:'마포'}},
+    {query:'쓰리룸 전세 송파 3억이하',cat:'방수+복합',expect:{trade_type:'전세',location:'송파',max_price:30000}},
+
+    // 15. 동 단위 지역 확장 (15)
+    {query:'잠실동',cat:'동단위',expect:{location:'잠실'}},
+    {query:'여의도동',cat:'동단위',expect:{location:'여의도'}},
+    {query:'성수동',cat:'동단위',expect:{location:'성수'}},
+    {query:'합정동',cat:'동단위',expect:{location:'합정'}},
+    {query:'이태원동',cat:'동단위',expect:{location:'이태원'}},
+    {query:'반포동',cat:'동단위',expect:{location:'반포'}},
+    {query:'대치동',cat:'동단위',expect:{location:'대치'}},
+    {query:'목동',cat:'동단위',expect:{location:'목동'}},
+    {query:'신림동',cat:'동단위',expect:{location:'신림'}},
+    {query:'노량진동',cat:'동단위',expect:{location:'노량진'}},
+    {query:'잠실 아파트',cat:'동단위+카테고리',expect:{location:'잠실',category:'apartment'}},
+    {query:'여의도 사무실',cat:'동단위+카테고리',expect:{location:'여의도',category:'office'}},
+    {query:'성수 상가',cat:'동단위+카테고리',expect:{location:'성수',category:'commercial'}},
+    {query:'합정 원룸',cat:'동단위+카테고리',expect:{location:'합정',category:'room'}},
+    {query:'이태원 월세',cat:'동단위+거래',expect:{location:'이태원',trade_type:'월세'}},
+
+    // 16. 추가 구 지역 (10)
+    {query:'강북',cat:'지역',expect:{location:'강북'}},
+    {query:'구로',cat:'지역',expect:{location:'구로'}},
+    {query:'금천',cat:'지역',expect:{location:'금천'}},
+    {query:'도봉',cat:'지역',expect:{location:'도봉'}},
+    {query:'동대문',cat:'지역',expect:{location:'동대문'}},
+    {query:'서대문',cat:'지역',expect:{location:'서대문'}},
+    {query:'성북',cat:'지역',expect:{location:'성북'}},
+    {query:'양천',cat:'지역',expect:{location:'양천'}},
+    {query:'은평',cat:'지역',expect:{location:'은평'}},
+    {query:'중랑',cat:'지역',expect:{location:'중랑'}},
+
+    // 17. 역 근처 검색 (10)
+    {query:'강남역 근처',cat:'역근처',expect:{location:'강남'}},
+    {query:'합정역 근처 원룸',cat:'역근처',expect:{location:'합정',category:'room'}},
+    {query:'잠실역 근처 아파트',cat:'역근처',expect:{location:'잠실',category:'apartment'}},
+    {query:'여의도역 사무실',cat:'역근처',expect:{location:'여의도',category:'office'}},
+    {query:'신림역 원룸 월세',cat:'역근처',expect:{trade_type:'월세',category:'room',location:'신림'}},
+    {query:'왕십리역 오피스텔',cat:'역근처',expect:{category:'officetel',location:'왕십리'}},
+    {query:'사당역 전세',cat:'역근처',expect:{trade_type:'전세',location:'사당'}},
+    {query:'건대입구역 근처',cat:'역근처',expect:{location:'구의'}},
+    {query:'홍대입구역 원룸',cat:'역근처',expect:{category:'room'}},
+    {query:'삼성역 사무실',cat:'역근처',expect:{category:'office',location:'삼성'}},
+
+    // 18. 가격+평수+카테고리 복합 — 랭킹 테스트 (15)
+    {query:'강남 전세 아파트 30평 5억이하',cat:'랭킹',expect:{trade_type:'전세',category:'apartment',location:'강남',max_price:50000}},
+    {query:'마포 매매 아파트 20평대 3억이하',cat:'랭킹',expect:{trade_type:'매매',category:'apartment',location:'마포',max_price:30000}},
+    {query:'서초 전세 오피스텔 10평 1억이하',cat:'랭킹',expect:{trade_type:'전세',category:'officetel',location:'서초',max_price:10000}},
+    {query:'송파 매매 아파트 40평 10억이하',cat:'랭킹',expect:{trade_type:'매매',category:'apartment',location:'송파',max_price:100000}},
+    {query:'용산 월세 원룸 보증금 1000',cat:'랭킹',expect:{trade_type:'월세',category:'room',location:'용산',max_price:1000}},
+    {query:'성동 전세 아파트 25평 4억이하',cat:'랭킹',expect:{trade_type:'전세',category:'apartment',location:'성동',max_price:40000}},
+    {query:'영등포 매매 상가 20평',cat:'랭킹',expect:{trade_type:'매매',category:'commercial',location:'영등포'}},
+    {query:'강서 전세 아파트 30평대 3억이하',cat:'랭킹',expect:{trade_type:'전세',category:'apartment',location:'강서',max_price:30000}},
+    {query:'노원 매매 아파트 20평대 5억이하',cat:'랭킹',expect:{trade_type:'매매',category:'apartment',location:'노원',max_price:50000}},
+    {query:'관악 월세 원룸 보증금 500 월세 30',cat:'랭킹',expect:{trade_type:'월세',category:'room',location:'관악'}},
+    {query:'동작 전세 빌라 15평 1억이하',cat:'랭킹',expect:{trade_type:'전세',category:'room',location:'동작',max_price:10000}},
+    {query:'광진 매매 오피스텔 2억이하',cat:'랭킹',expect:{trade_type:'매매',category:'officetel',location:'광진',max_price:20000}},
+    {query:'잠실 전세 아파트 30평 7억이하',cat:'랭킹',expect:{trade_type:'전세',category:'apartment',location:'잠실',max_price:70000}},
+    {query:'여의도 전세 아파트 40평',cat:'랭킹',expect:{trade_type:'전세',category:'apartment',location:'여의도'}},
+    {query:'반포 매매 아파트 50평 이상',cat:'랭킹',expect:{trade_type:'매매',category:'apartment',location:'반포',min_area:50}},
+
+    // 19. 단지명+조건 (10)
+    {query:'래미안 전세',cat:'단지명+조건',expect:{trade_type:'전세',complex:'래미안'}},
+    {query:'자이 매매 강남',cat:'단지명+조건',expect:{trade_type:'매매',complex:'자이',location:'강남'}},
+    {query:'힐스테이트 전세 5억이하',cat:'단지명+조건',expect:{trade_type:'전세',complex:'힐스테이트',max_price:50000}},
+    {query:'푸르지오 30평',cat:'단지명+조건',expect:{complex:'푸르지오'}},
+    {query:'롯데캐슬 매매',cat:'단지명+조건',expect:{trade_type:'매매',complex:'롯데캐슬'}},
+    {query:'e편한세상',cat:'단지명',expect:{complex:'e편한세상'}},
+    {query:'SK뷰',cat:'단지명',expect:{complex:'SK뷰'}},
+    {query:'헬리오시티',cat:'단지명',expect:{complex:'헬리오시티'}},
+    {query:'파크리오',cat:'단지명',expect:{complex:'파크리오'}},
+    {query:'아크로리버파크',cat:'단지명',expect:{complex:'아크로리버파크'}},
+
+    // 20. 실전 중개사 검색어 (20)
+    {query:'강남 30평대 전세 5억',cat:'실전',expect:{trade_type:'전세',location:'강남',max_price:50000}},
+    {query:'마포구 원룸 월세 50만원',cat:'실전',expect:{trade_type:'월세',category:'room',location:'마포'}},
+    {query:'서초 사무실 전세 3000만원',cat:'실전',expect:{trade_type:'전세',category:'office',location:'서초',max_price:3000}},
+    {query:'송파 아파트 매매 10억',cat:'실전',expect:{trade_type:'매매',category:'apartment',location:'송파'}},
+    {query:'역삼 오피스텔 전세 2억',cat:'실전',expect:{trade_type:'전세',category:'officetel',location:'역삼'}},
+    {query:'합정 카페 상가 월세',cat:'실전',expect:{trade_type:'월세',category:'commercial',location:'합정'}},
+    {query:'강남 역세권 아파트 전세',cat:'실전',expect:{trade_type:'전세',category:'apartment',location:'강남'}},
+    {query:'마포 남향 아파트 매매 5억이하',cat:'실전',expect:{trade_type:'매매',category:'apartment',location:'마포',max_price:50000}},
+    {query:'용산 한강뷰 아파트',cat:'실전',expect:{category:'apartment',location:'용산'}},
+    {query:'성수 사무실 월세 보증금 3000',cat:'실전',expect:{trade_type:'월세',category:'office',location:'성수',max_price:3000}},
+    {query:'노원 전세 아파트 4억이하 주차가능',cat:'실전',expect:{trade_type:'전세',category:'apartment',location:'노원',max_price:40000}},
+    {query:'관악 신림 원룸 월세 30만원',cat:'실전',expect:{trade_type:'월세',category:'room',location:'신림'}},
+    {query:'강동 고덕 아파트 매매',cat:'실전',expect:{trade_type:'매매',category:'apartment',location:'고덕'}},
+    {query:'양천 목동 아파트 전세 7억이하',cat:'실전',expect:{trade_type:'전세',category:'apartment',location:'목동',max_price:70000}},
+    {query:'중구 명동 상가 매매',cat:'실전',expect:{trade_type:'매매',category:'commercial',location:'명동'}},
+    {query:'종로 혜화 오피스텔 전세',cat:'실전',expect:{trade_type:'전세',category:'officetel',location:'혜화'}},
+    {query:'도봉 전세 아파트 2억대',cat:'실전',expect:{trade_type:'전세',category:'apartment',location:'도봉'}},
+    {query:'구로 사무실 월세',cat:'실전',expect:{trade_type:'월세',category:'office',location:'구로'}},
+    {query:'은평 빌라 매매 1억이하',cat:'실전',expect:{trade_type:'매매',category:'room',location:'은평',max_price:10000}},
+    {query:'중랑 전세 오피스텔 1억5천이하',cat:'실전',expect:{trade_type:'전세',category:'officetel',location:'중랑',max_price:15000}},
+
+    // 21. 특수 가격 패턴 (10)
+    {query:'1억5천이하',cat:'가격패턴',expect:{max_price:15000}},
+    {query:'2억3천',cat:'가격패턴',expect:{max_price:23000}},
+    {query:'3억5천만원 이하',cat:'가격패턴',expect:{max_price:35000}},
+    {query:'7억~10억',cat:'가격패턴',expect:{min_price:70000,max_price:100000}},
+    {query:'5천만원 이하',cat:'가격패턴',expect:{max_price:5000}},
+    {query:'1억 정도',cat:'가격패턴',expect:{}},
+    {query:'보증금 500 월세 50 이하',cat:'가격패턴',expect:{trade_type:'월세'}},
+    {query:'전세 3억~5억',cat:'가격패턴',expect:{trade_type:'전세',min_price:30000,max_price:50000}},
+    {query:'매매 15억이상',cat:'가격패턴',expect:{trade_type:'매매',min_price:150000}},
+    {query:'월세 100만원 이하',cat:'가격패턴',expect:{trade_type:'월세'}},
+
+    // 22. 특징 확장 (10)
+    {query:'반려동물 가능',cat:'특징확장',expect:{feature:'애견가능'}},
+    {query:'복층 오피스텔',cat:'특징확장',expect:{category:'officetel',feature:'복층'}},
+    {query:'신축 아파트 강남',cat:'특징확장',expect:{category:'apartment',location:'강남',feature:'신축'}},
+    {query:'루프탑 상가',cat:'특징확장',expect:{category:'commercial',feature:'루프탑'}},
+    {query:'테라스 아파트',cat:'특징확장',expect:{category:'apartment',feature:'테라스'}},
+    {query:'고층 아파트 매매',cat:'특징확장',expect:{trade_type:'매매',category:'apartment',feature:'고층'}},
+    {query:'학군 좋은 아파트',cat:'특징확장',expect:{category:'apartment',feature:'학군'}},
+    {query:'엘리베이터 사무실',cat:'특징확장',expect:{category:'office',feature:'엘리베이터'}},
+    {query:'주차 2대 아파트',cat:'특징확장',expect:{category:'apartment'}},
+    {query:'베란다확장 아파트 전세',cat:'특징확장',expect:{trade_type:'전세',category:'apartment',feature:'베란다확장'}},
+
+    // 23. 다중 지역 / 모호한 검색 (10)
+    {query:'강남 서초',cat:'모호',expect:{location:'강남'}},
+    {query:'마포 용산 전세',cat:'모호',expect:{trade_type:'전세',location:'마포'}},
+    {query:'아파트 전세',cat:'모호',expect:{trade_type:'전세',category:'apartment'}},
+    {query:'싼 아파트',cat:'모호',expect:{category:'apartment'}},
+    {query:'넓은 사무실',cat:'모호',expect:{category:'office'}},
+    {query:'좋은 아파트',cat:'모호',expect:{category:'apartment'}},
+    {query:'급매',cat:'모호',expect:{}},
+    {query:'신혼부부 아파트',cat:'모호',expect:{category:'apartment'}},
+    {query:'투자용 상가',cat:'모호',expect:{category:'commercial'}},
+    {query:'사무실 임대',cat:'모호',expect:{category:'office'}},
+
+    // 24. 정렬 테스트 (5)
+    {query:'최신 아파트',cat:'정렬',expect:{category:'apartment'}},
+    {query:'강남 아파트 가격순',cat:'정렬',expect:{category:'apartment',location:'강남'}},
+    {query:'싼순 전세 마포',cat:'정렬',expect:{trade_type:'전세',location:'마포'}},
+    {query:'최근 등록 매물',cat:'정렬',expect:{}},
+    {query:'비싼 아파트 강남',cat:'정렬',expect:{category:'apartment',location:'강남'}},
+
+    // 25. 도로명/주소 스타일 (5)
+    {query:'서울시 강남구',cat:'주소',expect:{location:'강남'}},
+    {query:'서울 마포구 합정동',cat:'주소',expect:{location:'합정'}},
+    {query:'송파구 잠실동 아파트',cat:'주소',expect:{location:'잠실',category:'apartment'}},
+    {query:'용산구 한남동',cat:'주소',expect:{location:'한남'}},
+    {query:'서초구 반포동 아파트 매매',cat:'주소',expect:{trade_type:'매매',category:'apartment',location:'반포'}},
+
+    // 26. 초간단 검색 (10)
+    {query:'전세',cat:'초간단',expect:{trade_type:'전세'}},
+    {query:'강남',cat:'초간단',expect:{location:'강남'}},
+    {query:'아파트',cat:'초간단',expect:{category:'apartment'}},
+    {query:'래미안',cat:'초간단',expect:{complex:'래미안'}},
+    {query:'3억',cat:'초간단',expect:{}},
+    {query:'역세권',cat:'초간단',expect:{feature:'역세권'}},
+    {query:'사무실',cat:'초간단',expect:{category:'office'}},
+    {query:'월세',cat:'초간단',expect:{trade_type:'월세'}},
+    {query:'상가',cat:'초간단',expect:{category:'commercial'}},
+    {query:'잠실',cat:'초간단',expect:{location:'잠실'}},
+
+    // 27. 장문/복잡 검색 (5)
+    {query:'강남역 근처 역세권 남향 아파트 전세 30평대 5억이하',cat:'장문',expect:{trade_type:'전세',category:'apartment',location:'강남',max_price:50000}},
+    {query:'마포 합정 올수리 풀옵션 원룸 월세 보증금 1000 이하',cat:'장문',expect:{trade_type:'월세',category:'room',location:'합정'}},
+    {query:'서초 반포 아파트 매매 40평 이상 주차가능 남향',cat:'장문',expect:{trade_type:'매매',category:'apartment',location:'반포',min_area:40}},
+    {query:'송파 잠실 전세 아파트 3룸 이상 역세권 7억이하',cat:'장문',expect:{trade_type:'전세',category:'apartment',location:'잠실',max_price:70000}},
+    {query:'용산 이태원 오피스텔 월세 풀옵션 즉시입주',cat:'장문',expect:{trade_type:'월세',category:'officetel',location:'이태원'}},
 ];
 
 // ===== 검색 실행 =====
@@ -678,6 +870,8 @@ async function runSingleSearch(query, mode) {
             results: data.results||[],
             parsed: data.parsed||null,
             applied_filters: data.applied_filters||[],
+            ranking: data.ranking||'unknown',
+            top_score: data.top_score||null,
             time: Date.now()-start,
             error: data.error||null
         };
