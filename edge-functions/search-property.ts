@@ -1184,8 +1184,8 @@ Deno.serve(async (req) => {
         score += roomScore;
         detail.room = { score: roomScore, reason: roomReason };
 
-        // ④ 위치 — 가격 조건 없으면 위치가 핵심 (0~40점), 있으면 보조 (0~10점)
-        const locWeight = (targetMaxPrice || targetMinPrice) ? 1 : 4; // 가격 없으면 4배
+        // ④ 위치 — 위치 검색이면 항상 높은 가중치 (가격과 무관하게)
+        const locWeight = 4; // 항상 4배 — 위치를 검색했으면 위치가 가장 중요
         let locScore = 0;
         let locReason = '';
         if (locCoord && r.lat && r.lng) {
