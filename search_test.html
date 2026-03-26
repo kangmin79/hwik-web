@@ -1202,7 +1202,7 @@ async function runMatchTest() {
         .eq('agent_id', currentUser.id)
         .eq('property->>type', '손님')
         .order('created_at', {ascending:false})
-        .limit(50);
+        .limit(500);
     var clients = clientRes.data || [];
     if(clients.length === 0) { prog.textContent = '손님 카드 없음'; document.getElementById('btnMatchTest').disabled=false; return; }
 
