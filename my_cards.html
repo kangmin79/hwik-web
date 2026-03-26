@@ -4339,24 +4339,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 return;
             }
 
-            // ★ 검색어에서 거래유형/카테고리 추출 → 서버에 직접 전달
-            const qWords = query.toLowerCase().split(/\s+/);
-            let serverTradeType = null;
-            let serverPropertyType = null;
-            let serverStatus = null;
-            const cleanWords = [];
+            // ★ 서버가 전부 파싱 — 클라이언트는 원본 검색어 그대로 전송
             const _clientKeywords = ['손님','찾는분','구하는분','구합니다','구해요','찾습니다','찾아요','구함','요청'];
-            let isClientSearch = false;
-            for (const w of qWords) {
-                if (_clientKeywords.includes(w)) { isClientSearch = true; }
-                else if (_typeKeywords[w] && !serverTradeType) serverTradeType = _typeKeywords[w];
-                else if (_catKeywords[w] && !serverPropertyType) serverPropertyType = _catKeywords[w];
-                else if (_statusKeywords[w] && !serverStatus) serverStatus = _statusKeywords[w];
-                else cleanWords.push(w);
-            }
-            // ★ 가격 조건도 클라이언트에서 추출 → Claude 파싱 불필요
-            const { minPrice: serverMinPrice, maxPrice: serverMaxPrice, textWords: finalWords } = _extractPriceConditions(cleanWords);
-            const searchQuery = finalWords.length > 0 ? finalWords.join(' ') : query;
+            const isClientSearch = query.split(/\s+/).some(w => _clientKeywords.includes(w));
 
             // 스켈레톤 로딩 표시
             document.getElementById('propertyList').innerHTML = Array(5).fill(0).map(() =>
@@ -4372,7 +4357,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     </div>
                 </div>`
             ).join('');
-            
+
             try {
                 const response = await fetch(`${SUPABASE_URL}/functions/v1/search-property`, {
                     method: 'POST',
@@ -4381,14 +4366,10 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         'Authorization': 'Bearer ' + SUPABASE_KEY
                     },
                     body: JSON.stringify({
-                        query: isClientSearch ? (finalWords.join(' ') || '손님') : searchQuery,
+                        query: query,
                         agent_id: currentUser.id,
                         limit: 50,
-                        search_mode: isClientSearch ? 'client' : 'my',
-                        trade_type: isClientSearch ? null : serverTradeType,
-                        property_type: isClientSearch ? null : serverPropertyType,
-                        min_price: serverMinPrice,
-                        max_price: serverMaxPrice
+                        search_mode: isClientSearch ? 'client' : 'my'
                     })
                 });
                 
@@ -4439,20 +4420,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         async function sharedVectorSearch(query) {
             if (!query || !currentUser) { renderSharedList(); return; }
 
-            // ★ 내 매물 검색과 동일한 파싱 로직
-            const qWords = query.toLowerCase().split(/\s+/);
-            let serverTradeType = null;
-            let serverPropertyType = null;
-            let serverStatus = null;
-            const cleanWords = [];
-            for (const w of qWords) {
-                if (_typeKeywords[w] && !serverTradeType) serverTradeType = _typeKeywords[w];
-                else if (_catKeywords[w] && !serverPropertyType) serverPropertyType = _catKeywords[w];
-                else if (_statusKeywords[w] && !serverStatus) serverStatus = _statusKeywords[w];
-                else cleanWords.push(w);
-            }
-            const { minPrice: serverMinPrice, maxPrice: serverMaxPrice, textWords: finalWords } = _extractPriceConditions(cleanWords);
-            const searchQuery = finalWords.length > 0 ? finalWords.join(' ') : query;
+            // ★ 서버가 전부 파싱 — 클라이언트는 원본 검색어 그대로 전송
 
             // 스켈레톤 로딩
             document.getElementById('sharedPropertyList').innerHTML = Array(5).fill(0).map(() =>
@@ -4473,14 +4441,10 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         'Authorization': 'Bearer ' + SUPABASE_KEY
                     },
                     body: JSON.stringify({
-                        query: searchQuery,
+                        query: query,
                         agent_id: currentUser.id,
                         limit: 50,
-                        search_mode: 'shared',
-                        trade_type: serverTradeType,
-                        property_type: serverPropertyType,
-                        min_price: serverMinPrice,
-                        max_price: serverMaxPrice
+                        search_mode: 'shared'
                     })
                 });
 
