@@ -704,6 +704,27 @@ Deno.serve(async (req) => {
     const finalTradeType = trade_type || parsed.filters?.trade_type || null;
     const finalPropertyType = property_type || parsed.filters?.property_type || null;
 
+    // ★ 위치 없으면 중개사 사무실 주소에서 구 자동 추출
+    if (!parsed.filters?.location && agent_id) {
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('address')
+          .eq('id', agent_id)
+          .single();
+        if (profile?.address) {
+          const guList = ['강남','서초','송파','마포','용산','성동','광진','영등포','강동','동작','관악','종로','중구','강서','양천','구로','노원','서대문','은평','중랑','도봉','동대문','성북','금천','강북'];
+          for (const gu of guList) {
+            if (profile.address.includes(gu)) {
+              parsed.filters.location = gu;
+              console.log(`위치 없음 → 사무실 주소에서 '${gu}' 자동 적용`);
+              break;
+            }
+          }
+        }
+      } catch(e) { /* 프로필 조회 실패 무시 */ }
+    }
+
     let results: any[] = [];
     let searchMethod = 'rpc';
 
