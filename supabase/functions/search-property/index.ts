@@ -1238,6 +1238,11 @@ Deno.serve(async (req) => {
       results = sortResults(results, autoSort);
     }
 
+    // ★ 30점 미만 제외 (랭킹 모드일 때만 — 조건 없는 검색은 전부 보여줌)
+    if (hasRankingConditions) {
+      results = results.filter(r => (r._score || 0) >= 30);
+    }
+
     results = results.slice(0, limit);
 
     // ★ 적용된 필터 요약 (클라이언트 표시용)

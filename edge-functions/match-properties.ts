@@ -535,7 +535,10 @@ Deno.serve(async (req) => {
       return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
     });
 
-    // 상위 10개
+    // ★ 30점 미만 제외 (조건 안 맞는 매물은 보여주지 않음)
+    results = results.filter((r: any) => (r._score || 0) >= 30);
+
+    // 상위 N개
     results = results.slice(0, limit).map((r: any) => ({
       id: r.id,
       property: r.property,
