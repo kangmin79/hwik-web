@@ -308,13 +308,18 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ★ Fix 8: 거래유형 하드필터 (벡터 보조 후 재확인)
+    if (wantedTradeType) {
+      results = results.filter((r: any) => r.property?.type === wantedTradeType);
+    }
+
     // 4. ★ 후필터: 카테고리, 가격, 지역
     if (wantedCategory) {
       const catFiltered = results.filter((r: any) => r.property?.category === wantedCategory);
       if (catFiltered.length >= 1) results = catFiltered; // 1개 이상이면 필터 적용
     }
 
-    if (maxPrice && wantedTradeType !== '월세') {
+    if (maxPrice) {
       const priceFiltered = results.filter((r: any) => {
         const pn = r.price_number || 0;
         if (minPrice && pn < minPrice) return false;
@@ -406,7 +411,7 @@ Deno.serve(async (req) => {
         if (wantedMaxArea && pyeong > wantedMaxArea + 3) return false;
         return true;
       });
-      if (areaFiltered.length >= 2) results = areaFiltered;
+      if (areaFiltered.length >= 1) results = areaFiltered;
     }
 
     // 방 수 필터
@@ -416,7 +421,7 @@ Deno.serve(async (req) => {
         const roomNum = parseInt(room.match(/(\d)/)?.[1] || '0');
         return roomNum === 0 || Math.abs(roomNum - wantedRooms!) <= 1; // ±1 허용
       });
-      if (roomFiltered.length >= 2) results = roomFiltered;
+      if (roomFiltered.length >= 1) results = roomFiltered;
     }
 
     // ★ 계약가능 매물만 (계약중/완료 제외 — 손님에게 추천 가능한 매물만)

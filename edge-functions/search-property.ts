@@ -606,6 +606,7 @@ Deno.serve(async (req) => {
 
     const { query, agent_id, limit = 10, search_mode = 'my', trade_type = null, property_type = null, min_price = null, max_price = null } = await req.json();
     if (!query) throw new Error('검색어가 필요합니다');
+    if (query.length < 2) throw new Error('검색어는 2글자 이상 입력하세요');
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const startTime = Date.now();
@@ -702,7 +703,18 @@ Deno.serve(async (req) => {
       if (finalTradeType) sqlQuery = sqlQuery.eq('property->>type', finalTradeType);
       if (finalPropertyType) sqlQuery = sqlQuery.eq('property->>category', finalPropertyType);
       if (parsed.filters?.min_price) sqlQuery = sqlQuery.gte('price_number', parsed.filters.min_price);
-      if (parsed.filters?.max_price) sqlQuery = sqlQuery.lte('price_number', parsed.filters.max_price);
+      if (parsed.filters?.max_price) sqlQuery = sqlQuery.lte('price_number', Math.round(parsed.filters.max_price * 1.1));
+
+      // ★ Fix 4: 위치 필터 — SQL에서 bounding box로 1차 필터
+      if (parsed.filters?.location) {
+        const lc = DISTRICT_COORDS[parsed.filters.location];
+        if (lc) {
+          const latDelta = lc.radius * 0.009; // rough conversion
+          const lngDelta = lc.radius * 0.011;
+          sqlQuery = sqlQuery.gte('lat', lc.lat - latDelta).lte('lat', lc.lat + latDelta);
+          sqlQuery = sqlQuery.gte('lng', lc.lng - lngDelta).lte('lng', lc.lng + lngDelta);
+        }
+      }
 
       sqlQuery = sqlQuery.order('created_at', { ascending: false }).limit(limit * multiplier);
       const { data: sqlData, error: sqlError } = await sqlQuery;
@@ -760,9 +772,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ★ 하이브리드: 벡터 결과가 3건 미만이면 키워드 폴백 추가
-    if (results.length < 3 && query.length >= 2) {
-      console.log(`벡터 결과 ${results.length}건 → 키워드 폴백 실행`);
+    // ★ 하이브리드: 벡터 결과가 limit 미만이면 키워드 폴백으로 항상 보충 (브랜드명 등)
+    if (results.length < limit && query.length >= 2) {
+      console.log(`벡터 결과 ${results.length}건 < limit(${limit}) → 키워드 폴백 실행`);
       // 검색어 확장: 단지명, 카테고리 한글명 등
       const kwSearchTerms: string[] = [query];
       if (parsed.semantic && parsed.semantic !== query) kwSearchTerms.unshift(parsed.semantic);
@@ -781,7 +793,7 @@ Deno.serve(async (req) => {
       }
 
       for (const kwTerm of kwSearchTerms) {
-        if (results.length >= 3) break;
+        if (results.length >= limit) break;
         let kwQuery = supabase
           .from('cards')
           .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number')
@@ -878,7 +890,8 @@ Deno.serve(async (req) => {
           if (searchMaxSqm && sqm > searchMaxSqm) return false;
           return true;
         }
-        return false;
+        // ★ Fix 1: 면적 정보 없는 매물은 통과 (조용히 제외하지 않음)
+        return true;
       });
     }
 
@@ -888,6 +901,8 @@ Deno.serve(async (req) => {
       results = results.filter(r => {
         const room = r.property?.room || '';
         const searchText = r.search_text || '';
+        // ★ Fix 2: 방 정보 없으면 통과 (제외하지 않음)
+        if (!room && !searchText.match(/\d룸|방\d/)) return true;
         return room.includes(targetRooms) || searchText.includes(targetRooms + '룸') || searchText.includes('방' + targetRooms);
       });
     }
@@ -902,8 +917,13 @@ Deno.serve(async (req) => {
         let locFound = false;
 
         for (const radius of radiusSteps) {
+          const parsedLoc = loc;
           const coordFiltered = results.filter(r => {
-            if (!r.lat || !r.lng) return false;
+            if (!r.lat || !r.lng) {
+              // ★ Fix 7: 좌표 없으면 텍스트 매칭으로 대체
+              const propLoc = r.property?.location || '';
+              return propLoc.includes(parsedLoc);
+            }
             return haversineDistance(coordInfo.lat, coordInfo.lng, r.lat, r.lng) <= radius;
           });
           if (coordFiltered.length > 0) {
@@ -1039,7 +1059,7 @@ Deno.serve(async (req) => {
       if (parsed.semantic) fallbackTerms.unshift(parsed.semantic);
       for (const term of fallbackTerms) {
         if (results.length > 0) break;
-        const { data: fbData } = await supabase
+        let fbQuery = supabase
           .from('cards')
           .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number')
           .eq('agent_id', agent_id)
@@ -1047,6 +1067,9 @@ Deno.serve(async (req) => {
           .ilike('search_text', `%${term}%`)
           .order('created_at', { ascending: false })
           .limit(limit * 3);
+        // ★ Fix 16: 폴백에서도 거래유형 필터 유지
+        if (finalTradeType) fbQuery = fbQuery.eq('property->>type', finalTradeType);
+        const { data: fbData } = await fbQuery;
         if (fbData && fbData.length > 0) {
           results = fbData.map(r => ({ ...r, similarity: 0 }));
           console.log(`필터 완화 폴백 '${term}': ${results.length}건`);
