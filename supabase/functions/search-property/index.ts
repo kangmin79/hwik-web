@@ -108,7 +108,7 @@ function localParseQuery(query: string) {
     '육천':'6천','칠천':'7천','팔천':'8천','구천':'9천',
     'ㅈㅅ':'전세','젼세':'전세','ㅁㅁ':'매매','ㅇㅅ':'월세','웜세':'월세','웜ㄴ세':'월세',
     '아빠트':'아파트','옵텔':'오피스텔','오피스탤':'오피스텔','상과':'상가',
-    '안넘게':'이하','안쪽':'이하',
+    '안넘게':'이하','안쪽':'이하','이해':'이하','미만':'이하',
   };
   for (const [typo, fix] of Object.entries(typoMap)) {
     if (q.includes(typo)) q = q.replace(new RegExp(typo, 'g'), fix);

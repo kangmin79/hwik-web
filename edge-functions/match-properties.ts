@@ -184,7 +184,7 @@ Deno.serve(async (req) => {
       // 카테고리 오타
       '아빠트':'아파트','옵텔':'오피스텔','오피스탤':'오피스텔','상과':'상가',
       // 기타
-      '안넘게':'이하','안쪽':'이하','안됨':'이하','미만':'이하','까지':'이하',
+      '안넘게':'이하','안쪽':'이하','안됨':'이하','미만':'이하','까지':'이하','이해':'이하',
     };
     for (const [typo, fix] of Object.entries(typoMap)) {
       if (allText.includes(typo)) allText = allText.replace(new RegExp(typo, 'g'), fix);
