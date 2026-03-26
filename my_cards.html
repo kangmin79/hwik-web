@@ -4440,7 +4440,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         query: query,
                         agent_id: currentUser.id,
                         limit: 50,
-                        search_mode: 'shared'
+                        search_mode: 'shared',
+                        trade_type: _typeKeywords[query.toLowerCase()] || null,
+                        property_type: _catKeywords[query.toLowerCase()] || null
                     })
                 });
 
@@ -4456,56 +4458,12 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     return;
                 }
 
-                // 검색 결과를 allSharedCards 형식으로 변환
-                const searchedCards = results.map(r => ({
-                    id: r.id,
-                    property: r.property,
-                    agent: r.agent,
-                    photos: r.photos,
-                    agent_comment: r.agent_comment,
-                    style: r.style,
-                    color: r.color,
-                    agent_id: r.agent_id,
+                // 검색 결과를 allSharedCards에 반영 → 동일한 renderSharedList로 표시
+                allSharedCards = results.map(r => ({
+                    ...r,
                     is_mine: r.agent_id === currentUser.id,
-                    similarity: r.similarity
                 }));
-
-                // 필터 표시
-                let html = '';
-                if (af.length > 0) {
-                    html += `<div class="search-info">🤖 ${af.join(' · ')}</div>`;
-                }
-
-                searchedCards.forEach(card => {
-                    const p = card.property || {};
-                    const isSelected = selectedCards.some(c => c.id === card.id);
-                    const typeClass = p.type === '매매' ? 'type-sale' : p.type === '전세' ? 'type-jeonse' : p.type === '월세' ? 'type-monthly' : '';
-                    const agentName = card.agent?.business_name || card.agent?.name || '공유';
-                    const similarity = card.similarity > 0 ? Math.round(card.similarity * 100) : 0;
-                    const similarityBadge = similarity > 0 ? `<span class="similarity-badge">${similarity}%</span>` : '';
-
-                    html += `<div class="property-item ${isSelected ? 'selected' : ''}" onclick="toggleSelect('${card.id}')">
-                        <div class="property-item-main">
-                            <div class="property-checkbox ${isSelected ? 'checked' : ''}"></div>
-                            <span class="property-type-badge ${typeClass}">${p.type || '?'}</span>
-                            <div class="property-text">
-                                <div class="item-main">
-                                    <span class="item-price">${p.price || '-'}</span>
-                                    <span class="item-name">${[p.complex, p.location].filter(Boolean).join(' · ')}</span>
-                                </div>
-                                <div class="property-tags-row">
-                                    <span class="list-tag" style="background:rgba(99,102,241,0.1);color:#6366f1;border-color:rgba(99,102,241,0.2);">${agentName}</span>
-                                    ${(p.features||[]).slice(0,3).map(f => `<span class="list-tag">${esc(f)}</span>`).join('')}
-                                </div>
-                            </div>
-                            ${similarityBadge}
-                            <button class="property-detail-btn" onclick="event.stopPropagation(); showDetail('${card.id}')">상세</button>
-                        </div>
-                    </div>`;
-                });
-
-                document.getElementById('sharedPropertyList').innerHTML = html;
-                // 토스트 제거
+                renderSharedList();
 
             } catch(e) {
                 console.error('공유 매물 검색 오류:', e);
