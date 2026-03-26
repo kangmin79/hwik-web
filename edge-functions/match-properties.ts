@@ -260,35 +260,52 @@ Deno.serve(async (req) => {
 
     const effectiveAgentId = agent_id || clientCard.agent_id || '';
 
-    console.log(`매칭 조건: trade=${wantedTradeType} cat=${wantedCategory} loc=${wantedLocation} price=${minPrice}~${maxPrice}`);
+    // 구조화 조건 개수 확인
+    const structuredCount = [wantedTradeType, wantedCategory, minPrice || maxPrice, wantedLocation].filter(Boolean).length;
+    console.log(`매칭 조건: trade=${wantedTradeType} cat=${wantedCategory} loc=${wantedLocation} price=${minPrice}~${maxPrice} area=${wantedMinArea}~${wantedMaxArea} (구조화 ${structuredCount}개)`);
 
-    // 3. ★ 벡터 검색 (넓게) + 후필터 (정확하게)
-    const { data: matches, error: matchError } = await supabase.rpc('match_properties_for_client', {
-      p_client_embedding: clientCard.embedding,
-      p_agent_id: effectiveAgentId,
-      p_trade_type: wantedTradeType,
-      p_threshold: threshold,
-      p_limit: limit * 5  // 넓게 가져와서 후필터
-    });
+    let results: any[] = [];
 
-    let results = matches || [];
+    // 3. ★ 구조화 조건 2개 이상이면 SQL 직접 검색 (정확하고 빠름)
+    if (structuredCount >= 2) {
+      let sqlQuery = supabase
+        .from('cards')
+        .select('id, property, agent_comment, price_number, trade_status, photos, lat, lng, created_at, search_text')
+        .eq('agent_id', effectiveAgentId)
+        .neq('property->>type', '손님')
+        .eq('trade_status', '계약가능');
 
-    if (matchError) {
-      // 폴백
-      console.warn('RPC 실패, 폴백:', matchError.message);
-      const { data: fbData } = await supabase.rpc('search_cards_advanced', {
+      if (wantedTradeType) sqlQuery = sqlQuery.eq('property->>type', wantedTradeType);
+      if (wantedCategory) sqlQuery = sqlQuery.eq('property->>category', wantedCategory);
+      if (minPrice) sqlQuery = sqlQuery.gte('price_number', minPrice);
+      if (maxPrice) sqlQuery = sqlQuery.lte('price_number', Math.round(maxPrice * 1.1)); // 10% 여유
+      sqlQuery = sqlQuery.order('created_at', { ascending: false }).limit(limit * 5);
+
+      const { data: sqlData, error: sqlError } = await sqlQuery;
+      if (!sqlError && sqlData && sqlData.length > 0) {
+        results = sqlData.map((r: any) => ({ ...r, similarity: 0 }));
+        console.log(`SQL 직접 매칭: ${results.length}건 | ${Date.now() - startTime}ms`);
+      }
+    }
+
+    // SQL 결과 부족하면 벡터 검색 보조
+    if (results.length < 3 && clientCard.embedding) {
+      const { data: matches, error: matchError } = await supabase.rpc('match_properties_for_client', {
+        p_client_embedding: clientCard.embedding,
         p_agent_id: effectiveAgentId,
-        p_search_text: null,
-        p_embedding: clientCard.embedding,
-        p_property_type: wantedCategory,
         p_trade_type: wantedTradeType,
-        p_min_price: minPrice,
-        p_max_price: maxPrice,
-        p_days_ago: null,
-        p_limit: limit * 3,
-        p_search_mode: 'my'
+        p_threshold: threshold,
+        p_limit: limit * 5
       });
-      results = (fbData || []).filter((r: any) => r.property?.type !== '손님');
+
+      if (!matchError && matches && matches.length > 0) {
+        const existingIds = new Set(results.map(r => r.id));
+        const newResults = matches.filter((r: any) => !existingIds.has(r.id));
+        results = [...results, ...newResults];
+        console.log(`벡터 보조: +${newResults.length}건 (총 ${results.length}건)`);
+      } else if (matchError) {
+        console.warn('RPC 실패:', matchError.message);
+      }
     }
 
     // 4. ★ 후필터: 카테고리, 가격, 지역
