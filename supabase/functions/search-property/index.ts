@@ -737,14 +737,34 @@ Deno.serve(async (req) => {
         console.error('SQL 검색 에러:', sqlError.message);
       } else {
         results = (sqlData || []).map(r => ({ ...r, similarity: 0 }));
-        // ★ SQL 결과를 haversine 거리순으로 정렬 (해당 구 매물이 상위로)
-        if (parsed.filters?.location && DISTRICT_COORDS[parsed.filters.location]) {
-          const lc = DISTRICT_COORDS[parsed.filters.location];
-          results.sort((a, b) => {
-            const distA = (a.lat && a.lng) ? haversineDistance(lc.lat, lc.lng, a.lat, a.lng) : 999;
-            const distB = (b.lat && b.lng) ? haversineDistance(lc.lat, lc.lng, b.lat, b.lng) : 999;
-            return distA - distB;
+        // ★ SQL 결과에서 해당 지역 매물 우선 (텍스트 하드필터 + 거리순)
+        if (parsed.filters?.location) {
+          const loc = parsed.filters.location;
+          const lc = DISTRICT_COORDS[loc];
+          // 텍스트 매칭: location에 해당 구/동 이름이 포함된 매물
+          const exactMatch = results.filter(r => {
+            const pLoc = r.property?.location || '';
+            const st = r.search_text || '';
+            return pLoc.includes(loc) || st.includes(loc);
           });
+          const others = results.filter(r => {
+            const pLoc = r.property?.location || '';
+            const st = r.search_text || '';
+            return !pLoc.includes(loc) && !st.includes(loc);
+          });
+          // 해당 지역 매물이 있으면 그것만, 없으면 전체 (거리순)
+          if (exactMatch.length > 0) {
+            results = exactMatch;
+            console.log(`SQL 텍스트 필터 '${loc}': ${exactMatch.length}건 (다른 지역 ${others.length}건 제외)`);
+          }
+          // 거리순 정렬
+          if (lc) {
+            results.sort((a, b) => {
+              const distA = (a.lat && a.lng) ? haversineDistance(lc.lat, lc.lng, a.lat, a.lng) : 999;
+              const distB = (b.lat && b.lng) ? haversineDistance(lc.lat, lc.lng, b.lat, b.lng) : 999;
+              return distA - distB;
+            });
+          }
         }
       }
       console.log(`SQL 직접 검색: ${results.length}건 | ${Date.now() - startTime}ms`);
