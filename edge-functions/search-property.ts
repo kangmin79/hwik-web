@@ -877,24 +877,116 @@ Deno.serve(async (req) => {
       }
     }
 
-    // features 필터
+    // features 필터 (소프트: 매칭되는 걸 상위로, 없으면 유지)
     if (parsed.features && parsed.features.length > 0) {
-      const featFiltered = results.filter(r => {
+      const withFeat: any[] = [];
+      const withoutFeat: any[] = [];
+      for (const r of results) {
         const st = r.search_text || '';
         const feats = (r.property?.features || []).join(' ');
         const all = (st + ' ' + feats).toLowerCase();
-        return parsed.features.some(f => all.includes(f.toLowerCase()));
-      });
-      if (featFiltered.length > 0) results = featFiltered;
+        if (parsed.features.some(f => all.includes(f.toLowerCase()))) {
+          withFeat.push(r);
+        } else {
+          withoutFeat.push(r);
+        }
+      }
+      // 특징 매칭된 것을 상위로, 나머지는 뒤에 (제거하지 않음)
+      results = [...withFeat, ...withoutFeat];
     }
 
-    // ★ 정렬 적용 — 명시적 sort 없으면 필터 기반 자동 정렬
-    let autoSort = parsed.filters?.sort || null;
-    if (!autoSort) {
-      if (parsed.filters?.date_filter) autoSort = 'newest';
-      else if (parsed.filters?.min_price || parsed.filters?.max_price) autoSort = 'price_asc';
+    // ★ 점수 기반 랭킹 (조건이 많을수록 정밀 랭킹, 적으면 최신순)
+    const hasRankingConditions = !!(
+      parsed.filters?.min_price || parsed.filters?.max_price ||
+      parsed.filters?.min_area || parsed.filters?.max_area ||
+      parsed.filters?.rooms || parsed.filters?.location
+    );
+
+    if (hasRankingConditions && results.length > 1) {
+      // 점수 계산용 기준값
+      const targetPrice = parsed.filters?.max_price || parsed.filters?.min_price || null;
+      const targetArea = parsed.filters?.min_area || parsed.filters?.max_area || null;
+      const targetRooms = parsed.filters?.rooms || null;
+      const locCoord = parsed.filters?.location ? DISTRICT_COORDS[parsed.filters.location] : null;
+
+      results = results.map(r => {
+        let score = 0;
+        let factors = 0;
+
+        // ① 가격 근접도 (0~40점)
+        if (targetPrice && r.price_number) {
+          factors++;
+          const priceDiff = Math.abs(r.price_number - targetPrice) / targetPrice;
+          if (priceDiff <= 0.05) score += 40;       // ±5% → 만점
+          else if (priceDiff <= 0.15) score += 32;   // ±15%
+          else if (priceDiff <= 0.30) score += 20;   // ±30%
+          else if (priceDiff <= 0.50) score += 10;   // ±50%
+          // 예산 초과 페널티
+          if (parsed.filters?.max_price && r.price_number > parsed.filters.max_price) {
+            const overRate = (r.price_number - parsed.filters.max_price) / parsed.filters.max_price;
+            score -= Math.min(20, Math.round(overRate * 40));
+          }
+        }
+
+        // ② 크기/면적 근접도 (0~25점)
+        if (targetArea) {
+          factors++;
+          const area = extractAreaNumber(r.property?.area);
+          if (area) {
+            const areaDiff = Math.abs(area - targetArea) / targetArea;
+            if (areaDiff <= 0.1) score += 25;        // ±10% → 만점
+            else if (areaDiff <= 0.25) score += 18;
+            else if (areaDiff <= 0.50) score += 10;
+            else score += 3;
+          }
+        }
+
+        // ③ 방 수 일치 (0~20점)
+        if (targetRooms) {
+          factors++;
+          const roomStr = r.property?.room || r.search_text || '';
+          const roomNum = parseInt(roomStr.match(/(\d)/)?.[1] || '0');
+          if (roomNum === targetRooms) score += 20;          // 정확 일치
+          else if (Math.abs(roomNum - targetRooms) === 1) score += 10; // ±1
+        }
+
+        // ④ 위치 근접도 (0~15점)
+        if (locCoord && r.lat && r.lng) {
+          factors++;
+          const dist = haversineDistance(locCoord.lat, locCoord.lng, r.lat, r.lng);
+          if (dist <= 0.5) score += 15;         // 500m 이내
+          else if (dist <= 1.0) score += 12;    // 1km
+          else if (dist <= 2.0) score += 8;     // 2km
+          else if (dist <= 3.0) score += 4;     // 3km
+        }
+
+        // ⑤ 최신 가산점 (0~5점) — 7일 이내 등록
+        if (r.created_at) {
+          const daysSince = (Date.now() - new Date(r.created_at).getTime()) / (1000*60*60*24);
+          if (daysSince <= 1) score += 5;
+          else if (daysSince <= 3) score += 3;
+          else if (daysSince <= 7) score += 1;
+        }
+
+        return { ...r, _score: score, _factors: factors };
+      });
+
+      // 점수 내림차순 정렬 (동점이면 최신순)
+      results.sort((a, b) => {
+        const diff = (b._score || 0) - (a._score || 0);
+        if (diff !== 0) return diff;
+        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      });
+      console.log(`랭킹 적용: ${results.length}건 | 상위: ${results[0]?._score}점 | 하위: ${results[results.length-1]?._score}점`);
+    } else {
+      // 조건이 적으면 → 명시적 sort 또는 최신순
+      let autoSort = parsed.filters?.sort || null;
+      if (!autoSort) {
+        if (parsed.filters?.date_filter) autoSort = 'newest';
+        else autoSort = 'newest'; // 조건 없으면 기본 최신순
+      }
+      results = sortResults(results, autoSort);
     }
-    results = sortResults(results, autoSort);
 
     results = results.slice(0, limit);
 
@@ -942,7 +1034,9 @@ Deno.serve(async (req) => {
       results,
       count: results.length,
       search_mode,
-      applied_filters: appliedFilters
+      applied_filters: appliedFilters,
+      ranking: hasRankingConditions ? 'score' : 'newest',
+      top_score: results[0]?._score ?? null
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
