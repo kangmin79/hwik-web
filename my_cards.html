@@ -5554,7 +5554,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             if (reset) clientOffset = 0;
             const { data, error } = await supabaseClient
                 .from('cards')
-                .select('id, property, agent, agent_comment, private_note, photos, trade_status, price_number, created_at, agent_id')
+                .select('id, property, agent, agent_comment, private_note, photos, trade_status, price_number, created_at, agent_id, lat, lng')
                 .eq('agent_id', currentUser.id)
                 .eq('property->>type', '손님')
                 .neq('trade_status', '완료')
@@ -7306,6 +7306,11 @@ async function loadClientFullView(cardId) {
 
     container.innerHTML = infoHtml;
 
+    // ★ 좌표 없으면 자동 감지 시도 (매칭 전에)
+    if (!card.lat) {
+        await updateClientLocation(cardId);
+    }
+
     // 매칭 + 타임라인 동시 로드
     await Promise.all([
         loadInlineMatch(cardId),
@@ -7382,6 +7387,10 @@ async function saveClientInlineEdit(cardId) {
         // 매칭 캐시 무효화 (조건 변경)
         delete _matchCache[cardId];
 
+        // ★ 위치 좌표 재감지 (조건 변경 시 좌표도 갱신)
+        card.lat = null; card.lng = null; // 기존 좌표 초기화하여 재감지
+        updateClientLocation(cardId);
+
         showToast('손님 정보 저장됨');
         // 리스트 행 텍스트 갱신 (detail은 열린 상태 유지)
         renderClientList();
@@ -7390,6 +7399,98 @@ async function saveClientInlineEdit(cardId) {
         showToast('저장 실패: ' + (e.message || ''));
     } finally {
         if (btn) { btn.textContent = '저장'; btn.disabled = false; }
+    }
+}
+
+// ========== 위치 좌표 매칭 ==========
+
+// Haversine 거리 계산 (km)
+function calcDistance(lat1, lng1, lat2, lng2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLng = (lng2 - lng1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2
+        + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180)
+        * Math.sin(dLng / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// 손님 카드 위치 좌표 자동 감지 및 업데이트
+async function updateClientLocation(cardId) {
+    const card = allClientCards.find(c => c.id === cardId);
+    if (!card) return;
+    if (card.lat && card.lng) return; // 이미 좌표 있으면 스킵
+
+    const p = card.property || {};
+    const memo = card.private_note?.memo || '';
+    const allText = [p.location, p.complex, p.price, memo, ...(p.features || [])].filter(Boolean).join(' ');
+
+    // 1) 역이름 감지 (XX역)
+    const stationMatch = allText.match(/(\S+역)/);
+    if (stationMatch) {
+        const stationName = stationMatch[1].replace('역', '');
+        if (stationName.length >= 1) {
+            const { data } = await supabaseClient
+                .from('facilities')
+                .select('latitude, longitude')
+                .eq('type', 'subway')
+                .ilike('name', '%' + stationName + '%')
+                .limit(1);
+            if (data && data[0]) {
+                await supabaseClient.from('cards').update({ lat: data[0].latitude, lng: data[0].longitude }).eq('id', cardId);
+                card.lat = data[0].latitude;
+                card.lng = data[0].longitude;
+                console.log(`[위치] 역 매칭: ${stationMatch[1]} → (${card.lat}, ${card.lng})`);
+                return;
+            }
+        }
+    }
+
+    // 2) 학교 감지 (XX대, XX초, XX중, XX고, XX학교)
+    const schoolMatch = allText.match(/(\S+(?:대학교|대학|대|초등학교|중학교|고등학교|초|중|고))/);
+    if (schoolMatch) {
+        const schoolName = schoolMatch[1]
+            .replace(/대학교|대학/, '')
+            .replace(/초등학교|중학교|고등학교/, '')
+            .replace(/[대초중고]$/, '');
+        if (schoolName.length >= 1) {
+            const { data } = await supabaseClient
+                .from('facilities')
+                .select('latitude, longitude')
+                .eq('type', 'school')
+                .ilike('name', '%' + schoolName + '%')
+                .limit(1);
+            if (data && data[0]) {
+                await supabaseClient.from('cards').update({ lat: data[0].latitude, lng: data[0].longitude }).eq('id', cardId);
+                card.lat = data[0].latitude;
+                card.lng = data[0].longitude;
+                console.log(`[위치] 학교 매칭: ${schoolMatch[1]} → (${card.lat}, ${card.lng})`);
+                return;
+            }
+        }
+    }
+
+    // 3) 동네명으로 역 검색 (홍대, 잠실, 강남, 역삼 등 → 해당 이름의 역)
+    const dongNames = ['홍대','합정','상수','망원','연남','공덕','상암','잠실','문정','가락','석촌',
+        '역삼','삼성','대치','논현','신사','청담','압구정','반포','서초','방배',
+        '이태원','한남','성수','건대','여의도','당산','천호','사당','신림',
+        '강남','신촌','종로','명동','혜화','왕십리','용산','동대문','신도림','구로','노원','수유'];
+    for (const dong of dongNames) {
+        if (allText.includes(dong)) {
+            const { data } = await supabaseClient
+                .from('facilities')
+                .select('latitude, longitude')
+                .eq('type', 'subway')
+                .ilike('name', '%' + dong + '%')
+                .limit(1);
+            if (data && data[0]) {
+                await supabaseClient.from('cards').update({ lat: data[0].latitude, lng: data[0].longitude }).eq('id', cardId);
+                card.lat = data[0].latitude;
+                card.lng = data[0].longitude;
+                console.log(`[위치] 동네 매칭: ${dong} → (${card.lat}, ${card.lng})`);
+                return;
+            }
+        }
     }
 }
 
@@ -7412,10 +7513,10 @@ async function loadInlineMatch(clientCardId) {
         <div class="match-skeleton"></div><div class="match-skeleton"></div><div class="match-skeleton"></div>`;
 
     try {
-        // ★ 손님 카드의 임베딩 가져오기
+        // ★ 손님 카드의 임베딩 + 좌표 가져오기
         const { data: clientCard } = await supabaseClient
             .from('cards')
-            .select('id, property, private_note, embedding')
+            .select('id, property, private_note, embedding, lat, lng')
             .eq('id', clientCardId)
             .single();
 
@@ -7518,6 +7619,19 @@ async function loadInlineMatch(clientCardId) {
                 const diffB = Math.abs((b.price_number || 0) - maxBudget);
                 return diffA - diffB;
             });
+        }
+
+        // ★ 좌표 기반 거리순 가중 정렬
+        if (clientCard.lat && clientCard.lng) {
+            results.forEach(r => {
+                if (r.lat && r.lng) {
+                    r._distance = calcDistance(clientCard.lat, clientCard.lng, r.lat, r.lng);
+                } else {
+                    r._distance = 999999;
+                }
+            });
+            // 거리 가까운 순 정렬 (지역 필터가 있으면 그 안에서, 없으면 전체)
+            results.sort((a, b) => (a._distance || 999999) - (b._distance || 999999));
         }
 
         results = results.slice(0, 10);
@@ -7938,6 +8052,9 @@ async function saveClientNote(cardId) {
 
     // ★ 손님 임베딩 재생성 (메모 포함 — 백그라운드)
     updateClientEmbedding(cardId);
+
+    // ★ 위치 좌표 자동 감지 (백그라운드)
+    updateClientLocation(cardId);
 }
 
 // 손님 카드 임베딩 업데이트 (property + 모든 메모 + 날짜 포함)
