@@ -892,49 +892,58 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 위치 필터 (★ 좌표 우선 → 텍스트 폴백)
+    // 위치 필터 (★ 점진적 반경 확대: 해당구 → 인근 5km → 인근 8km → 빈 결과)
     if (parsed.filters?.location) {
       const loc = parsed.filters.location;
       const coordInfo = DISTRICT_COORDS[loc];
 
       if (coordInfo) {
-        // ★ 좌표 기반 필터 (정확도 높음)
-        const coordFiltered = results.filter(r => {
-          if (!r.lat || !r.lng) return false;
-          return haversineDistance(coordInfo.lat, coordInfo.lng, r.lat, r.lng) <= coordInfo.radius;
-        });
-        if (coordFiltered.length > 0) {
-          results = coordFiltered;
-          console.log(`좌표 필터 '${loc}': ${coordFiltered.length}건 (반경 ${coordInfo.radius}km)`);
-        } else {
-          // 벡터 결과에 해당 지역이 없으면 → 텍스트 매칭 폴백
-          const textFiltered = results.filter(r => {
-            const st = r.search_text || '';
-            const pLoc = r.property?.location || '';
-            return st.includes(loc) || pLoc.includes(loc);
+        const radiusSteps = [coordInfo.radius, 5, 8];
+        let locFound = false;
+
+        for (const radius of radiusSteps) {
+          const coordFiltered = results.filter(r => {
+            if (!r.lat || !r.lng) return false;
+            return haversineDistance(coordInfo.lat, coordInfo.lng, r.lat, r.lng) <= radius;
           });
-          if (textFiltered.length > 0) {
-            results = textFiltered;
-            console.log(`텍스트 폴백 '${loc}': ${textFiltered.length}건`);
-          } else {
-            // 마지막 수단: 키워드 직접 검색
-            console.log(`위치 매칭 0건 → '${loc}' DB 키워드 재검색`);
+          if (coordFiltered.length > 0) {
+            results = coordFiltered;
+            console.log(`좌표 필터 '${loc}': ${coordFiltered.length}건 (반경 ${radius}km)`);
+            locFound = true;
+            break;
+          }
+        }
+
+        if (!locFound) {
+          // DB 직접 검색 (점진적 반경)
+          console.log(`결과 내 위치 매칭 0건 → '${loc}' DB 재검색`);
+          for (const radius of [5, 8]) {
             let locQuery1 = supabase
               .from('cards')
               .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number')
               .eq('agent_id', agent_id)
               .neq('property->>type', '손님')
-              .ilike('search_text', `%${loc}%`)
               .order('created_at', { ascending: false })
-              .limit(limit * multiplier);
+              .limit(limit * multiplier * 2);
             if (finalTradeType) locQuery1 = locQuery1.eq('property->>type', finalTradeType);
             if (finalPropertyType) locQuery1 = locQuery1.eq('property->>category', finalPropertyType);
             const { data: locData } = await locQuery1;
             if (locData && locData.length > 0) {
-              results = locData.map(r => ({ ...r, similarity: 0 }));
-            } else {
-              results = [];
+              const nearby = locData.filter(r => {
+                if (!r.lat || !r.lng) return false;
+                return haversineDistance(coordInfo.lat, coordInfo.lng, r.lat, r.lng) <= radius;
+              });
+              if (nearby.length > 0) {
+                results = nearby.map(r => ({ ...r, similarity: 0 }));
+                console.log(`DB 재검색: ${results.length}건 (반경 ${radius}km)`);
+                locFound = true;
+                break;
+              }
             }
+          }
+          if (!locFound) {
+            results = [];
+            console.log(`${loc} 반경 8km 내 매물 없음 → 빈 결과`);
           }
         }
       } else {
