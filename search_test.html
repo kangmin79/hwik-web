@@ -77,7 +77,7 @@ tr:hover td { background: rgba(59,130,246,0.05); }
 <div class="card">
   <h2 style="margin-top:0">2. 테스트 데이터 (삽입 + 임베딩 자동)</h2>
   <div class="row">
-    <button class="btn-green" id="btnGenMy" onclick="generateAll()" disabled>매물 3000개 + 손님 200명 생성</button>
+    <button class="btn-green" id="btnGenMy" onclick="generateAll()" disabled>매물 5000개 (25구×200) + 손님 200명 생성</button>
     <button class="btn-red" onclick="cleanupTestData()" id="btnCleanup">테스트 데이터 삭제</button>
     <span id="genCount" style="font-size:13px;color:#888"></span>
   </div>
@@ -234,52 +234,51 @@ var DB_APARTMENTS = []; // apartments 테이블에서 가져온 실제 단지
 var DB_SUBWAYS = [];    // facilities 테이블에서 가져온 역
 var DB_SCHOOLS = [];    // facilities 테이블에서 가져온 학교
 
-function makeProperty(agentId, category, tradeType) {
+function makeProperty(agentId, category, tradeType, forceDist) {
     var complex='',area='',floor='',room='',price='',priceNum=0,features=[],comment='',location='',lat=0,lng=0,address='',coordType='test';
 
     // ★ 카테고리별 실제 좌표 기반 배치
+    var dist = forceDist || rand(DISTRICTS); // 구 지정 또는 랜덤
     if((category==='apartment'||category==='officetel') && DB_APARTMENTS.length>0){
-        // 아파트/오피스텔: 실제 DB 단지 사용
-        var apt=rand(DB_APARTMENTS);
+        // 아파트/오피스텔: 해당 구의 실제 DB 단지 사용
+        var guApts = DB_APARTMENTS.filter(function(a){return a.sgg===dist.gu});
+        var apt = guApts.length>0 ? rand(guApts) : rand(DB_APARTMENTS);
         complex=apt.kapt_name||'';
-        location=(apt.sgg||'')+' '+(apt.umd_nm||'');
+        location=(apt.sgg||dist.gu)+' '+(apt.umd_nm||rand(dist.dongs));
         address=apt.doro_juso||('서울시 '+location);
         lat=parseFloat(apt.lat)||0;
         lng=parseFloat(apt.lon)||0;
         coordType='db_match';
         if(category==='officetel') complex=(complex.indexOf('오피스텔')>=0?complex:complex+' 오피스텔');
-    } else if(category==='room' && DB_SUBWAYS.length>0){
-        // 원투룸/빌라: 역 근처에 배치 (현실: 역세권 원룸)
-        var station=rand(DB_SUBWAYS);
-        lat=parseFloat(station.latitude)+randFloat(-0.005,0.005); // 역에서 ~500m 반경
-        lng=parseFloat(station.longitude)+randFloat(-0.005,0.005);
-        // 가장 가까운 구/동 찾기
-        var closestDist=DISTRICTS[0]; var minD=999;
-        for(var di=0;di<DISTRICTS.length;di++){var dd=Math.abs(DISTRICTS[di].lat-lat)+Math.abs(DISTRICTS[di].lng-lng);if(dd<minD){minD=dd;closestDist=DISTRICTS[di]}}
-        location=closestDist.gu+' '+rand(closestDist.dongs);
+    } else if(category==='room'){
+        // 원투룸/빌라: 해당 구 좌표 근처에 배치
+        var dong=rand(dist.dongs);
+        lat=dist.lat+randFloat(-0.008,0.008);
+        lng=dist.lng+randFloat(-0.008,0.008);
+        location=dist.gu+' '+dong;
         address='서울시 '+location;
         coordType='station_nearby';
-    } else if(category==='commercial' && DB_APARTMENTS.length>0){
-        // 상가: 아파트 단지 근처에 배치 (현실: 단지 상가)
-        var apt=rand(DB_APARTMENTS);
-        lat=parseFloat(apt.lat)+randFloat(-0.003,0.003); // 단지에서 ~300m
-        lng=parseFloat(apt.lon)+randFloat(-0.003,0.003);
-        location=(apt.sgg||'')+' '+(apt.umd_nm||'');
-        address=(apt.doro_juso||('서울시 '+location))+' 근처';
+    } else if(category==='commercial'){
+        // 상가: 해당 구 좌표 기반 + 근처 아파트 참조
+        var dong=rand(dist.dongs);
+        lat=dist.lat+randFloat(-0.006,0.006);
+        lng=dist.lng+randFloat(-0.006,0.006);
+        location=dist.gu+' '+dong;
+        var nearAptName='';
+        if(DB_APARTMENTS.length>0){var guApts=DB_APARTMENTS.filter(function(a){return a.sgg===dist.gu});if(guApts.length>0){var na=rand(guApts);nearAptName=na.kapt_name;lat=parseFloat(na.lat)+randFloat(-0.003,0.003);lng=parseFloat(na.lon)+randFloat(-0.003,0.003)}}
+        address='서울시 '+location+(nearAptName?' '+nearAptName+' 근처':'');
         coordType='apt_nearby';
-    } else if(category==='office' && DB_SUBWAYS.length>0){
-        // 사무실: 역 근처에 배치 (현실: 역세권 오피스)
-        var station=rand(DB_SUBWAYS);
-        lat=parseFloat(station.latitude)+randFloat(-0.003,0.003);
-        lng=parseFloat(station.longitude)+randFloat(-0.003,0.003);
-        var closestDist=DISTRICTS[0]; var minD=999;
-        for(var di=0;di<DISTRICTS.length;di++){var dd=Math.abs(DISTRICTS[di].lat-lat)+Math.abs(DISTRICTS[di].lng-lng);if(dd<minD){minD=dd;closestDist=DISTRICTS[di]}}
-        location=closestDist.gu+' '+rand(closestDist.dongs);
-        address='서울시 '+location+' '+station.name+' 인근';
-        coordType='station_nearby';
+    } else if(category==='office'){
+        // 사무실: 해당 구 좌표 기반
+        var dong=rand(dist.dongs);
+        lat=dist.lat+randFloat(-0.005,0.005);
+        lng=dist.lng+randFloat(-0.005,0.005);
+        location=dist.gu+' '+dong;
+        address='서울시 '+location;
+        coordType='district_based';
     } else {
-        // DB 없으면 랜덤 폴백
-        var dist=rand(DISTRICTS),dong=rand(dist.dongs);
+        // 폴백
+        var dong=rand(dist.dongs);
         location=dist.gu+' '+dong;
         address='서울시 '+location;
         lat=dist.lat+randFloat(-0.01,0.01);
@@ -422,7 +421,8 @@ async function generateAll() {
     var token = sess.data && sess.data.session ? sess.data.session.access_token : null;
     if(!token) return alert('세션 토큰 없음 - 다시 로그인');
 
-    var TOTAL_PROPERTIES = 3000;
+    var PER_DISTRICT = 200;  // 구별 200개
+    var TOTAL_PROPERTIES = DISTRICTS.length * PER_DISTRICT;  // 25구 × 200 = 5000
     var TOTAL_CLIENTS_CLEAN = 100;
     var TOTAL_CLIENTS_MESSY = 100;
     var TOTAL_ALL = TOTAL_PROPERTIES + TOTAL_CLIENTS_CLEAN + TOTAL_CLIENTS_MESSY;
@@ -430,7 +430,7 @@ async function generateAll() {
     // ===== 0단계: 실제 DB 데이터 로드 (아파트 단지, 역, 학교) =====
     document.getElementById('genLog').textContent = '=== 실제 DB 데이터 로드 중... ===';
     try {
-        var aptRes = await sb.from('apartments').select('kapt_name,sgg,umd_nm,lat,lon,doro_juso').limit(3000);
+        var aptRes = await sb.from('apartments').select('kapt_name,sgg,umd_nm,lat,lon,doro_juso').limit(5000);
         if(aptRes.data && aptRes.data.length>0) {
             DB_APARTMENTS = aptRes.data;
             addLog('아파트 단지 '+DB_APARTMENTS.length+'개 로드');
@@ -450,23 +450,25 @@ async function generateAll() {
     } catch(e) { addLog('⚠ DB 로드 실패: '+e.message+' — 랜덤 생성 모드'); }
     addLog('');
 
-    // ===== 1단계: 매물 3000개 생성 (실제 단지 데이터 기반) =====
-    document.getElementById('genLog').textContent += '\n=== 매물 ' + TOTAL_PROPERTIES + '개 생성 중... ===';
+    // ===== 1단계: 매물 5000개 생성 (25구 × 200개, 실제 단지 데이터 기반) =====
+    document.getElementById('genLog').textContent += '\n=== 매물 ' + TOTAL_PROPERTIES + '개 생성 중 (25구 × '+PER_DISTRICT+'개)... ===';
     var cats=['apartment','officetel','room','commercial','office'];
     var types=['매매','전세','월세'];
-    // 카테고리별 비중: 아파트 40%, 오피스텔 20%, 원투룸 20%, 상가 10%, 사무실 10%
-    var catWeights = {apartment:40, officetel:20, room:20, commercial:10, office:10};
+    // 구별 200개: 아파트80 + 오피스텔40 + 원투룸40 + 상가20 + 사무실20
+    var perDistCat = {apartment:80, officetel:40, room:40, commercial:20, office:20};
     var cards=[];
-    for(var ci=0;ci<cats.length;ci++){
-        var catCount = Math.round(TOTAL_PROPERTIES * catWeights[cats[ci]] / 100);
-        for(var i=0;i<catCount;i++){
-            var tt = types[i % 3]; // 거래유형 균등 분배
-            cards.push(makeProperty(currentUser.id, cats[ci], tt));
+    for(var di=0; di<DISTRICTS.length; di++){
+        var dist = DISTRICTS[di];
+        for(var ci=0; ci<cats.length; ci++){
+            var catCount = perDistCat[cats[ci]];
+            for(var i=0; i<catCount; i++){
+                var tt = types[i % 3]; // 거래유형 균등 분배
+                cards.push(makeProperty(currentUser.id, cats[ci], tt, dist));
+            }
         }
     }
-    // 정확히 3000개 맞추기
-    while(cards.length < TOTAL_PROPERTIES) cards.push(makeProperty(currentUser.id, rand(cats), rand(types)));
     cards = shuffle(cards);
+    addLog('생성할 매물: '+cards.length+'개 ('+DISTRICTS.length+'구 × '+PER_DISTRICT+'개)');
 
     var batchSize=50, inserted=0;
     for(var i=0;i<cards.length;i+=batchSize){
@@ -540,13 +542,13 @@ async function generateAll() {
     addLog('\n==============================');
     addLog('완료! 매물:'+inserted+' 손님:'+totalClients+'(깔끔:'+clientInserted+' 지저분:'+messyInserted+') 임베딩:'+embedDone+'/'+allCards.length);
     addLog('==============================');
-    addLog('\n카테고리 분포:');
-    addLog('  아파트: ~1200개 (40%) — 실제 단지 '+DB_APARTMENTS.length+'개 활용');
-    addLog('  오피스텔: ~600개 (20%)');
-    addLog('  원투룸: ~600개 (20%)');
-    addLog('  상가: ~300개 (10%)');
-    addLog('  사무실: ~300개 (10%)');
-    addLog('  지역: 서울 25개구 전체');
+    addLog('\n구별 '+PER_DISTRICT+'개 분포:');
+    addLog('  아파트: 80개/구 ('+80*DISTRICTS.length+'개) — 실제 단지 '+DB_APARTMENTS.length+'개 활용');
+    addLog('  오피스텔: 40개/구 ('+40*DISTRICTS.length+'개)');
+    addLog('  원투룸: 40개/구 ('+40*DISTRICTS.length+'개)');
+    addLog('  상가: 20개/구 ('+20*DISTRICTS.length+'개)');
+    addLog('  사무실: 20개/구 ('+20*DISTRICTS.length+'개)');
+    addLog('  총: '+DISTRICTS.length+'개 구 × '+PER_DISTRICT+'개 = '+TOTAL_PROPERTIES+'개');
     addLog('  지하철역: '+DB_SUBWAYS.length+'개 | 학교: '+DB_SCHOOLS.length+'개 참조');
     document.getElementById('genCount').textContent = '삽입: '+(inserted+totalClients)+'개 | 임베딩: '+embedDone+'개';
     document.getElementById('btnGenMy').disabled = false;
