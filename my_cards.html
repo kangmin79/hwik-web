@@ -4700,8 +4700,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             });
 
             // Enter → 즉시 벡터 검색
-            document.getElementById('searchInput').addEventListener('keypress', async e => {
+            document.getElementById('searchInput').addEventListener('keydown', async e => {
                 if (e.key === 'Enter') {
+                    e.preventDefault();
                     const query = e.target.value.trim();
                     if (!query) {
                         isSearchMode = false;
@@ -4719,7 +4720,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     loadClientCards();
                 }
             });
-            document.getElementById('clientSearchInput')?.addEventListener('keypress', async e => {
+            document.getElementById('clientSearchInput')?.addEventListener('keydown', async e => {
                 if (e.key === 'Enter') {
                     const query = e.target.value.trim();
                     if (!query) { loadClientCards(); return; }
@@ -5084,7 +5085,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 }, 1200);
             });
 
-            document.getElementById('sharedSearchInput')?.addEventListener('keypress', e => {
+            document.getElementById('sharedSearchInput')?.addEventListener('keydown', e => {
                 if (e.key === 'Enter') {
                     clearTimeout(_sharedAiTimer);
                     const q = e.target.value.trim();
