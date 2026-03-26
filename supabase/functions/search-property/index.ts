@@ -108,7 +108,7 @@ function localParseQuery(query: string) {
     '육천':'6천','칠천':'7천','팔천':'8천','구천':'9천',
     'ㅈㅅ':'전세','젼세':'전세','ㅁㅁ':'매매','ㅇㅅ':'월세','웜세':'월세','웜ㄴ세':'월세',
     '아빠트':'아파트','옵텔':'오피스텔','오피스탤':'오피스텔','상과':'상가',
-    '안넘게':'이하','안쪽':'이하','이해':'이하','미만':'이하',
+    '안넘게':'이하','안쪽':'이하','이해':'이하','안됨':'이하','넘지않게':'이하',
   };
   for (const [typo, fix] of Object.entries(typoMap)) {
     if (q.includes(typo)) q = q.replace(new RegExp(typo, 'g'), fix);
@@ -225,11 +225,11 @@ function localParseQuery(query: string) {
   }
 
   if (priceValue !== null) {
-    if (/이하|미만|아래|까지/.test(q)) {
+    if (/이하|미만|아래|까지|밑으로|내로|안넘는|못넘는/.test(q)) {
       filters.max_price = priceValue;
-    } else if (/이상|초과|넘는|부터/.test(q)) {
+    } else if (/이상|초과|넘는|부터|위로|넘게/.test(q)) {
       filters.min_price = priceValue;
-    } else if (/정도|쯤|근처|내외/.test(q) && !/역|학교|대학/.test(q)) {
+    } else if (/정도|쯤|선|대|내외|안팎|전후|언저리/.test(q) && !/역|학교|대학|동$/.test(q)) {
       filters.min_price = Math.round(priceValue * 0.85);
       filters.max_price = Math.round(priceValue * 1.15);
     } else {
