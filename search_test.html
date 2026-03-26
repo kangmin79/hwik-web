@@ -1,390 +1,803 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>휙 검색 테스트</title>
-    <script src="config.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js"></script>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #0f172a; color: #e2e8f0; font-family: -apple-system, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto; }
-        h1 { color: #facc15; margin-bottom: 20px; }
-        h2 { color: #0ea5e9; margin: 20px 0 10px; font-size: 16px; }
-        .test-group { background: #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-        .test-item { padding: 10px 0; border-bottom: 1px solid #334155; }
-        .test-item:last-child { border-bottom: none; }
-        .test-header { display: flex; align-items: center; gap: 12px; cursor: pointer; }
-        .test-header:hover { opacity: 0.8; }
-        .query { font-weight: 700; color: #facc15; min-width: 180px; }
-        .expect { color: #94a3b8; font-size: 13px; min-width: 150px; }
-        .result { font-weight: 600; min-width: 50px; }
-        .count { color: #64748b; font-size: 12px; }
-        .pass { color: #4ade80; }
-        .fail { color: #f87171; }
-        .match-detail { display: none; margin-top: 8px; padding: 10px; background: #0f172a; border-radius: 8px; font-size: 12px; }
-        .match-detail.open { display: block; }
-        .match-card { padding: 6px 0; border-bottom: 1px solid #1e293b; }
-        .match-card:last-child { border-bottom: none; }
-        .match-field { display: inline-block; padding: 1px 6px; border-radius: 4px; margin: 1px 2px; font-size: 11px; }
-        .match-field.hit { background: rgba(250,204,21,0.2); color: #facc15; border: 1px solid rgba(250,204,21,0.3); }
-        .match-field.miss { background: rgba(100,116,139,0.1); color: #475569; }
-        .summary { background: #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 20px; display: flex; gap: 30px; }
-        .summary-item { text-align: center; }
-        .summary-num { font-size: 32px; font-weight: 800; }
-        .summary-label { font-size: 13px; color: #94a3b8; }
-        button { padding: 10px 20px; border-radius: 8px; border: none; background: #facc15; color: #0f172a; font-weight: 700; cursor: pointer; font-size: 14px; }
-        button:hover { opacity: 0.9; }
-        .btn-group { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>휙 검색 테스트</title>
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Pretendard', -apple-system, sans-serif; background: #0a0e1a; color: #e0e0e0; padding: 20px; max-width: 1400px; margin: 0 auto; }
+h1 { font-size: 24px; margin-bottom: 8px; }
+h2 { font-size: 18px; margin: 24px 0 12px; color: #8be9fd; }
+h3 { font-size: 14px; color: #bd93f9; margin: 8px 0 4px; }
+.card { background: #161b2e; border-radius: 12px; padding: 20px; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.06); }
+.row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+input, select { background: #1a2036; border: 1px solid rgba(255,255,255,0.15); color: #e0e0e0; padding: 10px 14px; border-radius: 8px; font-size: 14px; }
+button { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 600; transition: 0.2s; }
+button:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-blue { background: #3b82f6; color: white; }
+.btn-blue:hover:not(:disabled) { background: #2563eb; }
+.btn-green { background: #10b981; color: white; }
+.btn-green:hover:not(:disabled) { background: #059669; }
+.btn-red { background: #ef4444; color: white; }
+.btn-red:hover:not(:disabled) { background: #dc2626; }
+.btn-orange { background: #f59e0b; color: #000; }
+.btn-purple { background: #8b5cf6; color: white; }
+.progress-bar { width: 100%; height: 8px; background: #1a2036; border-radius: 4px; overflow: hidden; margin: 8px 0; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #8be9fd); transition: width 0.3s; }
+.log { background: #0d1117; border-radius: 8px; padding: 12px; max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 12px; line-height: 1.6; margin: 8px 0; white-space: pre-wrap; }
+.status { padding: 6px 12px; border-radius: 6px; font-size: 13px; display: inline-block; margin: 4px 0; }
+.status-ok { background: rgba(16,185,129,0.15); color: #34d399; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #1a2036; padding: 10px 8px; text-align: left; position: sticky; top: 0; z-index: 1; white-space: nowrap; }
+td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: top; }
+tr:hover td { background: rgba(59,130,246,0.05); }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin: 1px 2px; white-space: nowrap; }
+.tag-ok { background: rgba(16,185,129,0.2); color: #34d399; }
+.tag-fail { background: rgba(239,68,68,0.2); color: #f87171; }
+.tag-warn { background: rgba(245,158,11,0.2); color: #fbbf24; }
+.tag-info { background: rgba(59,130,246,0.2); color: #93c5fd; }
+.tag-purple { background: rgba(139,92,246,0.2); color: #c4b5fd; }
+.table-wrap { max-height: 80vh; overflow: auto; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); }
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin: 12px 0; }
+.summary-item { background: #1a2036; border-radius: 10px; padding: 16px; text-align: center; }
+.summary-num { font-size: 28px; font-weight: 700; }
+.summary-label { font-size: 12px; color: #888; margin-top: 4px; }
+.detail-box { background: #0d1117; border-radius: 8px; padding: 12px; margin-top: 8px; font-size: 12px; }
+.detail-row { display: grid; grid-template-columns: 30px 1fr 60px 60px 60px 60px 60px 1fr; gap: 4px; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.03); align-items: center; }
+.detail-row.header { font-weight: 700; color: #8be9fd; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.chk { color: #34d399; }
+.cross { color: #f87171; }
+.na { color: #555; }
+.sim-bar { display: inline-block; height: 6px; border-radius: 3px; margin-right: 4px; vertical-align: middle; }
+.parsed-box { background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2); border-radius: 6px; padding: 8px; margin-top: 6px; font-size: 11px; }
+</style>
 </head>
 <body>
-    <h1>휙 검색 기능 테스트 v2</h1>
-    <div id="loginArea" style="margin-bottom:16px;padding:12px;background:#1e293b;border-radius:12px;display:flex;align-items:center;gap:12px;">
-        <span style="color:#94a3b8">로그인 필요 →</span>
-        <button onclick="kakaoLogin()" style="background:#FEE500;color:#000;padding:8px 16px">카카오 로그인</button>
-        <span id="loginStatus" style="color:#94a3b8"></span>
-    </div>
-    <div class="btn-group">
-        <button onclick="runAllTests()">전체 테스트 실행</button>
-        <button onclick="downloadResults()" style="background:#0ea5e9;color:#fff">결과 다운로드 (TXT)</button>
-    </div>
-    <div class="summary" id="summary" style="display:none">
-        <div class="summary-item"><div class="summary-num" id="totalCount">0</div><div class="summary-label">전체</div></div>
-        <div class="summary-item"><div class="summary-num pass" id="passCount">0</div><div class="summary-label">통과</div></div>
-        <div class="summary-item"><div class="summary-num fail" id="failCount">0</div><div class="summary-label">실패</div></div>
-    </div>
-    <div id="results"></div>
+
+<h1>휙 검색 분석기</h1>
+<p style="color:#888;margin-bottom:20px">매물/손님 생성(+임베딩) → 100개 검색 → 매물별 노출 이유 &amp; 순위 기준 분석</p>
+
+<!-- ===== 1. 로그인 ===== -->
+<div class="card">
+  <h2 style="margin-top:0">1. 로그인</h2>
+  <div id="loginArea" class="row">
+    <button onclick="doKakaoLogin()" style="background:#FEE500;color:#3C1E1E;font-size:16px;padding:12px 28px;border:none;border-radius:8px;cursor:pointer;font-weight:600">카카오 로그인</button>
+    <span id="localWarning" style="display:none;color:#fbbf24;font-size:13px"></span>
+  </div>
+  <div id="loggedInArea" class="row" style="display:none">
+    <span id="loginStatus" class="status status-ok"></span>
+    <button class="btn-red" onclick="doLogout()" style="font-size:12px;padding:6px 14px">로그아웃</button>
+  </div>
+</div>
+
+<!-- ===== 2. 데이터 생성 ===== -->
+<div class="card">
+  <h2 style="margin-top:0">2. 테스트 데이터 (삽입 + 임베딩 자동)</h2>
+  <div class="row">
+    <button class="btn-green" id="btnGenMy" onclick="generateAll()" disabled>매물 150개 + 손님 50명 생성</button>
+    <button class="btn-red" onclick="cleanupTestData()" id="btnCleanup">테스트 데이터 삭제</button>
+    <span id="genCount" style="font-size:13px;color:#888"></span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="genProgress" style="width:0%"></div></div>
+  <div class="log" id="genLog">대기 중...</div>
+</div>
+
+<!-- ===== 3. 검색 테스트 ===== -->
+<div class="card">
+  <h2 style="margin-top:0">3. 검색 테스트 (100개)</h2>
+  <div class="row">
+    <button class="btn-blue" id="btnRunTest" onclick="runAllTests()" disabled>전체 테스트 실행</button>
+    <select id="searchMode"><option value="my">내 매물</option><option value="shared">공유 매물</option></select>
+    <span id="testProgress" style="font-size:13px;color:#888">0 / 100</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="testProgressBar" style="width:0%"></div></div>
+</div>
+
+<!-- ===== 4. 결과 요약 ===== -->
+<div class="card" id="resultSummary" style="display:none">
+  <h2 style="margin-top:0">4. 결과 요약</h2>
+  <div class="summary-grid" id="summaryGrid"></div>
+  <div id="catSummary" style="margin-top:12px"></div>
+</div>
+
+<!-- ===== 5. 상세 결과 ===== -->
+<div class="card" id="resultDetail" style="display:none">
+  <h2 style="margin-top:0">5. 상세 결과 — 매물별 노출 이유</h2>
+  <div class="row" style="margin-bottom:12px">
+    <button class="btn-green" onclick="downloadJSON()">JSON 다운로드</button>
+    <button class="btn-blue" onclick="downloadCSV()">CSV 다운로드</button>
+    <select id="filterResult" onchange="renderResultTable()">
+      <option value="all">전체</option>
+      <option value="fail">실패만</option>
+      <option value="warn">경고만</option>
+      <option value="ok">정상만</option>
+      <option value="empty">결과없음</option>
+    </select>
+  </div>
+  <div id="resultBody"></div>
+</div>
 
 <script>
-    const SUPABASE_URL = HWIK_CONFIG.SUPABASE_URL;
-    const SUPABASE_KEY = HWIK_CONFIG.SUPABASE_KEY;
-    const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// ===== Supabase =====
+var SUPABASE_URL = HWIK_CONFIG.SUPABASE_URL;
+var SUPABASE_KEY = HWIK_CONFIG.SUPABASE_KEY;
+var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+var currentUser = null;
+var testResults = [];
+var insertedCardIds = [];
 
-    Kakao.init(HWIK_CONFIG.KAKAO_JS_KEY);
-    async function kakaoLogin() {
-        document.getElementById('loginStatus').textContent = '로그인 중...';
-        try {
-            await sbClient.auth.signInWithOAuth({ provider: 'kakao', options: { redirectTo: window.location.href } });
-        } catch(e) { document.getElementById('loginStatus').textContent = '실패: ' + e.message; }
+// ===== 로그인 =====
+var SITE_URL = 'https://hwik.kr';
+
+function doKakaoLogin() {
+    // 로컬 file:// 에서는 hwik.kr로 리다이렉트
+    var redirectUrl = SITE_URL + '/search_test.html';
+    sb.auth.signInWithOAuth({ provider: 'kakao', options: { redirectTo: redirectUrl } });
+}
+
+async function doLogout() {
+    await sb.auth.signOut(); currentUser = null;
+    document.getElementById('loginArea').style.display = '';
+    document.getElementById('loggedInArea').style.display = 'none';
+    enableButtons(false);
+}
+
+function onLoginSuccess() {
+    document.getElementById('loginArea').style.display = 'none';
+    document.getElementById('loggedInArea').style.display = 'flex';
+    document.getElementById('loginStatus').textContent = currentUser.email || currentUser.id.slice(0,12);
+    enableButtons(true);
+}
+
+function enableButtons(on) {
+    document.getElementById('btnGenMy').disabled = !on;
+    document.getElementById('btnRunTest').disabled = !on;
+}
+
+// 페이지 로드 시 세션 체크
+document.addEventListener('DOMContentLoaded', async function() {
+    // 로컬 파일 경고
+    if (location.protocol === 'file:') {
+        document.getElementById('localWarning').style.display = '';
+        document.getElementById('localWarning').textContent = '로컬 파일 → 로그인 시 hwik.kr/search_test.html 로 이동됩니다';
     }
-    sbClient.auth.getSession().then(({ data }) => {
-        if (data.session) {
-            document.getElementById('loginStatus').textContent = '로그인됨 ✓';
-            document.getElementById('loginArea').style.background = '#1a3a2a';
+
+    // 세션 체크
+    var res = await sb.auth.getSession();
+    var session = res.data ? res.data.session : null;
+    if (session && session.user) {
+        currentUser = session.user;
+        onLoginSuccess();
+    }
+});
+
+// ===== 데이터 정의 =====
+var DISTRICTS = [
+    { gu:'강남구', dongs:['역삼동','삼성동','청담동','대치동','논현동','신사동','압구정동','개포동','도곡동'], lat:37.497, lng:127.028 },
+    { gu:'서초구', dongs:['서초동','반포동','잠원동','방배동','양재동'], lat:37.483, lng:127.009 },
+    { gu:'마포구', dongs:['합정동','망원동','연남동','서교동','상수동','공덕동','성산동'], lat:37.554, lng:126.910 },
+    { gu:'용산구', dongs:['이태원동','한남동','용산동','원효로','후암동'], lat:37.532, lng:126.979 },
+    { gu:'성동구', dongs:['성수동','옥수동','왕십리동','금호동','행당동'], lat:37.563, lng:127.037 },
+    { gu:'송파구', dongs:['잠실동','가락동','문정동','석촌동','방이동','오금동'], lat:37.514, lng:127.106 },
+    { gu:'영등포구', dongs:['여의도동','당산동','양평동','영등포동','신길동'], lat:37.526, lng:126.896 },
+    { gu:'강서구', dongs:['화곡동','등촌동','마곡동','발산동'], lat:37.551, lng:126.849 },
+    { gu:'노원구', dongs:['상계동','중계동','하계동','공릉동'], lat:37.654, lng:127.056 },
+    { gu:'관악구', dongs:['신림동','봉천동','남현동'], lat:37.478, lng:126.951 },
+    { gu:'동작구', dongs:['노량진동','상도동','흑석동','사당동'], lat:37.497, lng:126.939 },
+    { gu:'광진구', dongs:['구의동','자양동','화양동','중곡동'], lat:37.538, lng:127.082 },
+    { gu:'종로구', dongs:['종로동','혜화동','평창동','삼청동'], lat:37.573, lng:126.979 },
+    { gu:'중구', dongs:['명동','충무로','신당동','약수동'], lat:37.563, lng:126.997 },
+    { gu:'강동구', dongs:['천호동','길동','둔촌동','명일동','고덕동'], lat:37.530, lng:127.124 },
+];
+var APT_NAMES = ['래미안','자이','힐스테이트','푸르지오','더샵','아이파크','롯데캐슬','e편한세상','SK뷰','엘크루','포레나','트리지움','리센츠','헬리오시티','파크리오','센트레빌','두산위브','한화포레나','금호어울림'];
+var OFFICETEL_NAMES = ['스카이뷰','리버파크','시티타워','센트럴','그랑시티','디오빌','트윈타워','메트로','프라임','하이시티'];
+var VILLA_NAMES = ['행복빌라','한빛빌라','그린빌라','태양빌라','미래빌라','하나빌라','신축빌라','해오름빌라'];
+var FEATURES_POOL = ['올수리','풀옵션','남향','동남향','역세권','주차가능','베란다확장','복층','탑층','저층','엘리베이터','보안','공원뷰','한강뷰','산뷰','대로변','학군우수','대형마트인근','반려동물가능'];
+var COMMERCIAL_TYPES = ['카페','음식점','편의점','미용실','학원','병원','약국','세탁소','치킨집','베이커리','네일샵'];
+var OFFICE_DESCS = ['코너사무실','독립사무실','공유오피스','단독사무실','IT사무실','법인사무실','소호사무실'];
+
+function rand(a){return a[Math.floor(Math.random()*a.length)]} function randInt(a,b){return Math.floor(Math.random()*(b-a+1))+a} function randFloat(a,b){return+(Math.random()*(b-a)+a).toFixed(3)} function uuid(){return crypto.randomUUID()}
+function shuffle(a){var b=a.slice();for(var i=b.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=b[i];b[i]=b[j];b[j]=t}return b}
+
+function priceText(m){if(m>=10000){var e=Math.floor(m/10000),r=m%10000;if(r>=1000)return e+'억'+Math.floor(r/1000)+'천';if(r>0)return e+'억'+r;return e+'억'}if(m>=1000)return Math.floor(m/1000)+'천'+(m%1000>0?m%1000:'');return''+m}
+
+function makeProperty(agentId, category, tradeType) {
+    var dist = rand(DISTRICTS), dong = rand(dist.dongs), location = dist.gu + ' ' + dong;
+    var lat = dist.lat + randFloat(-0.01, 0.01), lng = dist.lng + randFloat(-0.01, 0.01);
+    var complex='',area='',floor='',room='',price='',priceNum=0,features=[],comment='';
+    if(category==='apartment'){complex=rand(APT_NAMES)+(randInt(1,3)>1?'':' '+randInt(1,10)+'차');var p=rand([18,24,25,32,33,34,42,49,59,74,84]);area=p+'㎡('+Math.round(p*0.3025)+'평)';floor=randInt(1,30)+'층';room=rand(['2룸','3룸','4룸']);features=shuffle(FEATURES_POOL).slice(0,randInt(1,4));if(tradeType==='매매'){priceNum=randInt(15000,300000);price=priceText(priceNum);comment=complex+' '+priceText(priceNum)+' 매매'}else if(tradeType==='전세'){priceNum=randInt(10000,150000);price=priceText(priceNum);comment=complex+' 전세 '+priceText(priceNum)}else{var d=randInt(1000,10000),mn=randInt(30,200);priceNum=d;price=d+'/'+mn;comment=complex+' 월세 '+d+'/'+mn}}
+    else if(category==='officetel'){complex=rand(OFFICETEL_NAMES)+' 오피스텔';var p=rand([16,18,21,24,28,33]);area=p+'㎡('+Math.round(p*0.3025)+'평)';floor=randInt(1,25)+'층';room=rand(['원룸','1.5룸','투룸']);features=shuffle(FEATURES_POOL).slice(0,randInt(1,3));if(tradeType==='매매'){priceNum=randInt(8000,50000);price=priceText(priceNum);comment='오피스텔 '+priceText(priceNum)+' 매매'}else if(tradeType==='전세'){priceNum=randInt(5000,25000);price=priceText(priceNum);comment='오피스텔 전세 '+priceText(priceNum)}else{var d=randInt(300,3000),mn=randInt(25,100);priceNum=d;price=d+'/'+mn;comment='오피스텔 월세 '+d+'/'+mn}}
+    else if(category==='room'){complex=rand(VILLA_NAMES);var p=rand([10,13,16,18,21,26,33]);area=p+'㎡('+Math.round(p*0.3025)+'평)';floor=randInt(1,6)+'층';room=rand(['원룸','투룸','쓰리룸']);features=shuffle(FEATURES_POOL).slice(0,randInt(1,3));if(tradeType==='매매'){priceNum=randInt(5000,30000);price=priceText(priceNum);comment=room+' '+priceText(priceNum)+' 매매'}else if(tradeType==='전세'){priceNum=randInt(3000,15000);price=priceText(priceNum);comment=room+' 전세 '+priceText(priceNum)}else{var d=randInt(200,2000),mn=randInt(20,80);priceNum=d;price=d+'/'+mn;comment=room+' 월세 '+d+'/'+mn}}
+    else if(category==='commercial'){var biz=rand(COMMERCIAL_TYPES);complex=biz+(randInt(1,2)>1?' 가능':'');var p=rand([10,15,20,25,30,40,50,66]);area=p+'㎡('+Math.round(p*0.3025)+'평)';floor=rand(['1층','지하1층','2층','1~2층']);room='상가';features=shuffle(['대로변','코너','주차가능','유동인구多','전면넓음']).slice(0,randInt(0,2));if(tradeType==='매매'){priceNum=randInt(5000,100000);price=priceText(priceNum);comment=biz+' 상가 매매'}else if(tradeType==='전세'){priceNum=randInt(3000,30000);price=priceText(priceNum);comment='상가 전세 '+priceText(priceNum)}else{var d=randInt(1000,5000),mn=randInt(50,500);priceNum=d;price=d+'/'+mn;comment=biz+' 상가 월세 '+d+'/'+mn}}
+    else{var desc=rand(OFFICE_DESCS);complex=desc;var p=rand([15,20,25,33,45,60,80,100]);area=p+'㎡('+Math.round(p*0.3025)+'평)';floor=randInt(2,20)+'층';room='사무실';features=shuffle(['역세권','주차가능','엘리베이터','회의실포함','인터넷포함']).slice(0,randInt(0,2));if(tradeType==='매매'){priceNum=randInt(10000,100000);price=priceText(priceNum);comment='사무실 매매 '+priceText(priceNum)}else if(tradeType==='전세'){priceNum=randInt(3000,30000);price=priceText(priceNum);comment='사무실 전세 '+priceText(priceNum)}else{var d=randInt(500,5000),mn=randInt(30,300);priceNum=d;price=d+'/'+mn;comment='사무실 월세 '+d+'/'+mn}}
+    var catKo = CATEGORY_KO[category]||category;
+    var searchText = [tradeType,catKo,price,location,complex,area,features.join(' '),comment].filter(Boolean).join(' ');
+    return {id:uuid(),agent_id:agentId,property:{type:tradeType,price:price,location:location,address:'서울시 '+location,complex:complex,area:area,floor:floor,room:room,features:features,moveIn:rand(['즉시입주','협의','2026.04','2026.05']),category:category},agent_comment:comment,price_number:priceNum,trade_status:randInt(1,5)<=4?'계약가능':'계약중',lat:lat,lng:lng,coord_type:'test',search_text:searchText,style:rand(['a','b','c']),color:rand(['#FF6B35','#3b82f6','#10b981','#8b5cf6']),photos:[],private_note:{memo:'테스트-'+comment,rawText:''},status:'active'};
+}
+
+function makeClient(agentId) {
+    var dist=rand(DISTRICTS),tt=rand(['매매','전세','월세']),cat=rand(['apartment','officetel','room','commercial','office']);
+    var catKo=CATEGORY_KO[cat]||cat,priceRange='',memo='';
+    if(tt==='매매'){var b=cat==='apartment'?randInt(20000,200000):randInt(5000,50000);priceRange=priceText(b)+'~'+priceText(Math.round(b*1.3));memo=dist.gu+' '+catKo+' '+tt+' '+priceRange+' 원함. '+rand(['신혼부부','투자','실거주','학군','직장근처'])}
+    else if(tt==='전세'){var b=cat==='apartment'?randInt(10000,100000):randInt(3000,20000);priceRange=priceText(b)+' 이내';memo=dist.gu+' 근처 '+catKo+' '+tt+' '+priceRange+'. '+rand(['급구','내년 2월 만기','이번달 입주','가족 거주'])}
+    else{var d=randInt(200,5000),mn=randInt(20,150);priceRange='보증금 '+d+' 월세 '+mn+' 이내';memo=dist.gu+' '+catKo+' '+tt+' '+priceRange+'. '+rand(['1인가구','사무용','자취','통학'])}
+    return {id:uuid(),agent_id:agentId,property:{type:'손님',price:priceRange,location:dist.gu,complex:null,area:null,floor:null,room:null,features:[],moveIn:null,category:cat},agent_comment:null,price_number:null,trade_status:'계약가능',lat:dist.lat+randFloat(-0.005,0.005),lng:dist.lng+randFloat(-0.005,0.005),search_text:'손님 '+tt+' '+catKo+' '+dist.gu+' '+priceRange+' '+memo,private_note:{memo:memo,rawText:memo},style:'a',color:'#3b82f6',photos:[],status:'active'};
+}
+
+// ===== 로그 =====
+function addLog(m){var e=document.getElementById('genLog');e.textContent+='\n'+m;e.scrollTop=e.scrollHeight}
+function setProgress(pct){document.getElementById('genProgress').style.width=pct+'%'}
+
+// ===== 데이터 생성 + 임베딩 자동 =====
+async function generateAll() {
+    if(!currentUser) return alert('먼저 로그인하세요');
+    document.getElementById('btnGenMy').disabled = true;
+
+    var sess = await sb.auth.getSession();
+    var token = sess.data && sess.data.session ? sess.data.session.access_token : null;
+    if(!token) return alert('세션 토큰 없음 - 다시 로그인');
+
+    // 1단계: 매물 150개 생성
+    document.getElementById('genLog').textContent = '=== 매물 150개 생성 중... ===';
+    var cats=['apartment','officetel','room','commercial','office'];
+    var types=['매매','전세','월세'];
+    var cards=[];
+    for(var ci=0;ci<cats.length;ci++) for(var ti=0;ti<types.length;ti++) for(var i=0;i<10;i++) cards.push(makeProperty(currentUser.id,cats[ci],types[ti]));
+
+    var batchSize=25, inserted=0;
+    for(var i=0;i<cards.length;i+=batchSize){
+        var batch=cards.slice(i,i+batchSize);
+        var res=await sb.from('cards').insert(batch);
+        if(res.error){addLog('X 오류: '+res.error.message)}
+        else{inserted+=batch.length;for(var j=0;j<batch.length;j++)insertedCardIds.push(batch[j].id)}
+        setProgress(Math.round(inserted/200*30)); // 0~30%
+        addLog('  매물 '+inserted+'/150');
+    }
+    addLog('매물 '+inserted+'개 삽입 완료');
+
+    // 2단계: 손님 50명 생성
+    addLog('\n=== 손님 50명 생성 중... ===');
+    var clients=[];
+    for(var i=0;i<50;i++) clients.push(makeClient(currentUser.id));
+    var clientInserted=0;
+    for(var i=0;i<clients.length;i+=batchSize){
+        var batch=clients.slice(i,i+batchSize);
+        var res=await sb.from('cards').insert(batch);
+        if(res.error){addLog('X 손님 오류: '+res.error.message)}
+        else{clientInserted+=batch.length;for(var j=0;j<batch.length;j++)insertedCardIds.push(batch[j].id)}
+        setProgress(30+Math.round(clientInserted/50*10)); // 30~40%
+    }
+    addLog('손님 '+clientInserted+'명 삽입 완료');
+
+    // 3단계: 임베딩 자동 생성
+    addLog('\n=== 임베딩 생성 중 (200개)... ===');
+    var allCards = cards.concat(clients);
+    var embedDone=0, embedFail=0;
+    for(var i=0;i<allCards.length;i++){
+        try{
+            var r = await fetch(SUPABASE_URL+'/functions/v1/embed-card',{
+                method:'POST',
+                headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+                body:JSON.stringify({card_id:allCards[i].id,text:allCards[i].search_text})
+            });
+            var d = await r.json();
+            if(d.error) throw new Error(d.error);
+            embedDone++;
+        }catch(e){embedFail++;if(embedFail<=3)addLog('X 임베딩실패: '+e.message)}
+        if((embedDone+embedFail)%20===0){
+            addLog('  임베딩 '+(embedDone+embedFail)+'/'+allCards.length+' (성공:'+embedDone+' 실패:'+embedFail+')');
+            setProgress(40+Math.round((embedDone+embedFail)/allCards.length*60)); // 40~100%
         }
+        await new Promise(function(r){setTimeout(r,150)});
+    }
+
+    setProgress(100);
+    addLog('\n==============================');
+    addLog('완료! 매물:'+inserted+' 손님:'+clientInserted+' 임베딩:'+embedDone+'/'+(inserted+clientInserted));
+    addLog('==============================');
+    document.getElementById('genCount').textContent = '삽입: '+(inserted+clientInserted)+'개 | 임베딩: '+embedDone+'개';
+    document.getElementById('btnGenMy').disabled = false;
+}
+
+async function cleanupTestData() {
+    if(!insertedCardIds.length) return alert('삭제할 테스트 데이터 없음 (이번 세션 생성분만)');
+    if(!confirm(insertedCardIds.length+'개 삭제?')) return;
+    addLog('\n삭제 중...');
+    for(var i=0;i<insertedCardIds.length;i+=50){
+        await sb.from('cards').delete().in('id',insertedCardIds.slice(i,i+50));
+    }
+    addLog(insertedCardIds.length+'개 삭제 완료');
+    insertedCardIds=[];
+    document.getElementById('genCount').textContent='';
+}
+
+// ===== 100개 검색 키워드 =====
+var SEARCH_TESTS = [
+    // 1. 거래유형 (3)
+    {query:'매매',cat:'거래유형',expect:{trade_type:'매매'}},
+    {query:'전세',cat:'거래유형',expect:{trade_type:'전세'}},
+    {query:'월세',cat:'거래유형',expect:{trade_type:'월세'}},
+    // 2. 카테고리 (6)
+    {query:'아파트',cat:'카테고리',expect:{category:'apartment'}},
+    {query:'오피스텔',cat:'카테고리',expect:{category:'officetel'}},
+    {query:'원룸',cat:'카테고리',expect:{category:'room'}},
+    {query:'투룸',cat:'카테고리',expect:{category:'room'}},
+    {query:'상가',cat:'카테고리',expect:{category:'commercial'}},
+    {query:'사무실',cat:'카테고리',expect:{category:'office'}},
+    // 3. 지역 (10)
+    {query:'강남',cat:'지역',expect:{location:'강남'}},
+    {query:'서초',cat:'지역',expect:{location:'서초'}},
+    {query:'마포',cat:'지역',expect:{location:'마포'}},
+    {query:'용산',cat:'지역',expect:{location:'용산'}},
+    {query:'송파',cat:'지역',expect:{location:'송파'}},
+    {query:'성동',cat:'지역',expect:{location:'성동'}},
+    {query:'영등포',cat:'지역',expect:{location:'영등포'}},
+    {query:'노원',cat:'지역',expect:{location:'노원'}},
+    {query:'강서',cat:'지역',expect:{location:'강서'}},
+    {query:'역삼동',cat:'지역',expect:{location:'역삼'}},
+    // 4. 가격 (10)
+    {query:'3억이하',cat:'가격',expect:{max_price:30000}},
+    {query:'5억이하',cat:'가격',expect:{max_price:50000}},
+    {query:'10억이하',cat:'가격',expect:{max_price:100000}},
+    {query:'1억이상',cat:'가격',expect:{min_price:10000}},
+    {query:'2억이상',cat:'가격',expect:{min_price:20000}},
+    {query:'3억 이하',cat:'가격',expect:{max_price:30000}},
+    {query:'5000이하',cat:'가격',expect:{max_price:5000}},
+    {query:'1억 이상 3억 이하',cat:'가격',expect:{min_price:10000,max_price:30000}},
+    {query:'보증금 2000',cat:'가격',expect:{max_price:2000}},
+    {query:'보증금 3000',cat:'가격',expect:{max_price:3000}},
+    // 5. 거래+카테고리 (10)
+    {query:'전세 아파트',cat:'거래+카테고리',expect:{trade_type:'전세',category:'apartment'}},
+    {query:'매매 아파트',cat:'거래+카테고리',expect:{trade_type:'매매',category:'apartment'}},
+    {query:'월세 원룸',cat:'거래+카테고리',expect:{trade_type:'월세',category:'room'}},
+    {query:'월세 오피스텔',cat:'거래+카테고리',expect:{trade_type:'월세',category:'officetel'}},
+    {query:'전세 오피스텔',cat:'거래+카테고리',expect:{trade_type:'전세',category:'officetel'}},
+    {query:'매매 상가',cat:'거래+카테고리',expect:{trade_type:'매매',category:'commercial'}},
+    {query:'월세 상가',cat:'거래+카테고리',expect:{trade_type:'월세',category:'commercial'}},
+    {query:'전세 사무실',cat:'거래+카테고리',expect:{trade_type:'전세',category:'office'}},
+    {query:'월세 사무실',cat:'거래+카테고리',expect:{trade_type:'월세',category:'office'}},
+    {query:'매매 빌라',cat:'거래+카테고리',expect:{trade_type:'매매',category:'room'}},
+    // 6. 거래+지역 (8)
+    {query:'강남 매매',cat:'거래+지역',expect:{trade_type:'매매',location:'강남'}},
+    {query:'마포 전세',cat:'거래+지역',expect:{trade_type:'전세',location:'마포'}},
+    {query:'용산 월세',cat:'거래+지역',expect:{trade_type:'월세',location:'용산'}},
+    {query:'서초 전세',cat:'거래+지역',expect:{trade_type:'전세',location:'서초'}},
+    {query:'송파 매매',cat:'거래+지역',expect:{trade_type:'매매',location:'송파'}},
+    {query:'성동 월세',cat:'거래+지역',expect:{trade_type:'월세',location:'성동'}},
+    {query:'노원 전세',cat:'거래+지역',expect:{trade_type:'전세',location:'노원'}},
+    {query:'강서 매매',cat:'거래+지역',expect:{trade_type:'매매',location:'강서'}},
+    // 7. 가격+카테고리 (6)
+    {query:'아파트 3억이하',cat:'가격+카테고리',expect:{category:'apartment',max_price:30000}},
+    {query:'오피스텔 2억이하',cat:'가격+카테고리',expect:{category:'officetel',max_price:20000}},
+    {query:'원룸 5000이하',cat:'가격+카테고리',expect:{category:'room',max_price:5000}},
+    {query:'상가 1억이상',cat:'가격+카테고리',expect:{category:'commercial',min_price:10000}},
+    {query:'사무실 3000이하',cat:'가격+카테고리',expect:{category:'office',max_price:3000}},
+    {query:'아파트 10억이상',cat:'가격+카테고리',expect:{category:'apartment',min_price:100000}},
+    // 8. 복합 3종+ (12)
+    {query:'강남 전세 아파트',cat:'복합',expect:{trade_type:'전세',category:'apartment',location:'강남'}},
+    {query:'마포 월세 원룸',cat:'복합',expect:{trade_type:'월세',category:'room',location:'마포'}},
+    {query:'서초 매매 아파트 5억이하',cat:'복합',expect:{trade_type:'매매',category:'apartment',location:'서초',max_price:50000}},
+    {query:'강남 전세 오피스텔 2억이하',cat:'복합',expect:{trade_type:'전세',category:'officetel',location:'강남',max_price:20000}},
+    {query:'송파 매매 아파트 10억이상',cat:'복합',expect:{trade_type:'매매',category:'apartment',location:'송파',min_price:100000}},
+    {query:'용산 월세 오피스텔',cat:'복합',expect:{trade_type:'월세',category:'officetel',location:'용산'}},
+    {query:'성동 전세 원룸 5000이하',cat:'복합',expect:{trade_type:'전세',category:'room',location:'성동',max_price:5000}},
+    {query:'영등포 매매 상가',cat:'복합',expect:{trade_type:'매매',category:'commercial',location:'영등포'}},
+    {query:'관악 월세 원룸 500이하',cat:'복합',expect:{trade_type:'월세',category:'room',location:'관악',max_price:500}},
+    {query:'노원 전세 아파트 3억이하',cat:'복합',expect:{trade_type:'전세',category:'apartment',location:'노원',max_price:30000}},
+    {query:'강동 매매 아파트',cat:'복합',expect:{trade_type:'매매',category:'apartment',location:'강동'}},
+    {query:'동작 월세 사무실',cat:'복합',expect:{trade_type:'월세',category:'office',location:'동작'}},
+    // 9. 특징 (6)
+    {query:'역세권',cat:'특징',expect:{feature:'역세권'}},
+    {query:'남향',cat:'특징',expect:{feature:'남향'}},
+    {query:'올수리',cat:'특징',expect:{feature:'올수리'}},
+    {query:'풀옵션',cat:'특징',expect:{feature:'풀옵션'}},
+    {query:'역세권 남향',cat:'특징',expect:{feature:'역세권'}},
+    {query:'한강뷰',cat:'특징',expect:{feature:'한강뷰'}},
+    // 10. 단지명 (6)
+    {query:'래미안',cat:'단지명',expect:{complex:'래미안'}},
+    {query:'자이',cat:'단지명',expect:{complex:'자이'}},
+    {query:'힐스테이트',cat:'단지명',expect:{complex:'힐스테이트'}},
+    {query:'푸르지오',cat:'단지명',expect:{complex:'푸르지오'}},
+    {query:'더샵',cat:'단지명',expect:{complex:'더샵'}},
+    {query:'아이파크',cat:'단지명',expect:{complex:'아이파크'}},
+    // 11. 자연어 (13)
+    {query:'보증금 2000 월세 원룸',cat:'자연어',expect:{trade_type:'월세',category:'room',max_price:2000}},
+    {query:'전세 3억 강남',cat:'자연어',expect:{trade_type:'전세',location:'강남'}},
+    {query:'월세 80 이하',cat:'자연어',expect:{trade_type:'월세',max_price:80}},
+    {query:'마포 오피스텔 전세 1억',cat:'자연어',expect:{trade_type:'전세',category:'officetel',location:'마포'}},
+    {query:'강남역 근처 사무실',cat:'자연어',expect:{category:'office',location:'강남'}},
+    {query:'합정동 원룸 월세',cat:'자연어',expect:{trade_type:'월세',category:'room',location:'합정'}},
+    {query:'잠실 아파트 매매 15억',cat:'자연어',expect:{trade_type:'매매',category:'apartment',location:'잠실'}},
+    {query:'여의도 사무실 전세',cat:'자연어',expect:{trade_type:'전세',category:'office',location:'여의도'}},
+    {query:'성수동 카페 상가',cat:'자연어',expect:{category:'commercial',location:'성수'}},
+    {query:'방배동 빌라 전세 1억이하',cat:'자연어',expect:{trade_type:'전세',category:'room',location:'방배',max_price:10000}},
+    {query:'역삼 오피스텔 매매 2억이하',cat:'자연어',expect:{trade_type:'매매',category:'officetel',location:'역삼',max_price:20000}},
+    {query:'월세 50 이하 원룸',cat:'자연어',expect:{trade_type:'월세',category:'room'}},
+    {query:'전세 5000 마포 원룸',cat:'자연어',expect:{trade_type:'전세',category:'room',location:'마포'}},
+    // 12. 엣지케이스 (10)
+    {query:'계약중',cat:'엣지케이스',expect:{status:'계약중'}},
+    {query:'계약가능 강남',cat:'엣지케이스',expect:{status:'계약가능',location:'강남'}},
+    {query:'2억',cat:'엣지케이스',expect:{}},
+    {query:'강남구 역삼동',cat:'엣지케이스',expect:{location:'역삼'}},
+    {query:'50평',cat:'엣지케이스',expect:{}},
+    {query:'1층 상가',cat:'엣지케이스',expect:{category:'commercial'}},
+    {query:'주차가능',cat:'엣지케이스',expect:{feature:'주차가능'}},
+    {query:'즉시입주',cat:'엣지케이스',expect:{}},
+    {query:'3룸 아파트 매매',cat:'엣지케이스',expect:{trade_type:'매매',category:'apartment'}},
+    {query:'전세 아파트 강남 5억이하 남향 역세권',cat:'엣지케이스',expect:{trade_type:'전세',category:'apartment',location:'강남',max_price:50000}},
+];
+
+// ===== 검색 실행 =====
+async function runSingleSearch(query, mode) {
+    var start = Date.now();
+    try {
+        var resp = await fetch(SUPABASE_URL+'/functions/v1/search-property', {
+            method:'POST',
+            headers:{'Content-Type':'application/json','Authorization':'Bearer '+SUPABASE_KEY},
+            body:JSON.stringify({query:query,agent_id:currentUser.id,limit:50,search_mode:mode})
+        });
+        var data = await resp.json();
+        return {
+            results: data.results||[],
+            parsed: data.parsed||null,
+            applied_filters: data.applied_filters||[],
+            time: Date.now()-start,
+            error: data.error||null
+        };
+    } catch(e) {
+        return {results:[],parsed:null,applied_filters:[],time:Date.now()-start,error:e.message};
+    }
+}
+
+// ===== 매물별 노출 이유 분석 =====
+function analyzeResultDetailed(test, searchResult) {
+    var results = searchResult.results;
+    var expect = test.expect;
+    var parsed = searchResult.parsed;
+
+    // 서버 해석 요약
+    var serverInterpretation = '(파싱 데이터 없음)';
+    if (parsed && parsed.filters) {
+        var f = parsed.filters;
+        var parts = [];
+        if(f.trade_type) parts.push('거래:'+f.trade_type);
+        if(f.property_type) parts.push('종류:'+f.property_type);
+        if(f.min_price) parts.push('min:'+f.min_price);
+        if(f.max_price) parts.push('max:'+f.max_price);
+        if(f.location) parts.push('지역:'+f.location);
+        if(f.nearby) parts.push('근처:'+f.nearby);
+        if(f.sort) parts.push('정렬:'+f.sort);
+        if(f.trade_status) parts.push('상태:'+f.trade_status);
+        if(parsed.semantic) parts.push('벡터:"'+parsed.semantic+'"');
+        if(parsed.features&&parsed.features.length) parts.push('특징:'+parsed.features.join(','));
+        serverInterpretation = parts.join(' | ');
+    }
+
+    // 정렬 방식 판별
+    var sortMethod = '유사도순(기본)';
+    if(parsed&&parsed.filters){
+        var s=parsed.filters.sort;
+        if(s==='newest')sortMethod='최신순';
+        else if(s==='price_asc')sortMethod='가격낮은순';
+        else if(s==='price_desc')sortMethod='가격높은순';
+        else if(!s){
+            if(parsed.filters.date_filter)sortMethod='최신순(자동)';
+            else if(parsed.filters.min_price||parsed.filters.max_price)sortMethod='가격낮은순(자동)';
+        }
+    }
+
+    // 매물별 상세 분석
+    var perItem = [];
+    var matchCount = 0;
+
+    for (var ri = 0; ri < results.length; ri++) {
+        var r = results[ri];
+        var checks = {};
+        var reasons = [];
+        var allMatch = true;
+
+        // 유사도
+        var sim = r.similarity != null ? r.similarity : null;
+        checks.similarity = sim;
+        if(sim !== null) reasons.push('유사도:'+sim.toFixed(3));
+        else reasons.push('키워드폴백(유사도없음)');
+
+        // 거래유형
+        if(expect.trade_type){
+            var match = r.property && r.property.type === expect.trade_type;
+            checks.trade_type = match;
+            if(!match) allMatch=false;
+        }
+        // 카테고리
+        if(expect.category){
+            var cardCat = r.property ? r.property.category : '';
+            var match = cardCat === expect.category;
+            checks.category = match;
+            if(!match) allMatch=false;
+        }
+        // 가격 (±20% 허용)
+        if(expect.max_price){
+            var pn = r.price_number||0;
+            var match = pn <= expect.max_price * 1.2;
+            checks.price = match;
+            checks.price_val = pn;
+            if(!match) allMatch=false;
+        }
+        if(expect.min_price){
+            var pn = r.price_number||0;
+            var match = pn >= expect.min_price * 0.8;
+            if(checks.price !== undefined) checks.price = checks.price && match;
+            else checks.price = match;
+            checks.price_val = pn;
+            if(!match) allMatch=false;
+        }
+        // 지역
+        if(expect.location){
+            var loc = ((r.property||{}).location||'')+' '+((r.property||{}).complex||'')+(r.search_text||'');
+            var match = loc.indexOf(expect.location) !== -1;
+            checks.location = match;
+            if(!match) allMatch=false;
+        }
+        // 특징
+        if(expect.feature){
+            var feats = ((r.property||{}).features||[]).join(' ')+' '+(r.search_text||'');
+            var match = feats.indexOf(expect.feature) !== -1;
+            checks.feature = match;
+            if(!match) allMatch=false;
+        }
+        // 단지명
+        if(expect.complex){
+            var cx = ((r.property||{}).complex||'')+(r.search_text||'');
+            var match = cx.indexOf(expect.complex) !== -1;
+            checks.complex = match;
+            if(!match) allMatch=false;
+        }
+        // 거래상태
+        if(expect.status){
+            var match = (r.trade_status||'계약가능') === expect.status;
+            checks.status = match;
+            if(!match) allMatch=false;
+        }
+
+        // 노출 이유 문장 생성
+        var whyShown = [];
+        if(sim!==null && sim > 0) whyShown.push('벡터유사도 '+sim.toFixed(3));
+        else whyShown.push('키워드매칭');
+
+        // 왜 이 순위?
+        var whyRank = sortMethod;
+        if(ri===0) whyRank += ' (최상위)';
+
+        if(allMatch) matchCount++;
+
+        perItem.push({
+            rank: ri+1,
+            type: (r.property||{}).type||'?',
+            category: (r.property||{}).category||'?',
+            price: (r.property||{}).price||'?',
+            price_number: r.price_number,
+            location: (r.property||{}).location||'?',
+            complex: (r.property||{}).complex||'',
+            similarity: sim,
+            checks: checks,
+            allMatch: allMatch,
+            whyShown: whyShown.join(' + '),
+            whyRank: whyRank,
+            trade_status: r.trade_status||'계약가능'
+        });
+    }
+
+    var matchRate = results.length > 0 ? Math.round(matchCount/results.length*100) : 0;
+    var status = results.length===0 ? 'empty' : (matchRate>=70?'ok':(matchRate>=40?'warn':'fail'));
+
+    return {
+        matchCount: matchCount,
+        matchRate: matchRate,
+        status: status,
+        totalResults: results.length,
+        serverInterpretation: serverInterpretation,
+        sortMethod: sortMethod,
+        appliedFilters: searchResult.applied_filters,
+        perItem: perItem
+    };
+}
+
+// ===== 전체 테스트 =====
+async function runAllTests() {
+    if(!currentUser) return alert('먼저 로그인하세요');
+    document.getElementById('btnRunTest').disabled = true;
+    testResults = [];
+    var mode = document.getElementById('searchMode').value;
+    var total = SEARCH_TESTS.length;
+
+    for(var i=0;i<total;i++){
+        var test = SEARCH_TESTS[i];
+        document.getElementById('testProgress').textContent = (i+1)+'/'+total+' "'+test.query+'"';
+        document.getElementById('testProgressBar').style.width = Math.round((i+1)/total*100)+'%';
+
+        var searchResult = await runSingleSearch(test.query, mode);
+        var analysis = analyzeResultDetailed(test, searchResult);
+
+        testResults.push({
+            index: i+1,
+            query: test.query,
+            category: test.cat,
+            expect: test.expect,
+            totalResults: analysis.totalResults,
+            matchCount: analysis.matchCount,
+            matchRate: analysis.matchRate,
+            status: analysis.status,
+            time: searchResult.time,
+            error: searchResult.error,
+            serverInterpretation: analysis.serverInterpretation,
+            sortMethod: analysis.sortMethod,
+            appliedFilters: analysis.appliedFilters,
+            parsed: searchResult.parsed,
+            perItem: analysis.perItem
+        });
+
+        await new Promise(function(r){setTimeout(r,300)});
+    }
+
+    document.getElementById('testProgress').textContent = '완료! '+total+'개';
+    document.getElementById('btnRunTest').disabled = false;
+    showResults();
+}
+
+// ===== 결과 표시 =====
+function showResults() {
+    document.getElementById('resultSummary').style.display = 'block';
+    document.getElementById('resultDetail').style.display = 'block';
+
+    var total=testResults.length;
+    var ok=0,warn=0,fail=0,empty=0;
+    testResults.forEach(function(r){if(r.status==='ok')ok++;else if(r.status==='warn')warn++;else if(r.status==='fail')fail++;else empty++});
+    var avgTime = Math.round(testResults.reduce(function(s,r){return s+r.time},0)/total);
+    var withR = testResults.filter(function(r){return r.totalResults>0});
+    var avgMatch = withR.length>0 ? Math.round(withR.reduce(function(s,r){return s+r.matchRate},0)/withR.length) : 0;
+
+    document.getElementById('summaryGrid').innerHTML =
+        '<div class="summary-item"><div class="summary-num" style="color:#34d399">'+ok+'</div><div class="summary-label">정상 (>=70%)</div></div>'+
+        '<div class="summary-item"><div class="summary-num" style="color:#fbbf24">'+warn+'</div><div class="summary-label">경고 (40~69%)</div></div>'+
+        '<div class="summary-item"><div class="summary-num" style="color:#f87171">'+fail+'</div><div class="summary-label">실패 (&lt;40%)</div></div>'+
+        '<div class="summary-item"><div class="summary-num" style="color:#93c5fd">'+empty+'</div><div class="summary-label">결과없음</div></div>'+
+        '<div class="summary-item"><div class="summary-num">'+avgMatch+'%</div><div class="summary-label">평균 매칭률</div></div>'+
+        '<div class="summary-item"><div class="summary-num">'+avgTime+'ms</div><div class="summary-label">평균 응답시간</div></div>';
+
+    // 카테고리별
+    var cats={};
+    testResults.forEach(function(r){if(!cats[r.category])cats[r.category]={ok:0,warn:0,fail:0,empty:0,t:0};cats[r.category][r.status]++;cats[r.category].t++});
+    var h='<h3>카테고리별</h3><table><tr><th>카테고리</th><th>수</th><th style="color:#34d399">정상</th><th style="color:#fbbf24">경고</th><th style="color:#f87171">실패</th><th style="color:#93c5fd">없음</th></tr>';
+    Object.keys(cats).forEach(function(c){var d=cats[c];h+='<tr><td>'+c+'</td><td>'+d.t+'</td><td>'+d.ok+'</td><td>'+d.warn+'</td><td>'+d.fail+'</td><td>'+d.empty+'</td></tr>'});
+    document.getElementById('catSummary').innerHTML = h+'</table>';
+
+    renderResultTable();
+}
+
+function ck(v){return v===true?'<span class="chk">O</span>':v===false?'<span class="cross">X</span>':'<span class="na">-</span>'}
+function simBar(v){if(v===null)return'<span class="na">N/A</span>';var pct=Math.round(v*100);var col=pct>=70?'#34d399':pct>=40?'#fbbf24':'#f87171';return'<span class="sim-bar" style="width:'+Math.max(pct*0.6,3)+'px;background:'+col+'"></span>'+pct+'%'}
+
+function renderResultTable() {
+    var filter = document.getElementById('filterResult').value;
+    var filtered = filter==='all' ? testResults : testResults.filter(function(r){return r.status===filter});
+    var html = '';
+
+    filtered.forEach(function(r) {
+        var sc = r.status==='ok'?'tag-ok':r.status==='warn'?'tag-warn':r.status==='fail'?'tag-fail':'tag-info';
+        var expectStr = Object.keys(r.expect).map(function(k){return k+':'+r.expect[k]}).join(', ');
+
+        html += '<div class="card" style="padding:14px;margin-bottom:10px">';
+        // 헤더
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">';
+        html += '<div><strong style="font-size:16px">#'+r.index+' "'+r.query+'"</strong> <span class="tag tag-info">'+r.category+'</span> <span class="tag '+sc+'">'+r.matchRate+'% ('+r.matchCount+'/'+r.totalResults+')</span> <span class="tag tag-purple">'+r.time+'ms</span></div>';
+        html += '</div>';
+
+        // 서버 해석
+        html += '<div class="parsed-box">';
+        html += '<b>서버 해석:</b> '+r.serverInterpretation+'<br>';
+        html += '<b>정렬기준:</b> '+r.sortMethod+' | <b>적용필터:</b> '+(r.appliedFilters.length?r.appliedFilters.join(', '):'없음');
+        html += '<br><b>기대조건:</b> '+(expectStr||'(없음)');
+        html += '</div>';
+
+        if(r.error) {
+            html += '<div style="color:#f87171;margin-top:8px">에러: '+r.error+'</div>';
+        }
+
+        // 매물별 상세
+        if(r.perItem.length > 0) {
+            html += '<div class="detail-box">';
+            html += '<div class="detail-row header"><div>#</div><div>매물정보</div><div>유사도</div><div>거래</div><div>종류</div><div>가격</div><div>지역</div><div>노출이유 / 순위기준</div></div>';
+
+            var maxShow = 10;
+            for(var pi=0;pi<Math.min(r.perItem.length,maxShow);pi++){
+                var p = r.perItem[pi];
+                var bg = p.allMatch ? 'rgba(16,185,129,0.05)' : 'rgba(239,68,68,0.03)';
+                html += '<div class="detail-row" style="background:'+bg+'">';
+                html += '<div>'+p.rank+'</div>';
+                html += '<div style="font-size:11px"><b>'+p.type+'</b> '+p.category+' '+p.price+' <span style="color:#888">'+p.location+'</span>'+(p.complex?' '+p.complex:'')+'</div>';
+                html += '<div>'+simBar(p.similarity)+'</div>';
+                html += '<div>'+ck(p.checks.trade_type)+'</div>';
+                html += '<div>'+ck(p.checks.category)+'</div>';
+                html += '<div>'+(p.checks.price!==undefined?ck(p.checks.price)+'<span style="font-size:10px;color:#888"> '+priceText(p.price_number||0)+'</span>':'<span class="na">-</span>')+'</div>';
+                html += '<div>'+ck(p.checks.location)+'</div>';
+                html += '<div style="font-size:11px;color:#aaa">'+p.whyShown+' | <b>'+p.whyRank+'</b></div>';
+                html += '</div>';
+            }
+            if(r.perItem.length > maxShow) {
+                html += '<div style="text-align:center;padding:6px;color:#666;font-size:11px">... 외 '+(r.perItem.length-maxShow)+'건 (다운로드에서 전체 확인)</div>';
+            }
+            html += '</div>';
+        } else if(r.totalResults===0) {
+            html += '<div style="color:#888;margin-top:8px;font-size:13px">결과 없음 — 해당 조건의 매물이 없거나 벡터 유사도가 낮음</div>';
+        }
+
+        html += '</div>';
     });
 
-    let allCards = [];
-    const _categoryKo = { apartment:'아파트', officetel:'오피스텔', room:'원투룸', commercial:'상가', office:'사무실' };
+    document.getElementById('resultBody').innerHTML = html;
+}
 
-    function categorizeProperty(text, roomField, area, floor) {
-        const r = (roomField || '').toLowerCase();
-        if (r.includes('아파트') || r.includes('apt')) return '아파트';
-        if (r.includes('오피스텔') || r.includes('officetel')) return '오피스텔';
-        if (r.includes('상가') || r.includes('점포')) return '상가';
-        if (r.includes('사무실') || r.includes('오피스')) return '사무실';
-        if (r.includes('원룸') || r.includes('투룸') || r.includes('빌라') || r.includes('주택')) return '원투룸';
-        const t = (text || '').toLowerCase();
-        if (t.includes('상가') || t.includes('점포') || t.includes('매장')) return '상가';
-        if (t.includes('사무실') || t.includes('업무용')) return '사무실';
-        if (t.includes('오피스텔')) return '오피스텔';
-        const aptBrands = ['아파트','자이','래미안','힐스테이트','푸르지오','더샵','롯데캐슬','e편한세상','아이파크','sk뷰','엘스','리센츠','트리지움','헬리오시티','올림픽파크','아크로','반포자이','은마','주공','현대아파트','파크리오','한화꿈에그린','우남푸루미아','두산위브','타워팰리스','목동 신시가지','도곡 렉슬','레이크팰리스','포레온'];
-        if (aptBrands.some(b => t.includes(b))) return '아파트';
-        if (t.includes('원룸') || t.includes('투룸') || t.includes('빌라') || t.includes('연립') || t.includes('주택') || t.includes('다세대')) return '원투룸';
-        return '기타';
-    }
-
-    // 가격 파싱 (my_cards.html과 동일)
-    function _parsePriceToMan(s) {
-        if (!s) return null;
-        const m1 = s.match(/(\d+)\s*억\s*(\d*)\s*천?/);
-        if (m1) return parseInt(m1[1]) * 10000 + (parseInt(m1[2]) || 0) * (s.includes('천') ? 1000 : 0);
-        const m2 = s.match(/(\d+)\s*만/);
-        if (m2) return parseInt(m2[1]);
-        const m3 = s.match(/(\d+)/);
-        if (m3) return parseInt(m3[1]);
-        return null;
-    }
-
-    const _minWords = ['이상','초과','넘는','부터'];
-    const _maxWords = ['이하','미만','아래','까지'];
-
-    function _extractPriceConditions(words) {
-        let minPrice = null, maxPrice = null;
-        const textWords = [];
-        for (let i = 0; i < words.length; i++) {
-            const w = words[i];
-            if (_minWords.includes(w) && i > 0) {
-                const price = _parsePriceToMan(words[i-1]);
-                if (price) { minPrice = price; textWords.pop(); continue; }
-            }
-            if (_maxWords.includes(w) && i > 0) {
-                const price = _parsePriceToMan(words[i-1]);
-                if (price) { maxPrice = price; textWords.pop(); continue; }
-            }
-            // 붙여쓰기: "3억이상"
-            for (const mw of _minWords) {
-                if (w.endsWith(mw)) {
-                    const price = _parsePriceToMan(w.replace(mw, ''));
-                    if (price) { minPrice = price; continue; }
-                }
-            }
-            for (const mw of _maxWords) {
-                if (w.endsWith(mw)) {
-                    const price = _parsePriceToMan(w.replace(mw, ''));
-                    if (price) { maxPrice = price; continue; }
-                }
-            }
-            textWords.push(w);
-        }
-        return { textWords, minPrice, maxPrice };
-    }
-
-    // ★ 매칭 추적 검색 — 어떤 단어가 어떤 필드에서 매칭됐는지 반환
-    function localSearchWithTrace(query, cards) {
-        const q = query.toLowerCase();
-        const allWords = q.split(/\s+/).filter(w => w.length > 0);
-        const { textWords: words, minPrice, maxPrice } = _extractPriceConditions(allWords);
-
-        return cards.map(c => {
-            const p = c.property || {};
-            const pn = c.private_note || {};
-            const categoryKo = _categoryKo[p.category] || '';
-            const categoryFromFn = categorizeProperty([p.complex, p.location, p.price, p.type].filter(Boolean).join(' '), p.room, p.area, p.floor);
-
-            // 필드별로 분리
-            const fields = {
-                'type': p.type || '',
-                'price': p.price || '',
-                'complex': p.complex || '',
-                'location': p.location || '',
-                'address': p.address || '',
-                'area': p.area || '',
-                'floor': p.floor || '',
-                'room': p.room || '',
-                'category': p.category || '',
-                'categoryKo': categoryKo,
-                'categoryFn': categoryFromFn,
-                'features': (p.features || []).join(' '),
-                'moveIn': p.moveIn || '',
-                'comment': c.agent_comment || '',
-                'memo': pn?.memo || '',
-                'status': c.trade_status || '계약가능',
+// ===== 다운로드 =====
+function downloadJSON() {
+    var data = {
+        test_date: new Date().toISOString(),
+        agent_id: currentUser?currentUser.id:null,
+        total_tests: testResults.length,
+        summary: {
+            ok:testResults.filter(function(r){return r.status==='ok'}).length,
+            warn:testResults.filter(function(r){return r.status==='warn'}).length,
+            fail:testResults.filter(function(r){return r.status==='fail'}).length,
+            empty:testResults.filter(function(r){return r.status==='empty'}).length,
+        },
+        results: testResults.map(function(r){
+            return {
+                index:r.index, query:r.query, category:r.category, expect:r.expect,
+                totalResults:r.totalResults, matchCount:r.matchCount, matchRate:r.matchRate,
+                status:r.status, time:r.time, error:r.error,
+                serverInterpretation:r.serverInterpretation, sortMethod:r.sortMethod,
+                appliedFilters:r.appliedFilters,
+                parsed:r.parsed,
+                perItem:r.perItem
             };
+        })
+    };
+    var blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download='hwik_search_analysis_'+new Date().toISOString().slice(0,10)+'.json';a.click();
+}
 
-            // 각 단어별 매칭 필드 추적
-            const wordMatches = {};
-            let allMatch = true;
-            for (const w of words) {
-                const matchedFields = [];
-                for (const [fname, fval] of Object.entries(fields)) {
-                    if (fval.toLowerCase().includes(w)) {
-                        matchedFields.push(fname);
-                    }
-                }
-                wordMatches[w] = matchedFields;
-                if (matchedFields.length === 0) allMatch = false;
-            }
-
-            // 가격 조건 필터
-            if (allMatch && minPrice !== null && (c.price_number || 0) < minPrice) allMatch = false;
-            if (allMatch && maxPrice !== null && (c.price_number || 0) > maxPrice) allMatch = false;
-
-            return { card: c, matched: allMatch, wordMatches, fields, minPrice, maxPrice };
-        }).filter(r => r.matched);
-    }
-
-    // ★ 테스트 케이스 — 현실적 + 가혹한 검색어
-    const TEST_CASES = [
-        // 기본 단일 검색
-        { group: '기본 검색', query: '매매', expect: '매매 매물 포함', check: r => r.length > 0 },
-        { group: '기본 검색', query: '전세', expect: '전세 매물 포함', check: r => r.length > 0 },
-        { group: '기본 검색', query: '월세', expect: '월세 매물 포함', check: r => r.length > 0 },
-        { group: '기본 검색', query: '아파트', expect: '아파트 매물', check: r => r.length > 0 },
-        { group: '기본 검색', query: '오피스텔', expect: '오피스텔 매물', check: r => r.length > 0 },
-        { group: '기본 검색', query: '상가', expect: '상가 매물', check: r => r.length > 0 },
-        { group: '기본 검색', query: '사무실', expect: '사무실 매물', check: r => r.length > 0 },
-        { group: '기본 검색', query: '원투룸', expect: '원투룸 매물', check: r => r.length > 0 },
-
-        // 현실적 복합 검색
-        { group: '현실 검색 (중개사가 실제로 칠 법한)', query: '마포 전세 3억', expect: '마포+전세+3억', check: r => r.length > 0 },
-        { group: '현실 검색 (중개사가 실제로 칠 법한)', query: '강남 아파트 매매', expect: '강남+아파트+매매', check: r => r.length > 0 },
-        { group: '현실 검색 (중개사가 실제로 칠 법한)', query: '역세권 풀옵션 원룸', expect: '역세권+풀옵션+원룸', check: r => r.length > 0 },
-        { group: '현실 검색 (중개사가 실제로 칠 법한)', query: '남향 올수리', expect: '남향+올수리', check: r => r.length > 0 },
-        { group: '현실 검색 (중개사가 실제로 칠 법한)', query: '잠실 학군', expect: '잠실+학군', check: r => r.length > 0 },
-        { group: '현실 검색 (중개사가 실제로 칠 법한)', query: '투룸 주차', expect: '투룸+주차', check: r => r.length > 0 },
-        { group: '현실 검색 (중개사가 실제로 칠 법한)', query: '상가 1층', expect: '1층 상가', check: r => r.length > 0 },
-        { group: '현실 검색 (중개사가 실제로 칠 법한)', query: '사무실 강남', expect: '강남 사무실', check: r => r.length > 0 },
-        { group: '현실 검색 (중개사가 실제로 칠 법한)', query: '애견', expect: '애견가능 매물', check: r => r.length > 0 },
-        { group: '현실 검색 (중개사가 실제로 칠 법한)', query: '한강뷰', expect: '한강뷰 매물', check: r => r.length > 0 },
-        { group: '현실 검색 (중개사가 실제로 칠 법한)', query: '신축 오피스텔', expect: '신축+오피스텔', check: r => r.length > 0 },
-        { group: '현실 검색 (중개사가 실제로 칠 법한)', query: '즉시입주 마포', expect: '즉시입주+마포', check: r => r.length > 0 },
-        { group: '현실 검색 (중개사가 실제로 칠 법한)', query: '공덕', expect: '공덕 매물', check: r => r.length > 0 },
-        { group: '현실 검색 (중개사가 실제로 칠 법한)', query: '래미안', expect: '래미안 매물', check: r => r.length > 0 },
-
-        // 가혹한 검색 (지저분, 모호, 약어)
-        { group: '가혹한 검색 (지저분/모호)', query: '마포 월세 풀옵 역세', expect: '마포+월세+풀옵션+역세권', check: r => r.length > 0 },
-        { group: '가혹한 검색 (지저분/모호)', query: '강남 전세 아파트 남향', expect: '4개 조건 AND', check: r => r.length > 0 },
-        { group: '가혹한 검색 (지저분/모호)', query: '송파 매매 30평', expect: '송파+매매+30평', check: r => r.length > 0 },
-        { group: '가혹한 검색 (지저분/모호)', query: '잠실 엘스', expect: '잠실 엘스 매물', check: r => r.length > 0 },
-        { group: '가혹한 검색 (지저분/모호)', query: '반포 한강', expect: '반포+한강뷰', check: r => r.length > 0 },
-        { group: '가혹한 검색 (지저분/모호)', query: '코엑스', expect: '코엑스 관련 매물', check: r => r.length > 0 },
-        { group: '가혹한 검색 (지저분/모호)', query: '테라스', expect: '테라스 매물', check: r => r.length > 0 },
-        { group: '가혹한 검색 (지저분/모호)', query: '복층', expect: '복층 매물', check: r => r.length > 0 },
-        { group: '가혹한 검색 (지저분/모호)', query: '루프탑', expect: '루프탑 매물', check: r => r.length > 0 },
-        { group: '가혹한 검색 (지저분/모호)', query: '가산', expect: '가산 지역 매물', check: r => r.length > 0 },
-        { group: '가혹한 검색 (지저분/모호)', query: '법조', expect: '법조단지 관련', check: r => r.length > 0 },
-        { group: '가혹한 검색 (지저분/모호)', query: '계약가능 마포', expect: '마포+계약가능', check: r => r.length > 0 },
-        { group: '가혹한 검색 (지저분/모호)', query: '스타트업 사무실', expect: '스타트업 관련 사무실', check: r => r.length > 0 },
-        { group: '가혹한 검색 (지저분/모호)', query: '카페', expect: '카페 관련 상가', check: r => r.length > 0 },
-        { group: '가혹한 검색 (지저분/모호)', query: '55억', expect: '55억 매물', check: r => r.length > 0 },
-        { group: '가혹한 검색 (지저분/모호)', query: '수익률', expect: '수익률 언급 매물', check: r => r.length > 0 },
-
-        // 손님 검색
-        { group: '손님 검색', query: '손님', expect: '손님 요청', check: r => r.length > 0 },
-        { group: '손님 검색', query: '손님 마포', expect: '마포 손님 요청', check: r => r.length > 0 },
-        { group: '손님 검색', query: '손님 강남', expect: '강남 손님 요청', check: r => r.length > 0 },
-
-        // 결과 없어야 정상
-        // 가격 조건 검색
-        { group: '가격 조건 검색', query: '3억 이상', expect: '3억 이상 매물', check: r => r.length > 0 && r.every(c => (c.price_number||0) >= 30000) },
-        { group: '가격 조건 검색', query: '5억 이하', expect: '5억 이하 매물', check: r => r.length > 0 && r.every(c => (c.price_number||0) <= 50000) },
-        { group: '가격 조건 검색', query: '3억 이상 아파트', expect: '3억+아파트', check: r => r.length > 0 },
-        { group: '가격 조건 검색', query: '10억 이상 매매', expect: '10억+매매', check: r => r.length > 0 },
-        { group: '가격 조건 검색', query: '2억 미만 전세', expect: '2억 미만+전세', check: r => r.length > 0 },
-        { group: '가격 조건 검색', query: '1억 이하 월세', expect: '1억 이하+월세', check: r => r.length > 0 },
-
-        // 새 지역 검색
-        { group: '새 지역 검색', query: '용산', expect: '용산 매물', check: r => r.length > 0 },
-        { group: '새 지역 검색', query: '노원', expect: '노원 매물', check: r => r.length > 0 },
-        { group: '새 지역 검색', query: '영등포', expect: '영등포 매물', check: r => r.length > 0 },
-        { group: '새 지역 검색', query: '광진', expect: '광진 매물', check: r => r.length > 0 },
-        { group: '새 지역 검색', query: '여의도', expect: '여의도 매물', check: r => r.length > 0 },
-
-        // 특수 태그
-        { group: '특수 태그 검색', query: '초역세권', expect: '초역세권 매물', check: r => r.length > 0 },
-        { group: '특수 태그 검색', query: '더블역세권', expect: '더블역세권 매물', check: r => r.length > 0 },
-        { group: '특수 태그 검색', query: '드레스룸', expect: '드레스룸 매물', check: r => r.length > 0 },
-        { group: '특수 태그 검색', query: '리모델링', expect: '리모델링 매물', check: r => r.length > 0 },
-        { group: '특수 태그 검색', query: '공원뷰', expect: '공원뷰 매물', check: r => r.length > 0 },
-        { group: '특수 태그 검색', query: '산뷰', expect: '산뷰 매물', check: r => r.length > 0 },
-
-        // 결과 없음
-        { group: '결과 없음 (정상)', query: '제주도 바다뷰', expect: '0개', check: r => r.length === 0 },
-        { group: '결과 없음 (정상)', query: 'xyz123', expect: '0개', check: r => r.length === 0 },
-    ];
-
-    // ★ 로그
-    let _fullLog = '';
-    function log(msg) { _fullLog += msg + '\n'; }
-
-    function downloadResults() {
-        if (!_fullLog) { alert('먼저 테스트를 실행하세요'); return; }
-        const blob = new Blob([_fullLog], { type: 'text/plain;charset=utf-8' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `hwik_search_test_${new Date().toISOString().slice(0,10)}.txt`;
-        a.click();
-    }
-
-    // ★ 테스트 실행
-    async function runAllTests() {
-        const resultsEl = document.getElementById('results');
-        resultsEl.innerHTML = '<div style="color:#94a3b8;padding:20px;text-align:center">매물 데이터 로드 중...</div>';
-
-        const { data, error } = await sbClient
-            .from('cards')
-            .select('id, property, agent, agent_comment, private_note, trade_status, search_text, price_number, created_at')
-            .order('created_at', { ascending: false })
-            .limit(500);
-
-        if (error) { resultsEl.innerHTML = `<div class="fail">DB 로드 실패: ${error.message}</div>`; return; }
-
-        allCards = data || [];
-        _fullLog = '';
-        log(`=== 휙 검색 테스트 v2 ===`);
-        log(`날짜: ${new Date().toLocaleString()}`);
-        log(`매물: ${allCards.length}개`);
-        log('');
-
-        let pass = 0, fail = 0;
-        const groups = {};
-        const allTestDetails = [];
-
-        for (const tc of TEST_CASES) {
-            const traced = localSearchWithTrace(tc.query, allCards);
-            const results = traced.map(t => t.card);
-            const ok = tc.check(results);
-            if (ok) pass++; else fail++;
-            if (!groups[tc.group]) groups[tc.group] = [];
-
-            const detail = { ...tc, results, traced, ok };
-            groups[tc.group].push(detail);
-            allTestDetails.push(detail);
-
-            // 로그
-            log(`${ok ? 'PASS' : 'FAIL'} | "${tc.query}" → ${results.length}개 | ${tc.expect}`);
-            traced.slice(0, 3).forEach(t => {
-                const p = t.card.property || {};
-                const matchInfo = Object.entries(t.wordMatches).map(([w, fields]) => `"${w}"→[${fields.join(',')}]`).join(' ');
-                log(`  ${p.type||'?'} ${p.price||''} ${p.complex||''} ${p.location||''} | 매칭: ${matchInfo}`);
-            });
-            if (traced.length > 3) log(`  ... 외 ${traced.length - 3}개`);
-            log('');
+function downloadCSV() {
+    // 매물별 상세 CSV (모든 결과를 1행=1매물로)
+    var headers = ['검색번호','검색어','카테고리','기대조건','순위','매물거래유형','매물카테고리','매물가격','매물가격숫자','매물지역','매물단지','유사도','거래유형일치','카테고리일치','가격일치','지역일치','노출이유','순위기준','서버해석','정렬기준','응답시간(ms)'];
+    var rows = [];
+    testResults.forEach(function(r){
+        if(r.perItem.length===0){
+            rows.push([r.index,'"'+r.query+'"',r.category,'"'+Object.keys(r.expect).map(function(k){return k+':'+r.expect[k]}).join(', ')+'"',
+                0,'','','','','','','','','','','','결과없음','','"'+r.serverInterpretation+'"',r.sortMethod,r.time]);
         }
-
-        // 요약
-        document.getElementById('summary').style.display = 'flex';
-        document.getElementById('totalCount').textContent = TEST_CASES.length;
-        document.getElementById('passCount').textContent = pass;
-        document.getElementById('failCount').textContent = fail;
-
-        // HTML 렌더링
-        let html = '';
-        for (const [groupName, tests] of Object.entries(groups)) {
-            html += `<div class="test-group"><h2>${groupName}</h2>`;
-            tests.forEach((t, idx) => {
-                const uid = `detail_${groupName.replace(/\s/g,'')}_${idx}`;
-                html += `<div class="test-item">`;
-                html += `<div class="test-header" onclick="document.getElementById('${uid}').classList.toggle('open')">`;
-                html += `<span class="result ${t.ok ? 'pass' : 'fail'}">${t.ok ? 'PASS' : 'FAIL'}</span>`;
-                html += `<span class="query">"${esc(t.query)}"</span>`;
-                html += `<span class="expect">${esc(t.expect)}</span>`;
-                html += `<span class="count">${t.results.length}개 ▼</span>`;
-                html += `</div>`;
-
-                // 매칭 상세 (접기/펼치기)
-                html += `<div class="match-detail" id="${uid}">`;
-                if (t.traced.length === 0) {
-                    html += `<div style="color:#f87171">매칭된 매물 없음</div>`;
-                }
-                t.traced.slice(0, 10).forEach(tr => {
-                    const p = tr.card.property || {};
-                    html += `<div class="match-card">`;
-                    html += `<div><strong>${p.type||'?'} ${p.price||''}</strong> ${p.complex||''} · ${p.location||''}</div>`;
-                    html += `<div style="margin-top:4px">`;
-                    // 각 검색어별 매칭 필드 표시
-                    for (const [word, fields] of Object.entries(tr.wordMatches)) {
-                        html += `<span style="color:#facc15;margin-right:4px">"${esc(word)}"</span>→ `;
-                        if (fields.length > 0) {
-                            fields.forEach(f => { html += `<span class="match-field hit">${f}</span>`; });
-                        } else {
-                            html += `<span class="match-field miss">미매칭</span>`;
-                        }
-                        html += `&nbsp;&nbsp;`;
-                    }
-                    html += `</div></div>`;
-                });
-                if (t.traced.length > 10) html += `<div style="color:#64748b;margin-top:4px">... 외 ${t.traced.length - 10}개</div>`;
-                html += `</div></div>`;
-            });
-            html += '</div>';
-        }
-
-        resultsEl.innerHTML = html;
-    }
+        r.perItem.forEach(function(p){
+            rows.push([
+                r.index,'"'+r.query+'"',r.category,
+                '"'+Object.keys(r.expect).map(function(k){return k+':'+r.expect[k]}).join(', ')+'"',
+                p.rank,p.type,p.category,'"'+p.price+'"',p.price_number||'','"'+p.location+'"','"'+p.complex+'"',
+                p.similarity!==null?p.similarity.toFixed(4):'',
+                p.checks.trade_type===true?'O':p.checks.trade_type===false?'X':'-',
+                p.checks.category===true?'O':p.checks.category===false?'X':'-',
+                p.checks.price===true?'O':p.checks.price===false?'X':'-',
+                p.checks.location===true?'O':p.checks.location===false?'X':'-',
+                '"'+p.whyShown+'"','"'+p.whyRank+'"',
+                '"'+r.serverInterpretation+'"',r.sortMethod,r.time
+            ]);
+        });
+    });
+    var csv = '\uFEFF'+headers.join(',')+'\n'+rows.map(function(r){return r.join(',')}).join('\n');
+    var blob = new Blob([csv],{type:'text/csv;charset=utf-8'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download='hwik_search_analysis_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+}
 </script>
 </body>
 </html>

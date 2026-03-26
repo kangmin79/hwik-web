@@ -4292,12 +4292,14 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             const minKw = ['이상','초과','넘는','부터'];
             const maxKw = ['이하','미만','아래','까지'];
             const allKw = [...minKw, ...maxKw];
+            const priceContextKw = ['보증금','월세','전세','매매','매매가','전세가','보증','deposit'];
             let minPrice = null, maxPrice = null;
             const textWords = [];
             const used = new Set();
             for (let i = 0; i < words.length; i++) {
                 if (used.has(i)) continue;
                 const w = words[i];
+                // "2000 이하" 패턴
                 if (allKw.includes(w) && i > 0) {
                     const price = _parsePriceToMan(words[i-1]);
                     if (price !== null) {
@@ -4305,6 +4307,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         used.add(i); used.add(i-1); continue;
                     }
                 }
+                // "2000이하" 붙어있는 패턴
                 for (const kw of allKw) {
                     if (w.endsWith(kw)) {
                         const price = _parsePriceToMan(w.slice(0,-kw.length));
@@ -4312,6 +4315,15 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                             if (minKw.includes(kw)) minPrice = price; else maxPrice = price;
                             used.add(i); break;
                         }
+                    }
+                }
+                // ★ "보증금 2000" 패턴: 가격 키워드 뒤에 숫자만 오면 maxPrice로 처리
+                if (!used.has(i) && priceContextKw.includes(w) && i + 1 < words.length) {
+                    const nextPrice = _parsePriceToMan(words[i+1]);
+                    if (nextPrice !== null && !allKw.includes(words[i+2]||'')) {
+                        maxPrice = nextPrice;
+                        used.add(i); used.add(i+1);
+                        continue;
                     }
                 }
             }
@@ -4426,8 +4438,31 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         async function sharedVectorSearch(query) {
             if (!query || !currentUser) { renderSharedList(); return; }
 
-            document.getElementById('sharedPropertyList').innerHTML =
-                '<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">AI 검색 중...</div></div>';
+            // ★ 내 매물 검색과 동일한 파싱 로직
+            const qWords = query.toLowerCase().split(/\s+/);
+            let serverTradeType = null;
+            let serverPropertyType = null;
+            let serverStatus = null;
+            const cleanWords = [];
+            for (const w of qWords) {
+                if (_typeKeywords[w] && !serverTradeType) serverTradeType = _typeKeywords[w];
+                else if (_catKeywords[w] && !serverPropertyType) serverPropertyType = _catKeywords[w];
+                else if (_statusKeywords[w] && !serverStatus) serverStatus = _statusKeywords[w];
+                else cleanWords.push(w);
+            }
+            const { minPrice: serverMinPrice, maxPrice: serverMaxPrice, textWords: finalWords } = _extractPriceConditions(cleanWords);
+            const searchQuery = finalWords.length > 0 ? finalWords.join(' ') : query;
+
+            // 스켈레톤 로딩
+            document.getElementById('sharedPropertyList').innerHTML = Array(5).fill(0).map(() =>
+                `<div style="padding:16px;border:1px solid rgba(255,255,255,0.06);border-radius:10px;margin-bottom:8px;animation:shimmer 1.5s infinite">
+                    <div style="display:flex;gap:10px;align-items:center">
+                        <div style="width:50px;height:14px;background:rgba(255,255,255,0.08);border-radius:4px"></div>
+                        <div style="width:80px;height:16px;background:rgba(255,255,255,0.1);border-radius:4px"></div>
+                        <div style="width:180px;height:14px;background:rgba(255,255,255,0.06);border-radius:4px"></div>
+                    </div>
+                </div>`
+            ).join('');
 
             try {
                 const response = await fetch(`${SUPABASE_URL}/functions/v1/search-property`, {
@@ -4437,20 +4472,35 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         'Authorization': 'Bearer ' + SUPABASE_KEY
                     },
                     body: JSON.stringify({
-                        query: query,
+                        query: searchQuery,
                         agent_id: currentUser.id,
                         limit: 50,
                         search_mode: 'shared',
-                        trade_type: _typeKeywords[query.toLowerCase()] || null,
-                        property_type: _catKeywords[query.toLowerCase()] || null
+                        trade_type: serverTradeType,
+                        property_type: serverPropertyType,
+                        min_price: serverMinPrice,
+                        max_price: serverMaxPrice
                     })
                 });
 
                 const data = await response.json();
                 if (data.error) throw new Error(data.error);
 
-                const results = data.results || [];
-                const af = data.applied_filters || [];
+                let results = data.results || [];
+
+                // ★ 하드필터 적용 (내 매물 검색과 동일)
+                for (const w of qWords) {
+                    if (_typeKeywords[w]) results = results.filter(c => c.property?.type === _typeKeywords[w]);
+                    if (_statusKeywords[w]) results = results.filter(c => (c.trade_status || '계약가능') === _statusKeywords[w]);
+                    if (_catKeywords[w]) {
+                        const cat = _catKeywords[w];
+                        results = results.filter(c => {
+                            if (c.property?.category === cat) return true;
+                            const fn = categorizeProperty([c.property?.complex,c.property?.location].filter(Boolean).join(' '), c.property?.room, c.property?.area, c.property?.floor);
+                            return fn === (_categoryKo[cat] || '');
+                        });
+                    }
+                }
 
                 if (results.length === 0) {
                     document.getElementById('sharedPropertyList').innerHTML =
