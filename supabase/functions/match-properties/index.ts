@@ -294,15 +294,9 @@ Deno.serve(async (req) => {
       if (wantedCategory) sqlQuery = sqlQuery.eq('property->>category', wantedCategory);
       if (minPrice) sqlQuery = sqlQuery.gte('price_number', minPrice);
       if (maxPrice) sqlQuery = sqlQuery.lte('price_number', Math.round(maxPrice * 1.1)); // 10% 여유
-      // ★ 위치 bounding box (SQL 레벨에서 필터 — 이게 없으면 전국에서 50개만 가져옴)
+      // ★ 위치 필터 — property.location 텍스트로 직접 필터 (bounding box 대신)
       if (wantedLocation) {
-        const lc = DISTRICT_COORDS[wantedLocation];
-        if (lc) {
-          const latDelta = lc.radius * 0.007;
-          const lngDelta = lc.radius * 0.009;
-          sqlQuery = sqlQuery.gte('lat', lc.lat - latDelta).lte('lat', lc.lat + latDelta);
-          sqlQuery = sqlQuery.gte('lng', lc.lng - lngDelta).lte('lng', lc.lng + lngDelta);
-        }
+        sqlQuery = sqlQuery.or(`property->>location.ilike.%${wantedLocation}%,search_text.ilike.%${wantedLocation}%`);
       }
       sqlQuery = sqlQuery.order('created_at', { ascending: false }).limit(limit * 5);
 
