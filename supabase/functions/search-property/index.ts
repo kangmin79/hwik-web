@@ -622,8 +622,19 @@ Deno.serve(async (req) => {
         if (min_price !== null) parsed.filters.min_price = min_price;
         if (max_price !== null) parsed.filters.max_price = max_price;
       }
-      embedding = OPENAI_API_KEY ? await generateEmbedding(parsed.semantic || query, OPENAI_API_KEY) : null;
-      console.log(`로컬 파싱 성공: ${Date.now() - startTime}ms | filters: ${JSON.stringify(parsed.filters)}`);
+      // ★ 구조화된 필터가 2개 이상이면 임베딩 생략 (SQL만으로 충분)
+      const structuredFilterCount = [
+        parsed.filters.trade_type, parsed.filters.property_type,
+        parsed.filters.min_price || parsed.filters.max_price,
+        parsed.filters.location
+      ].filter(Boolean).length;
+      if (structuredFilterCount >= 2) {
+        embedding = null; // SQL 직접 검색 모드
+        console.log(`SQL 직접 검색: ${Date.now() - startTime}ms | filters: ${JSON.stringify(parsed.filters)} (임베딩 생략)`);
+      } else {
+        embedding = OPENAI_API_KEY ? await generateEmbedding(parsed.semantic || query, OPENAI_API_KEY) : null;
+        console.log(`로컬 파싱 + 벡터: ${Date.now() - startTime}ms | filters: ${JSON.stringify(parsed.filters)}`);
+      }
     } else if (!clientParsedPrice && query.length >= 6) {
       // 로컬 파서 실패 + 긴 쿼리 → Claude에게 맡기기
       const [parsedResult, earlyEmbedding] = await Promise.all([
@@ -663,25 +674,57 @@ Deno.serve(async (req) => {
     const finalTradeType = trade_type || parsed.filters?.trade_type || null;
     const finalPropertyType = property_type || parsed.filters?.property_type || null;
 
-    const { data, error } = await supabase.rpc('search_cards_advanced', {
-      p_agent_id: agent_id || '',
-      p_search_text: null,
-      p_embedding: embedding,
-      p_property_type: finalPropertyType,
-      p_trade_type: finalTradeType,
-      p_min_price: min_price || parsed.filters?.min_price || null,
-      p_max_price: max_price || parsed.filters?.max_price || null,
-      p_days_ago: null,
-      p_limit: limit * multiplier,
-      p_search_mode: search_mode
-    });
+    let results: any[] = [];
+    let searchMethod = 'rpc';
 
-    if (error) {
-      console.error('DB 검색 에러:', error.message);
-      throw new Error('매물 검색에 실패했습니다');
+    // ★ 구조화된 필터가 충분하면 SQL 직접 검색 (빠르고 정확)
+    if (!embedding && (finalTradeType || finalPropertyType || parsed.filters?.min_price || parsed.filters?.max_price)) {
+      searchMethod = 'sql';
+      let sqlQuery = supabase
+        .from('cards')
+        .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number, agent_comment')
+        .eq('agent_id', agent_id)
+        .neq('property->>type', '손님');
+
+      if (finalTradeType) sqlQuery = sqlQuery.eq('property->>type', finalTradeType);
+      if (finalPropertyType) sqlQuery = sqlQuery.eq('property->>category', finalPropertyType);
+      if (parsed.filters?.min_price) sqlQuery = sqlQuery.gte('price_number', parsed.filters.min_price);
+      if (parsed.filters?.max_price) sqlQuery = sqlQuery.lte('price_number', parsed.filters.max_price);
+
+      sqlQuery = sqlQuery.order('created_at', { ascending: false }).limit(limit * multiplier);
+      const { data: sqlData, error: sqlError } = await sqlQuery;
+
+      if (sqlError) {
+        console.error('SQL 검색 에러:', sqlError.message);
+      } else {
+        results = (sqlData || []).map(r => ({ ...r, similarity: 0 }));
+      }
+      console.log(`SQL 직접 검색: ${results.length}건 | ${Date.now() - startTime}ms`);
     }
 
-    let results = data || [];
+    // ★ SQL 결과 없거나 벡터 검색 모드면 RPC 사용
+    if (results.length === 0) {
+      searchMethod = embedding ? 'vector' : 'rpc';
+      const { data, error } = await supabase.rpc('search_cards_advanced', {
+        p_agent_id: agent_id || '',
+        p_search_text: null,
+        p_embedding: embedding,
+        p_property_type: finalPropertyType,
+        p_trade_type: finalTradeType,
+        p_min_price: min_price || parsed.filters?.min_price || null,
+        p_max_price: max_price || parsed.filters?.max_price || null,
+        p_days_ago: null,
+        p_limit: limit * multiplier,
+        p_search_mode: search_mode
+      });
+
+      if (error) {
+        console.error('DB 검색 에러:', error.message);
+        throw new Error('매물 검색에 실패했습니다');
+      }
+      results = data || [];
+      console.log(`RPC 검색: ${results.length}건 | ${Date.now() - startTime}ms`);
+    }
 
     // ★ RPC 결과 0건이면 property_type 완화 후 재시도
     if (results.length === 0 && finalPropertyType) {
@@ -1131,6 +1174,7 @@ Deno.serve(async (req) => {
       search_mode,
       applied_filters: appliedFilters,
       ranking: hasRankingConditions ? 'score' : 'newest',
+      search_method: searchMethod,
       top_score: results[0]?._score ?? null
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
