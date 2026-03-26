@@ -390,60 +390,89 @@ Deno.serve(async (req) => {
       return status === '계약가능';
     });
 
-    // ★ 점수 기반 랭킹
+    // ★ 중개사 실전 랭킹 (예산이하&가까운순 → 넓은순 → 최신순 → 계약가능)
     results = results.map((r: any) => {
       let score = 0;
+      const pn = r.price_number || 0;
 
-      // 벡터 유사도 (0~20점)
-      score += Math.round((r.similarity || 0) * 20);
-
-      // 가격 근접도 (0~30점)
-      if ((minPrice || maxPrice) && r.price_number) {
-        const targetPrice = maxPrice || minPrice!;
-        const priceDiff = Math.abs(r.price_number - targetPrice) / targetPrice;
-        if (priceDiff <= 0.05) score += 30;
-        else if (priceDiff <= 0.15) score += 24;
-        else if (priceDiff <= 0.30) score += 16;
-        else if (priceDiff <= 0.50) score += 8;
-        if (maxPrice && r.price_number > maxPrice * 1.2) score -= 15;
-      }
-
-      // 면적 근접도 (0~20점)
-      if (wantedMinArea || wantedMaxArea) {
-        const areaStr = r.property?.area || '';
-        const pyeongMatch = areaStr.match(/(\d+)평/);
-        const pyeong = pyeongMatch ? parseInt(pyeongMatch[1]) : null;
-        if (pyeong) {
-          const targetArea = wantedMinArea || wantedMaxArea!;
-          const areaDiff = Math.abs(pyeong - targetArea) / targetArea;
-          if (areaDiff <= 0.1) score += 20;
-          else if (areaDiff <= 0.25) score += 14;
-          else if (areaDiff <= 0.50) score += 7;
+      // ① 가격 (0~50점) — 예산 이하가 핵심
+      if (maxPrice && pn > 0) {
+        if (pn <= maxPrice) {
+          const ratio = pn / maxPrice;
+          if (ratio >= 0.90) score += 50;
+          else if (ratio >= 0.75) score += 42;
+          else if (ratio >= 0.50) score += 30;
+          else score += 15;
+        } else {
+          const overRate = (pn - maxPrice) / maxPrice;
+          if (overRate <= 0.05) score += 20;
+          else if (overRate <= 0.10) score += 5;
+          else score -= 30;
         }
+      } else if (minPrice && pn > 0) {
+        if (pn >= minPrice) {
+          const overRate = (pn - minPrice) / minPrice;
+          if (overRate <= 0.15) score += 50;
+          else if (overRate <= 0.30) score += 35;
+          else score += 20;
+        } else score -= 20;
       }
 
-      // 위치 근접도 (0~15점) - 좌표 기반
+      // ② 가성비 (0~20점) — 같은 가격이면 넓은 게 좋음
+      const areaStr = r.property?.area || '';
+      const pyeongMatch = areaStr.match(/(\d+)평/);
+      const sqmMatch = areaStr.match(/(\d+)㎡/);
+      const pyeong = pyeongMatch ? parseInt(pyeongMatch[1]) : (sqmMatch ? Math.round(parseInt(sqmMatch[1]) / 3.305785) : 0);
+      if ((wantedMinArea || wantedMaxArea) && pyeong > 0) {
+        const targetArea = wantedMinArea || wantedMaxArea!;
+        const areaDiff = Math.abs(pyeong - targetArea) / targetArea;
+        if (areaDiff <= 0.1) score += 20;
+        else if (areaDiff <= 0.25) score += 14;
+        else if (areaDiff <= 0.50) score += 7;
+      } else if (pn > 0 && pyeong > 0) {
+        const ppPrice = pn / pyeong;
+        if (ppPrice < 500) score += 15;
+        else if (ppPrice < 1000) score += 10;
+        else if (ppPrice < 2000) score += 5;
+      }
+
+      // ③ 위치 근접도 (0~10점)
       if (wantedLocation && DISTRICT_COORDS[wantedLocation] && r.lat && r.lng) {
         const coord = DISTRICT_COORDS[wantedLocation];
         const dist = haversineDistance(coord.lat, coord.lng, r.lat, r.lng);
-        if (dist <= 0.5) score += 15;
-        else if (dist <= 1.0) score += 12;
-        else if (dist <= 2.0) score += 8;
-        else if (dist <= 3.0) score += 4;
+        if (dist <= 0.5) score += 10;
+        else if (dist <= 1.0) score += 8;
+        else if (dist <= 2.0) score += 5;
+        else if (dist <= 3.0) score += 2;
       }
 
-      // 최신 가산점 (0~5점)
+      // ④ 계약가능 (0~8점)
+      const status = r.trade_status || '계약가능';
+      if (status === '계약가능') score += 8;
+
+      // ⑤ 최신 등록 (0~7점)
       if (r.created_at) {
         const days = (Date.now() - new Date(r.created_at).getTime()) / (1000*60*60*24);
-        if (days <= 1) score += 5;
-        else if (days <= 3) score += 3;
-        else if (days <= 7) score += 1;
+        if (days <= 1) score += 7;
+        else if (days <= 3) score += 5;
+        else if (days <= 7) score += 3;
+        else if (days <= 14) score += 1;
       }
+
+      // ⑥ 벡터 유사도 보너스 (0~5점)
+      score += Math.round((r.similarity || 0) * 5);
 
       return { ...r, _score: score };
     });
 
-    results.sort((a: any, b: any) => (b._score || 0) - (a._score || 0));
+    results.sort((a: any, b: any) => {
+      const diff = (b._score || 0) - (a._score || 0);
+      if (diff !== 0) return diff;
+      const aArea = parseInt((a.property?.area || '').match(/(\d+)평/)?.[1] || '0');
+      const bArea = parseInt((b.property?.area || '').match(/(\d+)평/)?.[1] || '0');
+      if (bArea !== aArea) return bArea - aArea;
+      return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+    });
 
     // 상위 10개
     results = results.slice(0, limit).map((r: any) => ({

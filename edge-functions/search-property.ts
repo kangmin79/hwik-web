@@ -1045,7 +1045,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ★ 점수 기반 랭킹 (조건이 많을수록 정밀 랭킹, 적으면 최신순)
+    // ★ 중개사 실전 랭킹 시스템
+    // 원칙: 예산 이하 & 가까운 순 → 같은 가격이면 넓은 순 → 최신순 → 계약가능 우선
     let autoSort: string | null = null;
     const hasRankingConditions = !!(
       parsed.filters?.min_price || parsed.filters?.max_price ||
@@ -1054,78 +1055,117 @@ Deno.serve(async (req) => {
     );
 
     if (hasRankingConditions && results.length > 1) {
-      // 점수 계산용 기준값
-      const targetPrice = parsed.filters?.max_price || parsed.filters?.min_price || null;
+      const targetMaxPrice = parsed.filters?.max_price || null;
+      const targetMinPrice = parsed.filters?.min_price || null;
       const targetArea = parsed.filters?.min_area || parsed.filters?.max_area || null;
       const targetRooms = parsed.filters?.rooms || null;
       const locCoord = parsed.filters?.location ? DISTRICT_COORDS[parsed.filters.location] : null;
 
       results = results.map(r => {
         let score = 0;
-        let factors = 0;
+        const pn = r.price_number || 0;
 
-        // ① 가격 근접도 (0~40점)
-        if (targetPrice && r.price_number) {
-          factors++;
-          const priceDiff = Math.abs(r.price_number - targetPrice) / targetPrice;
-          if (priceDiff <= 0.05) score += 40;       // ±5% → 만점
-          else if (priceDiff <= 0.15) score += 32;   // ±15%
-          else if (priceDiff <= 0.30) score += 20;   // ±30%
-          else if (priceDiff <= 0.50) score += 10;   // ±50%
-          // 예산 초과 페널티
-          if (parsed.filters?.max_price && r.price_number > parsed.filters.max_price) {
-            const overRate = (r.price_number - parsed.filters.max_price) / parsed.filters.max_price;
-            score -= Math.min(20, Math.round(overRate * 40));
+        // ① 가격 (0~50점) — 가장 중요. 예산 이하가 핵심.
+        if (targetMaxPrice && pn > 0) {
+          if (pn <= targetMaxPrice) {
+            // 예산 이하: 가까울수록 높은 점수 (예산에 딱 맞는 게 최고)
+            const ratio = pn / targetMaxPrice; // 0.0 ~ 1.0
+            if (ratio >= 0.90) score += 50;      // 예산의 90~100% → 만점
+            else if (ratio >= 0.75) score += 42;  // 75~90%
+            else if (ratio >= 0.50) score += 30;  // 50~75%
+            else score += 15;                      // 50% 미만 (너무 쌈 = 뭔가 이유 있을 수 있음)
+          } else {
+            // 예산 초과: 강한 페널티 (10% 초과까지만 보여주고 그 이상은 바닥)
+            const overRate = (pn - targetMaxPrice) / targetMaxPrice;
+            if (overRate <= 0.05) score += 20;     // 5% 초과 — 약간 봐줄만함
+            else if (overRate <= 0.10) score += 5;  // 10% 초과
+            else score -= 30;                       // 10% 넘게 초과 → 사실상 탈락
+          }
+        } else if (targetMinPrice && pn > 0) {
+          // "이상" 검색: 비쌀수록 좋은 게 아니라 가까울수록 좋음
+          if (pn >= targetMinPrice) {
+            const overRate = (pn - targetMinPrice) / targetMinPrice;
+            if (overRate <= 0.15) score += 50;
+            else if (overRate <= 0.30) score += 35;
+            else score += 20;
+          } else {
+            score -= 20;
           }
         }
 
-        // ② 크기/면적 근접도 (0~25점)
-        if (targetArea) {
-          factors++;
-          const area = extractAreaNumber(r.property?.area);
-          if (area) {
-            const areaDiff = Math.abs(area - targetArea) / targetArea;
-            if (areaDiff <= 0.1) score += 25;        // ±10% → 만점
-            else if (areaDiff <= 0.25) score += 18;
-            else if (areaDiff <= 0.50) score += 10;
-            else score += 3;
-          }
+        // ② 가성비 (0~20점) — 같은 가격이면 넓은 게 좋음
+        const areaStr = r.property?.area || '';
+        const pyeongMatch = areaStr.match(/(\d+)평/);
+        const sqmMatch = areaStr.match(/(\d+)㎡/);
+        const pyeong = pyeongMatch ? parseInt(pyeongMatch[1]) : (sqmMatch ? Math.round(parseInt(sqmMatch[1]) / 3.305785) : 0);
+
+        if (targetArea && pyeong > 0) {
+          // 요청 평수가 있으면 근접도
+          const areaDiff = Math.abs(pyeong - targetArea) / targetArea;
+          if (areaDiff <= 0.1) score += 20;
+          else if (areaDiff <= 0.25) score += 14;
+          else if (areaDiff <= 0.50) score += 7;
+        } else if (pn > 0 && pyeong > 0) {
+          // 요청 평수가 없으면 평당가 기준 (싸면 가산)
+          const pricePerPyeong = pn / pyeong;
+          if (pricePerPyeong < 500) score += 15;       // 평당 500만원 이하 (가성비 굿)
+          else if (pricePerPyeong < 1000) score += 10;
+          else if (pricePerPyeong < 2000) score += 5;
         }
 
-        // ③ 방 수 일치 (0~20점)
+        // ③ 방 수 일치 (0~10점)
         if (targetRooms) {
-          factors++;
           const roomStr = r.property?.room || r.search_text || '';
           const roomNum = parseInt(roomStr.match(/(\d)/)?.[1] || '0');
-          if (roomNum === targetRooms) score += 20;          // 정확 일치
-          else if (Math.abs(roomNum - targetRooms) === 1) score += 10; // ±1
+          if (roomNum === targetRooms) score += 10;
+          else if (roomNum > 0 && Math.abs(roomNum - targetRooms) === 1) score += 4;
         }
 
-        // ④ 위치 근접도 (0~15점)
+        // ④ 위치 근접도 (0~10점) — 이미 하드필터로 걸렀으므로 보너스 성격
         if (locCoord && r.lat && r.lng) {
-          factors++;
           const dist = haversineDistance(locCoord.lat, locCoord.lng, r.lat, r.lng);
-          if (dist <= 0.5) score += 15;         // 500m 이내
-          else if (dist <= 1.0) score += 12;    // 1km
-          else if (dist <= 2.0) score += 8;     // 2km
-          else if (dist <= 3.0) score += 4;     // 3km
+          if (dist <= 0.5) score += 10;
+          else if (dist <= 1.0) score += 8;
+          else if (dist <= 2.0) score += 5;
+          else if (dist <= 3.0) score += 2;
         }
 
-        // ⑤ 최신 가산점 (0~5점) — 7일 이내 등록
+        // ⑤ 계약가능 가산 (0~8점) — 계약중/완료는 보여줘도 의미 적음
+        const status = r.trade_status || '계약가능';
+        if (status === '계약가능') score += 8;
+        else if (status === '계약중') score += 0;
+        else score -= 5; // 완료
+
+        // ⑥ 최신 등록 (0~7점) — 최근 매물이 아직 살아있을 확률 높음
         if (r.created_at) {
           const daysSince = (Date.now() - new Date(r.created_at).getTime()) / (1000*60*60*24);
-          if (daysSince <= 1) score += 5;
-          else if (daysSince <= 3) score += 3;
-          else if (daysSince <= 7) score += 1;
+          if (daysSince <= 1) score += 7;
+          else if (daysSince <= 3) score += 5;
+          else if (daysSince <= 7) score += 3;
+          else if (daysSince <= 14) score += 1;
         }
 
-        return { ...r, _score: score, _factors: factors };
+        // ⑦ 특징 매칭 보너스 (0~5점)
+        if (parsed.features && parsed.features.length > 0) {
+          const st = r.search_text || '';
+          const feats = (r.property?.features || []).join(' ');
+          const all = (st + ' ' + feats).toLowerCase();
+          const matchedCount = parsed.features.filter(f => all.includes(f.toLowerCase())).length;
+          score += Math.min(5, matchedCount * 2);
+        }
+
+        return { ...r, _score: score };
       });
 
-      // 점수 내림차순 정렬 (동점이면 최신순)
+      // 점수 내림차순 정렬 (동점이면 넓은 순 → 최신순)
       results.sort((a, b) => {
         const diff = (b._score || 0) - (a._score || 0);
         if (diff !== 0) return diff;
+        // 동점이면 넓은 순
+        const aArea = parseInt((a.property?.area || '').match(/(\d+)평/)?.[1] || '0');
+        const bArea = parseInt((b.property?.area || '').match(/(\d+)평/)?.[1] || '0');
+        if (bArea !== aArea) return bArea - aArea;
+        // 그래도 동점이면 최신순
         return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
       });
       console.log(`랭킹 적용: ${results.length}건 | 상위: ${results[0]?._score}점 | 하위: ${results[results.length-1]?._score}점`);
@@ -1134,7 +1174,7 @@ Deno.serve(async (req) => {
       autoSort = parsed.filters?.sort || null;
       if (!autoSort) {
         if (parsed.filters?.date_filter) autoSort = 'newest';
-        else autoSort = 'newest'; // 조건 없으면 기본 최신순
+        else autoSort = 'newest';
       }
       results = sortResults(results, autoSort);
     }
