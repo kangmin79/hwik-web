@@ -7454,8 +7454,27 @@ async function loadInlineMatch(clientCardId) {
         else if (/아파트/.test(allText)) wantedCat = 'apartment';
 
         if (wantedCat) {
-            const catFiltered = results.filter(r => r.property?.category === wantedCat);
-            if (catFiltered.length >= 1) results = catFiltered;
+            // 카테고리별 대체 가능 그룹
+            const catGroups = {
+                'apartment': ['apartment', 'officetel', 'room'],  // 아파트 → 오피스텔 → 빌라
+                'officetel': ['officetel', 'apartment', 'room'],  // 오피스텔 → 아파트 → 원투룸
+                'room': ['room', 'officetel'],                     // 원투룸 → 오피스텔
+                'commercial': ['commercial'],                       // 상가만
+                'office': ['office'],                               // 사무실만
+            };
+            const allowed = catGroups[wantedCat] || [wantedCat];
+
+            // 허용된 카테고리만 필터
+            const catFiltered = results.filter(r => allowed.includes(r.property?.category));
+            if (catFiltered.length >= 1) {
+                // 우선순위 정렬 (요청 카테고리가 위로)
+                catFiltered.sort((a, b) => {
+                    const aIdx = allowed.indexOf(a.property?.category);
+                    const bIdx = allowed.indexOf(b.property?.category);
+                    return aIdx - bIdx;
+                });
+                results = catFiltered;
+            }
         }
 
         // ★ 가격 필터: 손님 예산에서 추출
