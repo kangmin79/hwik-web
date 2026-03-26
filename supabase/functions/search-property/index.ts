@@ -1064,97 +1064,124 @@ Deno.serve(async (req) => {
       results = results.map(r => {
         let score = 0;
         const pn = r.price_number || 0;
+        const detail: Record<string, any> = {}; // 항목별 점수 상세
 
-        // ① 가격 (0~50점) — 가장 중요. 예산 이하가 핵심.
+        // ① 가격 (0~50점)
+        let priceScore = 0;
+        let priceReason = '';
         if (targetMaxPrice && pn > 0) {
           if (pn <= targetMaxPrice) {
-            // 예산 이하: 가까울수록 높은 점수 (예산에 딱 맞는 게 최고)
-            const ratio = pn / targetMaxPrice; // 0.0 ~ 1.0
-            if (ratio >= 0.90) score += 50;      // 예산의 90~100% → 만점
-            else if (ratio >= 0.75) score += 42;  // 75~90%
-            else if (ratio >= 0.50) score += 30;  // 50~75%
-            else score += 15;                      // 50% 미만 (너무 쌈 = 뭔가 이유 있을 수 있음)
+            const ratio = pn / targetMaxPrice;
+            if (ratio >= 0.90) { priceScore = 50; priceReason = '예산 90~100% (딱 맞음)'; }
+            else if (ratio >= 0.75) { priceScore = 42; priceReason = '예산 75~90%'; }
+            else if (ratio >= 0.50) { priceScore = 30; priceReason = '예산 50~75% (여유)'; }
+            else { priceScore = 15; priceReason = '예산 50% 미만 (많이 싸다)'; }
           } else {
-            // 예산 초과: 강한 페널티 (10% 초과까지만 보여주고 그 이상은 바닥)
             const overRate = (pn - targetMaxPrice) / targetMaxPrice;
-            if (overRate <= 0.05) score += 20;     // 5% 초과 — 약간 봐줄만함
-            else if (overRate <= 0.10) score += 5;  // 10% 초과
-            else score -= 30;                       // 10% 넘게 초과 → 사실상 탈락
+            if (overRate <= 0.05) { priceScore = 20; priceReason = '예산 5% 초과'; }
+            else if (overRate <= 0.10) { priceScore = 5; priceReason = '예산 10% 초과'; }
+            else { priceScore = -30; priceReason = '예산 10%+ 초과 (탈락)'; }
           }
         } else if (targetMinPrice && pn > 0) {
-          // "이상" 검색: 비쌀수록 좋은 게 아니라 가까울수록 좋음
           if (pn >= targetMinPrice) {
             const overRate = (pn - targetMinPrice) / targetMinPrice;
-            if (overRate <= 0.15) score += 50;
-            else if (overRate <= 0.30) score += 35;
-            else score += 20;
-          } else {
-            score -= 20;
-          }
+            if (overRate <= 0.15) { priceScore = 50; priceReason = '최소가 근접'; }
+            else if (overRate <= 0.30) { priceScore = 35; priceReason = '최소가 30% 이내'; }
+            else { priceScore = 20; priceReason = '최소가 초과'; }
+          } else { priceScore = -20; priceReason = '최소가 미달'; }
         }
+        score += priceScore;
+        detail.price = { score: priceScore, reason: priceReason, value: pn };
 
-        // ② 가성비 (0~20점) — 같은 가격이면 넓은 게 좋음
+        // ② 가성비 (0~20점)
         const areaStr = r.property?.area || '';
         const pyeongMatch = areaStr.match(/(\d+)평/);
         const sqmMatch = areaStr.match(/(\d+)㎡/);
         const pyeong = pyeongMatch ? parseInt(pyeongMatch[1]) : (sqmMatch ? Math.round(parseInt(sqmMatch[1]) / 3.305785) : 0);
-
+        let areaScore = 0;
+        let areaReason = '';
         if (targetArea && pyeong > 0) {
-          // 요청 평수가 있으면 근접도
           const areaDiff = Math.abs(pyeong - targetArea) / targetArea;
-          if (areaDiff <= 0.1) score += 20;
-          else if (areaDiff <= 0.25) score += 14;
-          else if (areaDiff <= 0.50) score += 7;
+          if (areaDiff <= 0.1) { areaScore = 20; areaReason = `${pyeong}평 (요청 ${targetArea}평 ±10%)`; }
+          else if (areaDiff <= 0.25) { areaScore = 14; areaReason = `${pyeong}평 (±25%)`; }
+          else if (areaDiff <= 0.50) { areaScore = 7; areaReason = `${pyeong}평 (±50%)`; }
+          else { areaReason = `${pyeong}평 (범위 밖)`; }
         } else if (pn > 0 && pyeong > 0) {
-          // 요청 평수가 없으면 평당가 기준 (싸면 가산)
-          const pricePerPyeong = pn / pyeong;
-          if (pricePerPyeong < 500) score += 15;       // 평당 500만원 이하 (가성비 굿)
-          else if (pricePerPyeong < 1000) score += 10;
-          else if (pricePerPyeong < 2000) score += 5;
+          const ppPrice = Math.round(pn / pyeong);
+          if (ppPrice < 500) { areaScore = 15; areaReason = `평당 ${ppPrice}만 (가성비↑)`; }
+          else if (ppPrice < 1000) { areaScore = 10; areaReason = `평당 ${ppPrice}만`; }
+          else if (ppPrice < 2000) { areaScore = 5; areaReason = `평당 ${ppPrice}만`; }
+          else { areaReason = `평당 ${ppPrice}만 (비쌈)`; }
         }
+        score += areaScore;
+        detail.area = { score: areaScore, reason: areaReason, pyeong };
 
-        // ③ 방 수 일치 (0~10점)
+        // ③ 방 수 (0~10점)
+        let roomScore = 0;
+        let roomReason = '';
         if (targetRooms) {
           const roomStr = r.property?.room || r.search_text || '';
           const roomNum = parseInt(roomStr.match(/(\d)/)?.[1] || '0');
-          if (roomNum === targetRooms) score += 10;
-          else if (roomNum > 0 && Math.abs(roomNum - targetRooms) === 1) score += 4;
+          if (roomNum === targetRooms) { roomScore = 10; roomReason = `${roomNum}룸 (일치)`; }
+          else if (roomNum > 0 && Math.abs(roomNum - targetRooms) === 1) { roomScore = 4; roomReason = `${roomNum}룸 (±1)`; }
+          else { roomReason = roomNum > 0 ? `${roomNum}룸 (불일치)` : '정보없음'; }
         }
+        score += roomScore;
+        detail.room = { score: roomScore, reason: roomReason };
 
-        // ④ 위치 근접도 (0~10점) — 이미 하드필터로 걸렀으므로 보너스 성격
+        // ④ 위치 (0~10점)
+        let locScore = 0;
+        let locReason = '';
         if (locCoord && r.lat && r.lng) {
           const dist = haversineDistance(locCoord.lat, locCoord.lng, r.lat, r.lng);
-          if (dist <= 0.5) score += 10;
-          else if (dist <= 1.0) score += 8;
-          else if (dist <= 2.0) score += 5;
-          else if (dist <= 3.0) score += 2;
+          const distKm = Math.round(dist * 10) / 10;
+          if (dist <= 0.5) { locScore = 10; locReason = `${distKm}km (매우 가까움)`; }
+          else if (dist <= 1.0) { locScore = 8; locReason = `${distKm}km`; }
+          else if (dist <= 2.0) { locScore = 5; locReason = `${distKm}km`; }
+          else if (dist <= 3.0) { locScore = 2; locReason = `${distKm}km (먼 편)`; }
+          else { locReason = `${distKm}km (멀다)`; }
         }
+        score += locScore;
+        detail.location = { score: locScore, reason: locReason };
 
-        // ⑤ 계약가능 가산 (0~8점) — 계약중/완료는 보여줘도 의미 적음
+        // ⑤ 계약가능 (0~8점)
         const status = r.trade_status || '계약가능';
-        if (status === '계약가능') score += 8;
-        else if (status === '계약중') score += 0;
-        else score -= 5; // 완료
+        let statusScore = 0;
+        if (status === '계약가능') statusScore = 8;
+        else if (status === '계약중') statusScore = 0;
+        else statusScore = -5;
+        score += statusScore;
+        detail.status = { score: statusScore, value: status };
 
-        // ⑥ 최신 등록 (0~7점) — 최근 매물이 아직 살아있을 확률 높음
+        // ⑥ 최신 (0~7점)
+        let freshScore = 0;
+        let freshReason = '';
         if (r.created_at) {
-          const daysSince = (Date.now() - new Date(r.created_at).getTime()) / (1000*60*60*24);
-          if (daysSince <= 1) score += 7;
-          else if (daysSince <= 3) score += 5;
-          else if (daysSince <= 7) score += 3;
-          else if (daysSince <= 14) score += 1;
+          const daysSince = Math.round((Date.now() - new Date(r.created_at).getTime()) / (1000*60*60*24));
+          if (daysSince <= 1) { freshScore = 7; freshReason = '오늘'; }
+          else if (daysSince <= 3) { freshScore = 5; freshReason = `${daysSince}일 전`; }
+          else if (daysSince <= 7) { freshScore = 3; freshReason = `${daysSince}일 전`; }
+          else if (daysSince <= 14) { freshScore = 1; freshReason = `${daysSince}일 전`; }
+          else { freshReason = `${daysSince}일 전 (오래됨)`; }
         }
+        score += freshScore;
+        detail.fresh = { score: freshScore, reason: freshReason };
 
-        // ⑦ 특징 매칭 보너스 (0~5점)
+        // ⑦ 특징 (0~5점)
+        let featScore = 0;
+        let featReason = '';
         if (parsed.features && parsed.features.length > 0) {
           const st = r.search_text || '';
           const feats = (r.property?.features || []).join(' ');
           const all = (st + ' ' + feats).toLowerCase();
-          const matchedCount = parsed.features.filter(f => all.includes(f.toLowerCase())).length;
-          score += Math.min(5, matchedCount * 2);
+          const matched = parsed.features.filter(f => all.includes(f.toLowerCase()));
+          featScore = Math.min(5, matched.length * 2);
+          featReason = matched.length > 0 ? matched.join(',') : '없음';
         }
+        score += featScore;
+        detail.features = { score: featScore, reason: featReason };
 
-        return { ...r, _score: score };
+        return { ...r, _score: score, _scoreDetail: detail };
       });
 
       // 점수 내림차순 정렬 (동점이면 넓은 순 → 최신순)

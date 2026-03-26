@@ -1116,11 +1116,13 @@ function analyzeResultDetailed(test, searchResult) {
             complex: (r.property||{}).complex||'',
             similarity: sim,
             score: r._score || null,
+            scoreDetail: r._scoreDetail || null,
             checks: checks,
             allMatch: allMatch,
             whyShown: whyShown.join(' + '),
             whyRank: whyRank,
-            trade_status: r.trade_status||'계약가능'
+            trade_status: r.trade_status||'계약가능',
+            area: (r.property||{}).area||'?'
         });
     }
 
