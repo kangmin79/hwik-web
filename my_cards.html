@@ -7460,7 +7460,7 @@ async function loadInlineMatch(clientCardId) {
                 'officetel': ['officetel', 'apartment', 'room'],  // 오피스텔 → 아파트 → 원투룸
                 'room': ['room', 'officetel'],                     // 원투룸 → 오피스텔
                 'commercial': ['commercial'],                       // 상가만
-                'office': ['office'],                               // 사무실만
+                'office': ['office', 'officetel'],                   // 사무실 → 오피스텔도 가능
             };
             const allowed = catGroups[wantedCat] || [wantedCat];
 
