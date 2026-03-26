@@ -213,18 +213,95 @@ function shuffle(a){var b=a.slice();for(var i=b.length-1;i>0;i--){var j=Math.flo
 
 function priceText(m){if(m>=10000){var e=Math.floor(m/10000),r=m%10000;if(r>=1000)return e+'억'+Math.floor(r/1000)+'천';if(r>0)return e+'억'+r;return e+'억'}if(m>=1000)return Math.floor(m/1000)+'천'+(m%1000>0?m%1000:'');return''+m}
 
+// ★ 실제 DB 데이터 캐시 (generateAll에서 로드)
+var DB_APARTMENTS = []; // apartments 테이블에서 가져온 실제 단지
+var DB_SUBWAYS = [];    // facilities 테이블에서 가져온 역
+var DB_SCHOOLS = [];    // facilities 테이블에서 가져온 학교
+
 function makeProperty(agentId, category, tradeType) {
-    var dist = rand(DISTRICTS), dong = rand(dist.dongs), location = dist.gu + ' ' + dong;
-    var lat = dist.lat + randFloat(-0.01, 0.01), lng = dist.lng + randFloat(-0.01, 0.01);
-    var complex='',area='',floor='',room='',price='',priceNum=0,features=[],comment='';
-    if(category==='apartment'){complex=rand(APT_NAMES)+(randInt(1,3)>1?'':' '+randInt(1,10)+'차');var p=rand([18,24,25,32,33,34,42,49,59,74,84]);area=p+'㎡('+Math.round(p*0.3025)+'평)';floor=randInt(1,30)+'층';room=rand(['2룸','3룸','4룸']);features=shuffle(FEATURES_POOL).slice(0,randInt(1,4));if(tradeType==='매매'){priceNum=randInt(15000,300000);price=priceText(priceNum);comment=complex+' '+priceText(priceNum)+' 매매'}else if(tradeType==='전세'){priceNum=randInt(10000,150000);price=priceText(priceNum);comment=complex+' 전세 '+priceText(priceNum)}else{var d=randInt(1000,10000),mn=randInt(30,200);priceNum=d;price=d+'/'+mn;comment=complex+' 월세 '+d+'/'+mn}}
-    else if(category==='officetel'){complex=rand(OFFICETEL_NAMES)+' 오피스텔';var p=rand([16,18,21,24,28,33]);area=p+'㎡('+Math.round(p*0.3025)+'평)';floor=randInt(1,25)+'층';room=rand(['원룸','1.5룸','투룸']);features=shuffle(FEATURES_POOL).slice(0,randInt(1,3));if(tradeType==='매매'){priceNum=randInt(8000,50000);price=priceText(priceNum);comment='오피스텔 '+priceText(priceNum)+' 매매'}else if(tradeType==='전세'){priceNum=randInt(5000,25000);price=priceText(priceNum);comment='오피스텔 전세 '+priceText(priceNum)}else{var d=randInt(300,3000),mn=randInt(25,100);priceNum=d;price=d+'/'+mn;comment='오피스텔 월세 '+d+'/'+mn}}
-    else if(category==='room'){complex=rand(VILLA_NAMES);var p=rand([10,13,16,18,21,26,33]);area=p+'㎡('+Math.round(p*0.3025)+'평)';floor=randInt(1,6)+'층';room=rand(['원룸','투룸','쓰리룸']);features=shuffle(FEATURES_POOL).slice(0,randInt(1,3));if(tradeType==='매매'){priceNum=randInt(5000,30000);price=priceText(priceNum);comment=room+' '+priceText(priceNum)+' 매매'}else if(tradeType==='전세'){priceNum=randInt(3000,15000);price=priceText(priceNum);comment=room+' 전세 '+priceText(priceNum)}else{var d=randInt(200,2000),mn=randInt(20,80);priceNum=d;price=d+'/'+mn;comment=room+' 월세 '+d+'/'+mn}}
-    else if(category==='commercial'){var biz=rand(COMMERCIAL_TYPES);complex=biz+(randInt(1,2)>1?' 가능':'');var p=rand([10,15,20,25,30,40,50,66]);area=p+'㎡('+Math.round(p*0.3025)+'평)';floor=rand(['1층','지하1층','2층','1~2층']);room='상가';features=shuffle(['대로변','코너','주차가능','유동인구多','전면넓음']).slice(0,randInt(0,2));if(tradeType==='매매'){priceNum=randInt(5000,100000);price=priceText(priceNum);comment=biz+' 상가 매매'}else if(tradeType==='전세'){priceNum=randInt(3000,30000);price=priceText(priceNum);comment='상가 전세 '+priceText(priceNum)}else{var d=randInt(1000,5000),mn=randInt(50,500);priceNum=d;price=d+'/'+mn;comment=biz+' 상가 월세 '+d+'/'+mn}}
-    else{var desc=rand(OFFICE_DESCS);complex=desc;var p=rand([15,20,25,33,45,60,80,100]);area=p+'㎡('+Math.round(p*0.3025)+'평)';floor=randInt(2,20)+'층';room='사무실';features=shuffle(['역세권','주차가능','엘리베이터','회의실포함','인터넷포함']).slice(0,randInt(0,2));if(tradeType==='매매'){priceNum=randInt(10000,100000);price=priceText(priceNum);comment='사무실 매매 '+priceText(priceNum)}else if(tradeType==='전세'){priceNum=randInt(3000,30000);price=priceText(priceNum);comment='사무실 전세 '+priceText(priceNum)}else{var d=randInt(500,5000),mn=randInt(30,300);priceNum=d;price=d+'/'+mn;comment='사무실 월세 '+d+'/'+mn}}
+    var complex='',area='',floor='',room='',price='',priceNum=0,features=[],comment='',location='',lat=0,lng=0,address='',coordType='test';
+
+    // ★ 아파트/오피스텔: 실제 DB 단지 사용
+    if((category==='apartment'||category==='officetel') && DB_APARTMENTS.length>0){
+        var apt=rand(DB_APARTMENTS);
+        complex=apt.kapt_name||'';
+        location=(apt.sgg||'')+' '+(apt.umd_nm||'');
+        address=apt.doro_juso||('서울시 '+location);
+        lat=parseFloat(apt.lat)||0;
+        lng=parseFloat(apt.lon)||0;
+        coordType='db_match';
+        if(category==='officetel') complex=(complex.indexOf('오피스텔')>=0?complex:complex+' 오피스텔');
+    } else {
+        var dist=rand(DISTRICTS),dong=rand(dist.dongs);
+        location=dist.gu+' '+dong;
+        address='서울시 '+location;
+        lat=dist.lat+randFloat(-0.01,0.01);
+        lng=dist.lng+randFloat(-0.01,0.01);
+    }
+
+    // 매물 상세 생성
+    if(category==='apartment'){
+        if(!complex) complex=rand(APT_NAMES)+(randInt(1,3)>1?'':' '+randInt(1,10)+'차');
+        var p=rand([49,59,74,84,101,114,134,162,198]); // 실제 아파트 면적
+        area=p+'㎡('+Math.round(p*0.3025)+'평)';
+        floor=randInt(1,35)+'층';
+        room=rand(['2룸','3룸','4룸','5룸']);
+        features=shuffle(FEATURES_POOL).slice(0,randInt(1,5));
+        if(tradeType==='매매'){priceNum=randInt(15000,350000);price=priceText(priceNum);comment=complex+' '+priceText(priceNum)+' 매매'}
+        else if(tradeType==='전세'){priceNum=randInt(10000,180000);price=priceText(priceNum);comment=complex+' 전세 '+priceText(priceNum)}
+        else{var d=randInt(1000,15000),mn=randInt(30,300);priceNum=d;price=priceText(d)+'/'+mn;comment=complex+' 월세 '+priceText(d)+'/'+mn}
+    }
+    else if(category==='officetel'){
+        if(!complex) complex=rand(OFFICETEL_NAMES)+' 오피스텔';
+        var p=rand([16,18,21,24,28,33,39,46]);
+        area=p+'㎡('+Math.round(p*0.3025)+'평)';
+        floor=randInt(1,30)+'층';
+        room=rand(['원룸','1.5룸','투룸']);
+        features=shuffle(FEATURES_POOL).slice(0,randInt(1,3));
+        if(tradeType==='매매'){priceNum=randInt(8000,60000);price=priceText(priceNum);comment='오피스텔 '+complex+' '+priceText(priceNum)+' 매매'}
+        else if(tradeType==='전세'){priceNum=randInt(5000,30000);price=priceText(priceNum);comment='오피스텔 '+complex+' 전세 '+priceText(priceNum)}
+        else{var d=randInt(300,5000),mn=randInt(25,150);priceNum=d;price=priceText(d)+'/'+mn;comment='오피스텔 '+complex+' 월세 '+priceText(d)+'/'+mn}
+    }
+    else if(category==='room'){
+        complex=rand(VILLA_NAMES);
+        var p=rand([10,13,16,18,21,26,33]);
+        area=p+'㎡('+Math.round(p*0.3025)+'평)';
+        floor=randInt(1,6)+'층';
+        room=rand(['원룸','투룸','쓰리룸']);
+        features=shuffle(FEATURES_POOL).slice(0,randInt(1,3));
+        // 근처 역 이름을 코멘트에 포함 (검색에 도움)
+        var nearStation=(DB_SUBWAYS.length>0)?rand(DB_SUBWAYS).name:'';
+        if(tradeType==='매매'){priceNum=randInt(5000,35000);price=priceText(priceNum);comment=room+' '+location+' '+priceText(priceNum)+' 매매'+(nearStation?' '+nearStation+' 도보권':'')}
+        else if(tradeType==='전세'){priceNum=randInt(3000,18000);price=priceText(priceNum);comment=room+' '+location+' 전세 '+priceText(priceNum)+(nearStation?' '+nearStation+' 근처':'')}
+        else{var d=randInt(100,3000),mn=randInt(15,100);priceNum=d;price=priceText(d)+'/'+mn;comment=room+' '+location+' 월세 '+priceText(d)+'/'+mn}
+    }
+    else if(category==='commercial'){
+        var biz=rand(COMMERCIAL_TYPES);
+        complex=biz+(randInt(1,3)>1?' 가능':' 추천');
+        var p=rand([10,15,20,25,30,40,50,66,99,132]);
+        area=p+'㎡('+Math.round(p*0.3025)+'평)';
+        floor=rand(['1층','지하1층','2층','1~2층','3층']);
+        room='상가';
+        features=shuffle(['대로변','코너','주차가능','유동인구多','전면넓음','대형간판','층고높음','화장실남녀분리']).slice(0,randInt(0,3));
+        if(tradeType==='매매'){priceNum=randInt(5000,150000);price=priceText(priceNum);comment=biz+' 상가 '+location+' 매매 '+priceText(priceNum)}
+        else if(tradeType==='전세'){priceNum=randInt(3000,50000);price=priceText(priceNum);comment='상가 '+location+' 전세 '+priceText(priceNum)+' '+biz+' 추천'}
+        else{var d=randInt(500,10000),mn=randInt(50,800);priceNum=d;price=priceText(d)+'/'+mn;comment=biz+' 상가 '+location+' 월세 '+priceText(d)+'/'+mn}
+    }
+    else{
+        var desc=rand(OFFICE_DESCS);
+        complex=desc;
+        var p=rand([15,20,25,33,45,60,80,100,132,165]);
+        area=p+'㎡('+Math.round(p*0.3025)+'평)';
+        floor=randInt(2,25)+'층';
+        room='사무실';
+        features=shuffle(['역세권','주차가능','엘리베이터','회의실포함','인터넷포함','전용화장실','탕비실','층분리','간판가능']).slice(0,randInt(0,3));
+        if(tradeType==='매매'){priceNum=randInt(10000,150000);price=priceText(priceNum);comment='사무실 '+location+' 매매 '+priceText(priceNum)}
+        else if(tradeType==='전세'){priceNum=randInt(3000,40000);price=priceText(priceNum);comment='사무실 '+location+' 전세 '+priceText(priceNum)}
+        else{var d=randInt(500,8000),mn=randInt(30,500);priceNum=d;price=priceText(d)+'/'+mn;comment='사무실 '+location+' 월세 '+priceText(d)+'/'+mn}
+    }
     var catKo = CATEGORY_KO[category]||category;
-    var searchText = [tradeType,catKo,price,location,complex,area,features.join(' '),comment].filter(Boolean).join(' ');
-    return {id:uuid(),agent_id:agentId,property:{type:tradeType,price:price,location:location,address:'서울시 '+location,complex:complex,area:area,floor:floor,room:room,features:features,moveIn:rand(['즉시입주','협의','2026.04','2026.05']),category:category},agent_comment:comment,price_number:priceNum,trade_status:randInt(1,5)<=4?'계약가능':'계약중',lat:lat,lng:lng,coord_type:'test',search_text:searchText,style:rand(['a','b','c']),color:rand(['#FF6B35','#3b82f6','#10b981','#8b5cf6']),photos:[],private_note:{memo:'테스트-'+comment,rawText:''},status:'active'};
+    var searchText = [tradeType,catKo,price,location,complex,area,features.join(' '),comment,address].filter(Boolean).join(' ');
+    return {id:uuid(),agent_id:agentId,property:{type:tradeType,price:price,location:location,address:address,complex:complex,area:area,floor:floor,room:room,features:features,moveIn:rand(['즉시입주','협의','2026.04','2026.05','2026.06','2026.07','2026.08']),category:category},agent_comment:comment,price_number:priceNum,trade_status:randInt(1,5)<=4?'계약가능':'계약중',lat:lat,lng:lng,coord_type:coordType,search_text:searchText,style:rand(['a','b','c']),color:rand(['#FF6B35','#3b82f6','#10b981','#8b5cf6']),photos:[],private_note:{memo:'테스트-'+comment,rawText:''},status:'active'};
 }
 
 function makeClient(agentId) {
@@ -242,10 +319,10 @@ function makeClient(agentId) {
 var MESSY_TEMPLATES = [
     // 카톡 복붙 스타일
     function(d,g) { return '손님 한분 계신데 '+g+'쪽 '+rand(['아파트','오피스텔','빌라'])+' '+rand(['매매','전세','월세'])+' 알아보고계세요 예산은 '+rand(['3억정도','5억안쪽','2억이내','1억초반','7천~1억','10억이하'])+' '+rand(['급해요','천천히','빨리좀','가능하면 이번달']); },
-    // 오타+약어 스타일
-    function(d,g) { var dong=rand(d.dongs); return rand(['ㅈㅅ','전세','젼세'])+' '+g.replace('구','')+' '+dong.replace('동','')+' '+rand(['래미안','자이','힐스','푸르지오','아무거나'])+' '+rand(['3억이하','5억이하','2억선','4억안쪽'])+' '+rand(['있나요?','좀 보내주세요','급구','ㄱㄱ']); },
-    // 장문 스타일
-    function(d,g) { return '안녕하세요 저희가 지금 '+g+' '+rand(d.dongs)+' 살고있는데 '+rand(['전세만기가 다가와서','이사를 하려고','결혼을 해서','아이가 커서'])+' '+rand(['좀 더 넓은집','학군좋은곳','회사근처','강남쪽'])+' 알아보고 있거든요. 예산은 '+rand(['한 5억정도','3~4억','넉넉잡아 7억','2억 초중반'])+' 생각하고있고 '+rand(['남향이면 좋겠고','역세권이면 좋고','주차 꼭 필요하고','올수리면 좋겠고'])+' '+rand(['방3개','방2개이상','넓은거','30평대'])+' 찾아주세요~'; },
+    // 오타+약어 스타일 (실제 단지명 사용)
+    function(d,g) { var dong=rand(d.dongs); var aptName=DB_APARTMENTS.length>0?rand(DB_APARTMENTS).kapt_name:rand(['래미안','자이','힐스','푸르지오']); return rand(['ㅈㅅ','전세','젼세'])+' '+g.replace('구','')+' '+dong.replace('동','')+' '+aptName+' '+rand(['3억이하','5억이하','2억선','4억안쪽'])+' '+rand(['있나요?','좀 보내주세요','급구','ㄱㄱ']); },
+    // 장문 스타일 (실제 역이름 사용)
+    function(d,g) { var st=DB_SUBWAYS.length>0?rand(DB_SUBWAYS).name:'강남역'; return '안녕하세요 저희가 지금 '+g+' '+rand(d.dongs)+' 살고있는데 '+rand(['전세만기가 다가와서','이사를 하려고','결혼을 해서','아이가 커서'])+' '+rand(['좀 더 넓은집','학군좋은곳',st+' 근처','강남쪽'])+' 알아보고 있거든요. 예산은 '+rand(['한 5억정도','3~4억','넉넉잡아 7억','2억 초중반'])+' 생각하고있고 '+rand(['남향이면 좋겠고','역세권이면 좋고','주차 꼭 필요하고','올수리면 좋겠고'])+' '+rand(['방3개','방2개이상','넓은거','30평대'])+' 찾아주세요~'; },
     // 초간단 스타일
     function(d,g) { return rand([g,g.replace('구',''),rand(d.dongs).replace('동','')])+' '+rand(['매매','전세','월세'])+' '+rand(['아파트','오피스텔','원룸','투룸','상가','사무실'])+' '+rand(['3억','5억','1억','2000','5000','8000']); },
     // 전화 메모 스타일
@@ -301,8 +378,31 @@ async function generateAll() {
     var TOTAL_CLIENTS_MESSY = 100;
     var TOTAL_ALL = TOTAL_PROPERTIES + TOTAL_CLIENTS_CLEAN + TOTAL_CLIENTS_MESSY;
 
-    // ===== 1단계: 매물 3000개 생성 (25개 구 × 5카테고리 × 3거래유형 × ~8개씩) =====
-    document.getElementById('genLog').textContent = '=== 매물 ' + TOTAL_PROPERTIES + '개 생성 중... ===';
+    // ===== 0단계: 실제 DB 데이터 로드 (아파트 단지, 역, 학교) =====
+    document.getElementById('genLog').textContent = '=== 실제 DB 데이터 로드 중... ===';
+    try {
+        var aptRes = await sb.from('apartments').select('kapt_name,sgg,umd_nm,lat,lon,doro_juso').limit(3000);
+        if(aptRes.data && aptRes.data.length>0) {
+            DB_APARTMENTS = aptRes.data;
+            addLog('아파트 단지 '+DB_APARTMENTS.length+'개 로드');
+        } else { addLog('⚠ 아파트 데이터 없음 — 랜덤 생성 모드'); }
+
+        var subRes = await sb.from('facilities').select('name,latitude,longitude').eq('type','subway').limit(500);
+        if(subRes.data && subRes.data.length>0) {
+            DB_SUBWAYS = subRes.data;
+            addLog('지하철역 '+DB_SUBWAYS.length+'개 로드');
+        }
+
+        var schRes = await sb.from('facilities').select('name,latitude,longitude').eq('type','school').limit(500);
+        if(schRes.data && schRes.data.length>0) {
+            DB_SCHOOLS = schRes.data;
+            addLog('학교 '+DB_SCHOOLS.length+'개 로드');
+        }
+    } catch(e) { addLog('⚠ DB 로드 실패: '+e.message+' — 랜덤 생성 모드'); }
+    addLog('');
+
+    // ===== 1단계: 매물 3000개 생성 (실제 단지 데이터 기반) =====
+    document.getElementById('genLog').textContent += '\n=== 매물 ' + TOTAL_PROPERTIES + '개 생성 중... ===';
     var cats=['apartment','officetel','room','commercial','office'];
     var types=['매매','전세','월세'];
     // 카테고리별 비중: 아파트 40%, 오피스텔 20%, 원투룸 20%, 상가 10%, 사무실 10%
@@ -392,12 +492,13 @@ async function generateAll() {
     addLog('완료! 매물:'+inserted+' 손님:'+totalClients+'(깔끔:'+clientInserted+' 지저분:'+messyInserted+') 임베딩:'+embedDone+'/'+allCards.length);
     addLog('==============================');
     addLog('\n카테고리 분포:');
-    addLog('  아파트: ~1200개 (40%)');
+    addLog('  아파트: ~1200개 (40%) — 실제 단지 '+DB_APARTMENTS.length+'개 활용');
     addLog('  오피스텔: ~600개 (20%)');
     addLog('  원투룸: ~600개 (20%)');
     addLog('  상가: ~300개 (10%)');
     addLog('  사무실: ~300개 (10%)');
     addLog('  지역: 서울 25개구 전체');
+    addLog('  지하철역: '+DB_SUBWAYS.length+'개 | 학교: '+DB_SCHOOLS.length+'개 참조');
     document.getElementById('genCount').textContent = '삽입: '+(inserted+totalClients)+'개 | 임베딩: '+embedDone+'개';
     document.getElementById('btnGenMy').disabled = false;
 }
