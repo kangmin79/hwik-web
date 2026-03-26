@@ -650,12 +650,19 @@
         
         // 에러 표시
         function showError(message, emoji = '❌') {
-            document.getElementById('cardSlot').innerHTML = `
-                <div style="text-align: center; padding: 40px; color: #888;">
-                    <div style="font-size: 40px; margin-bottom: 16px;">${emoji}</div>
-                    <div style="font-size: 15px; line-height: 1.6;">${message}</div>
-                </div>
-            `;
+            const slot = document.getElementById('cardSlot');
+            const div = document.createElement('div');
+            div.style.cssText = 'text-align: center; padding: 40px; color: #888;';
+            const emojiDiv = document.createElement('div');
+            emojiDiv.style.cssText = 'font-size: 40px; margin-bottom: 16px;';
+            emojiDiv.textContent = emoji;
+            const msgDiv = document.createElement('div');
+            msgDiv.style.cssText = 'font-size: 15px; line-height: 1.6;';
+            msgDiv.innerHTML = message; // message는 내부 호출만 사용 (사용자 입력 아님)
+            div.appendChild(emojiDiv);
+            div.appendChild(msgDiv);
+            slot.innerHTML = '';
+            slot.appendChild(div);
             const cardSlot = document.getElementById('cardSlot');
             if (cardSlot) cardSlot.style.display = 'block';
         }
@@ -896,15 +903,15 @@
 
         // 공통 중개사 하단 HTML
         function _agentBelowHtml(agentName, agentPhone, agentPhoto) {
-            const initial = agentName.charAt(0);
+            const initial = esc(agentName).charAt(0);
             const avatarInner = agentPhoto
                 ? `<img src="${esc(agentPhoto)}">`
                 : initial;
             return `
               <div class="agent-below">
                 <div class="agent-below-avatar">${avatarInner}</div>
-                <div class="agent-below-name" style="flex:1;">${agentName}</div>
-                <div class="agent-below-phone">${agentPhone}</div>
+                <div class="agent-below-name" style="flex:1;">${esc(agentName)}</div>
+                <div class="agent-below-phone">${esc(agentPhone)}</div>
               </div>`;
         }
 

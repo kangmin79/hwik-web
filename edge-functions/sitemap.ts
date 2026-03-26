@@ -19,7 +19,7 @@ Deno.serve(async (req) => {
     // 공개 매물만 조회 (trade_status가 '완료'가 아닌 것)
     const { data: cards, error } = await supabase
       .from('cards')
-      .select('id, created_at, property, trade_status')
+      .select('id, created_at, trade_status')
       .neq('trade_status', '완료')
       .order('created_at', { ascending: false })
       .limit(5000);
@@ -43,11 +43,7 @@ Deno.serve(async (req) => {
 
     // 매물 페이지
     (cards || []).forEach(card => {
-      const p = card.property || {};
       const lastmod = card.created_at ? new Date(card.created_at).toISOString().split('T')[0] : '';
-      const type = p.type || '';
-      const complex = p.complex || '';
-      const location = p.location || '';
 
       urls += `
   <url>

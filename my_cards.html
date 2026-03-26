@@ -4546,7 +4546,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 // Supabase에서 프로필 로드
                 const { data, error } = await supabaseClient
                     .from('profiles')
-                    .select('*')
+                    .select('id, business_name, agent_name, phone, address, profile_photo')
                     .eq('id', currentUser.id)
                     .maybeSingle();
 
@@ -4795,59 +4795,6 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             }
 
             // _parsePriceToMan, _extractPriceConditions는 전역에 정의됨
-            // 검색 쿼리에서 가격 조건 추출 (레거시 — 전역 함수 사용)
-            function _extractPriceConditionsLegacy(words) {
-                const minKeywords = ['이상', '초과', '넘는', '부터'];
-                const maxKeywords = ['이하', '미만', '아래', '까지'];
-                const allCondKeywords = [...minKeywords, ...maxKeywords];
-                const pricePattern = /[\d]+[\d,.]*\s*(억|천|만)?[\d,.]*\s*(억|천|만)?/;
-
-                let minPrice = null;
-                let maxPrice = null;
-                const textWords = []; // 가격 조건 아닌 일반 텍스트 단어
-                const usedIndices = new Set();
-
-                for (let i = 0; i < words.length; i++) {
-                    if (usedIndices.has(i)) continue;
-                    const w = words[i];
-
-                    // 현재 단어가 조건어인지 체크 (앞 단어가 가격)
-                    if (allCondKeywords.includes(w) && i > 0) {
-                        const prev = words[i - 1];
-                        const price = _parsePriceToMan(prev);
-                        if (price !== null) {
-                            if (minKeywords.includes(w)) minPrice = price;
-                            else maxPrice = price;
-                            usedIndices.add(i);     // 조건어 제외
-                            usedIndices.add(i - 1); // 가격 단어 제외
-                            continue;
-                        }
-                    }
-
-                    // "3억이상" 같이 붙어있는 경우
-                    for (const kw of allCondKeywords) {
-                        if (w.endsWith(kw)) {
-                            const pricePart = w.slice(0, -kw.length);
-                            if (pricePart) {
-                                const price = _parsePriceToMan(pricePart);
-                                if (price !== null) {
-                                    if (minKeywords.includes(kw)) minPrice = price;
-                                    else maxPrice = price;
-                                    usedIndices.add(i);
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // 사용되지 않은 단어들은 텍스트 매칭용
-                for (let i = 0; i < words.length; i++) {
-                    if (!usedIndices.has(i)) textWords.push(words[i]);
-                }
-
-                return { minPrice, maxPrice, textWords };
-            }
 
             // ★ 검색 학습 시스템
             let _clickScores = {}; // card_id → 총 클릭수
@@ -6355,7 +6302,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             allMyRoomsList.forEach(room => {
                 html += `<div class="room-list-item" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:12px;border:1px solid rgba(255,255,255,0.06);border-radius:10px;margin-bottom:8px;" onclick="shareOneToRoom('${cardId}','${room.id}')">
                     <div>
-                        <div style="font-size:14px;font-weight:600">${room.name}</div>
+                        <div style="font-size:14px;font-weight:600">${esc(room.name)}</div>
                         <div style="font-size:11px;color:var(--text-gray)">${room.role === 'owner' ? '방장' : '멤버'}</div>
                     </div>
                     <span style="color:var(--primary);font-size:13px">올리기 →</span>
@@ -6397,7 +6344,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             allMyRoomsList.forEach(room => {
                 html += `<div class="room-list-item" style="cursor:pointer" onclick="shareCardsToRoom('${room.id}')">
                     <div class="room-list-info">
-                        <div class="room-list-name">${room.name}</div>
+                        <div class="room-list-name">${esc(room.name)}</div>
                     </div>
                     <span style="color:var(--primary);font-size:13px">올리기 →</span>
                 </div>`;
@@ -6821,7 +6768,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
 
         async function completeAlert(noteId) {
-            await supabaseClient.from('client_notes').update({ alert_done: true }).eq('id', noteId);
+            await supabaseClient.from('client_notes').update({ alert_done: true })
+                .eq('id', noteId)
+                .eq('agent_id', currentUser.id);  // ★ 본인 알림만 완료 처리
             showToast('✅ 완료');
             if (_alertIsActive) {
                 // 달력 모드: 현재 월 데이터만 리로드
@@ -7468,7 +7417,7 @@ async function updateClientLocation(cardId) {
                 .ilike('name', '%' + stationName + '%')
                 .limit(1);
             if (data && data[0]) {
-                await supabaseClient.from('cards').update({ lat: data[0].latitude, lng: data[0].longitude }).eq('id', cardId);
+                await supabaseClient.from('cards').update({ lat: data[0].latitude, lng: data[0].longitude }).eq('id', cardId).eq('agent_id', currentUser.id);
                 card.lat = data[0].latitude;
                 card.lng = data[0].longitude;
                 console.log(`[위치] 역 매칭: ${stationMatch[1]} → (${card.lat}, ${card.lng})`);
@@ -7492,7 +7441,7 @@ async function updateClientLocation(cardId) {
                 .ilike('name', '%' + schoolName + '%')
                 .limit(1);
             if (data && data[0]) {
-                await supabaseClient.from('cards').update({ lat: data[0].latitude, lng: data[0].longitude }).eq('id', cardId);
+                await supabaseClient.from('cards').update({ lat: data[0].latitude, lng: data[0].longitude }).eq('id', cardId).eq('agent_id', currentUser.id);
                 card.lat = data[0].latitude;
                 card.lng = data[0].longitude;
                 console.log(`[위치] 학교 매칭: ${schoolMatch[1]} → (${card.lat}, ${card.lng})`);
@@ -7515,7 +7464,7 @@ async function updateClientLocation(cardId) {
                 .ilike('name', '%' + dong + '%')
                 .limit(1);
             if (data && data[0]) {
-                await supabaseClient.from('cards').update({ lat: data[0].latitude, lng: data[0].longitude }).eq('id', cardId);
+                await supabaseClient.from('cards').update({ lat: data[0].latitude, lng: data[0].longitude }).eq('id', cardId).eq('agent_id', currentUser.id);
                 card.lat = data[0].latitude;
                 card.lng = data[0].longitude;
                 console.log(`[위치] 동네 매칭: ${dong} → (${card.lat}, ${card.lng})`);
@@ -7549,6 +7498,7 @@ async function loadInlineMatch(clientCardId) {
             .from('cards')
             .select('id, property, private_note, embedding, lat, lng')
             .eq('id', clientCardId)
+            .eq('agent_id', currentUser.id)  // ★ 본인 손님 카드만
             .single();
 
         if (!clientCard || !clientCard.embedding) throw new Error('임베딩 없음');
@@ -7916,7 +7866,7 @@ async function loadClientTimeline(cardId) {
     // client_notes 로드
     const { data: notes, error } = await supabaseClient
         .from('client_notes')
-        .select('*')
+        .select('id, client_card_id, agent_id, type, content, alert_date, alert_done, linked_card_id, created_at')
         .eq('client_card_id', cardId)
         .order('created_at', { ascending: true });
 
@@ -7951,7 +7901,7 @@ function renderClientTimeline(container, card, notes, cardId) {
             p.complex ? `<span style="color:#cbd5e1;">· ${p.complex}</span>` : '',
             p.area ? `<span style="color:#cbd5e1;">· ${p.area}</span>` : '',
         ].filter(Boolean).join('')} ${featureTags}</div>`,
-        pn.memo ? `<div style="margin-top:6px;font-size:13px;color:#94a3b8;line-height:1.6;">📝 ${pn.memo}</div>` : ''
+        pn.memo ? `<div style="margin-top:6px;font-size:13px;color:#94a3b8;line-height:1.6;">📝 ${esc(pn.memo)}</div>` : ''
     ].filter(Boolean).join('\n');
     items.push({
         type: '등록',
@@ -8105,7 +8055,9 @@ async function updateClientEmbedding(cardId) {
         const { data: card } = await supabaseClient
             .from('cards')
             .select('property, private_note')
-            .eq('id', cardId).single();
+            .eq('id', cardId)
+            .eq('agent_id', currentUser.id)  // ★ 본인 카드만
+            .single();
         if (!card) return;
 
         // 모든 메모 조회
@@ -8113,6 +8065,7 @@ async function updateClientEmbedding(cardId) {
             .from('client_notes')
             .select('type, content, created_at')
             .eq('client_card_id', cardId)
+            .eq('agent_id', currentUser.id)  // ★ 본인 메모만
             .order('created_at', { ascending: true });
 
         // 임베딩 텍스트 생성 (property + memo + 모든 노트 + 날짜)
@@ -8142,7 +8095,9 @@ async function updateClientEmbedding(cardId) {
 
 async function deleteClientNote(noteId, cardId) {
     if (!confirm('이 메모를 삭제할까요?')) return;
-    const { error } = await supabaseClient.from('client_notes').delete().eq('id', noteId);
+    const { error } = await supabaseClient.from('client_notes').delete()
+        .eq('id', noteId)
+        .eq('agent_id', currentUser.id);  // ★ 본인 메모만 삭제 가능
     if (error) {
         console.error('메모 삭제 에러:', error);
         showToast('삭제 실패');
@@ -8156,22 +8111,24 @@ async function deleteClientNote(noteId, cardId) {
 // 매물소개 자동 기록
 async function recordPropertyIntro(clientCardId, propertyCards) {
     if (!currentUser || !clientCardId || !propertyCards || propertyCards.length === 0) return;
-    const descriptions = propertyCards.map(c => {
-        const p = c.property || {};
-        return [p.type, p.price, p.complex, p.location, p.area].filter(Boolean).join(' ');
-    });
-    const content = propertyCards.length === 1
-        ? '매물 소개: ' + descriptions[0]
-        : `매물 ${propertyCards.length}개 소개:\n` + descriptions.map((d, i) => `${i+1}. ${d}`).join('\n');
+    try {
+        const descriptions = propertyCards.map(c => {
+            const p = c.property || {};
+            return [p.type, p.price, p.complex, p.location, p.area].filter(Boolean).join(' ');
+        });
+        const content = propertyCards.length === 1
+            ? '매물 소개: ' + descriptions[0]
+            : `매물 ${propertyCards.length}개 소개:\n` + descriptions.map((d, i) => `${i+1}. ${d}`).join('\n');
 
-    // 1건만 기록 (첫 번째 매물 ID를 linked_card_id로)
-    await supabaseClient.from('client_notes').insert([{
-        client_card_id: clientCardId,
-        agent_id: currentUser.id,
-        type: '매물소개',
-        content: content,
-        linked_card_id: propertyCards[0].id
-    }]);
+        // 1건만 기록 (첫 번째 매물 ID를 linked_card_id로)
+        await supabaseClient.from('client_notes').insert([{
+            client_card_id: clientCardId,
+            agent_id: currentUser.id,
+            type: '매물소개',
+            content: content,
+            linked_card_id: propertyCards[0].id
+        }]);
+    } catch(e) { console.warn('매물소개 기록 실패:', e); }
 }
 
 function scrollToCard(cardId) {

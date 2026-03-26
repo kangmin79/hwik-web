@@ -3543,7 +3543,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         async function loadProfile(userId) {
             const { data, error } = await supabaseClient
                 .from('profiles')
-                .select('*')
+                .select('id, business_name, agent_name, phone, address, profile_photo, style, is_admin, og_version')
                 .eq('id', userId)
                 .maybeSingle();
             
@@ -3718,7 +3718,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             try {
                 const { data, error } = await supabaseClient
                     .from('profiles')
-                    .select('*')
+                    .select('id, business_name, agent_name, phone, address, profile_photo, style, is_admin, og_version')
                     .eq('id', currentUser.id)
                     .maybeSingle();
 
@@ -4098,9 +4098,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     const canvas = document.createElement('canvas');
                     canvas.width = w; canvas.height = h;
                     canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-                    // 크기 무관하게 항상 JPEG 0.82로 압축
-                    canvas.toBlob(blob => resolve(blob), 'image/jpeg', 0.7);
+                    canvas.toBlob(blob => resolve(blob || file), 'image/jpeg', 0.7);
                 };
+                img.onerror = () => { URL.revokeObjectURL(objectUrl); resolve(file); };
                 img.src = objectUrl;
             });
         }
@@ -5316,7 +5316,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     const result = await supabaseClient
                         .from('cards')
                         .update(cardData)
-                        .eq('id', editCardId);
+                        .eq('id', editCardId)
+                        .eq('agent_id', currentUser.id);  // ★ 본인 카드만 수정 가능
                     dbError = result.error;
                 } else {
                     const result = await supabaseClient
@@ -5436,7 +5437,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             
             listEl.innerHTML = filtered.map(p => `
                 <div class="property-item" data-id="${p.id}">
-                    <div class="property-item-text">${p.text}</div>
+                    <div class="property-item-text">${esc(p.text)}</div>
                     <div class="property-item-actions">
                         <span class="property-item-category ${p.category}">${categoryNames[p.category]}</span>
                         <button class="property-item-link" onclick="selectProperty('${p.id}')">링크 생성</button>
@@ -5992,12 +5993,14 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             const tagContainer = document.getElementById('fiModalTagContainer');
             const tagInput = document.getElementById('fiModalTagInput');
             const tags = [...(p.features || [])];
+            // tags 배열을 window에 저장하여 onclick에서 접근 가능하게 함
+            window._fiEditTags = tags;
             function renderTags() {
                 tagContainer.querySelectorAll('.fi-tag-item').forEach(t => t.remove());
                 tags.forEach((tag, i) => {
                     const el = document.createElement('div');
                     el.className = 'fi-tag-item';
-                    el.innerHTML = `${esc(tag)}<button onclick="this.parentElement.remove();tags.splice(${i},1)">×</button>`;
+                    el.innerHTML = `${esc(tag)}<button onclick="window._fiEditTags.splice(${i},1);this.parentElement.remove()">×</button>`;
                     tagContainer.insertBefore(el, tagInput);
                 });
             }
@@ -6041,8 +6044,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             if (!fiCurrentEditId) return;
             const card = fiParsedCards.find(c => c.id === fiCurrentEditId);
             if (!card) return;
-            const tagContainer = document.getElementById('fiModalTagContainer');
-            const tags = [...tagContainer.querySelectorAll('.fi-tag-item')].map(el => el.textContent.replace('×','').trim());
+            // window._fiEditTags에서 최신 태그 가져오기 (onclick splice가 반영됨)
+            const tags = window._fiEditTags ? [...window._fiEditTags] : [];
             card.property = {
                 ...card.property,
                 type: document.getElementById('fiModalType').value,

@@ -53,8 +53,11 @@ Deno.serve(async (req) => {
       console.log('임베딩 즉시 생성 완료');
     }
 
-    // ★ 보안: 본인 손님만 조회 가능
-    if (agent_id && clientCard.agent_id !== agent_id) {
+    // ★ 보안: 본인 손님만 조회 가능 (agent_id 필수)
+    if (!agent_id) {
+      throw new Error('agent_id가 필요합니다');
+    }
+    if (clientCard.agent_id !== agent_id) {
       throw new Error('권한이 없습니다');
     }
 
