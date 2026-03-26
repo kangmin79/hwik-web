@@ -6113,11 +6113,18 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     let cardLng = card.lng || null;
                     let coordType = card.coord_type || null;
                     if (!cardLat && card.property) {
-                        const matched = await matchCoords(card.property);
+                        // 손님 카드: property.location이 없으면 메모에서 지역 추출
+                        const propForCoord = { ...card.property };
+                        if (!propForCoord.location && card.property?.type === '손님') {
+                            const memo = card.private_note?.memo || privateMemo || '';
+                            const guMatch = memo.match(/(강남|서초|마포|용산|성동|송파|영등포|강서|노원|관악|동작|광진|종로|중구|강동|강북|구로|금천|도봉|동대문|서대문|성북|양천|은평|중랑)(?:구)?/);
+                            if (guMatch) propForCoord.location = guMatch[0];
+                        }
+                        const matched = await matchCoords(propForCoord);
                         if (matched) {
                             cardLat = matched.lat;
                             cardLng = matched.lng;
-                            coordType = 'db_match';
+                            coordType = matched.coord_type || 'kakao';
                         }
                     }
 
