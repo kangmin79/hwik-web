@@ -723,8 +723,8 @@ Deno.serve(async (req) => {
       if (parsed.filters?.location) {
         const lc = DISTRICT_COORDS[parsed.filters.location];
         if (lc) {
-          const latDelta = lc.radius * 0.009; // rough conversion
-          const lngDelta = lc.radius * 0.011;
+          const latDelta = lc.radius * 0.007; // 1km ≈ 0.009 lat, 조금 타이트하게
+          const lngDelta = lc.radius * 0.009;
           sqlQuery = sqlQuery.gte('lat', lc.lat - latDelta).lte('lat', lc.lat + latDelta);
           sqlQuery = sqlQuery.gte('lng', lc.lng - lngDelta).lte('lng', lc.lng + lngDelta);
         }
@@ -737,6 +737,15 @@ Deno.serve(async (req) => {
         console.error('SQL 검색 에러:', sqlError.message);
       } else {
         results = (sqlData || []).map(r => ({ ...r, similarity: 0 }));
+        // ★ SQL 결과를 haversine 거리순으로 정렬 (해당 구 매물이 상위로)
+        if (parsed.filters?.location && DISTRICT_COORDS[parsed.filters.location]) {
+          const lc = DISTRICT_COORDS[parsed.filters.location];
+          results.sort((a, b) => {
+            const distA = (a.lat && a.lng) ? haversineDistance(lc.lat, lc.lng, a.lat, a.lng) : 999;
+            const distB = (b.lat && b.lng) ? haversineDistance(lc.lat, lc.lng, b.lat, b.lng) : 999;
+            return distA - distB;
+          });
+        }
       }
       console.log(`SQL 직접 검색: ${results.length}건 | ${Date.now() - startTime}ms`);
     }

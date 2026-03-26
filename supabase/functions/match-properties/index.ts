@@ -298,8 +298,8 @@ Deno.serve(async (req) => {
       if (wantedLocation) {
         const lc = DISTRICT_COORDS[wantedLocation];
         if (lc) {
-          const latDelta = lc.radius * 0.009;
-          const lngDelta = lc.radius * 0.011;
+          const latDelta = lc.radius * 0.007;
+          const lngDelta = lc.radius * 0.009;
           sqlQuery = sqlQuery.gte('lat', lc.lat - latDelta).lte('lat', lc.lat + latDelta);
           sqlQuery = sqlQuery.gte('lng', lc.lng - lngDelta).lte('lng', lc.lng + lngDelta);
         }
