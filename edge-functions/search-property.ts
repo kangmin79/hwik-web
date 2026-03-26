@@ -99,7 +99,20 @@ function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
 
 // ========== 0. 로컬 빠른 파서 (Claude 없이 즉시 처리) ==========
 function localParseQuery(query: string) {
-  const q = query.trim();
+  // ★ 오타/한글숫자 교정
+  let q = query.trim();
+  const typoMap: Record<string, string> = {
+    '일억':'1억','이억':'2억','삼억':'3억','사억':'4억','오억':'5억',
+    '육억':'6억','칠억':'7억','팔억':'8억','구억':'9억','십억':'10억',
+    '일천':'1천','이천':'2천','삼천':'3천','사천':'4천','오천':'5천',
+    '육천':'6천','칠천':'7천','팔천':'8천','구천':'9천',
+    'ㅈㅅ':'전세','젼세':'전세','ㅁㅁ':'매매','ㅇㅅ':'월세','웜세':'월세','웜ㄴ세':'월세',
+    '아빠트':'아파트','옵텔':'오피스텔','오피스탤':'오피스텔','상과':'상가',
+    '안넘게':'이하','안쪽':'이하',
+  };
+  for (const [typo, fix] of Object.entries(typoMap)) {
+    if (q.includes(typo)) q = q.replace(new RegExp(typo, 'g'), fix);
+  }
   const filters: Record<string, any> = {};
   let semantic: string | null = null;
   let features: string[] | null = null;

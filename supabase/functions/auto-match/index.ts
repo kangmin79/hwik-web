@@ -184,7 +184,10 @@ Deno.serve(async (req) => {
     const filteredClients = clients.filter(c => {
       const cp = c.property || {};
       const memo = c.private_note?.memo || '';
-      const allText = [cp.price, cp.location, memo, ...(cp.features || [])].filter(Boolean).join(' ');
+      let allText = [cp.price, cp.location, memo, ...(cp.features || [])].filter(Boolean).join(' ');
+      // ★ 오타/한글숫자 교정
+      const typoFix: Record<string, string> = {'오억':'5억','삼억':'3억','이억':'2억','사억':'4억','일억':'1억','ㅈㅅ':'전세','ㅁㅁ':'매매','ㅇㅅ':'월세','아빠트':'아파트','옵텔':'오피스텔','상과':'상가','안넘게':'이하','안쪽':'이하'};
+      for (const [t,f] of Object.entries(typoFix)) { if (allText.includes(t)) allText = allText.replace(new RegExp(t,'g'), f); }
 
       // 거래유형 체크
       if (tradeType === '매매' && !/매매|매도|ㅁㅁ/.test(allText)) return false;

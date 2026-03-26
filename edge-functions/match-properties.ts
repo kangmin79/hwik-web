@@ -155,7 +155,25 @@ Deno.serve(async (req) => {
     // 2. ★ 손님 조건 상세 분석 (모든 텍스트에서 추출)
     const cp = clientCard.property || {};
     const memo = clientCard.private_note?.memo || '';
-    const allText = [cp.price, cp.location, cp.complex, cp.area, memo, ...(cp.features || [])].filter(Boolean).join(' ');
+    let allText = [cp.price, cp.location, cp.complex, cp.area, memo, ...(cp.features || [])].filter(Boolean).join(' ');
+
+    // ★ 오타/한글숫자 교정
+    const typoMap: Record<string, string> = {
+      // 한글 숫자 → 아라비아 숫자
+      '일억':'1억','이억':'2억','삼억':'3억','사억':'4억','오억':'5억',
+      '육억':'6억','칠억':'7억','팔억':'8억','구억':'9억','십억':'10억',
+      '일천':'1천','이천':'2천','삼천':'3천','사천':'4천','오천':'5천',
+      '육천':'6천','칠천':'7천','팔천':'8천','구천':'9천',
+      // 거래유형 오타
+      'ㅈㅅ':'전세','젼세':'전세','ㅁㅁ':'매매','ㅇㅅ':'월세','웜세':'월세','웜ㄴ세':'월세',
+      // 카테고리 오타
+      '아빠트':'아파트','옵텔':'오피스텔','오피스탤':'오피스텔','상과':'상가',
+      // 기타
+      '안넘게':'이하','안쪽':'이하','안됨':'이하','미만':'이하','까지':'이하',
+    };
+    for (const [typo, fix] of Object.entries(typoMap)) {
+      if (allText.includes(typo)) allText = allText.replace(new RegExp(typo, 'g'), fix);
+    }
 
     // 거래유형 (더 많은 패턴)
     let wantedTradeType: string | null = null;
