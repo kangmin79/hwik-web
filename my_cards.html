@@ -7621,18 +7621,27 @@ async function loadInlineMatch(clientCardId) {
             });
         }
 
-        // ★ 좌표 기반 거리순 가중 정렬
+        // ★ 좌표 기반 거리 계산
         if (clientCard.lat && clientCard.lng) {
             results.forEach(r => {
-                if (r.lat && r.lng) {
-                    r._distance = calcDistance(clientCard.lat, clientCard.lng, r.lat, r.lng);
-                } else {
-                    r._distance = 999999;
-                }
+                r._distance = (r.lat && r.lng) ? calcDistance(clientCard.lat, clientCard.lng, r.lat, r.lng) : 999999;
             });
-            // 거리 가까운 순 정렬 (지역 필터가 있으면 그 안에서, 없으면 전체)
-            results.sort((a, b) => (a._distance || 999999) - (b._distance || 999999));
         }
+
+        // ★ 최종 정렬: 가격 우선 → 같은 가격대면 거리순
+        results.sort((a, b) => {
+            // 1. 예산 근접도 (가격 우선)
+            if (maxBudget) {
+                const diffA = Math.abs((a.price_number || 0) - maxBudget);
+                const diffB = Math.abs((b.price_number || 0) - maxBudget);
+                if (Math.abs(diffA - diffB) > 5000) return diffA - diffB; // 5천만원 이상 차이면 가격 우선
+            }
+            // 2. 거리순 (같은 가격대)
+            if (a._distance !== undefined && b._distance !== undefined) {
+                return (a._distance || 999999) - (b._distance || 999999);
+            }
+            return 0;
+        });
 
         results = results.slice(0, 10);
 
