@@ -118,6 +118,8 @@ Deno.serve(async (req) => {
       .single();
 
     if (cardErr || !card) throw new Error('매물을 찾을 수 없습니다');
+    // ★ 보안: 본인 매물인지 확인
+    if (card.agent_id !== agent_id) throw new Error('본인 매물만 매칭 가능합니다');
 
     // ★ 임베딩 없으면 즉시 생성
     if (!card.embedding) {
@@ -186,13 +188,21 @@ Deno.serve(async (req) => {
       const memo = c.private_note?.memo || '';
       let allText = [cp.price, cp.location, memo, ...(cp.features || [])].filter(Boolean).join(' ');
       // ★ 오타/한글숫자 교정
-      const typoFix: Record<string, string> = {'오억':'5억','삼억':'3억','이억':'2억','사억':'4억','일억':'1억','ㅈㅅ':'전세','ㅁㅁ':'매매','ㅇㅅ':'월세','아빠트':'아파트','옵텔':'오피스텔','상과':'상가','안넘게':'이하','안쪽':'이하'};
+      const typoFix: Record<string, string> = {
+        '일억':'1억','이억':'2억','삼억':'3억','사억':'4억','오억':'5억',
+        '육억':'6억','칠억':'7억','팔억':'8억','구억':'9억','십억':'10억',
+        '일천':'1천','이천':'2천','삼천':'3천','사천':'4천','오천':'5천',
+        '육천':'6천','칠천':'7천','팔천':'8천','구천':'9천',
+        'ㅈㅅ':'전세','젼세':'전세','ㅁㅁ':'매매','ㅇㅅ':'월세','웜세':'월세','웜ㄴ세':'월세',
+        '아빠트':'아파트','옵텔':'오피스텔','오피스탤':'오피스텔','상과':'상가',
+        '안넘게':'이하','안쪽':'이하',
+      };
       for (const [t,f] of Object.entries(typoFix)) { if (allText.includes(t)) allText = allText.replace(new RegExp(t,'g'), f); }
 
       // 거래유형 체크
-      if (tradeType === '매매' && !/매매|매도|ㅁㅁ/.test(allText)) return false;
-      if (tradeType === '전세' && !/전세|ㅈㅅ/.test(allText)) return false;
-      if (tradeType === '월세' && !/월세|임대|ㅇㅅ/.test(allText)) return false;
+      if (tradeType === '매매' && !/매매|매도|분양|ㅁㅁ/.test(allText)) return false;
+      if (tradeType === '전세' && !/전세|ㅈㅅ|젼세/.test(allText)) return false;
+      if (tradeType === '월세' && !/월세|임대|ㅇㅅ|웜세/.test(allText)) return false;
 
       // 카테고리 체크 (손님이 특정 카테고리를 원하면)
       if (cp.category && cardCategory && cp.category !== cardCategory) return false;
@@ -217,12 +227,18 @@ Deno.serve(async (req) => {
         }
       }
 
-      // 가격 체크 (손님 예산 범위 확인)
+      // 가격 체크 (손님 예산 범위 확인, 천 단위 포함)
       if (cardPrice > 0) {
-        const maxMatch = allText.match(/(\d+)\s*억\s*(?:\d*천?)?\s*(?:이내|이하|미만|까지)/);
+        const maxMatch = allText.match(/(\d+)\s*억\s*(\d+)?\s*천?\s*(?:이내|이하|미만|까지)/);
         if (maxMatch) {
-          const clientMax = parseInt(maxMatch[1]) * 10000;
+          const clientMax = parseInt(maxMatch[1]) * 10000 + (maxMatch[2] ? parseInt(maxMatch[2]) * 1000 : 0);
           if (cardPrice > clientMax * 1.3) return false; // 30% 초과하면 제외
+        }
+        // "5천 이하" 패턴
+        const chunMatch = allText.match(/(\d+)\s*천\s*(?:만원?)?\s*(?:이내|이하)/);
+        if (chunMatch && !maxMatch) {
+          const clientMax = parseInt(chunMatch[1]) * 1000;
+          if (cardPrice > clientMax * 1.3) return false;
         }
       }
 
