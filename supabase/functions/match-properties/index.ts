@@ -279,6 +279,16 @@ Deno.serve(async (req) => {
       if (wantedCategory) sqlQuery = sqlQuery.eq('property->>category', wantedCategory);
       if (minPrice) sqlQuery = sqlQuery.gte('price_number', minPrice);
       if (maxPrice) sqlQuery = sqlQuery.lte('price_number', Math.round(maxPrice * 1.1)); // 10% 여유
+      // ★ 위치 bounding box (SQL 레벨에서 필터 — 이게 없으면 전국에서 50개만 가져옴)
+      if (wantedLocation) {
+        const lc = DISTRICT_COORDS[wantedLocation];
+        if (lc) {
+          const latDelta = lc.radius * 0.009;
+          const lngDelta = lc.radius * 0.011;
+          sqlQuery = sqlQuery.gte('lat', lc.lat - latDelta).lte('lat', lc.lat + latDelta);
+          sqlQuery = sqlQuery.gte('lng', lc.lng - lngDelta).lte('lng', lc.lng + lngDelta);
+        }
+      }
       sqlQuery = sqlQuery.order('created_at', { ascending: false }).limit(limit * 5);
 
       const { data: sqlData, error: sqlError } = await sqlQuery;
@@ -300,7 +310,18 @@ Deno.serve(async (req) => {
 
       if (!matchError && matches && matches.length > 0) {
         const existingIds = new Set(results.map(r => r.id));
-        const newResults = matches.filter((r: any) => !existingIds.has(r.id));
+        let newResults = matches.filter((r: any) => !existingIds.has(r.id));
+        // ★ 벡터 결과에도 위치 필터 적용 (엉뚱한 지역 방지)
+        if (wantedLocation && DISTRICT_COORDS[wantedLocation]) {
+          const lc = DISTRICT_COORDS[wantedLocation];
+          newResults = newResults.filter((r: any) => {
+            if (!r.lat || !r.lng) {
+              const loc = r.property?.location || '';
+              return loc.includes(wantedLocation);
+            }
+            return haversineDistance(lc.lat, lc.lng, r.lat, r.lng) <= 5; // 5km
+          });
+        }
         results = [...results, ...newResults];
         console.log(`벡터 보조: +${newResults.length}건 (총 ${results.length}건)`);
       } else if (matchError) {
