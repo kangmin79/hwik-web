@@ -805,8 +805,8 @@ Deno.serve(async (req) => {
       // Convert search pyeong to sqm range too
       const searchMinPyeong = parsed.filters.min_area || null;
       const searchMaxPyeong = parsed.filters.max_area || null;
-      const searchMinSqm = searchMinPyeong ? Math.round(searchMinPyeong * 3.305 * 0.8) : null;
-      const searchMaxSqm = searchMaxPyeong ? Math.round(searchMaxPyeong * 3.305 * 1.2) : null;
+      const searchMinSqm = searchMinPyeong ? Math.round(searchMinPyeong * 3.305785 * 0.8) : null;
+      const searchMaxSqm = searchMaxPyeong ? Math.round(searchMaxPyeong * 3.305785 * 1.2) : null;
 
       results = results.filter(r => {
         const { pyeong, sqm } = extractAreaNumbers(r.property?.area);

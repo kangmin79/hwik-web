@@ -126,7 +126,8 @@ Deno.serve(async (req) => {
 
       const cp = clientCard.property || {};
       const memo = clientCard.private_note?.memo || '';
-      const embedText = [cp.type, cp.price, cp.location, cp.complex, cp.area, ...(cp.features || []), memo].filter(Boolean).join(' ');
+      const catKo = {apartment:'아파트',officetel:'오피스텔',room:'원투룸',commercial:'상가',office:'사무실'}[cp.category] || '';
+      const embedText = [cp.type, catKo, cp.price, cp.location, cp.complex, cp.area, cp.floor, cp.room, (cp.features||[]).join(' '), cp.moveIn, memo].filter(Boolean).join(' ');
 
       const embedResp = await fetch('https://api.openai.com/v1/embeddings', {
         method: 'POST',
@@ -275,7 +276,7 @@ Deno.serve(async (req) => {
     // 4. ★ 후필터: 카테고리, 가격, 지역
     if (wantedCategory) {
       const catFiltered = results.filter((r: any) => r.property?.category === wantedCategory);
-      if (catFiltered.length >= 3) results = catFiltered; // 3개 이상이면 필터 적용
+      if (catFiltered.length >= 1) results = catFiltered; // 1개 이상이면 필터 적용
     }
 
     if (maxPrice && wantedTradeType !== '월세') {
@@ -285,7 +286,7 @@ Deno.serve(async (req) => {
         if (maxPrice && pn > maxPrice * 1.2) return false; // 20% 여유
         return true;
       });
-      if (priceFiltered.length >= 2) results = priceFiltered;
+      if (priceFiltered.length >= 1) results = priceFiltered;
     }
 
     if (wantedLocation) {
@@ -293,7 +294,7 @@ Deno.serve(async (req) => {
         const loc = r.property?.location || '';
         return loc.includes(wantedLocation);
       });
-      if (locFiltered.length >= 2) results = locFiltered;
+      if (locFiltered.length >= 1) results = locFiltered;
     }
 
     // 면적 필터
@@ -302,7 +303,7 @@ Deno.serve(async (req) => {
         const areaStr = r.property?.area || '';
         const pyeongMatch = areaStr.match(/(\d+)평/);
         const sqmMatch = areaStr.match(/(\d+)㎡/);
-        const pyeong = pyeongMatch ? parseInt(pyeongMatch[1]) : (sqmMatch ? Math.round(parseInt(sqmMatch[1]) / 3.305) : null);
+        const pyeong = pyeongMatch ? parseInt(pyeongMatch[1]) : (sqmMatch ? Math.round(parseInt(sqmMatch[1]) / 3.305785) : null);
         if (!pyeong) return true; // 면적 정보 없으면 통과
         if (wantedMinArea && pyeong < wantedMinArea - 3) return false;
         if (wantedMaxArea && pyeong > wantedMaxArea + 3) return false;

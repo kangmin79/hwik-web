@@ -128,7 +128,8 @@ Deno.serve(async (req) => {
         });
       }
       const cp = card.property || {};
-      const embedText = [cp.type, cp.price, cp.location, cp.complex, cp.area, cp.floor, cp.room, cp.category, ...(cp.features || [])].filter(Boolean).join(' ');
+      const catKo = {apartment:'아파트',officetel:'오피스텔',room:'원투룸',commercial:'상가',office:'사무실'}[cp.category] || '';
+      const embedText = [cp.type, catKo, cp.price, cp.location, cp.complex, cp.area, cp.floor, cp.room, (cp.features||[]).join(' '), cp.moveIn].filter(Boolean).join(' ');
       const embedResp = await fetch('https://api.openai.com/v1/embeddings', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
