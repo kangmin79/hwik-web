@@ -2055,6 +2055,7 @@
     const content = document.getElementById('crmContent');
     if (!overlay || !sheet || !content) return;
 
+    history.pushState({ crm: true }, '');
     content.innerHTML = '<div style="padding:40px;text-align:center;color:#94a3b8;">로딩 중...</div>';
     overlay.classList.add('show');
     sheet.classList.add('show');
@@ -2572,7 +2573,13 @@
       setTimeout(() => detailOverlay.classList.remove('show'), 300);
       return;
     }
-    // 2. 메모 모달
+    // 2. CRM 바텀시트
+    const crmSheet = document.getElementById('crmSheet');
+    if (crmSheet && crmSheet.classList.contains('show')) {
+      closeCRM();
+      return;
+    }
+    // 3. 메모 모달
     const regModal = document.getElementById('regModal');
     if (regModal && regModal.classList.contains('show')) {
       regModal.classList.remove('show');
