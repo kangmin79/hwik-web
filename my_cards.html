@@ -4361,12 +4361,12 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             ).join('');
 
             try {
-                if (!window._accessToken) { showToast('로그인이 필요합니다'); return; }
+                const _searchToken = window._accessToken || SUPABASE_KEY;
                 const response = await fetch(`${SUPABASE_URL}/functions/v1/search-property`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + window._accessToken
+                        'Authorization': 'Bearer ' + _searchToken
                     },
                     body: JSON.stringify({
                         query: query,
@@ -4437,12 +4437,12 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             ).join('');
 
             try {
-                if (!window._accessToken) { showToast('로그인이 필요합니다'); return; }
+                const _searchToken = window._accessToken || SUPABASE_KEY;
                 const response = await fetch(`${SUPABASE_URL}/functions/v1/search-property`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + window._accessToken
+                        'Authorization': 'Bearer ' + _searchToken
                     },
                     body: JSON.stringify({
                         query: query,
@@ -4662,6 +4662,26 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         
         // 이벤트
+        // ★ 최신 액세스 토큰 가져오기 (만료 시 자동 갱신)
+        async function getAccessToken() {
+            if (window._accessToken) return window._accessToken;
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session?.access_token) {
+                window._accessToken = session.access_token;
+                return session.access_token;
+            }
+            return null;
+        }
+
+        // 세션 변경 시 토큰 자동 갱신
+        supabaseClient.auth.onAuthStateChange((event, session) => {
+            if (session?.access_token) {
+                window._accessToken = session.access_token;
+            } else {
+                window._accessToken = null;
+            }
+        });
+
         document.addEventListener('DOMContentLoaded', async () => {
             // 인증 상태 확인 (localStorage 세션 우선)
             const { data: { session } } = await supabaseClient.auth.getSession();
@@ -7583,10 +7603,10 @@ async function loadInlineMatch(clientCardId) {
         if (!clientCard || !clientCard.embedding) throw new Error('임베딩 없음');
 
         // ★ match-properties API 호출 (점수 랭킹 + 입주시기 + 위치 텍스트 필터)
-        if (!window._accessToken) throw new Error('로그인이 필요합니다');
+        const _matchToken = window._accessToken || SUPABASE_KEY;
         const matchResp = await fetch(`${SUPABASE_URL}/functions/v1/match-properties`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + window._accessToken },
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _matchToken },
             body: JSON.stringify({
                 client_card_id: clientCardId,
                 agent_id: currentUser.id,
