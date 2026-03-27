@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>휙 카드</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;800&family=Noto+Serif+KR:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body {
+  font-family: 'Noto Sans KR', sans-serif;
+  background: #0a0a0a; min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: safe center;
+  padding: 24px 20px; gap: 16px;
+  overflow-y: auto;
+}
+.agent-below {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 20px; border-radius: 16px;
+  background: rgba(255,255,255,0.08);
+  border: 1.5px solid rgba(255,255,255,0.25);
+  width: 300px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+.agent-below-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(78,205,196,0.2);
+  border: 2px solid #4ecdc4;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 800; color: #4ecdc4; flex-shrink: 0;
+}
+.agent-below-info { display: flex; align-items: center; gap: 10px; }
+.agent-below-name { font-size: 15px; font-weight: 800; color: #fff; }
+.agent-below-phone { font-size: 14px; font-weight: 600; color: #4ecdc4; }
+
+/* ===== 카드 ===== */
+.card-full {
+  width: 300px; height: 500px; border-radius: 24px;
+  overflow: hidden; position: relative;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.7);
+}
+.photo-slider {
+  position: absolute; inset: 0; display: flex;
+  transition: transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94);
+  z-index: 0; will-change: transform;
+}
+.photo-slide {
+  min-width: 100%; height: 100%; object-fit: cover;
+  filter: brightness(0.97) contrast(1.04) saturate(1.06);
+  pointer-events: none;
+}
+.memo-slide {
+  min-width: 100%; height: 100%; position: relative;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 40px 32px;
+  background: linear-gradient(160deg,#0d1117 0%,#151c27 40%,#0a0f1a 100%);
+  overflow: hidden;
+}
+.memo-slide::before {
+  content:''; position:absolute; width:300px; height:300px; border-radius:50%;
+  background:radial-gradient(circle,rgba(78,205,196,0.06) 0%,transparent 70%);
+  top:-50px; right:-80px;
+}
+.memo-quote { font-family:'Noto Serif KR',serif; font-size:72px; line-height:0.6; color:rgba(255,255,255,0.08); align-self:flex-start; margin-bottom:20px; position:relative; z-index:1; }
+.memo-text { font-family:'Noto Serif KR',serif; font-size:17px; color:rgba(255,255,255,0.9); line-height:1.9; text-align:center; letter-spacing:0.01em; position:relative; z-index:1; margin-bottom:32px; word-break:keep-all; }
+.memo-divider { width:32px; height:1px; background:rgba(255,255,255,0.15); margin-bottom:20px; position:relative; z-index:1; }
+.memo-agent { display:flex; flex-direction:column; align-items:center; gap:4px; position:relative; z-index:1; }
+.memo-agent-name { font-size:12px; color:rgba(255,255,255,0.4); font-weight:300; letter-spacing:0.05em; }
+.memo-agent-phone { font-size:14px; font-weight:600; color:rgba(255,255,255,0.7); letter-spacing:0.03em; }
+
+/* 카드 상단 */
+.top-info {
+  position:absolute; top:0; left:0; right:0; padding:18px 18px 40px;
+  background:linear-gradient(to bottom,rgba(0,0,0,0.65) 0%,transparent 100%);
+  display:flex; justify-content:space-between; align-items:flex-start;
+  z-index:10; pointer-events:none;
+}
+.badge { font-size:11px; font-weight:500; padding:5px 12px; border-radius:8px; color:rgba(255,255,255,0.85); background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); letter-spacing:0.04em; display:inline-flex; align-items:center; gap:6px; pointer-events:all; }
+.badge-dot { width:6px; height:6px; border-radius:50%; display:inline-block; flex-shrink:0; }
+.dots { display:flex; gap:5px; align-items:center; margin-top:4px; }
+.dot { height:4px; border-radius:3px; background:rgba(255,255,255,0.35); transition:all 0.25s; width:4px; }
+.dot.active { background:#fff; width:14px; }
+
+/* 카드 하단 */
+.bottom-wrap {
+  position:absolute; bottom:0; left:0; right:0;
+  background:linear-gradient(to top,rgba(0,0,0,0.92) 0%,rgba(0,0,0,0.72) 38%,rgba(0,0,0,0.2) 65%,transparent 100%);
+  padding:50px 18px 18px; z-index:10; transition:opacity 0.3s;
+}
+.bottom-wrap.hidden { opacity:0; pointer-events:none; }
+.price { font-size:30px; font-weight:800; color:#fff; letter-spacing:-0.03em; margin-bottom:2px; }
+.card-name { font-size:12px; color:rgba(255,255,255,0.55); margin-bottom:10px; }
+.specs { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:14px; }
+.spec { font-size:11px; padding:4px 9px; border-radius:20px; background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.8); border:1px solid rgba(255,255,255,0.12); }
+.divider { height:1px; background:rgba(255,255,255,0.1); margin-bottom:14px; }
+.action-bar { display:flex; gap:8px; }
+.action-btn {
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:5px; padding:10px 4px; border-radius:14px; cursor:pointer; text-decoration:none;
+  background:rgba(255,255,255,0.08); backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,0.12); box-shadow:inset 0 1px 0 rgba(255,255,255,0.1);
+  transition:all 0.15s;
+}
+.action-btn:active { transform:scale(0.93); }
+.action-btn svg { width:20px; height:20px; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.action-btn span { font-size:10px; font-weight:500; }
+.action-btn.call { border-color:rgba(78,205,196,0.3); }
+.action-btn.call svg { stroke:#4ecdc4; }
+.action-btn.call span { color:rgba(78,205,196,0.9); }
+.action-btn.kakao { border-color:rgba(250,204,21,0.25); }
+.action-btn.kakao svg { stroke:#facc15; }
+.action-btn.kakao span { color:rgba(250,204,21,0.9); }
+.action-btn.map-btn svg { stroke:rgba(255,255,255,0.9); }
+.action-btn.map-btn span { color:rgba(255,255,255,0.7); }
+
+/* 카드 좌우 화살표 */
+.arrow-btn {
+  position:absolute; top:50%; transform:translateY(-50%);
+  width:36px; height:36px; border-radius:50%;
+  background:rgba(255,255,255,0.15); backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,0.2);
+  color:#fff; font-size:18px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  z-index:20; transition:background 0.2s; user-select:none;
+}
+.arrow-btn:hover { background:rgba(255,255,255,0.25); }
+.arrow-btn.left { left:10px; }
+.arrow-btn.right { right:10px; }
+
+/* ===== 풀스크린 ===== */
+.fullscreen {
+  position:fixed; inset:0; background:#000;
+  z-index:1000; display:none;
+  flex-direction:column; justify-content:center; align-items:center;
+}
+.fullscreen.show { display:flex; }
+.fs-slider {
+  display:flex; width:100%;
+  transition:transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+.fs-slide {
+  min-width:100vw; height:100vh;
+  object-fit:contain; pointer-events:none;
+}
+.fs-memo-slide {
+  min-width:100vw; height:100vh;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:80px 48px;
+  background:linear-gradient(160deg,#0d1117 0%,#151c27 40%,#0a0f1a 100%);
+}
+.fs-memo-quote { font-family:'Noto Serif KR',serif; font-size:90px; line-height:0.6; color:rgba(255,255,255,0.08); align-self:flex-start; margin-bottom:28px; }
+.fs-memo-text { font-family:'Noto Serif KR',serif; font-size:22px; color:rgba(255,255,255,0.9); line-height:2; text-align:center; word-break:keep-all; margin-bottom:40px; }
+.fs-memo-divider { width:40px; height:1px; background:rgba(255,255,255,0.15); margin-bottom:24px; }
+.fs-memo-agent { display:flex; flex-direction:column; align-items:center; gap:6px; }
+.fs-memo-agent-name { font-size:14px; color:rgba(255,255,255,0.4); font-weight:300; letter-spacing:0.05em; }
+.fs-memo-agent-phone { font-size:18px; font-weight:600; color:rgba(255,255,255,0.7); letter-spacing:0.05em; }
+
+.fs-top-bar {
+  position:fixed; top:0; left:0; right:0;
+  padding:20px 24px;
+  display:flex; justify-content:space-between; align-items:center;
+  z-index:1001;
+  background:linear-gradient(to bottom,rgba(0,0,0,0.6) 0%,transparent 100%);
+  pointer-events:none;
+}
+.fs-count { font-size:13px; color:rgba(255,255,255,0.7); font-weight:500; pointer-events:all; }
+
+.fs-dots {
+  position:fixed; bottom:60px; left:50%; transform:translateX(-50%);
+  display:flex; gap:6px; align-items:center; z-index:1001;
+}
+.fs-dot { height:4px; border-radius:3px; background:rgba(255,255,255,0.35); transition:all 0.25s; width:4px; }
+.fs-dot.active { background:#fff; width:14px; }
+
+.fs-close-bar {
+  position:fixed; bottom:0; left:0; right:0;
+  padding:14px 24px 24px;
+  background:linear-gradient(to top,rgba(0,0,0,0.5) 0%,transparent 100%);
+  display:flex; justify-content:center; z-index:1001;
+}
+.fs-close-btn {
+  font-family:'Noto Sans KR',sans-serif;
+  font-size:13px; font-weight:500;
+  color:rgba(255,255,255,0.7);
+  background:rgba(255,255,255,0.1); backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,0.15);
+  padding:10px 32px; border-radius:30px;
+  cursor:pointer;
+}
+</style>
+</head>
+<body>
+
+<div class="card-full">
+  <div class="photo-slider" id="slider0">
+    <!-- 사진 슬라이드 3장 (데모용 unsplash) -->
+    <img class="photo-slide" src="이미지/card-demo-photo1.jpg" alt="외관">
+    <img class="photo-slide" src="이미지/card-demo-photo2.jpg" alt="거실">
+    <img class="photo-slide" src="이미지/card-demo-photo3.jpg" alt="주방">
+    <!-- 메모 슬라이드 -->
+    <div class="memo-slide">
+      <div class="memo-quote">"</div>
+      <div class="memo-text">채광이 정말 좋아요.<br>공덕역 도보 3분이라<br>출퇴근도 편하고요.<br>올수리라 입주 후<br>바로 생활 가능합니다.</div>
+      <div class="memo-divider"></div>
+      <div class="memo-agent">
+        <div class="memo-agent-name">스마일부동산</div>
+        <div class="memo-agent-phone">010-1234-5678</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 상단 -->
+  <div class="top-info">
+    <span class="badge"><span class="badge-dot" style="background:#fb923c;"></span>매매</span>
+    <div class="dots" id="dots0">
+      <div class="dot active"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div>
+    </div>
+  </div>
+
+  <!-- 하단 -->
+  <div class="bottom-wrap" id="bottom0">
+    <div class="price">8억 5,000</div>
+    <div class="card-name">마포구 공덕동 삼성래미안 · 32평</div>
+    <div class="specs">
+      <span class="spec">8층</span><span class="spec">남향</span>
+      <span class="spec">풀옵션</span><span class="spec">올수리</span>
+    </div>
+    <div class="divider"></div>
+    <div class="action-bar">
+      <a class="action-btn call" href="tel:01012345678">
+        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1.31h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6.07 6.07l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        <span>전화</span>
+      </a>
+      <a class="action-btn kakao" href="#">
+        <svg viewBox="0 0 24 24"><path d="M12 3C6.48 3 2 6.69 2 11.25c0 2.91 1.73 5.48 4.35 7.01L5.5 21l3.27-1.74C9.55 19.73 10.75 20 12 20c5.52 0 10-3.69 10-8.75S17.52 3 12 3z"/></svg>
+        <span>카톡</span>
+      </a>
+      <a class="action-btn map-btn" href="#" onclick="handleMap(event, 37.5436, 126.9507, '삼성래미안')">
+        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span>지도</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- 화살표 -->
+  <button class="arrow-btn left" onclick="moveSlide(-1)">‹</button>
+  <button class="arrow-btn right" onclick="moveSlide(1)">›</button>
+</div>
+
+<div class="agent-below">
+  <div class="agent-below-avatar">스</div>
+  <div class="agent-below-info">
+    <div class="agent-below-name">스마일부동산</div>
+    <div class="agent-below-phone">010-1234-5678</div>
+  </div>
+</div>
+
+<!-- 풀스크린 -->
+<div class="fullscreen" id="fullscreen">
+  <div class="fs-top-bar">
+    <div style="width:40px"></div>
+    <span class="fs-count" id="fsCount">1 / 4</span>
+    <div style="width:40px"></div>
+  </div>
+  <div class="fs-slider" id="fsSlider">
+    <img class="fs-slide" src="이미지/card-demo-fs1.jpg" alt="외관">
+    <img class="fs-slide" src="이미지/card-demo-fs2.jpg" alt="거실">
+    <img class="fs-slide" src="이미지/card-demo-fs3.jpg" alt="주방">
+    <div class="fs-memo-slide">
+      <div class="fs-memo-quote">"</div>
+      <div class="fs-memo-text">채광이 정말 좋아요.<br>공덕역 도보 3분이라<br>출퇴근도 편하고요.<br>올수리라 입주 후<br>바로 생활 가능합니다.</div>
+      <div class="fs-memo-divider"></div>
+      <div class="fs-memo-agent">
+        <div class="fs-memo-agent-name">스마일부동산</div>
+        <div class="fs-memo-agent-phone">010-1234-5678</div>
+      </div>
+    </div>
+  </div>
+  <div class="fs-dots" id="fsDots">
+    <div class="fs-dot active"></div><div class="fs-dot"></div>
+    <div class="fs-dot"></div><div class="fs-dot"></div>
+  </div>
+  <div class="fs-close-bar">
+    <button class="fs-close-btn" onclick="closeFS()">닫기</button>
+  </div>
+</div>
+
+<script>
+const slider0  = document.getElementById('slider0');
+const dots0    = document.getElementById('dots0');
+const bottom0  = document.getElementById('bottom0');
+const TOTAL    = 4;
+const MEMO_IDX = 3;
+let sStartX = 0, sDragging = false;
+
+// 클론 추가 (무한 루프)
+slider0.appendChild(slider0.children[0].cloneNode(true));
+slider0.insertBefore(slider0.children[TOTAL-1].cloneNode(true), slider0.children[0]);
+let currentPos = 1;
+
+function goTo(pos, animated = true) {
+  slider0.style.transition = animated ? 'transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94)' : 'none';
+  slider0.style.transform  = `translateX(${-pos * 100}%)`;
+  currentPos = pos;
+  const ri = ((pos - 1) % TOTAL + TOTAL) % TOTAL;
+  dots0.querySelectorAll('.dot').forEach((d,i) => d.classList.toggle('active', i === ri));
+  bottom0.classList.toggle('hidden', ri === MEMO_IDX);
+}
+goTo(1, false);
+
+slider0.addEventListener('transitionend', () => {
+  if (currentPos === 0)       goTo(TOTAL, false);
+  if (currentPos === TOTAL+1) goTo(1, false);
+});
+
+function moveSlide(dir) { goTo(currentPos + dir); }
+
+// 터치
+slider0.addEventListener('touchstart', e => { sStartX = e.touches[0].clientX; sDragging = true; }, { passive:true });
+slider0.addEventListener('touchmove',  e => {
+  if (!sDragging) return;
+  slider0.style.transition = 'none';
+  slider0.style.transform = `translateX(calc(${-currentPos*100}% + ${e.touches[0].clientX - sStartX}px))`;
+}, { passive:true });
+slider0.addEventListener('touchend', e => {
+  sDragging = false;
+  const dx = e.changedTouches[0].clientX - sStartX;
+  goTo(dx < -40 ? currentPos+1 : dx > 40 ? currentPos-1 : currentPos);
+});
+// 탭 → 풀스크린
+slider0.addEventListener('click', e => {
+  if (Math.abs(e.clientX - sStartX) > 8) return;
+  openFS(((currentPos-1) % TOTAL + TOTAL) % TOTAL);
+});
+
+// ===== 풀스크린 =====
+const fsEl     = document.getElementById('fullscreen');
+const fsSlider = document.getElementById('fsSlider');
+const fsDots   = document.getElementById('fsDots');
+const fsCount  = document.getElementById('fsCount');
+const FS_TOTAL = 4;
+let fsIdx = 0, fsStartX = 0, fsStartY = 0, fsDragging = false;
+
+function openFS(idx) {
+  fsIdx = idx; updateFS(false);
+  fsEl.classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeFS() {
+  fsEl.classList.remove('show');
+  document.body.style.overflow = '';
+}
+function fsMove(dir) {
+  fsIdx = (fsIdx + dir + FS_TOTAL) % FS_TOTAL;
+  updateFS();
+}
+function updateFS(animated = true) {
+  fsSlider.style.transition = animated ? 'transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94)' : 'none';
+  fsSlider.style.transform  = `translateX(${-fsIdx * 100}vw)`;
+  fsCount.textContent = `${fsIdx+1} / ${FS_TOTAL}`;
+  fsDots.querySelectorAll('.fs-dot').forEach((d,i) => d.classList.toggle('active', i === fsIdx));
+}
+
+// 풀스크린 터치
+fsEl.addEventListener('touchstart', e => {
+  fsStartX = e.touches[0].clientX; fsStartY = e.touches[0].clientY; fsDragging = true;
+}, { passive:true });
+fsEl.addEventListener('touchmove', e => {
+  if (!fsDragging) return;
+  fsSlider.style.transition = 'none';
+  fsSlider.style.transform = `translateX(calc(${-fsIdx*100}vw + ${e.touches[0].clientX - fsStartX}px))`;
+}, { passive:true });
+fsEl.addEventListener('touchend', e => {
+  fsDragging = false;
+  const dx = e.changedTouches[0].clientX - fsStartX;
+  const dy = e.changedTouches[0].clientY - fsStartY;
+  if (Math.abs(dy) > Math.abs(dx) && dy > 60) { closeFS(); return; }
+  fsMove(dx < -40 ? 1 : dx > 40 ? -1 : 0);
+  if (dx >= -40 && dx <= 40) updateFS();
+});
+// 키보드
+document.addEventListener('keydown', e => {
+  if (!fsEl.classList.contains('show')) return;
+  if (e.key === 'ArrowRight') fsMove(1);
+  if (e.key === 'ArrowLeft')  fsMove(-1);
+  if (e.key === 'Escape')     closeFS();
+});
+
+function handleMap(e, lat, lng, name) {
+  e.preventDefault();
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  if (isMobile) {
+    const t = Date.now();
+    location.href = `kakaomap://route?ep=${lat},${lng}&epName=${encodeURIComponent(name)}&by=foot`;
+    setTimeout(() => { if (Date.now()-t < 2000) location.href = `https://map.kakao.com/?eName=${encodeURIComponent(name)}`; }, 400);
+  } else {
+    window.open(`https://map.kakao.com/?eName=${encodeURIComponent(name)}`, '_blank');
+  }
+}
+</script>
+</body>
+</html>

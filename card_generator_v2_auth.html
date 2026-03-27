@@ -3574,7 +3574,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             if (currentUser && userProfile) {
                 const adminBtn = userProfile.is_admin ? `<a href="admin.html" class="btn btn-ghost" style="color:#f87171;border-color:rgba(248,113,113,0.3);font-size:12px;padding:8px 14px;">관리자</a>` : '';
                 navButtons.innerHTML = themeHTML + `
-                    <button class="btn btn-primary" onclick="openMyInfoModal()" id="agentBtn">${userProfile.business_name}님</button>
+                    <button class="btn btn-primary" onclick="openMyInfoModal()" id="agentBtn">${esc(userProfile.business_name)}님</button>
                     <a href="my_cards.html" class="btn btn-ghost">내 카드</a>
                     ${adminBtn}
                 `;
@@ -4555,10 +4555,10 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                             ${photoHtml}
                         </div>
                         <div style="flex:1; min-width:0;">
-                            <div style="font-size:36px; font-weight:900; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${office}</div>
-                            <div style="font-size:18px; color:#8899aa; margin-top:4px;">${agentName} 공인중개사</div>
+                            <div style="font-size:36px; font-weight:900; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(office)}</div>
+                            <div style="font-size:18px; color:#8899aa; margin-top:4px;">${esc(agentName)} 공인중개사</div>
                         </div>
-                        ${phone ? `<div style="font-size:36px; font-weight:900; color:#facc15; white-space:nowrap; flex-shrink:0;">📞 ${phone}</div>` : ''}
+                        ${phone ? `<div style="font-size:36px; font-weight:900; color:#facc15; white-space:nowrap; flex-shrink:0;">📞 ${esc(phone)}</div>` : ''}
                     </div>
 
                     <!-- 하단: 브랜드 영역 (260px = 62%) -->
@@ -5029,7 +5029,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
                 // 인증 토큰
                 const { data: { session } } = await supabaseClient.auth.getSession();
-                const accessToken = session?.access_token || SUPABASE_KEY;
+                if (!session?.access_token) { showToast('로그인이 필요합니다'); return; }
+                const accessToken = session.access_token;
 
                 const response = await fetch(`${SUPABASE_URL}/functions/v1/extract-image`, {
                     method: 'POST',
@@ -5177,7 +5178,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 // Edge Function으로 파싱 + 좌표 조회
                 // ★ Supabase 공식 인증 사용 - 세션 토큰 전달
                 const { data: { session: freshSession } } = await supabaseClient.auth.getSession();
-                const accessToken = freshSession?.access_token || SUPABASE_KEY;
+                if (!freshSession?.access_token) { showToast('로그인이 필요합니다'); return; }
+                const accessToken = freshSession.access_token;
 
                 // 타임아웃 + 자동 재시도 (15초 초과 시 1회 재시도)
                 const fetchWithTimeout = async (retryCount = 0) => {
@@ -5651,7 +5653,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             const ext = file.name.split('.').pop().toLowerCase();
 
             zone.classList.add('has-file');
-            zone.innerHTML = `<div class="fi-upload-filename">📄 ${file.name}</div>
+            zone.innerHTML = `<div class="fi-upload-filename">📄 ${esc(file.name)}</div>
                 <div class="fi-upload-meta">${(file.size/1024).toFixed(1)}KB · 클릭하면 다른 파일 선택</div>`;
 
             if (ext === 'xlsx' || ext === 'xls') {
@@ -5788,7 +5790,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 try {
                     const res = await fetch(`${SUPABASE_URL}/functions/v1/batch-parse`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+                        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
                         body: JSON.stringify({ text: chunks[i], agent_id: session.user.id, skip_save: true })
                     });
                     const result = await res.json();
@@ -5799,7 +5801,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         const newCards = result.cards;
                         if (newCards.length > 0) {
                             const lastName = newCards[newCards.length-1]?.property?.complex || newCards[newCards.length-1]?.property?.location || '';
-                            if (lastName) progLabel.innerHTML = `<span class="fi-spinner"></span>✅ ${lastName} 완료! 다음 분석 중...`;
+                            if (lastName) progLabel.innerHTML = `<span class="fi-spinner"></span>✅ ${esc(lastName)} 완료! 다음 분석 중...`;
                         }
                         // 새로 추가된 카드들 하나씩 등장 + 스크롤
                         const prevCount = fiParsedCards.length;
@@ -5923,12 +5925,12 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 const meta = [p.area, p.floor, p.room].filter(Boolean).join(' · ');
                 return `<div class="fi-card${card.isDuplicate ? ' duplicate' : ''}" id="fiCard-${card.id}">
                     <div class="fi-card-header">
-                        <span class="fi-badge ${typeKey}">${p.type || '?'}</span>
-                        <span class="fi-card-price">${p.price || '-'}</span>
-                        <span class="fi-card-name">${p.complex || p.location || '-'}</span>
+                        <span class="fi-badge ${typeKey}">${esc(p.type) || '?'}</span>
+                        <span class="fi-card-price">${esc(p.price) || '-'}</span>
+                        <span class="fi-card-name">${esc(p.complex || p.location) || '-'}</span>
                         ${card.isDuplicate ? '<span class="fi-dup-badge">중복 의심</span>' : ''}
                     </div>
-                    ${meta ? `<div class="fi-card-meta">${meta}</div>` : ''}
+                    ${meta ? `<div class="fi-card-meta">${esc(meta)}</div>` : ''}
                     ${tags ? `<div class="fi-tag-list">${tags}</div>` : ''}
                     <div class="fi-card-actions">
                         <button class="fi-detail-btn" onclick="fiToggleDetail('${card.id}')">📋 상세</button>

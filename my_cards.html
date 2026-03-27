@@ -2986,7 +2986,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 const photos = card.photos || [];
                 if (photos.length > 0) {
                     html += `<div style="width:44px;height:44px;border-radius:6px;overflow:hidden;flex-shrink:0;margin-right:4px;position:relative;">
-                        <img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;">
+                        <img src="${esc(photos[0])}" style="width:100%;height:100%;object-fit:cover;">
                         ${photos.length > 1 ? `<span style="position:absolute;bottom:1px;right:2px;font-size:9px;color:#fff;background:rgba(0,0,0,0.6);padding:1px 4px;border-radius:3px;">${photos.length}</span>` : ''}
                     </div>`;
                 }
@@ -3013,7 +3013,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 if (photos.length > 0) {
                     html += `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">`;
                     photos.forEach(url => {
-                        html += `<div style="width:56px;height:56px;border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);"><img src="${url}" style="width:100%;height:100%;object-fit:cover;"></div>`;
+                        html += `<div style="width:56px;height:56px;border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);"><img src="${esc(url)}" style="width:100%;height:100%;object-fit:cover;"></div>`;
                     });
                     html += `</div>`;
                 }
@@ -3489,10 +3489,10 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                             ${photoHtml}
                         </div>
                         <div style="flex:1; min-width:0;">
-                            <div style="font-size:36px; font-weight:900; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${office}</div>
-                            <div style="font-size:18px; color:#8899aa; margin-top:4px;">${agentName} 공인중개사</div>
+                            <div style="font-size:36px; font-weight:900; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(office)}</div>
+                            <div style="font-size:18px; color:#8899aa; margin-top:4px;">${esc(agentName)} 공인중개사</div>
                         </div>
-                        ${phone ? `<div style="font-size:36px; font-weight:900; color:#facc15; white-space:nowrap; flex-shrink:0;">📞 ${phone}</div>` : ''}
+                        ${phone ? `<div style="font-size:36px; font-weight:900; color:#facc15; white-space:nowrap; flex-shrink:0;">📞 ${esc(phone)}</div>` : ''}
                     </div>
                     <div style="position:absolute; top:162px; bottom:0; left:0; right:0; display:flex; align-items:center; padding:0 60px; gap:40px;">
                         <div style="position:absolute; width:250px; height:250px; background:radial-gradient(circle, rgba(250,204,21,0.10) 0%, transparent 70%); left:90px; top:50%; transform:translateY(-50%); pointer-events:none;"></div>
@@ -3702,7 +3702,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
-                const accessToken = session?.access_token || SUPABASE_KEY;
+                if (!session?.access_token) { showToast('로그인이 필요합니다'); return; }
+                const accessToken = session.access_token;
                 const res = await fetch(`${SUPABASE_URL}/functions/v1/parse-property`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken },
@@ -3783,7 +3784,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             // 기존 사진
             editExistingPhotos.forEach((url, i) => {
                 html += `<div style="position:relative;width:64px;height:64px;border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);">
-                    <img src="${url}" style="width:100%;height:100%;object-fit:cover;">
+                    <img src="${esc(url)}" style="width:100%;height:100%;object-fit:cover;">
                     <button onclick="editExistingPhotos.splice(${i},1);renderEditPhotos()" style="position:absolute;top:2px;right:2px;width:18px;height:18px;background:rgba(239,68,68,0.9);color:#fff;border:none;border-radius:50%;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;">×</button>
                 </div>`;
             });
@@ -3986,7 +3987,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 try {
                     const embedText = [p.type, p.price, p.location, p.complex, p.area, p.floor, p.room, p.category, ...(p.features||[]), p.moveIn, card.agent_comment].filter(Boolean).join(' ');
                     const { data: sess } = await supabaseClient.auth.getSession();
-                    const token = sess?.session?.access_token || SUPABASE_KEY;
+                    if (!sess?.session?.access_token) { console.warn('임베딩 생성 실패: 로그인 필요'); return; }
+                    const token = sess.session.access_token;
                     const embedResp = await fetch(`${SUPABASE_URL}/functions/v1/embed-card`, {
                         method: 'POST',
                         headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
@@ -4176,7 +4178,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 </div>`;
                 if (photos.length > 0) {
                     html += `<div style="width:44px;height:44px;border-radius:6px;overflow:hidden;flex-shrink:0;margin-right:4px;">
-                        <img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;">
+                        <img src="${esc(photos[0])}" style="width:100%;height:100%;object-fit:cover;">
                     </div>`;
                 }
                 // 되돌리기 버튼
@@ -4243,10 +4245,10 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         
         // ★ 자동 매칭 (매물 등록/수정 후 백그라운드 실행)
         function triggerAutoMatch(cardId) {
-            if (!currentUser) return;
+            if (!currentUser || !window._accessToken) return;
             fetch(`${SUPABASE_URL}/functions/v1/auto-match`, {
                 method: 'POST',
-                headers: { 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' },
+                headers: { 'Authorization': 'Bearer ' + window._accessToken, 'Content-Type': 'application/json' },
                 body: JSON.stringify({ card_id: cardId, agent_id: currentUser.id })
             }).then(r => r.json()).then(data => {
                 if (data.matched > 0) {
@@ -4359,11 +4361,12 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             ).join('');
 
             try {
+                if (!window._accessToken) { showToast('로그인이 필요합니다'); return; }
                 const response = await fetch(`${SUPABASE_URL}/functions/v1/search-property`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + SUPABASE_KEY
+                        'Authorization': 'Bearer ' + window._accessToken
                     },
                     body: JSON.stringify({
                         query: query,
@@ -4434,11 +4437,12 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             ).join('');
 
             try {
+                if (!window._accessToken) { showToast('로그인이 필요합니다'); return; }
                 const response = await fetch(`${SUPABASE_URL}/functions/v1/search-property`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + SUPABASE_KEY
+                        'Authorization': 'Bearer ' + window._accessToken
                     },
                     body: JSON.stringify({
                         query: query,
@@ -4495,7 +4499,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 const displayName = agentInfo.name || '내 정보';
                 const adminBtn = currentUser._isAdmin ? `<a href="admin.html" class="btn btn-primary" style="background:#f87171;font-size:12px;padding:8px 14px;">관리자</a>` : '';
                 nav.innerHTML = `
-                    <button onclick="openMyInfoModal()" class="btn-nav-agent">${displayName}님</button>
+                    <button onclick="openMyInfoModal()" class="btn-nav-agent">${esc(displayName)}님</button>
                     <a href="card_generator_v2_auth.html" class="btn btn-primary">+ 새 카드</a>
                     ${adminBtn}
                 `;
@@ -4663,6 +4667,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (session?.user) {
                 currentUser = session.user;
+                window._accessToken = session.access_token;
                 
                 // 프로필에서 전화번호 로드 (공유방 조회에 필요)
                 const { data: profile } = await supabaseClient
@@ -4948,11 +4953,12 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 if (currentQuery !== query) return; // 입력이 바뀌었으면 취소
 
                 try {
+                    if (!window._accessToken) return;
                     const response = await fetch(`${SUPABASE_URL}/functions/v1/search-property`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + SUPABASE_KEY
+                            'Authorization': 'Bearer ' + window._accessToken
                         },
                         body: JSON.stringify({
                             query: query,
@@ -5182,7 +5188,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 const date = new Date(m.created_at).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
                 const unreadBadge = !m.is_read ? '<span style="display:inline-block;background:#ff4d4d;color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:8px;">NEW</span>' : '';
                 return `<div class="memo-pc-item" id="memopc-${m.id}">
-                    <div class="memo-pc-text">${m.content.replace(/</g,'&lt;')}${unreadBadge}</div>
+                    <div class="memo-pc-text">${esc(m.content)}${unreadBadge}</div>
                     <div class="memo-pc-date">${date}</div>
                     <button class="memo-pc-del" onclick="deleteMemosPc('${m.id}')">삭제</button>
                 </div>`;
@@ -5692,8 +5698,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 const p = card.property || {};
                 const isSelected = selectedCards.some(c => c.id === card.id);
                 const typeClass = p.type === '매매' ? 'type-sale' : p.type === '전세' ? 'type-jeonse' : p.type === '월세' ? 'type-monthly' : 'type-client';
-                const mainText = [p.complex, p.location].filter(Boolean).join(' · ');
-                const featureTags = (p.features||p.tags||[]).slice(0,4).map(f=>`<span class="list-tag">${f}</span>`).join('');
+                const mainText = [p.complex, p.location].filter(Boolean).map(v=>esc(v)).join(' · ');
+                const featureTags = (p.features||p.tags||[]).slice(0,4).map(f=>`<span class="list-tag">${esc(f)}</span>`).join('');
                 const agentColor = getAgentColor(card.shared_by || card.agent_id);
                 const agentName = card.agent?.name || '중개사';
                 const roomName = allMyRoomsList.find(r => r.id === card.room_id)?.name || '';
@@ -5704,23 +5710,23 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 h += `<div class="property-checkbox"></div>`;
                 h += `<div class="property-text">
                     <div class="property-text-row">
-                        <span class="property-type-badge ${typeClass}">${p.type||''}</span>
-                        <strong>${p.price||''}</strong>
+                        <span class="property-type-badge ${typeClass}">${esc(p.type||'')}</span>
+                        <strong>${esc(p.price||'')}</strong>
                         ${mainText ? `<span style="color:var(--text-gray);font-size:13px;margin-left:6px">${mainText}</span>` : ''}
                         ${card.is_mine ? `<span class="mine-badge">내 매물</span>` : ''}
                     </div>
                     ${featureTags ? `<div class="property-tags-row">${featureTags}</div>` : ''}
                     ${card.is_mine
-                        ? (roomName ? `<div style="margin-top:2px"><span style="display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:4px;background:rgba(78,205,196,0.12);color:#4ecdc4;font-size:10px;font-weight:600;">${roomName}</span></div>` : '')
+                        ? (roomName ? `<div style="margin-top:2px"><span style="display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:4px;background:rgba(78,205,196,0.12);color:#4ecdc4;font-size:10px;font-weight:600;">${esc(roomName)}</span></div>` : '')
                         : `<div class="shared-agent-name">
                         <span class="shared-agent-dot" style="background:${agentColor}"></span>
-                        <span style="display:inline-block;padding:1px 6px;border-radius:4px;background:${agentColor}20;color:${agentColor};font-size:10px;font-weight:600;margin-right:4px;">${roomName} 공유방</span>
-                        <span style="color:${agentColor};font-weight:600;">${agentName}</span> <span style="color:var(--text-gray);font-size:11px;margin-left:8px;">${card.agent?.phone || ''}</span>
+                        <span style="display:inline-block;padding:1px 6px;border-radius:4px;background:${agentColor}20;color:${agentColor};font-size:10px;font-weight:600;margin-right:4px;">${esc(roomName)} 공유방</span>
+                        <span style="color:${agentColor};font-weight:600;">${esc(agentName)}</span> <span style="color:var(--text-gray);font-size:11px;margin-left:8px;">${esc(card.agent?.phone || '')}</span>
                     </div>`}
                 </div>`;
                 if (photos.length > 0) {
                     h += `<div style="position:relative;width:44px;height:44px;border-radius:6px;overflow:hidden;flex-shrink:0;margin-right:4px;">
-                        <img src="${photos[0]}" style="width:100%;height:100%;object-fit:cover;">
+                        <img src="${esc(photos[0])}" style="width:100%;height:100%;object-fit:cover;">
                         ${photos.length > 1 ? `<span style="position:absolute;bottom:1px;right:2px;font-size:9px;color:#fff;background:rgba(0,0,0,0.6);padding:1px 4px;border-radius:3px;">${photos.length}</span>` : ''}
                     </div>`;
                 }
@@ -5890,7 +5896,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     iHtml += `<div class="invite-card">
                         <div class="invite-card-info">
                             <span style="font-size:18px">📁</span>
-                            <span class="invite-card-name">${inv.share_rooms?.name || '공유방'}</span>
+                            <span class="invite-card-name">${esc(inv.share_rooms?.name || '공유방')}</span>
                         </div>
                         <div class="invite-card-actions">
                             <button class="invite-accept" onclick="acceptInvite('${inv.id}', '${inv.room_id}')">수락</button>
@@ -6021,11 +6027,11 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             const typeClass = p.type === '매매' ? 'type-sale' : p.type === '전세' ? 'type-jeonse' : 'type-monthly';
             html += `<div style="margin-bottom:16px;">`;
             html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">`;
-            html += `<span class="property-type-badge ${typeClass}">${p.type || ''}</span>`;
-            html += `<span style="font-size:20px;font-weight:800;color:var(--text-white);">${p.price || ''}</span>`;
+            html += `<span class="property-type-badge ${typeClass}">${esc(p.type || '')}</span>`;
+            html += `<span style="font-size:20px;font-weight:800;color:var(--text-white);">${esc(p.price || '')}</span>`;
             html += `</div>`;
             html += `<div style="font-size:15px;font-weight:600;color:var(--text-white);margin-bottom:4px;">${esc(p.complex || '')} · ${esc(p.location || '')}</div>`;
-            html += `<div style="font-size:13px;color:var(--text-gray);">${[p.area, p.floor].filter(Boolean).join(' · ')}</div>`;
+            html += `<div style="font-size:13px;color:var(--text-gray);">${[p.area, p.floor].filter(Boolean).map(v => esc(v)).join(' · ')}</div>`;
             html += `</div>`;
 
             // 태그
@@ -6125,7 +6131,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
                 html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid rgba(255,255,255,0.06);border-radius:8px;margin-bottom:6px;${isPending ? 'opacity:0.7;' : ''}">
                     <div style="display:flex;align-items:center;gap:10px;">
-                        <span style="font-size:13px;font-weight:600">${phoneDisplay}${isMe ? ' <span style="font-size:10px;color:var(--primary)">(나)</span>' : ''}</span>
+                        <span style="font-size:13px;font-weight:600">${esc(phoneDisplay)}${isMe ? ' <span style="font-size:10px;color:var(--primary)">(나)</span>' : ''}</span>
                         <span style="font-size:9px;padding:2px 6px;border-radius:6px;background:${badgeColor};color:${isOwner ? 'var(--bg-dark)' : '#fff'};font-weight:600">${badgeText}</span>
                     </div>
                     ${actionBtn}
@@ -6890,7 +6896,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             
             let html = '';
             Object.entries(grouped).forEach(([clientId, group]) => {
-                html += `<div style="padding:8px 16px 4px;font-size:11px;color:#4ecdc4;font-weight:600;">👤 ${group.summary}</div>`;
+                html += `<div style="padding:8px 16px 4px;font-size:11px;color:#4ecdc4;font-weight:600;">👤 ${esc(group.summary)}</div>`;
                 group.matches.forEach(m => {
                     const score = Math.round(m.similarity * 100);
                     const scoreClass = score >= 85 ? 'high' : '';
@@ -6898,8 +6904,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     html += `<div class="match-item" onclick="goToSharedCard('${m.shared_card_id}')">
                         <div class="match-score ${scoreClass}">${score}%</div>
                         <div class="match-info">
-                            <div class="match-property">${m.shared_summary}</div>
-                            <div class="match-meta">${m.shared_agent_name} · ${m.shared_room_name} · ${timeAgo}</div>
+                            <div class="match-property">${esc(m.shared_summary)}</div>
+                            <div class="match-meta">${esc(m.shared_agent_name)} · ${esc(m.shared_room_name)} · ${timeAgo}</div>
                         </div>
                     </div>`;
                 });
@@ -7577,9 +7583,10 @@ async function loadInlineMatch(clientCardId) {
         if (!clientCard || !clientCard.embedding) throw new Error('임베딩 없음');
 
         // ★ match-properties API 호출 (점수 랭킹 + 입주시기 + 위치 텍스트 필터)
+        if (!window._accessToken) throw new Error('로그인이 필요합니다');
         const matchResp = await fetch(`${SUPABASE_URL}/functions/v1/match-properties`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + window._accessToken },
             body: JSON.stringify({
                 client_card_id: clientCardId,
                 agent_id: currentUser.id,
@@ -7687,7 +7694,7 @@ function renderInlineMatchResults(clientCardId, result) {
         const photos = item.photos || [];
         const photoHtml = photos.length > 0
             ? `<div style="position:relative;width:44px;height:44px;border-radius:6px;overflow:hidden;flex-shrink:0;">
-                <img src="${photos[0]}" loading="lazy" style="width:100%;height:100%;object-fit:cover;">
+                <img src="${esc(photos[0])}" loading="lazy" style="width:100%;height:100%;object-fit:cover;">
                 ${photos.length > 1 ? `<span style="position:absolute;bottom:1px;right:2px;font-size:9px;color:#fff;background:rgba(0,0,0,0.6);padding:1px 4px;border-radius:3px;">${photos.length}</span>` : ''}
                </div>`
             : '';
@@ -7807,7 +7814,7 @@ function renderMatchResults(result) {
         const sim = item.similarity ? Math.round(item.similarity * 100) : null;
         const simClass = sim >= 70 ? 'match-sim-high' : sim >= 50 ? 'match-sim-mid' : 'match-sim-low';
         const typeClass = p.type === '매매' ? 'type-sale' : p.type === '전세' ? 'type-jeonse' : p.type === '월세' ? 'type-monthly' : '';
-        const mainText = [p.complex, p.location].filter(Boolean).join(' · ');
+        const mainText = [p.complex, p.location].filter(Boolean).map(v => esc(v)).join(' · ');
         const features = (p.features || []).slice(0, 3).map(f => `<span class="list-tag">${esc(f)}</span>`).join('');
         const status = item.trade_status || '계약가능';
         const statusClass = status === '계약가능' ? 'trade-available' : status === '계약중' ? 'trade-ongoing' : 'trade-done';
@@ -7821,7 +7828,7 @@ function renderMatchResults(result) {
                     <span class="trade-badge ${statusClass}" style="font-size:9px;">${esc(status)}</span>
                 </div>
                 <div class="match-info-row2">
-                    ${mainText ? esc(mainText) : ''}
+                    ${mainText ? mainText : ''}
                     ${p.area ? ' · ' + esc(p.area) : ''}
                     ${p.floor ? ' · ' + esc(p.floor) : ''}
                 </div>
@@ -7893,13 +7900,13 @@ function renderClientTimeline(container, card, notes, cardId) {
     let items = [];
 
     // 첫 번째: 손님 정보 (타임라인 첫 박스)
-    const featureTags = (p.features || []).map(f => `<span style="display:inline-block;padding:1px 6px;border-radius:4px;background:rgba(78,205,196,0.1);color:#4ecdc4;font-size:10px;margin:1px 2px;">${f}</span>`).join('');
+    const featureTags = (p.features || []).map(f => `<span style="display:inline-block;padding:1px 6px;border-radius:4px;background:rgba(78,205,196,0.1);color:#4ecdc4;font-size:10px;margin:1px 2px;">${esc(f)}</span>`).join('');
     const infoLines = [
         `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">${[
-            p.price ? `<span style="font-size:16px;font-weight:700;color:#4ecdc4;">${p.price}</span>` : '',
-            p.location ? `<span style="color:#e2e8f0;">· ${p.location}</span>` : '',
-            p.complex ? `<span style="color:#cbd5e1;">· ${p.complex}</span>` : '',
-            p.area ? `<span style="color:#cbd5e1;">· ${p.area}</span>` : '',
+            p.price ? `<span style="font-size:16px;font-weight:700;color:#4ecdc4;">${esc(p.price)}</span>` : '',
+            p.location ? `<span style="color:#e2e8f0;">· ${esc(p.location)}</span>` : '',
+            p.complex ? `<span style="color:#cbd5e1;">· ${esc(p.complex)}</span>` : '',
+            p.area ? `<span style="color:#cbd5e1;">· ${esc(p.area)}</span>` : '',
         ].filter(Boolean).join('')} ${featureTags}</div>`,
         pn.memo ? `<div style="margin-top:6px;font-size:13px;color:#94a3b8;line-height:1.6;">📝 ${esc(pn.memo)}</div>` : ''
     ].filter(Boolean).join('\n');
@@ -8097,7 +8104,8 @@ async function updateClientEmbedding(cardId) {
 
         // Edge Function으로 임베딩 생성
         const { data: sess } = await supabaseClient.auth.getSession();
-        const token = sess?.session?.access_token || SUPABASE_KEY;
+        if (!sess?.session?.access_token) { console.warn('임베딩 업데이트 실패: 로그인 필요'); return; }
+        const token = sess.session.access_token;
         await fetch(`${SUPABASE_URL}/functions/v1/embed-card`, {
             method: 'POST',
             headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
