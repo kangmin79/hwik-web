@@ -7853,7 +7853,7 @@ function openLinkedNoteInput(clientCardId, propertyId) {
         noteArea = document.createElement('div');
         noteArea.id = 'linked-note-area';
         // 매칭 결과 영역 다음에 삽입
-        const matchArea = document.getElementById('matchResults-' + clientCardId);
+        const matchArea = document.getElementById('client-match-' + clientCardId);
         if (matchArea) matchArea.after(noteArea);
         else return;
     }
