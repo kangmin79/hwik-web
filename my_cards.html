@@ -7824,7 +7824,7 @@ function renderInlineMatchResults(clientCardId, result) {
                     ? `<button class="property-edit" onclick="event.stopPropagation(); editCard('${item.id}')" style="flex-shrink:0;">수정</button>`
                     : `<button class="property-edit" onclick="event.stopPropagation(); openSharedDetail('${item.id}')" style="flex-shrink:0;">상세</button>`
                 }
-                <button onclick="event.stopPropagation(); sendMatchToClient('${clientCardId}','${item.id}')" style="background:#10b981;color:white;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;white-space:nowrap;">휙 보내기</button>
+                <button onclick="event.stopPropagation(); selectMatchedProperty('${item.id}','${clientCardId}')" style="background:${isSelected ? '#10b981' : 'rgba(16,185,129,0.15)'};color:${isSelected ? 'white' : '#10b981'};border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;white-space:nowrap;">${isSelected ? '✓ 선택됨' : '선택'}</button>
                 <button onclick="event.stopPropagation(); openLinkedNoteInput('${clientCardId}','${item.id}')" style="background:rgba(250,204,21,0.15);color:#facc15;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;white-space:nowrap;">메모</button>
             </div>
         </div>`;
