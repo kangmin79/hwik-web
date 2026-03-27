@@ -7487,15 +7487,14 @@ async function updateClientLocation(cardId) {
         const stationName = stationMatch[1].replace('역', '');
         if (stationName.length >= 1) {
             const { data } = await supabaseClient
-                .from('facilities')
-                .select('latitude, longitude')
-                .eq('type', 'subway')
+                .from('stations')
+                .select('lat, lon')
                 .ilike('name', '%' + stationName + '%')
                 .limit(1);
             if (data && data[0]) {
-                await supabaseClient.from('cards').update({ lat: data[0].latitude, lng: data[0].longitude }).eq('id', cardId).eq('agent_id', currentUser.id);
-                card.lat = data[0].latitude;
-                card.lng = data[0].longitude;
+                await supabaseClient.from('cards').update({ lat: data[0].lat, lng: data[0].lon }).eq('id', cardId).eq('agent_id', currentUser.id);
+                card.lat = data[0].lat;
+                card.lng = data[0].lon;
                 console.log(`[위치] 역 매칭: ${stationMatch[1]} → (${card.lat}, ${card.lng})`);
                 return;
             }
@@ -7511,15 +7510,14 @@ async function updateClientLocation(cardId) {
             .replace(/[대초중고]$/, '');
         if (schoolName.length >= 1) {
             const { data } = await supabaseClient
-                .from('facilities')
-                .select('latitude, longitude')
-                .eq('type', 'school')
+                .from('schools')
+                .select('lat, lon')
                 .ilike('name', '%' + schoolName + '%')
                 .limit(1);
             if (data && data[0]) {
-                await supabaseClient.from('cards').update({ lat: data[0].latitude, lng: data[0].longitude }).eq('id', cardId).eq('agent_id', currentUser.id);
-                card.lat = data[0].latitude;
-                card.lng = data[0].longitude;
+                await supabaseClient.from('cards').update({ lat: data[0].lat, lng: data[0].lon }).eq('id', cardId).eq('agent_id', currentUser.id);
+                card.lat = data[0].lat;
+                card.lng = data[0].lon;
                 console.log(`[위치] 학교 매칭: ${schoolMatch[1]} → (${card.lat}, ${card.lng})`);
                 return;
             }
@@ -7534,15 +7532,14 @@ async function updateClientLocation(cardId) {
     for (const dong of dongNames) {
         if (allText.includes(dong)) {
             const { data } = await supabaseClient
-                .from('facilities')
-                .select('latitude, longitude')
-                .eq('type', 'subway')
+                .from('stations')
+                .select('lat, lon')
                 .ilike('name', '%' + dong + '%')
                 .limit(1);
             if (data && data[0]) {
-                await supabaseClient.from('cards').update({ lat: data[0].latitude, lng: data[0].longitude }).eq('id', cardId).eq('agent_id', currentUser.id);
-                card.lat = data[0].latitude;
-                card.lng = data[0].longitude;
+                await supabaseClient.from('cards').update({ lat: data[0].lat, lng: data[0].lon }).eq('id', cardId).eq('agent_id', currentUser.id);
+                card.lat = data[0].lat;
+                card.lng = data[0].lon;
                 console.log(`[위치] 동네 매칭: ${dong} → (${card.lat}, ${card.lng})`);
                 return;
             }

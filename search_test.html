@@ -437,15 +437,15 @@ async function generateAll() {
             addLog('아파트 단지 '+DB_APARTMENTS.length+'개 로드');
         } else { addLog('⚠ 아파트 데이터 없음 — 랜덤 생성 모드'); }
 
-        var subRes = await sb.from('facilities').select('name,latitude,longitude').eq('type','subway').limit(500);
+        var subRes = await sb.from('stations').select('name,lat,lon').limit(500);
         if(subRes.data && subRes.data.length>0) {
-            DB_SUBWAYS = subRes.data;
+            DB_SUBWAYS = subRes.data.map(function(d){return {name:d.name, latitude:d.lat, longitude:d.lon}});
             addLog('지하철역 '+DB_SUBWAYS.length+'개 로드');
         }
 
-        var schRes = await sb.from('facilities').select('name,latitude,longitude').eq('type','school').limit(500);
+        var schRes = await sb.from('schools').select('name,lat,lon').limit(500);
         if(schRes.data && schRes.data.length>0) {
-            DB_SCHOOLS = schRes.data;
+            DB_SCHOOLS = schRes.data.map(function(d){return {name:d.name, latitude:d.lat, longitude:d.lon}});
             addLog('학교 '+DB_SCHOOLS.length+'개 로드');
         }
     } catch(e) { addLog('⚠ DB 로드 실패: '+e.message+' — 랜덤 생성 모드'); }

@@ -1070,20 +1070,33 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ★ 근처 검색 (역/학교 좌표 기반 — facilities 테이블)
+    // ★ 근처 검색 (역: stations 테이블, 학교: schools 테이블)
     if (parsed.filters?.nearby && parsed.filters?.nearby_type) {
       const nearbyName = parsed.filters.nearby;
       const nearbyType = parsed.filters.nearby_type;
-      const RADIUS_KM = 2.0; // 반경 2km (이전: 1.5km)
+      const RADIUS_KM = 2.0;
 
       try {
-        // facilities 테이블에서 해당 시설 좌표 찾기
-        const { data: facilityData } = await supabase
-          .from('facilities')
-          .select('latitude, longitude, name')
-          .eq('type', nearbyType)
-          .ilike('name', `%${nearbyName.replace(/역$|대$|대학$|학교$/, '')}%`)
-          .limit(3);
+        let facilityData: any[] | null = null;
+        const searchName = nearbyName.replace(/역$|대$|대학$|학교$/, '');
+
+        if (nearbyType === 'subway') {
+          // stations 테이블 (컬럼: name, lat, lon)
+          const { data } = await supabase
+            .from('stations')
+            .select('name, lat, lon')
+            .ilike('name', `%${searchName}%`)
+            .limit(3);
+          facilityData = data?.map(d => ({ name: d.name, latitude: d.lat, longitude: d.lon })) || null;
+        } else {
+          // schools 테이블 (컬럼: name, lat, lon)
+          const { data } = await supabase
+            .from('schools')
+            .select('name, lat, lon')
+            .ilike('name', `%${searchName}%`)
+            .limit(3);
+          facilityData = data?.map(d => ({ name: d.name, latitude: d.lat, longitude: d.lon })) || null;
+        }
 
         if (facilityData && facilityData.length > 0) {
           const facility = facilityData[0];
