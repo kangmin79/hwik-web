@@ -7978,6 +7978,7 @@ function renderClientTimeline(container, card, notes, cardId) {
             id: n.id,
             type: n.type || '메모',
             date: n.created_at,
+            alert_date: n.alert_date,
             content: n.content || '',
             linkedCardId: n.linked_card_id,
             alert_done: n.alert_done
@@ -8004,8 +8005,16 @@ function renderClientTimeline(container, card, notes, cardId) {
         const t = NOTE_TYPE_MAP[item.type] || NOTE_TYPE_MAP['메모'];
         const deleteBtn = item.id ? `<button onclick="event.stopPropagation();deleteClientNote('${item.id}','${cardId}')" style="margin-left:auto;padding:3px 10px;border-radius:5px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.08);color:#f87171;font-size:11px;cursor:pointer;">삭제</button>` : '';
         const editBtn = item.isRegister ? `<button onclick="event.stopPropagation();editClientCard('${cardId}')" style="margin-left:auto;padding:3px 10px;border-radius:5px;border:1px solid rgba(250,204,21,0.3);background:rgba(250,204,21,0.08);color:#facc15;font-size:11px;cursor:pointer;">수정</button>` : '';
+        // 일정 시간 표시 + 지연 판단
+        let scheduleTag = '';
+        if (item.alert_date) {
+            const ad = new Date(item.alert_date);
+            const adStr = `${ad.getMonth()+1}/${ad.getDate()} ${String(ad.getHours()).padStart(2,'0')}:${String(ad.getMinutes()).padStart(2,'0')}`;
+            const isOverdue = !item.alert_done && ad < new Date();
+            scheduleTag = `<span style="font-size:10px;margin-left:6px;padding:1px 6px;border-radius:3px;${isOverdue ? 'background:rgba(239,68,68,0.15);color:#f87171;' : 'background:rgba(250,204,21,0.1);color:#facc15;'}">📅 ${adStr}${isOverdue ? ' 지연' : ''}</span>`;
+        }
         let visitStatusBtn = '';
-        if (item.type === '방문' && item.id) {
+        if (item.alert_date && item.id) {
             visitStatusBtn = item.alert_done
                 ? `<span style="color:#34d399;font-size:11px;margin-left:6px;">✅ 완료</span>`
                 : `<button onclick="event.stopPropagation();toggleNoteStatus('${item.id}',true)" style="margin-left:6px;background:rgba(245,158,11,0.2);color:#fbbf24;border:none;padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer;">예정 → 완료</button>`;
@@ -8017,7 +8026,7 @@ function renderClientTimeline(container, card, notes, cardId) {
                 <div class="crm-tl-head">
                     <span class="crm-tl-type t-${t.cls}">${t.label}</span>
                     <span class="crm-tl-date">${formatNoteDate(item.date)}</span>
-                    ${editBtn}${deleteBtn}${visitStatusBtn}
+                    ${editBtn}${deleteBtn}${scheduleTag}${visitStatusBtn}
                 </div>
                 <div class="crm-tl-content" style="white-space:pre-wrap;">${contentHtml}</div>
             </div>
@@ -8055,44 +8064,63 @@ async function saveClientNote(cardId) {
     else if (/계약|사인|도장|잔금/.test(content)) type = '계약';
     if (!content) { showToast('내용을 입력하세요'); return; }
 
-    // ★ 날짜 자동 감지
+    // ★ 날짜+시간 자동 감지 (timestamptz로 저장)
     let alertDate = null;
     const now = new Date();
-    // "오늘" → 오늘 날짜
-    if (/오늘/.test(content)) {
-        alertDate = now.toISOString().slice(0, 10);
+
+    // 시간 파싱 함수 (기본 10:00)
+    function parseTime(text) {
+        // "오후 2시 30분", "오후2시", "14시30분", "2시반"
+        const pmMatch = text.match(/오후\s*(\d{1,2})\s*시?\s*(\d{1,2})?\s*분?/);
+        if (pmMatch) { let h = parseInt(pmMatch[1]); if (h < 12) h += 12; return { h, m: parseInt(pmMatch[2]) || 0 }; }
+        const amMatch = text.match(/오전\s*(\d{1,2})\s*시?\s*(\d{1,2})?\s*분?/);
+        if (amMatch) return { h: parseInt(amMatch[1]), m: parseInt(amMatch[2]) || 0 };
+        const timeMatch = text.match(/(\d{1,2})\s*시\s*(\d{1,2})?\s*분?/);
+        if (timeMatch) { const h = parseInt(timeMatch[1]); return { h, m: parseInt(timeMatch[2]) || 0 }; }
+        const halfMatch = text.match(/(\d{1,2})\s*시\s*반/);
+        if (halfMatch) return { h: parseInt(halfMatch[1]), m: 30 };
+        return { h: 10, m: 0 }; // 기본 오전 10시
     }
-    // "내일" → 내일 날짜
+
+    function makeAlertDate(baseDate) {
+        const t = parseTime(content);
+        baseDate.setHours(t.h, t.m, 0, 0);
+        return baseDate.toISOString();
+    }
+
+    if (/오늘/.test(content)) {
+        alertDate = makeAlertDate(new Date(now));
+    }
     else if (/내일/.test(content)) {
         const d = new Date(now); d.setDate(d.getDate() + 1);
-        alertDate = d.toISOString().slice(0, 10);
+        alertDate = makeAlertDate(d);
     }
-    // "모레" → 모레 날짜
     else if (/모레/.test(content)) {
         const d = new Date(now); d.setDate(d.getDate() + 2);
-        alertDate = d.toISOString().slice(0, 10);
+        alertDate = makeAlertDate(d);
     }
-    // "다음주" → 7일 후
     else if (/다음\s*주/.test(content)) {
         const d = new Date(now); d.setDate(d.getDate() + 7);
-        alertDate = d.toISOString().slice(0, 10);
+        alertDate = makeAlertDate(d);
     }
-    // "N월 N일" → 해당 날짜
     else {
+        // "N월 N일" → 해당 날짜
         const dateMatch = content.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
         if (dateMatch) {
             const m = parseInt(dateMatch[1]) - 1;
-            const d = parseInt(dateMatch[2]);
+            const day = parseInt(dateMatch[2]);
             const year = m < now.getMonth() ? now.getFullYear() + 1 : now.getFullYear();
-            alertDate = new Date(year, m, d).toISOString().slice(0, 10);
+            alertDate = makeAlertDate(new Date(year, m, day));
         }
         // "N/N" 형식
-        const slashMatch = content.match(/(\d{1,2})\/(\d{1,2})/);
-        if (!alertDate && slashMatch) {
-            const m = parseInt(slashMatch[1]) - 1;
-            const d = parseInt(slashMatch[2]);
-            const year = m < now.getMonth() ? now.getFullYear() + 1 : now.getFullYear();
-            alertDate = new Date(year, m, d).toISOString().slice(0, 10);
+        if (!alertDate) {
+            const slashMatch = content.match(/(\d{1,2})\/(\d{1,2})/);
+            if (slashMatch) {
+                const m = parseInt(slashMatch[1]) - 1;
+                const day = parseInt(slashMatch[2]);
+                const year = m < now.getMonth() ? now.getFullYear() + 1 : now.getFullYear();
+                alertDate = makeAlertDate(new Date(year, m, day));
+            }
         }
     }
 
@@ -8112,7 +8140,8 @@ async function saveClientNote(cardId) {
         return;
     }
 
-    showToast(alertDate ? `메모 저장됨 · 📅 ${alertDate} 알림 등록` : '메모 저장됨');
+    const alertDisplay = alertDate ? new Date(alertDate).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
+    showToast(alertDate ? `메모 저장됨 · 📅 ${alertDisplay} 알림` : '메모 저장됨');
     await loadClientTimeline(cardId);
 
     // ★ 손님 임베딩 재생성 (메모 포함 — 백그라운드)
