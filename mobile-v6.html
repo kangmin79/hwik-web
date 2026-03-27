@@ -1200,6 +1200,7 @@
   }
   .crm-sheet.show { bottom:0; }
   .crm-sheet-handle { width:36px;height:4px;background:#d1d5db;border-radius:2px;margin:10px auto 0; }
+  .container.alert-mode { justify-content:flex-start; padding-top:0; padding-bottom:80px; height:auto; min-height:100%; overflow-y:auto; }
 </style>
 </head>
 <body>
@@ -1664,10 +1665,13 @@
     const alertPanel = document.getElementById('alertPanel');
     if (alertPanel) alertPanel.style.display = tab === 'alert' ? '' : 'none';
     if (tab !== 'alert') {
+      container.classList.remove('alert-mode');
       const searchWrap = document.querySelector('.search-wrap');
       if (searchWrap) searchWrap.style.display = '';
       const logo = document.querySelector('.logo');
       if (logo) logo.style.display = '';
+      const tagline = document.querySelector('.tagline');
+      if (tagline) tagline.style.display = '';
     }
 
     if (tab === 'home') {
@@ -1677,10 +1681,11 @@
       doQuickSearch('my');
     } else if (tab === 'alert') {
       history.pushState({ tab: 'alert' }, '');
-      container.classList.add('active');
+      container.classList.add('active', 'alert-mode');
       results.innerHTML = '';
       document.querySelector('.search-wrap').style.display = 'none';
       document.querySelector('.logo').style.display = 'none';
+      document.querySelector('.tagline').style.display = 'none';
       loadMobileAlerts();
     } else if (tab === 'memo') {
       goRegister();
@@ -1967,7 +1972,9 @@
         if (clients) clients.forEach(c => { clientMap[c.id] = c.property || {}; });
       }
 
-      let html = '';
+      let html = `<div style="padding:16px 0 4px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:20px;font-weight:800;color:#1a1a2e;">알림</span>
+      </div>`;
 
       // 알림 카드 렌더 헬퍼
       function alertCard(accentColor, label, rightText, content, clientCardId) {
