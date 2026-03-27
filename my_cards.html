@@ -7796,11 +7796,91 @@ function renderInlineMatchResults(clientCardId, result) {
                     : `<button class="property-edit" onclick="event.stopPropagation(); openSharedDetail('${item.id}')" style="flex-shrink:0;">상세</button>`
                 }
                 <button onclick="event.stopPropagation(); sendMatchToClient('${clientCardId}','${item.id}')" style="background:#10b981;color:white;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;white-space:nowrap;">휙 보내기</button>
+                <button onclick="event.stopPropagation(); openLinkedNoteInput('${clientCardId}','${item.id}')" style="background:rgba(250,204,21,0.15);color:#facc15;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;white-space:nowrap;">메모</button>
             </div>
         </div>`;
     });
 
     area.innerHTML = html;
+}
+
+// ★ 매물 연결 메모 (매칭 결과에서)
+function openLinkedNoteInput(clientCardId, propertyId) {
+    // 기존 입력창이 있으면 닫기
+    const existing = document.getElementById('linked-note-' + propertyId);
+    if (existing) { existing.remove(); return; }
+
+    // 매물 정보
+    const propCard = allCards.find(c => c.id === propertyId);
+    const propName = propCard ? [propCard.property?.complex, propCard.property?.location, propCard.property?.price].filter(Boolean).join(' · ') : propertyId;
+
+    // 매물 카드 아래에 입력창 삽입
+    const cardEl = document.querySelector(`[onclick*="openLinkedNoteInput('${clientCardId}','${propertyId}')"]`)?.closest('.match-result-item, div[style]');
+    if (!cardEl) return;
+
+    const inputDiv = document.createElement('div');
+    inputDiv.id = 'linked-note-' + propertyId;
+    inputDiv.style.cssText = 'padding:8px 12px;margin-top:4px;background:rgba(250,204,21,0.05);border:1px solid rgba(250,204,21,0.2);border-radius:8px;';
+    inputDiv.innerHTML = `
+        <div style="font-size:11px;color:#facc15;margin-bottom:6px;">📝 ${esc(propName)} 메모</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+            <input type="text" id="linked-note-input-${propertyId}" placeholder="예) 내일 오후2시 방문, 가격 네고 가능" style="flex:1;padding:8px 12px;border-radius:6px;border:1px solid rgba(250,204,21,0.2);background:rgba(255,255,255,0.05);color:#e2e8f0;font-size:13px;outline:none;" onkeydown="if(event.key==='Enter')saveLinkedNote('${clientCardId}','${propertyId}');if(event.key==='Escape')document.getElementById('linked-note-${propertyId}')?.remove();" oninput="previewLinkedNote('${propertyId}')">
+            <button onclick="saveLinkedNote('${clientCardId}','${propertyId}')" style="padding:8px 14px;border-radius:6px;border:none;background:var(--primary);color:var(--bg-dark);font-weight:700;font-size:12px;cursor:pointer;flex-shrink:0;">저장</button>
+        </div>
+        <div id="linked-note-preview-${propertyId}" style="height:18px;padding:2px 0;font-size:11px;color:#64748b;"></div>
+    `;
+    cardEl.after(inputDiv);
+    document.getElementById('linked-note-input-' + propertyId)?.focus();
+}
+
+function previewLinkedNote(propertyId) {
+    const input = document.getElementById('linked-note-input-' + propertyId);
+    const preview = document.getElementById('linked-note-preview-' + propertyId);
+    if (!input || !preview) return;
+    const parsed = parseNoteText(input.value.trim());
+    const parts = [];
+    if (parsed.urgent) parts.push('<span style="color:#ef4444;">🔴 긴급</span>');
+    const typeColors = { '방문': '#4ecdc4', '상담': '#60a5fa', '계약': '#f59e0b', '매물소개': '#a78bfa', '메모': '#64748b' };
+    parts.push(`<span style="color:${typeColors[parsed.type]}">${parsed.type}</span>`);
+    if (parsed.alertDate) {
+        const d = new Date(parsed.alertDate);
+        const days = ['일','월','화','수','목','금','토'];
+        parts.push(`<span style="color:#facc15;">📅 ${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]})${parsed.hasTime ? ' ' + parsed.timeStr : ''}</span>`);
+    }
+    preview.innerHTML = parts.join(' · ');
+}
+
+async function saveLinkedNote(clientCardId, propertyId) {
+    const input = document.getElementById('linked-note-input-' + propertyId);
+    if (!input) return;
+    const content = input.value.trim();
+    if (!content) { showToast('내용을 입력하세요'); return; }
+
+    const parsed = parseNoteText(content);
+    const insertData = {
+        client_card_id: clientCardId,
+        agent_id: currentUser.id,
+        type: parsed.type,
+        content: content,
+        linked_card_id: propertyId,
+    };
+    if (parsed.alertDate) insertData.alert_date = parsed.alertDate;
+
+    const { error } = await supabaseClient.from('client_notes').insert(insertData);
+    if (error) { showToast('저장 실패: ' + error.message); return; }
+
+    // 입력창 제거 + 토스트
+    document.getElementById('linked-note-' + propertyId)?.remove();
+    let toastMsg = '메모 저장됨';
+    if (parsed.alertDate) {
+        const d = new Date(parsed.alertDate);
+        const days = ['일','월','화','수','목','금','토'];
+        toastMsg = `저장 · 📅 ${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]})${parsed.hasTime ? ' ' + parsed.timeStr : ''} 알림`;
+    }
+    showToast(toastMsg);
+
+    // 타임라인 새로고침
+    if (_expandedClientId === clientCardId) loadClientFullView(clientCardId);
 }
 
 // ★ Fix 2: 매칭 결과에서 바로 보내기
