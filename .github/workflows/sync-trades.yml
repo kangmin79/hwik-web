@@ -2,8 +2,8 @@ name: 실거래가 동기화
 
 on:
   schedule:
-    # 매일 새벽 3시 (KST) = UTC 18:00 전일
-    - cron: '0 18 * * *'
+    # 매일 새벽 1시 (KST) = UTC 16:00 전일
+    - cron: '0 16 * * *'
   workflow_dispatch:
     inputs:
       mode:
