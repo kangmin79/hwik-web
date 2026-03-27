@@ -608,13 +608,13 @@ function drawChart() {
     }));
   }
 
-  // 폴백: price_history 없으면 recent_trade에서 점 생성
+  // 폴백: price_history 없으면 현재 평형의 recent_trade만
   if (points.length === 0) {
     const recent = DATA.recent_trade || {};
+    const targetKey = key; // currentPyeong + suffix
     for (const [k, v] of Object.entries(recent)) {
-      if (currentTab === '매매' && k.includes('_')) continue;
-      if (currentTab === '전세' && !k.endsWith('_jeonse')) continue;
-      if (currentTab === '월세' && !k.endsWith('_wolse')) continue;
+      // 현재 선택한 평형+탭에 해당하는 키만
+      if (k !== targetKey) continue;
       if (v.price && v.date) {
         points.push({
           x: v.date,
