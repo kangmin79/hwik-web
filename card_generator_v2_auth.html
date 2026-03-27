@@ -6160,6 +6160,17 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     } else {
                         saved++;
                         // 임베딩은 batch-parse에서 이미 처리됨 (embed-card 레거시 삭제)
+
+                        // ★ 매물 등록 시 자동 매칭 (손님에게 알림)
+                        if (card.property?.type !== '손님') {
+                            try {
+                                fetch(`${SUPABASE_URL}/functions/v1/auto-match`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + session.access_token },
+                                    body: JSON.stringify({ card_id: linkId, agent_id: session.user.id })
+                                }).catch(e => console.log('auto-match:', e));
+                            } catch(e) {}
+                        }
                     }
                 } catch(e) { console.error('저장 예외:', e); }
             }

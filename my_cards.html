@@ -5534,7 +5534,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             }
         }
 
-        function renderClientList() {
+        async function renderClientList() {
             const container = document.getElementById('clientPropertyList');
             if (!container) return;
 
@@ -5567,6 +5567,23 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 return;
             }
 
+            // 마지막 연락일 로드
+            const clientIds = clients.map(c => c.id);
+            let latestNotes = {};
+            if (clientIds.length > 0) {
+                const { data: notes } = await supabaseClient
+                    .from('client_notes')
+                    .select('client_card_id, created_at, type')
+                    .in('client_card_id', clientIds.slice(0, 50))
+                    .in('type', ['상담', '방문', '매물소개', '계약'])
+                    .order('created_at', { ascending: false });
+                if (notes) {
+                    for (const n of notes) {
+                        if (!latestNotes[n.client_card_id]) latestNotes[n.client_card_id] = n;
+                    }
+                }
+            }
+
             let html = '';
             clients.forEach(card => {
                 const p = card.property || {};
@@ -5579,11 +5596,19 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 const clientSubText = [p.area, p.location].filter(Boolean).map(v => esc(v)).join(' · ');
                 const rawTextDisplay = esc(p.rawText || [p.price, mainText, clientSubText, (p.features||[]).join(' ')].filter(Boolean).join(' '));
                 const isDetailOpen = document.getElementById('client-detail-' + card.id)?.classList.contains('open');
+
+                const lastContact = latestNotes[card.id];
+                const lastContactStr = lastContact
+                    ? `${formatRelativeDate(lastContact.created_at)} (${lastContact.type})`
+                    : '연락 없음';
+                const isOld = lastContact && (Date.now() - new Date(lastContact.created_at).getTime()) > 7 * 24 * 60 * 60 * 1000;
+                const contactColor = isOld ? '#f87171' : '#888';
+
                 html += `<div class="property-item ${isExpanded ? 'selected' : ''}" id="item-${card.id}">
                     <div class="property-item-main" style="align-items:center;cursor:pointer;" onclick="toggleClientDetail('${card.id}')">
                         <div style="width:20px;flex-shrink:0;text-align:center;color:#94a3b8;font-size:12px;">${isExpanded ? '▼' : '▶'}</div>
                         <span class="property-type-badge" style="flex-shrink:0;background:rgba(78,205,196,0.15);color:#4ecdc4;border-color:rgba(78,205,196,0.3);margin-right:8px;">손님</span>
-                        <div class="client-raw-text">${rawTextDisplay}</div>
+                        <div class="client-raw-text">${rawTextDisplay}<br><span style="font-size:11px;color:${contactColor}">${esc(lastContactStr)}</span></div>
                         <button class="property-edit" onclick="event.stopPropagation(); toggleClientDetail('${card.id}')">상세</button>
                         <button style="padding:4px 10px;border-radius:6px;border:1px solid rgba(148,163,184,0.3);background:transparent;color:#94a3b8;font-size:11px;cursor:pointer;" onclick="event.stopPropagation(); completeClient('${card.id}')">완료</button>
                     </div>
@@ -6454,6 +6479,33 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 .order('alert_date', { ascending: true });
 
             _calMonthAlerts = [...(overdueData || []), ...(monthData || [])];
+
+            // ★ 자동 매칭 알림도 로드
+            try {
+                const { data: matchNotifs } = await supabaseClient
+                    .from('match_notifications')
+                    .select('id, card_id, client_card_id, similarity, is_read, created_at')
+                    .eq('agent_id', currentUser.id)
+                    .eq('is_read', false)
+                    .order('created_at', { ascending: false })
+                    .limit(20);
+
+                if (matchNotifs && matchNotifs.length > 0) {
+                    for (const mn of matchNotifs) {
+                        _calMonthAlerts.push({
+                            id: 'match-' + mn.id,
+                            type: '자동매칭',
+                            content: `새 매칭 매물 발견 (${Math.round(mn.similarity * 100)}%)`,
+                            client_card_id: mn.client_card_id,
+                            card_id: mn.card_id,
+                            created_at: mn.created_at,
+                            alert_date: mn.created_at.slice(0, 10),
+                            alert_done: mn.is_read,
+                            isMatch: true
+                        });
+                    }
+                }
+            } catch(e) { console.log('매칭 알림 로드 실패:', e); }
         }
 
         // 왼쪽 알림 목록 렌더링
@@ -6685,6 +6737,22 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
 
         function _alertItemHtml(a, status) {
+            // ★ 자동매칭 알림은 별도 렌더링
+            if (a.isMatch) {
+                const clientCard = allClientCards.find(c => c.id === a.client_card_id);
+                const clientProp = clientCard?.property || {};
+                const clientName = [clientProp.price, clientProp.location].filter(Boolean).join(' · ') || '손님';
+                return `<div style="padding:10px 14px;margin-bottom:6px;background:rgba(78,205,196,0.06);border:1px solid rgba(78,205,196,0.2);border-left:3px solid #4ecdc4;border-radius:8px;display:flex;align-items:center;gap:10px;cursor:pointer;" onclick="goToClientMatch('${a.client_card_id}','${a.card_id}')">
+                    <div style="flex:1;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <span style="padding:1px 8px;border-radius:4px;background:rgba(78,205,196,0.15);color:#4ecdc4;font-size:10px;font-weight:700;">🔔 자동매칭</span>
+                            <span style="font-size:11px;color:#4ecdc4;font-weight:600;">${esc(clientName)}</span>
+                        </div>
+                        <div style="font-size:14px;color:#e2e8f0;margin-top:3px;">${esc(a.content)}</div>
+                    </div>
+                    <button onclick="event.stopPropagation();goToClientMatch('${a.client_card_id}','${a.card_id}')" style="background:#4ecdc4;color:#000;border:none;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;white-space:nowrap;">매칭 매물 보기</button>
+                </div>`;
+            }
             const colors = {
                 overdue: { bg: 'rgba(239,68,68,0.08)', border: 'rgba(239,68,68,0.25)', label: '#f87171', dateColor: '#f87171' },
                 today: { bg: 'rgba(250,204,21,0.06)', border: 'rgba(250,204,21,0.2)', label: '#facc15', dateColor: '#facc15' },
@@ -6734,6 +6802,31 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     const itemEl = document.getElementById('item-' + clientCardId);
                     if (itemEl) {
                         itemEl.style.boxShadow = '0 0 0 2px #facc15';
+                        setTimeout(() => { itemEl.style.boxShadow = ''; }, 3000);
+                    }
+                }, 300);
+            }, 200);
+        }
+
+        // ★ 자동매칭 알림 클릭 → 손님 탭 → 해당 손님 상세 펼침
+        function goToClientMatch(clientCardId, cardId) {
+            _restorePreviewPanel();
+            switchMainTab('client');
+            setTimeout(async () => {
+                await loadClientCards();
+                const idx = allClientCards.findIndex(c => c.id === clientCardId);
+                if (idx > 0) {
+                    const card = allClientCards.splice(idx, 1)[0];
+                    allClientCards.unshift(card);
+                }
+                renderClientList();
+                setTimeout(() => {
+                    toggleClientDetail(clientCardId);
+                    document.getElementById('item-' + clientCardId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    // 매칭 결과에서 해당 매물 하이라이트
+                    const itemEl = document.getElementById('item-' + clientCardId);
+                    if (itemEl) {
+                        itemEl.style.boxShadow = '0 0 0 2px #4ecdc4';
                         setTimeout(() => { itemEl.style.boxShadow = ''; }, 3000);
                     }
                 }, 300);
@@ -6822,6 +6915,16 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             if (hours < 24) return `${hours}시간 전`;
             const days = Math.floor(hours / 24);
             return `${days}일 전`;
+        }
+
+        function formatRelativeDate(dateStr) {
+            const d = new Date(dateStr);
+            const days = Math.floor((Date.now() - d.getTime()) / (1000*60*60*24));
+            if (days === 0) return '오늘';
+            if (days === 1) return '어제';
+            if (days < 7) return days + '일 전';
+            if (days < 30) return Math.floor(days/7) + '주 전';
+            return Math.floor(days/30) + '개월 전';
         }
         
         function goToSharedCard(cardId) {
@@ -7564,6 +7667,9 @@ function renderInlineMatchResults(clientCardId, result) {
         const status = item.trade_status || '계약가능';
         const tradeBadgeClass = status === '계약가능' ? 'trade-available' : status === '계약중' ? 'trade-ongoing' : 'trade-done';
 
+        // ★ Fix 3: 매칭 점수 상세 표시
+        const scoreInfo = item._score ? `<span style="color:#8be9fd;font-size:11px;font-weight:600;margin-left:4px;" title="${esc(item._scoreDetail || '')}">${item._score}점</span>` : '';
+
         // 공유 매물 정보 (공유방 이름 + 중개사)
         let sharedInfoHtml = '';
         if (isMine) {
@@ -7599,21 +7705,41 @@ function renderInlineMatchResults(clientCardId, result) {
                     <span class="property-type-badge ${typeClass}" style="margin:0;font-size:10px;padding:1px 6px;">${esc(p.type || '')}</span>
                     <span class="trade-badge ${tradeBadgeClass}" style="font-size:9px;">${esc(status)}</span>
                     <strong style="font-size:13px;color:#e2e8f0;">${esc(p.price || '')}</strong>
+                    ${scoreInfo}
                     ${isMine ? sharedInfoHtml : ''}
                 </div>
                 ${mainText ? `<div style="font-size:12px;color:var(--text-gray);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${mainText}${subText ? ' · ' + subText : ''}</div>` : ''}
                 ${featureTags ? `<div style="margin-top:3px;">${featureTags}</div>` : ''}
+                ${item._scoreDetail ? `<div style="font-size:10px;color:#64748b;margin-top:2px;">${esc(item._scoreDetail)}</div>` : ''}
                 ${isShared ? sharedInfoHtml : ''}
             </div>
             ${photoHtml}
-            ${isMine
-                ? `<button class="property-edit" onclick="event.stopPropagation(); editCard('${item.id}')" style="flex-shrink:0;">수정</button>`
-                : `<button class="property-edit" onclick="event.stopPropagation(); openSharedDetail('${item.id}')" style="flex-shrink:0;">상세</button>`
-            }
+            <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">
+                ${isMine
+                    ? `<button class="property-edit" onclick="event.stopPropagation(); editCard('${item.id}')" style="flex-shrink:0;">수정</button>`
+                    : `<button class="property-edit" onclick="event.stopPropagation(); openSharedDetail('${item.id}')" style="flex-shrink:0;">상세</button>`
+                }
+                <button onclick="event.stopPropagation(); sendMatchToClient('${clientCardId}','${item.id}')" style="background:#10b981;color:white;border:none;padding:4px 10px;border-radius:6px;cursor:pointer;font-size:11px;white-space:nowrap;">휙 보내기</button>
+            </div>
         </div>`;
     });
 
     area.innerHTML = html;
+}
+
+// ★ Fix 2: 매칭 결과에서 바로 보내기
+function sendMatchToClient(clientCardId, propertyId) {
+    const result = _matchCache[clientCardId];
+    if (!result) return;
+    const matchedItem = (result.results || []).find(r => r.id === propertyId);
+    if (matchedItem) {
+        // 해당 매물만 선택하고 공유 시트 열기
+        selectedCards = [matchedItem];
+        currentSlideIndex = 0;
+        renderPreview();
+        updateSendButton();
+        openShareSheet();
+    }
 }
 
 // 매칭된 매물 선택 → 카드 미리보기에 표시
@@ -7797,7 +7923,8 @@ function renderClientTimeline(container, card, notes, cardId) {
             type: n.type || '메모',
             date: n.created_at,
             content: n.content || '',
-            linkedCardId: n.linked_card_id
+            linkedCardId: n.linked_card_id,
+            alert_done: n.alert_done
         });
     });
 
@@ -7821,6 +7948,12 @@ function renderClientTimeline(container, card, notes, cardId) {
         const t = NOTE_TYPE_MAP[item.type] || NOTE_TYPE_MAP['메모'];
         const deleteBtn = item.id ? `<button onclick="event.stopPropagation();deleteClientNote('${item.id}','${cardId}')" style="margin-left:auto;padding:3px 10px;border-radius:5px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.08);color:#f87171;font-size:11px;cursor:pointer;">삭제</button>` : '';
         const editBtn = item.isRegister ? `<button onclick="event.stopPropagation();editClientCard('${cardId}')" style="margin-left:auto;padding:3px 10px;border-radius:5px;border:1px solid rgba(250,204,21,0.3);background:rgba(250,204,21,0.08);color:#facc15;font-size:11px;cursor:pointer;">수정</button>` : '';
+        let visitStatusBtn = '';
+        if (item.type === '방문' && item.id) {
+            visitStatusBtn = item.alert_done
+                ? `<span style="color:#34d399;font-size:11px;margin-left:6px;">✅ 완료</span>`
+                : `<button onclick="event.stopPropagation();toggleNoteStatus('${item.id}',true)" style="margin-left:6px;background:rgba(245,158,11,0.2);color:#fbbf24;border:none;padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer;">예정 → 완료</button>`;
+        }
         const contentHtml = item.isHtml ? item.content : esc(item.content);
         return `<div class="crm-tl-item" ${hidden ? 'style="display:none;" data-hidden-note="' + cardId + '"' : ''}>
             <div class="crm-tl-dot type-${t.cls}"></div>
@@ -7828,7 +7961,7 @@ function renderClientTimeline(container, card, notes, cardId) {
                 <div class="crm-tl-head">
                     <span class="crm-tl-type t-${t.cls}">${t.label}</span>
                     <span class="crm-tl-date">${formatNoteDate(item.date)}</span>
-                    ${editBtn}${deleteBtn}
+                    ${editBtn}${deleteBtn}${visitStatusBtn}
                 </div>
                 <div class="crm-tl-content" style="white-space:pre-wrap;">${contentHtml}</div>
             </div>
@@ -7847,6 +7980,12 @@ function renderClientTimeline(container, card, notes, cardId) {
     }
 
     container.innerHTML = html;
+}
+
+async function toggleNoteStatus(noteId, done) {
+    await supabaseClient.from('client_notes').update({ alert_done: done }).eq('id', noteId);
+    // Refresh the timeline
+    if (_expandedClientId) loadClientFullView(_expandedClientId);
 }
 
 async function saveClientNote(cardId) {
