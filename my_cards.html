@@ -8120,14 +8120,14 @@ function renderClientTimeline(container, card, notes, cardId) {
             const adStr = `${ad.getMonth()+1}/${ad.getDate()} ${String(ad.getHours()).padStart(2,'0')}:${String(ad.getMinutes()).padStart(2,'0')}`;
             const isOverdue = !item.alert_done && ad < new Date();
             scheduleTag = item.id
-                ? `<span onclick="event.stopPropagation();editNoteDate('${item.id}','${cardId}')" style="cursor:pointer;font-size:10px;margin-left:6px;padding:1px 6px;border-radius:3px;${isOverdue ? 'background:rgba(239,68,68,0.15);color:#f87171;' : 'background:rgba(250,204,21,0.1);color:#facc15;'}" title="클릭: 날짜 변경">📅 ${adStr}${isOverdue ? ' 지연' : ''}</span>`
-                : `<span style="font-size:10px;margin-left:6px;padding:1px 6px;border-radius:3px;background:rgba(250,204,21,0.1);color:#facc15;">📅 ${adStr}</span>`;
+                ? `<span onclick="event.stopPropagation();editNoteDate('${item.id}','${cardId}')" style="cursor:pointer;font-size:10px;margin-left:6px;padding:2px 8px;border-radius:4px;border:1px solid ${isOverdue ? 'rgba(239,68,68,0.3)' : 'rgba(250,204,21,0.2)'};${isOverdue ? 'color:#f87171;' : 'color:#facc15;'}" title="클릭: 날짜 변경">${adStr}${isOverdue ? ' 지연' : ''}</span>`
+                : `<span style="font-size:10px;margin-left:6px;padding:2px 8px;border-radius:4px;border:1px solid rgba(250,204,21,0.2);color:#facc15;">${adStr}</span>`;
         }
         let visitStatusBtn = '';
         if (item.alert_date && item.id) {
             visitStatusBtn = item.alert_done
-                ? `<span onclick="event.stopPropagation();toggleNoteStatus('${item.id}',false)" style="cursor:pointer;color:#34d399;font-size:11px;margin-left:6px;" title="클릭: 미완료로 되돌리기">✅ 완료</span>`
-                : `<button onclick="event.stopPropagation();toggleNoteStatus('${item.id}',true)" style="margin-left:6px;background:rgba(245,158,11,0.2);color:#fbbf24;border:none;padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer;">예정 → 완료</button>`;
+                ? `<span onclick="event.stopPropagation();toggleNoteStatus('${item.id}',false)" style="cursor:pointer;margin-left:6px;padding:2px 8px;border-radius:4px;border:1px solid rgba(34,197,94,0.3);color:#34d399;font-size:11px;" title="클릭: 미완료로 되돌리기">완료</span>`
+                : `<button onclick="event.stopPropagation();toggleNoteStatus('${item.id}',true)" style="margin-left:6px;padding:2px 8px;border-radius:4px;border:1px solid rgba(250,204,21,0.3);background:rgba(250,204,21,0.08);color:#facc15;font-size:11px;cursor:pointer;">예정</button>`;
         }
         const contentHtml = item.isHtml ? item.content : esc(item.content);
         return `<div class="crm-tl-item" ${hidden ? 'style="display:none;" data-hidden-note="' + cardId + '"' : ''}>
