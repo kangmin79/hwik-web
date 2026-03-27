@@ -6,7 +6,7 @@ const BASE_URL = 'https://hwik.kr';
 Deno.serve(async (req) => {
   const headers = {
     'Content-Type': 'application/xml',
-    'Access-Control-Allow-Origin': '*',  // TODO: 프로덕션에서 'https://hwik.kr'로 제한
+    'Access-Control-Allow-Origin': 'https://hwik.kr',
     'Cache-Control': 'public, max-age=3600', // 1시간 캐시
   };
 
@@ -21,6 +21,7 @@ Deno.serve(async (req) => {
       .from('cards')
       .select('id, created_at, trade_status')
       .neq('trade_status', '완료')
+      .neq('property->>type', '손님')
       .order('created_at', { ascending: false })
       .limit(5000);
 

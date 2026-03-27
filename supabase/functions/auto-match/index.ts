@@ -4,7 +4,7 @@ import { DISTRICT_COORDS, haversineDistance } from '../_shared/geo.ts'
 import { fixTypos } from '../_shared/typo.ts'
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',  // TODO: 프로덕션에서 'https://hwik.kr'로 제한
+  'Access-Control-Allow-Origin': 'https://hwik.kr',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
@@ -21,23 +21,7 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // ★ 인증 확인 (선택적 — anon key도 허용)
-    const authHeader = req.headers.get('Authorization');
-    if (authHeader) {
-      try {
-        const token = authHeader.replace('Bearer ', '');
-        const payload = JSON.parse(atob(token.split('.')[1] || '{}'));
-        if (payload.role !== 'anon') {
-          const { data: { user } } = await supabase.auth.getUser(token);
-          if (user && agent_id && user.id !== agent_id) {
-            throw new Error('권한이 없습니다');
-          }
-        }
-      } catch(e) {
-        if (e.message === '권한이 없습니다') throw e;
-      }
-    }
-
+    // 권한은 agent_id + 매물 소유자 확인으로 검증 (아래에서)
     const startTime = Date.now();
 
     // 1. 새 매물 조회
