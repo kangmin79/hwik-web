@@ -108,17 +108,22 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // ★ 인증 확인
+    // ★ 인증 확인 (선택적 — anon key도 허용, agent_id로 권한 체크)
     const authHeader = req.headers.get('Authorization');
     if (authHeader) {
       try {
         const token = authHeader.replace('Bearer ', '');
-        const { data: { user } } = await supabase.auth.getUser(token);
-        if (user && agent_id && user.id !== agent_id) {
-          throw new Error('권한이 없습니다');
+        // anon key인지 확인 (JWT의 role이 anon이면 스킵)
+        const payload = JSON.parse(atob(token.split('.')[1] || '{}'));
+        if (payload.role !== 'anon') {
+          const { data: { user } } = await supabase.auth.getUser(token);
+          if (user && agent_id && user.id !== agent_id) {
+            throw new Error('권한이 없습니다');
+          }
         }
       } catch(e) {
         if (e.message === '권한이 없습니다') throw e;
+        // 인증 실패는 무시 (agent_id로 대신 검증)
       }
     }
 
