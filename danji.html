@@ -358,7 +358,10 @@ function render() {
     specParts.push('주차 ' + parseInt(d.parking).toLocaleString() + '대');
     if (d.total_units) specParts.push('(세대당 ' + (parseInt(d.parking) / d.total_units).toFixed(1) + '대)');
   }
+  if (d.heating) specParts.push(d.heating);
+  if (d.builder) specParts.push('시공 ' + d.builder);
   if (specParts.length > 0) seoParts.push(specParts.join(', ') + '.');
+  if (d.mgmt_fee) seoParts.push('세대당 월 평균 관리비 약 ' + Math.round(d.mgmt_fee/10000) + '만원.');
 
   // 평형 (DB categories 기반)
   if (cats.length > 0) {
@@ -418,6 +421,9 @@ function render() {
     const _ratio = (parseInt(d.parking) / d.total_units).toFixed(1);
     faqItems.push({ q: `${d.complex_name} 주차 대수는?`, a: `총 ${parseInt(d.parking).toLocaleString()}대 (세대당 ${_ratio}대)입니다.` });
   }
+  if (d.mgmt_fee) faqItems.push({ q: `${d.complex_name} 관리비는?`, a: `세대당 월 평균 관리비는 약 ${Math.round(d.mgmt_fee/10000)}만원입니다. (공용관리비 + 개별사용료 포함)` });
+  if (d.heating) faqItems.push({ q: `${d.complex_name} 난방 방식은?`, a: `${d.heating}입니다.` });
+  if (d.builder) faqItems.push({ q: `${d.complex_name} 시공사는?`, a: `${esc(d.builder)}입니다.` });
 
   const faqHtml = faqItems.map(f => `
     <div class="faq-item">
@@ -438,7 +444,7 @@ function render() {
         <div class="logo">휙</div>
         <div>
           <h1 class="header-name">${esc(d.complex_name)}</h1>
-          <div class="header-sub">${esc(d.location)} · ${d.total_units ? d.total_units.toLocaleString()+'세대' : ''} · ${d.build_year || ''}년</div>
+          <div class="header-sub">${esc(d.location)} · ${d.total_units ? d.total_units.toLocaleString()+'세대' : ''} · ${d.build_year || ''}년${d.builder ? ' · '+esc(d.builder) : ''}</div>
         </div>
       </div>
       <div class="tags">${tagHtml}</div>
@@ -489,6 +495,11 @@ function render() {
         return '';
       })()}
     </div>
+    <!-- 지표 3행: 관리비 + 난방 -->
+    ${(d.mgmt_fee || d.heating) ? '<div class="metrics">' +
+      (d.mgmt_fee ? '<div class="metric"><div class="metric-label">월 관리비</div><div class="metric-value">'+Math.round(d.mgmt_fee/10000)+'만원</div><div class="metric-change neutral">세대당 평균</div></div>' : '') +
+      (d.heating ? '<div class="metric"><div class="metric-label">난방</div><div class="metric-value" style="font-size:13px">'+esc(d.heating)+'</div></div>' : '') +
+    '</div>' : ''}
 
     <!-- 그래프 -->
     <div class="chart-section">

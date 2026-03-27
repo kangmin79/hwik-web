@@ -230,7 +230,7 @@ def load_apartments():
             f"{SUPABASE_URL}/rest/v1/apartments",
             headers={"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"},
             params={
-                "select": "kapt_code,kapt_name,doro_juso,lat,lon,lawd_cd,property_type,households,use_date,sgg,umd_nm,pyeongs,slug,top_floor,parking",
+                "select": "kapt_code,kapt_name,doro_juso,lat,lon,lawd_cd,property_type,households,use_date,sgg,umd_nm,pyeongs,slug,top_floor,parking,heating,builder,mgmt_fee",
                 "limit": str(limit),
                 "offset": str(offset),
             },
@@ -494,6 +494,12 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
     except:
         pass
 
+    mgmt_fee = None
+    try:
+        mgmt_fee = int(apt.get("mgmt_fee") or 0) or None
+    except:
+        pass
+
     return {
         "id": danji_id,
         "complex_name": apt.get("kapt_name") or "",
@@ -505,6 +511,9 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
         "build_year": build_year,
         "top_floor": top_floor,
         "parking": parking,
+        "heating": apt.get("heating") or None,
+        "builder": apt.get("builder") or None,
+        "mgmt_fee": mgmt_fee,
         "categories": categories,
         "recent_trade": recent_trade,
         "all_time_high": all_time_high,
