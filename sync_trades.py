@@ -395,7 +395,7 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
     # 분류
     recent_trade = {}
     all_time_high = {}
-    price_history = defaultdict(lambda: defaultdict(list))  # {cat: {month: [prices]}}
+    price_history = defaultdict(list)  # {cat: [{date, price, floor}, ...]}
 
     for t in trades:
         cat = get_cat(t)
@@ -407,14 +407,16 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
         deal_type = t.get("_deal_type", "매매")
         date_str = parse_date(t)
         floor = parse_floor(t)
-        ym = t.get("_year_month", "")
 
         suffix = "" if deal_type == "매매" else "_jeonse"
         key = cat + suffix
 
-        # 시세 추이 (월별 평균용)
-        if ym:
-            price_history[key][ym].append(price)
+        # 개별 거래 기록 (점 하나 = 거래 1건)
+        price_history[key].append({
+            "date": date_str,
+            "price": price,
+            "floor": floor,
+        })
 
         # 최근 거래
         if key not in recent_trade or date_str > (recent_trade[key].get("date") or ""):
@@ -447,15 +449,11 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
             if sp > 0:
                 jeonse_rate = round(jp / sp * 100, 1)
 
-    # price_history 집계: {key: [{month, avg_price}, ...]}
+    # price_history: 개별 거래를 날짜순 정렬
     ph = {}
-    for key, months in price_history.items():
-        series = []
-        for ym in sorted(months.keys()):
-            prices = months[ym]
-            avg = round(sum(prices) / len(prices))
-            series.append({"month": ym[:4] + "-" + ym[4:], "avg_price": avg, "count": len(prices)})
-        ph[key] = series
+    for key, items in price_history.items():
+        sorted_items = sorted(items, key=lambda x: x.get("date", ""))
+        ph[key] = sorted_items
 
     # 위치 정보
     sgg = apt.get("sgg") or ""

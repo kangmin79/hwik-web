@@ -457,7 +457,7 @@ function render() {
 
     <!-- 그래프 -->
     <div class="chart-section">
-      <div class="chart-title">3년 시세 흐름</div>
+      <div class="chart-title">실거래 내역 (점 1개 = 거래 1건)</div>
       <div class="chart-wrap"><canvas id="priceChart"></canvas></div>
     </div>
 
@@ -527,7 +527,7 @@ function render() {
   drawChart();
 }
 
-// ── 차트 ──
+// ── 차트 (scatter — 점 하나 = 실거래 1건) ──
 function drawChart() {
   const canvas = document.getElementById('priceChart');
   if (!canvas) return;
@@ -538,47 +538,71 @@ function drawChart() {
   const key = currentPyeong + (suffix || '');
   const ph = (DATA.price_history || {})[key] || [];
 
-  let months, values;
+  // price_history: [{date:"2024-03-15", price:131000, floor:12}, ...]
+  // 또는 이전 포맷: [{month:"2024-03", avg_price:131000, count:2}, ...]
+  let points = [];
 
-  if (ph.length > 0) {
-    // 실제 데이터: 최근 36개월 전체 표시 (거래 있는 월만)
-    const recent = ph.slice(-36);
-    months = recent.map(p => {
-      const parts = p.month.split('-');
-      return parseInt(parts[1]) + '월';
-    });
-    values = recent.map(p => Math.round(p.avg_price / 100) / 100); // 억 단위
-  } else {
-    // 폴백: 데이터 없으면 최근가 기준 플랫 라인
+  if (ph.length > 0 && ph[0].date) {
+    // 신규 포맷: 개별 거래
+    points = ph.map(p => ({
+      x: p.date,
+      y: Math.round(p.price / 100) / 100, // 억 단위
+      floor: p.floor || '',
+      date: p.date,
+      price: p.price,
+    }));
+  } else if (ph.length > 0 && ph[0].month) {
+    // 이전 포맷(월평균) 호환: 점 1개로 표시
+    points = ph.map(p => ({
+      x: p.month + '-15',
+      y: Math.round(p.avg_price / 100) / 100,
+      floor: '',
+      date: p.month,
+      price: p.avg_price,
+    }));
+  }
+
+  // 폴백: price_history 없으면 recent_trade에서 점 생성
+  if (points.length === 0) {
     const recent = DATA.recent_trade || {};
-    const price = recent[key] ? recent[key].price : null;
-    months = [];
-    values = [];
-    const now = new Date();
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      months.push((d.getMonth()+1) + '월');
-      values.push(price ? Math.round(price / 100) / 100 : 0);
+    for (const [k, v] of Object.entries(recent)) {
+      if (currentTab === '매매' && k.includes('_')) continue;
+      if (currentTab === '전세' && !k.endsWith('_jeonse')) continue;
+      if (currentTab === '월세' && !k.endsWith('_wolse')) continue;
+      if (v.price && v.date) {
+        points.push({
+          x: v.date,
+          y: Math.round(v.price / 100) / 100,
+          floor: v.floor || '',
+          date: v.date,
+          price: v.price,
+        });
+      }
     }
   }
 
-  const validValues = values.filter(v => v > 0);
-  const min = validValues.length ? Math.floor(Math.min(...validValues) * 0.9) : 0;
-  const max = validValues.length ? Math.ceil(Math.max(...validValues) * 1.05) : 10;
+  points.sort((a, b) => a.x.localeCompare(b.x));
+
+  if (points.length === 0) {
+    canvas.parentElement.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:12px;color:var(--sub);">거래 데이터가 없습니다</div>';
+    return;
+  }
+
+  const yValues = points.map(p => p.y);
+  const min = Math.floor(Math.min(...yValues) * 0.92);
+  const max = Math.ceil(Math.max(...yValues) * 1.05);
 
   chart = new Chart(canvas, {
-    type: 'line',
+    type: 'scatter',
     data: {
-      labels: months,
       datasets: [{
-        data: values,
+        data: points.map(p => ({ x: p.x, y: p.y })),
+        backgroundColor: 'rgba(245,200,66,0.7)',
         borderColor: '#f5c842',
-        backgroundColor: 'rgba(245,200,66,0.08)',
-        fill: true,
-        tension: 0.4,
-        pointRadius: 3,
-        pointBackgroundColor: '#f5c842',
-        borderWidth: 2
+        borderWidth: 1,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        pointHoverBackgroundColor: '#f5c842',
       }]
     },
     options: {
@@ -586,11 +610,45 @@ function drawChart() {
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: { label: ctx => ctx.parsed.y.toFixed(1) + '억' } }
+        tooltip: {
+          callbacks: {
+            title: ctx => {
+              const i = ctx[0].dataIndex;
+              return points[i].date;
+            },
+            label: ctx => {
+              const i = ctx.dataIndex;
+              const p = points[i];
+              let label = formatPrice(p.price);
+              if (p.floor) label += ' · ' + p.floor + '층';
+              return label;
+            }
+          }
+        }
       },
       scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#aaa', maxTicksLimit: 8, maxRotation: 0 } },
-        y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 }, color: '#aaa', callback: v => v + '억' }, min, max }
+        x: {
+          type: 'category',
+          labels: [...new Set(points.map(p => p.x))],
+          grid: { display: false },
+          ticks: {
+            font: { size: 10 },
+            color: '#aaa',
+            maxTicksLimit: 8,
+            maxRotation: 0,
+            callback: function(val, i) {
+              const label = this.getLabelForValue(val);
+              if (!label) return '';
+              const parts = label.split('-');
+              return parts.length >= 2 ? parts[0].slice(2) + '.' + parts[1] : label;
+            }
+          }
+        },
+        y: {
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          ticks: { font: { size: 10 }, color: '#aaa', callback: v => v + '억' },
+          min, max
+        }
       }
     }
   });
