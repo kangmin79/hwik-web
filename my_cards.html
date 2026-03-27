@@ -2664,6 +2664,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         // Supabase 초기화
         const SUPABASE_URL = HWIK_CONFIG.SUPABASE_URL;
         const SUPABASE_KEY = HWIK_CONFIG.SUPABASE_KEY;
+        const KAKAO_REST_KEY = HWIK_CONFIG.KAKAO_REST_KEY;
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
             auth: { clockSkewInSeconds: 300 }
         });
@@ -3851,7 +3852,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             resultEl.style.color = '#888';
             try {
                 const res = await fetch(`https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(addr)}`, {
-                    headers: { 'Authorization': 'KakaoAK 8b7ecadf67aaed392e75605093efb2c4' }
+                    headers: { 'Authorization': 'KakaoAK ' + KAKAO_REST_KEY }
                 });
                 const data = await res.json();
                 if (data.documents && data.documents.length > 0) {
@@ -3863,7 +3864,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 } else {
                     // 장소 검색으로 폴백
                     const res2 = await fetch(`https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(addr)}`, {
-                        headers: { 'Authorization': 'KakaoAK 8b7ecadf67aaed392e75605093efb2c4' }
+                        headers: { 'Authorization': 'KakaoAK ' + KAKAO_REST_KEY }
                     });
                     const data2 = await res2.json();
                     if (data2.documents && data2.documents.length > 0) {
@@ -4022,7 +4023,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 try {
                     const embedText = [p.type, p.price, p.location, p.complex, p.area, p.floor, p.room, p.category, ...(p.features||[]), p.moveIn, card.agent_comment].filter(Boolean).join(' ');
                     const { data: sess } = await supabaseClient.auth.getSession();
-                    if (!sess?.session?.access_token) { console.warn('임베딩 생성 실패: 로그인 필요'); return; }
+                    if (!sess?.session?.access_token) { throw new Error('로그인 필요'); }
                     const token = sess.session.access_token;
                     const embedResp = await fetch(`${SUPABASE_URL}/functions/v1/embed-card`, {
                         method: 'POST',
