@@ -5535,27 +5535,47 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             renderClientList();
         }
 
+        let _clientOriginalIndex = null; // 원래 위치 기억
         async function toggleClientDetail(cardId) {
             const detail = document.getElementById('client-detail-' + cardId);
             if (!detail) return;
             const wasOpen = detail.classList.contains('open');
-            // 다른 열린 디테일 닫기
+            const listEl = document.getElementById('clientPropertyList');
+
+            // 다른 열린 디테일 닫기 + 이전에 올린 카드 원위치
             document.querySelectorAll('.property-detail.open').forEach(el => {
                 if (el.id !== 'client-detail-' + cardId) el.classList.remove('open');
             });
-            detail.classList.toggle('open');
-            // _expandedClientId 업데이트 (매칭 선택 등에서 사용)
-            _expandedClientId = wasOpen ? null : cardId;
-            if (!wasOpen) {
-                selectedCards = [];
-                currentSlideIndex = 0;
-                renderPreview();
-                updateSendButton();
-                await loadClientFullView(cardId);
-                // 새로 연 손님이 보이도록 스크롤
-                const cardEl = document.getElementById('client-detail-' + cardId)?.closest('.property-item') || document.getElementById('client-detail-' + cardId)?.previousElementSibling;
-                if (cardEl) cardEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            if (wasOpen) {
+                // 닫기 → 원래 위치로 복원 (리스트 다시 렌더)
+                detail.classList.remove('open');
+                _expandedClientId = null;
+                _clientOriginalIndex = null;
+                renderClientList();
+                return;
             }
+
+            // 열기 → 카드를 맨 위로 이동
+            const cardItem = detail.closest('.property-item');
+            if (cardItem && listEl) {
+                // 원래 인덱스 기억
+                const items = Array.from(listEl.querySelectorAll('.property-item'));
+                _clientOriginalIndex = items.indexOf(cardItem);
+                // DOM 맨 위로
+                listEl.insertBefore(cardItem, listEl.firstChild);
+            }
+
+            detail.classList.add('open');
+            _expandedClientId = cardId;
+            selectedCards = [];
+            currentSlideIndex = 0;
+            renderPreview();
+            updateSendButton();
+            await loadClientFullView(cardId);
+            // 맨 위로 스크롤
+            if (listEl) listEl.scrollTop = 0;
+            window.scrollTo({ top: listEl?.offsetTop || 0, behavior: 'smooth' });
         }
 
         let allClientCards = [];
