@@ -6153,6 +6153,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         agent_comment: card.agent_comment || null,
                         search_text: searchText,
                         price_number: card.price_number || card.property?.price_number || null,
+                        deposit: card.deposit ?? card.property?.deposit ?? null,
+                        monthly_rent: card.monthly_rent ?? card.property?.monthly_rent ?? null,
                         move_in_date: card.move_in_date || null,
                         lat: cardLat,
                         lng: cardLng,

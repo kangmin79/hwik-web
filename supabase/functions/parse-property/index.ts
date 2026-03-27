@@ -246,20 +246,51 @@ function parseMoveInDate(moveIn: string | null | undefined): string | null {
   return null;
 }
 
-function parsePriceNumber(priceStr: string): number | null {
-  if (!priceStr) return null;
+// 단일 가격 문자열 → 만원 단위 숫자
+function parseSinglePrice(str: string): number | null {
+  if (!str) return null;
   try {
-    let price = priceStr.replace(/[\s,]/g, '');
-    if (price.includes('/')) return parsePriceNumber(price.split('/')[0]);
-    if (price.includes('억')) {
-      const parts = price.split('억');
+    let s = str.replace(/[\s,원보증금월세]/g, '');
+    // "3억5000" → 35000
+    if (s.includes('억')) {
+      const parts = s.split('억');
       return (parseInt(parts[0]) || 0) * 10000 + (parseInt(parts[1]) || 0);
     }
-    if (price.includes('만')) return parseInt(price.replace('만', '')) || null;
-    const num = parseInt(price);
+    // "4천904" → 4904, "1천88" → 1088
+    if (s.includes('천')) {
+      const parts = s.split('천');
+      return (parseInt(parts[0]) || 0) * 1000 + (parseInt(parts[1]) || 0);
+    }
+    if (s.includes('만')) return parseInt(s.replace('만', '')) || null;
+    const num = parseInt(s);
     if (!isNaN(num)) return num <= 100 ? num * 10000 : num;
-  } catch (e) {}
+  } catch (_e) {}
   return null;
+}
+
+// 가격 문자열에서 price_number (대표가격), deposit, monthly_rent 추출
+function parsePriceFields(priceStr: string, type: string): { price_number: number | null, deposit: number | null, monthly_rent: number | null } {
+  if (!priceStr) return { price_number: null, deposit: null, monthly_rent: null };
+  const clean = priceStr.replace(/[\s,]/g, '');
+
+  if (type === '월세' && clean.includes('/')) {
+    const parts = clean.split('/');
+    const deposit = parseSinglePrice(parts[0]);
+    const monthly = parseSinglePrice(parts[1]);
+    return { price_number: deposit, deposit, monthly_rent: monthly };
+  }
+
+  // 매매/전세: 단일 가격
+  const price_number = parseSinglePrice(clean);
+  return { price_number, deposit: null, monthly_rent: null };
+}
+
+// 하위 호환용
+function parsePriceNumber(priceStr: string): number | null {
+  if (!priceStr) return null;
+  const clean = priceStr.replace(/[\s,]/g, '');
+  if (clean.includes('/')) return parseSinglePrice(clean.split('/')[0]);
+  return parseSinglePrice(clean);
 }
 
 function normalizeType(type: string): string {
@@ -463,7 +494,6 @@ ${text}`
     // AI 크롤링용 public_data
     const publicData = createPublicData(parsedResult, salesData);
 
-    const priceNumber = parsePriceNumber(parsedResult.price);
     const moveInDate = parseMoveInDate(parsedResult.moveIn);
 
     // ★ 손님일 때 거래유형을 별도 필드로 추출 (property.type이 "손님"으로 덮이니까)
@@ -475,10 +505,35 @@ ${text}`
       else if (/월세|임대/.test(allText)) wantedTradeType = '월세';
     }
 
+    // ★ 가격 필드 파싱 (매물: type 기준, 손님: wantedTradeType 기준)
+    const priceType = parsedResult.type === '손님' ? (wantedTradeType || '') : parsedResult.type;
+    const priceFields = parsePriceFields(parsedResult.price, priceType);
+
+    // 손님이고 월세인 경우: 텍스트에서 보증금/월세 추가 추출 (price 필드에 없을 수 있음)
+    if (parsedResult.type === '손님' && wantedTradeType === '월세') {
+      const allText = [parsedResult.price, parsedResult.memo, text].join(' ');
+      if (!priceFields.deposit) {
+        const depMatch = allText.match(/보증금\s*(\d+)/);
+        if (depMatch) priceFields.deposit = parseInt(depMatch[1]);
+      }
+      if (!priceFields.monthly_rent) {
+        const monMatch = allText.match(/월(?:세)?\s*(\d+)/);
+        if (monMatch) priceFields.monthly_rent = parseInt(monMatch[1]);
+      }
+      // "1000/50" 패턴
+      if (!priceFields.deposit && !priceFields.monthly_rent) {
+        const slashMatch = allText.match(/(\d+)\s*\/\s*(\d+)/);
+        if (slashMatch) {
+          priceFields.deposit = parseInt(slashMatch[1]);
+          priceFields.monthly_rent = parseInt(slashMatch[2]);
+        }
+      }
+    }
+
     const result = {
       ...parsedResult,
       move_in_date: moveInDate,
-      wanted_trade_type: wantedTradeType, // 손님이 원하는 거래유형 (손님 카드 전용)
+      wanted_trade_type: wantedTradeType,
       // ★ 좌표는 클라이언트에서 DB 매칭 + 카카오 API 폴백으로 처리
       lat: null,
       lng: null,
@@ -486,7 +541,9 @@ ${text}`
       embedding,
       search_text: searchText,
       search_text_private: searchTextPrivate,
-      price_number: priceNumber,
+      price_number: priceFields.price_number,
+      deposit: priceFields.deposit,
+      monthly_rent: priceFields.monthly_rent,
       lawd_cd: lawdCd,
       recent_sales: salesData.slice(0, 5),
       recent_sales_count: salesData.length,

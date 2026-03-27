@@ -131,23 +131,25 @@ Deno.serve(async (req) => {
         maxPrice = Math.round(base * 1.15);
       }
     }
-    // 월세: 보증금과 월세금을 각각 추출
-    let wantedDeposit: number | null = null;  // 보증금 (만원)
-    let wantedMonthly: number | null = null;  // 월세금 (만원)
+    // 월세: 보증금과 월세금 — DB 필드 우선, 없으면 텍스트 파싱
+    let wantedDeposit: number | null = (clientCard as any).deposit || null;
+    let wantedMonthly: number | null = (clientCard as any).monthly_rent || null;
     if (wantedTradeType === '월세') {
-      // "보증금 1000" or "보증금1000"
-      const depMatch = allText.match(/보증금\s*(\d+)/);
-      if (depMatch) wantedDeposit = parseInt(depMatch[1]);
-      // "월세 50" or "월 80"
-      const monMatch = allText.match(/월(?:세)?\s*(\d+)/);
-      if (monMatch) wantedMonthly = parseInt(monMatch[1]);
-      // "1000/50" 패턴 (보증금/월세)
-      const slashMatch = allText.match(/(\d+)\s*\/\s*(\d+)/);
-      if (slashMatch && !wantedDeposit) {
-        wantedDeposit = parseInt(slashMatch[1]);
-        wantedMonthly = parseInt(slashMatch[2]);
+      if (!wantedDeposit) {
+        const depMatch = allText.match(/보증금\s*(\d+)/);
+        if (depMatch) wantedDeposit = parseInt(depMatch[1]);
       }
-      // maxPrice는 매매/전세용이므로 월세에선 사용 안 함
+      if (!wantedMonthly) {
+        const monMatch = allText.match(/월(?:세)?\s*(\d+)/);
+        if (monMatch) wantedMonthly = parseInt(monMatch[1]);
+      }
+      if (!wantedDeposit && !wantedMonthly) {
+        const slashMatch = allText.match(/(\d+)\s*\/\s*(\d+)/);
+        if (slashMatch) {
+          wantedDeposit = parseInt(slashMatch[1]);
+          wantedMonthly = parseInt(slashMatch[2]);
+        }
+      }
       maxPrice = null;
       minPrice = null;
     }
@@ -410,16 +412,14 @@ Deno.serve(async (req) => {
 
       // ① 가격 (0~50점)
       if (wantedTradeType === '월세' && (wantedDeposit || wantedMonthly)) {
-        // 월세: 매물의 가격 문자열에서 보증금/월세 추출해서 비교
-        const priceStr = r.property?.price || '';
-        let propDeposit = 0, propMonthly = 0;
-        // "보증금1,000/월80" or "1000/80" or "보증금500/월30"
-        const slashM = priceStr.replace(/,/g,'').match(/(\d+)\s*\/\s*(?:월?\s*)?(\d+)/);
-        if (slashM) { propDeposit = parseInt(slashM[1]); propMonthly = parseInt(slashM[2]); }
-        const depM = priceStr.replace(/,/g,'').match(/보증금\s*(\d+)/);
-        if (depM) propDeposit = parseInt(depM[1]);
-        const monM = priceStr.replace(/,/g,'').match(/월\s*(\d+)/);
-        if (monM) propMonthly = parseInt(monM[1]);
+        // 월세: DB 필드 우선, 없으면 텍스트 파싱 폴백
+        let propDeposit = r.deposit || 0;
+        let propMonthly = r.monthly_rent || 0;
+        if (!propDeposit && !propMonthly) {
+          const priceStr = (r.property?.price || '').replace(/,/g,'');
+          const slashM = priceStr.match(/(\d+)\s*\/\s*(?:월?\s*)?(\d+)/);
+          if (slashM) { propDeposit = parseInt(slashM[1]); propMonthly = parseInt(slashM[2]); }
+        }
 
         let depScore = 25, monScore = 25; // 기본 만점
         // 보증금 비교
