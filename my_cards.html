@@ -8090,10 +8090,15 @@ function parseNoteText(text) {
     // "14시30분", "3시반", "10시", "2시~3시"
     if (hour === null) {
         const halfMatch = text.match(/(\d{1,2})\s*시\s*반/);
-        if (halfMatch) { hour = parseInt(halfMatch[1]); minute = 30; }
+        if (halfMatch) { hour = parseInt(halfMatch[1]); minute = 30; if (hour >= 1 && hour <= 6 && !/오전|새벽/.test(text)) hour += 12; }
         else {
             const timeMatch = text.match(/(\d{1,2})\s*시\s*(?:(\d{1,2})\s*분)?/);
-            if (timeMatch) { hour = parseInt(timeMatch[1]); minute = parseInt(timeMatch[2]) || 0; }
+            if (timeMatch) {
+                hour = parseInt(timeMatch[1]);
+                minute = parseInt(timeMatch[2]) || 0;
+                // 1~6시 단독이면 오후로 추정 (중개사 업무시간: 새벽 약속은 거의 없음)
+                if (hour >= 1 && hour <= 6 && !/오전|새벽/.test(text)) hour += 12;
+            }
         }
     }
     // 시간대 키워드
@@ -8194,6 +8199,11 @@ function parseNoteText(text) {
 
     // "콜백", "재연락", "다시 전화" → 날짜 없으면 오늘로 자동 설정
     if (!baseDate && /콜백|재연락|다시\s*전화|다시\s*연락|팔로업|follow/i.test(text)) {
+        baseDate = new Date(now);
+    }
+
+    // 시간/시간대 키워드만 있고 날짜 없으면 → 오늘
+    if (!baseDate && hour !== null) {
         baseDate = new Date(now);
     }
 
