@@ -1988,8 +1988,8 @@
       </div>`;
 
       // 알림 카드 렌더 헬퍼
-      function alertCard(accentColor, label, rightText, content, clientCardId) {
-        const click = clientCardId ? `onclick="openClientCRM('${clientCardId}')"` : '';
+      function alertCard(accentColor, label, rightText, content, clientCardId, highlightNoteId) {
+        const click = clientCardId ? `onclick="openClientCRM('${clientCardId}'${highlightNoteId ? ",'" + highlightNoteId + "'" : ''})"` : '';
         const isOverdue = accentColor === '#ef4444';
         return `<div ${click} style="padding:16px;margin-bottom:10px;background:#fff;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.04);${clientCardId ? 'cursor:pointer;' : ''}position:relative;overflow:hidden;">
           <div style="position:absolute;top:0;left:0;bottom:0;width:4px;background:${accentColor};border-radius:4px 0 0 4px;"></div>
@@ -2015,7 +2015,7 @@
           const cp = clientMap[a.client_card_id] || {};
           const clientName = [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
           const ad = new Date(a.alert_date);
-          html += alertCard('#ef4444',`${ad.getMonth()+1}/${ad.getDate()} 지연`, esc(clientName), esc(a.content), a.client_card_id);
+          html += alertCard('#ef4444',`${ad.getMonth()+1}/${ad.getDate()} 지연`, esc(clientName), esc(a.content), a.client_card_id, a.id);
         });
       }
 
@@ -2061,7 +2061,7 @@
           const cp = clientMap[a.client_card_id] || {};
           const clientName = [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
           const ad = new Date(a.alert_date);
-          html += alertCard('#94a3b8',`${ad.getMonth()+1}/${ad.getDate()} ${esc(a.type||'일정')}`, esc(clientName), esc(a.content), a.client_card_id);
+          html += alertCard('#94a3b8',`${ad.getMonth()+1}/${ad.getDate()} ${esc(a.type||'일정')}`, esc(clientName), esc(a.content), a.client_card_id, a.id);
         });
       }
 
@@ -2076,7 +2076,7 @@
   }
 
   // ★ 손님 미니 CRM 바텀시트
-  async function openClientCRM(clientCardId) {
+  async function openClientCRM(clientCardId, highlightNoteId) {
     const overlay = document.getElementById('crmOverlay');
     const sheet = document.getElementById('crmSheet');
     const content = document.getElementById('crmContent');
@@ -2143,7 +2143,9 @@
           const typeLabel = n.type || '메모';
           const typeColors = { '방문':'#4ecdc4', '상담':'#0ea5e9', '계약':'#f59e0b', '매물소개':'#a78bfa', '메모':'#94a3b8' };
           const tc = typeColors[typeLabel] || '#94a3b8';
-          html += `<div style="padding:12px 14px;margin-bottom:8px;background:#fff;border-radius:10px;border:1px solid #f0f0f3;">
+          const isHighlight = highlightNoteId && n.id === highlightNoteId;
+          html += `<div id="crm-note-${n.id}" style="padding:12px 14px;margin-bottom:8px;background:${isHighlight ? '#fffbeb' : '#fff'};border-radius:10px;border:1px solid ${isHighlight ? '#f59e0b' : '#f0f0f3'};${isHighlight ? 'box-shadow:0 0 0 2px rgba(245,158,11,0.2);' : ''}">
+            ${isHighlight ? '<div style="font-size:10px;color:#f59e0b;font-weight:700;margin-bottom:6px;">📌 이 알림에서 열림</div>' : ''}
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
               <div style="display:flex;align-items:center;gap:6px;">
                 <span style="width:6px;height:6px;border-radius:50%;background:${tc};flex-shrink:0;"></span>
@@ -2160,6 +2162,13 @@
       }
 
       content.innerHTML = html;
+      // 하이라이트 메모로 스크롤
+      if (highlightNoteId) {
+        setTimeout(() => {
+          const el = document.getElementById('crm-note-' + highlightNoteId);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 200);
+      }
     } catch(e) {
       content.innerHTML = '<div style="padding:40px;text-align:center;color:#f87171;">로딩 실패</div>';
     }
