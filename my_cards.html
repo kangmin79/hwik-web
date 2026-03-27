@@ -7605,17 +7605,18 @@ async function loadInlineMatch(clientCardId) {
 
         if (!clientCard || !clientCard.embedding) throw new Error('임베딩 없음');
 
-        // ★ match-properties API 호출 — supabaseClient.functions.invoke (인증 자동 처리)
-        const { data: matchRaw, error: matchFnErr } = await supabaseClient.functions.invoke('match-properties', {
-            body: {
+        // ★ match-properties API 호출
+        const matchResp = await fetch(`${SUPABASE_URL}/functions/v1/match-properties`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY, 'apikey': SUPABASE_KEY },
+            body: JSON.stringify({
                 client_card_id: clientCardId,
                 agent_id: currentUser.id,
                 limit: 10,
                 threshold: 0.15
-            }
+            })
         });
-        if (matchFnErr) throw new Error(matchFnErr.message || '매칭 API 오류');
-        const matchData = matchRaw;
+        const matchData = await matchResp.json();
         if (matchData.error) throw new Error(matchData.error);
         let results = matchData.results || [];
         const wantedType = matchData.wanted_trade_type || null;
