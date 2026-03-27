@@ -536,7 +536,7 @@
 
   .detail-modal {
     position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: #0a0a1a;
+    background: #f8f8fa;
     z-index: 201;
     transform: translateY(100%);
     transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
@@ -550,20 +550,20 @@
     position: sticky; top: 0;
     display: flex; align-items: center; justify-content: space-between;
     padding: 16px 20px;
-    background: #0a0a1a;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    background: #fff;
+    border-bottom: 1px solid #e5e7eb;
     z-index: 10;
   }
   .dm-back {
     width: 36px; height: 36px;
     border: none; border-radius: 50%;
-    background: rgba(255,255,255,0.1);
+    background: #f0f0f3;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
     transition: all 0.15s ease;
   }
   .dm-back:active { transform: scale(0.9); }
-  .dm-back svg { width: 18px; height: 18px; stroke: #fff; stroke-width: 2.5; fill: none; }
-  .dm-title { font-size: 16px; font-weight: 700; color: #fff; }
+  .dm-back svg { width: 18px; height: 18px; stroke: #1a1a2e; stroke-width: 2.5; fill: none; }
+  .dm-title { font-size: 16px; font-weight: 700; color: #1a1a2e; }
 
   .dm-body { padding: 20px; }
 
@@ -1453,13 +1453,13 @@
           <span class="dm-type-badge" id="dmType"></span>
           <span class="li-trade" id="dmTrade"></span>
         </div>
-        <div id="dmPrice" style="font-size:30px;font-weight:900;color:#facc15;letter-spacing:-1px;margin-bottom:6px;"></div>
-        <div id="dmName" style="font-size:16px;font-weight:700;color:#fff;margin-bottom:2px;"></div>
-        <div id="dmLocation" style="font-size:12px;color:#666;"></div>
+        <div id="dmPrice" style="font-size:30px;font-weight:900;color:#1a1a2e;letter-spacing:-1px;margin-bottom:6px;"></div>
+        <div id="dmName" style="font-size:16px;font-weight:700;color:#1a1a2e;margin-bottom:2px;"></div>
+        <div id="dmLocation" style="font-size:12px;color:#64748b;"></div>
       </div>
       <!-- 썸네일 -->
       <div id="dmThumb" style="display:none;flex-shrink:0;position:relative;">
-        <img id="dmThumbImg" src="" style="width:80px;height:80px;object-fit:cover;border-radius:10px;border:1.5px solid rgba(255,255,255,0.1);">
+        <img id="dmThumbImg" src="" loading="lazy" style="width:80px;height:80px;object-fit:cover;border-radius:12px;border:1.5px solid #e5e7eb;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
         <div id="dmThumbCount" style="position:absolute;bottom:5px;right:5px;background:rgba(0,0,0,0.65);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:8px;"></div>
       </div>
     </div>
@@ -1478,18 +1478,18 @@
     <!-- 비공개 메모 -->
     <div id="dmPrivateField" style="margin-bottom:12px;">
       <div style="font-size:11px;font-weight:700;color:#f87171;margin-bottom:6px;">🔒 비공개 메모</div>
-      <div id="dmMemoPrivate" style="font-size:13px;color:#ccc;background:rgba(248,113,113,0.06);border:1px solid rgba(248,113,113,0.15);border-radius:8px;padding:10px 12px;line-height:1.5;"></div>
+      <div id="dmMemoPrivate" style="font-size:13px;color:#374151;background:rgba(248,113,113,0.05);border:1px solid rgba(248,113,113,0.15);border-radius:10px;padding:12px 14px;line-height:1.6;"></div>
     </div>
 
     <!-- 손님에게 한마디 -->
     <div id="dmPublicField" style="margin-bottom:20px;">
       <div style="font-size:11px;font-weight:700;color:#facc15;margin-bottom:6px;">💬 손님에게 한마디</div>
-      <div id="dmMemoPublic" style="font-size:13px;color:#ccc;background:rgba(250,204,21,0.06);border:1px solid rgba(250,204,21,0.15);border-radius:8px;padding:10px 12px;line-height:1.5;"></div>
+      <div id="dmMemoPublic" style="font-size:13px;color:#374151;background:rgba(250,204,21,0.05);border:1px solid rgba(250,204,21,0.15);border-radius:10px;padding:12px 14px;line-height:1.6;"></div>
     </div>
 
     <!-- 닫기 -->
     <div class="dm-actions">
-      <button class="dm-act act-cancel" style="flex:1;background:rgba(255,255,255,0.07);color:#aaa;border-radius:12px;" onclick="closeDetail()">닫기</button>
+      <button class="dm-act act-cancel" style="flex:1;background:#e5e7eb;color:#374151;border-radius:12px;font-weight:600;" onclick="closeDetail()">닫기</button>
     </div>
   </div>
 </div>
@@ -2478,14 +2478,14 @@
 
     // 평수/층수 - 있는 것만 표시
     const sizeFloor = [];
-    if (item.size) sizeFloor.push(`<div style="background:rgba(255,255,255,0.07);border-radius:8px;padding:8px 14px;font-size:13px;color:#ccc;"><span style="font-size:10px;color:#888;display:block;margin-bottom:2px;">평수</span>${esc(item.size)}</div>`);
-    if (item.floor) sizeFloor.push(`<div style="background:rgba(255,255,255,0.07);border-radius:8px;padding:8px 14px;font-size:13px;color:#ccc;"><span style="font-size:10px;color:#888;display:block;margin-bottom:2px;">층수</span>${esc(item.floor)}</div>`);
+    if (item.size) sizeFloor.push(`<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px 14px;font-size:14px;color:#1a1a2e;font-weight:500;"><span style="font-size:10px;color:#94a3b8;display:block;margin-bottom:3px;font-weight:400;">평수</span>${esc(item.size)}</div>`);
+    if (item.floor) sizeFloor.push(`<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px 14px;font-size:14px;color:#1a1a2e;font-weight:500;"><span style="font-size:10px;color:#94a3b8;display:block;margin-bottom:3px;font-weight:400;">층수</span>${esc(item.floor)}</div>`);
     document.getElementById('dmSizeFloor').innerHTML = sizeFloor.join('');
 
     // 방구조/향 - 있는 것만 표시
     const roomsDir = [];
-    if (item.rooms) roomsDir.push(`<div style="background:rgba(255,255,255,0.07);border-radius:8px;padding:8px 14px;font-size:13px;color:#ccc;"><span style="font-size:10px;color:#888;display:block;margin-bottom:2px;">방구조</span>${esc(item.rooms)}</div>`);
-    if (item.direction) roomsDir.push(`<div style="background:rgba(255,255,255,0.07);border-radius:8px;padding:8px 14px;font-size:13px;color:#ccc;"><span style="font-size:10px;color:#888;display:block;margin-bottom:2px;">향</span>${esc(item.direction)}</div>`);
+    if (item.rooms) roomsDir.push(`<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px 14px;font-size:14px;color:#1a1a2e;font-weight:500;"><span style="font-size:10px;color:#94a3b8;display:block;margin-bottom:3px;font-weight:400;">방구조</span>${esc(item.rooms)}</div>`);
+    if (item.direction) roomsDir.push(`<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px 14px;font-size:14px;color:#1a1a2e;font-weight:500;"><span style="font-size:10px;color:#94a3b8;display:block;margin-bottom:3px;font-weight:400;">향</span>${esc(item.direction)}</div>`);
     document.getElementById('dmRoomsDirection').innerHTML = roomsDir.join('');
 
     // 태그
