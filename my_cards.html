@@ -8012,6 +8012,7 @@ function renderClientTimeline(container, card, notes, cardId) {
     function renderItem(item, hidden) {
         const t = NOTE_TYPE_MAP[item.type] || NOTE_TYPE_MAP['메모'];
         const deleteBtn = item.id ? `<button onclick="event.stopPropagation();deleteClientNote('${item.id}','${cardId}')" style="margin-left:auto;padding:3px 10px;border-radius:5px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.08);color:#f87171;font-size:11px;cursor:pointer;">삭제</button>` : '';
+        const noteEditBtn = item.id && !item.isRegister ? `<button onclick="event.stopPropagation();startEditNote('${item.id}','${cardId}')" style="padding:3px 10px;border-radius:5px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#94a3b8;font-size:11px;cursor:pointer;">수정</button>` : '';
         const editBtn = item.isRegister ? `<button onclick="event.stopPropagation();editClientCard('${cardId}')" style="margin-left:auto;padding:3px 10px;border-radius:5px;border:1px solid rgba(250,204,21,0.3);background:rgba(250,204,21,0.08);color:#facc15;font-size:11px;cursor:pointer;">수정</button>` : '';
         // 일정 시간 표시 + 지연 판단
         let scheduleTag = '';
@@ -8034,9 +8035,9 @@ function renderClientTimeline(container, card, notes, cardId) {
                 <div class="crm-tl-head">
                     <span class="crm-tl-type t-${t.cls}">${t.label}</span>
                     <span class="crm-tl-date">${formatNoteDate(item.date)}</span>
-                    ${editBtn}${deleteBtn}${scheduleTag}${visitStatusBtn}
+                    ${editBtn}${noteEditBtn}${deleteBtn}${scheduleTag}${visitStatusBtn}
                 </div>
-                <div class="crm-tl-content" style="white-space:pre-wrap;">${contentHtml}</div>
+                <div class="crm-tl-content" id="note-content-${item.id || 'reg'}" style="white-space:pre-wrap;">${contentHtml}</div>
             </div>
         </div>`;
     }
@@ -8053,6 +8054,77 @@ function renderClientTimeline(container, card, notes, cardId) {
     }
 
     container.innerHTML = html;
+}
+
+// ★ 메모 인라인 수정
+function startEditNote(noteId, cardId) {
+    const contentEl = document.getElementById('note-content-' + noteId);
+    if (!contentEl) return;
+    const currentText = contentEl.textContent.trim();
+    contentEl.innerHTML = `<div style="display:flex;flex-direction:column;gap:6px;">
+        <input type="text" id="edit-note-input-${noteId}" value="${esc(currentText)}" style="width:100%;padding:8px 12px;border-radius:6px;border:1px solid rgba(250,204,21,0.3);background:rgba(255,255,255,0.05);color:#e2e8f0;font-size:13px;outline:none;box-sizing:border-box;" oninput="previewEditNote('${noteId}')" onkeydown="if(event.key==='Enter')saveEditNote('${noteId}','${cardId}');if(event.key==='Escape')cancelEditNote('${noteId}','${cardId}')">
+        <div id="edit-note-preview-${noteId}" style="font-size:11px;color:#64748b;min-height:16px;"></div>
+        <div style="display:flex;gap:6px;justify-content:flex-end;">
+            <button onclick="cancelEditNote('${noteId}','${cardId}')" style="padding:4px 12px;border-radius:5px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:#94a3b8;font-size:11px;cursor:pointer;">취소</button>
+            <button onclick="saveEditNote('${noteId}','${cardId}')" style="padding:4px 12px;border-radius:5px;border:none;background:var(--primary);color:var(--bg-dark);font-size:11px;font-weight:700;cursor:pointer;">저장</button>
+        </div>
+    </div>`;
+    const input = document.getElementById('edit-note-input-' + noteId);
+    input.focus();
+    input.select();
+    previewEditNote(noteId);
+}
+
+function previewEditNote(noteId) {
+    const input = document.getElementById('edit-note-input-' + noteId);
+    const preview = document.getElementById('edit-note-preview-' + noteId);
+    if (!input || !preview) return;
+    const parsed = parseNoteText(input.value.trim());
+    const parts = [];
+    if (parsed.urgent) parts.push('<span style="color:#ef4444;">🔴 긴급</span>');
+    const typeColors = { '방문': '#4ecdc4', '상담': '#60a5fa', '계약': '#f59e0b', '매물소개': '#a78bfa', '메모': '#64748b' };
+    parts.push(`<span style="color:${typeColors[parsed.type]}">${parsed.type}</span>`);
+    if (parsed.alertDate) {
+        const d = new Date(parsed.alertDate);
+        const days = ['일','월','화','수','목','금','토'];
+        parts.push(`<span style="color:#facc15;">📅 ${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]})${parsed.hasTime ? ' ' + parsed.timeStr : ''}</span>`);
+    }
+    preview.innerHTML = parts.join(' · ');
+}
+
+function cancelEditNote(noteId, cardId) {
+    loadClientTimeline(cardId);
+}
+
+async function saveEditNote(noteId, cardId) {
+    const input = document.getElementById('edit-note-input-' + noteId);
+    if (!input) return;
+    const content = input.value.trim();
+    if (!content) { showToast('내용을 입력하세요'); return; }
+
+    const parsed = parseNoteText(content);
+    const updateData = {
+        content: content,
+        type: parsed.type,
+    };
+    if (parsed.alertDate) {
+        updateData.alert_date = parsed.alertDate;
+    } else {
+        updateData.alert_date = null;
+    }
+
+    const { error } = await supabaseClient.from('client_notes')
+        .update(updateData)
+        .eq('id', noteId)
+        .eq('agent_id', currentUser.id);
+
+    if (error) {
+        showToast('수정 실패: ' + error.message);
+        return;
+    }
+
+    showToast('메모 수정됨');
+    loadClientTimeline(cardId);
 }
 
 async function toggleNoteStatus(noteId, done) {
