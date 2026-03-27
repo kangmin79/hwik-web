@@ -72,7 +72,7 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 /* 그래프 */
 .chart-section { padding:0 16px 12px; }
 .chart-title { font-size:12px; color:var(--sub); margin-bottom:8px; }
-.chart-wrap { position:relative; height:140px; }
+.chart-wrap { position:relative; height:180px; }
 
 /* 실거래 목록 */
 .section-title { font-size:14px; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
@@ -457,7 +457,7 @@ function render() {
 
     <!-- 그래프 -->
     <div class="chart-section">
-      <div class="chart-title">12개월 시세 흐름</div>
+      <div class="chart-title">3년 시세 흐름</div>
       <div class="chart-wrap"><canvas id="priceChart"></canvas></div>
     </div>
 
@@ -541,8 +541,8 @@ function drawChart() {
   let months, values;
 
   if (ph.length > 0) {
-    // 실제 데이터: 최근 36개월 중 마지막 12개 이상
-    const recent = ph.slice(-12);
+    // 실제 데이터: 최근 36개월 전체 표시 (거래 있는 월만)
+    const recent = ph.slice(-36);
     months = recent.map(p => {
       const parts = p.month.split('-');
       return parseInt(parts[1]) + '월';
@@ -589,7 +589,7 @@ function drawChart() {
         tooltip: { callbacks: { label: ctx => ctx.parsed.y.toFixed(1) + '억' } }
       },
       scales: {
-        x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#aaa', maxTicksLimit: 6 } },
+        x: { grid: { display: false }, ticks: { font: { size: 10 }, color: '#aaa', maxTicksLimit: 8, maxRotation: 0 } },
         y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 }, color: '#aaa', callback: v => v + '억' }, min, max }
       }
     }
