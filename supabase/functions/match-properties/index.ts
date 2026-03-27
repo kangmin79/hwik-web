@@ -127,7 +127,7 @@ Deno.serve(async (req) => {
     // 1. 손님 카드 조회
     const { data: clientCard, error: clientError } = await supabase
       .from('cards')
-      .select('id, property, private_note, embedding, agent_id')
+      .select('id, property, private_note, embedding, agent_id, wanted_trade_type, move_in_date')
       .eq('id', client_card_id)
       .single();
 
@@ -190,11 +190,13 @@ Deno.serve(async (req) => {
       if (allText.includes(typo)) allText = allText.replace(new RegExp(typo, 'g'), fix);
     }
 
-    // 거래유형 (더 많은 패턴)
-    let wantedTradeType: string | null = null;
-    if (/매매|매도|분양|ㅁㅁ/.test(allText)) wantedTradeType = '매매';
-    else if (/전세|ㅈㅅ|젼세/.test(allText)) wantedTradeType = '전세';
-    else if (/월세|임대|ㅇㅅ|웜세/.test(allText)) wantedTradeType = '월세';
+    // 거래유형 — DB에 wanted_trade_type 있으면 우선 사용
+    let wantedTradeType: string | null = (clientCard as any).wanted_trade_type || null;
+    if (!wantedTradeType) {
+      if (/매매|매도|분양|ㅁㅁ/.test(allText)) wantedTradeType = '매매';
+      else if (/전세|ㅈㅅ|젼세/.test(allText)) wantedTradeType = '전세';
+      else if (/월세|임대|ㅇㅅ|웜세/.test(allText)) wantedTradeType = '월세';
+    }
 
     // 카테고리 (더 많은 패턴)
     let wantedCategory: string | null = null;

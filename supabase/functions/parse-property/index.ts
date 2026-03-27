@@ -464,9 +464,19 @@ ${text}`
     const priceNumber = parsePriceNumber(parsedResult.price);
     const moveInDate = parseMoveInDate(parsedResult.moveIn);
 
+    // ★ 손님일 때 거래유형을 별도 필드로 추출 (property.type이 "손님"으로 덮이니까)
+    let wantedTradeType: string | null = null;
+    if (parsedResult.type === '손님') {
+      const allText = [parsedResult.price, parsedResult.location, parsedResult.memo, text].join(' ');
+      if (/매매|매도|분양/.test(allText)) wantedTradeType = '매매';
+      else if (/전세/.test(allText)) wantedTradeType = '전세';
+      else if (/월세|임대/.test(allText)) wantedTradeType = '월세';
+    }
+
     const result = {
       ...parsedResult,
-      move_in_date: moveInDate, // YYYY-MM 정규화된 입주시기
+      move_in_date: moveInDate,
+      wanted_trade_type: wantedTradeType, // 손님이 원하는 거래유형 (손님 카드 전용)
       // ★ 좌표는 클라이언트에서 DB 매칭 + 카카오 API 폴백으로 처리
       lat: null,
       lng: null,
