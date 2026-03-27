@@ -75,29 +75,37 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 .chart-wrap { position:relative; height:140px; }
 
 /* 실거래 목록 */
-.section-title { font-size:13px; font-weight:500; margin-bottom:10px; }
+.section-title { font-size:14px; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+.section-title::before { content:''; display:inline-block; width:3px; height:14px; background:var(--yellow); border-radius:2px; }
 .section { padding:16px; }
-.trade-list { display:flex; flex-direction:column; gap:6px; }
-.trade-item { display:flex; justify-content:space-between; padding:10px 12px; background:var(--card); border-radius:var(--radius); }
-.trade-price { font-size:13px; font-weight:500; }
-.trade-detail { font-size:11px; color:var(--sub); margin-top:2px; }
-.trade-date { font-size:11px; color:var(--sub); align-self:center; }
+.trade-list { display:flex; flex-direction:column; gap:8px; }
+.trade-item { display:flex; justify-content:space-between; padding:12px 14px; background:var(--surface); border-radius:var(--radius); border-left:3px solid var(--yellow); box-shadow:0 1px 4px rgba(0,0,0,0.06); }
+.trade-price { font-size:16px; font-weight:700; color:var(--dark); }
+.trade-detail { font-size:11px; color:var(--sub); margin-top:3px; }
+.trade-date { font-size:11px; color:var(--muted); align-self:center; white-space:nowrap; }
 
 /* 구분선 */
 .divider { height:8px; background:var(--card); }
 
 /* 휙 매물 */
 .listing-badge { font-size:11px; padding:3px 10px; background:var(--yellow-dim); border-radius:20px; color:#ba7517; font-weight:500; }
-.listing-item { display:flex; justify-content:space-between; padding:10px 12px; border:1px solid var(--yellow); border-radius:var(--radius); background:var(--yellow-bg); cursor:pointer; }
+.listing-item { display:flex; justify-content:space-between; padding:14px; border:1.5px solid var(--yellow); border-radius:var(--radius); background:var(--yellow-bg); cursor:pointer; box-shadow:0 1px 4px rgba(245,200,66,0.15); transition:transform .15s; }
+.listing-item:active { transform:scale(0.98); }
 .listing-link { font-size:11px; color:#ba7517; align-self:center; font-weight:500; }
+.listing-empty { text-align:center; padding:20px 16px; border:1.5px dashed var(--yellow); border-radius:var(--radius); background:var(--yellow-bg); }
+.listing-empty-text { font-size:13px; color:var(--sub); margin-bottom:8px; }
+.listing-empty-cta { font-size:12px; font-weight:600; color:#ba7517; cursor:pointer; }
 
 /* 주변 단지 */
-.nearby-item { display:flex; justify-content:space-between; align-items:center; padding:12px; border:1px solid var(--border); border-radius:var(--radius); cursor:pointer; transition:background .15s; }
-.nearby-item:hover { background:var(--card); }
-.nearby-name { font-size:13px; font-weight:500; }
+.nearby-item { display:flex; justify-content:space-between; align-items:center; padding:14px; background:var(--surface); border-radius:var(--radius); cursor:pointer; transition:all .15s; box-shadow:0 1px 4px rgba(0,0,0,0.05); }
+.nearby-item:active { transform:scale(0.98); }
+.nearby-item:hover { box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+.nearby-name { font-size:13px; font-weight:600; }
 .nearby-sub { font-size:11px; color:var(--sub); margin-top:2px; }
-.nearby-price { font-size:13px; font-weight:500; text-align:right; }
-.nearby-change { font-size:11px; text-align:right; margin-top:2px; }
+.nearby-price { font-size:14px; font-weight:700; text-align:right; }
+.nearby-diff { font-size:11px; text-align:right; margin-top:2px; padding:1px 6px; border-radius:4px; display:inline-block; }
+.nearby-diff.cheaper { background:rgba(99,153,34,0.1); color:var(--green); }
+.nearby-diff.pricier { background:rgba(226,75,74,0.1); color:var(--red); }
 
 /* CTA */
 .cta-section { padding:16px; border-top:1px solid var(--border); }
@@ -310,18 +318,28 @@ function render() {
     </div>
   `).join('');
 
-  // 주변 단지
-  const nearbyHtml = nearby.map(n => `
+  // 주변 단지 (현재 단지 대비 가격 차이)
+  const myPrice84 = recent['84A'] ? recent['84A'].price : (recent['84'] ? recent['84'].price : recentPrice);
+  const nearbyHtml = nearby.map(n => {
+    let diffHtml = '';
+    if (n.price_84 && myPrice84) {
+      const diff = n.price_84 - myPrice84;
+      if (diff > 0) diffHtml = `<div class="nearby-diff pricier">▲ ${formatPrice(diff)} 비쌈</div>`;
+      else if (diff < 0) diffHtml = `<div class="nearby-diff cheaper">▼ ${formatPrice(Math.abs(diff))} 저렴</div>`;
+      else diffHtml = `<div class="nearby-diff" style="color:var(--sub)">동일</div>`;
+    }
+    return `
     <div class="nearby-item" onclick="location.href='danji.html?id=${esc(n.id)}'">
       <div>
         <div class="nearby-name">${esc(n.name)}</div>
         <div class="nearby-sub">${esc(n.location)} ${n.distance ? '· '+distText(n.distance) : ''}</div>
       </div>
-      <div>
+      <div style="text-align:right">
         <div class="nearby-price">${n.price_84 ? formatPrice(n.price_84) : '-'}</div>
+        ${diffHtml}
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 
   // SEO 텍스트
   const seoFull = d.seo_text || '';
@@ -412,13 +430,14 @@ function render() {
 
     <!-- 휙 매물 -->
     <div class="section">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
         <div class="section-title" style="margin-bottom:0;">휙 등록 매물</div>
         ${listingBadge ? '<div class="listing-badge">'+esc(listingBadge)+'</div>' : ''}
       </div>
-      <div class="trade-list">
-        ${listingHtml || '<div style="font-size:12px;color:var(--sub);padding:8px 0;">등록된 매물이 없습니다</div>'}
-      </div>
+      ${listingHtml
+        ? '<div class="trade-list">' + listingHtml + '</div>'
+        : '<div class="listing-empty"><div class="listing-empty-text">이 단지에 등록된 매물이 아직 없습니다</div><div class="listing-empty-cta" onclick="location.href=\'card_generator_v2_auth.html\'">중개사님, 매물을 등록해보세요 →</div></div>'
+      }
     </div>
 
     <div class="divider"></div>
