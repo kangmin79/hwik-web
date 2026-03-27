@@ -6595,6 +6595,33 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     }
                 }
             } catch(e) { console.log('매칭 알림 로드 실패:', e); }
+
+            // ★ 손님 관심 표시 알림 로드
+            try {
+                const { data: interests } = await supabaseClient
+                    .from('card_interests')
+                    .select('id, card_id, bundle_id, visitor_id, created_at')
+                    .eq('agent_id', currentUser.id)
+                    .order('created_at', { ascending: false })
+                    .limit(30);
+
+                if (interests && interests.length > 0) {
+                    for (const ci of interests) {
+                        const card = allCards.find(c => c.id === ci.card_id);
+                        const cardName = card ? [card.property?.complex, card.property?.location, card.property?.price].filter(Boolean).join(' · ') : ci.card_id;
+                        _calMonthAlerts.push({
+                            id: 'interest-' + ci.id,
+                            type: '관심',
+                            content: `손님이 "${cardName}" 에 관심 표시`,
+                            card_id: ci.card_id,
+                            created_at: ci.created_at,
+                            alert_date: ci.created_at,
+                            alert_done: false,
+                            isInterest: true
+                        });
+                    }
+                }
+            } catch(e) { console.log('관심 알림 로드 실패:', e); }
         }
 
         // 왼쪽 알림 목록 렌더링
@@ -6829,6 +6856,16 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
 
         function _alertItemHtml(a, status) {
+            // ★ 손님 관심 표시 알림
+            if (a.isInterest) {
+                return `<div style="padding:10px 14px;margin-bottom:6px;background:rgba(250,204,21,0.06);border:1px solid rgba(250,204,21,0.2);border-left:3px solid #facc15;border-radius:8px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="padding:1px 8px;border-radius:4px;background:rgba(250,204,21,0.15);color:#facc15;font-size:10px;font-weight:700;">❤️ 관심 매물</span>
+                        <span style="font-size:10px;color:#64748b;">${new Date(a.created_at).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' })}</span>
+                    </div>
+                    <div style="font-size:14px;color:#e2e8f0;margin-top:3px;">${esc(a.content)}</div>
+                </div>`;
+            }
             // ★ 자동매칭 알림은 별도 렌더링
             if (a.isMatch) {
                 const clientCard = allClientCards.find(c => c.id === a.client_card_id);
@@ -8049,6 +8086,7 @@ const NOTE_TYPE_MAP = {
     '계약': { cls: 'contract', label: '계약' },
     '매물소개': { cls: 'intro', label: '매물소개' },
     '등록': { cls: 'register', label: '첫 등록' },
+    '관심': { cls: 'interest', label: '❤️ 관심' },
 };
 
 function formatNoteDate(dateStr) {

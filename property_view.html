@@ -492,6 +492,10 @@
         /* (기존 외부 액션 버튼 삭제됨 — 카드 내부로 이동) */
 
         /* 푸터 */
+        #interestBtn.interested {
+            background: #facc15; color: #111; border-color: #facc15;
+        }
+        #interestBtn:active { transform: scale(0.97); }
         .footer {
             padding: 20px;
             text-align: center;
@@ -543,8 +547,15 @@
             <!-- 탭 존은 카드 위에 렌더링되어야 클릭 수신 가능 -->
 
         </div>
-        
-        <!-- 액션 버튼은 카드 내부로 이동됨 -->
+
+        <!-- ★ 보고싶어요 버튼 -->
+        <div id="interestBtnArea" style="display:none;max-width:430px;margin:12px auto;padding:0 16px;">
+            <button id="interestBtn" onclick="toggleInterest()" style="width:100%;padding:14px;border-radius:12px;border:2px solid rgba(250,204,21,0.3);background:rgba(250,204,21,0.08);color:#facc15;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;">
+                🏠 이 매물 보고싶어요
+            </button>
+            <div id="interestStatus" style="text-align:center;font-size:12px;color:#64748b;margin-top:6px;"></div>
+        </div>
+
     </main>
     
     <!-- 푸터 -->
@@ -1086,6 +1097,7 @@
             setupSwipe();
             _initInternalSwipe();
             _preloadAdjacentCards();
+            updateInterestButton();
         }
 
         // 앞뒤 카드 photos[0] 미리 로드
@@ -1620,6 +1632,84 @@
                 showError('잘못된 링크입니다.');
             }
         })();
+
+        // ★ 보고싶어요 기능
+        let _interests = {}; // { cardId: true }
+        // 방문자 고유 ID (localStorage)
+        function getVisitorId() {
+            let vid = localStorage.getItem('hwik_visitor_id');
+            if (!vid) { vid = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2); localStorage.setItem('hwik_visitor_id', vid); }
+            return vid;
+        }
+
+        function updateInterestButton() {
+            const area = document.getElementById('interestBtnArea');
+            const btn = document.getElementById('interestBtn');
+            const status = document.getElementById('interestStatus');
+            if (!area || !btn) return;
+
+            const card = allCardsData[currentIndex];
+            if (!card) { area.style.display = 'none'; return; }
+
+            area.style.display = '';
+            const isInterested = _interests[card.id];
+            if (isInterested) {
+                btn.className = 'interested';
+                btn.textContent = '✓ 관심 매물로 등록했어요';
+                status.textContent = '중개사에게 전달되었습니다';
+            } else {
+                btn.className = '';
+                btn.innerHTML = '🏠 이 매물 보고싶어요';
+                status.textContent = '';
+            }
+        }
+
+        async function toggleInterest() {
+            const card = allCardsData[currentIndex];
+            if (!card) return;
+            const btn = document.getElementById('interestBtn');
+
+            if (_interests[card.id]) {
+                // 관심 해제
+                delete _interests[card.id];
+                await supabaseClient.from('card_interests').delete().eq('card_id', card.id).eq('visitor_id', getVisitorId());
+                updateInterestButton();
+                return;
+            }
+
+            // 관심 등록
+            btn.textContent = '등록 중...';
+            const bundleId = new URLSearchParams(location.search).get('cards') || card.id;
+            const { error } = await supabaseClient.from('card_interests').insert({
+                card_id: card.id,
+                bundle_id: bundleId,
+                agent_id: card.agent_id,
+                visitor_id: getVisitorId(),
+            });
+
+            if (error) {
+                console.error('관심 등록 실패:', error);
+                btn.textContent = '🏠 이 매물 보고싶어요';
+                return;
+            }
+
+            _interests[card.id] = true;
+            updateInterestButton();
+            // 햅틱 피드백 (지원 시)
+            if (navigator.vibrate) navigator.vibrate(50);
+        }
+
+        // 페이지 로드 시 이전 관심 표시 복원
+        async function loadPreviousInterests() {
+            const vid = getVisitorId();
+            const cardIds = allCardsData.map(c => c.id);
+            if (!cardIds.length) return;
+            const { data } = await supabaseClient.from('card_interests').select('card_id').eq('visitor_id', vid).in('card_id', cardIds);
+            if (data) data.forEach(d => { _interests[d.card_id] = true; });
+            updateInterestButton();
+        }
+        // 카드 로드 완료 후 실행
+        setTimeout(loadPreviousInterests, 500);
     </script>
 
 <!-- 휙 에러 수집 스니펫 v1.2 -->
