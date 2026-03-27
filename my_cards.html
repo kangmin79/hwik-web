@@ -7617,6 +7617,7 @@ async function loadInlineMatch(clientCardId) {
             })
         });
         const matchData = await matchResp.json();
+        console.log('[매칭]', clientCardId, 'status:', matchResp.status, 'results:', matchData.results?.length || 0, matchData.error || 'OK');
         if (matchData.error) throw new Error(matchData.error);
         let results = matchData.results || [];
         const wantedType = matchData.wanted_trade_type || null;
