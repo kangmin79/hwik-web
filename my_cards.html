@@ -7949,10 +7949,13 @@ function renderClientTimeline(container, card, notes, cardId) {
     const p = card.property || {};
     const pn = card.private_note || {};
 
-    // 메모 입력 UI (심플)
-    let html = `<div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;">
-        <input type="text" id="crm-input-${cardId}" placeholder="메모 입력..." autocomplete="off" style="flex:1;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#e2e8f0;font-size:13px;outline:none;" onkeydown="if(event.key==='Enter')saveClientNote('${cardId}')">
-        <button onclick="saveClientNote('${cardId}')" style="padding:10px 18px;border-radius:8px;border:none;background:var(--primary);color:var(--bg-dark);font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0;">저장</button>
+    // 메모 입력 UI + 실시간 파싱 프리뷰
+    let html = `<div style="margin-bottom:12px;">
+        <div style="display:flex;gap:8px;align-items:center;">
+            <input type="text" id="crm-input-${cardId}" placeholder="예) 내일 오후2시 방문, 3/30 계약서 준비" autocomplete="off" style="flex:1;padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:#e2e8f0;font-size:13px;outline:none;" oninput="previewNoteParse('${cardId}')" onkeydown="if(event.key==='Enter')saveClientNote('${cardId}')">
+            <button onclick="saveClientNote('${cardId}')" style="padding:10px 18px;border-radius:8px;border:none;background:var(--primary);color:var(--bg-dark);font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0;">저장</button>
+        </div>
+        <div id="crm-preview-${cardId}" style="height:20px;padding:2px 14px;font-size:11px;color:#64748b;transition:all 0.2s;"></div>
     </div>`;
 
     // 타임라인 아이템들 (최신이 위)
@@ -8058,84 +8061,147 @@ async function toggleNoteStatus(noteId, done) {
     if (_expandedClientId) loadClientFullView(_expandedClientId);
 }
 
-async function saveClientNote(cardId) {
-    const inputEl = document.getElementById('crm-input-' + cardId);
-    if (!inputEl) return;
-    const content = inputEl.value.trim();
-    // 내용에서 타입 자동 판별
-    let type = '메모';
-    if (/방문|현장|보러|봤/.test(content)) type = '방문';
-    else if (/상담|전화|통화|연락/.test(content)) type = '상담';
-    else if (/계약|사인|도장|잔금/.test(content)) type = '계약';
-    if (!content) { showToast('내용을 입력하세요'); return; }
+// ★ 메모 텍스트 → 타입 + 날짜 + 시간 파싱 (공용 함수)
+function parseNoteText(text) {
+    const result = { type: '메모', alertDate: null, hasTime: false, timeStr: '' };
+    if (!text) return result;
 
-    // ★ 날짜+시간 자동 감지 (timestamptz로 저장)
-    let alertDate = null;
-    const now = new Date();
+    // 1. 타입 판별
+    if (/방문|현장|보러|봤|투어/.test(text)) result.type = '방문';
+    else if (/상담|전화|통화|연락|문의/.test(text)) result.type = '상담';
+    else if (/계약|사인|도장|잔금|입금/.test(text)) result.type = '계약';
+    else if (/보내|전송|카톡|소개/.test(text)) result.type = '매물소개';
 
-    // 시간 파싱 함수 (기본 10:00)
-    function parseTime(text) {
-        // "오후 2시 30분", "오후2시", "14시30분", "2시반"
-        const pmMatch = text.match(/오후\s*(\d{1,2})\s*시?\s*(\d{1,2})?\s*분?/);
-        if (pmMatch) { let h = parseInt(pmMatch[1]); if (h < 12) h += 12; return { h, m: parseInt(pmMatch[2]) || 0 }; }
-        const amMatch = text.match(/오전\s*(\d{1,2})\s*시?\s*(\d{1,2})?\s*분?/);
-        if (amMatch) return { h: parseInt(amMatch[1]), m: parseInt(amMatch[2]) || 0 };
-        const timeMatch = text.match(/(\d{1,2})\s*시\s*(\d{1,2})?\s*분?/);
-        if (timeMatch) { const h = parseInt(timeMatch[1]); return { h, m: parseInt(timeMatch[2]) || 0 }; }
+    // 2. 시간 파싱 (없으면 null — 종일 일정)
+    let hour = null, minute = 0;
+    // "오후 2시 30분", "오후2시반"
+    const pmMatch = text.match(/오후\s*(\d{1,2})\s*시?\s*(?:(\d{1,2})\s*분|반)?/);
+    if (pmMatch) { hour = parseInt(pmMatch[1]); if (hour < 12) hour += 12; minute = pmMatch[2] ? parseInt(pmMatch[2]) : (text.match(/오후.*반/) ? 30 : 0); }
+    // "오전 10시"
+    if (hour === null) {
+        const amMatch = text.match(/오전\s*(\d{1,2})\s*시?\s*(?:(\d{1,2})\s*분|반)?/);
+        if (amMatch) { hour = parseInt(amMatch[1]); minute = amMatch[2] ? parseInt(amMatch[2]) : (text.match(/오전.*반/) ? 30 : 0); }
+    }
+    // "14시30분", "3시반", "10시"
+    if (hour === null) {
         const halfMatch = text.match(/(\d{1,2})\s*시\s*반/);
-        if (halfMatch) return { h: parseInt(halfMatch[1]), m: 30 };
-        return { h: 10, m: 0 }; // 기본 오전 10시
+        if (halfMatch) { hour = parseInt(halfMatch[1]); minute = 30; }
+        else {
+            const timeMatch = text.match(/(\d{1,2})\s*시\s*(\d{1,2})?\s*분?/);
+            if (timeMatch) { hour = parseInt(timeMatch[1]); minute = parseInt(timeMatch[2]) || 0; }
+        }
+    }
+    // "새벽" → 6시, "점심" → 12시, "저녁" → 18시
+    if (hour === null) {
+        if (/새벽/.test(text)) hour = 6;
+        else if (/점심/.test(text)) hour = 12;
+        else if (/저녁/.test(text)) hour = 18;
     }
 
-    function makeAlertDate(baseDate) {
-        const t = parseTime(content);
-        baseDate.setHours(t.h, t.m, 0, 0);
-        return baseDate.toISOString();
+    if (hour !== null) {
+        result.hasTime = true;
+        const hh = String(hour).padStart(2, '0');
+        const mm = String(minute).padStart(2, '0');
+        result.timeStr = hour < 12 ? `오전 ${hour}시${minute ? minute + '분' : ''}` : (hour === 12 ? `낮 12시${minute ? minute + '분' : ''}` : `오후 ${hour - 12}시${minute ? minute + '분' : ''}`);
     }
 
-    if (/오늘/.test(content)) {
-        alertDate = makeAlertDate(new Date(now));
-    }
-    else if (/내일/.test(content)) {
-        const d = new Date(now); d.setDate(d.getDate() + 1);
-        alertDate = makeAlertDate(d);
-    }
-    else if (/모레/.test(content)) {
-        const d = new Date(now); d.setDate(d.getDate() + 2);
-        alertDate = makeAlertDate(d);
-    }
-    else if (/다음\s*주/.test(content)) {
-        const d = new Date(now); d.setDate(d.getDate() + 7);
-        alertDate = makeAlertDate(d);
-    }
+    // 3. 날짜 파싱
+    const now = new Date();
+    let baseDate = null;
+
+    if (/오늘/.test(text)) { baseDate = new Date(now); }
+    else if (/내일/.test(text)) { baseDate = new Date(now); baseDate.setDate(baseDate.getDate() + 1); }
+    else if (/모레/.test(text)) { baseDate = new Date(now); baseDate.setDate(baseDate.getDate() + 2); }
+    else if (/다음\s*주/.test(text)) { baseDate = new Date(now); baseDate.setDate(baseDate.getDate() + 7); }
+    else if (/이번\s*주/.test(text)) { baseDate = new Date(now); } // 이번주 = 오늘 기준
     else {
-        // "N월 N일" → 해당 날짜
-        const dateMatch = content.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
+        // "3월30일", "3월 30일"
+        const dateMatch = text.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);
         if (dateMatch) {
             const m = parseInt(dateMatch[1]) - 1;
-            const day = parseInt(dateMatch[2]);
-            const year = m < now.getMonth() ? now.getFullYear() + 1 : now.getFullYear();
-            alertDate = makeAlertDate(new Date(year, m, day));
+            const d = parseInt(dateMatch[2]);
+            let year = now.getFullYear();
+            if (m < now.getMonth() || (m === now.getMonth() && d < now.getDate())) year++;
+            baseDate = new Date(year, m, d);
         }
-        // "N/N" 형식
-        if (!alertDate) {
-            const slashMatch = content.match(/(\d{1,2})\/(\d{1,2})/);
+        // "3/30"
+        if (!baseDate) {
+            const slashMatch = text.match(/(\d{1,2})\/(\d{1,2})/);
             if (slashMatch) {
                 const m = parseInt(slashMatch[1]) - 1;
-                const day = parseInt(slashMatch[2]);
-                const year = m < now.getMonth() ? now.getFullYear() + 1 : now.getFullYear();
-                alertDate = makeAlertDate(new Date(year, m, day));
+                const d = parseInt(slashMatch[2]);
+                let year = now.getFullYear();
+                if (m < now.getMonth() || (m === now.getMonth() && d < now.getDate())) year++;
+                baseDate = new Date(year, m, d);
+            }
+        }
+        // 요일: "월요일", "화요일" → 다가오는 해당 요일
+        if (!baseDate) {
+            const dayNames = { '일': 0, '월': 1, '화': 2, '수': 3, '목': 4, '금': 5, '토': 6 };
+            const dowMatch = text.match(/(일|월|화|수|목|금|토)\s*요일/);
+            if (dowMatch) {
+                const target = dayNames[dowMatch[1]];
+                baseDate = new Date(now);
+                const diff = (target - now.getDay() + 7) % 7 || 7; // 오늘이면 다음주
+                baseDate.setDate(baseDate.getDate() + diff);
             }
         }
     }
 
+    if (baseDate) {
+        if (hour !== null) {
+            baseDate.setHours(hour, minute, 0, 0);
+        } else {
+            baseDate.setHours(9, 0, 0, 0); // 시간 없으면 오전 9시 (업무 시작)
+        }
+        result.alertDate = baseDate.toISOString();
+    }
+
+    return result;
+}
+
+// 실시간 파싱 프리뷰
+function previewNoteParse(cardId) {
+    const input = document.getElementById('crm-input-' + cardId);
+    const preview = document.getElementById('crm-preview-' + cardId);
+    if (!input || !preview) return;
+    const text = input.value.trim();
+    if (!text) { preview.innerHTML = ''; return; }
+
+    const parsed = parseNoteText(text);
+    const parts = [];
+
+    // 타입 배지
+    const typeColors = { '방문': '#4ecdc4', '상담': '#60a5fa', '계약': '#f59e0b', '매물소개': '#a78bfa', '메모': '#64748b' };
+    parts.push(`<span style="color:${typeColors[parsed.type]}">${parsed.type}</span>`);
+
+    // 날짜+시간
+    if (parsed.alertDate) {
+        const d = new Date(parsed.alertDate);
+        const days = ['일', '월', '화', '수', '목', '금', '토'];
+        const dateStr = `${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]})`;
+        const timeStr = parsed.hasTime ? ` ${parsed.timeStr}` : ' (종일)';
+        parts.push(`<span style="color:#facc15;">📅 ${dateStr}${timeStr}</span>`);
+    }
+
+    preview.innerHTML = parts.join(' · ');
+}
+
+async function saveClientNote(cardId) {
+    const inputEl = document.getElementById('crm-input-' + cardId);
+    if (!inputEl) return;
+    const content = inputEl.value.trim();
+    if (!content) { showToast('내용을 입력하세요'); return; }
+
+    const parsed = parseNoteText(content);
+
     const insertData = {
         client_card_id: cardId,
         agent_id: currentUser.id,
-        type: type,
+        type: parsed.type,
         content: content,
     };
-    if (alertDate) insertData.alert_date = alertDate;
+    if (parsed.alertDate) insertData.alert_date = parsed.alertDate;
 
     const { error } = await supabaseClient.from('client_notes').insert(insertData);
 
@@ -8145,8 +8211,13 @@ async function saveClientNote(cardId) {
         return;
     }
 
-    const alertDisplay = alertDate ? new Date(alertDate).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
-    showToast(alertDate ? `메모 저장됨 · 📅 ${alertDisplay} 알림` : '메모 저장됨');
+    let toastMsg = '메모 저장됨';
+    if (parsed.alertDate) {
+        const d = new Date(parsed.alertDate);
+        const days = ['일', '월', '화', '수', '목', '금', '토'];
+        toastMsg = `저장 · 📅 ${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]})${parsed.hasTime ? ' ' + parsed.timeStr : ''} 알림`;
+    }
+    showToast(toastMsg);
     await loadClientTimeline(cardId);
 
     // ★ 손님 임베딩 재생성 (메모 포함 — 백그라운드)
