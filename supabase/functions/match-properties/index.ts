@@ -219,8 +219,11 @@ Deno.serve(async (req) => {
 
       if (wantedTradeType) sqlQuery = sqlQuery.eq('property->>type', wantedTradeType);
       if (wantedCategory) sqlQuery = sqlQuery.eq('property->>category', wantedCategory);
-      if (minPrice) sqlQuery = sqlQuery.gte('price_number', minPrice);
-      if (maxPrice) sqlQuery = sqlQuery.lte('price_number', Math.round(maxPrice * 1.1)); // 10% 여유
+      // ★ 월세는 price_number가 보증금이라 월세금과 비교 불가 → SQL 가격 필터 스킵
+      if (wantedTradeType !== '월세') {
+        if (minPrice) sqlQuery = sqlQuery.gte('price_number', minPrice);
+        if (maxPrice) sqlQuery = sqlQuery.lte('price_number', Math.round(maxPrice * 1.1));
+      }
       // ★ 위치 필터 — property.location 텍스트로 직접 필터 (bounding box 대신)
       if (wantedLocation) {
         sqlQuery = sqlQuery.or(`property->>location.ilike.%${wantedLocation}%,search_text.ilike.%${wantedLocation}%`);
@@ -276,11 +279,11 @@ Deno.serve(async (req) => {
       if (catFiltered.length >= 1) results = catFiltered; // 1개 이상이면 필터 적용
     }
 
-    if (maxPrice) {
+    if (maxPrice && wantedTradeType !== '월세') {
       const priceFiltered = results.filter((r: any) => {
         const pn = r.price_number || 0;
         if (minPrice && pn < minPrice) return false;
-        if (maxPrice && pn > maxPrice * 1.2) return false; // 20% 여유
+        if (maxPrice && pn > maxPrice * 1.2) return false;
         return true;
       });
       if (priceFiltered.length >= 1) results = priceFiltered;
@@ -517,7 +520,7 @@ Deno.serve(async (req) => {
         const st = r.search_text || '';
         if (!pLoc.includes(wantedLocation) && !st.includes(wantedLocation)) return false;
       }
-      if (maxPrice && r.price_number && r.price_number > maxPrice * 1.2) return false;
+      if (maxPrice && wantedTradeType !== '월세' && r.price_number && r.price_number > maxPrice * 1.2) return false;
       return true;
     });
 
