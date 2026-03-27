@@ -5273,12 +5273,10 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     search_text: parsedResult.search_text || null,
                     search_text_private: parsedResult.search_text_private || null,
                     price_number: parsedResult.price_number || null,
-                    // TODO: DB 컬럼 추가 후 활성화 (Supabase SQL Editor에서 ALTER TABLE)
-                    // move_in_date: parsedResult.move_in_date || null,
-                    // wanted_trade_type: parsedResult.wanted_trade_type || null,
-                    // contact_name, contact_phone: DB 컬럼 추가 후 활성화
-                    // contact_name: parsedResult.contact_name || null,
-                    // contact_phone: parsedResult.contact_phone || null,
+                    move_in_date: parsedResult.move_in_date || null,
+                    wanted_trade_type: parsedResult.wanted_trade_type || null,
+                    contact_name: parsedResult.contact_name || null,
+                    contact_phone: parsedResult.contact_phone || null,
                     photos: photoUrls.length ? photoUrls : null
                 };
 
@@ -6153,7 +6151,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         agent_comment: card.agent_comment || null,
                         search_text: searchText,
                         price_number: card.price_number || card.property?.price_number || null,
-                        // move_in_date: card.move_in_date || null, // TODO: DB 컬럼 추가 후
+                        move_in_date: card.move_in_date || null,
                         lat: cardLat,
                         lng: cardLng,
                         coord_type: coordType,
