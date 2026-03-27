@@ -477,29 +477,44 @@ function render() {
         <div class="metric-value">${jeonseRate ? jeonseRate + '%' : '-'}</div>
       </div>
     </div>
-    <!-- 지표 2행: 평당가 + 단지 스펙 -->
-    <div class="metrics">
-      ${(() => {
-        const py = currentPyeong ? Math.round(parseInt(currentPyeong) / 3.3058) : 0;
-        const ppPrice = (recentPrice && py > 0) ? Math.round(recentPrice / py) : null;
-        return ppPrice ? '<div class="metric"><div class="metric-label">평당가</div><div class="metric-value">'+formatPrice(ppPrice)+'</div><div class="metric-change neutral">'+py+'평 기준</div></div>' : '';
-      })()}
-      ${d.top_floor ? '<div class="metric"><div class="metric-label">최고층</div><div class="metric-value">'+d.top_floor+'층</div></div>' : ''}
-      ${(() => {
-        const pk = parseInt(d.parking || 0);
-        const hh = parseInt(d.total_units || 0);
-        if (pk > 0) {
-          const ratio = hh > 0 ? (pk / hh).toFixed(1) : '';
-          return '<div class="metric"><div class="metric-label">주차</div><div class="metric-value">'+pk.toLocaleString()+'대</div>'+(ratio ? '<div class="metric-change neutral">세대당 '+ratio+'대</div>' : '')+'</div>';
-        }
-        return '';
-      })()}
-    </div>
-    <!-- 지표 3행: 관리비 + 난방 -->
-    ${(d.mgmt_fee || d.heating) ? '<div class="metrics">' +
-      (d.mgmt_fee ? '<div class="metric"><div class="metric-label">월 관리비</div><div class="metric-value">'+Math.round(d.mgmt_fee/10000)+'만원</div><div class="metric-change neutral">세대당 평균</div></div>' : '') +
-      (d.heating ? '<div class="metric"><div class="metric-label">난방</div><div class="metric-value" style="font-size:13px">'+esc(d.heating)+'</div></div>' : '') +
-    '</div>' : ''}
+    <!-- 지표 2행: 동적으로 채움 (데이터 있는 것만, 3열 그리드) -->
+    ${(() => {
+      const cells = [];
+      // 평당가
+      const py = currentPyeong ? Math.round(parseInt(currentPyeong) / 3.3058) : 0;
+      const ppPrice = (recentPrice && py > 0) ? Math.round(recentPrice / py) : null;
+      if (ppPrice) cells.push({label:'평당가', value:formatPrice(ppPrice), sub:py+'평 기준'});
+      // 주차
+      const pk = parseInt(d.parking || 0);
+      const hh = parseInt(d.total_units || 0);
+      if (pk > 0) cells.push({label:'주차', value:pk.toLocaleString()+'대', sub: hh > 0 ? '세대당 '+(pk/hh).toFixed(1)+'대' : ''});
+      // 최고층
+      if (d.top_floor) cells.push({label:'최고층', value:d.top_floor+'층'});
+      // 관리비
+      if (d.mgmt_fee) cells.push({label:'월 관리비', value:Math.round(d.mgmt_fee/10000)+'만원', sub:'세대당 평균'});
+      // 난방
+      if (d.heating) cells.push({label:'난방', value:d.heating});
+      // 시공사
+      if (d.builder) cells.push({label:'시공', value:d.builder});
+      // 준공
+      if (d.build_year) cells.push({label:'준공', value:d.build_year+'년'});
+      // 세대수
+      if (d.total_units) cells.push({label:'세대수', value:d.total_units.toLocaleString()+'세대'});
+
+      if (cells.length === 0) return '';
+      // 3열씩 묶어서 출력
+      let html = '';
+      for (let i = 0; i < cells.length; i += 3) {
+        const row = cells.slice(i, i + 3);
+        html += '<div class="metrics">';
+        row.forEach(c => {
+          const fontSize = (c.value && c.value.length > 6) ? ' style="font-size:13px"' : '';
+          html += '<div class="metric"><div class="metric-label">'+esc(c.label)+'</div><div class="metric-value"'+fontSize+'>'+esc(c.value)+'</div>'+(c.sub ? '<div class="metric-change neutral">'+esc(c.sub)+'</div>' : '')+'</div>';
+        });
+        html += '</div>';
+      }
+      return html;
+    })()}
 
     <!-- 그래프 -->
     <div class="chart-section">
