@@ -1245,13 +1245,13 @@
       </div>
       <span class="tab-label">내 매물</span>
     </button>
-    <!-- 공유받은 -->
-    <button class="tab-btn" id="tabShared" onclick="switchTab('shared')">
+    <!-- 알림 -->
+    <button class="tab-btn" id="tabAlert" onclick="switchTab('alert')">
       <div class="tab-icon">
-        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-        <span class="tab-badge" id="badgeShared"></span>
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span class="tab-badge" id="badgeAlert"></span>
       </div>
-      <span class="tab-label">공유받은</span>
+      <span class="tab-label">알림</span>
     </button>
     <!-- 메모 -->
     <button class="tab-btn" id="tabMemo" onclick="switchTab('memo')">
@@ -1260,13 +1260,6 @@
         <span class="tab-badge" id="badgeMemo"></span>
       </div>
       <span class="tab-label">메모</span>
-    </button>
-
-    <button id="pwaInstallTab" onclick="triggerPwaInstall()">
-      <div class="pwa-tab-icon">
-        <svg viewBox="0 0 24 24"><path d="M12 2v13M8 11l4 4 4-4"/><line x1="3" y1="19" x2="21" y2="19"/></svg>
-      </div>
-      <span class="pwa-tab-label">설치</span>
     </button>
   </div>
 
@@ -1322,6 +1315,9 @@
   </div><!-- /search-wrap -->
 
   <div class="results" id="results"></div>
+
+  <!-- ★ 알림 패널 -->
+  <div id="alertPanel" style="display:none;padding:0 16px 100px;max-width:540px;margin:0 auto;width:100%;"></div>
 
   <!-- 플로팅 카드 만들기 버튼 -->
   <button class="float-card-btn" id="floatCardBtn" onclick="makeCards()">
@@ -1633,37 +1629,44 @@
   // ── 하단 탭 전환 ──
   function switchTab(tab) {
     // 탭 버튼 active 처리
-    ['home','my','shared','memo'].forEach(t => {
+    ['home','my','alert','memo'].forEach(t => {
       document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1))?.classList.toggle('active', t === tab);
     });
+    // 알림 화면 토글
+    const alertPanel = document.getElementById('alertPanel');
+    if (alertPanel) alertPanel.style.display = tab === 'alert' ? '' : 'none';
+
     if (tab === 'home') {
       resetAll();
     } else if (tab === 'my') {
-      // ★ 뒤로가기로 홈 복귀 지원
       history.pushState({ tab: 'my' }, '');
       doQuickSearch('my');
-    } else if (tab === 'shared') {
-      history.pushState({ tab: 'shared' }, '');
-      doQuickSearch('shared');
+    } else if (tab === 'alert') {
+      history.pushState({ tab: 'alert' }, '');
+      container.classList.add('active');
+      results.innerHTML = '';
+      loadMobileAlerts();
     } else if (tab === 'memo') {
       goRegister();
-      // 메모 탭 클릭 시 뱃지 제거
       const badge = document.getElementById('badgeMemo');
-      badge.textContent = '';
-      badge.classList.remove('show');
+      if (badge) { badge.textContent = ''; badge.classList.remove('show'); }
     }
   }
 
   async function updateTabBadges() {
     if (!currentUser) return;
     try {
-      // ★ 내 매물 수 + 미확인 메모 수를 동시에 조회
-      const [cardsResult, memosResult] = await Promise.all([
+      const [cardsResult, memosResult, matchResult, interestResult, overdueResult] = await Promise.all([
         supabaseClient.from('cards').select('*', { count: 'exact', head: true }).eq('agent_id', currentUser.id),
-        supabaseClient.from('memos').select('id', { count: 'exact', head: true }).eq('agent_id', currentUser.id).eq('is_read', false)
+        supabaseClient.from('memos').select('id', { count: 'exact', head: true }).eq('agent_id', currentUser.id).eq('is_read', false),
+        supabaseClient.from('match_notifications').select('*', { count: 'exact', head: true }).eq('agent_id', currentUser.id).eq('is_read', false),
+        supabaseClient.from('card_interests').select('*', { count: 'exact', head: true }).eq('agent_id', currentUser.id),
+        supabaseClient.from('client_notes').select('*', { count: 'exact', head: true }).eq('agent_id', currentUser.id).eq('alert_done', false).lt('alert_date', new Date().toISOString())
       ]);
       setBadge('badgeMy', cardsResult.count);
       setBadge('badgeMemo', memosResult.count);
+      const alertCount = (matchResult.count || 0) + (interestResult.count || 0) + (overdueResult.count || 0);
+      setBadge('badgeAlert', alertCount);
     } catch(e) {}
   }
 
@@ -1778,10 +1781,12 @@
     searchInput.value = '';
     results.innerHTML = '';
     searchData = [];
-    currentSearchMode = 'my'; // ★ 홈 복귀 시 모드 초기화
+    currentSearchMode = 'my';
     closeDropdown();
     checkedSet.clear();
     hideFloatBtn();
+    const alertPanel = document.getElementById('alertPanel');
+    if (alertPanel) alertPanel.style.display = 'none';
     if (currentUser) showHomeWidgets();
   }
 
@@ -1880,6 +1885,137 @@
         </div>`;
     });
     results.innerHTML = html;
+  }
+
+  // ★ 모바일 알림 로드
+  async function loadMobileAlerts() {
+    const panel = document.getElementById('alertPanel');
+    if (!panel || !currentUser) return;
+    panel.innerHTML = '<div style="text-align:center;padding:40px 0;color:#94a3b8;">알림 로딩 중...</div>';
+
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const [matchRes, interestRes, overdueRes, upcomingRes] = await Promise.all([
+        supabaseClient.from('match_notifications').select('id, card_id, client_card_id, similarity, created_at')
+          .eq('agent_id', currentUser.id).eq('is_read', false).order('created_at', { ascending: false }).limit(20),
+        supabaseClient.from('card_interests').select('id, card_id, created_at')
+          .eq('agent_id', currentUser.id).order('created_at', { ascending: false }).limit(20),
+        supabaseClient.from('client_notes').select('id, client_card_id, content, alert_date, type')
+          .eq('agent_id', currentUser.id).eq('alert_done', false).not('alert_date', 'is', null).lt('alert_date', new Date().toISOString())
+          .order('alert_date', { ascending: true }).limit(20),
+        supabaseClient.from('client_notes').select('id, client_card_id, content, alert_date, type')
+          .eq('agent_id', currentUser.id).eq('alert_done', false).not('alert_date', 'is', null).gte('alert_date', new Date().toISOString())
+          .order('alert_date', { ascending: true }).limit(20),
+      ]);
+
+      // 매물 ID 모으기 (이름 표시용)
+      const cardIds = [...new Set([
+        ...(matchRes.data || []).map(m => m.card_id),
+        ...(interestRes.data || []).map(i => i.card_id),
+      ])].filter(Boolean);
+      let cardMap = {};
+      if (cardIds.length) {
+        const { data: cards } = await supabaseClient.from('cards').select('id, property').in('id', cardIds);
+        if (cards) cards.forEach(c => { cardMap[c.id] = c.property || {}; });
+      }
+
+      // 손님 ID 모으기
+      const clientIds = [...new Set([
+        ...(overdueRes.data || []).map(o => o.client_card_id),
+        ...(upcomingRes.data || []).map(u => u.client_card_id),
+        ...(matchRes.data || []).map(m => m.client_card_id),
+      ])].filter(Boolean);
+      let clientMap = {};
+      if (clientIds.length) {
+        const { data: clients } = await supabaseClient.from('cards').select('id, property').in('id', clientIds);
+        if (clients) clients.forEach(c => { clientMap[c.id] = c.property || {}; });
+      }
+
+      let html = '';
+
+      // 지연 일정
+      const overdue = overdueRes.data || [];
+      if (overdue.length) {
+        html += `<div style="font-size:14px;font-weight:700;color:#ef4444;margin:16px 0 8px;">지연 ${overdue.length}건</div>`;
+        overdue.forEach(a => {
+          const cp = clientMap[a.client_card_id] || {};
+          const clientName = [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
+          const ad = new Date(a.alert_date);
+          const dateStr = `${ad.getMonth()+1}/${ad.getDate()}`;
+          html += `<div style="padding:12px 14px;margin-bottom:6px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-left:3px solid #ef4444;border-radius:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:11px;color:#f87171;font-weight:600;">${dateStr} 지연</span>
+              <span style="font-size:11px;color:#94a3b8;">${esc(clientName)}</span>
+            </div>
+            <div style="font-size:14px;color:#1a1a2e;margin-top:4px;">${esc(a.content)}</div>
+          </div>`;
+        });
+      }
+
+      // 손님 관심 표시
+      const interests = interestRes.data || [];
+      if (interests.length) {
+        html += `<div style="font-size:14px;font-weight:700;color:#facc15;margin:16px 0 8px;">관심 표시 ${interests.length}건</div>`;
+        interests.forEach(i => {
+          const p = cardMap[i.card_id] || {};
+          const name = [p.complex, p.location, p.price].filter(Boolean).join(' · ') || '매물';
+          const time = new Date(i.created_at).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
+          html += `<div style="padding:12px 14px;margin-bottom:6px;background:rgba(250,204,21,0.06);border:1px solid rgba(250,204,21,0.2);border-left:3px solid #facc15;border-radius:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:11px;color:#facc15;font-weight:600;">❤️ 관심 매물</span>
+              <span style="font-size:11px;color:#94a3b8;">${time}</span>
+            </div>
+            <div style="font-size:14px;color:#1a1a2e;margin-top:4px;">손님이 "${esc(name)}" 보고싶어요</div>
+          </div>`;
+        });
+      }
+
+      // 자동 매칭
+      const matches = matchRes.data || [];
+      if (matches.length) {
+        html += `<div style="font-size:14px;font-weight:700;color:#4ecdc4;margin:16px 0 8px;">새 매칭 ${matches.length}건</div>`;
+        matches.forEach(m => {
+          const p = cardMap[m.card_id] || {};
+          const cp = clientMap[m.client_card_id] || {};
+          const propName = [p.complex, p.location, p.price].filter(Boolean).join(' · ') || '매물';
+          const clientName = [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
+          html += `<div style="padding:12px 14px;margin-bottom:6px;background:rgba(78,205,196,0.06);border:1px solid rgba(78,205,196,0.2);border-left:3px solid #4ecdc4;border-radius:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:11px;color:#4ecdc4;font-weight:600;">매칭</span>
+              <span style="font-size:11px;color:#94a3b8;">${esc(clientName)}</span>
+            </div>
+            <div style="font-size:14px;color:#1a1a2e;margin-top:4px;">${esc(propName)}</div>
+          </div>`;
+        });
+      }
+
+      // 예정 일정
+      const upcoming = upcomingRes.data || [];
+      if (upcoming.length) {
+        html += `<div style="font-size:14px;font-weight:700;color:#64748b;margin:16px 0 8px;">예정 ${upcoming.length}건</div>`;
+        upcoming.forEach(a => {
+          const cp = clientMap[a.client_card_id] || {};
+          const clientName = [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
+          const ad = new Date(a.alert_date);
+          const dateStr = `${ad.getMonth()+1}/${ad.getDate()}`;
+          html += `<div style="padding:12px 14px;margin-bottom:6px;background:rgba(255,255,255,1);border:1px solid #e2e8f0;border-radius:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:11px;color:#64748b;font-weight:600;">${dateStr} ${esc(a.type || '일정')}</span>
+              <span style="font-size:11px;color:#94a3b8;">${esc(clientName)}</span>
+            </div>
+            <div style="font-size:14px;color:#1a1a2e;margin-top:4px;">${esc(a.content)}</div>
+          </div>`;
+        });
+      }
+
+      if (!html) {
+        html = '<div style="text-align:center;padding:60px 0;color:#94a3b8;font-size:14px;">알림이 없어요</div>';
+      }
+
+      panel.innerHTML = html;
+    } catch(e) {
+      panel.innerHTML = '<div style="text-align:center;padding:40px 0;color:#f87171;">알림 로딩 실패</div>';
+    }
   }
 
   function goRegister() {
