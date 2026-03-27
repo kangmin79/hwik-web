@@ -1201,6 +1201,7 @@
   .crm-sheet.show { bottom:0; }
   .crm-sheet-handle { width:36px;height:4px;background:#d1d5db;border-radius:2px;margin:10px auto 0; }
   .container.alert-mode { justify-content:flex-start; padding-top:0; padding-bottom:80px; height:auto; min-height:100%; overflow-y:auto; }
+  body.alert-scroll { overflow:auto; }
 </style>
 </head>
 <body>
@@ -1671,6 +1672,7 @@
     if (alertPanel) alertPanel.style.display = tab === 'alert' ? '' : 'none';
     if (tab !== 'alert') {
       container.classList.remove('alert-mode');
+      document.body.classList.remove('alert-scroll');
       const searchWrap = document.querySelector('.search-wrap');
       if (searchWrap) searchWrap.style.display = '';
       const logo = document.querySelector('.logo');
@@ -1687,6 +1689,7 @@
     } else if (tab === 'alert') {
       history.pushState({ tab: 'alert' }, '');
       container.classList.add('active', 'alert-mode');
+      document.body.classList.add('alert-scroll');
       results.innerHTML = '';
       document.querySelector('.search-wrap').style.display = 'none';
       document.querySelector('.logo').style.display = 'none';
