@@ -89,8 +89,8 @@ Deno.serve(async (req) => {
     else if (/오피스텔|옵텔/.test(allText)) wantedCategory = 'officetel';
     else if (/원룸|투룸|빌라|다세대|주택|쓰리룸|방\s?\d|룸/.test(allText)) wantedCategory = 'room';
     else if (/아파트|아빠트|apt/i.test(allText)) wantedCategory = 'apartment';
-    // property.category가 이미 있으면 우선
-    if (cp.category && !wantedCategory) wantedCategory = cp.category;
+    // 텍스트에서 못 찾으면 property.category 사용 (텍스트가 우선)
+    if (!wantedCategory && cp.category) wantedCategory = cp.category;
 
     // 가격 범위 (더 정밀한 파싱)
     let minPrice: number | null = null;
