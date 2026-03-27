@@ -351,6 +351,15 @@ function render() {
   if (d.total_units) seoBasic.push('총 ' + d.total_units.toLocaleString() + '세대 규모입니다.');
   seoParts.push(seoBasic.join(' '));
 
+  // 단지 스펙 (확실한 것만)
+  const specParts = [];
+  if (d.top_floor) specParts.push('최고 ' + d.top_floor + '층');
+  if (parseInt(d.parking || 0) > 0) {
+    specParts.push('주차 ' + parseInt(d.parking).toLocaleString() + '대');
+    if (d.total_units) specParts.push('(세대당 ' + (parseInt(d.parking) / d.total_units).toFixed(1) + '대)');
+  }
+  if (specParts.length > 0) seoParts.push(specParts.join(', ') + '.');
+
   // 평형 (DB categories 기반)
   if (cats.length > 0) {
     const pyList = cats.map(c => { const p = Math.round(parseInt(c)/3.3058); return p > 0 ? p+'평('+c+'㎡)' : c+'㎡'; });
@@ -397,10 +406,18 @@ function render() {
 
   // FAQ 데이터 — 확실한 데이터가 있는 항목만 표시
   const faqItems = [];
-  if (recentPrice) faqItems.push({ q: `${d.complex_name} 최근 실거래가는?`, a: `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentPrice)}입니다.${recentData && recentData.date ? ' ('+recentData.date+' 기준)' : ''}` });
+  if (recentPrice) {
+    faqItems.push({ q: `${d.complex_name} 최근 실거래가는?`, a: `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentPrice)}입니다.${recentData && recentData.date ? ' ('+recentData.date+' 기준)' : ''}` });
+    const _py = currentPyeong ? Math.round(parseInt(currentPyeong) / 3.3058) : 0;
+    if (_py > 0) faqItems.push({ q: `${d.complex_name} 평당가는?`, a: `${_py}평 기준 평당 ${formatPrice(Math.round(recentPrice / _py))}입니다.` });
+  }
   if (jeonseRate) faqItems.push({ q: `${d.complex_name} 전세가율은?`, a: `${d.complex_name}의 전세가율은 ${jeonseRate}%입니다.` });
   if (subway.length > 0) faqItems.push({ q: `${d.complex_name} 근처 지하철역은?`, a: subway.map(s => `${s.name}(${s.line || ''}) 도보 ${walkMin(s.distance)}`).join(', ') });
   if (highPrice) faqItems.push({ q: `${d.complex_name} 역대 최고가는?`, a: `역대 최고가는 ${formatPrice(highPrice)}입니다.${highData && highData.date ? ' ('+highData.date+')' : ''}` });
+  if (parseInt(d.parking || 0) > 0 && d.total_units) {
+    const _ratio = (parseInt(d.parking) / d.total_units).toFixed(1);
+    faqItems.push({ q: `${d.complex_name} 주차 대수는?`, a: `총 ${parseInt(d.parking).toLocaleString()}대 (세대당 ${_ratio}대)입니다.` });
+  }
 
   const faqHtml = faqItems.map(f => `
     <div class="faq-item">
@@ -437,7 +454,7 @@ function render() {
     <!-- 평형 -->
     <div class="pyeong-row">${pyeongHtml}</div>
 
-    <!-- 지표 -->
+    <!-- 지표 1행: 시세 -->
     <div class="metrics">
       <div class="metric">
         <div class="metric-label">최근 실거래</div>
@@ -453,6 +470,24 @@ function render() {
         <div class="metric-label">전세가율</div>
         <div class="metric-value">${jeonseRate ? jeonseRate + '%' : '-'}</div>
       </div>
+    </div>
+    <!-- 지표 2행: 평당가 + 단지 스펙 -->
+    <div class="metrics">
+      ${(() => {
+        const py = currentPyeong ? Math.round(parseInt(currentPyeong) / 3.3058) : 0;
+        const ppPrice = (recentPrice && py > 0) ? Math.round(recentPrice / py) : null;
+        return ppPrice ? '<div class="metric"><div class="metric-label">평당가</div><div class="metric-value">'+formatPrice(ppPrice)+'</div><div class="metric-change neutral">'+py+'평 기준</div></div>' : '';
+      })()}
+      ${d.top_floor ? '<div class="metric"><div class="metric-label">최고층</div><div class="metric-value">'+d.top_floor+'층</div></div>' : ''}
+      ${(() => {
+        const pk = parseInt(d.parking || 0);
+        const hh = parseInt(d.total_units || 0);
+        if (pk > 0) {
+          const ratio = hh > 0 ? (pk / hh).toFixed(1) : '';
+          return '<div class="metric"><div class="metric-label">주차</div><div class="metric-value">'+pk.toLocaleString()+'대</div>'+(ratio ? '<div class="metric-change neutral">세대당 '+ratio+'대</div>' : '')+'</div>';
+        }
+        return '';
+      })()}
     </div>
 
     <!-- 그래프 -->
