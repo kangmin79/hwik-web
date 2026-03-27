@@ -5573,9 +5573,11 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             renderPreview();
             updateSendButton();
             await loadClientFullView(cardId);
-            // 맨 위로 스크롤
-            if (listEl) listEl.scrollTop = 0;
-            window.scrollTo({ top: listEl?.offsetTop || 0, behavior: 'smooth' });
+            // 카드가 화면 최상단에 보이도록 스크롤
+            setTimeout(() => {
+                const cardItem = detail.closest('.property-item') || detail;
+                cardItem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 50);
         }
 
         let allClientCards = [];
