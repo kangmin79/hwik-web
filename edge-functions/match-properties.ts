@@ -131,12 +131,25 @@ Deno.serve(async (req) => {
         maxPrice = Math.round(base * 1.15);
       }
     }
-    // 월세: "월세 80 이하" or "월 50"
+    // 월세: 보증금과 월세금을 각각 추출
+    let wantedDeposit: number | null = null;  // 보증금 (만원)
+    let wantedMonthly: number | null = null;  // 월세금 (만원)
     if (wantedTradeType === '월세') {
-      const monthlyMax = allText.match(/월(?:세)?\s*(\d+)\s*(?:이하|이내|밑으로|만원)?/);
-      if (monthlyMax) maxPrice = parseInt(monthlyMax[1]);
-      const depositMatch = allText.match(/보증금\s*(\d+)/);
-      if (depositMatch && !maxPrice) maxPrice = parseInt(depositMatch[1]);
+      // "보증금 1000" or "보증금1000"
+      const depMatch = allText.match(/보증금\s*(\d+)/);
+      if (depMatch) wantedDeposit = parseInt(depMatch[1]);
+      // "월세 50" or "월 80"
+      const monMatch = allText.match(/월(?:세)?\s*(\d+)/);
+      if (monMatch) wantedMonthly = parseInt(monMatch[1]);
+      // "1000/50" 패턴 (보증금/월세)
+      const slashMatch = allText.match(/(\d+)\s*\/\s*(\d+)/);
+      if (slashMatch && !wantedDeposit) {
+        wantedDeposit = parseInt(slashMatch[1]);
+        wantedMonthly = parseInt(slashMatch[2]);
+      }
+      // maxPrice는 매매/전세용이므로 월세에선 사용 안 함
+      maxPrice = null;
+      minPrice = null;
     }
 
     // 지역 (구 + 동 + 유명지역)
@@ -395,8 +408,35 @@ Deno.serve(async (req) => {
       let score = 0;
       const pn = r.price_number || 0;
 
-      // ① 가격 (0~50점) — 예산 이하가 핵심
-      if (maxPrice && pn > 0) {
+      // ① 가격 (0~50점)
+      if (wantedTradeType === '월세' && (wantedDeposit || wantedMonthly)) {
+        // 월세: 매물의 가격 문자열에서 보증금/월세 추출해서 비교
+        const priceStr = r.property?.price || '';
+        let propDeposit = 0, propMonthly = 0;
+        // "보증금1,000/월80" or "1000/80" or "보증금500/월30"
+        const slashM = priceStr.replace(/,/g,'').match(/(\d+)\s*\/\s*(?:월?\s*)?(\d+)/);
+        if (slashM) { propDeposit = parseInt(slashM[1]); propMonthly = parseInt(slashM[2]); }
+        const depM = priceStr.replace(/,/g,'').match(/보증금\s*(\d+)/);
+        if (depM) propDeposit = parseInt(depM[1]);
+        const monM = priceStr.replace(/,/g,'').match(/월\s*(\d+)/);
+        if (monM) propMonthly = parseInt(monM[1]);
+
+        let depScore = 25, monScore = 25; // 기본 만점
+        // 보증금 비교
+        if (wantedDeposit && propDeposit > 0) {
+          if (propDeposit <= wantedDeposit * 1.1) depScore = 25;
+          else if (propDeposit <= wantedDeposit * 1.3) depScore = 15;
+          else depScore = -10;
+        }
+        // 월세금 비교
+        if (wantedMonthly && propMonthly > 0) {
+          if (propMonthly <= wantedMonthly * 1.1) monScore = 25;
+          else if (propMonthly <= wantedMonthly * 1.3) monScore = 15;
+          else monScore = -10;
+        }
+        score += depScore + monScore;
+      } else if (maxPrice && pn > 0) {
+        // 매매/전세: 기존 로직
         if (pn <= maxPrice) {
           const ratio = pn / maxPrice;
           if (ratio >= 0.90) score += 50;
@@ -554,6 +594,8 @@ Deno.serve(async (req) => {
       wanted_area: { min: wantedMinArea, max: wantedMaxArea },
       wanted_rooms: wantedRooms,
       wanted_move_by: wantedMoveBy,
+      wanted_deposit: wantedDeposit,
+      wanted_monthly: wantedMonthly,
       results,
       count: results.length,
     }), {
