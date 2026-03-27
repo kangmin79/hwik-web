@@ -8083,6 +8083,26 @@ function renderClientTimeline(container, card, notes, cardId) {
 
     // 첫 번째: 손님 정보 (타임라인 첫 박스)
     const featureTags = (p.features || []).map(f => `<span style="display:inline-block;padding:1px 6px;border-radius:4px;background:rgba(78,205,196,0.1);color:#4ecdc4;font-size:10px;margin:1px 2px;">${esc(f)}</span>`).join('');
+    // 연락처 모음 (손님 + 연결 매물 매도자)
+    let contactHtml = '';
+    const contacts = [];
+    // 손님(매수자) 연락처
+    if (card.contact_name || card.contact_phone) {
+        contacts.push(`<span style="color:#60a5fa;">👤 ${esc(card.contact_name || '손님')} ${esc(card.contact_phone || '')}</span>`);
+    }
+    // 연결된 매물(매도자/임대인) 연락처 — linked_card_id가 있는 메모에서 매물 찾기
+    const linkedPropertyIds = [...new Set(notes.filter(n => n.linked_card_id).map(n => n.linked_card_id))];
+    for (const lpId of linkedPropertyIds) {
+        const lCard = allCards.find(c => c.id === lpId);
+        if (lCard && (lCard.contact_name || lCard.contact_phone)) {
+            const lpName = [lCard.property?.complex, lCard.property?.location].filter(Boolean).join(' ') || '매물';
+            contacts.push(`<span style="color:#fb923c;">🏠 ${esc(lpName)} ${esc(lCard.contact_name || '')} ${esc(lCard.contact_phone || '')}</span>`);
+        }
+    }
+    if (contacts.length) {
+        contactHtml = `<div style="margin-top:8px;padding:6px 10px;border-radius:6px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);font-size:12px;display:flex;flex-wrap:wrap;gap:8px;">${contacts.join('')}</div>`;
+    }
+
     const infoLines = [
         `<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">${[
             p.price ? `<span style="font-size:16px;font-weight:700;color:#4ecdc4;">${esc(p.price)}</span>` : '',
@@ -8090,7 +8110,8 @@ function renderClientTimeline(container, card, notes, cardId) {
             p.complex ? `<span style="color:#cbd5e1;">· ${esc(p.complex)}</span>` : '',
             p.area ? `<span style="color:#cbd5e1;">· ${esc(p.area)}</span>` : '',
         ].filter(Boolean).join('')} ${featureTags}</div>`,
-        pn.memo ? `<div style="margin-top:6px;font-size:13px;color:#94a3b8;line-height:1.6;">📝 ${esc(pn.memo)}</div>` : ''
+        pn.memo ? `<div style="margin-top:6px;font-size:13px;color:#94a3b8;line-height:1.6;">📝 ${esc(pn.memo)}</div>` : '',
+        contactHtml
     ].filter(Boolean).join('\n');
     items.push({
         type: '등록',
