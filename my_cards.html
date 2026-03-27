@@ -8134,9 +8134,9 @@ function renderClientTimeline(container, card, notes, cardId) {
                 <div class="crm-tl-head">
                     ${typeTag}
                     <span class="crm-tl-date">${formatNoteDate(item.date)}</span>
-                    ${editBtn}${noteEditBtn}${deleteBtn}<span style="flex:1;"></span>${scheduleTag}${visitStatusBtn}
+                    ${editBtn}<span style="flex:1;"></span>${noteEditBtn}${visitStatusBtn}${deleteBtn}
                 </div>
-                <div class="crm-tl-content" id="note-content-${item.id || 'reg'}" style="white-space:pre-wrap;">${contentHtml}</div>
+                <div class="crm-tl-content" id="note-content-${item.id || 'reg'}" style="white-space:pre-wrap;">${contentHtml}</div>${scheduleTag ? `<div style="margin-top:3px;">${scheduleTag}</div>` : ''}
             </div>
         </div>`;
     }
