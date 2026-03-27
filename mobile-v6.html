@@ -1501,6 +1501,10 @@
   const dropdown = document.getElementById('dropdown');
   const results = document.getElementById('results');
 
+// ── 앱 상태 + 유틸 ──
+  const appState = { tab: 'home', selected: [], isLoggedIn: false, results: [], loading: false };
+  function haptic(ms = 30) { try { navigator.vibrate?.(ms); } catch(_e) {} }
+
 // ── Supabase + Kakao 초기화 ──
   const SUPABASE_URL = HWIK_CONFIG.SUPABASE_URL;
   const SUPABASE_KEY = HWIK_CONFIG.SUPABASE_KEY;
@@ -1657,6 +1661,7 @@
 
   // ── 하단 탭 전환 ──
   function switchTab(tab) {
+    haptic(15);
     // 탭 버튼 active 처리
     ['home','my','alert','memo'].forEach(t => {
       document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1))?.classList.toggle('active', t === tab);
@@ -2155,8 +2160,9 @@
     });
     if (error) { showToast('저장 실패'); return; }
     input.value = '';
+    haptic(50);
     showToast('메모 저장됨');
-    openClientCRM(clientCardId); // 새로고침
+    openClientCRM(clientCardId);
   }
 
   function goRegister() {
@@ -2194,6 +2200,7 @@
   const floatCount = document.getElementById('floatCount');
 
   function toggleCheck(idx) {
+    haptic();
     const el = document.getElementById('li-' + idx);
     if (checkedSet.has(idx)) { checkedSet.delete(idx); el.classList.remove('checked'); }
     else { checkedSet.add(idx); el.classList.add('checked'); }
@@ -2267,7 +2274,7 @@
       const cardNameStr = [location, name, area].filter(Boolean).join(' · ');
       cardHtml = `
         <div style="border-radius:16px;overflow:hidden;position:relative;min-height:300px;">
-          <img src="${esc(photos[0])}" style="width:100%;aspect-ratio:3/4;object-fit:cover;display:block;">
+          <img src="${esc(photos[0])}" loading="lazy" style="width:100%;aspect-ratio:3/4;object-fit:cover;display:block;">
           <div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(0,0,0,0.92) 0%,rgba(0,0,0,0.5) 60%,transparent 100%);padding:40px 16px 16px;">
             <div style="font-size:20px;font-weight:800;color:#fff;margin-bottom:2px;">${price}</div>
             <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:8px;">${cardNameStr}</div>
