@@ -2072,39 +2072,55 @@
 
       let html = '';
 
-      // 헤더: 손님 정보 + 전화 버튼
-      html += `<div style="padding:16px 20px 12px;border-bottom:1px solid #f0f0f3;">
-        <div style="font-size:17px;font-weight:700;color:#1a1a2e;">${esc(condition || '손님')}</div>
-        ${features ? `<div style="margin-top:6px;">${features}</div>` : ''}
-        ${pn.memo ? `<div style="font-size:13px;color:#64748b;margin-top:6px;">${esc(pn.memo)}</div>` : ''}
-        ${clientPhone ? `<a href="tel:${clientPhone.replace(/[-.\s]/g,'')}" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:10px 20px;border-radius:10px;background:#0ea5e9;color:#fff;font-size:15px;font-weight:600;text-decoration:none;">📞 ${esc(clientName)} ${esc(clientPhone)}</a>` : `<div style="margin-top:8px;font-size:13px;color:#94a3b8;">연락처 없음</div>`}
+      // 헤더: 손님 조건 카드
+      html += `<div style="padding:20px 20px 16px;">
+        <div style="background:linear-gradient(135deg,#1a1a2e,#242442);border-radius:14px;padding:18px 20px;color:#fff;">
+          <div style="font-size:18px;font-weight:800;letter-spacing:-0.5px;">${esc(condition || '손님')}</div>
+          ${features ? `<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">${(p.features||[]).map(f => `<span style="padding:3px 10px;border-radius:6px;background:rgba(78,205,196,0.2);color:#4ecdc4;font-size:12px;font-weight:500;">${esc(f)}</span>`).join('')}</div>` : ''}
+          ${pn.memo ? `<div style="font-size:13px;color:rgba(255,255,255,0.6);margin-top:8px;line-height:1.5;">${esc(pn.memo)}</div>` : ''}
+        </div>
+      </div>`;
+
+      // 전화 버튼
+      html += `<div style="padding:0 20px 16px;">
+        ${clientPhone
+          ? `<a href="tel:${clientPhone.replace(/[-.\s]/g,'')}" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px;border-radius:12px;background:#0ea5e9;color:#fff;font-size:16px;font-weight:700;text-decoration:none;">📞 ${esc(clientName)} ${esc(clientPhone)}</a>`
+          : `<div style="padding:14px;border-radius:12px;background:#f0f0f3;text-align:center;color:#94a3b8;font-size:14px;">연락처 없음</div>`
+        }
       </div>`;
 
       // 메모 입력
-      html += `<div style="padding:12px 20px;border-bottom:1px solid #f0f0f3;">
+      html += `<div style="padding:0 20px 16px;">
         <div style="display:flex;gap:8px;">
-          <input type="text" id="crmMemoInput" placeholder="메모 입력..." style="flex:1;padding:10px 14px;border-radius:8px;border:1.5px solid #e2e8f0;font-size:14px;font-family:inherit;outline:none;color:#1a1a2e;" onkeydown="if(event.key==='Enter')saveCRMMemo('${clientCardId}')">
-          <button onclick="saveCRMMemo('${clientCardId}')" style="padding:10px 16px;border-radius:8px;border:none;background:#1a1a2e;color:#FFD43B;font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0;">저장</button>
+          <input type="text" id="crmMemoInput" placeholder="메모 입력..." style="flex:1;padding:12px 16px;border-radius:12px;border:1.5px solid #e2e8f0;font-size:15px;font-family:inherit;outline:none;color:#1a1a2e;background:#f8f8fa;" onkeydown="if(event.key==='Enter')saveCRMMemo('${clientCardId}')" onfocus="this.style.borderColor='#0ea5e9';this.style.background='#fff'" onblur="this.style.borderColor='#e2e8f0';this.style.background='#f8f8fa'">
+          <button onclick="saveCRMMemo('${clientCardId}')" style="padding:12px 18px;border-radius:12px;border:none;background:#1a1a2e;color:#FFD43B;font-size:15px;font-weight:700;cursor:pointer;flex-shrink:0;">저장</button>
         </div>
       </div>`;
 
       // 최근 메모
       const notes = notesRes.data || [];
-      html += `<div style="padding:8px 20px 20px;">`;
       if (notes.length) {
+        html += `<div style="padding:0 20px 24px;">
+          <div style="font-size:12px;font-weight:600;color:#94a3b8;margin-bottom:10px;">최근 기록</div>`;
         notes.forEach(n => {
           const d = new Date(n.created_at);
           const dateStr = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
           const typeLabel = n.type || '메모';
-          html += `<div style="padding:10px 0;border-bottom:1px solid #f5f5f5;">
-            <div style="font-size:11px;color:#94a3b8;">${dateStr} · ${esc(typeLabel)}</div>
-            <div style="font-size:14px;color:#374151;margin-top:2px;">${esc(n.content)}</div>
+          const typeColors = { '방문':'#4ecdc4', '상담':'#0ea5e9', '계약':'#f59e0b', '매물소개':'#a78bfa', '메모':'#94a3b8' };
+          const tc = typeColors[typeLabel] || '#94a3b8';
+          html += `<div style="padding:12px 14px;margin-bottom:8px;background:#fff;border-radius:10px;border:1px solid #f0f0f3;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+              <span style="width:6px;height:6px;border-radius:50%;background:${tc};flex-shrink:0;"></span>
+              <span style="font-size:12px;color:${tc};font-weight:600;">${esc(typeLabel)}</span>
+              <span style="font-size:11px;color:#c0c0c0;">${dateStr}</span>
+            </div>
+            <div style="font-size:14px;color:#374151;line-height:1.5;padding-left:14px;">${esc(n.content)}</div>
           </div>`;
         });
+        html += `</div>`;
       } else {
-        html += `<div style="padding:20px 0;text-align:center;color:#94a3b8;font-size:13px;">메모가 없어요</div>`;
+        html += `<div style="padding:20px;text-align:center;color:#c0c0c0;font-size:13px;">아직 메모가 없어요</div>`;
       }
-      html += `</div>`;
 
       content.innerHTML = html;
     } catch(e) {
