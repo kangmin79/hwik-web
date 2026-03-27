@@ -5588,6 +5588,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         let clientOffset = 0;
         let _expandedClientId = null;  // 현재 매칭 결과가 펼쳐진 손님 ID
         let _matchCache = {};  // 매칭 결과 캐시 { clientCardId: result }
+        let _matchNotifCounts = {};  // DB에서 로드한 매칭 알림 건수 { clientCardId: count }
 
         async function loadClientCards(reset = true) {
             if (!currentUser) return;
@@ -5607,6 +5608,25 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 allClientCards = [...allClientCards, ...(data || [])];
             }
             clientOffset += (data || []).length;
+
+            // ★ DB에서 매칭 알림 건수 로드 (손님별)
+            try {
+                const cIds = (data || []).map(c => c.id);
+                if (cIds.length > 0) {
+                    const { data: notifs } = await supabaseClient
+                        .from('match_notifications')
+                        .select('client_card_id')
+                        .eq('agent_id', currentUser.id)
+                        .eq('is_read', false)
+                        .in('client_card_id', cIds);
+                    if (notifs) {
+                        for (const n of notifs) {
+                            _matchNotifCounts[n.client_card_id] = (_matchNotifCounts[n.client_card_id] || 0) + 1;
+                        }
+                    }
+                }
+            } catch(e) { console.log('매칭 알림 카운트 로드 실패:', e); }
+
             renderClientList();
             // 더보기
             const el = document.getElementById('clientLoadMoreBtn');
@@ -5639,10 +5659,11 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             }
 
             // 정렬 — 매칭된 손님 우선, 그 안에서 최신순
+            const getMatchCount = (c) => (_matchCache[c.id]?.results?.length || 0) + (_matchNotifCounts[c.id] || 0);
             clients.sort((a, b) => {
-                const aMatch = _matchCache[a.id]?.results?.length > 0 ? 1 : 0;
-                const bMatch = _matchCache[b.id]?.results?.length > 0 ? 1 : 0;
-                if (aMatch !== bMatch) return bMatch - aMatch; // 매칭 있는 게 위로
+                const aMatch = getMatchCount(a) > 0 ? 1 : 0;
+                const bMatch = getMatchCount(b) > 0 ? 1 : 0;
+                if (aMatch !== bMatch) return bMatch - aMatch;
                 const da = new Date(a.created_at || 0), db = new Date(b.created_at || 0);
                 return clientSort === 'oldest' ? da - db : db - da;
             });
@@ -5699,7 +5720,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 html += `<div class="property-item ${isExpanded ? 'selected' : ''}" id="item-${card.id}">
                     <div class="property-item-main" style="align-items:center;cursor:pointer;" onclick="toggleClientDetail('${card.id}')">
                         <div style="width:20px;flex-shrink:0;text-align:center;color:#94a3b8;font-size:12px;">${isExpanded ? '▼' : '▶'}</div>
-                        <span class="property-type-badge" style="flex-shrink:0;${_matchCache[card.id]?.results?.length > 0 ? 'background:rgba(250,204,21,0.15);color:#facc15;border-color:rgba(250,204,21,0.3);' : 'background:rgba(78,205,196,0.15);color:#4ecdc4;border-color:rgba(78,205,196,0.3);'}margin-right:8px;">${_matchCache[card.id]?.results?.length > 0 ? '매칭 ' + _matchCache[card.id].results.length : '손님'}</span>
+                        <span class="property-type-badge" style="flex-shrink:0;${getMatchCount(card) > 0 ? 'background:rgba(250,204,21,0.15);color:#facc15;border-color:rgba(250,204,21,0.3);' : 'background:rgba(78,205,196,0.15);color:#4ecdc4;border-color:rgba(78,205,196,0.3);'}margin-right:8px;">${getMatchCount(card) > 0 ? '매칭 ' + getMatchCount(card) : '손님'}</span>
                         <div class="client-raw-text">${rawTextDisplay}${(card.contact_name || card.contact_phone) ? `<br><span style="font-size:11px;color:#fb923c;">📞 ${esc(card.contact_name||'')} ${esc(card.contact_phone||'')}</span>` : (() => { const memo = card.private_note?.memo || ''; const ph = memo.match(/01[016789][-.\s]?\d{3,4}[-.\s]?\d{4}/); return ph ? `<br><span style="font-size:11px;color:#fb923c;">📞 ${esc(ph[0])}</span>` : ''; })()}<br><span style="font-size:11px;color:${contactColor}">${esc(lastContactStr)}</span></div>
                         <button class="property-edit" onclick="event.stopPropagation(); toggleClientDetail('${card.id}')">상세</button>
                         <button style="padding:4px 10px;border-radius:6px;border:1px solid rgba(148,163,184,0.3);background:transparent;color:#94a3b8;font-size:11px;cursor:pointer;" onclick="event.stopPropagation(); completeClient('${card.id}')">완료</button>
