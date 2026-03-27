@@ -2125,12 +2125,14 @@
           const typeColors = { '방문':'#4ecdc4', '상담':'#0ea5e9', '계약':'#f59e0b', '매물소개':'#a78bfa', '메모':'#94a3b8' };
           const tc = typeColors[typeLabel] || '#94a3b8';
           html += `<div style="padding:12px 14px;margin-bottom:8px;background:#fff;border-radius:10px;border:1px solid #f0f0f3;">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-              <span style="width:6px;height:6px;border-radius:50%;background:${tc};flex-shrink:0;"></span>
-              <span style="font-size:12px;color:${tc};font-weight:600;">${esc(typeLabel)}</span>
-              <span style="font-size:11px;color:#c0c0c0;">${dateStr}</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <span style="width:6px;height:6px;border-radius:50%;background:${tc};flex-shrink:0;"></span>
+                <span style="font-size:12px;color:${tc};font-weight:600;">${esc(typeLabel)}</span>
+              </div>
+              <span style="font-size:12px;color:#64748b;font-weight:500;">${dateStr}</span>
             </div>
-            <div style="font-size:14px;color:#374151;line-height:1.5;padding-left:14px;">${esc(n.content)}</div>
+            <div style="font-size:14px;color:#374151;line-height:1.5;padding-left:12px;">${esc(n.content)}</div>
           </div>`;
         });
         html += `</div>`;
