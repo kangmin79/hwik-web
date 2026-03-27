@@ -7834,31 +7834,43 @@ function renderInlineMatchResults(clientCardId, result) {
 }
 
 // ★ 매물 연결 메모 (매칭 결과에서)
+let _openLinkedNoteId = null; // 현재 열린 메모 입력 매물 ID
 function openLinkedNoteInput(clientCardId, propertyId) {
-    // 기존 입력창이 있으면 닫기
-    const existing = document.getElementById('linked-note-' + propertyId);
-    if (existing) { existing.remove(); return; }
+    // 같은 매물이면 닫기
+    if (_openLinkedNoteId === propertyId) {
+        document.getElementById('linked-note-area')?.remove();
+        _openLinkedNoteId = null;
+        return;
+    }
 
     // 매물 정보
     const propCard = allCards.find(c => c.id === propertyId);
-    const propName = propCard ? [propCard.property?.complex, propCard.property?.location, propCard.property?.price].filter(Boolean).join(' · ') : propertyId;
+    const propName = propCard ? [propCard.property?.complex, propCard.property?.location, propCard.property?.price].filter(Boolean).join(' · ') : '';
 
-    // 매물 카드 아래에 입력창 삽입
-    const cardEl = document.querySelector(`[onclick*="openLinkedNoteInput('${clientCardId}','${propertyId}')"]`)?.closest('.match-result-item, div[style]');
-    if (!cardEl) return;
+    // 매칭 영역 아래에 고정 위치로 입력창 배치
+    let noteArea = document.getElementById('linked-note-area');
+    if (!noteArea) {
+        noteArea = document.createElement('div');
+        noteArea.id = 'linked-note-area';
+        // 매칭 결과 영역 다음에 삽입
+        const matchArea = document.getElementById('matchResults-' + clientCardId);
+        if (matchArea) matchArea.after(noteArea);
+        else return;
+    }
+    _openLinkedNoteId = propertyId;
 
-    const inputDiv = document.createElement('div');
-    inputDiv.id = 'linked-note-' + propertyId;
-    inputDiv.style.cssText = 'padding:8px 12px;margin-top:4px;background:rgba(250,204,21,0.05);border:1px solid rgba(250,204,21,0.2);border-radius:8px;';
-    inputDiv.innerHTML = `
-        <div style="font-size:11px;color:#facc15;margin-bottom:6px;">📝 ${esc(propName)} 메모</div>
+    noteArea.style.cssText = 'padding:10px 14px;margin:8px 0;background:rgba(250,204,21,0.05);border:1px solid rgba(250,204,21,0.2);border-radius:8px;';
+    noteArea.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span style="font-size:12px;color:#facc15;">📝 ${esc(propName || '매물')} 메모</span>
+            <button onclick="document.getElementById('linked-note-area')?.remove();_openLinkedNoteId=null;" style="background:none;border:none;color:#64748b;cursor:pointer;font-size:14px;">✕</button>
+        </div>
         <div style="display:flex;gap:6px;align-items:center;">
-            <input type="text" id="linked-note-input-${propertyId}" placeholder="예) 내일 오후2시 방문, 가격 네고 가능" style="flex:1;padding:8px 12px;border-radius:6px;border:1px solid rgba(250,204,21,0.2);background:rgba(255,255,255,0.05);color:#e2e8f0;font-size:13px;outline:none;" onkeydown="if(event.key==='Enter')saveLinkedNote('${clientCardId}','${propertyId}');if(event.key==='Escape')document.getElementById('linked-note-${propertyId}')?.remove();" oninput="previewLinkedNote('${propertyId}')">
+            <input type="text" id="linked-note-input-${propertyId}" placeholder="예) 내일 오후2시 방문, 가격 네고 가능" style="flex:1;padding:8px 12px;border-radius:6px;border:1px solid rgba(250,204,21,0.2);background:rgba(255,255,255,0.05);color:#e2e8f0;font-size:13px;outline:none;" onkeydown="if(event.key==='Enter')saveLinkedNote('${clientCardId}','${propertyId}');if(event.key==='Escape'){document.getElementById('linked-note-area')?.remove();_openLinkedNoteId=null;}" oninput="previewLinkedNote('${propertyId}')">
             <button onclick="saveLinkedNote('${clientCardId}','${propertyId}')" style="padding:8px 14px;border-radius:6px;border:none;background:var(--primary);color:var(--bg-dark);font-weight:700;font-size:12px;cursor:pointer;flex-shrink:0;">저장</button>
         </div>
         <div id="linked-note-preview-${propertyId}" style="height:18px;padding:2px 0;font-size:11px;color:#64748b;"></div>
     `;
-    cardEl.after(inputDiv);
     document.getElementById('linked-note-input-' + propertyId)?.focus();
 }
 
@@ -7899,7 +7911,8 @@ async function saveLinkedNote(clientCardId, propertyId) {
     if (error) { showToast('저장 실패: ' + error.message); return; }
 
     // 입력창 제거 + 토스트
-    document.getElementById('linked-note-' + propertyId)?.remove();
+    document.getElementById('linked-note-area')?.remove();
+    _openLinkedNoteId = null;
     let toastMsg = '메모 저장됨';
     if (parsed.alertDate) {
         const d = new Date(parsed.alertDate);
