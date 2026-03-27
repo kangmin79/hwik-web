@@ -383,7 +383,9 @@ area 필드에 ㎡가 있으면 평수도 함께 표기 (예: "84.8㎡(25.7평)"
   "room": "방 구조",
   "features": ["화이트리스트 특징만"],
   "moveIn": "입주일",
-  "memo": "비공개 정보",
+  "contact_name": "사람 이름 (있으면 추출. 손님이면 손님 이름, 매물이면 매도자/임대인 이름. 없으면 null)",
+  "contact_phone": "전화번호 (010-XXXX-XXXX 형태. 없으면 null)",
+  "memo": "비공개 정보 (이름/전화번호 제외한 나머지)",
   "agent_comment": "중개사 코멘트 (없으면 null)",
   "category": "apartment/officetel/room/commercial/office"
 }

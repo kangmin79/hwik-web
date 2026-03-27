@@ -328,7 +328,7 @@ Deno.serve(async (req) => {
     if (structuredCount >= 2) {
       let sqlQuery = supabase
         .from('cards')
-        .select('id, property, agent_comment, price_number, trade_status, photos, lat, lng, created_at, search_text')
+        .select('id, property, agent_comment, price_number, trade_status, photos, lat, lng, created_at, search_text, contact_name, contact_phone')
         .eq('agent_id', effectiveAgentId)
         .neq('property->>type', '손님')
         .eq('trade_status', '계약가능');
@@ -429,7 +429,7 @@ Deno.serve(async (req) => {
           for (const radius of [5, 8]) {
             let locQuery = supabase
               .from('cards')
-              .select('id, property, agent_comment, price_number, trade_status, photos, lat, lng, created_at, search_text')
+              .select('id, property, agent_comment, price_number, trade_status, photos, lat, lng, created_at, search_text, contact_name, contact_phone')
               .eq('agent_id', effectiveAgentId)
               .neq('property->>type', '손님')
               .eq('trade_status', '계약가능')
@@ -648,6 +648,10 @@ Deno.serve(async (req) => {
       lat: r.lat,
       lng: r.lng,
       created_at: r.created_at,
+      contact_name: r.contact_name || null,
+      contact_phone: r.contact_phone || null,
+      _score: r._score || null,
+      _scoreDetail: r._scoreDetail || null,
       similarity: r.similarity ? Math.round(r.similarity * 100) / 100 : null
     }));
 

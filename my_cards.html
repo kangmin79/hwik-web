@@ -5505,7 +5505,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             if (reset) clientOffset = 0;
             const { data, error } = await supabaseClient
                 .from('cards')
-                .select('id, property, agent, agent_comment, private_note, photos, trade_status, price_number, created_at, agent_id, lat, lng')
+                .select('id, property, agent, agent_comment, private_note, photos, trade_status, price_number, created_at, agent_id, lat, lng, contact_name, contact_phone')
                 .eq('agent_id', currentUser.id)
                 .eq('property->>type', '손님')
                 .neq('trade_status', '완료')
@@ -5608,7 +5608,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     <div class="property-item-main" style="align-items:center;cursor:pointer;" onclick="toggleClientDetail('${card.id}')">
                         <div style="width:20px;flex-shrink:0;text-align:center;color:#94a3b8;font-size:12px;">${isExpanded ? '▼' : '▶'}</div>
                         <span class="property-type-badge" style="flex-shrink:0;background:rgba(78,205,196,0.15);color:#4ecdc4;border-color:rgba(78,205,196,0.3);margin-right:8px;">손님</span>
-                        <div class="client-raw-text">${rawTextDisplay}<br><span style="font-size:11px;color:${contactColor}">${esc(lastContactStr)}</span></div>
+                        <div class="client-raw-text">${rawTextDisplay}${card.contact_name || card.contact_phone ? `<br><span style="font-size:11px;color:#fb923c;">📞 ${esc(card.contact_name||'')} ${esc(card.contact_phone||'')}</span>` : ''}<br><span style="font-size:11px;color:${contactColor}">${esc(lastContactStr)}</span></div>
                         <button class="property-edit" onclick="event.stopPropagation(); toggleClientDetail('${card.id}')">상세</button>
                         <button style="padding:4px 10px;border-radius:6px;border:1px solid rgba(148,163,184,0.3);background:transparent;color:#94a3b8;font-size:11px;cursor:pointer;" onclick="event.stopPropagation(); completeClient('${card.id}')">완료</button>
                     </div>
@@ -7707,6 +7707,7 @@ function renderInlineMatchResults(clientCardId, result) {
                 </div>
                 ${mainText ? `<div style="font-size:12px;color:var(--text-gray);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${mainText}${subText ? ' · ' + subText : ''}</div>` : ''}
                 ${featureTags ? `<div style="margin-top:3px;">${featureTags}</div>` : ''}
+                ${item.contact_name || item.contact_phone ? `<div style="font-size:11px;color:#fb923c;margin-top:2px;">📞 ${esc(item.contact_name||'')} ${esc(item.contact_phone||'')}</div>` : ''}
                 ${item._scoreDetail ? `<div style="font-size:10px;color:#64748b;margin-top:2px;">${esc(item._scoreDetail)}</div>` : ''}
                 ${isShared ? sharedInfoHtml : ''}
             </div>
