@@ -6574,12 +6574,14 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             if (!container) return;
 
             const today = new Date().toISOString().slice(0, 10);
+            // alert_date가 timestamptz이므로 날짜 부분만 추출
+            const alertDay = (a) => a.alert_date ? a.alert_date.slice(0, 10) : '';
             let filtered = _calMonthAlerts;
 
             // 날짜 선택 시 필터
             let dateLabel = '';
             if (_calSelectedDate) {
-                filtered = _calMonthAlerts.filter(a => a.alert_date === _calSelectedDate);
+                filtered = _calMonthAlerts.filter(a => alertDay(a) === _calSelectedDate);
                 dateLabel = _calSelectedDate;
             }
 
@@ -6603,9 +6605,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 const done = filtered.filter(a => a.alert_done);
 
                 // 미완료: 지연 / 오늘 / 예정 분류
-                const overdue = undone.filter(a => a.alert_date < today);
-                const todayItems = undone.filter(a => a.alert_date === today);
-                const upcoming = undone.filter(a => a.alert_date > today);
+                const overdue = undone.filter(a => alertDay(a) < today);
+                const todayItems = undone.filter(a => alertDay(a) === today);
+                const upcoming = undone.filter(a => alertDay(a) > today);
 
                 if (overdue.length > 0) {
                     html += `<div style="font-size:14px;font-weight:700;color:#ef4444;margin-bottom:8px;">🔴 지연 (${overdue.length}건)</div>`;
@@ -6664,10 +6666,11 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             const month = _calMonth;
             const monthNames = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
 
-            // 날짜별 상태 맵 생성
+            // 날짜별 상태 맵 생성 (timestamptz → 날짜만 추출)
             const dateStatusMap = {};
             _calMonthAlerts.forEach(a => {
-                const d = a.alert_date;
+                const d = a.alert_date ? a.alert_date.slice(0, 10) : '';
+                if (!d) return;
                 if (!dateStatusMap[d]) dateStatusMap[d] = { total: 0, done: 0 };
                 dateStatusMap[d].total++;
                 if (a.alert_done) dateStatusMap[d].done++;
@@ -6820,7 +6823,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 done: { bg: 'rgba(34,197,94,0.06)', border: 'rgba(34,197,94,0.15)', label: '#22c55e', dateColor: '#22c55e' },
             };
             const c = colors[status];
-            const dateLabel = status === 'overdue' ? `⚠️ ${a.alert_date} (지연)` : status === 'today' ? '오늘' : status === 'done' ? `✅ ${a.alert_date}` : a.alert_date;
+            const _ad = new Date(a.alert_date);
+            const _adFmt = `${_ad.getMonth()+1}/${_ad.getDate()}` + (_ad.getHours() ? ` ${_ad.getHours()}시` + (_ad.getMinutes() ? `${_ad.getMinutes()}분` : '') : '');
+            const dateLabel = status === 'overdue' ? `⚠️ ${_adFmt} (지연)` : status === 'today' ? '오늘' : status === 'done' ? `✅ ${_adFmt}` : _adFmt;
             // 손님 정보: allClientCards에서 찾기
             const clientCard = allClientCards.find(c => c.id === a.client_card_id);
             const clientProp = clientCard?.property || {};
