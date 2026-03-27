@@ -1639,9 +1639,11 @@
     ['home','my','alert','memo'].forEach(t => {
       document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1))?.classList.toggle('active', t === tab);
     });
-    // 알림 화면 토글
+    // 알림 화면 토글 + 검색창 토글
     const alertPanel = document.getElementById('alertPanel');
     if (alertPanel) alertPanel.style.display = tab === 'alert' ? '' : 'none';
+    const searchWrap = document.querySelector('.search-wrap');
+    if (searchWrap && tab !== 'alert') searchWrap.style.display = '';
 
     if (tab === 'home') {
       resetAll();
@@ -1652,6 +1654,7 @@
       history.pushState({ tab: 'alert' }, '');
       container.classList.add('active');
       results.innerHTML = '';
+      document.querySelector('.search-wrap').style.display = 'none';
       loadMobileAlerts();
     } else if (tab === 'memo') {
       goRegister();
