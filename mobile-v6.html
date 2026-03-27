@@ -1186,6 +1186,20 @@
     .icon-btn { width: 38px; height: 38px; }
     .icon-btn svg { width: 17px; height: 17px; }
   }
+
+  /* ── 손님 미니 CRM 바텀시트 ── */
+  .crm-overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:300; }
+  .crm-overlay.show { display:block; }
+  .crm-sheet {
+    position:fixed;bottom:-100%;left:0;right:0;
+    background:#fff;border-radius:16px 16px 0 0;
+    box-shadow:0 -4px 24px rgba(0,0,0,0.15);z-index:301;
+    max-height:80vh;overflow-y:auto;
+    transition:bottom 0.3s cubic-bezier(0.16,1,0.3,1);
+    padding-bottom:env(safe-area-inset-bottom,16px);
+  }
+  .crm-sheet.show { bottom:0; }
+  .crm-sheet-handle { width:36px;height:4px;background:#d1d5db;border-radius:2px;margin:10px auto 0; }
 </style>
 </head>
 <body>
@@ -1226,6 +1240,13 @@
     </div>
     <button class="pwa-sheet-install-btn" onclick="confirmPwaInstall()">설치하기</button>
     <button class="pwa-sheet-later" onclick="closePwaSheet()">나중에 할게요</button>
+  </div>
+
+  <!-- ★ 손님 미니 CRM 바텀시트 -->
+  <div class="crm-overlay" id="crmOverlay" onclick="closeCRM()"></div>
+  <div class="crm-sheet" id="crmSheet">
+    <div class="crm-sheet-handle"></div>
+    <div id="crmContent"></div>
   </div>
 
   <!-- 하단 탭바 -->
@@ -1943,6 +1964,18 @@
 
       let html = '';
 
+      // 알림 카드 렌더 헬퍼
+      function alertCard(bg, border, borderLeft, labelColor, label, rightText, content, clientCardId) {
+        const clickAttr = clientCardId ? `onclick="openClientCRM('${clientCardId}')" style="cursor:pointer;"` : '';
+        return `<div ${clickAttr} style="padding:12px 14px;margin-bottom:6px;background:${bg};border:1px solid ${border};border-left:3px solid ${borderLeft};border-radius:10px;${clientCardId ? 'cursor:pointer;' : ''}">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:11px;color:${labelColor};font-weight:600;">${label}</span>
+            <span style="font-size:11px;color:#94a3b8;">${rightText}</span>
+          </div>
+          <div style="font-size:14px;color:#1a1a2e;margin-top:4px;">${content}</div>
+        </div>`;
+      }
+
       // 지연 일정
       const overdue = overdueRes.data || [];
       if (overdue.length) {
@@ -1951,14 +1984,7 @@
           const cp = clientMap[a.client_card_id] || {};
           const clientName = [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
           const ad = new Date(a.alert_date);
-          const dateStr = `${ad.getMonth()+1}/${ad.getDate()}`;
-          html += `<div style="padding:12px 14px;margin-bottom:6px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-left:3px solid #ef4444;border-radius:10px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-size:11px;color:#f87171;font-weight:600;">${dateStr} 지연</span>
-              <span style="font-size:11px;color:#94a3b8;">${esc(clientName)}</span>
-            </div>
-            <div style="font-size:14px;color:#1a1a2e;margin-top:4px;">${esc(a.content)}</div>
-          </div>`;
+          html += alertCard('rgba(239,68,68,0.06)','rgba(239,68,68,0.2)','#ef4444','#f87171',`${ad.getMonth()+1}/${ad.getDate()} 지연`, esc(clientName), esc(a.content), a.client_card_id);
         });
       }
 
@@ -1970,13 +1996,7 @@
           const p = cardMap[i.card_id] || {};
           const name = [p.complex, p.location, p.price].filter(Boolean).join(' · ') || '매물';
           const time = new Date(i.created_at).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
-          html += `<div style="padding:12px 14px;margin-bottom:6px;background:rgba(250,204,21,0.06);border:1px solid rgba(250,204,21,0.2);border-left:3px solid #facc15;border-radius:10px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-size:11px;color:#facc15;font-weight:600;">❤️ 관심 매물</span>
-              <span style="font-size:11px;color:#94a3b8;">${time}</span>
-            </div>
-            <div style="font-size:14px;color:#1a1a2e;margin-top:4px;">손님이 "${esc(name)}" 보고싶어요</div>
-          </div>`;
+          html += alertCard('rgba(250,204,21,0.06)','rgba(250,204,21,0.2)','#facc15','#facc15','❤️ 관심 매물', time, `손님이 "${esc(name)}" 보고싶어요`, null);
         });
       }
 
@@ -1989,13 +2009,7 @@
           const cp = clientMap[m.client_card_id] || {};
           const propName = [p.complex, p.location, p.price].filter(Boolean).join(' · ') || '매물';
           const clientName = [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
-          html += `<div style="padding:12px 14px;margin-bottom:6px;background:rgba(78,205,196,0.06);border:1px solid rgba(78,205,196,0.2);border-left:3px solid #4ecdc4;border-radius:10px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-size:11px;color:#4ecdc4;font-weight:600;">매칭</span>
-              <span style="font-size:11px;color:#94a3b8;">${esc(clientName)}</span>
-            </div>
-            <div style="font-size:14px;color:#1a1a2e;margin-top:4px;">${esc(propName)}</div>
-          </div>`;
+          html += alertCard('rgba(78,205,196,0.06)','rgba(78,205,196,0.2)','#4ecdc4','#4ecdc4','매칭', esc(clientName), esc(propName), m.client_card_id);
         });
       }
 
@@ -2007,14 +2021,7 @@
           const cp = clientMap[a.client_card_id] || {};
           const clientName = [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
           const ad = new Date(a.alert_date);
-          const dateStr = `${ad.getMonth()+1}/${ad.getDate()}`;
-          html += `<div style="padding:12px 14px;margin-bottom:6px;background:rgba(255,255,255,1);border:1px solid #e2e8f0;border-radius:10px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-              <span style="font-size:11px;color:#64748b;font-weight:600;">${dateStr} ${esc(a.type || '일정')}</span>
-              <span style="font-size:11px;color:#94a3b8;">${esc(clientName)}</span>
-            </div>
-            <div style="font-size:14px;color:#1a1a2e;margin-top:4px;">${esc(a.content)}</div>
-          </div>`;
+          html += alertCard('rgba(255,255,255,1)','#e2e8f0','#e2e8f0','#64748b',`${ad.getMonth()+1}/${ad.getDate()} ${esc(a.type||'일정')}`, esc(clientName), esc(a.content), a.client_card_id);
         });
       }
 
@@ -2026,6 +2033,100 @@
     } catch(e) {
       panel.innerHTML = '<div style="text-align:center;padding:40px 0;color:#f87171;">알림 로딩 실패</div>';
     }
+  }
+
+  // ★ 손님 미니 CRM 바텀시트
+  async function openClientCRM(clientCardId) {
+    const overlay = document.getElementById('crmOverlay');
+    const sheet = document.getElementById('crmSheet');
+    const content = document.getElementById('crmContent');
+    if (!overlay || !sheet || !content) return;
+
+    content.innerHTML = '<div style="padding:40px;text-align:center;color:#94a3b8;">로딩 중...</div>';
+    overlay.classList.add('show');
+    sheet.classList.add('show');
+
+    try {
+      // 손님 카드 + 최근 메모 로드
+      const [cardRes, notesRes] = await Promise.all([
+        supabaseClient.from('cards').select('id, property, contact_name, contact_phone, private_note').eq('id', clientCardId).single(),
+        supabaseClient.from('client_notes').select('id, type, content, created_at')
+          .eq('client_card_id', clientCardId).order('created_at', { ascending: false }).limit(10)
+      ]);
+
+      const card = cardRes.data;
+      if (!card) { content.innerHTML = '<div style="padding:40px;text-align:center;color:#f87171;">손님 정보를 찾을 수 없어요</div>'; return; }
+
+      const p = card.property || {};
+      const pn = card.private_note || {};
+      const clientName = card.contact_name || '손님';
+      const clientPhone = card.contact_phone || pn.memo?.match(/01[016789][-.\s]?\d{3,4}[-.\s]?\d{4}/)?.[0] || '';
+      const condition = [p.price, p.location, p.complex].filter(Boolean).join(' · ');
+      const features = (p.features || []).map(f => `<span style="display:inline-block;padding:2px 8px;border-radius:4px;background:#f0f0f3;color:#5a5a6e;font-size:12px;margin:2px;">${esc(f)}</span>`).join('');
+
+      let html = '';
+
+      // 헤더: 손님 정보 + 전화 버튼
+      html += `<div style="padding:16px 20px 12px;border-bottom:1px solid #f0f0f3;">
+        <div style="font-size:17px;font-weight:700;color:#1a1a2e;">${esc(condition || '손님')}</div>
+        ${features ? `<div style="margin-top:6px;">${features}</div>` : ''}
+        ${pn.memo ? `<div style="font-size:13px;color:#64748b;margin-top:6px;">${esc(pn.memo)}</div>` : ''}
+        ${clientPhone ? `<a href="tel:${clientPhone.replace(/[-.\s]/g,'')}" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:10px 20px;border-radius:10px;background:#0ea5e9;color:#fff;font-size:15px;font-weight:600;text-decoration:none;">📞 ${esc(clientName)} ${esc(clientPhone)}</a>` : `<div style="margin-top:8px;font-size:13px;color:#94a3b8;">연락처 없음</div>`}
+      </div>`;
+
+      // 메모 입력
+      html += `<div style="padding:12px 20px;border-bottom:1px solid #f0f0f3;">
+        <div style="display:flex;gap:8px;">
+          <input type="text" id="crmMemoInput" placeholder="메모 입력..." style="flex:1;padding:10px 14px;border-radius:8px;border:1.5px solid #e2e8f0;font-size:14px;font-family:inherit;outline:none;color:#1a1a2e;" onkeydown="if(event.key==='Enter')saveCRMMemo('${clientCardId}')">
+          <button onclick="saveCRMMemo('${clientCardId}')" style="padding:10px 16px;border-radius:8px;border:none;background:#1a1a2e;color:#FFD43B;font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0;">저장</button>
+        </div>
+      </div>`;
+
+      // 최근 메모
+      const notes = notesRes.data || [];
+      html += `<div style="padding:8px 20px 20px;">`;
+      if (notes.length) {
+        notes.forEach(n => {
+          const d = new Date(n.created_at);
+          const dateStr = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+          const typeLabel = n.type || '메모';
+          html += `<div style="padding:10px 0;border-bottom:1px solid #f5f5f5;">
+            <div style="font-size:11px;color:#94a3b8;">${dateStr} · ${esc(typeLabel)}</div>
+            <div style="font-size:14px;color:#374151;margin-top:2px;">${esc(n.content)}</div>
+          </div>`;
+        });
+      } else {
+        html += `<div style="padding:20px 0;text-align:center;color:#94a3b8;font-size:13px;">메모가 없어요</div>`;
+      }
+      html += `</div>`;
+
+      content.innerHTML = html;
+    } catch(e) {
+      content.innerHTML = '<div style="padding:40px;text-align:center;color:#f87171;">로딩 실패</div>';
+    }
+  }
+
+  function closeCRM() {
+    document.getElementById('crmOverlay')?.classList.remove('show');
+    document.getElementById('crmSheet')?.classList.remove('show');
+  }
+
+  async function saveCRMMemo(clientCardId) {
+    const input = document.getElementById('crmMemoInput');
+    if (!input) return;
+    const text = input.value.trim();
+    if (!text) return;
+
+    const { error } = await supabaseClient.from('client_notes').insert({
+      client_card_id: clientCardId,
+      agent_id: currentUser.id,
+      type: '메모',
+      content: text,
+    });
+    if (error) { showToast('저장 실패'); return; }
+    input.value = '';
+    showToast('메모 저장됨');
+    openClientCRM(clientCardId); // 새로고침
   }
 
   function goRegister() {
