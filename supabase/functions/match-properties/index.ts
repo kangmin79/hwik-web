@@ -623,6 +623,20 @@ Deno.serve(async (req) => {
       results = results.filter((r: any) => (r._score || 0) >= 30);
     }
 
+    // ★ 최종 검증: 엉뚱한 매물 절대 방지
+    results = results.filter((r: any) => {
+      const p = r.property || {};
+      if (wantedTradeType && p.type && p.type !== wantedTradeType) return false;
+      if (wantedCategory && p.category && p.category !== wantedCategory) return false;
+      if (wantedLocation) {
+        const pLoc = p.location || '';
+        const st = r.search_text || '';
+        if (!pLoc.includes(wantedLocation) && !st.includes(wantedLocation)) return false;
+      }
+      if (maxPrice && r.price_number && r.price_number > maxPrice * 1.2) return false;
+      return true;
+    });
+
     // 상위 N개
     results = results.slice(0, limit).map((r: any) => ({
       id: r.id,

@@ -1319,6 +1319,34 @@ Deno.serve(async (req) => {
       results = results.filter(r => (r._score || 0) >= 30);
     }
 
+    // ★ 최종 검증: 결과 반환 직전 하드 체크 (엉뚱한 매물 절대 방지)
+    const beforeFinal = results.length;
+    results = results.filter(r => {
+      const p = r.property || {};
+      // 거래유형 불일치 제거
+      if (finalTradeType && p.type && p.type !== finalTradeType) return false;
+      // 카테고리 불일치 제거
+      if (finalPropertyType && p.category && p.category !== finalPropertyType) return false;
+      // 위치 불일치 제거 (텍스트 매칭)
+      if (parsed.filters?.location) {
+        const loc = parsed.filters.location;
+        const pLoc = p.location || '';
+        const st = r.search_text || '';
+        if (!pLoc.includes(loc) && !st.includes(loc)) return false;
+      }
+      // 가격 범위 초과 제거 (20% 여유)
+      if (parsed.filters?.max_price && r.price_number) {
+        if (r.price_number > parsed.filters.max_price * 1.2) return false;
+      }
+      if (parsed.filters?.min_price && r.price_number) {
+        if (r.price_number < parsed.filters.min_price * 0.8) return false;
+      }
+      return true;
+    });
+    if (beforeFinal !== results.length) {
+      console.log(`최종 검증: ${beforeFinal}건 → ${results.length}건 (${beforeFinal - results.length}건 제거)`);
+    }
+
     results = results.slice(0, limit);
 
     // ★ 적용된 필터 요약 (클라이언트 표시용)
