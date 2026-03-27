@@ -3741,6 +3741,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         deposit: parsed.deposit || null,
                         monthly_rent: parsed.monthly_rent || null,
                         wanted_trade_type: parsed.wanted_trade_type || null,
+                        contact_name: parsed.contact_name || null,
+                        contact_phone: parsed.contact_phone || null,
                     })
                     .eq('id', cardId)
                     .eq('agent_id', currentUser.id);
@@ -4001,6 +4003,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     price_number: _priceFields.price_number,
                     deposit: _priceFields.deposit,
                     monthly_rent: _priceFields.monthly_rent,
+                    contact_name: p.contact_name || card.private_note?.contact_name || null,
+                    contact_phone: p.contact_phone || card.private_note?.contact_phone || null,
                 };
                 if (editNewLat && editNewLng) {
                     updateData.lat = editNewLat;

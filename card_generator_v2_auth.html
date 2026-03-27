@@ -6156,6 +6156,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         deposit: card.deposit ?? card.property?.deposit ?? null,
                         monthly_rent: card.monthly_rent ?? card.property?.monthly_rent ?? null,
                         move_in_date: card.move_in_date || null,
+                        contact_name: card.contact_name || card.property?.contact_name || null,
+                        contact_phone: card.contact_phone || card.property?.contact_phone || null,
                         lat: cardLat,
                         lng: cardLng,
                         coord_type: coordType,
