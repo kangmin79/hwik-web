@@ -8109,18 +8109,24 @@ function renderClientTimeline(container, card, notes, cardId) {
         const deleteBtn = item.id ? `<button onclick="event.stopPropagation();deleteClientNote('${item.id}','${cardId}')" style="margin-left:auto;padding:3px 10px;border-radius:5px;border:1px solid rgba(239,68,68,0.3);background:rgba(239,68,68,0.08);color:#f87171;font-size:11px;cursor:pointer;">삭제</button>` : '';
         const noteEditBtn = item.id && !item.isRegister ? `<button onclick="event.stopPropagation();startEditNote('${item.id}','${cardId}')" style="padding:3px 10px;border-radius:5px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#94a3b8;font-size:11px;cursor:pointer;">수정</button>` : '';
         const editBtn = item.isRegister ? `<button onclick="event.stopPropagation();editClientCard('${cardId}')" style="margin-left:auto;padding:3px 10px;border-radius:5px;border:1px solid rgba(250,204,21,0.3);background:rgba(250,204,21,0.08);color:#facc15;font-size:11px;cursor:pointer;">수정</button>` : '';
-        // 일정 시간 표시 + 지연 판단
+        // 타입 태그 — 클릭으로 순환 변경
+        const typeTag = item.id && !item.isRegister
+            ? `<span class="crm-tl-type t-${t.cls}" style="cursor:pointer;" onclick="event.stopPropagation();cycleNoteType('${item.id}','${cardId}')" title="클릭: 타입 변경">${t.label}</span>`
+            : `<span class="crm-tl-type t-${t.cls}">${t.label}</span>`;
+        // 일정 시간 표시 + 클릭으로 날짜 수정
         let scheduleTag = '';
         if (item.alert_date) {
             const ad = new Date(item.alert_date);
             const adStr = `${ad.getMonth()+1}/${ad.getDate()} ${String(ad.getHours()).padStart(2,'0')}:${String(ad.getMinutes()).padStart(2,'0')}`;
             const isOverdue = !item.alert_done && ad < new Date();
-            scheduleTag = `<span style="font-size:10px;margin-left:6px;padding:1px 6px;border-radius:3px;${isOverdue ? 'background:rgba(239,68,68,0.15);color:#f87171;' : 'background:rgba(250,204,21,0.1);color:#facc15;'}">📅 ${adStr}${isOverdue ? ' 지연' : ''}</span>`;
+            scheduleTag = item.id
+                ? `<span onclick="event.stopPropagation();editNoteDate('${item.id}','${cardId}')" style="cursor:pointer;font-size:10px;margin-left:6px;padding:1px 6px;border-radius:3px;${isOverdue ? 'background:rgba(239,68,68,0.15);color:#f87171;' : 'background:rgba(250,204,21,0.1);color:#facc15;'}" title="클릭: 날짜 변경">📅 ${adStr}${isOverdue ? ' 지연' : ''}</span>`
+                : `<span style="font-size:10px;margin-left:6px;padding:1px 6px;border-radius:3px;background:rgba(250,204,21,0.1);color:#facc15;">📅 ${adStr}</span>`;
         }
         let visitStatusBtn = '';
         if (item.alert_date && item.id) {
             visitStatusBtn = item.alert_done
-                ? `<span style="color:#34d399;font-size:11px;margin-left:6px;">✅ 완료</span>`
+                ? `<span onclick="event.stopPropagation();toggleNoteStatus('${item.id}',false)" style="cursor:pointer;color:#34d399;font-size:11px;margin-left:6px;" title="클릭: 미완료로 되돌리기">✅ 완료</span>`
                 : `<button onclick="event.stopPropagation();toggleNoteStatus('${item.id}',true)" style="margin-left:6px;background:rgba(245,158,11,0.2);color:#fbbf24;border:none;padding:2px 8px;border-radius:4px;font-size:11px;cursor:pointer;">예정 → 완료</button>`;
         }
         const contentHtml = item.isHtml ? item.content : esc(item.content);
@@ -8128,7 +8134,7 @@ function renderClientTimeline(container, card, notes, cardId) {
             <div class="crm-tl-dot type-${t.cls}"></div>
             <div class="crm-tl-box" id="note-${item.id || 'reg'}" style="${item.isRegister ? 'border-color:rgba(78,205,196,0.3);background:rgba(78,205,196,0.03);' : ''}${_highlightNoteId && item.id === _highlightNoteId ? 'border-color:#facc15;background:rgba(250,204,21,0.08);box-shadow:0 0 0 1px #facc15;' : ''}">
                 <div class="crm-tl-head">
-                    <span class="crm-tl-type t-${t.cls}">${t.label}</span>
+                    ${typeTag}
                     <span class="crm-tl-date">${formatNoteDate(item.date)}</span>
                     ${editBtn}${noteEditBtn}${deleteBtn}${scheduleTag}${visitStatusBtn}
                 </div>
@@ -8222,9 +8228,76 @@ async function saveEditNote(noteId, cardId) {
     loadClientTimeline(cardId);
 }
 
+// ★ 타입 순환 변경 (클릭할 때마다 다음 타입으로)
+async function cycleNoteType(noteId, cardId) {
+    const typeOrder = ['메모', '상담', '방문', '계약', '매물소개'];
+    // 현재 타입 가져오기
+    const { data } = await supabaseClient.from('client_notes').select('type').eq('id', noteId).single();
+    if (!data) return;
+    const currentIdx = typeOrder.indexOf(data.type);
+    const nextType = typeOrder[(currentIdx + 1) % typeOrder.length];
+    await supabaseClient.from('client_notes').update({ type: nextType }).eq('id', noteId).eq('agent_id', currentUser.id);
+    showToast(`타입 → ${nextType}`);
+    loadClientTimeline(cardId);
+}
+
+// ★ 날짜 인라인 수정 (📅 태그 클릭)
+function editNoteDate(noteId, cardId) {
+    const noteBox = document.getElementById('note-' + noteId);
+    if (!noteBox) return;
+    // 기존 편집 UI가 있으면 닫기
+    const existing = document.getElementById('date-edit-' + noteId);
+    if (existing) { existing.remove(); return; }
+
+    const editDiv = document.createElement('div');
+    editDiv.id = 'date-edit-' + noteId;
+    editDiv.style.cssText = 'margin-top:6px;padding:8px;background:rgba(250,204,21,0.05);border:1px solid rgba(250,204,21,0.15);border-radius:6px;';
+    editDiv.innerHTML = `
+        <div style="font-size:11px;color:#94a3b8;margin-bottom:4px;">새 날짜/시간 입력 (예: 내일 오후3시, 4/2, 월요일)</div>
+        <div style="display:flex;gap:6px;align-items:center;">
+            <input type="text" id="date-edit-input-${noteId}" placeholder="내일 오후3시" style="flex:1;padding:6px 10px;border-radius:6px;border:1px solid rgba(250,204,21,0.2);background:rgba(255,255,255,0.05);color:#e2e8f0;font-size:13px;outline:none;" onkeydown="if(event.key==='Enter')saveDateEdit('${noteId}','${cardId}');if(event.key==='Escape')document.getElementById('date-edit-${noteId}')?.remove();" oninput="previewDateEdit('${noteId}')">
+            <button onclick="saveDateEdit('${noteId}','${cardId}')" style="padding:6px 12px;border-radius:6px;border:none;background:var(--primary);color:var(--bg-dark);font-weight:700;font-size:12px;cursor:pointer;">변경</button>
+            <button onclick="removeDateEdit('${noteId}','${cardId}')" style="padding:6px 10px;border-radius:6px;border:1px solid rgba(239,68,68,0.3);background:transparent;color:#f87171;font-size:12px;cursor:pointer;">삭제</button>
+        </div>
+        <div id="date-edit-preview-${noteId}" style="height:16px;font-size:11px;color:#64748b;margin-top:4px;"></div>
+    `;
+    noteBox.appendChild(editDiv);
+    document.getElementById('date-edit-input-' + noteId)?.focus();
+}
+
+function previewDateEdit(noteId) {
+    const input = document.getElementById('date-edit-input-' + noteId);
+    const preview = document.getElementById('date-edit-preview-' + noteId);
+    if (!input || !preview) return;
+    const parsed = parseNoteText(input.value.trim());
+    if (parsed.alertDate) {
+        const d = new Date(parsed.alertDate);
+        const days = ['일','월','화','수','목','금','토'];
+        preview.innerHTML = `<span style="color:#facc15;">📅 ${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]})${parsed.hasTime ? ' ' + parsed.timeStr : ''}</span>`;
+    } else {
+        preview.innerHTML = '';
+    }
+}
+
+async function saveDateEdit(noteId, cardId) {
+    const input = document.getElementById('date-edit-input-' + noteId);
+    if (!input) return;
+    const parsed = parseNoteText(input.value.trim());
+    if (!parsed.alertDate) { showToast('날짜를 인식할 수 없어요'); return; }
+
+    await supabaseClient.from('client_notes').update({ alert_date: parsed.alertDate, alert_done: false }).eq('id', noteId).eq('agent_id', currentUser.id);
+    showToast('일정 변경됨');
+    loadClientTimeline(cardId);
+}
+
+async function removeDateEdit(noteId, cardId) {
+    await supabaseClient.from('client_notes').update({ alert_date: null, alert_done: false }).eq('id', noteId).eq('agent_id', currentUser.id);
+    showToast('일정 삭제됨');
+    loadClientTimeline(cardId);
+}
+
 async function toggleNoteStatus(noteId, done) {
     await supabaseClient.from('client_notes').update({ alert_done: done }).eq('id', noteId);
-    // Refresh the timeline
     if (_expandedClientId) loadClientFullView(_expandedClientId);
 }
 
