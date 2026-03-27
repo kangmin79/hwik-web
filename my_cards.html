@@ -8219,6 +8219,32 @@ function parseNoteText(text) {
     return result;
 }
 
+// ★ 메모 파싱 테스트 (브라우저 콘솔에서 testParse() 실행)
+window.testParse = function() {
+    const tests = [
+        '콜백', '부재중 재연락', '내일 오후2시 방문', '주말에 시간된다고',
+        '다음주 화요일 3시', '글피 임장', '급해함 빨리 찾아달라', '잔금일 4/15',
+        '퇴근후 전화하기', '이사 4월1일', '카톡으로 매물 3건 보냄', '보증금 1000/50 상가',
+        '3월30일 오전 1시 방문 예약', '모레 3시반 현장', '이번주 금요일 상담',
+        '5일후 계약', '점심에 만나자', '저녁 통화', '월요일 방문',
+        '다시 전화하기', '오후에 방문', '아침에 연락', '밤에 문자', '오늘 급하게 전화',
+    ];
+    const days = ['일','월','화','수','목','금','토'];
+    const rows = [];
+    for (const t of tests) {
+        const r = parseNoteText(t);
+        let dateStr = '-';
+        if (r.alertDate) {
+            const d = new Date(r.alertDate);
+            dateStr = `${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]})`;
+            if (r.hasTime) dateStr += ' ' + r.timeStr;
+        }
+        rows.push({ 입력: t, 타입: r.type, 일정: dateStr, 긴급: r.urgent ? '🔴' : '' });
+    }
+    console.table(rows);
+    return rows;
+};
+
 // 실시간 파싱 프리뷰
 function previewNoteParse(cardId) {
     const input = document.getElementById('crm-input-' + cardId);
