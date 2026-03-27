@@ -126,13 +126,12 @@ Deno.serve(async (req) => {
     const gu = locationParts[0] || '';
     const dong = locationParts[1] || locationParts[0] || '';
 
-    // FAQ
-    const faqItems = [
-      { q: `${d.complex_name} 최근 실거래가는?`, a: recentPrice ? `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentPrice)}입니다.${recentData?.date ? ` (${recentData.date} 기준)` : ''}` : `최근 거래 내역을 확인 중입니다.` },
-      { q: `${d.complex_name} 전세가율은?`, a: jeonseRate ? `${d.complex_name}의 전세가율은 약 ${jeonseRate}%입니다.` : `전세가율 정보를 확인 중입니다.` },
-      { q: `${d.complex_name} 근처 지하철역은?`, a: subway.length > 0 ? `${subway.map((s: any) => `${s.name}(${s.line || ''}) 도보 ${walkMin(s.distance)}`).join(', ')}` : `주변 지하철 정보를 확인 중입니다.` },
-      { q: `${d.complex_name} 역대 최고가는?`, a: highPrice ? `${d.complex_name} 역대 최고가는 ${formatPrice(highPrice)}입니다.${highData?.date ? ` (${highData.date})` : ''}` : `역대 최고가 정보를 확인 중입니다.` },
-    ];
+    // FAQ — 데이터가 확실한 항목만
+    const faqItems: {q:string, a:string}[] = [];
+    if (recentPrice) faqItems.push({ q: `${d.complex_name} 최근 실거래가는?`, a: `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentPrice)}입니다.${recentData?.date ? ` (${recentData.date} 기준)` : ''}` });
+    if (jeonseRate) faqItems.push({ q: `${d.complex_name} 전세가율은?`, a: `${d.complex_name}의 전세가율은 ${jeonseRate}%입니다.` });
+    if (subway.length > 0) faqItems.push({ q: `${d.complex_name} 근처 지하철역은?`, a: subway.map((s: any) => `${s.name}(${s.line || ''}) 도보 ${walkMin(s.distance)}`).join(', ') });
+    if (highPrice) faqItems.push({ q: `${d.complex_name} 역대 최고가는?`, a: `역대 최고가는 ${formatPrice(highPrice)}입니다.${highData?.date ? ` (${highData.date})` : ''}` });
 
     // JSON-LD: Residence + BreadcrumbList + FAQPage
     const jsonLd = JSON.stringify({
@@ -143,7 +142,7 @@ Deno.serve(async (req) => {
           "name": d.complex_name,
           "address": { "@type": "PostalAddress", "addressLocality": d.location, "streetAddress": d.address, "addressRegion": "서울특별시", "addressCountry": "KR" },
           "geo": { "@type": "GeoCoordinates", "latitude": d.lat, "longitude": d.lng },
-          "description": d.seo_text || desc,
+          "description": desc,
           "numberOfRooms": d.total_units,
           "yearBuilt": d.build_year,
         },
@@ -232,7 +231,7 @@ ${nearbyHtml ? `<h2>${esc(dong)} 주변 단지</h2><ul>${nearbyHtml}</ul>` : ''}
 ${faqItems.map(f => `  <dt>${esc(f.q)}</dt>\n  <dd>${esc(f.a)}</dd>`).join('\n')}
 </dl>
 
-${d.seo_text ? `<div class="seo"><p>${esc(d.seo_text)}</p></div>` : ''}
+<div class="seo"><p>${esc(d.complex_name)}은(는) ${d.address ? esc(d.address) + '에 위치한 ' : ''}${d.build_year ? d.build_year + '년 준공 ' : ''}아파트입니다.${d.total_units ? ' 총 ' + d.total_units.toLocaleString() + '세대 규모입니다.' : ''}${cats.length > 0 ? ' ' + cats.map((c: string) => { const p = Math.round(parseInt(c)/3.3058); return p > 0 ? p+'평('+c+'㎡)' : c+'㎡'; }).join(', ') + ' 평형이 있습니다.' : ''}${subway.length > 0 ? ' 인근 지하철: ' + subway.map((s:any) => esc(s.name) + (s.line ? '('+esc(s.line)+')' : '') + ' 도보 ' + walkMin(s.distance)).join(', ') + '.' : ''}${recentPrice ? ' 최근 매매 실거래가는 ' + formatPrice(recentPrice) + (recentData?.date ? ' (' + recentData.date + ' 기준)' : '') + '입니다.' : ''}</p></div>
 <div class="source">실거래가 출처: 국토교통부 실거래가 공개시스템 · 매일 업데이트 · ${new Date().toISOString().split('T')[0]} 기준</div>
 
 </body>

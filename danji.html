@@ -341,10 +341,51 @@ function render() {
     </div>`;
   }).join('');
 
-  // SEO 텍스트
-  const seoFull = d.seo_text || '';
-  const seoShort = seoFull.length > 100 ? seoFull.slice(0,100) : seoFull;
-  const seoRest = seoFull.length > 100 ? seoFull.slice(100) : '';
+  // SEO 텍스트 — DB가 아닌 실제 데이터 기반으로 자동 생성
+  const seoParts = [];
+  // 기본 정보 (확실한 것만)
+  const seoBasic = [esc(d.complex_name), '은(는)'];
+  if (d.address) seoBasic.push(esc(d.address) + '에 위치한');
+  if (d.build_year) seoBasic.push(d.build_year + '년 준공');
+  seoBasic.push('아파트입니다.');
+  if (d.total_units) seoBasic.push('총 ' + d.total_units.toLocaleString() + '세대 규모입니다.');
+  seoParts.push(seoBasic.join(' '));
+
+  // 평형 (DB categories 기반)
+  if (cats.length > 0) {
+    const pyList = cats.map(c => { const p = Math.round(parseInt(c)/3.3058); return p > 0 ? p+'평('+c+'㎡)' : c+'㎡'; });
+    seoParts.push(pyList.join(', ') + ' 평형이 있습니다.');
+  }
+
+  // 지하철 (DB nearby_subway 기반)
+  if (subway.length > 0) {
+    const subList = subway.map(s => esc(s.name) + (s.line ? '('+esc(s.line)+')' : '') + ' 도보 ' + walkMin(s.distance));
+    seoParts.push('인근 지하철: ' + subList.join(', ') + '.');
+  }
+
+  // 학교 (DB nearby_school 기반)
+  if (school.length > 0) {
+    const schList = school.map(s => esc(s.name) + ' 도보 ' + walkMin(s.distance));
+    seoParts.push('인근 학교: ' + schList.join(', ') + '.');
+  }
+
+  // 시세 (실제 거래 데이터 기반)
+  if (recentPrice) {
+    let priceText = '최근 매매 실거래가는 ' + formatPrice(recentPrice);
+    if (recentData && recentData.date) priceText += ' (' + recentData.date + ' 기준)';
+    priceText += '입니다.';
+    seoParts.push(priceText);
+  }
+  if (highPrice && highData) {
+    seoParts.push('역대 최고가는 ' + formatPrice(highPrice) + (highData.date ? ' (' + highData.date + ')' : '') + '입니다.');
+  }
+  if (jeonseRate) {
+    seoParts.push('전세가율은 ' + jeonseRate + '%입니다.');
+  }
+
+  const seoFull = seoParts.join(' ');
+  const seoShort = seoFull.length > 120 ? seoFull.slice(0,120) : seoFull;
+  const seoRest = seoFull.length > 120 ? seoFull.slice(120) : '';
 
   // 조합
   const locationParts = (d.location || '').split(' ');
@@ -354,12 +395,12 @@ function render() {
   const locationParts2 = (d.location || '').split(' ');
   const gu = locationParts2[0] || '';
 
-  // FAQ 데이터
-  const faqItems = [
-    { q: `${d.complex_name} 최근 실거래가는?`, a: recentPrice ? `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentPrice)}입니다.${recentData && recentData.date ? ' ('+recentData.date+' 기준)' : ''}` : '최근 거래 내역을 확인 중입니다.' },
-    { q: `${d.complex_name} 전세가율은?`, a: jeonseRate ? `${d.complex_name}의 전세가율은 약 ${jeonseRate}%입니다.` : '전세가율 정보를 확인 중입니다.' },
-    { q: `${d.complex_name} 근처 지하철역은?`, a: subway.length > 0 ? subway.map(s => `${s.name}(${s.line || ''}) 도보 ${walkMin(s.distance)}`).join(', ') : '주변 지하철 정보를 확인 중입니다.' },
-  ];
+  // FAQ 데이터 — 확실한 데이터가 있는 항목만 표시
+  const faqItems = [];
+  if (recentPrice) faqItems.push({ q: `${d.complex_name} 최근 실거래가는?`, a: `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentPrice)}입니다.${recentData && recentData.date ? ' ('+recentData.date+' 기준)' : ''}` });
+  if (jeonseRate) faqItems.push({ q: `${d.complex_name} 전세가율은?`, a: `${d.complex_name}의 전세가율은 ${jeonseRate}%입니다.` });
+  if (subway.length > 0) faqItems.push({ q: `${d.complex_name} 근처 지하철역은?`, a: subway.map(s => `${s.name}(${s.line || ''}) 도보 ${walkMin(s.distance)}`).join(', ') });
+  if (highPrice) faqItems.push({ q: `${d.complex_name} 역대 최고가는?`, a: `역대 최고가는 ${formatPrice(highPrice)}입니다.${highData && highData.date ? ' ('+highData.date+')' : ''}` });
 
   const faqHtml = faqItems.map(f => `
     <div class="faq-item">
