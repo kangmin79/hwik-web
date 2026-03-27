@@ -27,6 +27,13 @@ Deno.serve(async (req) => {
 
     if (error) throw error;
 
+    // 단지 페이지 조회
+    const { data: danjiPages } = await supabase
+      .from('danji_pages')
+      .select('id, updated_at')
+      .order('updated_at', { ascending: false })
+      .limit(10000);
+
     let urls = '';
 
     // 정적 페이지
@@ -41,6 +48,19 @@ Deno.serve(async (req) => {
     <changefreq>weekly</changefreq>
     <priority>0.3</priority>
   </url>`;
+
+    // 단지 페이지
+    (danjiPages || []).forEach(page => {
+      const lastmod = page.updated_at ? new Date(page.updated_at).toISOString().split('T')[0] : '';
+
+      urls += `
+  <url>
+    <loc>${BASE_URL}/danji.html?id=${page.id}</loc>
+    ${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>`;
+    });
 
     // 매물 페이지
     (cards || []).forEach(card => {
