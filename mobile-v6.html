@@ -1980,27 +1980,34 @@
         if (clients) clients.forEach(c => { clientMap[c.id] = c.property || {}; });
       }
 
-      let html = `<div style="padding:16px 0 4px;display:flex;justify-content:space-between;align-items:center;">
-        <span style="font-size:20px;font-weight:800;color:#1a1a2e;">알림</span>
+      let html = `<div style="padding:8px 0 4px;">
+        <span style="font-size:22px;font-weight:900;color:#1a1a2e;letter-spacing:-0.5px;">알림</span>
       </div>`;
 
       // 알림 카드 렌더 헬퍼
       function alertCard(accentColor, label, rightText, content, clientCardId) {
         const click = clientCardId ? `onclick="openClientCRM('${clientCardId}')"` : '';
-        return `<div ${click} style="padding:14px 16px;margin-bottom:10px;background:#fff;border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,0.06);${clientCardId ? 'cursor:pointer;' : ''}border-left:4px solid ${accentColor};">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:12px;color:${accentColor};font-weight:700;">${label}</span>
-            <span style="font-size:11px;color:#94a3b8;font-weight:400;">${rightText}</span>
+        const isOverdue = accentColor === '#ef4444';
+        return `<div ${click} style="padding:16px;margin-bottom:10px;background:#fff;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.04);${clientCardId ? 'cursor:pointer;' : ''}position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;bottom:0;width:4px;background:${accentColor};border-radius:4px 0 0 4px;"></div>
+          <div style="padding-left:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <span style="font-size:11px;color:#fff;font-weight:600;background:${accentColor};padding:3px 10px;border-radius:20px;">${label}</span>
+              <span style="font-size:12px;color:#64748b;font-weight:500;">${rightText}</span>
+            </div>
+            <div style="font-size:15px;color:#1a1a2e;font-weight:600;line-height:1.5;">${content}</div>
+            ${clientCardId ? `<div style="margin-top:8px;font-size:12px;color:${accentColor};font-weight:500;">상세보기 →</div>` : ''}
           </div>
-          <div style="font-size:15px;color:#1a1a2e;font-weight:500;line-height:1.4;">${content}</div>
-          ${clientCardId ? '<div style="font-size:11px;color:#c0c0c0;margin-top:6px;">터치하여 상세보기 →</div>' : ''}
         </div>`;
       }
 
       // 지연 일정
       const overdue = overdueRes.data || [];
       if (overdue.length) {
-        html += `<div style="font-size:13px;font-weight:700;color:#ef4444;margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid rgba(239,68,68,0.15);">🔴 지연 ${overdue.length}건</div>`;
+        html += `<div style="display:flex;align-items:center;gap:8px;margin:20px 0 12px;">
+          <span style="font-size:15px;font-weight:800;color:#ef4444;">지연</span>
+          <span style="font-size:12px;color:#fff;background:#ef4444;padding:2px 10px;border-radius:20px;font-weight:600;">${overdue.length}</span>
+        </div>`;
         overdue.forEach(a => {
           const cp = clientMap[a.client_card_id] || {};
           const clientName = [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
@@ -2012,7 +2019,10 @@
       // 손님 관심 표시
       const interests = interestRes.data || [];
       if (interests.length) {
-        html += `<div style="font-size:13px;font-weight:700;color:#f59e0b;margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid rgba(245,158,11,0.15);">❤️ 관심 표시 ${interests.length}건</div>`;
+        html += `<div style="display:flex;align-items:center;gap:8px;margin:24px 0 12px;">
+          <span style="font-size:15px;font-weight:800;color:#f59e0b;">관심 표시</span>
+          <span style="font-size:12px;color:#fff;background:#f59e0b;padding:2px 10px;border-radius:20px;font-weight:600;">${interests.length}</span>
+        </div>`;
         interests.forEach(i => {
           const p = cardMap[i.card_id] || {};
           const name = [p.complex, p.location, p.price].filter(Boolean).join(' · ') || '매물';
@@ -2024,7 +2034,10 @@
       // 자동 매칭
       const matches = matchRes.data || [];
       if (matches.length) {
-        html += `<div style="font-size:13px;font-weight:700;color:#4ecdc4;margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid rgba(78,205,196,0.15);">🔔 새 매칭 ${matches.length}건</div>`;
+        html += `<div style="display:flex;align-items:center;gap:8px;margin:24px 0 12px;">
+          <span style="font-size:15px;font-weight:800;color:#4ecdc4;">새 매칭</span>
+          <span style="font-size:12px;color:#fff;background:#4ecdc4;padding:2px 10px;border-radius:20px;font-weight:600;">${matches.length}</span>
+        </div>`;
         matches.forEach(m => {
           const p = cardMap[m.card_id] || {};
           const cp = clientMap[m.client_card_id] || {};
@@ -2037,7 +2050,10 @@
       // 예정 일정
       const upcoming = upcomingRes.data || [];
       if (upcoming.length) {
-        html += `<div style="font-size:13px;font-weight:700;color:#64748b;margin:20px 0 10px;padding-bottom:6px;border-bottom:1px solid rgba(0,0,0,0.06);">📅 예정 ${upcoming.length}건</div>`;
+        html += `<div style="display:flex;align-items:center;gap:8px;margin:24px 0 12px;">
+          <span style="font-size:15px;font-weight:800;color:#64748b;">예정</span>
+          <span style="font-size:12px;color:#fff;background:#94a3b8;padding:2px 10px;border-radius:20px;font-weight:600;">${upcoming.length}</span>
+        </div>`;
         upcoming.forEach(a => {
           const cp = clientMap[a.client_card_id] || {};
           const clientName = [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
