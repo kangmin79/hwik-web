@@ -5552,6 +5552,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 renderPreview();
                 updateSendButton();
                 await loadClientFullView(cardId);
+                // 새로 연 손님이 보이도록 스크롤
+                const cardEl = document.getElementById('client-detail-' + cardId)?.closest('.property-item') || document.getElementById('client-detail-' + cardId)?.previousElementSibling;
+                if (cardEl) cardEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         }
 
