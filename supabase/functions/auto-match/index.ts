@@ -1,99 +1,11 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { DISTRICT_COORDS, haversineDistance } from '../_shared/geo.ts'
+import { fixTypos } from '../_shared/typo.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',  // TODO: 프로덕션에서 'https://hwik.kr'로 제한
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-// ========== 좌표 사전: 서울시 구/동 중심좌표 ==========
-const DISTRICT_COORDS: Record<string, { lat: number; lng: number; radius: number }> = {
-  // 구 단위 (반경 2.5km)
-  '강남': { lat: 37.497, lng: 127.028, radius: 2.5 },
-  '서초': { lat: 37.483, lng: 127.009, radius: 2.5 },
-  '마포': { lat: 37.554, lng: 126.910, radius: 2.5 },
-  '용산': { lat: 37.532, lng: 126.979, radius: 2.5 },
-  '성동': { lat: 37.563, lng: 127.037, radius: 2.5 },
-  '송파': { lat: 37.514, lng: 127.106, radius: 2.5 },
-  '영등포': { lat: 37.526, lng: 126.896, radius: 2.5 },
-  '강서': { lat: 37.551, lng: 126.849, radius: 2.5 },
-  '노원': { lat: 37.654, lng: 127.056, radius: 2.5 },
-  '관악': { lat: 37.478, lng: 126.951, radius: 2.5 },
-  '동작': { lat: 37.497, lng: 126.939, radius: 2.5 },
-  '광진': { lat: 37.538, lng: 127.082, radius: 2.5 },
-  '종로': { lat: 37.573, lng: 126.979, radius: 2.5 },
-  '중구': { lat: 37.563, lng: 126.997, radius: 2.5 },
-  '강동': { lat: 37.530, lng: 127.124, radius: 2.5 },
-  '강북': { lat: 37.640, lng: 127.011, radius: 2.5 },
-  '구로': { lat: 37.495, lng: 126.858, radius: 2.5 },
-  '금천': { lat: 37.457, lng: 126.895, radius: 2.5 },
-  '도봉': { lat: 37.669, lng: 127.032, radius: 2.5 },
-  '동대문': { lat: 37.574, lng: 127.040, radius: 2.5 },
-  '서대문': { lat: 37.579, lng: 126.937, radius: 2.5 },
-  '성북': { lat: 37.589, lng: 127.017, radius: 2.5 },
-  '양천': { lat: 37.517, lng: 126.867, radius: 2.5 },
-  '은평': { lat: 37.603, lng: 126.929, radius: 2.5 },
-  '중랑': { lat: 37.607, lng: 127.093, radius: 2.5 },
-  // 동/유명지역 단위 (반경 1.2km)
-  '역삼': { lat: 37.500, lng: 127.036, radius: 1.2 },
-  '삼성': { lat: 37.509, lng: 127.063, radius: 1.2 },
-  '청담': { lat: 37.520, lng: 127.048, radius: 1.2 },
-  '대치': { lat: 37.494, lng: 127.058, radius: 1.2 },
-  '논현': { lat: 37.511, lng: 127.022, radius: 1.2 },
-  '신사': { lat: 37.524, lng: 127.023, radius: 1.2 },
-  '압구정': { lat: 37.527, lng: 127.028, radius: 1.2 },
-  '개포': { lat: 37.478, lng: 127.052, radius: 1.2 },
-  '도곡': { lat: 37.488, lng: 127.042, radius: 1.2 },
-  '잠실': { lat: 37.513, lng: 127.100, radius: 1.5 },
-  '가락': { lat: 37.497, lng: 127.118, radius: 1.2 },
-  '문정': { lat: 37.486, lng: 127.122, radius: 1.2 },
-  '석촌': { lat: 37.506, lng: 127.107, radius: 1.2 },
-  '여의도': { lat: 37.525, lng: 126.924, radius: 1.5 },
-  '당산': { lat: 37.534, lng: 126.902, radius: 1.2 },
-  '합정': { lat: 37.549, lng: 126.914, radius: 1.2 },
-  '망원': { lat: 37.556, lng: 126.905, radius: 1.2 },
-  '연남': { lat: 37.560, lng: 126.921, radius: 1.2 },
-  '서교': { lat: 37.551, lng: 126.919, radius: 1.2 },
-  '상수': { lat: 37.548, lng: 126.923, radius: 1.2 },
-  '공덕': { lat: 37.544, lng: 126.952, radius: 1.2 },
-  '성수': { lat: 37.544, lng: 127.056, radius: 1.2 },
-  '옥수': { lat: 37.540, lng: 127.017, radius: 1.2 },
-  '왕십리': { lat: 37.561, lng: 127.037, radius: 1.2 },
-  '이태원': { lat: 37.534, lng: 126.994, radius: 1.2 },
-  '한남': { lat: 37.534, lng: 127.003, radius: 1.2 },
-  '반포': { lat: 37.508, lng: 127.000, radius: 1.2 },
-  '방배': { lat: 37.481, lng: 126.988, radius: 1.2 },
-  '양재': { lat: 37.472, lng: 127.013, radius: 1.2 },
-  '잠원': { lat: 37.515, lng: 127.005, radius: 1.2 },
-  '노량진': { lat: 37.513, lng: 126.942, radius: 1.2 },
-  '상도': { lat: 37.503, lng: 126.953, radius: 1.2 },
-  '흑석': { lat: 37.508, lng: 126.963, radius: 1.2 },
-  '사당': { lat: 37.476, lng: 126.982, radius: 1.2 },
-  '신림': { lat: 37.484, lng: 126.930, radius: 1.2 },
-  '봉천': { lat: 37.482, lng: 126.942, radius: 1.2 },
-  '화곡': { lat: 37.541, lng: 126.839, radius: 1.2 },
-  '마곡': { lat: 37.560, lng: 126.827, radius: 1.2 },
-  '발산': { lat: 37.549, lng: 126.838, radius: 1.2 },
-  '등촌': { lat: 37.551, lng: 126.856, radius: 1.2 },
-  '상계': { lat: 37.659, lng: 127.068, radius: 1.2 },
-  '중계': { lat: 37.648, lng: 127.068, radius: 1.2 },
-  '천호': { lat: 37.538, lng: 127.124, radius: 1.2 },
-  '길동': { lat: 37.533, lng: 127.140, radius: 1.2 },
-  '둔촌': { lat: 37.524, lng: 127.136, radius: 1.2 },
-  '고덕': { lat: 37.556, lng: 127.154, radius: 1.2 },
-  '혜화': { lat: 37.582, lng: 127.002, radius: 1.2 },
-  '명동': { lat: 37.564, lng: 126.982, radius: 1.2 },
-  '목동': { lat: 37.527, lng: 126.875, radius: 1.5 },
-  '구의': { lat: 37.538, lng: 127.086, radius: 1.2 },
-  '자양': { lat: 37.535, lng: 127.073, radius: 1.2 },
-};
-
-// 하버사인 거리 계산 (km)
-function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
-  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 // 새 매물 등록 시 자동으로 손님과 매칭 체크
@@ -206,16 +118,7 @@ Deno.serve(async (req) => {
       const memo = c.private_note?.memo || '';
       let allText = [cp.price, cp.location, memo, ...(cp.features || [])].filter(Boolean).join(' ');
       // ★ 오타/한글숫자 교정
-      const typoFix: Record<string, string> = {
-        '일억':'1억','이억':'2억','삼억':'3억','사억':'4억','오억':'5억',
-        '육억':'6억','칠억':'7억','팔억':'8억','구억':'9억','십억':'10억',
-        '일천':'1천','이천':'2천','삼천':'3천','사천':'4천','오천':'5천',
-        '육천':'6천','칠천':'7천','팔천':'8천','구천':'9천',
-        'ㅈㅅ':'전세','젼세':'전세','ㅁㅁ':'매매','ㅇㅅ':'월세','웜세':'월세','웜ㄴ세':'월세',
-        '아빠트':'아파트','옵텔':'오피스텔','오피스탤':'오피스텔','상과':'상가',
-        '안넘게':'이하','안쪽':'이하',
-      };
-      for (const [t,f] of Object.entries(typoFix)) { if (allText.includes(t)) allText = allText.replace(new RegExp(t,'g'), f); }
+      allText = fixTypos(allText);
 
       // 거래유형 체크
       if (tradeType === '매매' && !/매매|매도|분양|ㅁㅁ/.test(allText)) return false;
