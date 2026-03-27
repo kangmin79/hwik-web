@@ -474,31 +474,37 @@ function drawChart() {
 
   if (chart) { chart.destroy(); chart = null; }
 
-  // 샘플 12개월 데이터 (실제로는 DB에서 가져와야 함)
-  const recent = DATA.recent_trade || {};
   const suffix = currentTab === '전세' ? '_jeonse' : (currentTab === '월세' ? '_wolse' : '');
   const key = currentPyeong + (suffix || '');
-  const price = recent[key] ? recent[key].price : null;
+  const ph = (DATA.price_history || {})[key] || [];
 
-  // 간단한 시뮬레이션 (±5% 변동)
-  const months = [];
-  const values = [];
-  const now = new Date();
-  for (let i = 11; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    months.push((d.getMonth()+1) + '월');
-    if (price) {
-      const variation = 1 + (Math.sin(i * 0.7) * 0.03) + (Math.random() - 0.5) * 0.02;
-      values.push(Math.round(price * variation / 100) / 100); // 억 단위
-    } else {
-      values.push(0);
+  let months, values;
+
+  if (ph.length > 0) {
+    // 실제 데이터: 최근 36개월 중 마지막 12개 이상
+    const recent = ph.slice(-12);
+    months = recent.map(p => {
+      const parts = p.month.split('-');
+      return parseInt(parts[1]) + '월';
+    });
+    values = recent.map(p => Math.round(p.avg_price / 100) / 100); // 억 단위
+  } else {
+    // 폴백: 데이터 없으면 최근가 기준 플랫 라인
+    const recent = DATA.recent_trade || {};
+    const price = recent[key] ? recent[key].price : null;
+    months = [];
+    values = [];
+    const now = new Date();
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push((d.getMonth()+1) + '월');
+      values.push(price ? Math.round(price / 100) / 100 : 0);
     }
   }
-  // 마지막 값은 실제 가격
-  if (price) values[11] = Math.round(price / 100) / 100;
 
-  const min = values.length ? Math.floor(Math.min(...values.filter(v=>v>0)) * 0.9) : 0;
-  const max = values.length ? Math.ceil(Math.max(...values) * 1.05) : 10;
+  const validValues = values.filter(v => v > 0);
+  const min = validValues.length ? Math.floor(Math.min(...validValues) * 0.9) : 0;
+  const max = validValues.length ? Math.ceil(Math.max(...validValues) * 1.05) : 10;
 
   chart = new Chart(canvas, {
     type: 'line',

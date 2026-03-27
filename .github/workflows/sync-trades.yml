@@ -1,0 +1,43 @@
+name: 실거래가 동기화
+
+on:
+  schedule:
+    # 매일 새벽 3시 (KST) = UTC 18:00 전일
+    - cron: '0 18 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: '실행 모드'
+        required: false
+        default: 'daily'
+        type: choice
+        options:
+          - daily
+          - init
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 의존성 설치
+        run: pip install requests python-dateutil
+
+      - name: 실거래가 동기화
+        env:
+          GOV_SERVICE_KEY: ${{ secrets.GOV_SERVICE_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ "${{ github.event.inputs.mode }}" = "init" ]; then
+            python sync_trades.py --init
+          else
+            python sync_trades.py
+          fi
