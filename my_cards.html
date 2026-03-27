@@ -3706,7 +3706,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 const accessToken = session.access_token;
                 const res = await fetch(`${SUPABASE_URL}/functions/v1/parse-property`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken },
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + accessToken, 'apikey': SUPABASE_KEY },
                     body: JSON.stringify({ text })
                 });
                 const parsed = await res.json();
@@ -3991,7 +3991,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     const token = sess.session.access_token;
                     const embedResp = await fetch(`${SUPABASE_URL}/functions/v1/embed-card`, {
                         method: 'POST',
-                        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+                        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
                         body: JSON.stringify({ card_id: cardId, text: embedText })
                     });
                     if (!embedResp.ok) console.warn('임베딩 재생성:', embedResp.status);
@@ -4248,7 +4248,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             if (!currentUser || !window._accessToken) return;
             fetch(`${SUPABASE_URL}/functions/v1/auto-match`, {
                 method: 'POST',
-                headers: { 'Authorization': 'Bearer ' + window._accessToken, 'Content-Type': 'application/json' },
+                headers: { 'Authorization': 'Bearer ' + (window._accessToken || SUPABASE_KEY), 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
                 body: JSON.stringify({ card_id: cardId, agent_id: currentUser.id })
             }).then(r => r.json()).then(data => {
                 if (data.matched > 0) {
@@ -4366,7 +4366,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + _searchToken
+                        'Authorization': 'Bearer ' + _searchToken,
+                        'apikey': SUPABASE_KEY
                     },
                     body: JSON.stringify({
                         query: query,
@@ -4442,7 +4443,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + _searchToken
+                        'Authorization': 'Bearer ' + _searchToken,
+                        'apikey': SUPABASE_KEY
                     },
                     body: JSON.stringify({
                         query: query,
@@ -4978,7 +4980,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + window._accessToken
+                            'Authorization': 'Bearer ' + window._accessToken,
+                            'apikey': SUPABASE_KEY
                         },
                         body: JSON.stringify({
                             query: query,
@@ -7606,7 +7609,7 @@ async function loadInlineMatch(clientCardId) {
         const _matchToken = window._accessToken || SUPABASE_KEY;
         const matchResp = await fetch(`${SUPABASE_URL}/functions/v1/match-properties`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _matchToken },
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _matchToken, 'apikey': SUPABASE_KEY },
             body: JSON.stringify({
                 client_card_id: clientCardId,
                 agent_id: currentUser.id,
@@ -8128,7 +8131,7 @@ async function updateClientEmbedding(cardId) {
         const token = sess.session.access_token;
         await fetch(`${SUPABASE_URL}/functions/v1/embed-card`, {
             method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+            headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
             body: JSON.stringify({ card_id: cardId, text: embedText })
         });
     } catch(e) { console.warn('손님 임베딩 업데이트 실패:', e); }
