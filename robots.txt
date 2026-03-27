@@ -1,6 +1,7 @@
 User-agent: *
 Allow: /
 Allow: /property_view.html
+Allow: /danji.html
 Allow: /llms.txt
 
 Disallow: /my_cards.html

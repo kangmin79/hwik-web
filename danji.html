@@ -11,6 +11,9 @@
 <meta property="og:description" id="og-desc" content="아파트 실거래가, 시세 추이, 전세가율을 한눈에">
 <meta property="og:image" content="https://hwik.kr/og-image.png">
 <link rel="canonical" id="canonical" href="https://hwik.kr/danji.html">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" id="tw-title" content="단지 시세 - 휙">
+<meta name="twitter:description" id="tw-desc" content="아파트 실거래가, 시세 추이, 전세가율을 한눈에">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -107,6 +110,18 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 .seo-more { color:var(--sub); cursor:pointer; }
 .seo-source { margin-top:8px; font-size:10px; color:var(--muted); }
 
+/* breadcrumb */
+.breadcrumb { padding:10px 16px; font-size:11px; color:var(--muted); }
+.breadcrumb a { color:var(--sub); text-decoration:none; }
+.breadcrumb span { margin:0 4px; }
+
+/* FAQ */
+.faq-section { padding:16px; }
+.faq-item { border-bottom:1px solid var(--border); padding:12px 0; }
+.faq-item:last-child { border-bottom:none; }
+.faq-q { font-size:13px; font-weight:500; margin-bottom:4px; }
+.faq-a { font-size:12px; color:var(--sub); line-height:1.6; }
+
 /* 로딩 */
 .loading { display:flex; flex-direction:column; align-items:center; justify-content:center; height:80vh; gap:12px; }
 .loading-spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--yellow); border-radius:50%; animation:spin .8s linear infinite; }
@@ -125,6 +140,13 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
     <div class="loading-spinner"></div>
     <div class="loading-text">단지 정보 불러오는 중...</div>
   </div>
+  <noscript>
+    <div style="padding:20px;text-align:center;">
+      <h1>아파트 실거래가 시세 - 휙</h1>
+      <p>이 페이지는 JavaScript가 필요합니다.</p>
+      <p>검색엔진용 전체 콘텐츠: <a href="https://api.hwik.kr/functions/v1/danji-page?id=" id="noscript-link">여기에서 확인</a></p>
+    </div>
+  </noscript>
 </div>
 
 <script>
@@ -177,6 +199,8 @@ async function loadData() {
   const desc = `${data.complex_name} ${data.location} ${data.total_units}세대 ${data.build_year}년 아파트 실거래가, 전세가, 시세 추이`;
   document.getElementById('og-title').content = document.title;
   document.getElementById('og-desc').content = desc;
+  document.getElementById('tw-title').content = document.title;
+  document.getElementById('tw-desc').content = desc;
   document.querySelector('meta[name="description"]').content = desc;
   document.getElementById('canonical').href = `https://hwik.kr/danji.html?id=${id}`;
 
@@ -308,18 +332,41 @@ function render() {
   const locationParts = (d.location || '').split(' ');
   const dong = locationParts[locationParts.length - 1] || d.location;
 
+  // breadcrumb
+  const locationParts2 = (d.location || '').split(' ');
+  const gu = locationParts2[0] || '';
+
+  // FAQ 데이터
+  const faqItems = [
+    { q: `${d.complex_name} 최근 실거래가는?`, a: recentPrice ? `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentPrice)}입니다.${recentData && recentData.date ? ' ('+recentData.date+' 기준)' : ''}` : '최근 거래 내역을 확인 중입니다.' },
+    { q: `${d.complex_name} 전세가율은?`, a: jeonseRate ? `${d.complex_name}의 전세가율은 약 ${jeonseRate}%입니다.` : '전세가율 정보를 확인 중입니다.' },
+    { q: `${d.complex_name} 근처 지하철역은?`, a: subway.length > 0 ? subway.map(s => `${s.name}(${s.line || ''}) 도보 ${walkMin(s.distance)}`).join(', ') : '주변 지하철 정보를 확인 중입니다.' },
+  ];
+
+  const faqHtml = faqItems.map(f => `
+    <div class="faq-item">
+      <div class="faq-q">${esc(f.q)}</div>
+      <div class="faq-a">${esc(f.a)}</div>
+    </div>
+  `).join('');
+
   $('#app').innerHTML = `
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="breadcrumb">
+      <a href="/">휙</a><span>&gt;</span><a href="/danji.html?gu=${encodeURIComponent(gu)}">서울 ${esc(gu)}</a><span>&gt;</span>${esc(d.complex_name)}
+    </nav>
+
     <!-- 헤더 -->
-    <div class="header">
+    <header class="header">
       <div class="header-top">
         <div class="logo">휙</div>
         <div>
-          <div class="header-name">${esc(d.complex_name)}</div>
+          <h1 class="header-name">${esc(d.complex_name)}</h1>
           <div class="header-sub">${esc(d.location)} · ${d.total_units ? d.total_units.toLocaleString()+'세대' : ''} · ${d.build_year || ''}년</div>
         </div>
       </div>
       <div class="tags">${tagHtml}</div>
-    </div>
+    </header>
 
     <!-- 탭 -->
     <div class="tabs">
@@ -382,6 +429,14 @@ function render() {
       <div style="font-size:11px;color:var(--sub);margin-bottom:12px;margin-top:-6px;">84㎡ 기준</div>
       <div style="display:flex;flex-direction:column;gap:8px;">${nearbyHtml || '<div style="font-size:12px;color:var(--sub);">주변 단지 정보가 없습니다</div>'}</div>
     </div>
+
+    <!-- FAQ -->
+    <div class="faq-section">
+      <div class="section-title">자주 묻는 질문</div>
+      ${faqHtml}
+    </div>
+
+    <div class="divider"></div>
 
     <!-- CTA -->
     <div class="cta-section">
@@ -489,13 +544,54 @@ function showError(msg) {
 // ── JSON-LD 구조화 데이터 (SEO) ──
 function injectJsonLd() {
   if (!DATA) return;
+  const d = DATA;
+  const locParts = (d.location || '').split(' ');
+  const guName = locParts[0] || '';
+  const canonUrl = `https://hwik.kr/danji.html?id=${new URLSearchParams(location.search).get('id')}`;
+
+  const subway = d.nearby_subway || [];
+  const recentFirst = d.categories && d.categories[0] ? (d.recent_trade || {})[d.categories[0]] : null;
+  const highFirst = d.categories && d.categories[0] ? (d.all_time_high || {})[d.categories[0]] : null;
+  const jeonseFirst = d.categories && d.categories[0] ? (d.recent_trade || {})[d.categories[0] + '_jeonse'] : null;
+  let jr = d.jeonse_rate;
+  if (jeonseFirst && recentFirst && recentFirst.price > 0) jr = Math.round(jeonseFirst.price / recentFirst.price * 1000) / 10;
+
+  const faq = [
+    { q: `${d.complex_name} 최근 실거래가는?`, a: recentFirst ? `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentFirst.price)}입니다.${recentFirst.date ? ' ('+recentFirst.date+' 기준)' : ''}` : '최근 거래 내역을 확인 중입니다.' },
+    { q: `${d.complex_name} 전세가율은?`, a: jr ? `${d.complex_name}의 전세가율은 약 ${jr}%입니다.` : '전세가율 정보를 확인 중입니다.' },
+    { q: `${d.complex_name} 근처 지하철역은?`, a: subway.length > 0 ? subway.map(s => `${s.name}(${s.line || ''}) 도보 ${walkMin(s.distance)}`).join(', ') : '주변 지하철 정보를 확인 중입니다.' },
+    { q: `${d.complex_name} 역대 최고가는?`, a: highFirst ? `${d.complex_name} 역대 최고가는 ${formatPrice(highFirst.price)}입니다.${highFirst.date ? ' ('+highFirst.date+')' : ''}` : '역대 최고가 정보를 확인 중입니다.' },
+  ];
+
   const ld = {
     "@context": "https://schema.org",
-    "@type": "Residence",
-    "name": DATA.complex_name,
-    "address": { "@type": "PostalAddress", "addressLocality": DATA.location, "streetAddress": DATA.address },
-    "geo": { "@type": "GeoCoordinates", "latitude": DATA.lat, "longitude": DATA.lng },
-    "description": DATA.seo_text || ''
+    "@graph": [
+      {
+        "@type": "Residence",
+        "name": d.complex_name,
+        "address": { "@type": "PostalAddress", "addressLocality": d.location, "streetAddress": d.address, "addressRegion": "서울특별시", "addressCountry": "KR" },
+        "geo": { "@type": "GeoCoordinates", "latitude": d.lat, "longitude": d.lng },
+        "description": d.seo_text || '',
+        "numberOfRooms": d.total_units,
+        "yearBuilt": d.build_year,
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr" },
+          { "@type": "ListItem", "position": 2, "name": `서울 ${guName}`, "item": `https://hwik.kr/danji.html?gu=${encodeURIComponent(guName)}` },
+          { "@type": "ListItem", "position": 3, "name": d.complex_name, "item": canonUrl },
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": faq.map(f => ({
+          "@type": "Question",
+          "name": f.q,
+          "acceptedAnswer": { "@type": "Answer", "text": f.a }
+        }))
+      }
+    ]
   };
   const script = document.createElement('script');
   script.type = 'application/ld+json';
