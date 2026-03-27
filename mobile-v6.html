@@ -1863,7 +1863,7 @@
     let html = `
       ${filterBadge}
       <div class="results-status">
-        <strong>${data.length}건</strong>${isClientSearch ? ' <span style="font-size:11px;color:#4ecdc4;font-weight:600;">🙋 내 손님</span>' : ''}
+        <strong>${data.length}건</strong>
         ${!isClientSearch ? `<button class="sort-toggle ${myFirst ? 'active' : ''}" id="sortToggleBtn" onclick="toggleMyFirst()">
           <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
           내 매물 위로
