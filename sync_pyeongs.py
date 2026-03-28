@@ -134,9 +134,9 @@ def fetch_building_areas(sigunguCd, bjdongCd, bun, ji):
             lst = [lst]
         item_list = lst or []
 
-        # 평형 파악 목적 → 최대 5페이지(500건)로 충분
+        # 평형 파악 목적 → 최대 10페이지(1000건)
         total_pages = math.ceil(total / 100)
-        max_pages = min(total_pages, 5)
+        max_pages = min(total_pages, 10)
 
         for page in range(2, max_pages + 1):
             r = gov_session.get(BUILDING_API_URL, params={**base_params, "pageNo": str(page)}, timeout=15)
@@ -185,8 +185,8 @@ def calc_pyeongs(items, property_type):
     raw = defaultdict(list)
     for ho, expos in ho_expos.items():
         pubuse = ho_pubuse.get(ho, 0)
-        if pubuse > 0:
-            raw[round(expos, 2)].append(round(expos + pubuse, 2))
+        supply = expos + pubuse if pubuse > 0 else 0
+        raw[round(expos, 2)].append(round(supply, 2) if supply > 0 else 0)
 
     if not raw:
         return []
@@ -209,7 +209,9 @@ def calc_pyeongs(items, property_type):
         all_supply = []
         for k in cluster:
             all_supply.extend(raw[k])
-        avg_supply = round(sum(all_supply) / len(all_supply), 2)
+        # 공용면적이 있는 것만으로 평균, 없으면 0
+        valid_supply = [s for s in all_supply if s > 0]
+        avg_supply = round(sum(valid_supply) / len(valid_supply), 2) if valid_supply else 0
         result.append({
             "exclu": round(rep, 2),
             "supply": avg_supply,
