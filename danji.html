@@ -719,7 +719,9 @@ function render() {
       const active = document.querySelector('.pyeong-btn.active');
       if (active) {
         const row = active.parentElement;
-        row.scrollTo({ left: active.offsetLeft - 16, behavior: 'smooth' });
+        const rowRect = row.getBoundingClientRect();
+        const btnRect = active.getBoundingClientRect();
+        row.scrollLeft += btnRect.left - rowRect.left - 16;
       }
     }, 50);
   }));
@@ -729,7 +731,9 @@ function render() {
     const active = document.querySelector('.pyeong-btn.active');
     if (active) {
       const row = active.parentElement;
-      row.scrollTo({ left: active.offsetLeft - 16, behavior: 'instant' });
+      const rowRect = row.getBoundingClientRect();
+      const btnRect = active.getBoundingClientRect();
+      row.scrollLeft = btnRect.left - rowRect.left - 16 + row.scrollLeft;
     }
   }, 10);
 
