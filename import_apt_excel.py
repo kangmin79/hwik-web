@@ -122,11 +122,8 @@ def import_fee(filepath: str):
     df = df[df["시도"] == "서울특별시"].copy()
     print(f"   서울: {len(df)}행")
 
-    # 단지별 최근 3개월 평균 계산
-    # 세대수는 apartments 테이블에서 가져와야 하지만,
-    # 여기서는 공용관리비 + 개별사용료 합계를 단지코드별로 집계
-    df["총관리비"] = pd.to_numeric(df["공용관리비계"], errors="coerce").fillna(0) + \
-                     pd.to_numeric(df["개별사용료계"], errors="coerce").fillna(0)
+    # 단지별 최근 3개월 평균 계산 (공용관리비만 — 개별사용료는 세대마다 다름)
+    df["총관리비"] = pd.to_numeric(df["공용관리비계"], errors="coerce").fillna(0)
     df["년월"] = df["발생년월(YYYYMM)"].astype(str)
 
     # 단지별 최근 3개월
