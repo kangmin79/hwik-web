@@ -97,6 +97,11 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 .trade-detail { font-size:11px; color:var(--sub); margin-top:3px; }
 .trade-date { font-size:11px; color:var(--muted); align-self:center; white-space:nowrap; }
 
+/* 면적 토글 */
+.area-toggle { display:flex; justify-content:flex-end; padding:8px 16px 0; gap:4px; }
+.area-toggle-btn { font-size:10px; padding:2px 8px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--sub); cursor:pointer; }
+.area-toggle-btn.active { background:var(--dark); color:#fff; border-color:var(--dark); }
+
 /* 구분선 */
 .divider { height:8px; background:var(--card); }
 
@@ -179,6 +184,7 @@ const $$ = s => document.querySelectorAll(s);
 let DATA = null;
 let currentTab = '매매';
 let currentPyeong = null;
+let areaMode = 'supply'; // 'supply' or 'exclu'
 let chart = null;
 let volumeChart = null;
 
@@ -197,19 +203,21 @@ function formatPrice(manwon) {
   return `${manwon.toLocaleString()}만`;
 }
 
-// 현재 평형의 평수 (공급면적 기준 우선, 없으면 전용)
+// 현재 평형의 평수
 function getCurrentPy() {
   if (!DATA || !currentPyeong) return 0;
   const pm = (DATA.pyeongs_map || {})[currentPyeong];
-  if (pm && pm.supply > 0) return Math.round(pm.supply / 3.3058);
+  if (pm && pm.supply > 0 && areaMode === 'supply') return Math.round(pm.supply / 3.3058);
   return Math.round(parseInt(currentPyeong) / 3.3058);
 }
 // 현재 평형의 라벨
 function getCurrentPyLabel() {
   if (!DATA || !currentPyeong) return '';
   const pm = (DATA.pyeongs_map || {})[currentPyeong];
-  if (pm && pm.supply > 0) return Math.round(pm.supply / 3.3058) + '평(공급)';
-  return currentPyeong + '㎡(전용)';
+  if (pm && pm.supply > 0 && areaMode === 'supply') {
+    return Math.round(pm.supply / 3.3058) + '평(공급)';
+  }
+  return Math.round(parseInt(currentPyeong) / 3.3058) + '평(전용)';
 }
 
 function distText(m) {
@@ -317,19 +325,29 @@ function render() {
     ...school.slice(0,2).map(s => `<div class="tag tag-school">${esc(s.name)} ${walkMin(s.distance)}</div>`)
   ].join('');
 
-  // 평형 버튼 — pyeongs_map 있으면 공급면적 표시, 없으면 전용면적
+  // 평형 버튼
   const pm = d.pyeongs_map || {};
+  const hasSupply = Object.values(pm).some(p => p.supply > 0);
+
   const pyeongHtml = cats.map(c => {
     let label;
-    if (pm[c] && pm[c].supply > 0) {
+    if (pm[c] && pm[c].supply > 0 && areaMode === 'supply') {
       const supplyPy = Math.round(pm[c].supply / 3.3058);
       label = `${supplyPy}평(${Math.round(pm[c].supply)}㎡)`;
     } else {
-      label = `전용 ${c}㎡`;
+      const excluPy = Math.round(parseInt(c) / 3.3058);
+      label = `${excluPy}평(${c}㎡)`;
     }
     const active = c === currentPyeong ? ' active' : '';
     return `<div class="pyeong-btn${active}" data-cat="${esc(c)}">${esc(label)}</div>`;
   }).join('');
+
+  // 토글 (공급면적 데이터 있을 때만)
+  const toggleHtml = hasSupply ? `
+    <div class="area-toggle">
+      <div class="area-toggle-btn${areaMode==='supply'?' active':''}" data-mode="supply">공급</div>
+      <div class="area-toggle-btn${areaMode==='exclu'?' active':''}" data-mode="exclu">전용</div>
+    </div>` : '';
 
   // 현재 평형 기준 지표
   const tradeKey = currentPyeong;
@@ -562,7 +580,8 @@ function render() {
       <div class="tab${currentTab==='월세'?' active':''}" data-tab="월세">월세</div>
     </div>
 
-    <!-- 평형 -->
+    <!-- 면적 토글 + 평형 -->
+    ${toggleHtml}
     <div class="pyeong-row">${pyeongHtml}</div>
 
     <!-- 지표 1행: 시세 -->
@@ -683,6 +702,10 @@ function render() {
   // 이벤트 바인딩
   $$('.tab').forEach(el => el.addEventListener('click', () => {
     currentTab = el.dataset.tab;
+    render();
+  }));
+  $$('.area-toggle-btn').forEach(el => el.addEventListener('click', () => {
+    areaMode = el.dataset.mode;
     render();
   }));
   $$('.pyeong-btn').forEach(el => el.addEventListener('click', () => {
