@@ -334,8 +334,11 @@ def match_trades_to_complex(apt: dict, trade_rows: list) -> list:
                     hit = False
 
             if hit:
-                item["_deal_type"] = row.get("deal_type", "")
-                item["_year_month"] = row.get("year_month", "")
+                # item에 이미 _deal_type이 있으면 유지 (전세/월세 분리됨)
+                if "_deal_type" not in item:
+                    item["_deal_type"] = row.get("deal_type", "")
+                if "_year_month" not in item:
+                    item["_year_month"] = row.get("year_month", "")
                 matched.append(item)
 
     return matched
