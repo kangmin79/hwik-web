@@ -600,14 +600,13 @@ def fill_nearby_complex(danji_list: list, apartments: list):
     for apt in apartments:
         apt_map[apt.get("kapt_code", "")] = apt
 
-    # danji → property_type 매핑 (apartments에서 찾기)
+    # danji → property_type 매핑
+    name_to_type = {}
+    for apt in apartments:
+        name_to_type[apt.get("kapt_name", "")] = apt.get("property_type", "apt")
+
     def get_prop_type(danji):
-        # danji_id에서 apartments 매칭
-        name = danji.get("complex_name", "")
-        for apt in apartments:
-            if apt.get("kapt_name") == name:
-                return apt.get("property_type", "apt")
-        return "apt"
+        return name_to_type.get(danji.get("complex_name", ""), "apt")
 
     # 거리 계산
     def haversine(lat1, lon1, lat2, lon2):
@@ -638,21 +637,30 @@ def fill_nearby_complex(danji_list: list, apartments: list):
                 continue
             dist = haversine(lat1, lon1, other.get("lat"), other.get("lng"))
             if dist < 2000:  # 2km 이내
-                # 84㎡ 기준 가격 찾기
+                # 현재 단지의 기본 평형(84㎡ 근처)과 비슷한 평형 가격
                 price_84 = None
                 rt = other.get("recent_trade") or {}
+                # 1순위: 80~90㎡ 매매
                 for k, v in rt.items():
-                    if "_" not in k:  # 매매만
+                    if "_" not in k:
                         area = int(k) if k.isdigit() else 0
                         if 80 <= area <= 90:
                             price_84 = v.get("price")
                             break
+                # 2순위: 59~120㎡ 범위 내에서 가장 84에 가까운 것
                 if not price_84:
-                    # 아무 매매가나
+                    best_diff = 999
                     for k, v in rt.items():
                         if "_" not in k:
-                            price_84 = v.get("price")
-                            break
+                            area = int(k) if k.isdigit() else 0
+                            if 59 <= area <= 120:
+                                diff = abs(area - 84)
+                                if diff < best_diff:
+                                    best_diff = diff
+                                    price_84 = v.get("price")
+                # 59~120㎡ 범위 밖이면 비교 불가 → 제외
+                if not price_84:
+                    continue
 
                 candidates.append({
                     "id": other["id"],
