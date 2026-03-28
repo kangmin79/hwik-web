@@ -445,7 +445,7 @@ function render() {
     seoParts.push(priceText);
   }
   if (highPrice && highData) {
-    seoParts.push('역대 최고가는 ' + formatPrice(highPrice) + (highData.date ? ' (' + highData.date + ')' : '') + '입니다.');
+    seoParts.push('3년 내 최고가는 ' + formatPrice(highPrice) + (highData.date ? ' (' + highData.date + ')' : '') + '입니다.');
   }
   if (jeonseRate) {
     seoParts.push('전세가율은 ' + jeonseRate + '%입니다.');
@@ -472,7 +472,7 @@ function render() {
   }
   if (jeonseRate) faqItems.push({ q: `${d.complex_name} 전세가율은?`, a: `${d.complex_name}의 전세가율은 ${jeonseRate}%입니다.` });
   if (subway.length > 0) faqItems.push({ q: `${d.complex_name} 근처 지하철역은?`, a: subway.map(s => `${s.name}(${s.line || ''}) 도보 ${walkMin(s.distance)}`).join(', ') });
-  if (highPrice) faqItems.push({ q: `${d.complex_name} 역대 최고가는?`, a: `역대 최고가는 ${formatPrice(highPrice)}입니다.${highData && highData.date ? ' ('+highData.date+')' : ''}` });
+  if (highPrice) faqItems.push({ q: `${d.complex_name} 3년 내 최고가는?`, a: `3년 내 최고가는 ${formatPrice(highPrice)}입니다.${highData && highData.date ? ' ('+highData.date+')' : ''}` });
   if (parseInt(d.parking || 0) > 0 && d.total_units) {
     const _ratio = (parseInt(d.parking) / d.total_units).toFixed(1);
     faqItems.push({ q: `${d.complex_name} 주차 대수는?`, a: `총 ${parseInt(d.parking).toLocaleString()}대 (세대당 ${_ratio}대)입니다.` });
@@ -524,7 +524,7 @@ function render() {
         ${changeHtml}
       </div>
       <div class="metric">
-        <div class="metric-label">역대 최고가</div>
+        <div class="metric-label">3년 내 최고가</div>
         <div class="metric-value">${highPrice ? formatPrice(highPrice) : '-'}</div>
         <div class="metric-change neutral">${highData && highData.date ? highData.date : ''}</div>
       </div>
@@ -862,7 +862,7 @@ function injectJsonLd() {
     { q: `${d.complex_name} 최근 실거래가는?`, a: recentFirst ? `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentFirst.price)}입니다.${recentFirst.date ? ' ('+recentFirst.date+' 기준)' : ''}` : '최근 거래 내역을 확인 중입니다.' },
     { q: `${d.complex_name} 전세가율은?`, a: jr ? `${d.complex_name}의 전세가율은 약 ${jr}%입니다.` : '전세가율 정보를 확인 중입니다.' },
     { q: `${d.complex_name} 근처 지하철역은?`, a: subway.length > 0 ? subway.map(s => `${s.name}(${s.line || ''}) 도보 ${walkMin(s.distance)}`).join(', ') : '주변 지하철 정보를 확인 중입니다.' },
-    { q: `${d.complex_name} 역대 최고가는?`, a: highFirst ? `${d.complex_name} 역대 최고가는 ${formatPrice(highFirst.price)}입니다.${highFirst.date ? ' ('+highFirst.date+')' : ''}` : '역대 최고가 정보를 확인 중입니다.' },
+    { q: `${d.complex_name} 3년 내 최고가는?`, a: highFirst ? `${d.complex_name} 3년 내 최고가는 ${formatPrice(highFirst.price)}입니다.${highFirst.date ? ' ('+highFirst.date+')' : ''}` : '3년 내 최고가 정보를 확인 중입니다.' },
   ];
 
   const ld = {
