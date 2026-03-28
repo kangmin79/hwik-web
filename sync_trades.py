@@ -272,20 +272,29 @@ def load_trade_cache_for_gu(lawd_cd: str) -> list:
     """특정 구의 trade_cache 전체 로드"""
     all_rows = []
     offset = 0
-    limit = 1000
+    limit = 500
     while True:
-        resp = sb_session.get(
-            f"{SUPABASE_URL}/rest/v1/trade_cache",
-            headers={"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"},
-            params={
-                "select": "*",
-                "kapt_code": f"like.{lawd_cd}_%",
-                "limit": str(limit),
-                "offset": str(offset),
-                "order": "year_month.desc",
-            },
-            timeout=30,
-        )
+        for attempt in range(3):
+            try:
+                resp = sb_session.get(
+                    f"{SUPABASE_URL}/rest/v1/trade_cache",
+                    headers={"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"},
+                    params={
+                        "select": "*",
+                        "kapt_code": f"like.{lawd_cd}_%",
+                        "limit": str(limit),
+                        "offset": str(offset),
+                        "order": "year_month.desc",
+                    },
+                    timeout=90,
+                )
+                break
+            except Exception as e:
+                if attempt < 2:
+                    time.sleep(3)
+                else:
+                    print(f"  ⚠️ trade_cache 로드 실패: {lawd_cd} offset={offset}")
+                    return all_rows
         if resp.status_code != 200:
             break
         data = resp.json()
