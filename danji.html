@@ -432,8 +432,13 @@ function render() {
     }
     if (!bestKey) return null; // 비슷한 평형 없으면 제외
     const p = prices[bestKey];
-    return { ...n, matchedPrice: p.price, matchedExclu: p.exclu, matchedSupply: p.supply };
+    // 평당가 계산 (전용면적 기준)
+    const ppPrice = p.exclu > 0 ? Math.round(p.price / (p.exclu / 3.3058)) : 0;
+    return { ...n, matchedPrice: p.price, matchedExclu: p.exclu, matchedSupply: p.supply, ppPrice };
   }).filter(Boolean);
+
+  // 평당가 순 정렬 (비싼 순)
+  nearbyFiltered.sort((a, b) => (b.ppPrice || 0) - (a.ppPrice || 0));
 
   const nearbyHtml = nearbyFiltered.map(n => {
     let diffHtml = '';
@@ -452,6 +457,7 @@ function render() {
       </div>
       <div style="text-align:right">
         <div class="nearby-price">${n.matchedPrice ? formatPrice(n.matchedPrice) : '-'}</div>
+        ${n.ppPrice ? '<div style="font-size:10px;color:var(--sub);margin-top:1px;">평당 '+formatPrice(n.ppPrice)+'</div>' : ''}
         ${diffHtml}
       </div>
     </div>`;
