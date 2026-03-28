@@ -452,13 +452,7 @@ function render() {
   nearbyFiltered.sort((a, b) => (b.ppPrice || 0) - (a.ppPrice || 0));
 
   const nearbyHtml = nearbyFiltered.map(n => {
-    let diffHtml = '';
-    if (n.matchedPrice && myPrice) {
-      const diff = n.matchedPrice - myPrice;
-      if (diff > 0) diffHtml = `<div class="nearby-diff pricier">▲ ${formatPrice(diff)} 비쌈</div>`;
-      else if (diff < 0) diffHtml = `<div class="nearby-diff cheaper">▼ ${formatPrice(Math.abs(diff))} 저렴</div>`;
-      else diffHtml = `<div class="nearby-diff" style="color:var(--sub)">동일</div>`;
-    }
+    const diffHtml = '';
     const areaLabel = (areaMode === 'supply' && n.matchedSupply && n.matchedSupply > n.matchedExclu) ? '공급' + Math.round(n.matchedSupply) + '㎡' : '전용' + n.matchedExclu + '㎡';
     return `
     <div class="nearby-item" onclick="location.href='danji.html?id=${esc(n.id)}'">
