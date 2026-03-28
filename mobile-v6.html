@@ -1713,11 +1713,11 @@
     if (!currentUser) return;
     try {
       const [cardsResult, memosResult, matchResult, interestResult, overdueResult] = await Promise.all([
-        supabaseClient.from('cards').select('*', { count: 'exact', head: true }).eq('agent_id', currentUser.id),
+        supabaseClient.from('cards').select('id', { count: 'exact', head: true }).eq('agent_id', currentUser.id),
         supabaseClient.from('memos').select('id', { count: 'exact', head: true }).eq('agent_id', currentUser.id).eq('is_read', false),
-        supabaseClient.from('match_notifications').select('*', { count: 'exact', head: true }).eq('agent_id', currentUser.id).eq('is_read', false),
-        supabaseClient.from('card_interests').select('*', { count: 'exact', head: true }).eq('agent_id', currentUser.id),
-        supabaseClient.from('client_notes').select('*', { count: 'exact', head: true }).eq('agent_id', currentUser.id).eq('alert_done', false).lt('alert_date', new Date().toISOString())
+        supabaseClient.from('match_notifications').select('id', { count: 'exact', head: true }).eq('agent_id', currentUser.id).eq('is_read', false),
+        supabaseClient.from('card_interests').select('id', { count: 'exact', head: true }).eq('agent_id', currentUser.id),
+        supabaseClient.from('client_notes').select('id', { count: 'exact', head: true }).eq('agent_id', currentUser.id).eq('alert_done', false).lt('alert_date', new Date().toISOString())
       ]);
       setBadge('badgeMy', cardsResult.count);
       setBadge('badgeMemo', memosResult.count);
