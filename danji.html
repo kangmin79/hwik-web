@@ -61,9 +61,9 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 .tab.active { color:var(--text); font-weight:500; border-bottom-color:var(--yellow); }
 
 /* 평형 */
-.pyeong-row { padding:12px 16px; display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+.pyeong-row { padding:12px 0; display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
 .pyeong-row::-webkit-scrollbar { display:none; }
-.pyeong-row::after { content:''; min-width:8px; flex-shrink:0; }
+.pyeong-row::before, .pyeong-row::after { content:''; min-width:calc(50% - 40px); flex-shrink:0; }
 .pyeong-btn { padding:6px 14px; border-radius:20px; font-size:12px; cursor:pointer; white-space:nowrap; flex-shrink:0; border:1px solid var(--border); background:var(--card); color:var(--sub); transition:all .15s; -webkit-tap-highlight-color:transparent; }
 .pyeong-btn.active { background:var(--yellow); border-color:var(--yellow); color:var(--dark); font-weight:500; }
 
@@ -701,10 +701,14 @@ function render() {
     }
     currentPyeong = el.dataset.cat;
     render();
-    // 선택한 버튼이 보이도록 스크롤
+    // 선택한 버튼 중앙으로 스크롤
     setTimeout(() => {
       const active = document.querySelector('.pyeong-btn.active');
-      if (active) active.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+      if (active) {
+        const row = active.parentElement;
+        const left = active.offsetLeft - (row.offsetWidth / 2) + (active.offsetWidth / 2);
+        row.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+      }
     }, 50);
   }));
 
