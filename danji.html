@@ -325,8 +325,6 @@ function render() {
 
   // 평형 버튼
   const pm = d.pyeongs_map || {};
-  const hasSupply = Object.values(pm).some(p => p.supply > 0);
-
   const hasSupply = Object.values(pm).some(p => p.supply > 0 && p.supply !== p.exclu);
 
   const pyeongHtml = cats.map(c => {
