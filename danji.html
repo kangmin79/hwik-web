@@ -329,10 +329,10 @@ function render() {
 
   const pyeongHtml = cats.map(c => {
     let label;
-    if (areaMode === 'supply' && pm[c] && pm[c].supply > pm[c].exclu) {
-      label = `공급 ${Math.round(pm[c].supply)}㎡`;
+    if (areaMode === 'supply' && pm[c] && pm[c].supply > pm[c].exclu && pm[c].supply > 0) {
+      label = `${Math.round(pm[c].supply)}㎡`;
     } else {
-      label = `전용 ${c}㎡`;
+      label = `${c}㎡`;
     }
     const active = c === currentPyeong ? ' active' : '';
     return `<div class="pyeong-btn${active}" data-cat="${esc(c)}">${esc(label)}</div>`;
