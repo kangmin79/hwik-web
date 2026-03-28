@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>단지 시세 - 휙</title>
+<meta name="description" content="아파트 실거래가, 시세 추이, 전세가율을 한눈에. 휙에서 확인하세요.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="휙">
+<meta property="og:title" id="og-title" content="단지 시세 - 휙">
+<meta property="og:description" id="og-desc" content="아파트 실거래가, 시세 추이, 전세가율을 한눈에">
+<meta property="og:image" content="https://hwik.kr/og-image.png">
+<link rel="canonical" id="canonical" href="https://hwik.kr/danji.html">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" id="tw-title" content="단지 시세 - 휙">
+<meta name="twitter:description" id="tw-desc" content="아파트 실거래가, 시세 추이, 전세가율을 한눈에">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="config.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+:root {
+  --dark: #1a1a2e;
+  --yellow: #f5c842;
+  --yellow-dim: rgba(245,200,66,0.15);
+  --yellow-bg: rgba(245,200,66,0.04);
+  --bg: #f8f8fa;
+  --surface: #ffffff;
+  --card: #f3f4f6;
+  --border: #e5e7eb;
+  --text: #1a1a2e;
+  --sub: #6b7280;
+  --muted: #9ca3af;
+  --red: #e24b4a;
+  --green: #639922;
+  --radius: 10px;
+}
+html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; background:var(--bg); color:var(--text); }
+.wrap { max-width:430px; margin:0 auto; background:var(--surface); min-height:100vh; }
+
+/* 헤더 */
+.header { background:var(--dark); padding:16px; }
+.header-top { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.logo { width:36px; height:36px; background:var(--yellow); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; color:var(--dark); flex-shrink:0; }
+.header-name { font-size:17px; font-weight:500; color:#fff; }
+.header-sub { font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px; }
+.tags { display:flex; gap:8px; flex-wrap:wrap; }
+.tag { padding:4px 10px; background:rgba(255,255,255,0.1); border-radius:20px; font-size:11px; color:rgba(255,255,255,0.8); }
+
+/* 탭 */
+.tabs { display:flex; border-bottom:1px solid var(--border); }
+.tab.active { color:var(--text); font-weight:500; border-bottom-color:var(--yellow); }
+
+/* 평형 */
+.pyeong-row { padding:12px 16px; display:flex; gap:8px; overflow-x:auto; }
+.pyeong-row::-webkit-scrollbar { display:none; }
+.pyeong-btn.active { background:var(--yellow); border-color:var(--yellow); color:var(--dark); font-weight:500; }
+
+/* 지표 */
+.metrics { padding:0 16px 12px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+.metric { background:var(--card); border-radius:var(--radius); padding:12px; }
+.metric-label { font-size:10px; color:var(--sub); margin-bottom:4px; }
+.metric-value { font-size:15px; font-weight:500; }
+.metric-change { font-size:10px; margin-top:2px; }
+.metric-change.down { color:var(--red); }
+.metric-change.up { color:var(--green); }
+.metric-change.neutral { color:var(--sub); }
+
+/* 그래프 */
+.chart-section { padding:0 16px 12px; }
+.chart-title { font-size:12px; color:var(--sub); margin-bottom:8px; }
+.chart-wrap { position:relative; height:180px; }
+
+/* 실거래 목록 */
+.section-title { font-size:14px; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+.section-title::before { content:''; display:inline-block; width:3px; height:14px; background:var(--yellow); border-radius:2px; }
+.section { padding:16px; }
+.trade-list { display:flex; flex-direction:column; gap:8px; }
+.trade-item { display:flex; justify-content:space-between; padding:12px 14px; background:var(--surface); border-radius:var(--radius); border-left:3px solid var(--yellow); box-shadow:0 1px 4px rgba(0,0,0,0.06); }
+.trade-price { font-size:16px; font-weight:700; color:var(--dark); }
+.trade-detail { font-size:11px; color:var(--sub); margin-top:3px; }
+.trade-date { font-size:11px; color:var(--muted); align-self:center; white-space:nowrap; }
+
+/* 구분선 */
+.divider { height:8px; background:var(--card); }
+
+/* 휙 매물 */
+.listing-badge { font-size:11px; padding:3px 10px; background:var(--yellow-dim); border-radius:20px; color:#ba7517; font-weight:500; }
+.listing-item { display:flex; justify-content:space-between; padding:14px; border:1.5px solid var(--yellow); border-radius:var(--radius); background:var(--yellow-bg); cursor:pointer; box-shadow:0 1px 4px rgba(245,200,66,0.15); transition:transform .15s; }
+.listing-item:active { transform:scale(0.98); }
+.listing-link { font-size:11px; color:#ba7517; align-self:center; font-weight:500; }
+.listing-empty { text-align:center; padding:20px 16px; border:1.5px dashed var(--yellow); border-radius:var(--radius); background:var(--yellow-bg); }
+.listing-empty-text { font-size:13px; color:var(--sub); margin-bottom:8px; }
+.listing-empty-cta { font-size:12px; font-weight:600; color:#ba7517; cursor:pointer; }
+
+/* 주변 단지 */
+.nearby-item { display:flex; justify-content:space-between; align-items:center; padding:14px; background:var(--surface); border-radius:var(--radius); cursor:pointer; transition:all .15s; box-shadow:0 1px 4px rgba(0,0,0,0.05); }
+.nearby-item:active { transform:scale(0.98); }
+.nearby-item:hover { box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+.nearby-name { font-size:13px; font-weight:600; }
+.nearby-sub { font-size:11px; color:var(--sub); margin-top:2px; }
+.nearby-price { font-size:14px; font-weight:700; text-align:right; }
+.nearby-diff { font-size:11px; text-align:right; margin-top:2px; padding:1px 6px; border-radius:4px; display:inline-block; }
+.nearby-diff.cheaper { background:rgba(99,153,34,0.1); color:var(--green); }
+.nearby-diff.pricier { background:rgba(226,75,74,0.1); color:var(--red); }
+
+/* CTA */
+.cta-section { padding:16px; border-top:1px solid var(--border); }
+.btn-primary { width:100%; padding:14px; background:var(--yellow); border:none; border-radius:var(--radius); font-size:14px; font-weight:500; color:var(--dark); cursor:pointer; margin-bottom:8px; font-family:inherit; transition:transform .1s; }
+.btn-primary:active { transform:scale(0.97); }
+.btn-secondary { width:100%; padding:12px; background:transparent; border:1px solid var(--border); border-radius:var(--radius); font-size:13px; color:var(--sub); cursor:pointer; font-family:inherit; transition:transform .1s; }
+.btn-secondary:active { transform:scale(0.97); }
+.tab { flex:1; padding:12px; text-align:center; font-size:13px; color:var(--sub); cursor:pointer; border-bottom:2px solid transparent; transition:all .2s; -webkit-tap-highlight-color:transparent; }
+.pyeong-btn { padding:6px 14px; border-radius:20px; font-size:12px; cursor:pointer; white-space:nowrap; border:1px solid var(--border); background:var(--card); color:var(--sub); transition:all .15s; -webkit-tap-highlight-color:transparent; }
+
+/* SEO */
+.seo-section { padding:16px; border-top:1px solid var(--border); background:var(--card); }
+.seo-text { font-size:11px; color:var(--muted); line-height:1.7; }
+.seo-more { color:var(--sub); cursor:pointer; }
+.seo-source { margin-top:8px; font-size:10px; color:var(--muted); }
+
+/* breadcrumb */
+.breadcrumb { padding:10px 16px; font-size:11px; color:var(--muted); }
+.breadcrumb a { color:var(--sub); text-decoration:none; }
+.breadcrumb span { margin:0 4px; }
+
+/* FAQ */
+.faq-section { padding:16px; }
+.faq-item { border-bottom:1px solid var(--border); padding:12px 0; }
+.faq-item:last-child { border-bottom:none; }
+.faq-q { font-size:13px; font-weight:500; margin-bottom:4px; }
+.faq-a { font-size:12px; color:var(--sub); line-height:1.6; }
+
+/* 로딩 */
+.loading { display:flex; flex-direction:column; align-items:center; justify-content:center; height:80vh; gap:12px; }
+.loading-spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--yellow); border-radius:50%; animation:spin .8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading-text { font-size:13px; color:var(--sub); }
+
+/* 에러 */
+.error { text-align:center; padding:60px 20px; }
+.error-icon { font-size:48px; margin-bottom:12px; }
+.error-msg { font-size:14px; color:var(--sub); }
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div class="loading" id="loading">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">단지 정보 불러오는 중...</div>
+  </div>
+  <noscript>
+    <div style="padding:20px;text-align:center;">
+      <h1>아파트 실거래가 시세 - 휙</h1>
+      <p>이 페이지는 JavaScript가 필요합니다.</p>
+      <p>검색엔진용 전체 콘텐츠: <a href="https://api.hwik.kr/functions/v1/danji-page?id=" id="noscript-link">여기에서 확인</a></p>
+    </div>
+  </noscript>
+</div>
+
+<script>
+const sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_KEY);
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+let DATA = null;
+let currentTab = '매매';
+let currentPyeong = null;
+let chart = null;
+let volumeChart = null;
+
+// ── 유틸 ──
+function esc(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function formatPrice(manwon) {
+  if (!manwon) return '-';
+  const uk = Math.floor(manwon / 10000);
+  const rest = manwon % 10000;
+  if (uk > 0 && rest > 0) {
+    const cheon = Math.floor(rest / 1000);
+    return cheon > 0 ? `${uk}억 ${cheon}천` : `${uk}억 ${rest}`;
+  }
+  if (uk > 0) return `${uk}억`;
+  return `${manwon.toLocaleString()}만`;
+}
+
+function distText(m) {
+  if (!m) return '';
+  return m >= 1000 ? (m/1000).toFixed(1) + 'km' : m + 'm';
+}
+
+function walkMin(m) {
+  if (!m) return '';
+  return Math.round(m / 67) + '분'; // 도보 평균 80m/분 → 67m/분 보수적
+}
+
+// ── 데이터 로드 ──
+async function loadData() {
+  const id = new URLSearchParams(location.search).get('id');
+  if (!id) { showError('단지 ID가 없습니다'); return; }
+
+  const { data, error } = await sb.from('danji_pages').select('*').eq('id', id).single();
+  if (error || !data) { showError('단지 정보를 찾을 수 없습니다'); return; }
+
+  DATA = data;
+
+  // SEO 메타 업데이트
+  document.title = `${data.complex_name} 실거래가 시세 - 휙`;
+  const desc = `${data.complex_name} ${data.location} ${data.total_units}세대 ${data.build_year}년 아파트 실거래가, 전세가, 시세 추이`;
+  document.getElementById('og-title').content = document.title;
+  document.getElementById('og-desc').content = desc;
+  document.getElementById('tw-title').content = document.title;
+  document.getElementById('tw-desc').content = desc;
+  document.querySelector('meta[name="description"]').content = desc;
+  document.getElementById('canonical').href = `https://hwik.kr/danji.html?id=${id}`;
+
+  // 첫 번째 평형 선택
+  const cats = data.categories || [];
+  if (cats.length > 0) currentPyeong = cats[0];
+
+  render();
+}
+
+// ── 렌더링 ──
+function render() {
+  const d = DATA;
+  if (!d) return;
+
+  const cats = d.categories || [];
+  const recent = d.recent_trade || {};
+  const high = d.all_time_high || {};
+  const subway = d.nearby_subway || [];
+  const school = d.nearby_school || [];
+  const nearby = d.nearby_complex || [];
+  const listings = d.active_listings || [];
+
+  // 지하철/학교 태그
+  const tagHtml = [
+    ...subway.map(s => `<div class="tag">${esc(s.name)} ${walkMin(s.distance)}</div>`),
+    ...school.slice(0,2).map(s => `<div class="tag">${esc(s.name)} ${walkMin(s.distance)}</div>`)
+  ].join('');
+
+  // 평형 버튼
+  const pyeongHtml = cats.map(c => {
+    const py = Math.round(parseInt(c) / 3.3058);
+    const label = py > 0 ? `${py}평(${c})` : c;
+    const active = c === currentPyeong ? ' active' : '';
+    return `<div class="pyeong-btn${active}" data-cat="${esc(c)}">${esc(label)}</div>`;
+  }).join('');
+
+  // 현재 평형 기준 지표
+  const tradeKey = currentPyeong;
+  const jeonseKey = currentPyeong + '_jeonse';
+  const wolseKey = currentPyeong + '_wolse';
+
+  let recentData, highData;
+  if (currentTab === '매매') {
+    recentData = recent[tradeKey];
+    highData = high[tradeKey];
+  } else if (currentTab === '전세') {
+    recentData = recent[jeonseKey];
+    highData = null;
+  } else {
+    recentData = recent[wolseKey];
+    highData = null;
+  }
+
+  const recentPrice = recentData ? recentData.price : null;
+  const highPrice = highData ? highData.price : null;
+
+  // 전세가율
+  const jeonseData = recent[jeonseKey];
+  const saleData = recent[tradeKey];
+  let jeonseRate = d.jeonse_rate;
+  if (jeonseData && saleData && saleData.price > 0) {
+    jeonseRate = Math.round(jeonseData.price / saleData.price * 1000) / 10;
+  }
+
+  // 지표 변화량 (역대최고 대비)
+  let changeHtml = '';
+  if (recentPrice && highPrice) {
+    const diff = recentPrice - highPrice;
+    if (diff < 0) changeHtml = `<div class="metric-change down">▼ ${formatPrice(Math.abs(diff))}</div>`;
+    else if (diff > 0) changeHtml = `<div class="metric-change up">▲ ${formatPrice(diff)}</div>`;
+    else changeHtml = `<div class="metric-change neutral">보합</div>`;
+  }
+
+  // 최근 거래 목록 (현재 선택 평형 + 탭 기준)
+  const tradeKeyFull = currentPyeong + (currentTab === '전세' ? '_jeonse' : (currentTab === '월세' ? '_wolse' : ''));
+  const ph = (d.price_history || {})[tradeKeyFull] || [];
+  const pyNum = currentPyeong ? Math.round(parseInt(currentPyeong) / 3.3058) : 0;
+  const pyLabel = pyNum > 0 ? currentPyeong + '㎡(' + pyNum + '평)' : (currentPyeong ? currentPyeong + '㎡' : '');
+
+  // price_history에 개별 거래가 있으면 그걸 사용
+  let tradeItems = [];
+  if (ph.length > 0 && ph[0].date) {
+    tradeItems = ph.slice().sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  } else {
+    // 폴백: recent_trade에서 현재 키만
+    const val = recent[tradeKeyFull];
+    if (val) tradeItems = [val];
+  }
+
+  const tradeListHtml = tradeItems.slice(0,5).map(t => `
+    <div class="trade-item">
+      <div>
+        <div class="trade-price">${formatPrice(t.price)}</div>
+        <div class="trade-detail">${pyLabel}${t.floor ? ' · ' + t.floor + '층' : ''}</div>
+      </div>
+      <div class="trade-date">${esc(t.date || '')}</div>
+    </div>
+  `).join('');
+
+  // 휙 매물
+  const listingCount = {};
+  listings.forEach(l => { listingCount[l.type] = (listingCount[l.type]||0) + 1; });
+  const listingBadge = Object.entries(listingCount).map(([k,v]) => `${k} ${v}`).join(' · ');
+  const listingHtml = listings.slice(0,3).map(l => `
+    <div class="listing-item" onclick="location.href='property_view.html?id=${esc(l.id)}'">
+      <div>
+        <div class="trade-price">${esc(l.type)} ${formatPrice(l.price)}</div>
+        <div class="trade-detail">${l.floor ? l.floor+'층' : ''} ${l.area ? '· '+l.area+'㎡' : ''} ${l.move_in ? '· '+esc(l.move_in) : ''}</div>
+      </div>
+      <div class="listing-link">상세보기</div>
+    </div>
+  `).join('');
+
+  // 주변 단지 (현재 단지 대비 가격 차이)
+  const myPrice84 = recent['84A'] ? recent['84A'].price : (recent['84'] ? recent['84'].price : recentPrice);
+  const nearbyHtml = nearby.map(n => {
+    let diffHtml = '';
+    if (n.price_84 && myPrice84) {
+      const diff = n.price_84 - myPrice84;
+      if (diff > 0) diffHtml = `<div class="nearby-diff pricier">▲ ${formatPrice(diff)} 비쌈</div>`;
+      else if (diff < 0) diffHtml = `<div class="nearby-diff cheaper">▼ ${formatPrice(Math.abs(diff))} 저렴</div>`;
+      else diffHtml = `<div class="nearby-diff" style="color:var(--sub)">동일</div>`;
+    }
+    return `
+    <div class="nearby-item" onclick="location.href='danji.html?id=${esc(n.id)}'">
+      <div>
+        <div class="nearby-name">${esc(n.name)}</div>
+        <div class="nearby-sub">${esc(n.location)} ${n.distance ? '· '+distText(n.distance) : ''}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="nearby-price">${n.price_84 ? formatPrice(n.price_84) : '-'}</div>
+        ${diffHtml}
+      </div>
+    </div>`;
+  }).join('');
+
+  // SEO 텍스트 — DB가 아닌 실제 데이터 기반으로 자동 생성
+  const seoParts = [];
+  // 기본 정보 (확실한 것만)
+  const seoBasic = [esc(d.complex_name), '은(는)'];
+  if (d.address) seoBasic.push(esc(d.address) + '에 위치한');
+  if (d.build_year) seoBasic.push(d.build_year + '년 준공');
+  seoBasic.push('아파트입니다.');
+  if (d.total_units) seoBasic.push('총 ' + d.total_units.toLocaleString() + '세대 규모입니다.');
+  seoParts.push(seoBasic.join(' '));
+
+  // 단지 스펙 (확실한 것만)
+  const specParts = [];
+  if (d.top_floor) specParts.push('최고 ' + d.top_floor + '층');
+  if (parseInt(d.parking || 0) > 0) {
+    specParts.push('주차 ' + parseInt(d.parking).toLocaleString() + '대');
+    if (d.total_units) specParts.push('(세대당 ' + (parseInt(d.parking) / d.total_units).toFixed(1) + '대)');
+  }
+  if (d.heating) specParts.push(d.heating);
+  if (d.builder) specParts.push('시공 ' + d.builder);
+  if (specParts.length > 0) seoParts.push(specParts.join(', ') + '.');
+  if (d.mgmt_fee) seoParts.push('세대당 월 평균 관리비 약 ' + Math.round(d.mgmt_fee/10000) + '만원.');
+
+  // 평형 (DB categories 기반)
+  if (cats.length > 0) {
+    const pyList = cats.map(c => { const p = Math.round(parseInt(c)/3.3058); return p > 0 ? p+'평('+c+'㎡)' : c+'㎡'; });
+    seoParts.push(pyList.join(', ') + ' 평형이 있습니다.');
+  }
+
+  // 지하철 (DB nearby_subway 기반)
+  if (subway.length > 0) {
+    const subList = subway.map(s => esc(s.name) + (s.line ? '('+esc(s.line)+')' : '') + ' 도보 ' + walkMin(s.distance));
+    seoParts.push('인근 지하철: ' + subList.join(', ') + '.');
+  }
+
+  // 학교 (DB nearby_school 기반)
+  if (school.length > 0) {
+    const schList = school.map(s => esc(s.name) + ' 도보 ' + walkMin(s.distance));
+    seoParts.push('인근 학교: ' + schList.join(', ') + '.');
+  }
+
+  // 시세 (실제 거래 데이터 기반)
+  if (recentPrice) {
+    let priceText = '최근 매매 실거래가는 ' + formatPrice(recentPrice);
+    if (recentData && recentData.date) priceText += ' (' + recentData.date + ' 기준)';
+    priceText += '입니다.';
+    seoParts.push(priceText);
+  }
+  if (highPrice && highData) {
+    seoParts.push('역대 최고가는 ' + formatPrice(highPrice) + (highData.date ? ' (' + highData.date + ')' : '') + '입니다.');
+  }
+  if (jeonseRate) {
+    seoParts.push('전세가율은 ' + jeonseRate + '%입니다.');
+  }
+
+  const seoFull = seoParts.join(' ');
+  const seoShort = seoFull.length > 120 ? seoFull.slice(0,120) : seoFull;
+  const seoRest = seoFull.length > 120 ? seoFull.slice(120) : '';
+
+  // 조합
+  const locationParts = (d.location || '').split(' ');
+  const dong = locationParts[locationParts.length - 1] || d.location;
+
+  // breadcrumb
+  const locationParts2 = (d.location || '').split(' ');
+  const gu = locationParts2[0] || '';
+
+  // FAQ 데이터 — 확실한 데이터가 있는 항목만 표시
+  const faqItems = [];
+  if (recentPrice) {
+    faqItems.push({ q: `${d.complex_name} 최근 실거래가는?`, a: `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentPrice)}입니다.${recentData && recentData.date ? ' ('+recentData.date+' 기준)' : ''}` });
+    const _py = currentPyeong ? Math.round(parseInt(currentPyeong) / 3.3058) : 0;
+    if (_py > 0) faqItems.push({ q: `${d.complex_name} 평당가는?`, a: `${_py}평 기준 평당 ${formatPrice(Math.round(recentPrice / _py))}입니다.` });
+  }
+  if (jeonseRate) faqItems.push({ q: `${d.complex_name} 전세가율은?`, a: `${d.complex_name}의 전세가율은 ${jeonseRate}%입니다.` });
+  if (subway.length > 0) faqItems.push({ q: `${d.complex_name} 근처 지하철역은?`, a: subway.map(s => `${s.name}(${s.line || ''}) 도보 ${walkMin(s.distance)}`).join(', ') });
+  if (highPrice) faqItems.push({ q: `${d.complex_name} 역대 최고가는?`, a: `역대 최고가는 ${formatPrice(highPrice)}입니다.${highData && highData.date ? ' ('+highData.date+')' : ''}` });
+  if (parseInt(d.parking || 0) > 0 && d.total_units) {
+    const _ratio = (parseInt(d.parking) / d.total_units).toFixed(1);
+    faqItems.push({ q: `${d.complex_name} 주차 대수는?`, a: `총 ${parseInt(d.parking).toLocaleString()}대 (세대당 ${_ratio}대)입니다.` });
+  }
+  if (d.mgmt_fee) faqItems.push({ q: `${d.complex_name} 관리비는?`, a: `세대당 월 평균 관리비는 약 ${Math.round(d.mgmt_fee/10000)}만원입니다. (공용관리비 + 개별사용료 포함)` });
+  if (d.heating) faqItems.push({ q: `${d.complex_name} 난방 방식은?`, a: `${d.heating}입니다.` });
+  if (d.builder) faqItems.push({ q: `${d.complex_name} 시공사는?`, a: `${esc(d.builder)}입니다.` });
+
+  const faqHtml = faqItems.map(f => `
+    <div class="faq-item">
+      <div class="faq-q">${esc(f.q)}</div>
+      <div class="faq-a">${esc(f.a)}</div>
+    </div>
+  `).join('');
+
+  $('#app').innerHTML = `
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="breadcrumb">
+      <a href="/">휙</a><span>&gt;</span><a href="/danji.html?gu=${encodeURIComponent(gu)}">서울 ${esc(gu)}</a><span>&gt;</span>${esc(d.complex_name)}
+    </nav>
+
+    <!-- 헤더 -->
+    <header class="header">
+      <div class="header-top">
+        <div class="logo">휙</div>
+        <div>
+          <h1 class="header-name">${esc(d.complex_name)}</h1>
+          <div class="header-sub">${esc(d.location)} · ${d.total_units ? d.total_units.toLocaleString()+'세대' : ''} · ${d.build_year || ''}년${d.builder ? ' · '+esc(d.builder) : ''}</div>
+        </div>
+      </div>
+      <div class="tags">${tagHtml}</div>
+    </header>
+
+    <!-- 탭 -->
+    <div class="tabs">
+      <div class="tab${currentTab==='매매'?' active':''}" data-tab="매매">매매</div>
+      <div class="tab${currentTab==='전세'?' active':''}" data-tab="전세">전세</div>
+      <div class="tab${currentTab==='월세'?' active':''}" data-tab="월세">월세</div>
+    </div>
+
+    <!-- 평형 -->
+    <div class="pyeong-row">${pyeongHtml}</div>
+
+    <!-- 지표 1행: 시세 -->
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">최근 실거래</div>
+        <div class="metric-value">${recentPrice ? formatPrice(recentPrice) : '-'}</div>
+        ${changeHtml}
+      </div>
+      <div class="metric">
+        <div class="metric-label">역대 최고가</div>
+        <div class="metric-value">${highPrice ? formatPrice(highPrice) : '-'}</div>
+        <div class="metric-change neutral">${highData && highData.date ? highData.date : ''}</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">전세가율</div>
+        <div class="metric-value">${jeonseRate ? jeonseRate + '%' : '-'}</div>
+      </div>
+    </div>
+    <!-- 지표 2행: 동적으로 채움 (데이터 있는 것만, 3열 그리드) -->
+    ${(() => {
+      const cells = [];
+      // 평당가
+      const py = currentPyeong ? Math.round(parseInt(currentPyeong) / 3.3058) : 0;
+      const ppPrice = (recentPrice && py > 0) ? Math.round(recentPrice / py) : null;
+      if (ppPrice) cells.push({label:'평당가', value:formatPrice(ppPrice), sub:py+'평 기준'});
+      // 주차
+      const pk = parseInt(d.parking || 0);
+      const hh = parseInt(d.total_units || 0);
+      if (pk > 0) cells.push({label:'주차', value:pk.toLocaleString()+'대', sub: hh > 0 ? '세대당 '+(pk/hh).toFixed(1)+'대' : ''});
+      // 최고층
+      if (d.top_floor) cells.push({label:'최고층', value:d.top_floor+'층'});
+      // 관리비
+      if (d.mgmt_fee) cells.push({label:'월 관리비', value:Math.round(d.mgmt_fee/10000)+'만원', sub:'세대당 평균'});
+      // 난방
+      if (d.heating) cells.push({label:'난방', value:d.heating});
+      // 시공사
+      if (d.builder) cells.push({label:'시공', value:d.builder});
+      // 준공
+      if (d.build_year) cells.push({label:'준공', value:d.build_year+'년'});
+      // 세대수
+      if (d.total_units) cells.push({label:'세대수', value:d.total_units.toLocaleString()+'세대'});
+
+      if (cells.length === 0) return '';
+      // 3열씩 묶어서 출력
+      let html = '';
+      for (let i = 0; i < cells.length; i += 3) {
+        const row = cells.slice(i, i + 3);
+        html += '<div class="metrics">';
+        row.forEach(c => {
+          const fontSize = (c.value && c.value.length > 6) ? ' style="font-size:13px"' : '';
+          html += '<div class="metric"><div class="metric-label">'+esc(c.label)+'</div><div class="metric-value"'+fontSize+'>'+esc(c.value)+'</div>'+(c.sub ? '<div class="metric-change neutral">'+esc(c.sub)+'</div>' : '')+'</div>';
+        });
+        html += '</div>';
+      }
+      return html;
+    })()}
+
+    <!-- 거래량 + 그래프 -->
+    <div class="chart-section">
+      <div class="chart-title">거래량</div>
+      <div style="height:40px;position:relative;"><canvas id="volumeChart"></canvas></div>
+      <div class="chart-title" style="margin-top:8px;">실거래가</div>
+      <div class="chart-wrap"><canvas id="priceChart"></canvas></div>
+    </div>
+
+    <!-- 최근 실거래 -->
+    <div class="section">
+      <div class="section-title">최근 실거래</div>
+      <div class="trade-list">${tradeListHtml || '<div style="font-size:12px;color:var(--sub);padding:8px 0;">거래 내역이 없습니다</div>'}</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 휙 매물 -->
+    <div class="section">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div class="section-title" style="margin-bottom:0;">휙 등록 매물</div>
+        ${listingBadge ? '<div class="listing-badge">'+esc(listingBadge)+'</div>' : ''}
+      </div>
+      ${listingHtml
+        ? '<div class="trade-list">' + listingHtml + '</div>'
+        : '<div class="listing-empty"><div class="listing-empty-text">이 단지에 등록된 매물이 아직 없습니다</div><div class="listing-empty-cta" onclick="location.href=\'card_generator_v2_auth.html\'">중개사님, 매물을 등록해보세요 →</div></div>'
+      }
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 주변 단지 -->
+    <div class="section">
+      <div class="section-title">${esc(dong)} 주변 단지</div>
+      <div style="font-size:11px;color:var(--sub);margin-bottom:12px;margin-top:-6px;">84㎡ 기준</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">${nearbyHtml || '<div style="font-size:12px;color:var(--sub);">주변 단지 정보가 없습니다</div>'}</div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="faq-section">
+      <div class="section-title">자주 묻는 질문</div>
+      ${faqHtml}
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- CTA -->
+    <div class="cta-section">
+      <button class="btn-primary" onclick="location.href='mobile-v6.html'">이 단지 매물 전체보기</button>
+      <button class="btn-secondary" onclick="location.href='card_generator_v2_auth.html'">공인중개사 서비스 · 무료로 시작하기</button>
+    </div>
+
+    <!-- SEO -->
+    <div class="seo-section">
+      <div class="seo-text">
+        ${esc(seoShort)}${seoRest ? '<span id="seoMore" style="display:none;">' + esc(seoRest) + '</span><span class="seo-more" onclick="document.getElementById(\'seoMore\').style.display=\'inline\';this.style.display=\'none\';"> 더보기</span>' : ''}
+      </div>
+      <div class="seo-source">실거래가 출처: 국토교통부 실거래가 공개시스템 · 매일 업데이트</div>
+    </div>
+  `;
+
+  // 이벤트 바인딩
+  $$('.tab').forEach(el => el.addEventListener('click', () => {
+    currentTab = el.dataset.tab;
+    render();
+  }));
+  $$('.pyeong-btn').forEach(el => el.addEventListener('click', () => {
+    currentPyeong = el.dataset.cat;
+    render();
+  }));
+
+  // 차트
+  drawChart();
+}
+
+// ── 차트 (scatter — 점 하나 = 실거래 1건) ──
+function drawChart() {
+  const canvas = document.getElementById('priceChart');
+  if (!canvas) return;
+
+  if (chart) { chart.destroy(); chart = null; }
+  if (volumeChart) { volumeChart.destroy(); volumeChart = null; }
+
+  const suffix = currentTab === '전세' ? '_jeonse' : (currentTab === '월세' ? '_wolse' : '');
+  const key = currentPyeong + (suffix || '');
+  const ph = (DATA.price_history || {})[key] || [];
+
+  // price_history: [{date:"2024-03-15", price:131000, floor:12}, ...]
+  // 또는 이전 포맷: [{month:"2024-03", avg_price:131000, count:2}, ...]
+  let points = [];
+
+  if (ph.length > 0 && ph[0].date) {
+    // 신규 포맷: 개별 거래
+    points = ph.map(p => ({
+      x: p.date,
+      y: Math.round(p.price / 100) / 100, // 억 단위
+      floor: p.floor || '',
+      date: p.date,
+      price: p.price,
+    }));
+  } else if (ph.length > 0 && ph[0].month) {
+    // 이전 포맷(월평균) 호환: 점 1개로 표시
+    points = ph.map(p => ({
+      x: p.month + '-15',
+      y: Math.round(p.avg_price / 100) / 100,
+      floor: '',
+      date: p.month,
+      price: p.avg_price,
+    }));
+  }
+
+  // 폴백: price_history 없으면 현재 평형의 recent_trade만
+  if (points.length === 0) {
+    const recent = DATA.recent_trade || {};
+    const targetKey = key; // currentPyeong + suffix
+    for (const [k, v] of Object.entries(recent)) {
+      // 현재 선택한 평형+탭에 해당하는 키만
+      if (k !== targetKey) continue;
+      if (v.price && v.date) {
+        points.push({
+          x: v.date,
+          y: Math.round(v.price / 100) / 100,
+          floor: v.floor || '',
+          date: v.date,
+          price: v.price,
+        });
+      }
+    }
+  }
+
+  points.sort((a, b) => a.x.localeCompare(b.x));
+
+  if (points.length === 0) {
+    canvas.parentElement.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:12px;color:var(--sub);">거래 데이터가 없습니다</div>';
+    return;
+  }
+
+  const yValues = points.map(p => p.y);
+  const min = Math.floor(Math.min(...yValues) * 0.92);
+  const max = Math.ceil(Math.max(...yValues) * 1.05);
+
+  chart = new Chart(canvas, {
+    type: 'scatter',
+    data: {
+      datasets: [{
+        data: points.map(p => ({ x: p.x, y: p.y })),
+        backgroundColor: 'rgba(245,200,66,0.7)',
+        borderColor: '#f5c842',
+        borderWidth: 1,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        pointHoverBackgroundColor: '#f5c842',
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          displayColors: false,
+          callbacks: {
+            title: ctx => {
+              const i = ctx[0].dataIndex;
+              return points[i].date;
+            },
+            beforeBody: ctx => {
+              const p = points[ctx[0].dataIndex];
+              const tabLabel = currentTab || '매매';
+              const py = currentPyeong ? Math.round(parseInt(currentPyeong) / 3.3058) : 0;
+              const pyLabel = py > 0 ? currentPyeong + '(' + py + '평)' : (currentPyeong || '');
+              const parts = [tabLabel];
+              if (pyLabel) parts.push(pyLabel);
+              if (p.floor) parts.push(p.floor + '층');
+              return parts.join(' · ');
+            },
+            label: ctx => {
+              const p = points[ctx.dataIndex];
+              return formatPrice(p.price);
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: 'category',
+          labels: [...new Set(points.map(p => p.x))],
+          grid: { display: false },
+          ticks: {
+            font: { size: 10 },
+            color: '#aaa',
+            maxTicksLimit: 8,
+            maxRotation: 0,
+            callback: function(val, i) {
+              const label = this.getLabelForValue(val);
+              if (!label) return '';
+              const parts = label.split('-');
+              return parts.length >= 2 ? parts[0].slice(2) + '.' + parts[1] : label;
+            }
+          }
+        },
+        y: {
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          ticks: { font: { size: 10 }, color: '#aaa', callback: v => v + '억' },
+          min, max
+        }
+      }
+    }
+  });
+
+  // ── 거래량 바 차트 ──
+  const volCanvas = document.getElementById('volumeChart');
+  if (volCanvas && points.length > 1) {
+    // 월별 거래 건수 집계
+    const monthlyCounts = {};
+    points.forEach(p => {
+      const ym = p.x.slice(0, 7); // "2025-03"
+      monthlyCounts[ym] = (monthlyCounts[ym] || 0) + 1;
+    });
+    const volMonths = Object.keys(monthlyCounts).sort();
+    const volCounts = volMonths.map(m => monthlyCounts[m]);
+    const volLabels = volMonths.map(m => { const p = m.split('-'); return p[0].slice(2) + '.' + p[1]; });
+
+    volumeChart = new Chart(volCanvas, {
+      type: 'bar',
+      data: {
+        labels: volLabels,
+        datasets: [{
+          data: volCounts,
+          backgroundColor: 'rgba(245,200,66,0.35)',
+          borderRadius: 2,
+          barPercentage: 0.6,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ctx.parsed.y + '건' } }
+        },
+        scales: {
+          x: { display: false },
+          y: { display: false }
+        }
+      }
+    });
+  }
+}
+
+// ── 에러 ──
+function showError(msg) {
+  $('#app').innerHTML = `
+    <div class="error">
+      <div class="error-icon">🏠</div>
+      <div class="error-msg">${esc(msg)}</div>
+      <button class="btn-secondary" style="margin-top:16px;width:auto;padding:10px 24px;" onclick="location.href='/'">홈으로</button>
+    </div>
+  `;
+}
+
+// ── JSON-LD 구조화 데이터 (SEO) ──
+function injectJsonLd() {
+  if (!DATA) return;
+  const d = DATA;
+  const locParts = (d.location || '').split(' ');
+  const guName = locParts[0] || '';
+  const canonUrl = `https://hwik.kr/danji.html?id=${new URLSearchParams(location.search).get('id')}`;
+
+  const subway = d.nearby_subway || [];
+  const recentFirst = d.categories && d.categories[0] ? (d.recent_trade || {})[d.categories[0]] : null;
+  const highFirst = d.categories && d.categories[0] ? (d.all_time_high || {})[d.categories[0]] : null;
+  const jeonseFirst = d.categories && d.categories[0] ? (d.recent_trade || {})[d.categories[0] + '_jeonse'] : null;
+  let jr = d.jeonse_rate;
+  if (jeonseFirst && recentFirst && recentFirst.price > 0) jr = Math.round(jeonseFirst.price / recentFirst.price * 1000) / 10;
+
+  const faq = [
+    { q: `${d.complex_name} 최근 실거래가는?`, a: recentFirst ? `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentFirst.price)}입니다.${recentFirst.date ? ' ('+recentFirst.date+' 기준)' : ''}` : '최근 거래 내역을 확인 중입니다.' },
+    { q: `${d.complex_name} 전세가율은?`, a: jr ? `${d.complex_name}의 전세가율은 약 ${jr}%입니다.` : '전세가율 정보를 확인 중입니다.' },
+    { q: `${d.complex_name} 근처 지하철역은?`, a: subway.length > 0 ? subway.map(s => `${s.name}(${s.line || ''}) 도보 ${walkMin(s.distance)}`).join(', ') : '주변 지하철 정보를 확인 중입니다.' },
+    { q: `${d.complex_name} 역대 최고가는?`, a: highFirst ? `${d.complex_name} 역대 최고가는 ${formatPrice(highFirst.price)}입니다.${highFirst.date ? ' ('+highFirst.date+')' : ''}` : '역대 최고가 정보를 확인 중입니다.' },
+  ];
+
+  const ld = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Residence",
+        "name": d.complex_name,
+        "address": { "@type": "PostalAddress", "addressLocality": d.location, "streetAddress": d.address, "addressRegion": "서울특별시", "addressCountry": "KR" },
+        "geo": { "@type": "GeoCoordinates", "latitude": d.lat, "longitude": d.lng },
+        "description": d.seo_text || '',
+        "numberOfRooms": d.total_units,
+        "yearBuilt": d.build_year,
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr" },
+          { "@type": "ListItem", "position": 2, "name": `서울 ${guName}`, "item": `https://hwik.kr/danji.html?gu=${encodeURIComponent(guName)}` },
+          { "@type": "ListItem", "position": 3, "name": d.complex_name, "item": canonUrl },
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": faq.map(f => ({
+          "@type": "Question",
+          "name": f.q,
+          "acceptedAnswer": { "@type": "Answer", "text": f.a }
+        }))
+      }
+    ]
+  };
+  const script = document.createElement('script');
+  script.type = 'application/ld+json';
+  script.textContent = JSON.stringify(ld);
+  document.head.appendChild(script);
+}
+
+// ── 실행 ──
+loadData().then(() => { injectJsonLd(); });
+</script>
+</body>
+</html>
