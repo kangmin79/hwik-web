@@ -129,9 +129,20 @@ def fetch_trades(lawd_cd: str, year_month: str, api_url: str, deal_type: str) ->
         items = []
         for item in root.findall(".//item"):
             row = {c.tag: (c.text.strip() if c.text else "") for c in item}
-            row["_deal_type"] = deal_type
             row["_lawd_cd"] = lawd_cd
             row["_year_month"] = year_month
+
+            # 전월세 API: monthlyRent(월세금) > 0이면 월세, 아니면 전세
+            if deal_type == "전세":
+                monthly = row.get("monthlyRent") or row.get("monthlyAmount") or "0"
+                try:
+                    monthly_val = int(str(monthly).replace(",", "").strip() or "0")
+                except:
+                    monthly_val = 0
+                row["_deal_type"] = "월세" if monthly_val > 0 else "전세"
+            else:
+                row["_deal_type"] = deal_type
+
             items.append(row)
         return items
 
@@ -198,21 +209,28 @@ def upsert_trade_cache(year_month: str, all_data: dict):
     if not rows:
         return 0
 
-    # 배치 upsert (50개씩)
-    batch_size = 50
+    # 1건씩 upsert (data 필드가 크므로)
     total = 0
-    for i in range(0, len(rows), batch_size):
-        batch = rows[i:i + batch_size]
-        resp = sb_session.post(
-            f"{SUPABASE_URL}/rest/v1/trade_cache",
-            headers=SB_HEADERS,
-            json=batch,
-            timeout=30,
-        )
-        if resp.status_code in (200, 201):
-            total += len(batch)
-        else:
-            print(f"  ⚠️ upsert 오류: {resp.status_code} {resp.text[:200]}")
+    for row in rows:
+        for attempt in range(3):
+            try:
+                resp = sb_session.post(
+                    f"{SUPABASE_URL}/rest/v1/trade_cache",
+                    headers=SB_HEADERS,
+                    json=[row],
+                    timeout=60,
+                )
+                if resp.status_code in (200, 201):
+                    total += 1
+                    break
+                else:
+                    if attempt < 2:
+                        time.sleep(1)
+            except Exception as e:
+                if attempt < 2:
+                    time.sleep(2)
+                else:
+                    print(f"  ⚠️ upsert 실패: {row['kapt_code']}/{row['year_month']} — {e}")
 
     return total
 
@@ -408,7 +426,14 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
         date_str = parse_date(t)
         floor = parse_floor(t)
 
-        suffix = "" if deal_type == "매매" else "_jeonse"
+        if deal_type == "매매":
+            suffix = ""
+        elif deal_type == "전세":
+            suffix = "_jeonse"
+        elif deal_type == "월세":
+            suffix = "_wolse"
+        else:
+            suffix = ""
         key = cat + suffix
 
         # 개별 거래 기록 (점 하나 = 거래 1건)
@@ -476,10 +501,13 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
 
     slug = apt.get("slug") or apt.get("kapt_name") or ""
     danji_id = slug.replace(" ", "-").lower()
-    # 간단한 slug 정리
     import re as _re
     danji_id = _re.sub(r'[^a-z0-9가-힣\-]', '', danji_id)
-    if not danji_id:
+    # kapt_code 뒤 4자리 붙여서 고유성 보장
+    kapt_suffix = (apt.get("kapt_code") or "")[-4:]
+    if kapt_suffix:
+        danji_id = f"{danji_id}-{kapt_suffix}"
+    if not danji_id or danji_id == f"-{kapt_suffix}":
         danji_id = apt.get("kapt_code", "unknown")
 
     top_floor = None

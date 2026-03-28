@@ -708,15 +708,20 @@ function drawChart() {
   const min = Math.floor(Math.min(...yValues) * 0.92);
   const max = Math.ceil(Math.max(...yValues) * 1.05);
 
+  // 점 개수에 따라 크기/투명도 조절
+  const ptCount = points.length;
+  const ptRadius = ptCount > 200 ? 2.5 : ptCount > 50 ? 3.5 : 5;
+  const ptAlpha = ptCount > 200 ? 0.35 : ptCount > 50 ? 0.5 : 0.7;
+
   chart = new Chart(canvas, {
     type: 'scatter',
     data: {
       datasets: [{
         data: points.map(p => ({ x: p.x, y: p.y })),
-        backgroundColor: 'rgba(245,200,66,0.7)',
-        borderColor: '#f5c842',
-        borderWidth: 1,
-        pointRadius: 5,
+        backgroundColor: `rgba(245,200,66,${ptAlpha})`,
+        borderColor: 'rgba(245,200,66,0.3)',
+        borderWidth: 0.5,
+        pointRadius: ptRadius,
         pointHoverRadius: 7,
         pointHoverBackgroundColor: '#f5c842',
       }]
