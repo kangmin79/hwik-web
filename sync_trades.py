@@ -455,10 +455,11 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
                 "type": deal_type,
             }
 
-        # 역대 최고 (매매만)
-        if deal_type == "매매":
-            if cat not in all_time_high or price > all_time_high[cat].get("price", 0):
-                all_time_high[cat] = {
+        # 3년 내 최고 (매매 + 전세)
+        if deal_type in ("매매", "전세"):
+            high_key = cat if deal_type == "매매" else cat + "_jeonse"
+            if high_key not in all_time_high or price > all_time_high[high_key].get("price", 0):
+                all_time_high[high_key] = {
                     "price": price,
                     "date": date_str,
                 }
