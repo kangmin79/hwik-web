@@ -221,6 +221,9 @@ function getCurrentPyLabel() {
   return '전용 ' + currentPyeong + '㎡';
 }
 
+// 햅틱 진동 (10ms)
+function haptic() { if (navigator.vibrate) navigator.vibrate(10); }
+
 function distText(m) {
   if (!m) return '';
   return m >= 1000 ? (m/1000).toFixed(1) + 'km' : m + 'm';
@@ -709,10 +712,12 @@ function render() {
 
   // 이벤트 바인딩
   $$('.tab').forEach(el => el.addEventListener('click', () => {
+    haptic();
     currentTab = el.dataset.tab;
     render();
   }));
   $$('.pyeong-btn').forEach(el => el.addEventListener('click', () => {
+    haptic();
     currentPyeong = el.dataset.cat;
     render();
     // 선택한 버튼을 왼쪽 첫번째로 스크롤
@@ -840,6 +845,7 @@ function drawChart() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      onClick: () => haptic(),
       interaction: {
         mode: 'nearest',
         intersect: false,
