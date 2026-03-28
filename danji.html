@@ -591,8 +591,8 @@ function render() {
     <!-- 평형 -->
     <div class="pyeong-row${cats.length > 3 ? ' many' : ''}">${pyeongHtml}</div>
 
-    <!-- 지표 1행: 시세 -->
-    <div class="metrics">
+    <!-- 지표 1행: 시세 (월세 탭에서는 숨김) -->
+    ${currentTab !== '월세' ? `<div class="metrics">
       <div class="metric accent-yellow">
         <div class="metric-label">최근 실거래</div>
         <div class="metric-value">${recentPrice ? formatPrice(recentPrice) : '-'}</div>
@@ -607,9 +607,9 @@ function render() {
         <div class="metric-label">전세가율</div>
         <div class="metric-value">${jeonseRate ? jeonseRate + '%' : '-'}</div>
       </div>
-    </div>
-    <!-- 지표 2행: 평당가 + 최고 대비 + 거래량 -->
-    <div class="metrics">
+    </div>` : ''}
+    <!-- 지표 2행: 평당가 + 최고 대비 + 거래량 (월세 탭 숨김) -->
+    ${currentTab !== '월세' ? `<div class="metrics">` : `<div style="display:none">`}
       ${(() => {
         const py = getCurrentPy();
         const ppPrice = (recentPrice && py > 0) ? Math.round(recentPrice / py) : null;
