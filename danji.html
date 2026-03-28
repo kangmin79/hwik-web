@@ -204,12 +204,12 @@ function getCurrentPy() {
   if (pm && pm.supply > 0) return Math.round(pm.supply / 3.3058);
   return Math.round(parseInt(currentPyeong) / 3.3058);
 }
-// 현재 평형의 라벨 ("공급 52평" 또는 "전용 85㎡")
+// 현재 평형의 라벨
 function getCurrentPyLabel() {
   if (!DATA || !currentPyeong) return '';
   const pm = (DATA.pyeongs_map || {})[currentPyeong];
-  if (pm && pm.supply > 0) return '공급 ' + Math.round(pm.supply / 3.3058) + '평';
-  return '전용 ' + currentPyeong + '㎡';
+  if (pm && pm.supply > 0) return Math.round(pm.supply / 3.3058) + '평(공급)';
+  return currentPyeong + '㎡(전용)';
 }
 
 function distText(m) {
