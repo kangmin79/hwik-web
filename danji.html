@@ -714,24 +714,22 @@ function render() {
   $$('.pyeong-btn').forEach(el => el.addEventListener('click', () => {
     currentPyeong = el.dataset.cat;
     render();
-    // 선택한 버튼 중앙으로 스크롤
+    // 선택한 버튼을 왼쪽 첫번째로 스크롤
     setTimeout(() => {
       const active = document.querySelector('.pyeong-btn.active');
       if (active) {
         const row = active.parentElement;
-        const left = active.offsetLeft - (row.offsetWidth / 2) + (active.offsetWidth / 2);
-        row.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+        row.scrollTo({ left: active.offsetLeft - 16, behavior: 'smooth' });
       }
     }, 50);
   }));
 
-  // 렌더할 때마다 active 버튼 중앙으로
+  // 렌더할 때마다 active 버튼을 왼쪽 첫번째로
   setTimeout(() => {
     const active = document.querySelector('.pyeong-btn.active');
     if (active) {
       const row = active.parentElement;
-      const left = active.offsetLeft - (row.offsetWidth / 2) + (active.offsetWidth / 2);
-      row.scrollTo({ left: Math.max(0, left), behavior: 'instant' });
+      row.scrollTo({ left: active.offsetLeft - 16, behavior: 'instant' });
     }
   }, 10);
 
