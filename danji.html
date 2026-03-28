@@ -539,13 +539,17 @@ function render() {
   // FAQ 데이터 — 확실한 데이터가 있는 항목만 표시
   const faqItems = [];
   if (recentPrice) {
-    faqItems.push({ q: `${d.complex_name} 최근 실거래가는?`, a: `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentPrice)}입니다.${recentData && recentData.date ? ' ('+recentData.date+' 기준)' : ''}` });
+    const _tradeLabel = currentTab === '전세' ? '전세' : (currentTab === '월세' ? '월세' : '매매');
+    faqItems.push({ q: `${d.complex_name} 최근 ${_tradeLabel} 실거래가는?`, a: `${d.complex_name} 최근 ${_tradeLabel} 실거래가는 ${formatPrice(recentPrice)}입니다.${recentData && recentData.date ? ' ('+recentData.date+' 기준)' : ''}` });
     const _py = getCurrentPy();
     if (_py > 0) faqItems.push({ q: `${d.complex_name} 평당가는?`, a: `${_py}평(${getCurrentPyLabel()}) 기준 평당 ${formatPrice(Math.round(recentPrice / _py))}입니다.` });
   }
   if (jeonseRate) faqItems.push({ q: `${d.complex_name} 전세가율은?`, a: `${d.complex_name}의 전세가율은 ${jeonseRate}%입니다.` });
   if (subway.length > 0) faqItems.push({ q: `${d.complex_name} 근처 지하철역은?`, a: subway.map(s => `${s.name}(${s.line || ''}) 도보 ${walkMin(s.distance)}`).join(', ') });
-  if (highPrice) faqItems.push({ q: `${d.complex_name} 3년 내 최고가는?`, a: `3년 내 최고가는 ${formatPrice(highPrice)}입니다.${highData && highData.date ? ' ('+highData.date+')' : ''}` });
+  if (highPrice) {
+    const tradeLabel = currentTab === '전세' ? '전세' : '매매';
+    faqItems.push({ q: `${d.complex_name} ${tradeLabel} 3년 내 최고가는?`, a: `${tradeLabel} 3년 내 최고가는 ${formatPrice(highPrice)}입니다.${highData && highData.date ? ' ('+highData.date+')' : ''}` });
+  }
   if (parseInt(d.parking || 0) > 0 && d.total_units) {
     const _ratio = (parseInt(d.parking) / d.total_units).toFixed(1);
     faqItems.push({ q: `${d.complex_name} 주차 대수는?`, a: `총 ${parseInt(d.parking).toLocaleString()}대 (세대당 ${_ratio}대)입니다.` });
