@@ -3456,7 +3456,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         
         // 공유 링크 생성 (GitHub Pages 직접 링크)
         function getShareLink() {
-            const base = 'https://kangmin79.github.io/hwik-web/property_view.html';
+            const base = 'https://hwik.kr/property_view.html';
             const agentParam = currentUser ? '&agent=' + currentUser.id : '';
             if (selectedCards.length === 1) {
                 return base + '?id=' + selectedCards[0].id + agentParam;

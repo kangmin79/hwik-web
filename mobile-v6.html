@@ -2370,7 +2370,7 @@
   function getShareLink() {
     const ids = cardItems.map(c => c.id);
     const agentParam = currentUser ? '&agent=' + currentUser.id : '';
-    const base = 'https://kangmin79.github.io/hwik-web/property_view.html';
+    const base = 'https://hwik.kr/property_view.html';
     return ids.length === 1 ? `${base}?id=${ids[0]}${agentParam}` : `${base}?ids=${ids.join(',')}${agentParam}`;
   }
 
@@ -2598,7 +2598,7 @@
   // ★ 상세 모달 썸네일 클릭 → property_view 갤러리로 이동
   function openDetailGallery() {
     if (!currentItem?.id) return;
-    const url = `https://kangmin79.github.io/hwik-web/property_view.html?id=${currentItem.id}&agent=${currentUser?.id || ''}`;
+    const url = `https://hwik.kr/property_view.html?id=${currentItem.id}&agent=${currentUser?.id || ''}`;
     window.open(url, '_blank');
   }
 
