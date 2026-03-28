@@ -671,7 +671,7 @@ function render() {
       </div>
       ${listingHtml
         ? '<div class="trade-list">' + listingHtml + '</div>'
-        : '<div class="listing-empty"><div class="listing-empty-text">이 단지에 등록된 매물이 아직 없습니다</div><div class="listing-empty-cta" onclick="location.href=\'card_generator_v2_auth.html\'">중개사님, 매물을 등록해보세요 →</div></div>'
+        : '<div class="listing-empty" onclick="location.href=\'card_generator_v2_auth.html\'" style="cursor:pointer;"><div class="listing-empty-text">이 단지에 등록된 매물이 아직 없습니다</div><div class="listing-empty-cta">중개사님, 매물을 등록해보세요 →</div></div>'
       }
     </div>
 
