@@ -247,7 +247,16 @@ function applyData(data) {
   document.getElementById('canonical').href = `https://hwik.kr/danji.html?id=${id}`;
   // 첫 번째 평형 선택
   const cats = data.categories || [];
-  if (cats.length > 0 && !currentPyeong) currentPyeong = cats[0];
+  // 기본 평형: 전용 84㎡(국민평수 34평)에 가장 가까운 것 선택
+  if (cats.length > 0 && !currentPyeong) {
+    const target = 84;
+    let bestCat = cats[0], bestDiff = 999;
+    cats.forEach(c => {
+      const diff = Math.abs(parseInt(c) - target);
+      if (diff < bestDiff) { bestDiff = diff; bestCat = c; }
+    });
+    currentPyeong = bestCat;
+  }
   render();
 }
 
