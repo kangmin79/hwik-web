@@ -657,7 +657,7 @@ function render() {
 
     <!-- 최근 실거래 -->
     <div class="section">
-      <div class="section-title">최근 실거래</div>
+      <div class="section-title">최근 ${currentTab === '전세' ? '전세' : (currentTab === '월세' ? '월세' : '매매')} 실거래</div>
       <div class="trade-list">${tradeListHtml || '<div style="font-size:12px;color:var(--sub);padding:8px 0;">거래 내역이 없습니다</div>'}</div>
     </div>
 
