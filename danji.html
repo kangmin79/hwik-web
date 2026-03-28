@@ -285,8 +285,8 @@ function render() {
   }
 
   // 최근 거래 목록 (현재 선택 평형 + 탭 기준)
-  const tradeKey = currentPyeong + (currentTab === '전세' ? '_jeonse' : (currentTab === '월세' ? '_wolse' : ''));
-  const ph = (d.price_history || {})[tradeKey] || [];
+  const tradeKeyFull = currentPyeong + (currentTab === '전세' ? '_jeonse' : (currentTab === '월세' ? '_wolse' : ''));
+  const ph = (d.price_history || {})[tradeKeyFull] || [];
   const pyNum = currentPyeong ? Math.round(parseInt(currentPyeong) / 3.3058) : 0;
   const pyLabel = pyNum > 0 ? currentPyeong + '㎡(' + pyNum + '평)' : (currentPyeong ? currentPyeong + '㎡' : '');
 
@@ -296,7 +296,7 @@ function render() {
     tradeItems = ph.slice().sort((a,b) => (b.date||'').localeCompare(a.date||''));
   } else {
     // 폴백: recent_trade에서 현재 키만
-    const val = recent[tradeKey];
+    const val = recent[tradeKeyFull];
     if (val) tradeItems = [val];
   }
 
