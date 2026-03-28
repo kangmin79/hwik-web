@@ -204,6 +204,13 @@ function getCurrentPy() {
   if (pm && pm.supply > 0) return Math.round(pm.supply / 3.3058);
   return Math.round(parseInt(currentPyeong) / 3.3058);
 }
+// 현재 평형의 라벨 ("공급 52평" 또는 "전용 85㎡")
+function getCurrentPyLabel() {
+  if (!DATA || !currentPyeong) return '';
+  const pm = (DATA.pyeongs_map || {})[currentPyeong];
+  if (pm && pm.supply > 0) return '공급 ' + Math.round(pm.supply / 3.3058) + '평';
+  return '전용 ' + currentPyeong + '㎡';
+}
 
 function distText(m) {
   if (!m) return '';
@@ -365,7 +372,7 @@ function render() {
   const tradeKeyFull = currentPyeong + (currentTab === '전세' ? '_jeonse' : (currentTab === '월세' ? '_wolse' : ''));
   const ph = (d.price_history || {})[tradeKeyFull] || [];
   const pyNum = getCurrentPy();
-  const pyLabel = pyNum > 0 ? currentPyeong + '㎡(' + pyNum + '평)' : (currentPyeong ? currentPyeong + '㎡' : '');
+  const pyLabel = getCurrentPyLabel() + (currentPyeong ? '(전용' + currentPyeong + '㎡)' : '');
 
   // price_history에 개별 거래가 있으면 그걸 사용
   let tradeItems = [];
@@ -510,7 +517,7 @@ function render() {
   if (recentPrice) {
     faqItems.push({ q: `${d.complex_name} 최근 실거래가는?`, a: `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentPrice)}입니다.${recentData && recentData.date ? ' ('+recentData.date+' 기준)' : ''}` });
     const _py = getCurrentPy();
-    if (_py > 0) faqItems.push({ q: `${d.complex_name} 평당가는?`, a: `${_py}평 기준 평당 ${formatPrice(Math.round(recentPrice / _py))}입니다.` });
+    if (_py > 0) faqItems.push({ q: `${d.complex_name} 평당가는?`, a: `${getCurrentPyLabel()} 기준 평당 ${formatPrice(Math.round(recentPrice / _py))}입니다.` });
   }
   if (jeonseRate) faqItems.push({ q: `${d.complex_name} 전세가율은?`, a: `${d.complex_name}의 전세가율은 ${jeonseRate}%입니다.` });
   if (subway.length > 0) faqItems.push({ q: `${d.complex_name} 근처 지하철역은?`, a: subway.map(s => `${s.name}(${s.line || ''}) 도보 ${walkMin(s.distance)}`).join(', ') });
@@ -580,7 +587,7 @@ function render() {
       ${(() => {
         const py = getCurrentPy();
         const ppPrice = (recentPrice && py > 0) ? Math.round(recentPrice / py) : null;
-        return ppPrice ? '<div class="metric accent-yellow"><div class="metric-label">평당가</div><div class="metric-value">'+formatPrice(ppPrice)+'</div><div class="metric-change neutral">'+py+'평 기준</div></div>' : '<div class="metric"><div class="metric-label">평당가</div><div class="metric-value">-</div></div>';
+        return ppPrice ? '<div class="metric accent-yellow"><div class="metric-label">평당가</div><div class="metric-value">'+formatPrice(ppPrice)+'</div><div class="metric-change neutral">'+getCurrentPyLabel()+' 기준</div></div>' : '<div class="metric"><div class="metric-label">평당가</div><div class="metric-value">-</div></div>';
       })()}
       ${(() => {
         if (!recentPrice || !highPrice) return '<div class="metric"><div class="metric-label">최고 대비</div><div class="metric-value">-</div></div>';
@@ -816,7 +823,7 @@ function drawChart() {
               const p = points[ctx[0].dataIndex];
               const tabLabel = currentTab || '매매';
               const py = getCurrentPy();
-              const pyLabel = py > 0 ? py + '평(전용' + currentPyeong + '㎡)' : '전용 ' + (currentPyeong || '') + '㎡';
+              const pyLabel = getCurrentPyLabel() + '(전용' + currentPyeong + '㎡)';
               const parts = [tabLabel];
               if (pyLabel) parts.push(pyLabel);
               return parts.join(' · ');
