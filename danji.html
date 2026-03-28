@@ -301,16 +301,14 @@ function render() {
     ...school.slice(0,2).map(s => `<div class="tag tag-school">${esc(s.name)} ${walkMin(s.distance)}</div>`)
   ].join('');
 
-  // 평형 버튼 — pyeongs_map 있으면 공급면적 기준, 없으면 전용면적만
+  // 평형 버튼 — pyeongs_map 있으면 공급면적 표시, 없으면 전용면적
   const pm = d.pyeongs_map || {};
   const pyeongHtml = cats.map(c => {
     let label;
     if (pm[c] && pm[c].supply > 0) {
-      // 공급면적 기준 평수
       const supplyPy = Math.round(pm[c].supply / 3.3058);
-      label = `${supplyPy}평(전용${c}㎡)`;
+      label = `${supplyPy}평(${Math.round(pm[c].supply)}㎡)`;
     } else {
-      // pyeongs_map 없으면 전용면적만 표시 (잘못된 평수 방지)
       label = `전용 ${c}㎡`;
     }
     const active = c === currentPyeong ? ' active' : '';
