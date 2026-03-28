@@ -69,11 +69,15 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 
 /* 지표 */
 .metrics { padding:0 16px 10px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
-.metric { background:var(--surface); border-radius:var(--radius); padding:12px; border:1px solid var(--border); }
-.metric:first-child { border-left:3px solid var(--yellow); }
+.metric { background:var(--surface); border-radius:var(--radius); padding:12px 10px; border:1px solid var(--border); position:relative; overflow:hidden; }
+.metric::before { content:''; position:absolute; top:0; left:0; width:3px; height:100%; background:var(--border); }
+.metric.accent-yellow::before { background:var(--yellow); }
+.metric.accent-red::before { background:var(--red); }
+.metric.accent-green::before { background:var(--green); }
+.metric.accent-blue::before { background:#5b9ef5; }
 .metric-label { font-size:10px; color:var(--sub); margin-bottom:4px; letter-spacing:-0.3px; }
-.metric-value { font-size:15px; font-weight:600; }
-.metric-change { font-size:10px; margin-top:2px; }
+.metric-value { font-size:16px; font-weight:700; }
+.metric-change { font-size:10px; margin-top:3px; font-weight:500; }
 .metric-change.down { color:var(--red); }
 .metric-change.up { color:var(--green); }
 .metric-change.neutral { color:var(--sub); }
@@ -518,17 +522,17 @@ function render() {
 
     <!-- 지표 1행: 시세 -->
     <div class="metrics">
-      <div class="metric">
+      <div class="metric accent-yellow">
         <div class="metric-label">최근 실거래</div>
         <div class="metric-value">${recentPrice ? formatPrice(recentPrice) : '-'}</div>
         ${changeHtml}
       </div>
-      <div class="metric">
+      <div class="metric accent-red">
         <div class="metric-label">3년 내 최고가</div>
         <div class="metric-value">${highPrice ? formatPrice(highPrice) : '-'}</div>
         <div class="metric-change neutral">${highData && highData.date ? highData.date : ''}</div>
       </div>
-      <div class="metric">
+      <div class="metric accent-blue">
         <div class="metric-label">전세가율</div>
         <div class="metric-value">${jeonseRate ? jeonseRate + '%' : '-'}</div>
       </div>
@@ -539,15 +543,15 @@ function render() {
       // 평당가
       const py = currentPyeong ? Math.round(parseInt(currentPyeong) / 3.3058) : 0;
       const ppPrice = (recentPrice && py > 0) ? Math.round(recentPrice / py) : null;
-      if (ppPrice) cells.push({label:'평당가', value:formatPrice(ppPrice), sub:py+'평 기준'});
+      if (ppPrice) cells.push({label:'평당가', value:formatPrice(ppPrice), sub:py+'평 기준', accent:'yellow'});
       // 주차
       const pk = parseInt(d.parking || 0);
       const hh = parseInt(d.total_units || 0);
-      if (pk > 0) cells.push({label:'주차', value:pk.toLocaleString()+'대', sub: hh > 0 ? '세대당 '+(pk/hh).toFixed(1)+'대' : ''});
+      if (pk > 0) cells.push({label:'주차', value:pk.toLocaleString()+'대', sub: hh > 0 ? '세대당 '+(pk/hh).toFixed(1)+'대' : '', accent:'green'});
       // 최고층
-      if (d.top_floor) cells.push({label:'최고층', value:d.top_floor+'층'});
+      if (d.top_floor) cells.push({label:'최고층', value:d.top_floor+'층', accent:'blue'});
       // 관리비
-      if (d.mgmt_fee) cells.push({label:'월 관리비', value:Math.round(d.mgmt_fee/10000)+'만원', sub:'세대당 평균'});
+      if (d.mgmt_fee) cells.push({label:'월 관리비', value:Math.round(d.mgmt_fee/10000)+'만원', sub:'세대당 평균', accent:'red'});
       // 난방
       if (d.heating) cells.push({label:'난방', value:d.heating});
       // 시공사
@@ -565,7 +569,8 @@ function render() {
         html += '<div class="metrics">';
         row.forEach(c => {
           const fontSize = (c.value && c.value.length > 6) ? ' style="font-size:13px"' : '';
-          html += '<div class="metric"><div class="metric-label">'+esc(c.label)+'</div><div class="metric-value"'+fontSize+'>'+esc(c.value)+'</div>'+(c.sub ? '<div class="metric-change neutral">'+esc(c.sub)+'</div>' : '')+'</div>';
+          const acc = c.accent ? ' accent-'+c.accent : '';
+          html += '<div class="metric'+acc+'"><div class="metric-label">'+esc(c.label)+'</div><div class="metric-value"'+fontSize+'>'+esc(c.value)+'</div>'+(c.sub ? '<div class="metric-change neutral">'+esc(c.sub)+'</div>' : '')+'</div>';
         });
         html += '</div>';
       }
