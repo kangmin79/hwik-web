@@ -415,7 +415,7 @@ function render() {
     <div class="nearby-item" onclick="location.href='danji.html?id=${esc(n.id)}'">
       <div>
         <div class="nearby-name">${esc(n.name)}</div>
-        <div class="nearby-sub">${esc(n.location)} ${n.distance ? '· '+distText(n.distance) : ''}</div>
+        <div class="nearby-sub">${esc(n.location)} ${n.distance ? '· '+distText(n.distance) : ''}${n.area_supply ? ' · '+Math.round(n.area_supply/3.3058)+'평' : (n.area_exclu ? ' · 전용'+n.area_exclu+'㎡' : '')}</div>
       </div>
       <div style="text-align:right">
         <div class="nearby-price">${n.price_84 ? formatPrice(n.price_84) : '-'}</div>
@@ -613,7 +613,7 @@ function render() {
     <!-- 주변 단지 -->
     <div class="section">
       <div class="section-title">${esc(dong)} 주변 단지</div>
-      <div style="font-size:11px;color:var(--sub);margin-bottom:12px;margin-top:-6px;">84㎡ 기준</div>
+      <div style="font-size:11px;color:var(--sub);margin-bottom:12px;margin-top:-6px;">매매 기준</div>
       <div style="display:flex;flex-direction:column;gap:8px;">${nearbyHtml || '<div style="font-size:12px;color:var(--sub);">주변 단지 정보가 없습니다</div>'}</div>
     </div>
 

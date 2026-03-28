@@ -641,11 +641,13 @@ def fill_nearby_complex(danji_list: list, apartments: list):
                 price_84 = None
                 rt = other.get("recent_trade") or {}
                 # 1순위: 80~90㎡ 매매
+                matched_area = None
                 for k, v in rt.items():
                     if "_" not in k:
                         area = int(k) if k.isdigit() else 0
                         if 80 <= area <= 90:
                             price_84 = v.get("price")
+                            matched_area = area
                             break
                 # 2순위: 59~120㎡ 범위 내에서 가장 84에 가까운 것
                 if not price_84:
@@ -658,9 +660,16 @@ def fill_nearby_complex(danji_list: list, apartments: list):
                                 if diff < best_diff:
                                     best_diff = diff
                                     price_84 = v.get("price")
+                                    matched_area = area
                 # 59~120㎡ 범위 밖이면 비교 불가 → 제외
                 if not price_84:
                     continue
+
+                # 공급면적 찾기
+                other_pm = other.get("pyeongs_map") or {}
+                supply_area = None
+                if matched_area and str(matched_area) in other_pm:
+                    supply_area = round(other_pm[str(matched_area)].get("supply", 0))
 
                 candidates.append({
                     "id": other["id"],
@@ -668,6 +677,8 @@ def fill_nearby_complex(danji_list: list, apartments: list):
                     "location": other.get("location", ""),
                     "distance": round(dist),
                     "price_84": price_84,
+                    "area_exclu": matched_area,
+                    "area_supply": supply_area,
                 })
 
         candidates.sort(key=lambda x: x["distance"])
