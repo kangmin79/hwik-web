@@ -195,31 +195,71 @@ function walkMin(m) {
   return Math.round(m / 67) + '분'; // 도보 평균 80m/분 → 67m/분 보수적
 }
 
-// ── 데이터 로드 ──
-async function loadData() {
-  const id = new URLSearchParams(location.search).get('id');
-  if (!id) { showError('단지 ID가 없습니다'); return; }
+// ── 캐시 ──
+function cacheKey(id) { return 'danji_' + id; }
 
-  const { data, error } = await sb.from('danji_pages').select('*').eq('id', id).single();
-  if (error || !data) { showError('단지 정보를 찾을 수 없습니다'); return; }
+function saveCache(id, data) {
+  try {
+    localStorage.setItem(cacheKey(id), JSON.stringify({ data, ts: Date.now() }));
+  } catch(e) {}
+}
 
+function loadCache(id) {
+  try {
+    const raw = localStorage.getItem(cacheKey(id));
+    if (!raw) return null;
+    const { data, ts } = JSON.parse(raw);
+    return { data, ts };
+  } catch(e) { return null; }
+}
+
+function applyData(data) {
   DATA = data;
-
   // SEO 메타 업데이트
   document.title = `${data.complex_name} 실거래가 시세 - 휙`;
-  const desc = `${data.complex_name} ${data.location} ${data.total_units}세대 ${data.build_year}년 아파트 실거래가, 전세가, 시세 추이`;
+  const desc = `${data.complex_name} ${data.location} ${data.total_units || ''}세대 ${data.build_year || ''}년 아파트 실거래가, 전세가, 시세 추이`;
   document.getElementById('og-title').content = document.title;
   document.getElementById('og-desc').content = desc;
   document.getElementById('tw-title').content = document.title;
   document.getElementById('tw-desc').content = desc;
   document.querySelector('meta[name="description"]').content = desc;
+  const id = new URLSearchParams(location.search).get('id');
   document.getElementById('canonical').href = `https://hwik.kr/danji.html?id=${id}`;
-
   // 첫 번째 평형 선택
   const cats = data.categories || [];
-  if (cats.length > 0) currentPyeong = cats[0];
-
+  if (cats.length > 0 && !currentPyeong) currentPyeong = cats[0];
   render();
+}
+
+// ── 데이터 로드 (stale-while-revalidate) ──
+async function loadData() {
+  const id = new URLSearchParams(location.search).get('id');
+  if (!id) { showError('단지 ID가 없습니다'); return; }
+
+  // 1. 캐시 있으면 즉시 렌더 (로딩 스피너 제거)
+  const cached = loadCache(id);
+  if (cached) {
+    applyData(cached.data);
+  }
+
+  // 2. Supabase에서 최신 데이터 요청 (5초 타임아웃)
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+
+    const { data, error } = await sb.from('danji_pages').select('*').eq('id', id).single();
+    clearTimeout(timeout);
+
+    if (!error && data) {
+      saveCache(id, data);
+      applyData(data);
+    } else if (!cached) {
+      showError('단지 정보를 찾을 수 없습니다');
+    }
+  } catch (e) {
+    // 네트워크 에러 — 캐시 있으면 그대로, 없으면 에러
+    if (!cached) showError('네트워크 오류. 잠시 후 다시 시도해주세요.');
+  }
 }
 
 // ── 렌더링 ──
