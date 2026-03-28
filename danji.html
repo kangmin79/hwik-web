@@ -676,17 +676,25 @@ function drawChart() {
       plugins: {
         legend: { display: false },
         tooltip: {
+          displayColors: false,
           callbacks: {
             title: ctx => {
               const i = ctx[0].dataIndex;
               return points[i].date;
             },
+            beforeBody: ctx => {
+              const p = points[ctx[0].dataIndex];
+              const tabLabel = currentTab || '매매';
+              const py = currentPyeong ? Math.round(parseInt(currentPyeong) / 3.3058) : 0;
+              const pyLabel = py > 0 ? currentPyeong + '(' + py + '평)' : (currentPyeong || '');
+              const parts = [tabLabel];
+              if (pyLabel) parts.push(pyLabel);
+              if (p.floor) parts.push(p.floor + '층');
+              return parts.join(' · ');
+            },
             label: ctx => {
-              const i = ctx.dataIndex;
-              const p = points[i];
-              let label = formatPrice(p.price);
-              if (p.floor) label += ' · ' + p.floor + '층';
-              return label;
+              const p = points[ctx.dataIndex];
+              return formatPrice(p.price);
             }
           }
         }
