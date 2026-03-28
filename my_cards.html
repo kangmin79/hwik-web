@@ -2330,6 +2330,291 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             color: #64748b;
             margin-top: 10px;
         }
+
+        /* ═══ Customer 360 Hub View ═══ */
+        .hub-overlay {
+            position: fixed; inset: 0; z-index: 2000;
+            background: var(--bg-dark);
+            overflow-y: auto; overflow-x: hidden;
+            opacity: 0; transform: translateY(20px);
+            transition: opacity 0.35s ease, transform 0.35s ease;
+            display: none;
+        }
+        .hub-overlay.show { display: block; }
+        .hub-overlay.visible { opacity: 1; transform: translateY(0); }
+
+        /* 헤더 */
+        .hub-header {
+            position: sticky; top: 0; z-index: 10;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 32px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .hub-back {
+            display: flex; align-items: center; gap: 8px;
+            background: none; border: none; color: var(--text-white);
+            font-size: 15px; font-weight: 600; cursor: pointer; padding: 8px 12px;
+            border-radius: 10px; transition: background 0.2s;
+        }
+        .hub-back:hover { background: var(--primary-bg); }
+        .hub-back svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .hub-actions { display: flex; gap: 8px; }
+        .hub-action-btn {
+            padding: 8px 18px; border-radius: 10px; border: 1px solid var(--border-color);
+            background: var(--bg-card); color: var(--text-white);
+            font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+        }
+        .hub-action-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .hub-action-btn.primary { background: var(--primary); color: var(--bg-dark); border-color: var(--primary); }
+
+        /* 비주얼 허브 */
+        .hub-visual {
+            position: relative;
+            width: 100%; max-width: 700px;
+            height: 380px;
+            margin: 32px auto 0;
+        }
+        .hub-center {
+            position: absolute;
+            left: 50%; top: 50%;
+            transform: translate(-50%, -50%);
+            width: 120px; height: 120px;
+            border-radius: 28px;
+            background: var(--bg-card);
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 40px var(--primary-bg), 0 8px 32px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 5;
+            transition: box-shadow 0.3s;
+        }
+        .hub-center:hover { box-shadow: 0 0 60px var(--primary-bg), 0 8px 32px rgba(0,0,0,0.15); }
+        .hub-center-icon { font-size: 32px; margin-bottom: 4px; }
+        .hub-center-name { font-size: 14px; font-weight: 800; color: var(--text-white); text-align: center; line-height: 1.2; }
+        .hub-center-sub { font-size: 11px; color: var(--text-gray); margin-top: 2px; }
+
+        /* 연결선 (SVG) */
+        .hub-lines {
+            position: absolute; inset: 0; z-index: 1; pointer-events: none;
+        }
+        .hub-line {
+            stroke: var(--border-color); stroke-width: 1.5;
+            stroke-dasharray: 6 4; opacity: 0.6;
+        }
+
+        /* 노드 */
+        .hub-node {
+            position: absolute; z-index: 4;
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: pointer;
+        }
+        .hub-node.appear { transform: translate(-50%, -50%) scale(1); }
+        .hub-node-inner {
+            background: var(--bg-card);
+            border: 1.5px solid var(--border-color);
+            border-radius: 16px;
+            padding: 14px 20px;
+            text-align: center;
+            min-width: 100px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+            transition: all 0.25s;
+        }
+        .hub-node:hover .hub-node-inner {
+            border-color: var(--primary);
+            box-shadow: 0 4px 24px var(--primary-bg), 0 2px 8px rgba(0,0,0,0.08);
+            transform: translateY(-2px);
+        }
+        .hub-node-icon { font-size: 22px; margin-bottom: 4px; }
+        .hub-node-label { font-size: 12px; font-weight: 700; color: var(--text-white); }
+        .hub-node-count {
+            display: inline-block; margin-top: 4px;
+            padding: 2px 10px; border-radius: 10px;
+            background: var(--primary-bg);
+            color: var(--primary); font-size: 11px; font-weight: 700;
+        }
+        .hub-node-count.empty { background: rgba(148,163,184,0.1); color: var(--text-gray-light); }
+        .hub-node-dot {
+            position: absolute;
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--primary);
+            box-shadow: 0 0 8px var(--primary);
+        }
+
+        /* KPI 스트립 */
+        .hub-kpi {
+            max-width: 800px; margin: 0 auto;
+            padding: 0 32px;
+            display: flex; gap: 12px; flex-wrap: wrap;
+            justify-content: center;
+        }
+        .hub-kpi-card {
+            flex: 1; min-width: 140px; max-width: 200px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 16px 20px;
+            text-align: center;
+        }
+        .hub-kpi-value {
+            font-size: 24px; font-weight: 800; color: var(--text-white);
+            line-height: 1;
+        }
+        .hub-kpi-value.warn { color: #f87171; }
+        .hub-kpi-value.good { color: #4ecdc4; }
+        .hub-kpi-label {
+            font-size: 11px; color: var(--text-gray); margin-top: 6px; font-weight: 500;
+        }
+
+        /* 벤토 그리드 */
+        .hub-bento {
+            max-width: 900px; margin: 28px auto 60px;
+            padding: 0 32px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto;
+            gap: 16px;
+        }
+        .bento-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px 24px;
+            overflow: hidden;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .bento-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 20px var(--primary-bg);
+        }
+        .bento-card.full { grid-column: 1 / -1; }
+        .bento-card.highlight {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-bg);
+        }
+        .bento-title {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 14px; font-weight: 700; color: var(--text-white);
+            margin-bottom: 14px;
+        }
+        .bento-title-icon { font-size: 18px; }
+        .bento-title-badge {
+            margin-left: auto;
+            padding: 3px 10px; border-radius: 8px;
+            background: var(--primary-bg); color: var(--primary);
+            font-size: 11px; font-weight: 700;
+        }
+        .bento-empty {
+            color: var(--text-gray-light); font-size: 13px;
+            text-align: center; padding: 16px 0;
+        }
+
+        /* 벤토 내부 아이템 */
+        .bento-item {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+        .bento-item:last-child { border-bottom: none; }
+        .bento-item-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            margin-top: 6px; flex-shrink: 0;
+        }
+        .bento-item-content { flex: 1; }
+        .bento-item-main { font-size: 13px; color: var(--text-white); font-weight: 500; }
+        .bento-item-sub { font-size: 11px; color: var(--text-gray); margin-top: 2px; }
+        .bento-item-date { font-size: 10px; color: var(--text-gray-light); margin-top: 2px; }
+
+        /* 매칭 매물 카드 */
+        .bento-match-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 12px; border-radius: 10px;
+            background: rgba(255,255,255,0.02);
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .bento-match-item:hover { background: var(--primary-bg); }
+        .bento-match-type {
+            padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;
+            flex-shrink: 0;
+        }
+        .bento-match-type.sale { background: rgba(249,115,22,0.15); color: #f97316; }
+        .bento-match-type.jeonse { background: rgba(78,205,196,0.15); color: #4ecdc4; }
+        .bento-match-type.rent { background: rgba(167,139,250,0.15); color: #a78bfa; }
+        .bento-match-info { flex: 1; }
+        .bento-match-name { font-size: 13px; font-weight: 600; color: var(--text-white); }
+        .bento-match-detail { font-size: 11px; color: var(--text-gray); margin-top: 2px; }
+        .bento-match-score {
+            padding: 4px 10px; border-radius: 8px;
+            background: rgba(250,204,21,0.1); color: #facc15;
+            font-size: 11px; font-weight: 700;
+        }
+
+        /* 조건 태그 */
+        .hub-cond-tag {
+            display: inline-block; padding: 5px 12px; border-radius: 8px;
+            background: rgba(78,205,196,0.1); color: #4ecdc4;
+            font-size: 12px; font-weight: 600; margin: 3px 4px;
+            border: 1px solid rgba(78,205,196,0.15);
+        }
+
+        /* 타임라인 (벤토 내부) */
+        .hub-tl-item {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 8px 0;
+        }
+        .hub-tl-badge {
+            padding: 3px 8px; border-radius: 6px;
+            font-size: 10px; font-weight: 700; flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .hub-tl-badge.상담 { background: rgba(96,165,250,0.15); color: #60a5fa; }
+        .hub-tl-badge.방문 { background: rgba(74,222,128,0.15); color: #4ade80; }
+        .hub-tl-badge.매물소개 { background: rgba(251,146,60,0.15); color: #fb923c; }
+        .hub-tl-badge.계약 { background: rgba(248,113,113,0.15); color: #f87171; }
+        .hub-tl-badge.등록 { background: rgba(148,163,184,0.15); color: #94a3b8; }
+        .hub-tl-badge.메모 { background: rgba(148,163,184,0.1); color: #94a3b8; }
+        .hub-tl-content { flex: 1; font-size: 13px; color: var(--text-white); }
+        .hub-tl-date { font-size: 11px; color: var(--text-gray-light); margin-top: 1px; }
+        .hub-tl-more {
+            display: block; width: 100%; text-align: center;
+            padding: 8px; border: none; border-radius: 8px;
+            background: var(--primary-bg); color: var(--primary);
+            font-size: 12px; font-weight: 600; cursor: pointer;
+            margin-top: 8px; transition: background 0.2s;
+        }
+        .hub-tl-more:hover { background: rgba(14,165,233,0.12); }
+
+        /* 메모 입력 */
+        .hub-note-input {
+            display: flex; gap: 8px; margin-bottom: 12px;
+        }
+        .hub-note-input input {
+            flex: 1; padding: 10px 14px; border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-input); color: var(--text-white);
+            font-size: 13px; outline: none;
+            transition: border-color 0.2s;
+        }
+        .hub-note-input input:focus { border-color: var(--primary); }
+        .hub-note-input button {
+            padding: 10px 20px; border-radius: 10px; border: none;
+            background: var(--primary); color: var(--bg-dark);
+            font-weight: 700; font-size: 13px; cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .hub-note-input button:hover { opacity: 0.85; }
+
+        @media (max-width: 768px) {
+            .hub-bento { grid-template-columns: 1fr; padding: 0 16px; }
+            .bento-card.full { grid-column: 1; }
+            .hub-visual { height: 300px; }
+            .hub-kpi { padding: 0 16px; }
+            .hub-header { padding: 12px 16px; }
+        }
     </style>
 </head>
 <body>
@@ -5719,11 +6004,11 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
                 const contactColor = isOld ? '#f87171' : '#888';
 
                 html += `<div class="property-item ${isExpanded ? 'selected' : ''}" id="item-${card.id}">
-                    <div class="property-item-main" style="align-items:center;cursor:pointer;" onclick="toggleClientDetail('${card.id}')">
-                        <div style="width:20px;flex-shrink:0;text-align:center;color:#94a3b8;font-size:12px;">${isExpanded ? '▼' : '▶'}</div>
+                    <div class="property-item-main" style="align-items:center;cursor:pointer;" onclick="openClientHub('${card.id}')">
+                        <div style="width:20px;flex-shrink:0;text-align:center;color:#94a3b8;font-size:12px;">▶</div>
                         <span class="property-type-badge" style="flex-shrink:0;${getMatchCount(card) > 0 ? 'background:rgba(250,204,21,0.15);color:#facc15;border-color:rgba(250,204,21,0.3);' : 'background:rgba(78,205,196,0.15);color:#4ecdc4;border-color:rgba(78,205,196,0.3);'}margin-right:8px;">${getMatchCount(card) > 0 ? '매칭 ' + getMatchCount(card) : '손님'}</span>
                         <div class="client-raw-text">${rawTextDisplay}${(card.contact_name || card.contact_phone) ? `<br><span style="font-size:11px;color:#fb923c;">📞 ${esc(card.contact_name||'')} ${esc(card.contact_phone||'')}</span>` : (() => { const memo = card.private_note?.memo || ''; const ph = memo.match(/01[016789][-.\s]?\d{3,4}[-.\s]?\d{4}/); return ph ? `<br><span style="font-size:11px;color:#fb923c;">📞 ${esc(ph[0])}</span>` : ''; })()}<br><span style="font-size:11px;color:${contactColor}">${esc(lastContactStr)}</span></div>
-                        <button class="property-edit" onclick="event.stopPropagation(); toggleClientDetail('${card.id}')">상세</button>
+                        <button class="property-edit" onclick="event.stopPropagation(); openClientHub('${card.id}')">CRM</button>
                         <button style="padding:4px 10px;border-radius:6px;border:1px solid rgba(148,163,184,0.3);background:transparent;color:#94a3b8;font-size:11px;cursor:pointer;" onclick="event.stopPropagation(); completeClient('${card.id}')">완료</button>
                     </div>
                     <div class="property-detail ${isDetailOpen ? 'open' : ''}" id="client-detail-${card.id}">
@@ -8780,6 +9065,558 @@ function scrollToCard(cardId) {
         }
     }, 200);
 }
+
+// ═══ Customer 360 Hub View ═══
+
+const HUB_NODES = [
+  { key: 'conditions', icon: '🎯', label: '희망 조건', angle: -90 },
+  { key: 'match',      icon: '🏠', label: '매칭 매물', angle: -30 },
+  { key: 'timeline',   icon: '📋', label: '상담 기록', angle: 30 },
+  { key: 'schedule',   icon: '⏰', label: '일정/알림', angle: 90 },
+  { key: 'interest',   icon: '💛', label: '관심 매물', angle: 150 },
+  { key: 'contact',    icon: '📞', label: '연락처',   angle: 210 },
+];
+
+let _hubCardId = null;
+let _hubData = {};
+
+function openClientHub(cardId) {
+  _hubCardId = cardId;
+  _hubData = {};
+  const overlay = document.getElementById('hubOverlay');
+  overlay.classList.add('show');
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => overlay.classList.add('visible'));
+  });
+  overlay.innerHTML = buildHubSkeleton();
+  loadHubData(cardId);
+  history.pushState({ hub: true }, '');
+}
+
+function closeClientHub() {
+  const overlay = document.getElementById('hubOverlay');
+  overlay.classList.remove('visible');
+  setTimeout(() => {
+    overlay.classList.remove('show');
+    overlay.innerHTML = '';
+    _hubCardId = null;
+  }, 350);
+}
+
+function buildHubSkeleton() {
+  return `
+    <div class="hub-header">
+      <button class="hub-back" onclick="closeClientHub()">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        손님 목록
+      </button>
+      <div class="hub-actions">
+        <button class="hub-action-btn" onclick="hubAddNote()">✏️ 메모 추가</button>
+        <button class="hub-action-btn primary" onclick="hubSendProperties()">📤 매물 보내기</button>
+      </div>
+    </div>
+
+    <div class="hub-visual" id="hubVisual">
+      <svg class="hub-lines" id="hubLines"></svg>
+      <div class="hub-center" id="hubCenter">
+        <div class="hub-center-icon">👤</div>
+        <div class="hub-center-name" id="hubCenterName">로딩 중...</div>
+        <div class="hub-center-sub" id="hubCenterSub"></div>
+      </div>
+    </div>
+
+    <div class="hub-kpi" id="hubKpi"></div>
+
+    <div class="hub-bento" id="hubBento">
+      <div class="bento-card" id="bentoConditions">
+        <div class="bento-title"><span class="bento-title-icon">🎯</span> 희망 조건</div>
+        <div class="bento-empty">로딩 중...</div>
+      </div>
+      <div class="bento-card" id="bentoMatch">
+        <div class="bento-title"><span class="bento-title-icon">🏠</span> 매칭 매물</div>
+        <div class="bento-empty">로딩 중...</div>
+      </div>
+      <div class="bento-card full" id="bentoTimeline">
+        <div class="bento-title"><span class="bento-title-icon">📋</span> 상담 기록</div>
+        <div class="bento-empty">로딩 중...</div>
+      </div>
+      <div class="bento-card" id="bentoSchedule">
+        <div class="bento-title"><span class="bento-title-icon">⏰</span> 일정 / 알림</div>
+        <div class="bento-empty">로딩 중...</div>
+      </div>
+      <div class="bento-card" id="bentoContact">
+        <div class="bento-title"><span class="bento-title-icon">📞</span> 연락처</div>
+        <div class="bento-empty">로딩 중...</div>
+      </div>
+    </div>
+  `;
+}
+
+async function loadHubData(cardId) {
+  const card = allClientCards.find(c => c.id === cardId);
+  if (!card) return;
+
+  const p = card.property || {};
+  const pn = card.private_note || {};
+
+  // 중앙 프로필
+  const centerName = document.getElementById('hubCenterName');
+  const centerSub = document.getElementById('hubCenterSub');
+  if (centerName) centerName.textContent = card.contact_name || p.complex || p.location || '손님';
+  if (centerSub) centerSub.textContent = p.price || '';
+
+  // 병렬 데이터 로드
+  const [notesRes, matchResult, interestRes] = await Promise.all([
+    supabaseClient.from('client_notes')
+      .select('id, type, content, alert_date, alert_done, linked_card_id, created_at')
+      .eq('client_card_id', cardId)
+      .order('created_at', { ascending: false }),
+    loadHubMatch(cardId),
+    supabaseClient.from('card_interests')
+      .select('id, card_id, created_at')
+      .eq('agent_id', currentUser.id)
+  ]);
+
+  const notes = notesRes.data || [];
+  const matches = matchResult || [];
+  const interests = interestRes.data || [];
+
+  _hubData = { card, notes, matches, interests };
+
+  // 노드 그리기 + 애니메이션
+  renderHubNodes(card, notes, matches, interests);
+
+  // KPI 스트립
+  renderHubKpi(card, notes, matches);
+
+  // 벤토 카드들
+  renderBentoConditions(card);
+  renderBentoMatch(matches);
+  renderBentoTimeline(cardId, notes);
+  renderBentoSchedule(notes);
+  renderBentoContact(card, notes);
+}
+
+async function loadHubMatch(cardId) {
+  // 캐시 활용
+  if (_matchCache[cardId]) return _matchCache[cardId].results || [];
+  try {
+    const resp = await fetch(`${SUPABASE_URL}/functions/v1/match-properties`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY, 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({ client_card_id: cardId, agent_id: currentUser.id, limit: 10, threshold: 0.15 })
+    });
+    const data = await resp.json();
+    if (data.results) {
+      _matchCache[cardId] = data;
+      return data.results;
+    }
+    return [];
+  } catch(e) { return []; }
+}
+
+function renderHubNodes(card, notes, matches, interests) {
+  const visual = document.getElementById('hubVisual');
+  if (!visual) return;
+
+  const cx = 350, cy = 190, radius = 155;
+  const counts = {
+    conditions: (card.property?.features || []).length || 0,
+    match: matches.length,
+    timeline: notes.length,
+    schedule: notes.filter(n => n.alert_date && !n.alert_done).length,
+    interest: interests.length,
+    contact: (card.contact_phone ? 1 : 0) + (card.contact_name ? 1 : 0),
+  };
+
+  // SVG 연결선
+  let svgHtml = '';
+  // 노드 HTML
+  let nodesHtml = '';
+
+  HUB_NODES.forEach((node, i) => {
+    const rad = (node.angle * Math.PI) / 180;
+    const nx = cx + radius * Math.cos(rad);
+    const ny = cy + radius * Math.sin(rad);
+    const count = counts[node.key] || 0;
+
+    svgHtml += `<line class="hub-line" x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}" />`;
+
+    nodesHtml += `
+      <div class="hub-node" data-key="${node.key}" style="left:${nx}px;top:${ny}px;"
+           onclick="hubScrollTo('${node.key}')">
+        <div class="hub-node-inner">
+          <div class="hub-node-icon">${node.icon}</div>
+          <div class="hub-node-label">${node.label}</div>
+          <div class="hub-node-count ${count === 0 ? 'empty' : ''}">${count > 0 ? count + '건' : '-'}</div>
+        </div>
+      </div>`;
+  });
+
+  const linesEl = document.getElementById('hubLines');
+  if (linesEl) linesEl.innerHTML = svgHtml;
+
+  // 기존 노드 제거 후 추가
+  visual.querySelectorAll('.hub-node').forEach(el => el.remove());
+  visual.insertAdjacentHTML('beforeend', nodesHtml);
+
+  // 순차 애니메이션
+  visual.querySelectorAll('.hub-node').forEach((el, i) => {
+    setTimeout(() => el.classList.add('appear'), 100 + i * 80);
+  });
+}
+
+function renderHubKpi(card, notes, matches) {
+  const kpi = document.getElementById('hubKpi');
+  if (!kpi) return;
+
+  const lastNote = notes.find(n => ['상담','방문','매물소개','계약'].includes(n.type));
+  const daysSince = lastNote ? Math.floor((Date.now() - new Date(lastNote.created_at).getTime()) / 86400000) : -1;
+  const dayText = daysSince < 0 ? '없음' : daysSince === 0 ? '오늘' : daysSince + '일 전';
+  const dayClass = daysSince > 7 ? 'warn' : daysSince >= 0 ? 'good' : '';
+
+  const schedCount = notes.filter(n => n.alert_date && !n.alert_done).length;
+  const totalNotes = notes.length;
+
+  kpi.innerHTML = `
+    <div class="hub-kpi-card">
+      <div class="hub-kpi-value ${dayClass}">${dayText}</div>
+      <div class="hub-kpi-label">마지막 연락</div>
+    </div>
+    <div class="hub-kpi-card">
+      <div class="hub-kpi-value">${matches.length}</div>
+      <div class="hub-kpi-label">매칭 매물</div>
+    </div>
+    <div class="hub-kpi-card">
+      <div class="hub-kpi-value">${totalNotes}</div>
+      <div class="hub-kpi-label">상담 기록</div>
+    </div>
+    <div class="hub-kpi-card">
+      <div class="hub-kpi-value ${schedCount > 0 ? 'warn' : ''}">${schedCount}</div>
+      <div class="hub-kpi-label">예정 일정</div>
+    </div>
+  `;
+}
+
+function renderBentoConditions(card) {
+  const el = document.getElementById('bentoConditions');
+  if (!el) return;
+  const p = card.property || {};
+  const pn = card.private_note || {};
+  const features = p.features || [];
+
+  let html = `<div class="bento-title"><span class="bento-title-icon">🎯</span> 희망 조건 <span class="bento-title-badge">${features.length}개</span></div>`;
+
+  const condItems = [
+    p.price ? ['💰', '예산', p.price] : null,
+    p.location ? ['📍', '지역', p.location] : null,
+    p.complex ? ['🏢', '단지', p.complex] : null,
+    p.area ? ['📐', '면적', p.area] : null,
+    p.type && p.type !== '손님' ? ['📝', '거래유형', p.type] : null,
+  ].filter(Boolean);
+
+  if (condItems.length) {
+    html += condItems.map(([icon, label, value]) =>
+      `<div class="bento-item"><div class="bento-item-dot" style="background:#4ecdc4;"></div><div class="bento-item-content"><div class="bento-item-main">${esc(value)}</div><div class="bento-item-sub">${label}</div></div></div>`
+    ).join('');
+  }
+
+  if (features.length) {
+    html += `<div style="margin-top:8px;">${features.map(f => `<span class="hub-cond-tag">${esc(f)}</span>`).join('')}</div>`;
+  }
+
+  if (pn.memo) {
+    html += `<div style="margin-top:10px;padding:10px 12px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);font-size:12px;color:var(--text-gray);line-height:1.6;">📝 ${esc(pn.memo)}</div>`;
+  }
+
+  if (!condItems.length && !features.length && !pn.memo) {
+    html += '<div class="bento-empty">등록된 조건이 없어요</div>';
+  }
+
+  el.innerHTML = html;
+}
+
+function renderBentoMatch(matches) {
+  const el = document.getElementById('bentoMatch');
+  if (!el) return;
+
+  let html = `<div class="bento-title"><span class="bento-title-icon">🏠</span> 매칭 매물 <span class="bento-title-badge">${matches.length}건</span></div>`;
+
+  if (!matches.length) {
+    html += '<div class="bento-empty">매칭되는 매물이 없어요</div>';
+  } else {
+    const myIds = new Set(allCards.map(c => c.id));
+    matches.slice(0, 5).forEach(m => {
+      const p = m.property || {};
+      const typeClass = p.type === '매매' ? 'sale' : p.type === '전세' ? 'jeonse' : 'rent';
+      const isMine = myIds.has(m.id);
+      const score = m.similarity ? Math.round(m.similarity * 100) : 0;
+      html += `
+        <div class="bento-match-item" onclick="openClientHub_matchDetail('${m.id}')">
+          <span class="bento-match-type ${typeClass}">${esc(p.type || '?')}</span>
+          <div class="bento-match-info">
+            <div class="bento-match-name">${esc(p.complex || p.location || '매물')} ${isMine ? '' : '<span style="font-size:10px;color:#fb923c;">공유</span>'}</div>
+            <div class="bento-match-detail">${[p.price, p.area].filter(Boolean).map(v => esc(v)).join(' · ')}</div>
+          </div>
+          ${score > 0 ? `<span class="bento-match-score">${score}%</span>` : ''}
+        </div>`;
+    });
+    if (matches.length > 5) {
+      html += `<button class="hub-tl-more" onclick="hubScrollTo('match')">+ ${matches.length - 5}건 더보기</button>`;
+    }
+  }
+
+  el.innerHTML = html;
+}
+
+function renderBentoTimeline(cardId, notes) {
+  const el = document.getElementById('bentoTimeline');
+  if (!el) return;
+
+  let html = `<div class="bento-title"><span class="bento-title-icon">📋</span> 상담 기록 <span class="bento-title-badge">${notes.length}건</span></div>`;
+
+  // 메모 입력
+  html += `<div class="hub-note-input">
+    <input type="text" id="hubNoteInput" placeholder="메모 입력 (예: 콜백, 내일 오후2시 방문)"
+           onkeydown="if(event.key==='Enter')hubSaveNote('${cardId}')">
+    <button onclick="hubSaveNote('${cardId}')">저장</button>
+  </div>`;
+
+  const visible = notes.slice(0, 6);
+  const hidden = notes.slice(6);
+
+  if (!notes.length) {
+    html += '<div class="bento-empty">아직 상담 기록이 없어요</div>';
+  } else {
+    visible.forEach(n => {
+      const type = n.type || '메모';
+      const date = formatRelativeDate(n.created_at);
+      html += `
+        <div class="hub-tl-item">
+          <span class="hub-tl-badge ${type}">${type}</span>
+          <div>
+            <div class="hub-tl-content">${esc(n.content || '')}</div>
+            <div class="hub-tl-date">${date}${n.alert_date ? ' · 📅 ' + new Date(n.alert_date).toLocaleDateString('ko-KR') : ''}</div>
+          </div>
+        </div>`;
+    });
+    if (hidden.length > 0) {
+      html += `<button class="hub-tl-more" id="hubTlMore" onclick="hubShowAllTimeline('${cardId}')">+ ${hidden.length}건 더보기</button>`;
+    }
+  }
+
+  el.innerHTML = html;
+}
+
+function hubShowAllTimeline(cardId) {
+  const notes = _hubData.notes || [];
+  renderBentoTimeline.__showAll = true;
+  const el = document.getElementById('bentoTimeline');
+  if (!el) return;
+
+  let html = `<div class="bento-title"><span class="bento-title-icon">📋</span> 상담 기록 <span class="bento-title-badge">${notes.length}건</span></div>`;
+  html += `<div class="hub-note-input">
+    <input type="text" id="hubNoteInput" placeholder="메모 입력 (예: 콜백, 내일 오후2시 방문)"
+           onkeydown="if(event.key==='Enter')hubSaveNote('${cardId}')">
+    <button onclick="hubSaveNote('${cardId}')">저장</button>
+  </div>`;
+
+  notes.forEach(n => {
+    const type = n.type || '메모';
+    const date = formatRelativeDate(n.created_at);
+    html += `
+      <div class="hub-tl-item">
+        <span class="hub-tl-badge ${type}">${type}</span>
+        <div>
+          <div class="hub-tl-content">${esc(n.content || '')}</div>
+          <div class="hub-tl-date">${date}${n.alert_date ? ' · 📅 ' + new Date(n.alert_date).toLocaleDateString('ko-KR') : ''}</div>
+        </div>
+      </div>`;
+  });
+
+  el.innerHTML = html;
+}
+
+function renderBentoSchedule(notes) {
+  const el = document.getElementById('bentoSchedule');
+  if (!el) return;
+
+  const schedules = notes.filter(n => n.alert_date && !n.alert_done)
+    .sort((a, b) => new Date(a.alert_date) - new Date(b.alert_date));
+
+  let html = `<div class="bento-title"><span class="bento-title-icon">⏰</span> 일정 / 알림 <span class="bento-title-badge">${schedules.length}건</span></div>`;
+
+  if (!schedules.length) {
+    html += '<div class="bento-empty">예정된 일정이 없어요</div>';
+  } else {
+    schedules.forEach(n => {
+      const d = new Date(n.alert_date);
+      const isPast = d < new Date();
+      const dateStr = d.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
+      html += `
+        <div class="bento-item">
+          <div class="bento-item-dot" style="background:${isPast ? '#f87171' : '#facc15'};"></div>
+          <div class="bento-item-content">
+            <div class="bento-item-main" style="${isPast ? 'color:#f87171;' : ''}">${esc(n.content || n.type || '일정')}</div>
+            <div class="bento-item-sub">${dateStr} ${isPast ? '(지연)' : ''}</div>
+          </div>
+        </div>`;
+    });
+  }
+
+  el.innerHTML = html;
+}
+
+function renderBentoContact(card, notes) {
+  const el = document.getElementById('bentoContact');
+  if (!el) return;
+
+  let html = `<div class="bento-title"><span class="bento-title-icon">📞</span> 연락처</div>`;
+  const contacts = [];
+
+  if (card.contact_name || card.contact_phone) {
+    contacts.push({ icon: '👤', name: card.contact_name || '손님', phone: card.contact_phone || '' });
+  } else {
+    // 메모에서 전화번호 추출
+    const memo = card.private_note?.memo || '';
+    const ph = memo.match(/01[016789][-.\s]?\d{3,4}[-.\s]?\d{4}/);
+    if (ph) contacts.push({ icon: '👤', name: '손님', phone: ph[0] });
+  }
+
+  // 연결 매물 매도자
+  const linkedIds = [...new Set(notes.filter(n => n.linked_card_id).map(n => n.linked_card_id))];
+  linkedIds.forEach(id => {
+    const lc = allCards.find(c => c.id === id);
+    if (lc && (lc.contact_name || lc.contact_phone)) {
+      const lpName = [lc.property?.complex, lc.property?.location].filter(Boolean).join(' ') || '매물';
+      contacts.push({ icon: '🏠', name: `${lpName} (${lc.contact_name || ''})`, phone: lc.contact_phone || '' });
+    }
+  });
+
+  if (!contacts.length) {
+    html += '<div class="bento-empty">등록된 연락처가 없어요</div>';
+  } else {
+    contacts.forEach(c => {
+      html += `
+        <div class="bento-item">
+          <div class="bento-item-dot" style="background:#60a5fa;"></div>
+          <div class="bento-item-content">
+            <div class="bento-item-main">${esc(c.name)}</div>
+            ${c.phone ? `<div class="bento-item-sub" style="color:#60a5fa;cursor:pointer;" onclick="navigator.clipboard.writeText('${esc(c.phone)}')">${esc(c.phone)} 📋</div>` : ''}
+          </div>
+        </div>`;
+    });
+  }
+
+  el.innerHTML = html;
+}
+
+function hubScrollTo(key) {
+  const map = {
+    conditions: 'bentoConditions',
+    match: 'bentoMatch',
+    timeline: 'bentoTimeline',
+    schedule: 'bentoSchedule',
+    interest: 'bentoTimeline',
+    contact: 'bentoContact',
+  };
+  const el = document.getElementById(map[key]);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('highlight');
+    setTimeout(() => el.classList.remove('highlight'), 1500);
+  }
+}
+
+async function hubSaveNote(cardId) {
+  const input = document.getElementById('hubNoteInput');
+  if (!input || !input.value.trim()) return;
+  const content = input.value.trim();
+
+  // 간단 파싱: 유형 추출
+  let type = '메모';
+  if (/콜백|전화|통화/.test(content)) type = '상담';
+  if (/방문|투어|현장/.test(content)) type = '방문';
+  if (/소개|보내|발송/.test(content)) type = '매물소개';
+  if (/계약|잔금|이사/.test(content)) type = '계약';
+
+  // 날짜 추출
+  let alertDate = null;
+  const tmrw = content.match(/내일/);
+  const dayMatch = content.match(/(\d{1,2})월\s*(\d{1,2})일/);
+  if (tmrw) {
+    alertDate = new Date();
+    alertDate.setDate(alertDate.getDate() + 1);
+    alertDate = alertDate.toISOString();
+  } else if (dayMatch) {
+    const y = new Date().getFullYear();
+    alertDate = new Date(y, parseInt(dayMatch[1]) - 1, parseInt(dayMatch[2])).toISOString();
+  }
+
+  const { error } = await supabaseClient.from('client_notes').insert({
+    client_card_id: cardId,
+    agent_id: currentUser.id,
+    type,
+    content,
+    alert_date: alertDate,
+    alert_done: false,
+  });
+
+  if (!error) {
+    input.value = '';
+    // 새로고침
+    const { data: notes } = await supabaseClient.from('client_notes')
+      .select('id, type, content, alert_date, alert_done, linked_card_id, created_at')
+      .eq('client_card_id', cardId)
+      .order('created_at', { ascending: false });
+    _hubData.notes = notes || [];
+    renderBentoTimeline(cardId, _hubData.notes);
+    renderBentoSchedule(_hubData.notes);
+    renderHubNodes(_hubData.card, _hubData.notes, _hubData.matches, _hubData.interests);
+    renderHubKpi(_hubData.card, _hubData.notes, _hubData.matches);
+  }
+}
+
+function hubAddNote() {
+  const input = document.getElementById('hubNoteInput');
+  if (input) { input.focus(); hubScrollTo('timeline'); }
+}
+
+function hubSendProperties() {
+  closeClientHub();
+  // 손님 탭에서 해당 손님 열기
+  if (_hubCardId) {
+    setTimeout(() => toggleClientDetail(_hubCardId), 400);
+  }
+}
+
+function openClientHub_matchDetail(matchId) {
+  // 매칭 매물 상세 — 기존 toggleSelect 활용
+  closeClientHub();
+  setTimeout(() => {
+    const myTab = document.querySelector('[data-tab="mine"]');
+    if (myTab) myTab.click();
+    setTimeout(() => {
+      const el = document.getElementById('item-' + matchId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.style.outline = '2px solid var(--primary)';
+        setTimeout(() => { el.style.outline = 'none'; }, 3000);
+      }
+    }, 300);
+  }, 400);
+}
+
+// 뒤로가기 지원
+window.addEventListener('popstate', (e) => {
+  if (document.getElementById('hubOverlay')?.classList.contains('show')) {
+    closeClientHub();
+  }
+});
 </script>
+
+<!-- Customer 360 Hub Overlay -->
+<div class="hub-overlay" id="hubOverlay"></div>
+
 </body>
 </html>
