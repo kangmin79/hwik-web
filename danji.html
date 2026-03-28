@@ -646,11 +646,13 @@ function render() {
     }, 50);
   }));
 
-  // 초기 렌더 시에도 active 버튼 중앙으로
-  setTimeout(() => {
-    const active = document.querySelector('.pyeong-btn.active');
-    if (active) active.scrollIntoView({ inline:'center', block:'nearest' });
-  }, 100);
+  // 렌더할 때마다 active 버튼 중앙으로
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      const active = document.querySelector('.pyeong-btn.active');
+      if (active) active.scrollIntoView({ inline:'center', block:'nearest' });
+    }, 50);
+  });
 
   // 차트
   drawChart();
