@@ -61,8 +61,9 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 .tab.active { color:var(--text); font-weight:500; border-bottom-color:var(--yellow); }
 
 /* 평형 */
-.pyeong-row { padding:12px 16px; display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+.pyeong-row { padding:12px 16px; display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; justify-content:center; }
 .pyeong-row::-webkit-scrollbar { display:none; }
+.pyeong-row.many { justify-content:flex-start; }
 .pyeong-btn { padding:6px 14px; border-radius:20px; font-size:12px; cursor:pointer; white-space:nowrap; flex-shrink:0; border:1px solid var(--border); background:var(--card); color:var(--sub); transition:all .15s; -webkit-tap-highlight-color:transparent; }
 .pyeong-btn.active { background:var(--yellow); border-color:var(--yellow); color:var(--dark); font-weight:500; }
 
@@ -328,10 +329,21 @@ function render() {
   const pm = d.pyeongs_map || {};
   const hasSupply = Object.values(pm).some(p => p.supply > 0);
 
+  // 공급면적 중복 체크
+  const supplyCount = {};
+  cats.forEach(c => {
+    if (pm[c] && pm[c].supply > 0) {
+      const s = Math.round(pm[c].supply);
+      supplyCount[s] = (supplyCount[s] || 0) + 1;
+    }
+  });
+
   const pyeongHtml = cats.map(c => {
     let label;
     if (pm[c] && pm[c].supply > 0 && areaMode === 'supply') {
-      label = `공급 ${Math.round(pm[c].supply)}㎡`;
+      const s = Math.round(pm[c].supply);
+      // 같은 공급면적이 여러 개면 전용면적으로 구분
+      label = supplyCount[s] > 1 ? `공급 ${s}㎡(전용${c})` : `공급 ${s}㎡`;
     } else {
       label = `전용 ${c}㎡`;
     }
@@ -576,9 +588,8 @@ function render() {
       <div class="tab${currentTab==='월세'?' active':''}" data-tab="월세">월세</div>
     </div>
 
-    <!-- 면적 토글 + 평형 -->
-    ${toggleHtml}
-    <div class="pyeong-row">${pyeongHtml}</div>
+    <!-- 평형 -->
+    <div class="pyeong-row${cats.length > 3 ? ' many' : ''}">${pyeongHtml}</div>
 
     <!-- 지표 1행: 시세 -->
     <div class="metrics">
@@ -615,11 +626,11 @@ function render() {
         const suffix = currentTab === '전세' ? '_jeonse' : (currentTab === '월세' ? '_wolse' : '');
         const key = currentPyeong + (suffix || '');
         const ph = (d.price_history || {})[key] || [];
-        // 최근 3개월 거래 건수
+        // 최근 6개월 거래 건수
         const now = new Date();
-        const m3 = new Date(now.getFullYear(), now.getMonth() - 3, 1).toISOString().slice(0,10);
-        const recent3 = ph.filter(p => p.date >= m3).length;
-        return '<div class="metric accent-green"><div class="metric-label">최근 거래</div><div class="metric-value">'+recent3+'건</div><div class="metric-change neutral">최근 3개월</div></div>';
+        const m6 = new Date(now.getFullYear(), now.getMonth() - 6, 1).toISOString().slice(0,10);
+        const recent6 = ph.filter(p => p.date >= m6).length;
+        return '<div class="metric accent-green"><div class="metric-label">최근 거래</div><div class="metric-value">'+recent6+'건</div><div class="metric-change neutral">최근 6개월</div></div>';
       })()}
     </div>
     <!-- 단지 정보 (텍스트) -->
