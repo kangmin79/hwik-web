@@ -215,9 +215,9 @@ function getCurrentPyLabel() {
   if (!DATA || !currentPyeong) return '';
   const pm = (DATA.pyeongs_map || {})[currentPyeong];
   if (pm && pm.supply > 0 && areaMode === 'supply') {
-    return Math.round(pm.supply / 3.3058) + '평(공급)';
+    return '공급 ' + Math.round(pm.supply) + '㎡';
   }
-  return Math.round(parseInt(currentPyeong) / 3.3058) + '평(전용)';
+  return '전용 ' + currentPyeong + '㎡';
 }
 
 function distText(m) {
@@ -332,11 +332,9 @@ function render() {
   const pyeongHtml = cats.map(c => {
     let label;
     if (pm[c] && pm[c].supply > 0 && areaMode === 'supply') {
-      const supplyPy = Math.round(pm[c].supply / 3.3058);
-      label = `${supplyPy}평(${Math.round(pm[c].supply)}㎡)`;
+      label = `공급 ${Math.round(pm[c].supply)}㎡`;
     } else {
-      const excluPy = Math.round(parseInt(c) / 3.3058);
-      label = `${excluPy}평(${c}㎡)`;
+      label = `전용 ${c}㎡`;
     }
     const active = c === currentPyeong ? ' active' : '';
     return `<div class="pyeong-btn${active}" data-cat="${esc(c)}">${esc(label)}</div>`;
@@ -390,7 +388,7 @@ function render() {
   const tradeKeyFull = currentPyeong + (currentTab === '전세' ? '_jeonse' : (currentTab === '월세' ? '_wolse' : ''));
   const ph = (d.price_history || {})[tradeKeyFull] || [];
   const pyNum = getCurrentPy();
-  const pyLabel = getCurrentPyLabel() + (currentPyeong ? '(전용' + currentPyeong + '㎡)' : '');
+  const pyLabel = getCurrentPyLabel();
 
   // price_history에 개별 거래가 있으면 그걸 사용
   let tradeItems = [];
@@ -450,7 +448,7 @@ function render() {
       else if (diff < 0) diffHtml = `<div class="nearby-diff cheaper">▼ ${formatPrice(Math.abs(diff))} 저렴</div>`;
       else diffHtml = `<div class="nearby-diff" style="color:var(--sub)">동일</div>`;
     }
-    const areaLabel = n.matchedSupply ? Math.round(n.matchedSupply/3.3058)+'평' : '전용'+n.matchedExclu+'㎡';
+    const areaLabel = n.matchedSupply && areaMode === 'supply' ? '공급'+Math.round(n.matchedSupply)+'㎡' : '전용'+n.matchedExclu+'㎡';
     return `
     <div class="nearby-item" onclick="location.href='danji.html?id=${esc(n.id)}'">
       <div>
@@ -846,7 +844,7 @@ function drawChart() {
               const p = points[ctx[0].dataIndex];
               const tabLabel = currentTab || '매매';
               const py = getCurrentPy();
-              const pyLabel = getCurrentPyLabel() + '(전용' + currentPyeong + '㎡)';
+              const pyLabel = getCurrentPyLabel();
               const parts = [tabLabel];
               if (pyLabel) parts.push(pyLabel);
               return parts.join(' · ');
