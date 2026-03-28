@@ -548,6 +548,91 @@ def update_danji_pages(danji_list: list):
 
 
 # ========================================================
+# 주변 단지 매칭
+# ========================================================
+def fill_nearby_complex(danji_list: list, apartments: list):
+    """같은 property_type + 좌표 가까운 단지 3개를 nearby_complex에 채움"""
+    import math
+
+    # danji_list를 id로 인덱싱
+    danji_map = {d["id"]: d for d in danji_list}
+
+    # apartments를 kapt_code로 인덱싱 (property_type 확인용)
+    apt_map = {}
+    for apt in apartments:
+        apt_map[apt.get("kapt_code", "")] = apt
+
+    # danji → property_type 매핑 (apartments에서 찾기)
+    def get_prop_type(danji):
+        # danji_id에서 apartments 매칭
+        name = danji.get("complex_name", "")
+        for apt in apartments:
+            if apt.get("kapt_name") == name:
+                return apt.get("property_type", "apt")
+        return "apt"
+
+    # 거리 계산
+    def haversine(lat1, lon1, lat2, lon2):
+        if not all([lat1, lon1, lat2, lon2]):
+            return 99999
+        R = 6371000
+        p = math.pi / 180
+        a = 0.5 - math.cos((lat2-lat1)*p)/2 + math.cos(lat1*p)*math.cos(lat2*p)*(1-math.cos((lon2-lon1)*p))/2
+        return R * 2 * math.asin(math.sqrt(a))
+
+    # property_type별 그룹
+    type_groups = defaultdict(list)
+    for d in danji_list:
+        pt = get_prop_type(d)
+        type_groups[pt].append(d)
+
+    filled = 0
+    for d in danji_list:
+        pt = get_prop_type(d)
+        lat1, lon1 = d.get("lat"), d.get("lng")
+        if not lat1 or not lon1:
+            continue
+
+        # 같은 타입에서 거리순 정렬 (자기 자신 제외)
+        candidates = []
+        for other in type_groups[pt]:
+            if other["id"] == d["id"]:
+                continue
+            dist = haversine(lat1, lon1, other.get("lat"), other.get("lng"))
+            if dist < 2000:  # 2km 이내
+                # 84㎡ 기준 가격 찾기
+                price_84 = None
+                rt = other.get("recent_trade") or {}
+                for k, v in rt.items():
+                    if "_" not in k:  # 매매만
+                        area = int(k) if k.isdigit() else 0
+                        if 80 <= area <= 90:
+                            price_84 = v.get("price")
+                            break
+                if not price_84:
+                    # 아무 매매가나
+                    for k, v in rt.items():
+                        if "_" not in k:
+                            price_84 = v.get("price")
+                            break
+
+                candidates.append({
+                    "id": other["id"],
+                    "name": other["complex_name"],
+                    "location": other.get("location", ""),
+                    "distance": round(dist),
+                    "price_84": price_84,
+                })
+
+        candidates.sort(key=lambda x: x["distance"])
+        d["nearby_complex"] = candidates[:5]
+        if candidates:
+            filled += 1
+
+    print(f"  → {filled}개 단지에 주변 단지 매칭 완료")
+
+
+# ========================================================
 # sitemap.xml 자동 생성
 # ========================================================
 def generate_sitemap(danji_list: list):
@@ -664,6 +749,10 @@ def main():
                 danji_list.append(danji)
 
         print(f"    → {sum(1 for d in danji_list if d.get('location','').startswith(gu_name) or True)}개 집계")
+
+    # 주변 단지 매칭 (같은 property_type끼리)
+    print(f"\n🏘️  주변 단지 매칭 중...")
+    fill_nearby_complex(danji_list, apartments)
 
     print(f"\n📦 danji_pages 업데이트: {len(danji_list)}개 단지")
     if danji_list:
