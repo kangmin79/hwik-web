@@ -339,8 +339,11 @@ function render() {
   }).join('');
 
   const areaTypeLabel = hasSupply
-    ? `<span style="font-size:10px;color:var(--sub);padding:0 16px;cursor:pointer;" onclick="areaMode=areaMode==='supply'?'exclu':'supply';render();">${areaMode === 'supply' ? '공급면적' : '전용면적'} ↔ 전환</span>`
-    : `<span style="font-size:10px;color:var(--sub);padding:0 16px;">전용면적</span>`;
+    ? `<div style="display:flex;gap:4px;padding:8px 16px 0;">
+        <div style="font-size:11px;padding:3px 10px;border-radius:12px;cursor:pointer;${areaMode==='exclu'?'background:var(--dark);color:#fff;':'background:var(--card);color:var(--sub);border:1px solid var(--border);'}" onclick="areaMode='exclu';render();">전용</div>
+        <div style="font-size:11px;padding:3px 10px;border-radius:12px;cursor:pointer;${areaMode==='supply'?'background:var(--dark);color:#fff;':'background:var(--card);color:var(--sub);border:1px solid var(--border);'}" onclick="areaMode='supply';render();">공급</div>
+      </div>`
+    : '';
 
   const toggleHtml = '';
 
