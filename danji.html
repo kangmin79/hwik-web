@@ -203,20 +203,14 @@ function formatPrice(manwon) {
   return `${manwon.toLocaleString()}만`;
 }
 
-// 현재 평형의 평수
+// 현재 평형의 평수 (전용면적 기준)
 function getCurrentPy() {
   if (!DATA || !currentPyeong) return 0;
-  const pm = (DATA.pyeongs_map || {})[currentPyeong];
-  if (pm && pm.supply > 0 && areaMode === 'supply') return Math.round(pm.supply / 3.3058);
   return Math.round(parseInt(currentPyeong) / 3.3058);
 }
 // 현재 평형의 라벨
 function getCurrentPyLabel() {
   if (!DATA || !currentPyeong) return '';
-  const pm = (DATA.pyeongs_map || {})[currentPyeong];
-  if (pm && pm.supply > 0 && areaMode === 'supply') {
-    return '공급 ' + Math.round(pm.supply) + '㎡';
-  }
   return '전용 ' + currentPyeong + '㎡';
 }
 
@@ -330,20 +324,11 @@ function render() {
   const hasSupply = Object.values(pm).some(p => p.supply > 0);
 
   const pyeongHtml = cats.map(c => {
-    let label;
-    if (areaMode === 'supply' && pm[c] && pm[c].supply > 0) {
-      label = `${Math.round(pm[c].supply)}㎡`;
-    } else {
-      label = `${c}㎡`;
-    }
     const active = c === currentPyeong ? ' active' : '';
-    return `<div class="pyeong-btn${active}" data-cat="${esc(c)}">${esc(label)}</div>`;
+    return `<div class="pyeong-btn${active}" data-cat="${esc(c)}">${c}㎡</div>`;
   }).join('');
 
-  // 전용/공급 표시 (공급 데이터 있을 때)
-  const areaTypeLabel = hasSupply
-    ? `<span style="font-size:10px;color:var(--sub);padding:0 16px;">${areaMode === 'supply' ? '공급면적' : '전용면적'} · 탭하여 전환</span>`
-    : `<span style="font-size:10px;color:var(--sub);padding:0 16px;">전용면적</span>`;
+  const areaTypeLabel = `<span style="font-size:10px;color:var(--sub);padding:0 16px;">전용면적</span>`;
 
   const toggleHtml = '';
 
@@ -458,7 +443,7 @@ function render() {
       else if (diff < 0) diffHtml = `<div class="nearby-diff cheaper">▼ ${formatPrice(Math.abs(diff))} 저렴</div>`;
       else diffHtml = `<div class="nearby-diff" style="color:var(--sub)">동일</div>`;
     }
-    const areaLabel = n.matchedSupply && areaMode === 'supply' ? '공급'+Math.round(n.matchedSupply)+'㎡' : '전용'+n.matchedExclu+'㎡';
+    const areaLabel = '전용' + n.matchedExclu + '㎡';
     return `
     <div class="nearby-item" onclick="location.href='danji.html?id=${esc(n.id)}'">
       <div>
@@ -711,10 +696,6 @@ function render() {
     render();
   }));
   $$('.pyeong-btn').forEach(el => el.addEventListener('click', () => {
-    if (currentPyeong === el.dataset.cat && hasSupply) {
-      // 이미 선택된 버튼 다시 누르면 전용↔공급 토글
-      areaMode = areaMode === 'supply' ? 'exclu' : 'supply';
-    }
     currentPyeong = el.dataset.cat;
     render();
     // 선택한 버튼 중앙으로 스크롤
