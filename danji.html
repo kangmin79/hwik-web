@@ -650,6 +650,17 @@ function drawChart() {
   if (chart) { chart.destroy(); chart = null; }
   if (volumeChart) { volumeChart.destroy(); volumeChart = null; }
 
+  // 월세는 보증금/월세 두 축이라 그래프 불가
+  if (currentTab === '월세') {
+    canvas.parentElement.innerHTML = '';
+    const volCanvas = document.getElementById('volumeChart');
+    if (volCanvas) volCanvas.parentElement.innerHTML = '';
+    // 거래량/실거래가 타이틀도 숨김
+    document.querySelectorAll('.chart-title').forEach(el => el.style.display = 'none');
+    return;
+  }
+  document.querySelectorAll('.chart-title').forEach(el => el.style.display = '');
+
   const suffix = currentTab === '전세' ? '_jeonse' : (currentTab === '월세' ? '_wolse' : '');
   const key = currentPyeong + (suffix || '');
   const ph = (DATA.price_history || {})[key] || [];
