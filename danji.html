@@ -575,13 +575,31 @@ function render() {
         <div class="metric-value">${jeonseRate ? jeonseRate + '%' : '-'}</div>
       </div>
     </div>
-    <!-- 지표 2행: 평당가만 박스 -->
-    ${(() => {
-      const py = getCurrentPy();
-      const ppPrice = (recentPrice && py > 0) ? Math.round(recentPrice / py) : null;
-      if (!ppPrice) return '';
-      return '<div class="metrics"><div class="metric accent-yellow"><div class="metric-label">평당가</div><div class="metric-value">'+formatPrice(ppPrice)+'</div><div class="metric-change neutral">'+py+'평 기준</div></div></div>';
-    })()}
+    <!-- 지표 2행: 평당가 + 최고 대비 + 거래량 -->
+    <div class="metrics">
+      ${(() => {
+        const py = getCurrentPy();
+        const ppPrice = (recentPrice && py > 0) ? Math.round(recentPrice / py) : null;
+        return ppPrice ? '<div class="metric accent-yellow"><div class="metric-label">평당가</div><div class="metric-value">'+formatPrice(ppPrice)+'</div><div class="metric-change neutral">'+py+'평 기준</div></div>' : '<div class="metric"><div class="metric-label">평당가</div><div class="metric-value">-</div></div>';
+      })()}
+      ${(() => {
+        if (!recentPrice || !highPrice) return '<div class="metric"><div class="metric-label">최고 대비</div><div class="metric-value">-</div></div>';
+        const pct = Math.round((recentPrice - highPrice) / highPrice * 1000) / 10;
+        const cls = pct < 0 ? 'down' : (pct > 0 ? 'up' : 'neutral');
+        const sign = pct > 0 ? '+' : '';
+        return '<div class="metric accent-red"><div class="metric-label">최고 대비</div><div class="metric-value">'+ sign + pct + '%</div><div class="metric-change '+cls+'">'+ formatPrice(Math.abs(recentPrice - highPrice)) + (pct < 0 ? ' 하락' : (pct > 0 ? ' 상승' : '')) +'</div></div>';
+      })()}
+      ${(() => {
+        const suffix = currentTab === '전세' ? '_jeonse' : (currentTab === '월세' ? '_wolse' : '');
+        const key = currentPyeong + (suffix || '');
+        const ph = (d.price_history || {})[key] || [];
+        // 최근 3개월 거래 건수
+        const now = new Date();
+        const m3 = new Date(now.getFullYear(), now.getMonth() - 3, 1).toISOString().slice(0,10);
+        const recent3 = ph.filter(p => p.date >= m3).length;
+        return '<div class="metric accent-green"><div class="metric-label">최근 거래</div><div class="metric-value">'+recent3+'건</div><div class="metric-change neutral">최근 3개월</div></div>';
+      })()}
+    </div>
     <!-- 단지 정보 (텍스트) -->
     ${(() => {
       const items = [];
