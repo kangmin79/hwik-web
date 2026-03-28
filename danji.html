@@ -166,6 +166,7 @@ let DATA = null;
 let currentTab = '매매';
 let currentPyeong = null;
 let chart = null;
+let volumeChart = null;
 
 // ── 유틸 ──
 function esc(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -516,9 +517,11 @@ function render() {
       return html;
     })()}
 
-    <!-- 그래프 -->
+    <!-- 거래량 + 그래프 -->
     <div class="chart-section">
-      <div class="chart-title">실거래 내역 (점 1개 = 거래 1건)</div>
+      <div class="chart-title">거래량</div>
+      <div style="height:40px;position:relative;"><canvas id="volumeChart"></canvas></div>
+      <div class="chart-title" style="margin-top:8px;">실거래가</div>
       <div class="chart-wrap"><canvas id="priceChart"></canvas></div>
     </div>
 
@@ -594,6 +597,7 @@ function drawChart() {
   if (!canvas) return;
 
   if (chart) { chart.destroy(); chart = null; }
+  if (volumeChart) { volumeChart.destroy(); volumeChart = null; }
 
   const suffix = currentTab === '전세' ? '_jeonse' : (currentTab === '월세' ? '_wolse' : '');
   const key = currentPyeong + (suffix || '');
@@ -713,6 +717,45 @@ function drawChart() {
       }
     }
   });
+
+  // ── 거래량 바 차트 ──
+  const volCanvas = document.getElementById('volumeChart');
+  if (volCanvas && points.length > 1) {
+    // 월별 거래 건수 집계
+    const monthlyCounts = {};
+    points.forEach(p => {
+      const ym = p.x.slice(0, 7); // "2025-03"
+      monthlyCounts[ym] = (monthlyCounts[ym] || 0) + 1;
+    });
+    const volMonths = Object.keys(monthlyCounts).sort();
+    const volCounts = volMonths.map(m => monthlyCounts[m]);
+    const volLabels = volMonths.map(m => { const p = m.split('-'); return p[0].slice(2) + '.' + p[1]; });
+
+    volumeChart = new Chart(volCanvas, {
+      type: 'bar',
+      data: {
+        labels: volLabels,
+        datasets: [{
+          data: volCounts,
+          backgroundColor: 'rgba(245,200,66,0.35)',
+          borderRadius: 2,
+          barPercentage: 0.6,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ctx.parsed.y + '건' } }
+        },
+        scales: {
+          x: { display: false },
+          y: { display: false }
+        }
+      }
+    });
+  }
 }
 
 // ── 에러 ──
