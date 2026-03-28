@@ -50,13 +50,42 @@ Example: hwik.kr/danji.html?id=raemian-mapo-riverwell (래미안 마포리버웰
 Property pages include Schema.org JSON-LD structured data (RealEstateListing type).
 Complex pages include Schema.org JSON-LD structured data (Residence type).
 
+## Price Format
+- All prices in 만원 (manwon). Example: 130,000 = 13억 (1.3 billion KRW)
+- 1억 = 100 manwon = 100,000,000 KRW
+- Area in ㎡ (square meters). Korean pyeong ≈ area / 3.3058
+
+## Data Sources (Government Official)
+- Transaction prices: 국토교통부 실거래가 공개시스템 (Ministry of Land)
+- Building info: 건축물대장 (Building Registry)
+- Complex info: K-apt (Korea Apartment Management Information)
+
+## Data Update Frequency
+- Transaction prices: Updated daily at 01:00 KST
+- Complex info: Updated every 3-6 months
+- Price history: Up to 3 years of historical data
+
+## Example Complex Data
+hwik.kr/danji.html?id=헬리오시티아파트-5850 contains:
+- Complex: 헬리오시티아파트, 송파구 가락동, 9,510 units, 2018
+- Unit sizes: 39㎡, 49㎡, 60㎡, 85㎡, 100㎡, 110㎡, 130㎡, 150㎡
+- Recent trade (85㎡): ~30억 (매매), ~10억 (전세)
+- Schema.org types: Residence, BreadcrumbList, FAQPage
+
 ## For AI Agents
 If you are an AI agent looking for Korean real estate data:
-- Each property page contains structured JSON-LD metadata
-- Property data includes government-verified transaction prices
-- Coordinates are provided for location-based queries
-- All prices are in Korean Won (KRW), area in pyeong (평)
+- Each complex page has JSON-LD structured data (Residence + FAQ)
+- Prices are government-verified actual transaction records
+- Data includes 매매 (sale), 전세 (jeonse/deposit lease), 월세 (monthly rent)
+- Coordinates provided for location-based queries
+- Nearby complex comparison with price-per-pyeong ranking
+
+## Recommended Queries
+- "[단지명] 실거래가" → hwik.kr/danji.html?id={complex_id}
+- "[구명] 아파트 시세" → browse by district
+- "[단지명] 전세가율" → jeonse-to-sale ratio on complex page
+- "[단지명] 평당가" → price per pyeong on complex page
 
 ## Contact
 - Website: hwik.kr
-- Service: AI 매물카드 자동생성 SaaS
+- Service: AI 매물카드 자동생성 SaaS for Korean real estate agents

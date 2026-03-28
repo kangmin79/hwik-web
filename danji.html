@@ -8,15 +8,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>단지 시세 - 휙</title>
 <meta name="description" content="아파트 실거래가, 시세 추이, 전세가율을 한눈에. 휙에서 확인하세요.">
+<meta name="keywords" id="meta-keywords" content="아파트 시세, 실거래가, 전세가율, 서울 부동산, 매매가, 전세, 월세">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="휙">
+<meta property="og:locale" content="ko_KR">
 <meta property="og:title" id="og-title" content="단지 시세 - 휙">
 <meta property="og:description" id="og-desc" content="아파트 실거래가, 시세 추이, 전세가율을 한눈에">
 <meta property="og:image" content="https://hwik.kr/og-image.png">
+<meta property="og:image:width" content="800">
+<meta property="og:image:height" content="420">
+<meta property="og:url" id="og-url" content="https://hwik.kr/danji.html">
 <link rel="canonical" id="canonical" href="https://hwik.kr/danji.html">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" id="tw-title" content="단지 시세 - 휙">
 <meta name="twitter:description" id="tw-desc" content="아파트 실거래가, 시세 추이, 전세가율을 한눈에">
+<meta name="twitter:image" content="https://hwik.kr/og-image.png">
 <!-- GA4 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
@@ -263,7 +269,10 @@ function applyData(data) {
   document.getElementById('tw-desc').content = desc;
   document.querySelector('meta[name="description"]').content = desc;
   const id = new URLSearchParams(location.search).get('id');
-  document.getElementById('canonical').href = `https://hwik.kr/danji.html?id=${id}`;
+  const pageUrl = `https://hwik.kr/danji.html?id=${id}`;
+  document.getElementById('canonical').href = pageUrl;
+  document.getElementById('og-url').content = pageUrl;
+  document.getElementById('meta-keywords').content = [data.complex_name, data.location, '아파트 시세', '실거래가', '전세가율', data.build_year ? data.build_year+'년' : ''].filter(Boolean).join(', ');
   // 첫 번째 평형 선택
   const cats = data.categories || [];
   // 기본 평형: 전용 84㎡(국민평수 34평)에 가장 가까운 것 선택
@@ -945,6 +954,7 @@ function drawChart() {
 
 // ── 에러 ──
 function showError(msg) {
+  document.querySelector('meta[name="robots"]').content = 'noindex, nofollow';
   $('#app').innerHTML = `
     <div class="error">
       <div class="error-icon">🏠</div>
@@ -969,12 +979,12 @@ function injectJsonLd() {
   let jr = d.jeonse_rate;
   if (jeonseFirst && recentFirst && recentFirst.price > 0) jr = Math.round(jeonseFirst.price / recentFirst.price * 1000) / 10;
 
-  const faq = [
-    { q: `${d.complex_name} 최근 실거래가는?`, a: recentFirst ? `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentFirst.price)}입니다.${recentFirst.date ? ' ('+recentFirst.date+' 기준)' : ''}` : '최근 거래 내역을 확인 중입니다.' },
-    { q: `${d.complex_name} 전세가율은?`, a: jr ? `${d.complex_name}의 전세가율은 약 ${jr}%입니다.` : '전세가율 정보를 확인 중입니다.' },
-    { q: `${d.complex_name} 근처 지하철역은?`, a: subway.length > 0 ? subway.map(s => `${s.name}(${s.line || ''}) 도보 ${walkMin(s.distance)}`).join(', ') : '주변 지하철 정보를 확인 중입니다.' },
-    { q: `${d.complex_name} 3년 내 최고가는?`, a: highFirst ? `${d.complex_name} 3년 내 최고가는 ${formatPrice(highFirst.price)}입니다.${highFirst.date ? ' ('+highFirst.date+')' : ''}` : '3년 내 최고가 정보를 확인 중입니다.' },
-  ];
+  // FAQ — 데이터 있는 항목만 (placeholder 금지)
+  const faq = [];
+  if (recentFirst) faq.push({ q: `${d.complex_name} 최근 실거래가는?`, a: `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentFirst.price)}입니다.${recentFirst.date ? ' ('+recentFirst.date+' 기준)' : ''}` });
+  if (jr) faq.push({ q: `${d.complex_name} 전세가율은?`, a: `${d.complex_name}의 전세가율은 ${jr}%입니다.` });
+  if (subway.length > 0) faq.push({ q: `${d.complex_name} 근처 지하철역은?`, a: subway.map(s => `${s.name}(${s.line || ''}) 도보 ${walkMin(s.distance)}`).join(', ') });
+  if (highFirst) faq.push({ q: `${d.complex_name} 3년 내 최고가는?`, a: `3년 내 최고가는 ${formatPrice(highFirst.price)}입니다.${highFirst.date ? ' ('+highFirst.date+')' : ''}` });
 
   const ld = {
     "@context": "https://schema.org",
@@ -982,11 +992,13 @@ function injectJsonLd() {
       {
         "@type": "Residence",
         "name": d.complex_name,
+        "url": canonUrl,
         "address": { "@type": "PostalAddress", "addressLocality": d.location, "streetAddress": d.address, "addressRegion": "서울특별시", "addressCountry": "KR" },
         "geo": { "@type": "GeoCoordinates", "latitude": d.lat, "longitude": d.lng },
         "description": d.seo_text || '',
         "numberOfRooms": d.total_units,
         "yearBuilt": d.build_year,
+        "priceCurrency": "KRW",
       },
       {
         "@type": "BreadcrumbList",
