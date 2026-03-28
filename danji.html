@@ -284,22 +284,27 @@ function render() {
     else changeHtml = `<div class="metric-change neutral">보합</div>`;
   }
 
-  // 최근 거래 목록 (해당 탭 기준)
-  const suffix = currentTab === '전세' ? '_jeonse' : (currentTab === '월세' ? '_wolse' : '');
-  const tradeItems = [];
-  for (const [key, val] of Object.entries(recent)) {
-    if (currentTab === '매매' && key.includes('_')) continue;
-    if (currentTab === '전세' && !key.endsWith('_jeonse')) continue;
-    if (currentTab === '월세' && !key.endsWith('_wolse')) continue;
-    tradeItems.push(val);
-  }
-  tradeItems.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  // 최근 거래 목록 (현재 선택 평형 + 탭 기준)
+  const tradeKey = currentPyeong + (currentTab === '전세' ? '_jeonse' : (currentTab === '월세' ? '_wolse' : ''));
+  const ph = (d.price_history || {})[tradeKey] || [];
+  const pyNum = currentPyeong ? Math.round(parseInt(currentPyeong) / 3.3058) : 0;
+  const pyLabel = pyNum > 0 ? currentPyeong + '㎡(' + pyNum + '평)' : (currentPyeong ? currentPyeong + '㎡' : '');
 
-  const tradeListHtml = tradeItems.slice(0,3).map(t => `
+  // price_history에 개별 거래가 있으면 그걸 사용
+  let tradeItems = [];
+  if (ph.length > 0 && ph[0].date) {
+    tradeItems = ph.slice().sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  } else {
+    // 폴백: recent_trade에서 현재 키만
+    const val = recent[tradeKey];
+    if (val) tradeItems = [val];
+  }
+
+  const tradeListHtml = tradeItems.slice(0,5).map(t => `
     <div class="trade-item">
       <div>
         <div class="trade-price">${formatPrice(t.price)}</div>
-        <div class="trade-detail">${t.floor ? t.floor+'층' : ''} ${t.area ? '· '+t.area+'㎡' : ''}</div>
+        <div class="trade-detail">${pyLabel}${t.floor ? ' · ' + t.floor + '층' : ''}</div>
       </div>
       <div class="trade-date">${esc(t.date || '')}</div>
     </div>
