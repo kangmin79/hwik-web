@@ -154,39 +154,48 @@ def fetch_building_areas(sigunguCd, bjdongCd, bun, ji):
         return []
 
 
+RESIDENTIAL_COMMON_KEYWORDS = ['복도', '계단', '승강기', '홀', '현관', '통로', '벽체', '엘리베이터']
+
+def is_residential_common(etc_purps):
+    """주거공용 여부 판별 (복도/계단/승강기/홀/현관/통로/벽체만)"""
+    if not etc_purps:
+        return False
+    return any(k in etc_purps for k in RESIDENTIAL_COMMON_KEYWORDS)
+
+
 def calc_pyeongs(items, property_type):
-    """호별 전용+공용 합산 → [{exclu, supply}, ...]"""
-    # 용도 필터
+    """호별 전용 + 주거공용만 합산 → [{exclu, supply}, ...]"""
+    # 호별 전용/주거공용 합산 (전체 items에서 — 용도 필터는 전유에만 적용)
     target_types = OFFI_TYPES if property_type == "offi" else APT_TYPES
 
-    filtered = [it for it in items if it.get("mainPurpsCdNm", "") in target_types]
-    if not filtered:
-        # 용도 필터 실패 시 전체 사용
-        filtered = items
+    ho_expos = {}       # 호 → 전용면적
+    ho_res_common = {}  # 호 → 주거공용면적만
 
-    # 호별 전용/공용 합산
-    ho_expos = {}   # 호 → 전용면적
-    ho_pubuse = {}  # 호 → 공용면적
-    for it in filtered:
+    for it in items:
         gb = it.get("exposPubuseGbCd", "")
         ho = it.get("hoNm", "").strip()
+        purp_nm = it.get("mainPurpsCdNm", "")
+        etc_purps = it.get("etcPurps", "").strip()
         try:
             ar = float(it.get("area", 0) or 0)
         except:
             ar = 0
         if not ho or ar <= 0:
             continue
-        if gb == "1":  # 전용
-            ho_expos[ho] = ho_expos.get(ho, 0) + ar
-        elif gb == "2":  # 공용
-            ho_pubuse[ho] = ho_pubuse.get(ho, 0) + ar
 
-    # 전용면적별 공급면적(전용+공용) 그룹핑
+        if gb == "1" and purp_nm in target_types:
+            # 전유 (아파트/오피스텔 용도만)
+            ho_expos[ho] = ho_expos.get(ho, 0) + ar
+        elif gb == "2" and is_residential_common(etc_purps):
+            # 공용 중 주거공용만 (복도/계단/승강기/홀/현관/통로/벽체)
+            ho_res_common[ho] = ho_res_common.get(ho, 0) + ar
+
+    # 공급면적 = 전용 + 주거공용
     raw = defaultdict(list)
     for ho, expos in ho_expos.items():
-        pubuse = ho_pubuse.get(ho, 0)
-        supply = expos + pubuse if pubuse > 0 else 0
-        raw[round(expos, 2)].append(round(supply, 2) if supply > 0 else 0)
+        res_com = ho_res_common.get(ho, 0)
+        supply = expos + res_com
+        raw[round(expos, 2)].append(round(supply, 2))
 
     if not raw:
         return []
@@ -209,9 +218,7 @@ def calc_pyeongs(items, property_type):
         all_supply = []
         for k in cluster:
             all_supply.extend(raw[k])
-        # 공용면적이 있는 것만으로 평균, 없으면 0
-        valid_supply = [s for s in all_supply if s > 0]
-        avg_supply = round(sum(valid_supply) / len(valid_supply), 2) if valid_supply else 0
+        avg_supply = round(sum(all_supply) / len(all_supply), 2) if all_supply else 0
         result.append({
             "exclu": round(rep, 2),
             "supply": avg_supply,

@@ -203,14 +203,18 @@ function formatPrice(manwon) {
   return `${manwon.toLocaleString()}만`;
 }
 
-// 현재 평형의 평수 (전용면적 기준)
+// 현재 평형의 평수
 function getCurrentPy() {
   if (!DATA || !currentPyeong) return 0;
+  const pm = (DATA.pyeongs_map || {})[currentPyeong];
+  if (areaMode === 'supply' && pm && pm.supply > pm.exclu) return Math.round(pm.supply / 3.3058);
   return Math.round(parseInt(currentPyeong) / 3.3058);
 }
 // 현재 평형의 라벨
 function getCurrentPyLabel() {
   if (!DATA || !currentPyeong) return '';
+  const pm = (DATA.pyeongs_map || {})[currentPyeong];
+  if (areaMode === 'supply' && pm && pm.supply > pm.exclu) return '공급 ' + Math.round(pm.supply) + '㎡';
   return '전용 ' + currentPyeong + '㎡';
 }
 
@@ -323,12 +327,22 @@ function render() {
   const pm = d.pyeongs_map || {};
   const hasSupply = Object.values(pm).some(p => p.supply > 0);
 
+  const hasSupply = Object.values(pm).some(p => p.supply > 0 && p.supply !== p.exclu);
+
   const pyeongHtml = cats.map(c => {
+    let label;
+    if (areaMode === 'supply' && pm[c] && pm[c].supply > pm[c].exclu) {
+      label = `공급 ${Math.round(pm[c].supply)}㎡`;
+    } else {
+      label = `전용 ${c}㎡`;
+    }
     const active = c === currentPyeong ? ' active' : '';
-    return `<div class="pyeong-btn${active}" data-cat="${esc(c)}">${c}㎡</div>`;
+    return `<div class="pyeong-btn${active}" data-cat="${esc(c)}">${esc(label)}</div>`;
   }).join('');
 
-  const areaTypeLabel = `<span style="font-size:10px;color:var(--sub);padding:0 16px;">전용면적</span>`;
+  const areaTypeLabel = hasSupply
+    ? `<span style="font-size:10px;color:var(--sub);padding:0 16px;cursor:pointer;" onclick="areaMode=areaMode==='supply'?'exclu':'supply';render();">${areaMode === 'supply' ? '공급면적' : '전용면적'} ↔ 전환</span>`
+    : `<span style="font-size:10px;color:var(--sub);padding:0 16px;">전용면적</span>`;
 
   const toggleHtml = '';
 
@@ -443,7 +457,7 @@ function render() {
       else if (diff < 0) diffHtml = `<div class="nearby-diff cheaper">▼ ${formatPrice(Math.abs(diff))} 저렴</div>`;
       else diffHtml = `<div class="nearby-diff" style="color:var(--sub)">동일</div>`;
     }
-    const areaLabel = '전용' + n.matchedExclu + '㎡';
+    const areaLabel = (areaMode === 'supply' && n.matchedSupply && n.matchedSupply > n.matchedExclu) ? '공급' + Math.round(n.matchedSupply) + '㎡' : '전용' + n.matchedExclu + '㎡';
     return `
     <div class="nearby-item" onclick="location.href='danji.html?id=${esc(n.id)}'">
       <div>
