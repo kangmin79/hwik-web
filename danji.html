@@ -340,12 +340,7 @@ function render() {
     return `<div class="pyeong-btn${active}" data-cat="${esc(c)}">${esc(label)}</div>`;
   }).join('');
 
-  // 토글 (공급면적 데이터 있을 때만)
-  const toggleHtml = hasSupply ? `
-    <div class="area-toggle">
-      <div class="area-toggle-btn${areaMode==='supply'?' active':''}" data-mode="supply">공급</div>
-      <div class="area-toggle-btn${areaMode==='exclu'?' active':''}" data-mode="exclu">전용</div>
-    </div>` : '';
+  const toggleHtml = '';
 
   // 현재 평형 기준 지표
   const tradeKey = currentPyeong;
@@ -702,11 +697,11 @@ function render() {
     currentTab = el.dataset.tab;
     render();
   }));
-  $$('.area-toggle-btn').forEach(el => el.addEventListener('click', () => {
-    areaMode = el.dataset.mode;
-    render();
-  }));
   $$('.pyeong-btn').forEach(el => el.addEventListener('click', () => {
+    if (currentPyeong === el.dataset.cat && hasSupply) {
+      // 이미 선택된 버튼 다시 누르면 전용↔공급 토글
+      areaMode = areaMode === 'supply' ? 'exclu' : 'supply';
+    }
     currentPyeong = el.dataset.cat;
     render();
     // 선택한 버튼이 보이도록 스크롤
