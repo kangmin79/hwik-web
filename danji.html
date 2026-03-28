@@ -801,12 +801,11 @@ function drawChart() {
               const pyLabel = py > 0 ? py + '평(전용' + currentPyeong + '㎡)' : '전용 ' + (currentPyeong || '') + '㎡';
               const parts = [tabLabel];
               if (pyLabel) parts.push(pyLabel);
-              if (p.floor) parts.push(p.floor + '층');
               return parts.join(' · ');
             },
             label: ctx => {
               const p = points[ctx.dataIndex];
-              return formatPrice(p.price);
+              return formatPrice(p.price) + (p.floor ? '  ' + p.floor + '층' : '');
             }
           }
         }
