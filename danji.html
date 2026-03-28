@@ -197,6 +197,14 @@ function formatPrice(manwon) {
   return `${manwon.toLocaleString()}만`;
 }
 
+// 현재 평형의 평수 (공급면적 기준 우선, 없으면 전용)
+function getCurrentPy() {
+  if (!DATA || !currentPyeong) return 0;
+  const pm = (DATA.pyeongs_map || {})[currentPyeong];
+  if (pm && pm.supply > 0) return Math.round(pm.supply / 3.3058);
+  return Math.round(parseInt(currentPyeong) / 3.3058);
+}
+
 function distText(m) {
   if (!m) return '';
   return m >= 1000 ? (m/1000).toFixed(1) + 'km' : m + 'm';
@@ -293,10 +301,18 @@ function render() {
     ...school.slice(0,2).map(s => `<div class="tag tag-school">${esc(s.name)} ${walkMin(s.distance)}</div>`)
   ].join('');
 
-  // 평형 버튼
+  // 평형 버튼 — pyeongs_map 있으면 공급면적 기준, 없으면 전용면적만
+  const pm = d.pyeongs_map || {};
   const pyeongHtml = cats.map(c => {
-    const py = Math.round(parseInt(c) / 3.3058);
-    const label = py > 0 ? `${py}평(${c}㎡)` : c;
+    let label;
+    if (pm[c] && pm[c].supply > 0) {
+      // 공급면적 기준 평수
+      const supplyPy = Math.round(pm[c].supply / 3.3058);
+      label = `${supplyPy}평(전용${c}㎡)`;
+    } else {
+      // pyeongs_map 없으면 전용면적만 표시 (잘못된 평수 방지)
+      label = `전용 ${c}㎡`;
+    }
     const active = c === currentPyeong ? ' active' : '';
     return `<div class="pyeong-btn${active}" data-cat="${esc(c)}">${esc(label)}</div>`;
   }).join('');
@@ -341,7 +357,7 @@ function render() {
   // 최근 거래 목록 (현재 선택 평형 + 탭 기준)
   const tradeKeyFull = currentPyeong + (currentTab === '전세' ? '_jeonse' : (currentTab === '월세' ? '_wolse' : ''));
   const ph = (d.price_history || {})[tradeKeyFull] || [];
-  const pyNum = currentPyeong ? Math.round(parseInt(currentPyeong) / 3.3058) : 0;
+  const pyNum = getCurrentPy();
   const pyLabel = pyNum > 0 ? currentPyeong + '㎡(' + pyNum + '평)' : (currentPyeong ? currentPyeong + '㎡' : '');
 
   // price_history에 개별 거래가 있으면 그걸 사용
@@ -471,7 +487,7 @@ function render() {
   const faqItems = [];
   if (recentPrice) {
     faqItems.push({ q: `${d.complex_name} 최근 실거래가는?`, a: `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentPrice)}입니다.${recentData && recentData.date ? ' ('+recentData.date+' 기준)' : ''}` });
-    const _py = currentPyeong ? Math.round(parseInt(currentPyeong) / 3.3058) : 0;
+    const _py = getCurrentPy();
     if (_py > 0) faqItems.push({ q: `${d.complex_name} 평당가는?`, a: `${_py}평 기준 평당 ${formatPrice(Math.round(recentPrice / _py))}입니다.` });
   }
   if (jeonseRate) faqItems.push({ q: `${d.complex_name} 전세가율은?`, a: `${d.complex_name}의 전세가율은 ${jeonseRate}%입니다.` });
@@ -539,7 +555,7 @@ function render() {
     </div>
     <!-- 지표 2행: 평당가만 박스 -->
     ${(() => {
-      const py = currentPyeong ? Math.round(parseInt(currentPyeong) / 3.3058) : 0;
+      const py = getCurrentPy();
       const ppPrice = (recentPrice && py > 0) ? Math.round(recentPrice / py) : null;
       if (!ppPrice) return '';
       return '<div class="metrics"><div class="metric accent-yellow"><div class="metric-label">평당가</div><div class="metric-value">'+formatPrice(ppPrice)+'</div><div class="metric-change neutral">'+py+'평 기준</div></div></div>';
@@ -752,8 +768,8 @@ function drawChart() {
             beforeBody: ctx => {
               const p = points[ctx[0].dataIndex];
               const tabLabel = currentTab || '매매';
-              const py = currentPyeong ? Math.round(parseInt(currentPyeong) / 3.3058) : 0;
-              const pyLabel = py > 0 ? currentPyeong + '(' + py + '평)' : (currentPyeong || '');
+              const py = getCurrentPy();
+              const pyLabel = py > 0 ? py + '평(전용' + currentPyeong + '㎡)' : '전용 ' + (currentPyeong || '') + '㎡';
               const parts = [tabLabel];
               if (pyLabel) parts.push(pyLabel);
               if (p.floor) parts.push(p.floor + '층');

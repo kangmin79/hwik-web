@@ -350,17 +350,20 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
         return None
 
     pyeongs = apt.get("pyeongs") or []
-    # 전용면적 → 평형명 매핑
+    # 전용면적 → 평형명 매핑 + 공급면적 매핑
     exclu_to_cat = {}
     categories = []
+    pyeongs_map = {}  # {"39": {"exclu": 39, "supply": 59}}
     for p in pyeongs:
         exclu = p.get("exclu", 0)
+        supply = p.get("supply", 0)
         if exclu <= 0:
             continue
         cat = str(round(exclu))
         exclu_to_cat[exclu] = cat
         if cat not in categories:
             categories.append(cat)
+        pyeongs_map[cat] = {"exclu": round(exclu, 1), "supply": round(supply, 1)}
 
     if not categories:
         # pyeongs 없으면 거래 데이터에서 추출
@@ -547,6 +550,7 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
         "builder": apt.get("builder") or None,
         "mgmt_fee": mgmt_fee,
         "categories": categories,
+        "pyeongs_map": pyeongs_map or None,
         "recent_trade": recent_trade,
         "all_time_high": all_time_high,
         "jeonse_rate": jeonse_rate,
