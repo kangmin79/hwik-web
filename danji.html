@@ -709,12 +709,14 @@ function render() {
   }));
 
   // 렌더할 때마다 active 버튼 중앙으로
-  requestAnimationFrame(() => {
-    setTimeout(() => {
-      const active = document.querySelector('.pyeong-btn.active');
-      if (active) active.scrollIntoView({ inline:'center', block:'nearest' });
-    }, 50);
-  });
+  setTimeout(() => {
+    const active = document.querySelector('.pyeong-btn.active');
+    if (active) {
+      const row = active.parentElement;
+      const left = active.offsetLeft - (row.offsetWidth / 2) + (active.offsetWidth / 2);
+      row.scrollTo({ left: Math.max(0, left), behavior: 'instant' });
+    }
+  }, 10);
 
   // 차트
   drawChart();
