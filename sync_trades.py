@@ -548,6 +548,39 @@ def update_danji_pages(danji_list: list):
 
 
 # ========================================================
+# sitemap.xml 자동 생성
+# ========================================================
+def generate_sitemap(danji_list: list):
+    """danji_pages 기반 sitemap.xml 생성"""
+    base = "https://hwik.kr"
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    urls = []
+    # 정적 페이지
+    urls.append(f'  <url><loc>{base}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>')
+    urls.append(f'  <url><loc>{base}/mobile-v6.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>')
+    urls.append(f'  <url><loc>{base}/llms.txt</loc><changefreq>weekly</changefreq><priority>0.3</priority></url>')
+
+    # 단지 페이지
+    for d in danji_list:
+        did = d.get("id", "")
+        if not did:
+            continue
+        urls.append(f'  <url><loc>{base}/danji.html?id={did}</loc><lastmod>{today}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>')
+
+    xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    xml += '\n'.join(urls)
+    xml += '\n</urlset>\n'
+
+    # 스크립트와 같은 폴더의 sitemap.xml에 저장
+    sitemap_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sitemap.xml")
+    with open(sitemap_path, "w", encoding="utf-8") as f:
+        f.write(xml)
+    print(f"\n🗺️  sitemap.xml 생성: {len(danji_list)}개 단지 URL ({sitemap_path})")
+
+
+# ========================================================
 # 메인
 # ========================================================
 def main():
@@ -636,6 +669,9 @@ def main():
     if danji_list:
         updated = update_danji_pages(danji_list)
         print(f"✅ {updated}개 upsert 완료")
+
+    # sitemap.xml 자동 생성
+    generate_sitemap(danji_list)
 
     print(f"\n{'='*50}")
     print(f"🏁 동기화 완료")
