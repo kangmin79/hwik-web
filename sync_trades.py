@@ -704,6 +704,7 @@ def main():
     parser.add_argument("--init", action="store_true", help="초기 36개월 전체 수집")
     parser.add_argument("--months", type=int, default=2, help="수집할 월 수 (기본: 2 = 당월+전월)")
     parser.add_argument("--skip-aggregate", action="store_true", help="집계 건너뛰기 (수집만)")
+    parser.add_argument("--aggregate-only", action="store_true", help="집계만 (수집 건너뛰기)")
     parser.add_argument("--gu", default=None, help="특정 구만 (예: 11440=마포구)")
     args = parser.parse_args()
 
@@ -716,25 +717,25 @@ def main():
     print(f"   시각: {now.strftime('%Y-%m-%d %H:%M')}")
     print(f"{'='*50}\n")
 
-    # 수집할 월 목록
-    ym_list = [(now - relativedelta(months=i)).strftime("%Y%m") for i in range(months)]
-    print(f"📅 수집 대상: {ym_list[0]} ~ {ym_list[-1]} ({len(ym_list)}개월)")
-
     lawd_codes = [args.gu] if args.gu else list(SEOUL_GU.keys())
 
-    # 1단계: 수집 + 저장
+    # 1단계: 수집 + 저장 (--aggregate-only면 건너뜀)
     total_trades = 0
     total_cached = 0
-    for ym in ym_list:
-        print(f"\n── {ym} ──")
-        all_data = fetch_all_for_month(ym, lawd_codes)
-        if all_data:
-            cached = upsert_trade_cache(ym, all_data)
-            total_cached += cached
-            total_trades += sum(len(v) for v in all_data.values())
-        time.sleep(0.5)  # API 부하 방지
-
-    print(f"\n✅ 수집 완료: {total_trades}건 → trade_cache {total_cached}행 저장")
+    if not args.aggregate_only:
+        ym_list = [(now - relativedelta(months=i)).strftime("%Y%m") for i in range(months)]
+        print(f"📅 수집 대상: {ym_list[0]} ~ {ym_list[-1]} ({len(ym_list)}개월)")
+        for ym in ym_list:
+            print(f"\n── {ym} ──")
+            all_data = fetch_all_for_month(ym, lawd_codes)
+            if all_data:
+                cached = upsert_trade_cache(ym, all_data)
+                total_cached += cached
+                total_trades += sum(len(v) for v in all_data.values())
+            time.sleep(0.5)  # API 부하 방지
+        print(f"\n✅ 수집 완료: {total_trades}건 → trade_cache {total_cached}행 저장")
+    else:
+        print("⏭️  수집 건너뜀 (--aggregate-only)")
 
     # 2단계: 집계
     if args.skip_aggregate:
