@@ -350,32 +350,34 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
         return None
 
     pyeongs = apt.get("pyeongs") or []
-    # 전용면적 → 평형명 매핑 + 공급면적 매핑
-    exclu_to_cat = {}
-    categories = []
-    pyeongs_map = {}  # {"39": {"exclu": 39, "supply": 59}}
+    # 공급면적 매핑 테이블 (전용→공급)
+    pyeongs_map = {}  # {"39": {"exclu": 39, "supply": 91}}
     for p in pyeongs:
         exclu = p.get("exclu", 0)
         supply = p.get("supply", 0)
         if exclu <= 0:
             continue
         cat = str(round(exclu))
-        exclu_to_cat[exclu] = cat
-        if cat not in categories:
-            categories.append(cat)
         pyeongs_map[cat] = {"exclu": round(exclu, 1), "supply": round(supply, 1)}
 
-    if not categories:
-        # pyeongs 없으면 거래 데이터에서 추출
-        areas = set()
-        for t in trades:
-            try:
-                area = float(t.get("excluUseAr") or t.get("exclusiveArea") or 0)
-                if area > 0:
-                    areas.add(str(round(area)))
-            except:
-                pass
-        categories = sorted(areas, key=lambda x: float(x))
+    # categories는 항상 실거래 데이터에서 추출 (거래 있는 평형만)
+    areas = set()
+    for t in trades:
+        try:
+            area = float(t.get("excluUseAr") or t.get("exclusiveArea") or 0)
+            if area > 0:
+                areas.add(str(round(area)))
+        except:
+            pass
+    categories = sorted(areas, key=lambda x: float(x))
+
+    # pyeongs_map에서 매칭 안 되는 카테고리는 가장 가까운 것으로 매핑
+    if pyeongs_map:
+        pm_keys = [float(k) for k in pyeongs_map.keys()]
+        for cat in categories:
+            if cat not in pyeongs_map and pm_keys:
+                closest = min(pm_keys, key=lambda k: abs(k - float(cat)))
+                pyeongs_map[cat] = pyeongs_map[str(round(closest))]
 
     # 거래를 평형별로 분류
     def get_cat(trade_item):
