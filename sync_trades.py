@@ -444,12 +444,16 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
             suffix = ""
         key = cat + suffix
 
-        # 개별 거래 기록 (점 하나 = 거래 1건)
-        price_history[key].append({
-            "date": date_str,
-            "price": price,
-            "floor": floor,
-        })
+        # 개별 거래 기록
+        record = {"date": date_str, "price": price, "floor": floor}
+        # 월세는 월세금도 저장
+        if deal_type == "월세":
+            monthly_raw = t.get("monthlyRent") or t.get("monthlyAmount") or "0"
+            try:
+                record["monthly"] = int(str(monthly_raw).replace(",", "").strip() or "0")
+            except:
+                record["monthly"] = 0
+        price_history[key].append(record)
 
         # 최근 거래
         if key not in recent_trade or date_str > (recent_trade[key].get("date") or ""):

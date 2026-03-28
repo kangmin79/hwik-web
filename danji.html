@@ -400,15 +400,20 @@ function render() {
     if (val) tradeItems = [val];
   }
 
-  const tradeListHtml = tradeItems.slice(0,5).map(t => `
+  const tradeListHtml = tradeItems.slice(0,5).map(t => {
+    // 월세는 "보증금/월세" 형태
+    const priceText = (currentTab === '월세' && t.monthly)
+      ? formatPrice(t.price) + ' / ' + t.monthly + '만'
+      : formatPrice(t.price);
+    return `
     <div class="trade-item">
       <div>
-        <div class="trade-price">${formatPrice(t.price)}</div>
+        <div class="trade-price">${priceText}</div>
         <div class="trade-detail">${pyLabel}${t.floor ? ' · ' + t.floor + '층' : ''}</div>
       </div>
       <div class="trade-date">${esc(t.date || '')}</div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 
   // 휙 매물
   const listingCount = {};
@@ -640,13 +645,13 @@ function render() {
       return '<div style="padding:0 16px 12px;font-size:12px;color:var(--sub);line-height:1.8;">'+items.join(' · ')+'</div>';
     })()}
 
-    <!-- 거래량 + 그래프 -->
-    <div class="chart-section">
+    <!-- 거래량 + 그래프 (월세 탭 숨김) -->
+    ${currentTab !== '월세' ? `<div class="chart-section">
       <div class="chart-title">거래량</div>
       <div style="height:40px;position:relative;"><canvas id="volumeChart"></canvas></div>
       <div class="chart-title" style="margin-top:8px;">실거래가</div>
       <div class="chart-wrap"><canvas id="priceChart"></canvas></div>
-    </div>
+    </div>` : ''}
 
     <!-- 최근 실거래 -->
     <div class="section">
