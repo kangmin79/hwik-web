@@ -640,7 +640,18 @@ function render() {
   $$('.pyeong-btn').forEach(el => el.addEventListener('click', () => {
     currentPyeong = el.dataset.cat;
     render();
+    // 선택한 버튼이 보이도록 스크롤
+    setTimeout(() => {
+      const active = document.querySelector('.pyeong-btn.active');
+      if (active) active.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+    }, 50);
   }));
+
+  // 초기 렌더 시에도 active 버튼 중앙으로
+  setTimeout(() => {
+    const active = document.querySelector('.pyeong-btn.active');
+    if (active) active.scrollIntoView({ inline:'center', block:'nearest' });
+  }, 100);
 
   // 차트
   drawChart();
