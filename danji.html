@@ -328,7 +328,11 @@ function render() {
   const pm = d.pyeongs_map || {};
   const hasSupply = Object.values(pm).some(p => p.supply > 0 && p.supply !== p.exclu);
 
-  const pyeongHtml = cats.map(c => {
+  // 선택된 평형부터 시작하도록 정렬
+  const curIdx = cats.indexOf(currentPyeong);
+  const sortedCats = curIdx > 0 ? [...cats.slice(curIdx), ...cats.slice(0, curIdx)] : cats;
+
+  const pyeongHtml = sortedCats.map(c => {
     let label;
     if (areaMode === 'supply' && pm[c] && pm[c].supply > pm[c].exclu && pm[c].supply > 0) {
       label = `${Math.round(pm[c].supply)}㎡`;
