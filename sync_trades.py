@@ -637,48 +637,30 @@ def fill_nearby_complex(danji_list: list, apartments: list):
                 continue
             dist = haversine(lat1, lon1, other.get("lat"), other.get("lng"))
             if dist < 2000:  # 2km 이내
-                # 현재 단지의 기본 평형(84㎡ 근처)과 비슷한 평형 가격
-                price_84 = None
+                # 주변 단지의 매매 가격을 평형별로 저장
                 rt = other.get("recent_trade") or {}
-                # 1순위: 80~90㎡ 매매
-                matched_area = None
-                for k, v in rt.items():
-                    if "_" not in k:
-                        area = int(k) if k.isdigit() else 0
-                        if 80 <= area <= 90:
-                            price_84 = v.get("price")
-                            matched_area = area
-                            break
-                # 2순위: 59~120㎡ 범위 내에서 가장 84에 가까운 것
-                if not price_84:
-                    best_diff = 999
-                    for k, v in rt.items():
-                        if "_" not in k:
-                            area = int(k) if k.isdigit() else 0
-                            if 59 <= area <= 120:
-                                diff = abs(area - 84)
-                                if diff < best_diff:
-                                    best_diff = diff
-                                    price_84 = v.get("price")
-                                    matched_area = area
-                # 59~120㎡ 범위 밖이면 비교 불가 → 제외
-                if not price_84:
-                    continue
-
-                # 공급면적 찾기
                 other_pm = other.get("pyeongs_map") or {}
-                supply_area = None
-                if matched_area and str(matched_area) in other_pm:
-                    supply_area = round(other_pm[str(matched_area)].get("supply", 0))
+                prices = {}  # {"85": {"price":180000, "supply":172}, ...}
+                for k, v in rt.items():
+                    if "_" not in k and k.isdigit():
+                        area = int(k)
+                        supply = None
+                        if str(area) in other_pm:
+                            supply = round(other_pm[str(area)].get("supply", 0)) or None
+                        prices[k] = {
+                            "price": v.get("price"),
+                            "exclu": area,
+                            "supply": supply,
+                        }
+                if not prices:
+                    continue
 
                 candidates.append({
                     "id": other["id"],
                     "name": other["complex_name"],
                     "location": other.get("location", ""),
                     "distance": round(dist),
-                    "price_84": price_84,
-                    "area_exclu": matched_area,
-                    "area_supply": supply_area,
+                    "prices": prices,
                 })
 
         candidates.sort(key=lambda x: x["distance"])
