@@ -2381,12 +2381,80 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         .hub-action-btn.primary:hover { box-shadow: 0 4px 20px rgba(99,102,241,0.4); }
 
+        /* 스플릿 레이아웃 */
+        .hub-split {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            gap: 0;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .hub-split-left {
+            flex: 1;
+            display: flex; flex-direction: column; align-items: center;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            min-width: 0;
+        }
+        .hub-split-right {
+            width: 0; opacity: 0;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .hub-split.open .hub-split-left {
+            flex: 0 0 45%;
+        }
+        .hub-split.open .hub-split-right {
+            flex: 0 0 55%;
+            width: auto; opacity: 1;
+            overflow-y: auto;
+            max-height: calc(100vh - 120px);
+            padding: 24px 24px 24px 0;
+        }
+        .hub-split-right-inner {
+            background: #fff;
+            border: 1px solid rgba(0,0,0,0.06);
+            border-radius: 20px;
+            padding: 24px 28px;
+            min-height: 300px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+        }
+        body.dark .hub-split-right-inner {
+            background: rgba(15,23,42,0.7);
+            border-color: rgba(255,255,255,0.06);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+        }
+        .hub-split-close {
+            position: absolute; top: 12px; right: 12px;
+            background: none; border: none; color: #94a3b8;
+            font-size: 18px; cursor: pointer; padding: 4px 8px;
+            border-radius: 8px; transition: all 0.2s;
+        }
+        .hub-split-close:hover { background: rgba(99,102,241,0.08); color: #6366f1; }
+
+        /* 활성 노드 표시 */
+        .hub-node.active .hub-node-inner {
+            border-color: #6366f1;
+            background: rgba(99,102,241,0.06);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.1), 0 4px 16px rgba(99,102,241,0.08);
+        }
+        body.dark .hub-node.active .hub-node-inner {
+            background: rgba(99,102,241,0.12);
+            border-color: #818cf8;
+        }
+
         /* 비주얼 허브 */
         .hub-visual {
             position: relative;
             width: 100%; max-width: 720px;
             height: 400px;
             margin: 24px auto 0;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .hub-split.open .hub-visual {
+            max-width: 100%;
+            transform: scale(0.82);
+            margin-top: 0;
         }
 
         /* 중앙 노드 — 글래스 + 글로우 */
@@ -9164,21 +9232,31 @@ function buildHubSkeleton() {
         손님 목록
       </button>
       <div class="hub-actions">
-        <button class="hub-action-btn" onclick="hubAddNote()">✏️ 메모 추가</button>
-        <button class="hub-action-btn primary" onclick="hubSendProperties()">📤 매물 보내기</button>
+        <button class="hub-action-btn" onclick="hubAddNote()">메모 추가</button>
+        <button class="hub-action-btn primary" onclick="hubSendProperties()">매물 보내기</button>
       </div>
     </div>
 
-    <div class="hub-visual" id="hubVisual">
-      <svg class="hub-lines" id="hubLines"></svg>
-      <div class="hub-center" id="hubCenter">
-        <div class="hub-center-icon">👤</div>
-        <div class="hub-center-name" id="hubCenterName">로딩 중...</div>
-        <div class="hub-center-sub" id="hubCenterSub"></div>
+    <div class="hub-split" id="hubSplit">
+      <div class="hub-split-left">
+        <div class="hub-visual" id="hubVisual">
+          <svg class="hub-lines" id="hubLines"></svg>
+          <div class="hub-center" id="hubCenter">
+            <div class="hub-center-icon">👤</div>
+            <div class="hub-center-name" id="hubCenterName">로딩 중...</div>
+            <div class="hub-center-sub" id="hubCenterSub"></div>
+          </div>
+        </div>
+        <div class="hub-kpi" id="hubKpi"></div>
+      </div>
+
+      <div class="hub-split-right" id="hubSplitRight">
+        <div class="hub-split-right-inner" id="hubSplitContent" style="position:relative;">
+          <button class="hub-split-close" onclick="hubClosePanel()">✕</button>
+          <div id="hubPanelBody"></div>
+        </div>
       </div>
     </div>
-
-    <div class="hub-kpi" id="hubKpi"></div>
 
     <div class="hub-bento" id="hubBento">
       <div class="bento-card" id="bentoConditions">
@@ -9565,21 +9643,260 @@ function renderBentoContact(card, notes) {
   el.innerHTML = html;
 }
 
+let _hubActivePanel = null;
+
 function hubScrollTo(key) {
-  const map = {
-    conditions: 'bentoConditions',
-    match: 'bentoMatch',
-    timeline: 'bentoTimeline',
-    schedule: 'bentoSchedule',
-    interest: 'bentoTimeline',
-    contact: 'bentoContact',
-  };
-  const el = document.getElementById(map[key]);
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    el.classList.add('highlight');
-    setTimeout(() => el.classList.remove('highlight'), 1500);
+  const split = document.getElementById('hubSplit');
+  const body = document.getElementById('hubPanelBody');
+  if (!split || !body) return;
+
+  // 같은 노드 다시 클릭 → 닫기
+  if (_hubActivePanel === key) {
+    hubClosePanel();
+    return;
   }
+
+  // 노드 active 표시
+  document.querySelectorAll('.hub-node').forEach(n => n.classList.remove('active'));
+  const activeNode = document.querySelector(`.hub-node[data-key="${key}"]`);
+  if (activeNode) activeNode.classList.add('active');
+
+  _hubActivePanel = key;
+
+  // 패널 컨텐츠 생성
+  const card = _hubData.card;
+  const notes = _hubData.notes || [];
+  const matches = _hubData.matches || [];
+
+  let html = '';
+  switch(key) {
+    case 'conditions':
+      html = buildPanelConditions(card);
+      break;
+    case 'match':
+      html = buildPanelMatch(matches);
+      break;
+    case 'timeline':
+      html = buildPanelTimeline(_hubCardId, notes);
+      break;
+    case 'schedule':
+      html = buildPanelSchedule(notes);
+      break;
+    case 'interest':
+      html = buildPanelTimeline(_hubCardId, notes);
+      break;
+    case 'contact':
+      html = buildPanelContact(card, notes);
+      break;
+  }
+
+  body.innerHTML = html;
+
+  // 스플릿 열기
+  split.classList.add('open');
+
+  // 하단 벤토에서도 하이라이트
+  const map = { conditions:'bentoConditions', match:'bentoMatch', timeline:'bentoTimeline', schedule:'bentoSchedule', interest:'bentoTimeline', contact:'bentoContact' };
+  document.querySelectorAll('.bento-card').forEach(c => c.classList.remove('highlight'));
+  const bentoEl = document.getElementById(map[key]);
+  if (bentoEl) bentoEl.classList.add('highlight');
+}
+
+function hubClosePanel() {
+  const split = document.getElementById('hubSplit');
+  if (split) split.classList.remove('open');
+  document.querySelectorAll('.hub-node').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.bento-card').forEach(c => c.classList.remove('highlight'));
+  _hubActivePanel = null;
+}
+
+// ── 패널 컨텐츠 빌더 ──
+
+function buildPanelConditions(card) {
+  const p = card.property || {};
+  const pn = card.private_note || {};
+  const features = p.features || [];
+
+  let html = `<div style="font-size:16px;font-weight:700;color:var(--text-white);margin-bottom:16px;letter-spacing:-0.5px;">희망 조건</div>`;
+
+  const items = [
+    p.price ? ['💰', '예산', p.price] : null,
+    p.location ? ['📍', '지역', p.location] : null,
+    p.complex ? ['🏢', '단지', p.complex] : null,
+    p.area ? ['📐', '면적', p.area] : null,
+  ].filter(Boolean);
+
+  items.forEach(([icon, label, value]) => {
+    html += `<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(0,0,0,0.04);">
+      <span style="font-size:18px;">${icon}</span>
+      <div><div style="font-size:14px;font-weight:600;color:var(--text-white);">${esc(value)}</div>
+      <div style="font-size:11px;color:#94a3b8;">${label}</div></div></div>`;
+  });
+
+  if (features.length) {
+    html += `<div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:6px;">`;
+    features.forEach(f => { html += `<span class="hub-cond-tag">${esc(f)}</span>`; });
+    html += `</div>`;
+  }
+
+  if (pn.memo) {
+    html += `<div style="margin-top:14px;padding:14px 16px;border-radius:12px;background:rgba(99,102,241,0.04);border:1px solid rgba(99,102,241,0.08);font-size:13px;color:#64748b;line-height:1.7;">${esc(pn.memo)}</div>`;
+  }
+
+  return html;
+}
+
+function buildPanelMatch(matches) {
+  let html = `<div style="font-size:16px;font-weight:700;color:var(--text-white);margin-bottom:16px;letter-spacing:-0.5px;">매칭 매물 <span style="color:#6366f1;">${matches.length}건</span></div>`;
+
+  if (!matches.length) return html + '<div class="bento-empty">매칭되는 매물이 없어요</div>';
+
+  const myIds = new Set(allCards.map(c => c.id));
+  matches.forEach(m => {
+    const p = m.property || {};
+    const typeClass = p.type === '매매' ? 'sale' : p.type === '전세' ? 'jeonse' : 'rent';
+    const isMine = myIds.has(m.id);
+    const score = m.similarity ? Math.round(m.similarity * 100) : 0;
+    html += `
+      <div class="bento-match-item" onclick="openClientHub_matchDetail('${m.id}')">
+        <span class="bento-match-type ${typeClass}">${esc(p.type || '?')}</span>
+        <div class="bento-match-info">
+          <div class="bento-match-name">${esc(p.complex || p.location || '매물')} ${isMine ? '' : '<span style="font-size:10px;color:#fb923c;">공유</span>'}</div>
+          <div class="bento-match-detail">${[p.price, p.area, p.floor].filter(Boolean).map(v => esc(v)).join(' · ')}</div>
+        </div>
+        ${score > 0 ? `<span class="bento-match-score">${score}%</span>` : ''}
+      </div>`;
+  });
+
+  return html;
+}
+
+function buildPanelTimeline(cardId, notes) {
+  let html = `<div style="font-size:16px;font-weight:700;color:var(--text-white);margin-bottom:16px;letter-spacing:-0.5px;">상담 기록 <span style="color:#6366f1;">${notes.length}건</span></div>`;
+
+  html += `<div class="hub-note-input">
+    <input type="text" id="hubPanelNoteInput" placeholder="메모 입력 (예: 콜백, 내일 오후2시 방문)"
+           onkeydown="if(event.key==='Enter')hubSaveNotePanel('${cardId}')">
+    <button onclick="hubSaveNotePanel('${cardId}')">저장</button>
+  </div>`;
+
+  if (!notes.length) return html + '<div class="bento-empty">아직 상담 기록이 없어요</div>';
+
+  notes.forEach(n => {
+    const type = n.type || '메모';
+    const date = formatRelativeDate(n.created_at);
+    html += `
+      <div class="hub-tl-item">
+        <span class="hub-tl-badge ${type}">${type}</span>
+        <div>
+          <div class="hub-tl-content">${esc(n.content || '')}</div>
+          <div class="hub-tl-date">${date}${n.alert_date ? ' · 📅 ' + new Date(n.alert_date).toLocaleDateString('ko-KR') : ''}</div>
+        </div>
+      </div>`;
+  });
+
+  return html;
+}
+
+function buildPanelSchedule(notes) {
+  const schedules = notes.filter(n => n.alert_date && !n.alert_done)
+    .sort((a, b) => new Date(a.alert_date) - new Date(b.alert_date));
+
+  let html = `<div style="font-size:16px;font-weight:700;color:var(--text-white);margin-bottom:16px;letter-spacing:-0.5px;">일정 / 알림 <span style="color:#6366f1;">${schedules.length}건</span></div>`;
+
+  if (!schedules.length) return html + '<div class="bento-empty">예정된 일정이 없어요</div>';
+
+  schedules.forEach(n => {
+    const d = new Date(n.alert_date);
+    const isPast = d < new Date();
+    const dateStr = d.toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
+    html += `
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(0,0,0,0.04);">
+        <div style="width:8px;height:8px;border-radius:50%;background:${isPast ? '#ef4444' : '#6366f1'};flex-shrink:0;"></div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:${isPast ? '#ef4444' : '#1e293b'};">${esc(n.content || n.type || '일정')}</div>
+          <div style="font-size:12px;color:#94a3b8;margin-top:2px;">${dateStr} ${isPast ? '(지연)' : ''}</div>
+        </div>
+      </div>`;
+  });
+
+  return html;
+}
+
+function buildPanelContact(card, notes) {
+  let html = `<div style="font-size:16px;font-weight:700;color:var(--text-white);margin-bottom:16px;letter-spacing:-0.5px;">연락처</div>`;
+  const contacts = [];
+
+  if (card.contact_name || card.contact_phone) {
+    contacts.push({ icon: '👤', name: card.contact_name || '손님', phone: card.contact_phone || '', type: '손님' });
+  } else {
+    const memo = card.private_note?.memo || '';
+    const ph = memo.match(/01[016789][-.\s]?\d{3,4}[-.\s]?\d{4}/);
+    if (ph) contacts.push({ icon: '👤', name: '손님', phone: ph[0], type: '손님' });
+  }
+
+  const linkedIds = [...new Set(notes.filter(n => n.linked_card_id).map(n => n.linked_card_id))];
+  linkedIds.forEach(id => {
+    const lc = allCards.find(c => c.id === id);
+    if (lc && (lc.contact_name || lc.contact_phone)) {
+      const lpName = [lc.property?.complex, lc.property?.location].filter(Boolean).join(' ') || '매물';
+      contacts.push({ icon: '🏠', name: lc.contact_name || lpName, phone: lc.contact_phone || '', type: lpName });
+    }
+  });
+
+  if (!contacts.length) return html + '<div class="bento-empty">등록된 연락처가 없어요</div>';
+
+  contacts.forEach(c => {
+    html += `
+      <div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid rgba(0,0,0,0.04);">
+        <div style="width:42px;height:42px;border-radius:12px;background:rgba(99,102,241,0.08);display:flex;align-items:center;justify-content:center;font-size:18px;">${c.icon}</div>
+        <div style="flex:1;">
+          <div style="font-size:14px;font-weight:600;color:var(--text-white);">${esc(c.name)}</div>
+          <div style="font-size:12px;color:#94a3b8;">${esc(c.type)}</div>
+        </div>
+        ${c.phone ? `<button onclick="navigator.clipboard.writeText('${esc(c.phone)}');this.textContent='복사됨!';setTimeout(()=>this.textContent='${esc(c.phone)}',1500);"
+          style="padding:8px 14px;border-radius:10px;border:1px solid rgba(99,102,241,0.15);background:rgba(99,102,241,0.04);color:#6366f1;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s;">
+          ${esc(c.phone)}</button>` : ''}
+      </div>`;
+  });
+
+  return html;
+}
+
+async function hubSaveNotePanel(cardId) {
+  const input = document.getElementById('hubPanelNoteInput');
+  if (!input || !input.value.trim()) return;
+  const content = input.value.trim();
+
+  let type = '메모';
+  if (/콜백|전화|통화/.test(content)) type = '상담';
+  if (/방문|투어|현장/.test(content)) type = '방문';
+  if (/소개|보내|발송/.test(content)) type = '매물소개';
+  if (/계약|잔금|이사/.test(content)) type = '계약';
+
+  let alertDate = null;
+  if (/내일/.test(content)) {
+    alertDate = new Date(); alertDate.setDate(alertDate.getDate() + 1); alertDate = alertDate.toISOString();
+  }
+  const dayMatch = content.match(/(\d{1,2})월\s*(\d{1,2})일/);
+  if (dayMatch) alertDate = new Date(new Date().getFullYear(), parseInt(dayMatch[1]) - 1, parseInt(dayMatch[2])).toISOString();
+
+  await supabaseClient.from('client_notes').insert({
+    client_card_id: cardId, agent_id: currentUser.id, type, content, alert_date: alertDate, alert_done: false,
+  });
+
+  // 새로고침
+  const { data: notes } = await supabaseClient.from('client_notes')
+    .select('id, type, content, alert_date, alert_done, linked_card_id, created_at')
+    .eq('client_card_id', cardId).order('created_at', { ascending: false });
+  _hubData.notes = notes || [];
+  renderBentoTimeline(cardId, _hubData.notes);
+  renderBentoSchedule(_hubData.notes);
+  renderHubNodes(_hubData.card, _hubData.notes, _hubData.matches, _hubData.interests);
+  renderHubKpi(_hubData.card, _hubData.notes, _hubData.matches);
+  // 패널도 갱신
+  if (_hubActivePanel === 'timeline') hubScrollTo('timeline');
+  if (_hubActivePanel === 'schedule') hubScrollTo('schedule');
 }
 
 async function hubSaveNote(cardId) {
@@ -9632,8 +9949,11 @@ async function hubSaveNote(cardId) {
 }
 
 function hubAddNote() {
-  const input = document.getElementById('hubNoteInput');
-  if (input) { input.focus(); hubScrollTo('timeline'); }
+  hubScrollTo('timeline');
+  setTimeout(() => {
+    const input = document.getElementById('hubPanelNoteInput') || document.getElementById('hubNoteInput');
+    if (input) input.focus();
+  }, 400);
 }
 
 function hubSendProperties() {
