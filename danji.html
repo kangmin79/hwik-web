@@ -477,7 +477,6 @@ function render() {
   if (d.heating) specParts.push(d.heating);
   if (d.builder) specParts.push('시공 ' + d.builder);
   if (specParts.length > 0) seoParts.push(specParts.join(', ') + '.');
-  if (d.mgmt_fee) seoParts.push('세대당 월 평균 관리비 약 ' + Math.round(d.mgmt_fee/10000) + '만원.');
 
   // 평형 (DB categories 기반)
   if (cats.length > 0) {
@@ -537,7 +536,6 @@ function render() {
     const _ratio = (parseInt(d.parking) / d.total_units).toFixed(1);
     faqItems.push({ q: `${d.complex_name} 주차 대수는?`, a: `총 ${parseInt(d.parking).toLocaleString()}대 (세대당 ${_ratio}대)입니다.` });
   }
-  if (d.mgmt_fee) faqItems.push({ q: `${d.complex_name} 관리비는?`, a: `공용관리비 월 약 ${Math.round(d.mgmt_fee/10000)}만원 (세대당 평균, 개별사용료 별도)` });
   if (d.heating) faqItems.push({ q: `${d.complex_name} 난방 방식은?`, a: `${d.heating}입니다.` });
   if (d.builder) faqItems.push({ q: `${d.complex_name} 시공사는?`, a: `${esc(d.builder)}입니다.` });
 
@@ -626,7 +624,6 @@ function render() {
       const hh = parseInt(d.total_units || 0);
       if (pk > 0) items.push('주차 ' + pk.toLocaleString() + '대' + (hh > 0 ? ' (세대당 '+(pk/hh).toFixed(1)+'대)' : ''));
       if (d.top_floor) items.push('최고 ' + d.top_floor + '층');
-      if (d.mgmt_fee) items.push('공용관리비 월 ' + Math.round(d.mgmt_fee/10000) + '만원');
       if (d.heating) items.push(esc(d.heating));
       if (items.length === 0) return '';
       return '<div style="padding:0 16px 12px;font-size:12px;color:var(--sub);line-height:1.8;">'+items.join(' · ')+'</div>';
