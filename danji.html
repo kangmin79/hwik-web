@@ -329,27 +329,21 @@ function render() {
   const pm = d.pyeongs_map || {};
   const hasSupply = Object.values(pm).some(p => p.supply > 0);
 
-  // 공급면적 중복 체크
-  const supplyCount = {};
-  cats.forEach(c => {
-    if (pm[c] && pm[c].supply > 0) {
-      const s = Math.round(pm[c].supply);
-      supplyCount[s] = (supplyCount[s] || 0) + 1;
-    }
-  });
-
   const pyeongHtml = cats.map(c => {
     let label;
-    if (pm[c] && pm[c].supply > 0 && areaMode === 'supply') {
-      const s = Math.round(pm[c].supply);
-      // 같은 공급면적이 여러 개면 전용면적으로 구분
-      label = supplyCount[s] > 1 ? `공급 ${s}㎡(전용${c})` : `공급 ${s}㎡`;
+    if (areaMode === 'supply' && pm[c] && pm[c].supply > 0) {
+      label = `${Math.round(pm[c].supply)}㎡`;
     } else {
-      label = `전용 ${c}㎡`;
+      label = `${c}㎡`;
     }
     const active = c === currentPyeong ? ' active' : '';
     return `<div class="pyeong-btn${active}" data-cat="${esc(c)}">${esc(label)}</div>`;
   }).join('');
+
+  // 전용/공급 표시 (공급 데이터 있을 때)
+  const areaTypeLabel = hasSupply
+    ? `<span style="font-size:10px;color:var(--sub);padding:0 16px;">${areaMode === 'supply' ? '공급면적' : '전용면적'} · 탭하여 전환</span>`
+    : `<span style="font-size:10px;color:var(--sub);padding:0 16px;">전용면적</span>`;
 
   const toggleHtml = '';
 
@@ -589,6 +583,7 @@ function render() {
     </div>
 
     <!-- 평형 -->
+    ${areaTypeLabel}
     <div class="pyeong-row${cats.length > 3 ? ' many' : ''}">${pyeongHtml}</div>
 
     <!-- 지표 1행: 시세 (월세 탭에서는 숨김) -->
