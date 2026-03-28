@@ -21,7 +21,7 @@
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <style>
@@ -1430,7 +1430,7 @@
   <div class="share-sheet-title" id="shareSheetTitle">매물 공유하기</div>
   <div class="share-sheet-btns">
     <button class="share-opt kakao" onclick="shareKakao()">
-      <div class="share-opt-icon"><img src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_medium.png" style="width:32px;height:32px;"></div>
+      <div class="share-opt-icon"><img src="https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_medium.png" loading="lazy" style="width:32px;height:32px;"></div>
       <div class="share-opt-label">카카오톡</div>
     </button>
     <button class="share-opt copy" onclick="copyLink()">
@@ -1545,16 +1545,14 @@
   async function onLoggedIn() {
     closeLogin();
     showHomeWidgets();
-    await loadMyCount();
 
-    // ★ 신규 유저 (프로필 없음) → PC 유도 토스트
-    const { data: profile } = await supabaseClient
-      .from('profiles')
-      .select('id')
-      .eq('id', currentUser.id)
-      .maybeSingle();
+    // ★ loadMyCount와 프로필 체크를 병렬 실행
+    const [, profileResult] = await Promise.all([
+      loadMyCount(),
+      supabaseClient.from('profiles').select('id').eq('id', currentUser.id).maybeSingle()
+    ]);
 
-    if (!profile) {
+    if (!profileResult.data) {
       setTimeout(() => showPcGuideToast(), 800);
     }
   }
@@ -1664,7 +1662,7 @@
   function showHomeWidgets() {
     document.getElementById('bottomTabBar').classList.add('visible');
     renderRecent();
-    updateTabBadges();
+    // updateTabBadges는 loadMyCount()에서 호출되므로 중복 제거
   }
 
   // ── 하단 탭 전환 ──
@@ -1792,10 +1790,11 @@
   }
 
   // ── 검색 ──
-  searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doSearch(); });
+  searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !appState.loading) doSearch(); });
 
   async function doSearch(skipRecent = false) {
     if (!currentUser) { showLogin(); return; }
+    if (appState.loading) return;
     const rawQuery = searchInput.value.trim();
     if (!rawQuery) return;
 
@@ -1810,6 +1809,7 @@
     searchInput.blur();
     if (searchController) searchController.abort();
     searchController = new AbortController();
+    appState.loading = true;
     results.innerHTML = `
       <div class="searching">
         <div class="dot-pulse"><span></span><span></span><span></span></div>
@@ -1829,6 +1829,8 @@
     } catch(e) {
       if (e.name === 'AbortError') return;
       results.innerHTML = `<div class="results-status" style="text-align:center;padding:32px 0;color:#f87171">검색 오류가 발생했어요</div>`;
+    } finally {
+      appState.loading = false;
     }
   }
 
@@ -1964,28 +1966,24 @@
           .order('alert_date', { ascending: true }).limit(20),
       ]);
 
-      // 매물 ID 모으기 (이름 표시용)
+      // 매물 ID + 손님 ID 모으기 (병렬 조회)
       const cardIds = [...new Set([
         ...(matchRes.data || []).map(m => m.card_id),
         ...(interestRes.data || []).map(i => i.card_id),
       ])].filter(Boolean);
-      let cardMap = {};
-      if (cardIds.length) {
-        const { data: cards } = await supabaseClient.from('cards').select('id, property').in('id', cardIds);
-        if (cards) cards.forEach(c => { cardMap[c.id] = c.property || {}; });
-      }
-
-      // 손님 ID 모으기
       const clientIds = [...new Set([
         ...(overdueRes.data || []).map(o => o.client_card_id),
         ...(upcomingRes.data || []).map(u => u.client_card_id),
         ...(matchRes.data || []).map(m => m.client_card_id),
       ])].filter(Boolean);
-      let clientMap = {};
-      if (clientIds.length) {
-        const { data: clients } = await supabaseClient.from('cards').select('id, property').in('id', clientIds);
-        if (clients) clients.forEach(c => { clientMap[c.id] = c.property || {}; });
-      }
+
+      let cardMap = {}, clientMap = {};
+      const [cardsRes, clientsRes] = await Promise.all([
+        cardIds.length ? supabaseClient.from('cards').select('id, property').in('id', cardIds) : { data: [] },
+        clientIds.length ? supabaseClient.from('cards').select('id, property').in('id', clientIds) : { data: [] }
+      ]);
+      if (cardsRes.data) cardsRes.data.forEach(c => { cardMap[c.id] = c.property || {}; });
+      if (clientsRes.data) clientsRes.data.forEach(c => { clientMap[c.id] = c.property || {}; });
 
       let html = `<div style="padding:8px 0 4px;">
         <span style="font-size:22px;font-weight:900;color:#1a1a2e;letter-spacing:-0.5px;">알림</span>
@@ -2417,11 +2415,15 @@
 
   async function openDetailById(cardId, cat = 'my') {
     try {
-      // ★ 공유 매물은 비공개 컬럼 제외, 내 매물은 전체 조회
-      const selectCols = cat === 'shared'
-        ? 'id, property, agent, style, color, agent_comment, photos, lat, lng, trade_status, created_at, agent_id'
-        : '*';
-      const { data } = await supabaseClient.from('cards_view').select(selectCols).eq('id', cardId).maybeSingle();
+      // ★ searchData 캐시에서 먼저 찾기 (불필요한 API 호출 제거)
+      let data = searchData.find(c => c.id === cardId);
+      if (!data) {
+        const selectCols = cat === 'shared'
+          ? 'id, property, agent, style, color, agent_comment, photos, lat, lng, trade_status, created_at, agent_id'
+          : '*';
+        const res = await supabaseClient.from('cards_view').select(selectCols).eq('id', cardId).maybeSingle();
+        data = res.data;
+      }
       if (!data) return;
       const p = data.property || {};
       const item = {
@@ -2435,7 +2437,6 @@
         rooms: p.room || '',
         direction: (p.features || []).join(', ') || '',
         status: data.trade_status || '',
-        // ★ 공유 매물이면 비공개 메모 비움
         memo: cat === 'shared' ? '' : (data.agent_comment || ''),
         memoPrivate: cat === 'shared' ? '' : (data.private_note?.memo || ''),
         tags: p.features || [],
@@ -2444,42 +2445,6 @@
       };
       openDetail(item);
     } catch(e) { console.error(e); }
-  }
-
-  // ── 검색창 포커스 → 드롭다운 (구글 방식 — 로그인 체크는 검색 시점에)
-  // 입력 중이면 드롭다운 닫기
-  searchInput.addEventListener('input', () => {
-    if (searchInput.value.trim()) {
-      closeDropdown();
-    } else {
-      openDropdown();
-    }
-  });
-
-  // 바깥 터치하면 드롭다운 닫기
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('.search-wrap')) {
-      closeDropdown();
-    }
-  });
-
-  function openDropdown() {
-    if (container.classList.contains('active')) return; // 검색 결과 상태에서는 안 열기
-    dropdown.classList.add('show');
-    searchInput.classList.add('dropdown-open');
-  }
-
-  function closeDropdown() {
-    dropdown.classList.remove('show');
-    searchInput.classList.remove('dropdown-open');
-  }
-
-  // 추천 항목 선택
-  function pickSuggest(el) {
-    const text = el.querySelector('.suggest-text').textContent;
-    searchInput.value = text;
-    closeDropdown();
-    doSearch();
   }
 
     // ── 상세 모달 ──
