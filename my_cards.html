@@ -2724,6 +2724,47 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         .hub-note-input button:hover { box-shadow: 0 4px 16px rgba(99,102,241,0.35); }
 
+        /* 리마인드 배너 */
+        .hub-remind {
+            max-width: 640px; margin: 16px auto 0;
+            padding: 14px 20px;
+            border-radius: 14px;
+            display: flex; align-items: center; gap: 12px;
+            font-size: 13px; font-weight: 600;
+            letter-spacing: -0.3px;
+            animation: hubPanelIn 0.4s ease;
+        }
+        .hub-remind.warn {
+            background: #fef3c7; border: 1px solid #fcd34d;
+            color: #92400e;
+        }
+        .hub-remind.danger {
+            background: #fee2e2; border: 1px solid #fca5a5;
+            color: #991b1b;
+        }
+        .hub-remind.good {
+            background: #ecfdf5; border: 1px solid #6ee7b7;
+            color: #065f46;
+        }
+        .hub-remind-icon { font-size: 20px; flex-shrink: 0; }
+        .hub-remind-text { flex: 1; line-height: 1.5; }
+        .hub-remind-action {
+            padding: 6px 14px; border-radius: 8px; border: none;
+            font-size: 12px; font-weight: 700; cursor: pointer;
+            transition: opacity 0.2s; flex-shrink: 0;
+        }
+        .hub-remind.warn .hub-remind-action { background: #f59e0b; color: #fff; }
+        .hub-remind.danger .hub-remind-action { background: #ef4444; color: #fff; }
+
+        /* 매물 상태 뱃지 (타임라인 내) */
+        .tl-property-status {
+            display: inline-block; padding: 2px 8px; border-radius: 6px;
+            font-size: 10px; font-weight: 700; margin-left: 6px;
+        }
+        .tl-property-status.available { background: rgba(74,222,128,0.12); color: #16a34a; }
+        .tl-property-status.ongoing { background: rgba(251,191,36,0.12); color: #d97706; }
+        .tl-property-status.done { background: rgba(239,68,68,0.12); color: #dc2626; text-decoration: line-through; }
+
         @media (max-width: 768px) {
             .hub-bento { grid-template-columns: 1fr; padding: 0 16px; }
             .bento-card.full { grid-column: 1; }
@@ -9243,6 +9284,7 @@ function buildHubSkeleton() {
           </div>
         </div>
         <div class="hub-kpi" id="hubKpi"></div>
+        <div id="hubRemind"></div>
       </div>
       <div class="hub-body-right" id="hubBodyRight"></div>
     </div>
@@ -9285,6 +9327,9 @@ async function loadHubData(cardId) {
 
   // KPI 칩
   renderHubKpi(card, notes, matches);
+
+  // 리마인드 배너
+  renderHubRemind(card, notes);
 }
 
 async function loadHubMatch(cardId) {
@@ -9678,11 +9723,14 @@ function buildPanelMatch(matches) {
     const typeClass = p.type === '매매' ? 'sale' : p.type === '전세' ? 'jeonse' : 'rent';
     const isMine = myIds.has(m.id);
     const score = m.similarity ? Math.round(m.similarity * 100) : 0;
+    const st = m.trade_status || '계약가능';
+    const stClass = st === '완료' ? 'done' : st === '계약중' ? 'ongoing' : 'available';
+    const isDone = st === '완료';
     html += `
-      <div class="bento-match-item" onclick="openClientHub_matchDetail('${m.id}')">
+      <div class="bento-match-item" style="${isDone ? 'opacity:0.5;' : ''}" onclick="openClientHub_matchDetail('${m.id}')">
         <span class="bento-match-type ${typeClass}">${esc(p.type || '?')}</span>
         <div class="bento-match-info">
-          <div class="bento-match-name">${esc(p.complex || p.location || '매물')} ${isMine ? '' : '<span style="font-size:10px;color:#fb923c;">공유</span>'}</div>
+          <div class="bento-match-name">${esc(p.complex || p.location || '매물')} ${isMine ? '' : '<span style="font-size:10px;color:#fb923c;">공유</span>'} ${st !== '계약가능' ? `<span class="tl-property-status ${stClass}">${st === '완료' ? '나간 매물' : st}</span>` : ''}</div>
           <div class="bento-match-detail">${[p.price, p.area, p.floor].filter(Boolean).map(v => esc(v)).join(' · ')}</div>
         </div>
         ${score > 0 ? `<span class="bento-match-score">${score}%</span>` : ''}
@@ -9706,11 +9754,24 @@ function buildPanelTimeline(cardId, notes) {
   notes.forEach(n => {
     const type = n.type || '메모';
     const date = formatRelativeDate(n.created_at);
+
+    // 연결 매물 상태 표시
+    let propertyStatusHtml = '';
+    if (n.linked_card_id) {
+      const linkedCard = allCards.find(c => c.id === n.linked_card_id) || allSharedCards.find(c => c.id === n.linked_card_id);
+      if (linkedCard) {
+        const st = linkedCard.trade_status || '계약가능';
+        const stClass = st === '완료' ? 'done' : st === '계약중' ? 'ongoing' : 'available';
+        const stLabel = st === '완료' ? '계약완료 (나간 매물)' : st;
+        propertyStatusHtml = `<span class="tl-property-status ${stClass}">${stLabel}</span>`;
+      }
+    }
+
     html += `
       <div class="hub-tl-item">
         <span class="hub-tl-badge ${type}">${type}</span>
         <div>
-          <div class="hub-tl-content">${esc(n.content || '')}</div>
+          <div class="hub-tl-content">${esc(n.content || '')}${propertyStatusHtml}</div>
           <div class="hub-tl-date">${date}${n.alert_date ? ' · 📅 ' + new Date(n.alert_date).toLocaleDateString('ko-KR') : ''}</div>
         </div>
       </div>`;
@@ -9867,6 +9928,54 @@ async function hubSaveNote(cardId) {
     renderHubNodes(_hubData.card, _hubData.notes, _hubData.matches, _hubData.interests);
     renderHubKpi(_hubData.card, _hubData.notes, _hubData.matches);
   }
+}
+
+function renderHubRemind(card, notes) {
+  const el = document.getElementById('hubRemind');
+  if (!el) return;
+
+  const contactNotes = notes.filter(n => ['상담','방문','매물소개','계약'].includes(n.type));
+  const lastContact = contactNotes.length ? contactNotes[0] : null; // notes는 이미 최신순
+  const daysSince = lastContact ? Math.floor((Date.now() - new Date(lastContact.created_at).getTime()) / 86400000) : -1;
+
+  // 예정 일정 중 지연된 것
+  const overdue = notes.filter(n => n.alert_date && !n.alert_done && new Date(n.alert_date) < new Date());
+
+  let html = '';
+
+  if (overdue.length > 0) {
+    const item = overdue[0];
+    html += `<div class="hub-remind danger">
+      <span class="hub-remind-icon">🚨</span>
+      <span class="hub-remind-text">지연된 일정이 ${overdue.length}건 있습니다. "${esc(item.content || item.type || '일정')}"</span>
+      <button class="hub-remind-action" onclick="hubScrollTo('schedule')">확인</button>
+    </div>`;
+  } else if (daysSince < 0) {
+    html += `<div class="hub-remind warn">
+      <span class="hub-remind-icon">👋</span>
+      <span class="hub-remind-text">아직 상담 기록이 없어요. 첫 연락을 기록해보세요!</span>
+      <button class="hub-remind-action" onclick="hubAddNote()">메모 추가</button>
+    </div>`;
+  } else if (daysSince >= 14) {
+    html += `<div class="hub-remind danger">
+      <span class="hub-remind-icon">🔴</span>
+      <span class="hub-remind-text">마지막 연락이 ${daysSince}일 전입니다. 이탈 위험! 안부 연락 한번 해보세요.</span>
+      <button class="hub-remind-action" onclick="hubAddNote()">연락 기록</button>
+    </div>`;
+  } else if (daysSince >= 7) {
+    html += `<div class="hub-remind warn">
+      <span class="hub-remind-icon">⏰</span>
+      <span class="hub-remind-text">상담한 지 ${daysSince}일 지났습니다. 안부 연락 한번 해보세요!</span>
+      <button class="hub-remind-action" onclick="hubAddNote()">연락 기록</button>
+    </div>`;
+  } else if (daysSince <= 2 && contactNotes.length > 0) {
+    html += `<div class="hub-remind good">
+      <span class="hub-remind-icon">✅</span>
+      <span class="hub-remind-text">최근 연락 잘 하고 있어요! (${daysSince === 0 ? '오늘' : daysSince + '일 전'})</span>
+    </div>`;
+  }
+
+  el.innerHTML = html;
 }
 
 function hubAddNote() {
