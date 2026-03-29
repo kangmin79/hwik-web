@@ -479,7 +479,9 @@ const Hub = {
     document.querySelectorAll('.hub-node').forEach(n=>n.classList.remove('active'));
     document.querySelector(`.hub-node[data-key="${key}"]`)?.classList.add('active');
     this.activePanel = key;
-    document.getElementById('main').classList.add('split');
+    const main = document.getElementById('main');
+    main.classList.remove('split','triple');
+    main.classList.add(key === 'register' ? 'triple' : 'split');
     Panel.load(key, document.getElementById('panelArea'));
   },
 
@@ -559,14 +561,9 @@ const Panel = {
 
   onRegInput() {
     const text = document.getElementById('regInput')?.value?.trim() || '';
-    const main = document.getElementById('main');
     if (text.length > 0) {
-      main.classList.remove('split');
-      main.classList.add('triple');
       this.updatePreview(text);
     } else {
-      main.classList.remove('triple');
-      main.classList.add('split');
       document.getElementById('previewArea').innerHTML = `<div style="text-align:center;color:var(--text-light);font-size:13px;"><div style="font-size:32px;margin-bottom:8px;">📝</div>매물 정보를 입력하면<br>미리보기가 표시됩니다</div>`;
     }
   },
