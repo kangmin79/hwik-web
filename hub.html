@@ -602,6 +602,7 @@ function onNodeClick(key) {
 }
 
 function openPanel(key) {
+  console.log('[hub] openPanel:', key);
   if (_activePanel === key) { closePanel(); return; }
 
   document.querySelectorAll('.hub-node').forEach(n => n.classList.remove('active'));
@@ -873,6 +874,7 @@ async function doRegister() {
 
 // ── 패널: 내 매물 ──
 async function loadMyPanel(el) {
+  console.log('[hub] loadMyPanel 시작, currentUser:', currentUser?.id);
   el.innerHTML = `<div class="panel-inner">
     <div class="panel-header">
       <div class="panel-title">내 매물 <span>${_counts.my}건</span></div>
@@ -894,6 +896,7 @@ async function loadMyPanel(el) {
     .neq('property->>type', '손님')
     .order('created_at', { ascending:false })
     .limit(50);
+  console.log('[hub] loadMyPanel 데이터:', data?.length, '건');
   _myCards = data || [];
   renderMyList();
 }
