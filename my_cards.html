@@ -2411,6 +2411,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             position: sticky; top: 56px;
             height: calc(100vh - 56px);
             justify-content: center;
+            overflow: hidden;
         }
         .hub-body.split .hub-body-right {
             flex: 0 0 50%; opacity: 1; width: auto;
@@ -2418,7 +2419,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             max-height: calc(100vh - 56px);
             padding: 24px 28px 60px 0;
         }
-        .hub-body.split .hub-visual { transform: none; margin: 0; max-width: 100%; overflow: visible; }
+        .hub-body.split .hub-visual { margin: 0; max-width: 100%; max-height: calc(100vh - 100px); overflow: visible; }
 
         /* 우측 패널 카드 */
         .hub-panel-card {
