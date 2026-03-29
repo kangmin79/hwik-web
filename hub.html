@@ -65,20 +65,24 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sa
 .main.split .hub-area { width:50%; }
 .main.split .panel-area { width:50%; }
 
-/* 3분할: 허브(30%) + 패널(40%) + 미리보기(30%) */
-.main.triple .hub-area { width:30%; }
-.main.triple .panel-area { width:40%; }
-.preview-area {
-  position:fixed; top:56px; right:0;
-  width:0; height:calc(100vh - 56px);
-  background:var(--bg);
-  display:flex; align-items:center; justify-content:center;
-  overflow:hidden;
-  transition:width 0.4s ease;
-  z-index:50;
-  border-left:1px solid var(--border);
+/* 패널 내부 미리보기 (card_generator 방식) */
+.panel-with-preview { display:flex; height:100%; }
+.panel-input { flex:1; overflow-y:auto; }
+.panel-preview {
+  flex:0 0 auto; overflow:visible; opacity:0;
+  display:flex; align-items:center;
+  pointer-events:none;
+  transition:opacity 0.4s ease 0.15s;
 }
-.main.triple .preview-area { width:30%; }
+.panel-preview.visible { opacity:1; pointer-events:all; }
+.panel-preview-slide {
+  width:0; overflow:hidden;
+  transition:width 0.5s cubic-bezier(0.4,0,0.2,1), padding 0.5s cubic-bezier(0.4,0,0.2,1);
+  padding:0; display:flex; align-items:center; justify-content:center;
+}
+.panel-preview.visible .panel-preview-slide {
+  width:320px; padding:0 24px;
+}
 .phone-mock {
   width:280px; height:500px; border-radius:32px;
   background:#111; border:3px solid #333;
@@ -297,7 +301,6 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sa
     </div>
   </div>
   <div class="panel-area" id="panelArea"></div>
-  <div class="preview-area" id="previewArea"></div>
 </div>
 
 <!-- 로그인 -->
@@ -485,15 +488,12 @@ const Hub = {
     document.querySelectorAll('.hub-node').forEach(n=>n.classList.remove('active'));
     document.querySelector(`.hub-node[data-key="${key}"]`)?.classList.add('active');
     this.activePanel = key;
-    const main = document.getElementById('main');
-    main.classList.remove('split','triple');
-    main.classList.add('split');
+    document.getElementById('main').classList.add('split');
     Panel.load(key, document.getElementById('panelArea'));
   },
 
   closePanel() {
     document.getElementById('main').classList.remove('split','triple');
-    document.getElementById('previewArea').innerHTML = '';
     document.querySelectorAll('.hub-node').forEach(n=>n.classList.remove('active'));
     this.activePanel = null;
   },
@@ -545,45 +545,50 @@ const Panel = {
   },
 
   register(el) {
-    el.innerHTML = `<div class="panel-inner">
-      ${this.h('매물 등록')}
-      <div style="padding:0 24px;">
-        <textarea class="textarea" id="regInput" placeholder="매물 정보를 말하듯이 적어보세요&#10;&#10;예) 강남구 역삼동 래미안 아파트 34평 전세 5억&#10;남향 주차가능 학교근처" oninput="Panel.onRegInput()"></textarea>
-        <button class="btn-primary" id="regBtn" onclick="Panel.doRegister()">AI로 카드 만들기</button>
-        <div id="regResult" style="margin-top:16px;"></div>
+    el.innerHTML = `<div class="panel-with-preview">
+      <div class="panel-input">
+        <div class="panel-inner">
+          ${this.h('매물 등록')}
+          <div style="padding:0 24px;">
+            <textarea class="textarea" id="regInput" placeholder="매물 정보를 말하듯이 적어보세요&#10;&#10;예) 강남구 역삼동 래미안 아파트 34평 전세 5억&#10;남향 주차가능 학교근처" oninput="Panel.onRegInput()"></textarea>
+            <button class="btn-primary" id="regBtn" onclick="Panel.doRegister()">AI로 카드 만들기</button>
+            <div id="regResult" style="margin-top:16px;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-preview" id="panelPreview">
+        <div class="panel-preview-slide" id="previewSlide">
+          <div class="phone-mock"><div class="phone-notch"></div><div class="phone-screen" id="previewScreen">
+            <div style="text-align:center;color:var(--text-light);padding:40px 0;font-size:13px;"><div style="font-size:32px;margin-bottom:8px;">📝</div>매물 정보를 입력하면<br>미리보기가 표시됩니다</div>
+          </div></div>
+        </div>
       </div>
     </div>`;
-    // 미리보기 초기화
-    document.getElementById('previewArea').innerHTML = '<div style="text-align:center;color:var(--text-light);font-size:13px;"><div style="font-size:32px;margin-bottom:8px;">📝</div>매물 정보를 입력하면<br>미리보기가 표시됩니다</div>';
   },
 
   onRegInput() {
     const text = document.getElementById('regInput')?.value?.trim() || '';
-    const main = document.getElementById('main');
+    const preview = document.getElementById('panelPreview');
     if (text.length > 0) {
-      main.classList.remove('split');
-      main.classList.add('triple');
+      if (preview) preview.classList.add('visible');
       this.updatePreview(text);
     } else {
-      main.classList.remove('triple');
-      main.classList.add('split');
-      document.getElementById('previewArea').innerHTML = '<div style="text-align:center;color:var(--text-light);font-size:13px;"><div style="font-size:32px;margin-bottom:8px;">📝</div>매물 정보를 입력하면<br>미리보기가 표시됩니다</div>';
+      if (preview) preview.classList.remove('visible');
     }
   },
 
   updatePreview(text) {
     const parsed = this.parsePreview(text);
-    const area = document.getElementById('previewArea');
+    const area = document.getElementById('previewScreen');
     if (!area) return;
     const tc = parsed.type==='매매'?'sale':parsed.type==='전세'?'jeonse':'rent';
-    area.innerHTML = `<div class="phone-mock"><div class="phone-notch"></div><div class="phone-screen">
+    area.innerHTML = `
       <div style="text-align:center;font-size:18px;font-weight:900;color:#6366f1;margin-bottom:16px;">휙</div>
       ${parsed.type ? `<span class="card-type ${tc}">${esc(parsed.type)}</span>` : ''}
       ${parsed.price ? `<div class="card-price">${esc(parsed.price)}</div>` : ''}
       ${parsed.name ? `<div class="card-name">${esc(parsed.name)}</div>` : ''}
       <div class="card-detail">${[parsed.area, parsed.floor, parsed.location].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
-      ${parsed.features.length ? `<div class="card-tags">${parsed.features.map(f=>`<span class="card-tag">${esc(f)}</span>`).join('')}</div>` : ''}
-    </div></div>`;
+      ${parsed.features.length ? `<div class="card-tags">${parsed.features.map(f=>`<span class="card-tag">${esc(f)}</span>`).join('')}</div>` : ''}`;
   },
 
   parsePreview(text) {
