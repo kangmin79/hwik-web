@@ -2387,30 +2387,58 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         .hub-action-btn.primary:hover { box-shadow: 0 4px 20px rgba(99,102,241,0.4); }
 
-        /* 컨텐츠 패널 — 허브 아래 단일 영역 */
-        .hub-content-panel {
-            max-width: 680px;
+        /* 스플릿 레이아웃 */
+        .hub-body {
+            display: flex;
+            max-width: 1280px;
             margin: 0 auto;
-            padding: 0 24px 60px;
+            min-height: calc(100vh - 56px);
+            transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
         }
+        .hub-body-left {
+            flex: 1;
+            display: flex; flex-direction: column; align-items: center;
+            transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 0 16px;
+        }
+        .hub-body-right {
+            width: 0; opacity: 0; overflow: hidden;
+            transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .hub-body.split .hub-body-left { flex: 0 0 42%; }
+        .hub-body.split .hub-body-right {
+            flex: 0 0 58%; opacity: 1; width: auto;
+            overflow-y: auto;
+            padding: 24px 28px 60px 0;
+        }
+        .hub-body.split .hub-visual { transform: scale(0.78); margin-top: 0; }
+
+        /* 우측 패널 카드 */
         .hub-panel-card {
             background: #fff;
-            border: 1.5px solid rgba(0,0,0,0.08);
+            border: 1px solid rgba(0,0,0,0.06);
             border-left: 3px solid #6366f1;
             border-radius: 20px;
             padding: 28px 32px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.03);
-            animation: hubPanelIn 0.35s ease;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.03);
+            animation: hubPanelIn 0.3s ease;
+            position: relative;
         }
         body.dark .hub-panel-card {
             background: #fff;
             border-color: rgba(0,0,0,0.06);
             border-left: 3px solid #6366f1;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.04);
         }
+        .hub-panel-close {
+            position: absolute; top: 16px; right: 16px;
+            background: none; border: none; color: #94a3b8;
+            font-size: 20px; cursor: pointer; padding: 4px 8px;
+            border-radius: 8px; transition: all 0.2s; line-height: 1;
+        }
+        .hub-panel-close:hover { background: rgba(99,102,241,0.08); color: #6366f1; }
         @keyframes hubPanelIn {
-            from { opacity: 0; transform: translateY(12px); }
-            to { opacity: 1; transform: translateY(0); }
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
         }
 
         /* 활성 노드 표시 */
@@ -9203,21 +9231,19 @@ function buildHubSkeleton() {
       </div>
     </div>
 
-    <div class="hub-visual" id="hubVisual">
-      <svg class="hub-lines" id="hubLines"></svg>
-      <div class="hub-center" id="hubCenter">
-        <div class="hub-center-icon">👤</div>
-        <div class="hub-center-name" id="hubCenterName">로딩 중...</div>
-        <div class="hub-center-sub" id="hubCenterSub"></div>
+    <div class="hub-body" id="hubBody">
+      <div class="hub-body-left">
+        <div class="hub-visual" id="hubVisual">
+          <svg class="hub-lines" id="hubLines"></svg>
+          <div class="hub-center" id="hubCenter">
+            <div class="hub-center-icon">👤</div>
+            <div class="hub-center-name" id="hubCenterName">로딩 중...</div>
+            <div class="hub-center-sub" id="hubCenterSub"></div>
+          </div>
+        </div>
+        <div class="hub-kpi" id="hubKpi"></div>
       </div>
-    </div>
-
-    <div class="hub-kpi" id="hubKpi"></div>
-
-    <div class="hub-content-panel" id="hubContentPanel">
-      <div style="text-align:center;color:#94a3b8;padding:40px 0;font-size:14px;">
-        노드를 클릭하면 상세 정보가 여기에 표시됩니다
-      </div>
+      <div class="hub-body-right" id="hubBodyRight"></div>
     </div>
   `;
 }
@@ -9258,9 +9284,6 @@ async function loadHubData(cardId) {
 
   // KPI 칩
   renderHubKpi(card, notes, matches);
-
-  // 기본으로 희망 조건 패널 열기
-  hubScrollTo('conditions');
 }
 
 async function loadHubMatch(cardId) {
@@ -9568,8 +9591,12 @@ function renderBentoContact(card, notes) {
 let _hubActivePanel = null;
 
 function hubScrollTo(key) {
-  const panel = document.getElementById('hubContentPanel');
-  if (!panel) return;
+  const body = document.getElementById('hubBody');
+  const right = document.getElementById('hubBodyRight');
+  if (!body || !right) return;
+
+  // 같은 노드 재클릭 → 닫기
+  if (_hubActivePanel === key) { hubClosePanel(); return; }
 
   // 노드 active 표시
   document.querySelectorAll('.hub-node').forEach(n => n.classList.remove('active'));
@@ -9592,11 +9619,13 @@ function hubScrollTo(key) {
     case 'contact':    html = buildPanelContact(card, notes); break;
   }
 
-  panel.innerHTML = `<div class="hub-panel-card">${html}</div>`;
-  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  right.innerHTML = `<div class="hub-panel-card"><button class="hub-panel-close" onclick="hubClosePanel()">✕</button>${html}</div>`;
+  body.classList.add('split');
 }
 
 function hubClosePanel() {
+  const body = document.getElementById('hubBody');
+  if (body) body.classList.remove('split');
   document.querySelectorAll('.hub-node').forEach(n => n.classList.remove('active'));
   _hubActivePanel = null;
 }
