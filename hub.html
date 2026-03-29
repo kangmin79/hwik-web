@@ -85,6 +85,7 @@ body {
 .hub-main.split .hub-right {
   flex:0 0 50%; opacity:1; width:auto;
   overflow-y:auto;
+  height:calc(100vh - 56px);
   border-left:1px solid var(--border);
   padding:0;
   background:var(--bg-card);
@@ -899,6 +900,8 @@ async function loadMyPanel(el) {
     .limit(50);
   console.log('[hub] loadMyPanel 데이터:', data?.length, '건');
   _myCards = data || [];
+  const listEl = document.getElementById('myList');
+  console.log('[hub] myList 엘리먼트:', listEl ? '있음' : '없음');
   renderMyList();
 }
 
