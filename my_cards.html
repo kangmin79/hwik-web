@@ -9451,16 +9451,16 @@ function renderBentoConditions(card) {
   let html = `<div class="bento-title"><span class="bento-title-icon">🎯</span> 희망 조건 <span class="bento-title-badge">${features.length}개</span></div>`;
 
   const condItems = [
-    p.price ? ['💰', '예산', p.price] : null,
-    p.location ? ['📍', '지역', p.location] : null,
-    p.complex ? ['🏢', '단지', p.complex] : null,
-    p.area ? ['📐', '면적', p.area] : null,
-    p.type && p.type !== '손님' ? ['📝', '거래유형', p.type] : null,
+    p.price ? ['예산', p.price] : null,
+    p.location ? ['지역', p.location] : null,
+    p.complex ? ['단지', p.complex] : null,
+    p.area ? ['면적', p.area] : null,
+    p.type && p.type !== '손님' ? ['거래유형', p.type] : null,
   ].filter(Boolean);
 
   if (condItems.length) {
-    html += condItems.map(([icon, label, value]) =>
-      `<div class="bento-item"><div class="bento-item-dot" style="background:#4ecdc4;"></div><div class="bento-item-content"><div class="bento-item-main">${esc(value)}</div><div class="bento-item-sub">${label}</div></div></div>`
+    html += condItems.map(([label, value]) =>
+      `<div class="bento-item"><div class="bento-item-content"><div class="bento-item-main">${esc(value)}</div><div class="bento-item-sub">${label}</div></div></div>`
     ).join('');
   }
 
@@ -9761,17 +9761,16 @@ function buildPanelConditions(card) {
   let html = `<div style="font-size:16px;font-weight:700;color:var(--text-white);margin-bottom:16px;letter-spacing:-0.5px;">희망 조건</div>`;
 
   const items = [
-    p.price ? ['💰', '예산', p.price] : null,
-    p.location ? ['📍', '지역', p.location] : null,
-    p.complex ? ['🏢', '단지', p.complex] : null,
-    p.area ? ['📐', '면적', p.area] : null,
+    p.price ? ['예산', p.price] : null,
+    p.location ? ['지역', p.location] : null,
+    p.complex ? ['단지', p.complex] : null,
+    p.area ? ['면적', p.area] : null,
   ].filter(Boolean);
 
-  items.forEach(([icon, label, value]) => {
-    html += `<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(0,0,0,0.04);">
-      <span style="font-size:18px;">${icon}</span>
-      <div><div style="font-size:14px;font-weight:600;color:var(--text-white);">${esc(value)}</div>
-      <div style="font-size:11px;color:#94a3b8;">${label}</div></div></div>`;
+  items.forEach(([label, value]) => {
+    html += `<div style="padding:12px 0;border-bottom:1px solid rgba(0,0,0,0.04);">
+      <div style="font-size:14px;font-weight:600;color:var(--text-white);">${esc(value)}</div>
+      <div style="font-size:11px;color:#94a3b8;">${label}</div></div>`;
   });
 
   if (features.length) {
