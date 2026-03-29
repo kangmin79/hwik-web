@@ -65,9 +65,40 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sa
 .main.split .hub-area { width:50%; }
 .main.split .panel-area { width:50%; }
 
-/* 3분할 (매물 등록 + 미리보기) */
-.main.triple .hub-area { width:33%; }
-.main.triple .panel-area { width:67%; }
+/* 3분할 (허브 + 입력 + 미리보기) */
+.main.triple .hub-area { width:30%; }
+.main.triple .panel-area { width:70%; display:flex; flex-direction:row; }
+.panel-split { display:flex; width:100%; height:100%; }
+.panel-split-left { flex:1; overflow-y:auto; border-right:1px solid var(--border); }
+.panel-split-right {
+  flex:0 0 320px; overflow-y:auto;
+  background:var(--bg); display:flex; align-items:center; justify-content:center;
+}
+.phone-mock {
+  width:280px; height:500px; border-radius:32px;
+  background:#111; border:3px solid #333;
+  overflow:hidden; position:relative;
+  box-shadow:0 8px 32px rgba(0,0,0,0.15);
+}
+.phone-notch {
+  width:120px; height:24px; background:#111;
+  border-radius:0 0 16px 16px; margin:0 auto;
+  position:relative; z-index:2;
+}
+.phone-screen {
+  height:calc(100% - 24px); overflow-y:auto;
+  background:#fff; padding:16px;
+  font-size:13px; color:#1a1a2e;
+}
+.phone-screen .card-type { font-size:11px; font-weight:800; padding:3px 8px; border-radius:6px; display:inline-block; margin-bottom:8px; }
+.phone-screen .card-type.sale { background:rgba(249,115,22,0.1); color:#ea580c; }
+.phone-screen .card-type.jeonse { background:rgba(99,102,241,0.1); color:#4f46e5; }
+.phone-screen .card-type.rent { background:rgba(167,139,250,0.1); color:#7c3aed; }
+.phone-screen .card-price { font-size:22px; font-weight:900; margin:8px 0 4px; }
+.phone-screen .card-name { font-size:15px; font-weight:700; }
+.phone-screen .card-detail { font-size:12px; color:#64748b; margin-top:4px; }
+.phone-screen .card-tags { display:flex; flex-wrap:wrap; gap:4px; margin-top:10px; }
+.phone-screen .card-tag { padding:3px 8px; border-radius:6px; background:#f1f5f9; font-size:10px; font-weight:600; color:#475569; }
 
 /* ═══════════════════════════════════
    3. 허브 비주얼 (SVG + 노드)
@@ -506,12 +537,87 @@ const Panel = {
   },
 
   register(el) {
-    el.innerHTML = this.h('매물 등록') + `
-      <div style="padding:0 24px;">
-        <textarea class="textarea" id="regInput" placeholder="매물 정보를 말하듯이 적어보세요\n\n예) 강남구 역삼동 래미안 아파트 34평 전세 5억\n남향 주차가능 학교근처"></textarea>
-        <button class="btn-primary" id="regBtn" onclick="Panel.doRegister()">AI로 카드 만들기</button>
-        <div id="regResult" style="margin-top:16px;"></div>
-      </div></div>`;
+    el.innerHTML = `<div class="panel-split">
+      <div class="panel-split-left">
+        <div class="panel-inner">
+          ${this.h('매물 등록')}
+          <div style="padding:0 24px;">
+            <textarea class="textarea" id="regInput" placeholder="매물 정보를 말하듯이 적어보세요&#10;&#10;예) 강남구 역삼동 래미안 아파트 34평 전세 5억&#10;남향 주차가능 학교근처" oninput="Panel.onRegInput()"></textarea>
+            <button class="btn-primary" id="regBtn" onclick="Panel.doRegister()">AI로 카드 만들기</button>
+            <div id="regResult" style="margin-top:16px;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-split-right" id="previewArea">
+        <div style="text-align:center;color:var(--text-light);font-size:13px;">
+          <div style="font-size:32px;margin-bottom:8px;">📝</div>
+          매물 정보를 입력하면<br>미리보기가 표시됩니다
+        </div>
+      </div>
+    </div>`;
+  },
+
+  onRegInput() {
+    const text = document.getElementById('regInput')?.value?.trim() || '';
+    const main = document.getElementById('main');
+    if (text.length > 0) {
+      main.classList.remove('split');
+      main.classList.add('triple');
+      this.updatePreview(text);
+    } else {
+      main.classList.remove('triple');
+      main.classList.add('split');
+      document.getElementById('previewArea').innerHTML = `<div style="text-align:center;color:var(--text-light);font-size:13px;"><div style="font-size:32px;margin-bottom:8px;">📝</div>매물 정보를 입력하면<br>미리보기가 표시됩니다</div>`;
+    }
+  },
+
+  updatePreview(text) {
+    const parsed = this.parsePreview(text);
+    const area = document.getElementById('previewArea');
+    if (!area) return;
+    const tc = parsed.type==='매매'?'sale':parsed.type==='전세'?'jeonse':'rent';
+    area.innerHTML = `<div class="phone-mock"><div class="phone-notch"></div><div class="phone-screen">
+      <div style="text-align:center;font-size:18px;font-weight:900;color:#6366f1;margin-bottom:16px;">휙</div>
+      ${parsed.type ? `<span class="card-type ${tc}">${esc(parsed.type)}</span>` : ''}
+      ${parsed.price ? `<div class="card-price">${esc(parsed.price)}</div>` : ''}
+      ${parsed.name ? `<div class="card-name">${esc(parsed.name)}</div>` : ''}
+      <div class="card-detail">${[parsed.area, parsed.floor, parsed.location].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
+      ${parsed.features.length ? `<div class="card-tags">${parsed.features.map(f=>`<span class="card-tag">${esc(f)}</span>`).join('')}</div>` : ''}
+    </div></div>`;
+  },
+
+  parsePreview(text) {
+    const result = { type:'', price:'', name:'', location:'', area:'', floor:'', features:[] };
+    if (/매매/.test(text)) result.type='매매';
+    else if (/전세/.test(text)) result.type='전세';
+    else if (/월세/.test(text)) result.type='월세';
+
+    const priceMatch = text.match(/(\d+[\d,.]*\s*억[\s\d,만]*|\d+[\d,.]*\s*만?\s*원?)/);
+    if (priceMatch) result.price = priceMatch[0].trim();
+
+    const areaMatch = text.match(/(\d+)\s*(평|㎡|m2)/);
+    if (areaMatch) result.area = areaMatch[0];
+
+    const floorMatch = text.match(/(\d+)\s*층/);
+    if (floorMatch) result.floor = floorMatch[0];
+
+    const guMatch = text.match(/([가-힣]+구)/);
+    if (guMatch) result.location = guMatch[0];
+
+    const dongMatch = text.match(/([가-힣]+동)/);
+    if (dongMatch) result.location = (result.location ? result.location + ' ' : '') + dongMatch[0];
+
+    const namePatterns = ['래미안','자이','힐스테이트','푸르지오','더샵','롯데캐슬','e편한세상','아이파크','sk뷰','파크리오','포레나'];
+    namePatterns.forEach(n => { if (text.includes(n)) result.name = n; });
+    if (!result.name) {
+      const complexMatch = text.match(/([가-힣a-zA-Z]+(?:아파트|오피스텔|빌라|상가|사무실))/);
+      if (complexMatch) result.name = complexMatch[0];
+    }
+
+    const featureWords = ['남향','동향','서향','북향','주차','올수리','역세권','학교','신축','복층','테라스','베란다','풀옵션','보안','엘리베이터','반려동물','애견가능','전면넓음','코너'];
+    featureWords.forEach(f => { if (text.includes(f)) result.features.push(f); });
+
+    return result;
   },
 
   async doRegister() {
