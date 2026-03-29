@@ -518,8 +518,7 @@ function renderHub(nodes, centerInfo, counts) {
     const nx = cx + radius * Math.cos(rad);
     const ny = cy + radius * Math.sin(rad);
     const count = counts[node.key];
-    const countText = count === '+' ? '+' : count === '휙' ? '휙' : (count != null && count !== '' && count > 0 ? count : '-');
-    const countClass = (!count || count === 0 || count === '+' || count === '') ? 'empty' : '';
+    // 카운트 표시 안 함
 
     svgHtml += `<line class="hub-line" x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}" />`;
     svgHtml += `<circle class="hub-pulse-t3" id="pt3-${node.key}" cx="${cx}" cy="${cy}" r="6" />`;
@@ -533,7 +532,6 @@ function renderHub(nodes, centerInfo, counts) {
       <div class="hub-node" data-key="${node.key}" style="left:${leftPct}%;top:${topPct}%;" onclick="onNodeClick('${node.key}')">
         <div class="hub-node-inner">
           <span class="hub-node-label">${node.label}</span>
-          ${countText !== '-' && countText !== '' ? `<span class="hub-node-count ${countClass}">${countText}</span>` : ''}
         </div>
       </div>`;
   });
