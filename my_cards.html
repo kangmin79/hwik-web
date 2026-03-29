@@ -9388,8 +9388,6 @@ function renderHubNodes(card, notes, matches, interests) {
     const count = counts[node.key] || 0;
 
     svgHtml += `<line class="hub-line" x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}" />`;
-    svgHtml += `<circle class="hub-line-dot" cx="${cx + (nx-cx)*0.15}" cy="${cy + (ny-cy)*0.15}" r="2.5" />`;
-    svgHtml += `<circle class="hub-line-dot" cx="${nx - (nx-cx)*0.08}" cy="${ny - (ny-cy)*0.08}" r="2.5" />`;
     svgHtml += `<circle class="hub-pulse-t3" id="pulse-t3-${node.key}" cx="${cx}" cy="${cy}" r="6" />`;
     svgHtml += `<circle class="hub-pulse-t2" id="pulse-t2-${node.key}" cx="${cx}" cy="${cy}" r="5" />`;
     svgHtml += `<circle class="hub-pulse-t1" id="pulse-t1-${node.key}" cx="${cx}" cy="${cy}" r="4" />`;
