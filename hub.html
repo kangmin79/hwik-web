@@ -65,25 +65,14 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sa
 .main.split .hub-area { width:40%; }
 .main.split .panel-area { width:60%; }
 
-/* 패널 내부 미리보기 (card_generator 방식) */
+/* 패널 내부 미리보기 */
 .panel-with-preview { display:flex; height:100%; }
 .panel-input { flex:1; overflow-y:auto; }
-.panel-preview {
-  flex:0 0 auto; overflow:visible; opacity:0;
-  display:flex; align-items:center;
-  pointer-events:none;
-  transition:opacity 0.4s ease 0.15s;
-}
-.panel-preview.visible { opacity:1; pointer-events:all; }
-.panel-preview-slide {
-  width:0; overflow:hidden;
-  transition:width 0.5s cubic-bezier(0.4,0,0.2,1), padding 0.5s cubic-bezier(0.4,0,0.2,1);
-  padding:0; display:flex; align-items:center; justify-content:center;
-}
-.panel-preview.visible .panel-preview-slide {
-  width:300px; padding:0 20px 0 20px;
-  border-left:1px solid var(--border);
-  background:var(--bg);
+.panel-preview-wrap {
+  display:flex; align-items:center; justify-content:center;
+  border-left:1px solid var(--border); background:var(--bg);
+  width:0; opacity:0; overflow:hidden;
+  transition:width 0.4s ease, opacity 0.3s ease, padding 0.4s ease;
 }
 .phone-mock {
   width:280px; height:500px; border-radius:32px;
@@ -558,24 +547,22 @@ const Panel = {
           </div>
         </div>
       </div>
-      <div class="panel-preview" id="panelPreview">
-        <div class="panel-preview-slide" id="previewSlide">
-          <div class="phone-mock"><div class="phone-notch"></div><div class="phone-screen" id="previewScreen">
-            <div style="text-align:center;color:var(--text-light);padding:40px 0;font-size:13px;"><div style="font-size:32px;margin-bottom:8px;">📝</div>매물 정보를 입력하면<br>미리보기가 표시됩니다</div>
-          </div></div>
-        </div>
+      <div class="panel-preview-wrap" id="previewSlide">
+        <div class="phone-mock"><div class="phone-notch"></div><div class="phone-screen" id="previewScreen">
+          <div style="text-align:center;color:#999;padding:40px 0;font-size:13px;">📝<br>미리보기</div>
+        </div></div>
       </div>
     </div>`;
   },
 
   onRegInput() {
     const text = document.getElementById('regInput')?.value?.trim() || '';
-    const preview = document.getElementById('panelPreview');
+    const slide = document.getElementById('previewSlide');
     if (text.length > 0) {
-      if (preview) preview.classList.add('visible');
+      if (slide) { slide.style.width = '300px'; slide.style.padding = '0 16px'; slide.style.opacity = '1'; }
       this.updatePreview(text);
     } else {
-      if (preview) preview.classList.remove('visible');
+      if (slide) { slide.style.width = '0'; slide.style.padding = '0'; slide.style.opacity = '0'; }
     }
   },
 
