@@ -9695,7 +9695,13 @@ function hubPulseStart(key) {
       el.setAttribute('cy', y);
     });
     const lastT = (now - start - delays[3]) / dur;
-    if (lastT < 1) _hubPulseRaf = requestAnimationFrame(animate);
+    if (lastT < 1) {
+      _hubPulseRaf = requestAnimationFrame(animate);
+    } else {
+      // 무한 반복: 처음부터 다시
+      els.forEach(el => { if (el) { el.setAttribute('cx', fromX); el.setAttribute('cy', fromY); } });
+      setTimeout(() => { if (document.querySelector(`.hub-node[data-key="${key}"]:hover`)) hubPulseStart(key); }, 200);
+    }
   }
   _hubPulseRaf = requestAnimationFrame(animate);
 }
