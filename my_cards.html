@@ -2381,80 +2381,48 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         .hub-action-btn.primary:hover { box-shadow: 0 4px 20px rgba(99,102,241,0.4); }
 
-        /* 스플릿 레이아웃 */
-        .hub-split {
-            display: flex;
-            max-width: 1200px;
+        /* 컨텐츠 패널 — 허브 아래 단일 영역 */
+        .hub-content-panel {
+            max-width: 680px;
             margin: 0 auto;
-            padding: 0 24px;
-            gap: 0;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 0 24px 60px;
         }
-        .hub-split-left {
-            flex: 1;
-            display: flex; flex-direction: column; align-items: center;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            min-width: 0;
-        }
-        .hub-split-right {
-            width: 0; opacity: 0;
-            overflow: hidden;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .hub-split.open .hub-split-left {
-            flex: 0 0 45%;
-        }
-        .hub-split.open .hub-split-right {
-            flex: 0 0 55%;
-            width: auto; opacity: 1;
-            overflow-y: auto;
-            max-height: calc(100vh - 120px);
-            padding: 24px 24px 24px 0;
-        }
-        .hub-split-right-inner {
+        .hub-panel-card {
             background: #fff;
             border: 1px solid rgba(0,0,0,0.06);
             border-radius: 20px;
-            padding: 24px 28px;
-            min-height: 300px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+            padding: 28px 32px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.03);
+            animation: hubPanelIn 0.35s ease;
         }
-        body.dark .hub-split-right-inner {
-            background: rgba(15,23,42,0.7);
+        body.dark .hub-panel-card {
+            background: rgba(15,23,42,0.6);
             border-color: rgba(255,255,255,0.06);
-            box-shadow: 0 4px 24px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.15);
         }
-        .hub-split-close {
-            position: absolute; top: 12px; right: 12px;
-            background: none; border: none; color: #94a3b8;
-            font-size: 18px; cursor: pointer; padding: 4px 8px;
-            border-radius: 8px; transition: all 0.2s;
+        @keyframes hubPanelIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .hub-split-close:hover { background: rgba(99,102,241,0.08); color: #6366f1; }
 
         /* 활성 노드 표시 */
         .hub-node.active .hub-node-inner {
             border-color: #6366f1;
             background: rgba(99,102,241,0.06);
-            box-shadow: 0 0 0 3px rgba(99,102,241,0.1), 0 4px 16px rgba(99,102,241,0.08);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
         }
         body.dark .hub-node.active .hub-node-inner {
             background: rgba(99,102,241,0.12);
             border-color: #818cf8;
+            box-shadow: 0 0 0 3px rgba(129,140,248,0.15);
         }
 
         /* 비주얼 허브 */
         .hub-visual {
             position: relative;
-            width: 100%; max-width: 720px;
-            height: 400px;
-            margin: 24px auto 0;
-            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        .hub-split.open .hub-visual {
-            max-width: 100%;
-            transform: scale(0.82);
-            margin-top: 0;
+            width: 100%; max-width: 640px;
+            height: 340px;
+            margin: 16px auto 0;
         }
 
         /* 중앙 노드 — 글래스 + 글로우 */
@@ -2542,35 +2510,25 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .hub-node-count.empty { background: transparent; color: #cbd5e1; }
         body.dark .hub-node-count.empty { color: #475569; }
 
-        /* KPI 스트립 */
+        /* KPI 스트립 — 컴팩트 인라인 */
         .hub-kpi {
-            max-width: 800px; margin: 0 auto;
-            padding: 0 32px;
-            display: flex; gap: 12px; flex-wrap: wrap;
+            max-width: 640px; margin: 0 auto;
+            padding: 0 24px;
+            display: flex; gap: 8px;
             justify-content: center;
         }
-        .hub-kpi-card {
-            flex: 1; min-width: 140px; max-width: 200px;
+        .hub-kpi-chip {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 16px; border-radius: 12px;
             background: #fff;
             border: 1px solid rgba(0,0,0,0.06);
-            border-radius: 16px;
-            padding: 18px 20px;
-            text-align: center;
-            transition: box-shadow 0.3s;
+            font-size: 13px; font-weight: 600; color: #374151;
+            letter-spacing: -0.3px;
         }
-        body.dark .hub-kpi-card { background: rgba(15,23,42,0.6); border-color: rgba(255,255,255,0.06); }
-        .hub-kpi-card:hover { box-shadow: 0 4px 16px rgba(99,102,241,0.08); }
-        .hub-kpi-value {
-            font-size: 26px; font-weight: 800; color: #1e293b;
-            line-height: 1; letter-spacing: -1px;
-        }
-        body.dark .hub-kpi-value { color: #f1f5f9; }
-        .hub-kpi-value.warn { color: #ef4444; }
-        .hub-kpi-value.good { color: #6366f1; }
-        .hub-kpi-label {
-            font-size: 11px; color: #94a3b8; margin-top: 6px; font-weight: 500;
-            letter-spacing: -0.2px;
-        }
+        body.dark .hub-kpi-chip { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.06); color: #e2e8f0; }
+        .hub-kpi-chip .kpi-val { font-weight: 800; color: #6366f1; }
+        body.dark .hub-kpi-chip .kpi-val { color: #818cf8; }
+        .hub-kpi-chip .kpi-val.warn { color: #ef4444; }
 
         /* 벤토 그리드 */
         .hub-bento {
@@ -9237,47 +9195,20 @@ function buildHubSkeleton() {
       </div>
     </div>
 
-    <div class="hub-split" id="hubSplit">
-      <div class="hub-split-left">
-        <div class="hub-visual" id="hubVisual">
-          <svg class="hub-lines" id="hubLines"></svg>
-          <div class="hub-center" id="hubCenter">
-            <div class="hub-center-icon">👤</div>
-            <div class="hub-center-name" id="hubCenterName">로딩 중...</div>
-            <div class="hub-center-sub" id="hubCenterSub"></div>
-          </div>
-        </div>
-        <div class="hub-kpi" id="hubKpi"></div>
-      </div>
-
-      <div class="hub-split-right" id="hubSplitRight">
-        <div class="hub-split-right-inner" id="hubSplitContent" style="position:relative;">
-          <button class="hub-split-close" onclick="hubClosePanel()">✕</button>
-          <div id="hubPanelBody"></div>
-        </div>
+    <div class="hub-visual" id="hubVisual">
+      <svg class="hub-lines" id="hubLines"></svg>
+      <div class="hub-center" id="hubCenter">
+        <div class="hub-center-icon">👤</div>
+        <div class="hub-center-name" id="hubCenterName">로딩 중...</div>
+        <div class="hub-center-sub" id="hubCenterSub"></div>
       </div>
     </div>
 
-    <div class="hub-bento" id="hubBento">
-      <div class="bento-card" id="bentoConditions">
-        <div class="bento-title"><span class="bento-title-icon">🎯</span> 희망 조건</div>
-        <div class="bento-empty">로딩 중...</div>
-      </div>
-      <div class="bento-card" id="bentoMatch">
-        <div class="bento-title"><span class="bento-title-icon">🏠</span> 매칭 매물</div>
-        <div class="bento-empty">로딩 중...</div>
-      </div>
-      <div class="bento-card full" id="bentoTimeline">
-        <div class="bento-title"><span class="bento-title-icon">📋</span> 상담 기록</div>
-        <div class="bento-empty">로딩 중...</div>
-      </div>
-      <div class="bento-card" id="bentoSchedule">
-        <div class="bento-title"><span class="bento-title-icon">⏰</span> 일정 / 알림</div>
-        <div class="bento-empty">로딩 중...</div>
-      </div>
-      <div class="bento-card" id="bentoContact">
-        <div class="bento-title"><span class="bento-title-icon">📞</span> 연락처</div>
-        <div class="bento-empty">로딩 중...</div>
+    <div class="hub-kpi" id="hubKpi"></div>
+
+    <div class="hub-content-panel" id="hubContentPanel">
+      <div style="text-align:center;color:#94a3b8;padding:40px 0;font-size:14px;">
+        노드를 클릭하면 상세 정보가 여기에 표시됩니다
       </div>
     </div>
   `;
@@ -9317,15 +9248,11 @@ async function loadHubData(cardId) {
   // 노드 그리기 + 애니메이션
   renderHubNodes(card, notes, matches, interests);
 
-  // KPI 스트립
+  // KPI 칩
   renderHubKpi(card, notes, matches);
 
-  // 벤토 카드들
-  renderBentoConditions(card);
-  renderBentoMatch(matches);
-  renderBentoTimeline(cardId, notes);
-  renderBentoSchedule(notes);
-  renderBentoContact(card, notes);
+  // 기본으로 희망 조건 패널 열기
+  hubScrollTo('conditions');
 }
 
 async function loadHubMatch(cardId) {
@@ -9350,7 +9277,7 @@ function renderHubNodes(card, notes, matches, interests) {
   const visual = document.getElementById('hubVisual');
   if (!visual) return;
 
-  const cx = 350, cy = 190, radius = 155;
+  const cx = 320, cy = 170, radius = 140;
   const counts = {
     conditions: (card.property?.features || []).length || 0,
     match: matches.length,
@@ -9405,28 +9332,15 @@ function renderHubKpi(card, notes, matches) {
   const lastNote = notes.find(n => ['상담','방문','매물소개','계약'].includes(n.type));
   const daysSince = lastNote ? Math.floor((Date.now() - new Date(lastNote.created_at).getTime()) / 86400000) : -1;
   const dayText = daysSince < 0 ? '없음' : daysSince === 0 ? '오늘' : daysSince + '일 전';
-  const dayClass = daysSince > 7 ? 'warn' : daysSince >= 0 ? 'good' : '';
+  const dayWarn = daysSince > 7 ? ' warn' : '';
 
   const schedCount = notes.filter(n => n.alert_date && !n.alert_done).length;
-  const totalNotes = notes.length;
 
   kpi.innerHTML = `
-    <div class="hub-kpi-card">
-      <div class="hub-kpi-value ${dayClass}">${dayText}</div>
-      <div class="hub-kpi-label">마지막 연락</div>
-    </div>
-    <div class="hub-kpi-card">
-      <div class="hub-kpi-value">${matches.length}</div>
-      <div class="hub-kpi-label">매칭 매물</div>
-    </div>
-    <div class="hub-kpi-card">
-      <div class="hub-kpi-value">${totalNotes}</div>
-      <div class="hub-kpi-label">상담 기록</div>
-    </div>
-    <div class="hub-kpi-card">
-      <div class="hub-kpi-value ${schedCount > 0 ? 'warn' : ''}">${schedCount}</div>
-      <div class="hub-kpi-label">예정 일정</div>
-    </div>
+    <div class="hub-kpi-chip"><span class="kpi-val${dayWarn}">${dayText}</span> 마지막 연락</div>
+    <div class="hub-kpi-chip"><span class="kpi-val">${matches.length}</span> 매칭</div>
+    <div class="hub-kpi-chip"><span class="kpi-val">${notes.length}</span> 상담</div>
+    ${schedCount > 0 ? `<div class="hub-kpi-chip"><span class="kpi-val warn">${schedCount}</span> 예정</div>` : ''}
   `;
 }
 
@@ -9646,15 +9560,8 @@ function renderBentoContact(card, notes) {
 let _hubActivePanel = null;
 
 function hubScrollTo(key) {
-  const split = document.getElementById('hubSplit');
-  const body = document.getElementById('hubPanelBody');
-  if (!split || !body) return;
-
-  // 같은 노드 다시 클릭 → 닫기
-  if (_hubActivePanel === key) {
-    hubClosePanel();
-    return;
-  }
+  const panel = document.getElementById('hubContentPanel');
+  if (!panel) return;
 
   // 노드 active 표시
   document.querySelectorAll('.hub-node').forEach(n => n.classList.remove('active'));
@@ -9663,50 +9570,26 @@ function hubScrollTo(key) {
 
   _hubActivePanel = key;
 
-  // 패널 컨텐츠 생성
   const card = _hubData.card;
   const notes = _hubData.notes || [];
   const matches = _hubData.matches || [];
 
   let html = '';
   switch(key) {
-    case 'conditions':
-      html = buildPanelConditions(card);
-      break;
-    case 'match':
-      html = buildPanelMatch(matches);
-      break;
-    case 'timeline':
-      html = buildPanelTimeline(_hubCardId, notes);
-      break;
-    case 'schedule':
-      html = buildPanelSchedule(notes);
-      break;
-    case 'interest':
-      html = buildPanelTimeline(_hubCardId, notes);
-      break;
-    case 'contact':
-      html = buildPanelContact(card, notes);
-      break;
+    case 'conditions': html = buildPanelConditions(card); break;
+    case 'match':      html = buildPanelMatch(matches); break;
+    case 'timeline':   html = buildPanelTimeline(_hubCardId, notes); break;
+    case 'schedule':   html = buildPanelSchedule(notes); break;
+    case 'interest':   html = buildPanelTimeline(_hubCardId, notes); break;
+    case 'contact':    html = buildPanelContact(card, notes); break;
   }
 
-  body.innerHTML = html;
-
-  // 스플릿 열기
-  split.classList.add('open');
-
-  // 하단 벤토에서도 하이라이트
-  const map = { conditions:'bentoConditions', match:'bentoMatch', timeline:'bentoTimeline', schedule:'bentoSchedule', interest:'bentoTimeline', contact:'bentoContact' };
-  document.querySelectorAll('.bento-card').forEach(c => c.classList.remove('highlight'));
-  const bentoEl = document.getElementById(map[key]);
-  if (bentoEl) bentoEl.classList.add('highlight');
+  panel.innerHTML = `<div class="hub-panel-card">${html}</div>`;
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function hubClosePanel() {
-  const split = document.getElementById('hubSplit');
-  if (split) split.classList.remove('open');
   document.querySelectorAll('.hub-node').forEach(n => n.classList.remove('active'));
-  document.querySelectorAll('.bento-card').forEach(c => c.classList.remove('highlight'));
   _hubActivePanel = null;
 }
 
@@ -9951,7 +9834,7 @@ async function hubSaveNote(cardId) {
 function hubAddNote() {
   hubScrollTo('timeline');
   setTimeout(() => {
-    const input = document.getElementById('hubPanelNoteInput') || document.getElementById('hubNoteInput');
+    const input = document.getElementById('hubPanelNoteInput');
     if (input) input.focus();
   }, 400);
 }
