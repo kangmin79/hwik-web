@@ -67,27 +67,28 @@ body {
 
 /* ── 메인 레이아웃 ── */
 .hub-main {
-  display:flex;
   height:calc(100vh - 56px);
   margin-top:56px;
+  position:relative;
 }
 .hub-left {
-  flex:1;
+  width:100%; height:100%;
   display:flex; align-items:center; justify-content:center;
   padding-bottom:5%;
-  transition:all 0.45s cubic-bezier(0.4,0,0.2,1);
+  transition:width 0.4s ease;
 }
 .hub-right {
-  width:0; opacity:0; overflow:hidden;
-  transition:all 0.45s cubic-bezier(0.4,0,0.2,1);
-}
-.hub-main.split .hub-left { flex:0 0 50%; }
-.hub-main.split .hub-right {
-  flex:0 0 50%; opacity:1; width:auto;
+  position:fixed;
+  top:56px; right:0;
+  width:0; height:calc(100vh - 56px);
+  background:#fff;
   overflow-y:auto;
   border-left:1px solid var(--border);
-  padding:0;
+  transition:width 0.4s ease;
+  z-index:50;
 }
+.hub-main.split .hub-left { width:50%; }
+.hub-main.split .hub-right { width:50%; }
 
 /* ── 허브 비주얼 ── */
 .hub-visual {
@@ -346,9 +347,9 @@ body {
   <div class="hub-left">
     <div class="hub-visual" id="hubVisual">
       <svg class="hub-lines" id="hubLines" viewBox="0 0 800 700" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"></svg>
-      <div class="hub-center" id="hubCenter" onclick="openPanel('settings')" style="cursor:pointer;"
+      <div class="hub-center" id="hubCenter" onclick="openPanel('settings')" style="cursor:pointer;">
         <div class="hub-center-icon">👤</div>
-        <div class="hub-center-name" id="centerName">로딩 중...</div>
+        <div class="hub-center-name" id="centerName"></div>
         <div class="hub-center-sub" id="centerSub"></div>
       </div>
     </div>
@@ -611,11 +612,11 @@ function openPanel(key) {
   document.getElementById('hubMain').classList.add('split');
 
   switch(key) {
-    case 'register': window.location.href = 'card_generator_v2_auth.html'; return;
-    case 'my':       window.location.href = 'my_cards.html'; return;
-    case 'client':   window.location.href = 'my_cards.html#client'; return;
-    case 'shared':   window.location.href = 'my_cards.html#shared'; return;
-    case 'alert':    window.location.href = 'my_cards.html#alert'; return;
+    case 'register': loadRegisterPanel(right); break;
+    case 'my':       loadMyPanel(right); break;
+    case 'client':   loadClientPanel(right); break;
+    case 'shared':   loadSharedPanel(right); break;
+    case 'alert':    loadAlertPanel(right); break;
     case 'settings': loadSettingsPanel(right); break;
   }
 }
