@@ -62,8 +62,8 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sa
   transition:width 0.4s ease;
   z-index:50;
 }
-.main.split .hub-area { width:50%; }
-.main.split .panel-area { width:50%; }
+.main.split .hub-area { width:40%; }
+.main.split .panel-area { width:60%; }
 
 /* 패널 내부 미리보기 (card_generator 방식) */
 .panel-with-preview { display:flex; height:100%; }
@@ -81,7 +81,9 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sa
   padding:0; display:flex; align-items:center; justify-content:center;
 }
 .panel-preview.visible .panel-preview-slide {
-  width:320px; padding:0 24px;
+  width:300px; padding:0 20px 0 20px;
+  border-left:1px solid var(--border);
+  background:var(--bg);
 }
 .phone-mock {
   width:280px; height:500px; border-radius:32px;
