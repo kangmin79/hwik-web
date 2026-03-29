@@ -338,9 +338,7 @@ body {
 <!-- 헤더 -->
 <header class="hub-header">
   <div class="hub-logo" onclick="goBackOrHome()">휙</div>
-  <div class="hub-header-actions" id="headerActions">
-    <span class="hub-user-name" id="userName"></span>
-  </div>
+  <div class="hub-header-actions" id="headerActions"></div>
 </header>
 
 <!-- 메인 -->
@@ -462,7 +460,6 @@ async function init() {
   const name = userProfile?.business_name || userProfile?.agent_name || '중개사';
   document.getElementById('centerName').textContent = name;
   document.getElementById('centerSub').textContent = userProfile?.phone || '';
-  document.getElementById('userName').textContent = name + '님';
 
   // 카운트 병렬 로드
   const [myRes, clientRes, sharedRes, alertRes, memoRes] = await Promise.all([
