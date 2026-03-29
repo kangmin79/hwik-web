@@ -75,7 +75,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sa
   background:var(--bg); display:flex; align-items:center; justify-content:center;
   transition:width 0.3s ease;
 }
-.main.triple .panel-split-right { width:320px; overflow-y:auto; }
+.panel-split-right.show { width:320px; overflow-y:auto; }
 .phone-mock {
   width:280px; height:500px; border-radius:32px;
   background:#111; border:3px solid #333;
@@ -564,13 +564,16 @@ const Panel = {
   onRegInput() {
     const text = document.getElementById('regInput')?.value?.trim() || '';
     const main = document.getElementById('main');
+    const preview = document.getElementById('previewArea');
     if (text.length > 0) {
       main.classList.remove('split');
       main.classList.add('triple');
+      if (preview) preview.classList.add('show');
       this.updatePreview(text);
     } else {
       main.classList.remove('triple');
       main.classList.add('split');
+      if (preview) preview.classList.remove('show');
     }
   },
 
