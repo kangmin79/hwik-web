@@ -120,7 +120,7 @@ def fetch_trades(lawd_cd: str, year_month: str, api_url: str, deal_type: str) ->
             "DEAL_YMD": year_month,
             "pageNo": "1",
             "numOfRows": "9999",
-        }, headers={"Accept": "application/xml"}, timeout=30)
+        }, headers={"Accept": "application/xml"}, timeout=60)
 
         if resp.status_code != 200:
             return []
@@ -252,7 +252,7 @@ def load_apartments():
                 "limit": str(limit),
                 "offset": str(offset),
             },
-            timeout=30,
+            timeout=90,
         )
         if resp.status_code != 200:
             break
