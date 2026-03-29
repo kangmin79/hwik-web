@@ -457,9 +457,7 @@ async function init() {
     userProfile = data;
   }
 
-  const name = userProfile?.business_name || userProfile?.agent_name || '중개사';
-  document.getElementById('centerName').textContent = name;
-  document.getElementById('centerSub').textContent = '';
+  // renderHub()에서 처리
 
   // 카운트 병렬 로드
   const [myRes, clientRes, sharedRes, alertRes, memoRes] = await Promise.all([
@@ -613,11 +611,11 @@ function openPanel(key) {
   document.getElementById('hubMain').classList.add('split');
 
   switch(key) {
-    case 'register': loadRegisterPanel(right); break;
-    case 'my':       loadMyPanel(right); break;
-    case 'client':   loadClientPanel(right); break;
-    case 'shared':   loadSharedPanel(right); break;
-    case 'alert':    loadAlertPanel(right); break;
+    case 'register': window.location.href = 'card_generator_v2_auth.html'; return;
+    case 'my':       window.location.href = 'my_cards.html'; return;
+    case 'client':   window.location.href = 'my_cards.html#client'; return;
+    case 'shared':   window.location.href = 'my_cards.html#shared'; return;
+    case 'alert':    window.location.href = 'my_cards.html#alert'; return;
     case 'settings': loadSettingsPanel(right); break;
   }
 }
