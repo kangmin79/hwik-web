@@ -78,17 +78,15 @@ body {
   transition:all 0.45s cubic-bezier(0.4,0,0.2,1);
 }
 .hub-right {
-  width:0; min-width:0; opacity:0; overflow:hidden;
+  flex:0 0 0%; opacity:0; overflow:hidden;
   transition:all 0.45s cubic-bezier(0.4,0,0.2,1);
-  flex-shrink:0;
 }
 .hub-main.split .hub-left { flex:0 0 50%; }
 .hub-main.split .hub-right {
-  width:50%; min-width:50%; opacity:1;
+  flex:0 0 50%; opacity:1;
   overflow-y:auto; overflow-x:hidden;
   height:calc(100vh - 56px);
   border-left:1px solid var(--border);
-  padding:0;
   background:var(--bg-card);
 }
 
