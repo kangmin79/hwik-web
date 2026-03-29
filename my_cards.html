@@ -2522,7 +2522,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .hub-node {
             position: absolute; z-index: 4;
             transform: translate(-50%, -50%) scale(0);
-            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
             cursor: pointer;
         }
         .hub-node.appear { transform: translate(-50%, -50%) scale(1); }
@@ -9414,7 +9414,7 @@ function renderHubNodes(card, notes, matches, interests) {
 
   // 순차 애니메이션
   visual.querySelectorAll('.hub-node').forEach((el, i) => {
-    setTimeout(() => el.classList.add('appear'), 100 + i * 80);
+    setTimeout(() => el.classList.add('appear'), 30 + i * 40);
 
     // 호버 시 빛 이동 효과
     const key = el.dataset.key;
