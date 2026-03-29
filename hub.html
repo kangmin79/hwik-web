@@ -459,7 +459,7 @@ async function init() {
 
   const name = userProfile?.business_name || userProfile?.agent_name || '중개사';
   document.getElementById('centerName').textContent = name;
-  document.getElementById('centerSub').textContent = userProfile?.phone || '';
+  document.getElementById('centerSub').textContent = '';
 
   // 카운트 병렬 로드
   const [myRes, clientRes, sharedRes, alertRes, memoRes] = await Promise.all([
@@ -490,7 +490,7 @@ function renderHub(nodes, centerInfo, counts) {
   centerInfo = centerInfo || {
     icon: '👤',
     name: userProfile?.business_name || '중개사',
-    sub: userProfile?.phone || ''
+    sub: ''
   };
 
   const visual = document.getElementById('hubVisual');
@@ -614,7 +614,6 @@ function openPanel(key) {
   switch(key) {
     case 'register': loadRegisterPanel(right); break;
     case 'my':       loadMyPanel(right); break;
-    case 'send':     loadSendPanel(right); break;
     case 'client':   loadClientPanel(right); break;
     case 'shared':   loadSharedPanel(right); break;
     case 'alert':    loadAlertPanel(right); break;
