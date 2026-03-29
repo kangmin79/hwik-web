@@ -2505,6 +2505,19 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .hub-line { stroke: #cbd5e1; stroke-width: 1; opacity: 0.5; }
         body.dark .hub-line { stroke: #cbd5e1; opacity: 0.5; }
         .hub-line-dot { fill: #6366f1; opacity: 0.8; }
+        .hub-pulse {
+            fill: #6366f1; opacity: 0;
+            filter: drop-shadow(0 0 6px #6366f1) drop-shadow(0 0 12px rgba(99,102,241,0.6));
+            transition: opacity 0.2s;
+        }
+        .hub-pulse.on { opacity: 1; }
+        .hub-pulse-trail {
+            stroke: #6366f1; stroke-width: 2; fill: none;
+            opacity: 0; stroke-linecap: round;
+            filter: drop-shadow(0 0 4px rgba(99,102,241,0.5));
+            transition: opacity 0.2s;
+        }
+        .hub-pulse-trail.on { opacity: 0.6; }
 
         /* 노드 — 이미지처럼 가볍고 심플 */
         .hub-node {
@@ -9384,6 +9397,11 @@ function renderHubNodes(card, notes, matches, interests) {
     svgHtml += `<line class="hub-line" x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}" />`;
     svgHtml += `<circle class="hub-line-dot" cx="${cx + (nx-cx)*0.15}" cy="${cy + (ny-cy)*0.15}" r="2.5" />`;
     svgHtml += `<circle class="hub-line-dot" cx="${nx - (nx-cx)*0.08}" cy="${ny - (ny-cy)*0.08}" r="2.5" />`;
+    svgHtml += `<line class="hub-pulse-trail" id="pulse-trail-${node.key}" x1="${cx}" y1="${cy}" x2="${cx}" y2="${cy}" stroke-dasharray="8 6" />`;
+    svgHtml += `<circle class="hub-pulse" id="pulse-${node.key}" cx="${cx}" cy="${cy}" r="5">
+      <animate attributeName="cx" from="${cx}" to="${nx}" dur="0.6s" fill="freeze" begin="indefinite" id="anim-cx-${node.key}" />
+      <animate attributeName="cy" from="${cy}" to="${ny}" dur="0.6s" fill="freeze" begin="indefinite" id="anim-cy-${node.key}" />
+    </circle>`;
 
     nodesHtml += `
       <div class="hub-node" data-key="${node.key}" style="left:${nx}px;top:${ny}px;"
@@ -9405,6 +9423,11 @@ function renderHubNodes(card, notes, matches, interests) {
   // 순차 애니메이션
   visual.querySelectorAll('.hub-node').forEach((el, i) => {
     setTimeout(() => el.classList.add('appear'), 100 + i * 80);
+
+    // 호버 시 빛 이동 효과
+    const key = el.dataset.key;
+    el.addEventListener('mouseenter', () => hubPulseStart(key));
+    el.addEventListener('mouseleave', () => hubPulseStop(key));
   });
 }
 
@@ -9641,6 +9664,54 @@ function renderBentoContact(card, notes) {
 }
 
 let _hubActivePanel = null;
+let _hubPulseRaf = null;
+
+function hubPulseStart(key) {
+  const dot = document.getElementById('pulse-' + key);
+  const trail = document.getElementById('pulse-trail-' + key);
+  if (!dot || !trail) return;
+
+  // 애니메이트 시작
+  const animCx = document.getElementById('anim-cx-' + key);
+  const animCy = document.getElementById('anim-cy-' + key);
+  if (animCx && animCy) {
+    dot.classList.add('on');
+    trail.classList.add('on');
+    animCx.beginElement();
+    animCy.beginElement();
+
+    // 트레일 라인도 따라가기
+    const fromX = parseFloat(animCx.getAttribute('from'));
+    const fromY = parseFloat(animCy.getAttribute('from'));
+    const toX = parseFloat(animCx.getAttribute('to'));
+    const toY = parseFloat(animCy.getAttribute('to'));
+    const start = performance.now();
+    const dur = 600;
+
+    function updateTrail(now) {
+      const t = Math.min((now - start) / dur, 1);
+      const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; // easeInOut
+      const curX = fromX + (toX - fromX) * ease;
+      const curY = fromY + (toY - fromY) * ease;
+      trail.setAttribute('x2', curX);
+      trail.setAttribute('y2', curY);
+      if (t < 1) _hubPulseRaf = requestAnimationFrame(updateTrail);
+    }
+    trail.setAttribute('x1', fromX);
+    trail.setAttribute('y1', fromY);
+    trail.setAttribute('x2', fromX);
+    trail.setAttribute('y2', fromY);
+    _hubPulseRaf = requestAnimationFrame(updateTrail);
+  }
+}
+
+function hubPulseStop(key) {
+  if (_hubPulseRaf) { cancelAnimationFrame(_hubPulseRaf); _hubPulseRaf = null; }
+  const dot = document.getElementById('pulse-' + key);
+  const trail = document.getElementById('pulse-trail-' + key);
+  if (dot) dot.classList.remove('on');
+  if (trail) trail.classList.remove('on');
+}
 
 function hubScrollTo(key) {
   const body = document.getElementById('hubBody');
