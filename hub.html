@@ -339,7 +339,6 @@ body {
   <div class="hub-logo" onclick="closePanel()">휙</div>
   <div class="hub-header-actions" id="headerActions">
     <span class="hub-user-name" id="userName"></span>
-    <button class="hub-header-btn" onclick="logout()">로그아웃</button>
   </div>
 </header>
 
@@ -383,16 +382,17 @@ let _myCards = [];
 let _sharedCards = [];
 let _clientCards = [];
 let _memos = [];
-let _counts = { my:0, shared:0, client:0, alert:0, memo:0 };
+let _counts = { my:0, shared:0, client:0, alert:0, memo:0, send:'휙', settings:'', register:'+' };
 
 // ── 노드 정의 ──
 const HUB_NODES = [
-  { key:'register', label:'매물 등록', angle:-90 },
-  { key:'my',       label:'내 매물',   angle:-30 },
-  { key:'client',   label:'손님',     angle:30 },
-  { key:'shared',   label:'공유 매물', angle:150 },
-  { key:'alert',    label:'알림',     angle:90 },
-  { key:'memo',     label:'메모',     angle:210 },
+  { key:'register', label:'매물 등록',   angle:-90 },
+  { key:'my',       label:'내 매물',    angle:-38 },
+  { key:'send',     label:'휙 보내기',  angle:14 },
+  { key:'client',   label:'손님',      angle:66 },
+  { key:'alert',    label:'알림',      angle:118 },
+  { key:'shared',   label:'공유방',    angle:170 },
+  { key:'settings', label:'설정',      angle:222 },
 ];
 
 // ── 인증 ──
@@ -459,6 +459,8 @@ async function init() {
     alert: alertRes.count || 0,
     memo: memoRes.count || 0,
     register: '+',
+    send: '휙',
+    settings: '',
   };
 
   renderHub();
@@ -468,7 +470,7 @@ async function init() {
 function renderHub() {
   const visual = document.getElementById('hubVisual');
   const vw = 800, vh = 700;
-  const cx = vw/2, cy = vh/2, radius = 200;
+  const cx = vw/2, cy = vh/2, radius = 230;
 
   let svgHtml = '';
   let nodesHtml = '';
@@ -518,8 +520,8 @@ function pulseStart(key) {
   if (!node) return;
   const vw=800, vh=700, fromX=vw/2, fromY=vh/2;
   const rad = (node.angle * Math.PI) / 180;
-  const toX = fromX + 200 * Math.cos(rad);
-  const toY = fromY + 200 * Math.sin(rad);
+  const toX = fromX + 230 * Math.cos(rad);
+  const toY = fromY + 230 * Math.sin(rad);
 
   const els = ['ph','pt1','pt2','pt3'].map(p => document.getElementById(`${p}-${key}`));
   els.forEach(el => { if(el) el.classList.add('on'); });
@@ -568,10 +570,11 @@ function openPanel(key) {
   switch(key) {
     case 'register': loadRegisterPanel(right); break;
     case 'my':       loadMyPanel(right); break;
+    case 'send':     loadSendPanel(right); break;
     case 'client':   loadClientPanel(right); break;
     case 'shared':   loadSharedPanel(right); break;
     case 'alert':    loadAlertPanel(right); break;
-    case 'memo':     loadMemoPanel(right); break;
+    case 'settings': loadSettingsPanel(right); break;
   }
 }
 
@@ -783,41 +786,65 @@ async function loadAlertPanel(el) {
     <div id="alertList"><div class="p-empty"><div class="p-empty-icon">⏳</div>불러오는 중...</div></div>
   </div>`;
 
-  const [matchRes, overdueRes] = await Promise.all([
+  const [matchRes, overdueRes, memoRes] = await Promise.all([
     sb.from('match_notifications').select('id, card_id, client_card_id, similarity, created_at, is_read')
       .eq('agent_id', currentUser.id).order('created_at', { ascending:false }).limit(20),
     sb.from('client_notes').select('id, client_card_id, content, alert_date, type')
       .eq('agent_id', currentUser.id).eq('alert_done', false).not('alert_date','is',null).lt('alert_date', new Date().toISOString())
       .order('alert_date', { ascending:true }).limit(20),
+    sb.from('memos').select('id, content, is_read, created_at')
+      .eq('agent_id', currentUser.id).order('created_at', { ascending:false }).limit(20),
   ]);
 
   const matches = matchRes.data || [];
   const overdue = overdueRes.data || [];
+  const memos = memoRes.data || [];
 
-  if (!matches.length && !overdue.length) {
+  if (!matches.length && !overdue.length && !memos.length) {
     document.getElementById('alertList').innerHTML = '<div class="p-empty"><div class="p-empty-icon">🔔</div>새 알림이 없어요</div>';
     return;
   }
 
   let html = '';
-  overdue.forEach(a => {
-    html += `<div class="alert-item">
-      <div class="alert-dot" style="background:#ef4444;"></div>
-      <div class="alert-info">
-        <div class="alert-title">⏰ ${esc(a.content || a.type || '일정')} (지연)</div>
-        <div class="alert-sub">${new Date(a.alert_date).toLocaleDateString('ko-KR')}</div>
-      </div>
-    </div>`;
-  });
-  matches.forEach(m => {
-    html += `<div class="alert-item">
-      <div class="alert-dot" style="background:${m.is_read ? '#94a3b8' : '#6366f1'};"></div>
-      <div class="alert-info">
-        <div class="alert-title">🏠 매칭 매물 발견</div>
-        <div class="alert-sub">${new Date(m.created_at).toLocaleDateString('ko-KR')}</div>
-      </div>
-    </div>`;
-  });
+
+  if (overdue.length) {
+    html += `<div style="font-size:12px;font-weight:700;color:#ef4444;padding:8px 0 4px;">지연된 일정 (${overdue.length})</div>`;
+    overdue.forEach(a => {
+      html += `<div class="alert-item">
+        <div class="alert-dot" style="background:#ef4444;"></div>
+        <div class="alert-info">
+          <div class="alert-title">${esc(a.content || a.type || '일정')}</div>
+          <div class="alert-sub">${new Date(a.alert_date).toLocaleDateString('ko-KR')} (지연)</div>
+        </div>
+      </div>`;
+    });
+  }
+
+  if (matches.length) {
+    html += `<div style="font-size:12px;font-weight:700;color:var(--primary);padding:12px 0 4px;">매칭 알림 (${matches.length})</div>`;
+    matches.forEach(m => {
+      html += `<div class="alert-item">
+        <div class="alert-dot" style="background:${m.is_read ? '#94a3b8' : '#6366f1'};"></div>
+        <div class="alert-info">
+          <div class="alert-title">🏠 매칭 매물 발견</div>
+          <div class="alert-sub">${new Date(m.created_at).toLocaleDateString('ko-KR')}</div>
+        </div>
+      </div>`;
+    });
+  }
+
+  if (memos.length) {
+    html += `<div style="font-size:12px;font-weight:700;color:#f59e0b;padding:12px 0 4px;">모바일 메모 (${memos.length})</div>`;
+    memos.forEach(m => {
+      html += `<div class="alert-item" style="${m.is_read ? 'opacity:0.5;' : ''}">
+        <div class="alert-dot" style="background:${m.is_read ? '#94a3b8' : '#f59e0b'};"></div>
+        <div class="alert-info">
+          <div class="alert-title">${esc(m.content || '메모')}</div>
+          <div class="alert-sub">${new Date(m.created_at).toLocaleDateString('ko-KR')}</div>
+        </div>
+      </div>`;
+    });
+  }
 
   document.getElementById('alertList').innerHTML = html;
 }
@@ -854,6 +881,150 @@ async function loadMemoPanel(el) {
       </div>
     </div>`;
   }).join('');
+}
+
+// ── 패널: 휙 보내기 ──
+async function loadSendPanel(el) {
+  el.innerHTML = `<div class="panel-inner">
+    <div class="panel-header">
+      <div class="panel-title">휙 보내기</div>
+      <button class="panel-close" onclick="closePanel()">✕</button>
+    </div>
+    <p style="color:var(--text-sub);font-size:13px;margin-bottom:16px;line-height:1.6;">매물을 선택하고 손님에게 링크를 보내세요</p>
+    <div class="panel-search"><input type="text" id="sendSearch" placeholder="매물 검색..." oninput="renderSendList()"></div>
+    <div id="sendSelected" style="margin-bottom:12px;"></div>
+    <div id="sendList"><div class="p-empty"><div class="p-empty-icon">⏳</div>불러오는 중...</div></div>
+    <div id="sendActions" style="display:none;position:sticky;bottom:0;padding:16px 0;background:var(--bg);">
+      <button class="register-btn" onclick="generateSendLink()">🔗 링크 생성하기</button>
+    </div>
+  </div>`;
+
+  if (!_myCards.length) {
+    const { data } = await sb.from('cards')
+      .select('id, property, trade_status, created_at')
+      .eq('agent_id', currentUser.id)
+      .neq('property->>type', '손님')
+      .order('created_at', { ascending:false })
+      .limit(50);
+    _myCards = data || [];
+  }
+  _sendSelected = new Set();
+  renderSendList();
+}
+
+let _sendSelected = new Set();
+
+function renderSendList() {
+  const q = (document.getElementById('sendSearch')?.value || '').toLowerCase();
+  let items = _myCards.filter(c => (c.trade_status || '계약가능') !== '완료');
+  if (q) items = items.filter(c => {
+    const p = c.property || {};
+    return [p.complex, p.location, p.price, p.type].filter(Boolean).join(' ').toLowerCase().includes(q);
+  });
+
+  // 선택된 매물 표시
+  const selEl = document.getElementById('sendSelected');
+  const actEl = document.getElementById('sendActions');
+  if (_sendSelected.size > 0) {
+    selEl.innerHTML = `<div style="padding:10px 14px;border-radius:10px;background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.1);font-size:13px;font-weight:600;color:var(--primary);">${_sendSelected.size}건 선택됨</div>`;
+    if (actEl) actEl.style.display = '';
+  } else {
+    selEl.innerHTML = '';
+    if (actEl) actEl.style.display = 'none';
+  }
+
+  if (!items.length) {
+    document.getElementById('sendList').innerHTML = '<div class="p-empty"><div class="p-empty-icon">🏠</div>보낼 매물이 없어요</div>';
+    return;
+  }
+
+  document.getElementById('sendList').innerHTML = items.map(c => {
+    const p = c.property || {};
+    const typeClass = p.type === '매매' ? 'sale' : p.type === '전세' ? 'jeonse' : 'rent';
+    const selected = _sendSelected.has(c.id);
+    return `<div class="p-item" style="${selected ? 'background:rgba(99,102,241,0.06);border-color:var(--primary);' : ''}" onclick="toggleSend('${c.id}')">
+      <div style="width:20px;height:20px;border-radius:6px;border:2px solid ${selected ? 'var(--primary)' : 'var(--border)'};background:${selected ? 'var(--primary)' : 'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        ${selected ? '<span style="color:#fff;font-size:12px;font-weight:800;">✓</span>' : ''}
+      </div>
+      <span class="p-type ${typeClass}">${esc(p.type||'')}</span>
+      <div class="p-info">
+        <div class="p-name">${esc(p.complex || p.location || '매물')}</div>
+        <div class="p-detail">${[p.price, p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleSend(id) {
+  if (_sendSelected.has(id)) _sendSelected.delete(id);
+  else _sendSelected.add(id);
+  renderSendList();
+}
+
+async function generateSendLink() {
+  if (!_sendSelected.size) return;
+  const ids = [..._sendSelected];
+  const btn = document.querySelector('#sendActions .register-btn');
+  btn.textContent = '생성 중...'; btn.disabled = true;
+
+  try {
+    // 링크 생성 API 호출
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/create-share-link`, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+SUPABASE_KEY },
+      body: JSON.stringify({ card_ids: ids, agent_id: currentUser.id })
+    });
+    const data = await res.json();
+    if (data.url) {
+      document.getElementById('sendActions').innerHTML = `
+        <div style="padding:16px;border-radius:12px;background:#ecfdf5;border:1px solid #6ee7b7;">
+          <div style="font-weight:700;color:#065f46;margin-bottom:8px;">✅ 링크가 생성되었습니다!</div>
+          <div style="display:flex;gap:8px;">
+            <input type="text" value="${data.url}" readonly style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid #6ee7b7;font-size:12px;background:#fff;color:var(--text);" onclick="this.select();navigator.clipboard.writeText(this.value);">
+            <button onclick="navigator.clipboard.writeText('${data.url}')" style="padding:8px 16px;border-radius:8px;border:none;background:var(--primary);color:#fff;font-weight:700;font-size:12px;cursor:pointer;">복사</button>
+          </div>
+        </div>`;
+    } else {
+      btn.textContent = '🔗 링크 생성하기'; btn.disabled = false;
+    }
+  } catch(e) {
+    btn.textContent = '🔗 링크 생성하기'; btn.disabled = false;
+  }
+}
+
+// ── 패널: 설정 ──
+function loadSettingsPanel(el) {
+  const profile = userProfile || {};
+  el.innerHTML = `<div class="panel-inner">
+    <div class="panel-header">
+      <div class="panel-title">설정</div>
+      <button class="panel-close" onclick="closePanel()">✕</button>
+    </div>
+
+    <div style="text-align:center;padding:20px 0;">
+      <div style="width:80px;height:80px;border-radius:24px;background:rgba(99,102,241,0.1);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:36px;">👤</div>
+      <div style="font-size:18px;font-weight:800;color:var(--text);">${esc(profile.business_name || '사무소명')}</div>
+      <div style="font-size:14px;color:var(--text-sub);margin-top:4px;">${esc(profile.agent_name || '이름')}</div>
+      <div style="font-size:13px;color:var(--text-light);margin-top:2px;">${esc(profile.phone || '전화번호')}</div>
+    </div>
+
+    <div style="border-top:1px solid var(--border);padding-top:20px;">
+      <div class="p-item" onclick="window.open('my_cards.html','_blank')">
+        <div style="font-size:18px;">📋</div>
+        <div class="p-info"><div class="p-name">기존 매물 관리</div><div class="p-detail">상세 편집, 사진 관리, 상태 변경</div></div>
+        <span style="color:var(--text-light);">→</span>
+      </div>
+      <div class="p-item" onclick="window.open('card_generator_v2_auth.html','_blank')">
+        <div style="font-size:18px;">✨</div>
+        <div class="p-info"><div class="p-name">고급 매물 등록</div><div class="p-detail">파일 대량 등록, 스타일 선택</div></div>
+        <span style="color:var(--text-light);">→</span>
+      </div>
+      <div class="p-item" onclick="logout()">
+        <div style="font-size:18px;">🚪</div>
+        <div class="p-info"><div class="p-name" style="color:#ef4444;">로그아웃</div><div class="p-detail">계정에서 로그아웃합니다</div></div>
+      </div>
+    </div>
+  </div>`;
 }
 
 // ── 시작 ──
