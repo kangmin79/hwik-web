@@ -9302,11 +9302,10 @@ function buildHubSkeleton() {
             <div class="hub-center-sub" id="hubCenterSub"></div>
           </div>
         </div>
-        <div class="hub-kpi" id="hubKpi"></div>
-        <div id="hubRemind"></div>
       </div>
       <div class="hub-body-right" id="hubBodyRight"></div>
     </div>
+    <div id="hubBottomInfo" style="max-width:640px;margin:0 auto;padding:0 24px;"></div>
   `;
 }
 
@@ -9344,11 +9343,8 @@ async function loadHubData(cardId) {
   // 노드 그리기 + 애니메이션
   renderHubNodes(card, notes, matches, interests);
 
-  // KPI 칩
-  renderHubKpi(card, notes, matches);
-
-  // 리마인드 배너
-  renderHubRemind(card, notes);
+  // KPI + 리마인드 (허브 아래)
+  renderHubBottomInfo(card, notes, matches);
 }
 
 async function loadHubMatch(cardId) {
@@ -9746,8 +9742,14 @@ function hubScrollTo(key) {
     case 'contact':    html = buildPanelContact(card, notes); break;
   }
 
-  right.innerHTML = `<div class="hub-panel-card"><button class="hub-panel-close" onclick="hubClosePanel()">✕</button>${html}</div>`;
+  // 리마인드를 패널 상단에
+  const remind = buildRemindHtml(_hubData.notes || []);
+  right.innerHTML = `${remind}<div class="hub-panel-card" style="margin-top:${remind ? '12px' : '0'};"><button class="hub-panel-close" onclick="hubClosePanel()">✕</button>${html}</div>`;
   body.classList.add('split');
+
+  // 하단 info 숨기기
+  const bottomInfo = document.getElementById('hubBottomInfo');
+  if (bottomInfo) bottomInfo.style.display = 'none';
 }
 
 function hubClosePanel() {
@@ -9755,6 +9757,8 @@ function hubClosePanel() {
   if (body) body.classList.remove('split');
   document.querySelectorAll('.hub-node').forEach(n => n.classList.remove('active'));
   _hubActivePanel = null;
+  const bottomInfo = document.getElementById('hubBottomInfo');
+  if (bottomInfo) bottomInfo.style.display = '';
 }
 
 // ── 패널 컨텐츠 빌더 ──
@@ -9956,7 +9960,7 @@ async function hubSaveNotePanel(cardId) {
   renderBentoTimeline(cardId, _hubData.notes);
   renderBentoSchedule(_hubData.notes);
   renderHubNodes(_hubData.card, _hubData.notes, _hubData.matches, _hubData.interests);
-  renderHubKpi(_hubData.card, _hubData.notes, _hubData.matches);
+  renderHubBottomInfo(_hubData.card, _hubData.notes, _hubData.matches);
   // 패널도 갱신
   if (_hubActivePanel === 'timeline') hubScrollTo('timeline');
   if (_hubActivePanel === 'schedule') hubScrollTo('schedule');
@@ -10007,8 +10011,52 @@ async function hubSaveNote(cardId) {
     renderBentoTimeline(cardId, _hubData.notes);
     renderBentoSchedule(_hubData.notes);
     renderHubNodes(_hubData.card, _hubData.notes, _hubData.matches, _hubData.interests);
-    renderHubKpi(_hubData.card, _hubData.notes, _hubData.matches);
+    renderHubBottomInfo(_hubData.card, _hubData.notes, _hubData.matches);
   }
+}
+
+function renderHubBottomInfo(card, notes, matches) {
+  const el = document.getElementById('hubBottomInfo');
+  if (!el) return;
+
+  // KPI
+  const lastNote = notes.find(n => ['상담','방문','매물소개','계약'].includes(n.type));
+  const daysSince = lastNote ? Math.floor((Date.now() - new Date(lastNote.created_at).getTime()) / 86400000) : -1;
+  const dayText = daysSince < 0 ? '없음' : daysSince === 0 ? '오늘' : daysSince + '일 전';
+  const dayWarn = daysSince > 7 ? ' warn' : '';
+  const schedCount = notes.filter(n => n.alert_date && !n.alert_done).length;
+
+  let html = `<div class="hub-kpi" style="margin-top:8px;">
+    <div class="hub-kpi-chip"><span class="kpi-val${dayWarn}">${dayText}</span> 마지막 연락</div>
+    <div class="hub-kpi-chip"><span class="kpi-val">${matches.length}</span> 매칭</div>
+    <div class="hub-kpi-chip"><span class="kpi-val">${notes.length}</span> 상담</div>
+    ${schedCount > 0 ? `<div class="hub-kpi-chip"><span class="kpi-val warn">${schedCount}</span> 예정</div>` : ''}
+  </div>`;
+
+  // 리마인드
+  html += buildRemindHtml(notes);
+
+  el.innerHTML = html;
+}
+
+function buildRemindHtml(notes) {
+  const contactNotes = notes.filter(n => ['상담','방문','매물소개','계약'].includes(n.type));
+  const lastContact = contactNotes.length ? contactNotes[0] : null;
+  const daysSince = lastContact ? Math.floor((Date.now() - new Date(lastContact.created_at).getTime()) / 86400000) : -1;
+  const overdue = notes.filter(n => n.alert_date && !n.alert_done && new Date(n.alert_date) < new Date());
+
+  if (overdue.length > 0) {
+    return `<div class="hub-remind danger"><span class="hub-remind-icon">🚨</span><span class="hub-remind-text">지연된 일정이 ${overdue.length}건 있습니다.</span><button class="hub-remind-action" onclick="hubScrollTo('schedule')">확인</button></div>`;
+  } else if (daysSince < 0) {
+    return `<div class="hub-remind warn"><span class="hub-remind-icon">👋</span><span class="hub-remind-text">아직 상담 기록이 없어요. 첫 연락을 기록해보세요!</span><button class="hub-remind-action" onclick="hubAddNote()">메모 추가</button></div>`;
+  } else if (daysSince >= 14) {
+    return `<div class="hub-remind danger"><span class="hub-remind-icon">🔴</span><span class="hub-remind-text">마지막 연락이 ${daysSince}일 전입니다. 이탈 위험!</span><button class="hub-remind-action" onclick="hubAddNote()">연락 기록</button></div>`;
+  } else if (daysSince >= 7) {
+    return `<div class="hub-remind warn"><span class="hub-remind-icon">⏰</span><span class="hub-remind-text">상담한 지 ${daysSince}일 지났습니다. 안부 연락 해보세요!</span><button class="hub-remind-action" onclick="hubAddNote()">연락 기록</button></div>`;
+  } else if (daysSince <= 2) {
+    return `<div class="hub-remind good"><span class="hub-remind-icon">✅</span><span class="hub-remind-text">최근 연락 잘 하고 있어요! (${daysSince === 0 ? '오늘' : daysSince + '일 전'})</span></div>`;
+  }
+  return '';
 }
 
 function renderHubRemind(card, notes) {
