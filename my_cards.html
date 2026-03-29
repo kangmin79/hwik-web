@@ -9737,9 +9737,7 @@ function hubScrollTo(key) {
     case 'contact':    html = buildPanelContact(card, notes); break;
   }
 
-  // 리마인드를 패널 상단에
-  const remind = buildRemindHtml(_hubData.notes || []);
-  right.innerHTML = `${remind}<div class="hub-panel-card" style="margin-top:${remind ? '12px' : '0'};"><button class="hub-panel-close" onclick="hubClosePanel()">✕</button>${html}</div>`;
+  right.innerHTML = `<div class="hub-panel-card"><button class="hub-panel-close" onclick="hubClosePanel()">✕</button>${html}</div>`;
   body.classList.add('split');
 
 }
