@@ -2335,7 +2335,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .hub-overlay {
             position: fixed; inset: 0; z-index: 2000;
             background: #f7f8fc;
-            overflow-y: auto; overflow-x: hidden;
+            overflow: hidden;
             opacity: 0; transform: translateY(20px);
             transition: opacity 0.4s ease, transform 0.4s ease;
             display: none;
@@ -2392,7 +2392,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             display: flex;
             max-width: 1280px;
             margin: 0 auto;
-            min-height: calc(100vh - 56px);
+            height: calc(100vh - 56px);
             transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .hub-body-left {
