@@ -2340,7 +2340,13 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             transition: opacity 0.4s ease, transform 0.4s ease;
             display: none;
         }
-        body.dark .hub-overlay { background: #080e1a; }
+        /* 허브 오버레이는 항상 웜 라이트 (다크모드에서도) */
+        body.dark .hub-overlay {
+            background: #f9f8f4; color: #1e293b;
+            --text-white: #1e293b; --text-gray: #6b7280; --text-gray-light: #9ca3af;
+            --bg-card: #ffffff; --bg-input: #f0f1f3; --border-color: #e2e8f0;
+            --primary: #6366f1; --primary-bg: rgba(99,102,241,0.06);
+        }
         .hub-overlay.show { display: block; }
         .hub-overlay.visible { opacity: 1; transform: translateY(0); }
 
@@ -2353,7 +2359,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             padding: 14px 32px;
             display: flex; align-items: center; justify-content: space-between;
         }
-        body.dark .hub-header { background: rgba(8,14,26,0.85); border-bottom-color: rgba(255,255,255,0.06); }
+        body.dark .hub-header { background: rgba(249,248,244,0.92); border-bottom-color: rgba(0,0,0,0.06); color: #1e293b; }
         .hub-back {
             display: flex; align-items: center; gap: 6px;
             background: none; border: none; color: #64748b;
@@ -2361,8 +2367,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             border-radius: 10px; transition: all 0.2s; letter-spacing: -0.3px;
         }
         .hub-back:hover { background: rgba(99,102,241,0.08); color: #6366f1; }
-        body.dark .hub-back { color: #94a3b8; }
-        body.dark .hub-back:hover { color: #818cf8; }
+        body.dark .hub-back { color: #64748b; }
+        body.dark .hub-back:hover { color: #6366f1; }
         .hub-back svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
         .hub-actions { display: flex; gap: 8px; }
         .hub-action-btn {
@@ -2372,7 +2378,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
             letter-spacing: -0.3px;
         }
-        body.dark .hub-action-btn { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.08); color: #e2e8f0; }
+        body.dark .hub-action-btn { background: #fff; border-color: rgba(0,0,0,0.08); color: #374151; }
         .hub-action-btn:hover { border-color: #6366f1; color: #6366f1; }
         .hub-action-btn.primary {
             background: linear-gradient(135deg, #6366f1, #818cf8);
@@ -2397,10 +2403,10 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             animation: hubPanelIn 0.35s ease;
         }
         body.dark .hub-panel-card {
-            background: rgba(15,23,42,0.65);
-            border-color: rgba(129,140,248,0.18);
-            border-left: 3px solid #818cf8;
-            box-shadow: 0 0 24px rgba(99,102,241,0.06), 0 4px 24px rgba(0,0,0,0.15);
+            background: #fff;
+            border-color: rgba(0,0,0,0.06);
+            border-left: 3px solid #6366f1;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.04);
         }
         @keyframes hubPanelIn {
             from { opacity: 0; transform: translateY(12px); }
@@ -2414,9 +2420,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             box-shadow: 0 0 0 3px rgba(99,102,241,0.12), 0 0 20px rgba(99,102,241,0.08);
         }
         body.dark .hub-node.active .hub-node-inner {
-            background: rgba(99,102,241,0.1);
-            border-color: #818cf8;
-            box-shadow: 0 0 0 3px rgba(129,140,248,0.2), 0 0 24px rgba(99,102,241,0.12);
+            background: rgba(99,102,241,0.06);
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.12), 0 0 20px rgba(99,102,241,0.08);
         }
 
         /* 비주얼 허브 */
@@ -2446,9 +2452,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             transition: box-shadow 0.4s;
         }
         body.dark .hub-center {
-            background: rgba(15,23,42,0.9);
-            border: 1.5px solid rgba(129,140,248,0.35);
-            box-shadow: 0 0 0 1px rgba(129,140,248,0.12), 0 0 60px rgba(99,102,241,0.18), 0 8px 32px rgba(0,0,0,0.3);
+            background: #fff;
+            border: 1.5px solid rgba(99,102,241,0.25);
+            box-shadow: 0 0 0 1px rgba(99,102,241,0.08), 0 0 40px rgba(99,102,241,0.1), 0 8px 32px rgba(0,0,0,0.06);
         }
         .hub-center:hover { box-shadow: 0 0 0 1px rgba(99,102,241,0.15), 0 0 80px rgba(99,102,241,0.2), 0 8px 32px rgba(0,0,0,0.08); }
         .hub-center-icon { font-size: 28px; margin-bottom: 2px; }
@@ -2456,13 +2462,13 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             font-size: 13px; font-weight: 700; color: #1e293b;
             text-align: center; line-height: 1.2; letter-spacing: -0.5px;
         }
-        body.dark .hub-center-name { color: #f1f5f9; }
+        body.dark .hub-center-name { color: #1e293b; }
         .hub-center-sub { font-size: 11px; color: #94a3b8; margin-top: 2px; font-weight: 500; }
 
         /* SVG 연결선 */
         .hub-lines { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
         .hub-line { stroke: #cbd5e1; stroke-width: 1; opacity: 0.5; }
-        body.dark .hub-line { stroke: rgba(129,140,248,0.2); opacity: 0.6; }
+        body.dark .hub-line { stroke: #cbd5e1; opacity: 0.5; }
         .hub-line-dot { fill: #6366f1; opacity: 0.8; }
 
         /* 노드 — 이미지처럼 가볍고 심플 */
@@ -2484,9 +2490,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             transition: all 0.3s;
         }
         body.dark .hub-node-inner {
-            background: rgba(15,23,42,0.85);
-            border: 1.5px solid rgba(129,140,248,0.2);
-            box-shadow: 0 0 16px rgba(99,102,241,0.06), 0 2px 12px rgba(0,0,0,0.2);
+            background: #fff;
+            border: 1.5px solid rgba(0,0,0,0.08);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.04);
         }
         .hub-node:hover .hub-node-inner {
             border-color: rgba(99,102,241,0.4);
@@ -2494,23 +2500,23 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             transform: translateY(-3px);
         }
         body.dark .hub-node:hover .hub-node-inner {
-            border-color: rgba(129,140,248,0.45);
-            box-shadow: 0 0 24px rgba(99,102,241,0.15), 0 4px 20px rgba(0,0,0,0.2);
+            border-color: rgba(99,102,241,0.4);
+            box-shadow: 0 0 20px rgba(99,102,241,0.1), 0 4px 20px rgba(0,0,0,0.05);
         }
         .hub-node-label {
             font-size: 13px; font-weight: 600; color: #374151;
             letter-spacing: -0.3px;
         }
-        body.dark .hub-node-label { color: #e2e8f0; }
+        body.dark .hub-node-label { color: #374151; }
         .hub-node-count {
             display: inline-block; margin-left: 6px;
             padding: 1px 7px; border-radius: 8px;
             background: rgba(99,102,241,0.1); color: #6366f1;
             font-size: 11px; font-weight: 700;
         }
-        body.dark .hub-node-count { background: rgba(129,140,248,0.15); color: #818cf8; }
+        body.dark .hub-node-count { background: rgba(99,102,241,0.1); color: #6366f1; }
         .hub-node-count.empty { background: transparent; color: #cbd5e1; }
-        body.dark .hub-node-count.empty { color: #475569; }
+        body.dark .hub-node-count.empty { color: #cbd5e1; }
 
         /* KPI 스트립 — 컴팩트 인라인 */
         .hub-kpi {
@@ -2527,9 +2533,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             font-size: 13px; font-weight: 600; color: #374151;
             letter-spacing: -0.3px;
         }
-        body.dark .hub-kpi-chip { background: rgba(255,255,255,0.04); border: 1.5px solid rgba(129,140,248,0.15); color: #e2e8f0; }
+        body.dark .hub-kpi-chip { background: #fff; border: 1px solid rgba(0,0,0,0.06); color: #374151; }
         .hub-kpi-chip .kpi-val { font-weight: 800; color: #6366f1; }
-        body.dark .hub-kpi-chip .kpi-val { color: #818cf8; }
+        body.dark .hub-kpi-chip .kpi-val { color: #6366f1; }
         .hub-kpi-chip .kpi-val.warn { color: #ef4444; }
 
         /* 벤토 그리드 */
@@ -2631,7 +2637,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             border: 1px solid rgba(99,102,241,0.1);
             letter-spacing: -0.2px;
         }
-        body.dark .hub-cond-tag { background: rgba(129,140,248,0.1); color: #818cf8; border-color: rgba(129,140,248,0.15); }
+        body.dark .hub-cond-tag { background: rgba(99,102,241,0.06); color: #6366f1; border-color: rgba(99,102,241,0.1); }
 
         /* 타임라인 (벤토 내부) */
         .hub-tl-item {
@@ -2650,7 +2656,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .hub-tl-badge.등록 { background: rgba(148,163,184,0.1); color: #94a3b8; }
         .hub-tl-badge.메모 { background: rgba(148,163,184,0.06); color: #94a3b8; }
         .hub-tl-content { flex: 1; font-size: 13px; color: #374151; letter-spacing: -0.2px; }
-        body.dark .hub-tl-content { color: #e2e8f0; }
+        body.dark .hub-tl-content { color: #374151; }
         .hub-tl-date { font-size: 11px; color: #94a3b8; margin-top: 1px; }
         .hub-tl-more {
             display: block; width: 100%; text-align: center;
@@ -2659,7 +2665,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             font-size: 12px; font-weight: 600; cursor: pointer;
             margin-top: 10px; transition: all 0.2s;
         }
-        body.dark .hub-tl-more { background: rgba(129,140,248,0.08); color: #818cf8; }
+        body.dark .hub-tl-more { background: rgba(99,102,241,0.06); color: #6366f1; }
         .hub-tl-more:hover { background: rgba(99,102,241,0.12); }
 
         /* 메모 입력 */
@@ -2674,9 +2680,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             transition: all 0.2s; letter-spacing: -0.2px;
         }
         body.dark .hub-note-input input {
-            background: rgba(255,255,255,0.04);
-            border-color: rgba(255,255,255,0.08);
-            color: #e2e8f0;
+            background: #f8f9fb;
+            border-color: rgba(0,0,0,0.08);
+            color: #1e293b;
         }
         .hub-note-input input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.08); }
         .hub-note-input button {
