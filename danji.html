@@ -346,10 +346,33 @@ function render() {
   const curIdx = cats.indexOf(currentPyeong);
   const sortedCats = curIdx > 0 ? [...cats.slice(curIdx), ...cats.slice(0, curIdx)] : cats;
 
+  // 공급면적 중복 시 A,B,C 접미사 계산
+  const supplyCount = {};
+  const supplySuffix = {};
+  if (areaMode === 'supply') {
+    sortedCats.forEach(c => {
+      if (pm[c] && pm[c].supply > pm[c].exclu && pm[c].supply > 0) {
+        const s = Math.round(pm[c].supply);
+        supplyCount[s] = (supplyCount[s] || 0) + 1;
+      }
+    });
+    const supplyIdx = {};
+    sortedCats.forEach(c => {
+      if (pm[c] && pm[c].supply > pm[c].exclu && pm[c].supply > 0) {
+        const s = Math.round(pm[c].supply);
+        if (supplyCount[s] > 1) {
+          supplyIdx[s] = (supplyIdx[s] || 0) + 1;
+          supplySuffix[c] = String.fromCharCode(64 + supplyIdx[s]); // A, B, C...
+        }
+      }
+    });
+  }
+
   const pyeongHtml = sortedCats.map(c => {
     let label;
     if (areaMode === 'supply' && pm[c] && pm[c].supply > pm[c].exclu && pm[c].supply > 0) {
-      label = `${Math.round(pm[c].supply)}㎡`;
+      const s = Math.round(pm[c].supply);
+      label = supplySuffix[c] ? `${s}${supplySuffix[c]}㎡` : `${s}㎡`;
     } else {
       label = `${c}㎡`;
     }
