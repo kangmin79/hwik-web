@@ -612,6 +612,7 @@ function openPanel(key) {
 
   const right = document.getElementById('hubRight');
   document.getElementById('hubMain').classList.add('split');
+  right.style.cssText = 'flex:0 0 50%;opacity:1;overflow-y:auto;height:calc(100vh - 56px);border-left:1px solid #e0ded8;background:#fff;';
 
   switch(key) {
     case 'register': loadRegisterPanel(right); break;
@@ -625,6 +626,8 @@ function openPanel(key) {
 
 function closePanel() {
   document.getElementById('hubMain').classList.remove('split');
+  const right = document.getElementById('hubRight');
+  if (right) right.style.cssText = 'flex:0 0 0%;opacity:0;overflow:hidden;';
   document.querySelectorAll('.hub-node').forEach(n => n.classList.remove('active'));
   _activePanel = null;
 }
@@ -716,6 +719,7 @@ function openSubPanel(key) {
 
   const right = document.getElementById('hubRight');
   document.getElementById('hubMain').classList.add('split');
+  right.style.cssText = 'flex:0 0 50%;opacity:1;overflow-y:auto;height:calc(100vh - 56px);border-left:1px solid #e0ded8;background:#fff;';
   const card = _currentLevel?.data;
   if (!card) return;
 
