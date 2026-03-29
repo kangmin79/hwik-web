@@ -11,113 +11,83 @@
 <script src="config.js"></script>
 <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js"></script>
 <style>
+/* ═══════════════════════════════════
+   1. 기본 & 테마 변수
+   ═══════════════════════════════════ */
 * { margin:0; padding:0; box-sizing:border-box; }
-
 :root {
-  --primary: #6366f1;
-  --primary-dark: #4f46e5;
-  --primary-bg: rgba(99,102,241,0.06);
-  --bg: #f6f5f1;
-  --bg-card: #ffffff;
-  --bg-input: #f0efeb;
-  --text: #0f172a;
-  --text-sub: #475569;
-  --text-light: #64748b;
-  --border: #e0ded8;
+  --primary:#6366f1; --primary-dark:#4f46e5;
+  --primary-bg:rgba(99,102,241,0.06);
+  --bg:#f6f5f1; --bg-card:#fff; --bg-input:#f0efeb;
+  --text:#0f172a; --text-sub:#475569; --text-light:#64748b;
+  --border:#e0ded8;
+  --header-h:56px;
 }
-
-html, body { height:100%; overflow:hidden; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-}
-
-/* 스크롤바 */
+html,body { height:100%; overflow:hidden; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans KR',sans-serif; background:var(--bg); color:var(--text); }
 ::-webkit-scrollbar { width:4px; }
 ::-webkit-scrollbar-track { background:transparent; }
 ::-webkit-scrollbar-thumb { background:#c9c6be; border-radius:4px; }
 
-/* ── 헤더 ── */
-.hub-header {
+/* ═══════════════════════════════════
+   2. 레이아웃
+   ═══════════════════════════════════ */
+.header {
   position:fixed; top:0; left:0; right:0; z-index:100;
-  height:56px;
+  height:var(--header-h);
   background:rgba(246,245,241,0.92);
   backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
   border-bottom:1px solid var(--border);
-  display:flex; align-items:center; justify-content:space-between;
-  padding:0 24px;
+  display:flex; align-items:center; padding:0 24px;
 }
-.hub-logo { font-size:24px; font-weight:900; color:var(--primary); cursor:pointer; }
-.hub-header-actions { display:flex; gap:8px; align-items:center; }
-.hub-header-btn {
-  padding:8px 18px; border-radius:10px;
-  border:1px solid var(--border);
-  background:var(--bg-card); color:var(--text);
-  font-size:13px; font-weight:600; cursor:pointer;
-  transition:all 0.2s; letter-spacing:-0.3px;
-}
-.hub-header-btn:hover { border-color:var(--primary); color:var(--primary); }
-.hub-header-btn.primary {
-  background:linear-gradient(135deg,#6366f1,#818cf8);
-  color:#fff; border-color:transparent;
-  box-shadow:0 2px 12px rgba(99,102,241,0.3);
-}
-.hub-user-name { font-size:13px; font-weight:600; color:var(--text-sub); margin-right:4px; }
+.logo { font-size:24px; font-weight:900; color:var(--primary); cursor:pointer; }
 
-/* ── 메인 레이아웃 ── */
-.hub-main {
-  height:calc(100vh - 56px);
-  margin-top:56px;
-  position:relative;
-}
-.hub-left {
+.main { height:calc(100vh - var(--header-h)); margin-top:var(--header-h); position:relative; }
+
+/* 왼쪽: 허브 */
+.hub-area {
   width:100%; height:100%;
   display:flex; align-items:center; justify-content:center;
   padding-bottom:5%;
   transition:width 0.4s ease;
 }
-.hub-right {
-  position:fixed;
-  top:56px; right:0;
-  width:0; height:calc(100vh - 56px);
-  background:#fff;
-  overflow-y:auto;
+
+/* 오른쪽: 패널 */
+.panel-area {
+  position:fixed; top:var(--header-h); right:0;
+  width:0; height:calc(100vh - var(--header-h));
+  background:var(--bg-card);
+  overflow-y:auto; overflow-x:hidden;
   border-left:1px solid var(--border);
   transition:width 0.4s ease;
   z-index:50;
 }
-.hub-main.split .hub-left { width:50%; }
-.hub-main.split .hub-right { width:50%; }
+.main.split .hub-area { width:50%; }
+.main.split .panel-area { width:50%; }
 
-/* ── 허브 비주얼 ── */
-.hub-visual {
-  position:relative;
-  width:min(90%,700px);
-  aspect-ratio:800/700;
-  max-height:75vh;
-}
+/* 3분할 (매물 등록 + 미리보기) */
+.main.triple .hub-area { width:33%; }
+.main.triple .panel-area { width:67%; }
+
+/* ═══════════════════════════════════
+   3. 허브 비주얼 (SVG + 노드)
+   ═══════════════════════════════════ */
+.hub-visual { position:relative; width:min(90%,700px); aspect-ratio:800/700; max-height:75vh; }
 .hub-lines { position:absolute; inset:0; z-index:1; pointer-events:none; }
 .hub-line { stroke:#cbd5e1; stroke-width:1; opacity:0.5; }
 
-/* 중앙 노드 */
 .hub-center {
-  position:absolute; left:50%; top:50%;
-  transform:translate(-50%,-50%);
-  width:150px; height:150px;
-  border-radius:32px;
-  background:#fff;
-  border:1px solid rgba(99,102,241,0.2);
-  box-shadow:0 0 0 1px rgba(99,102,241,0.08), 0 0 40px rgba(99,102,241,0.08), 0 8px 32px rgba(0,0,0,0.06);
-  display:flex; flex-direction:column;
-  align-items:center; justify-content:center;
-  z-index:5;
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+  width:150px; height:150px; border-radius:32px;
+  background:#fff; border:1px solid rgba(99,102,241,0.2);
+  box-shadow:0 0 40px rgba(99,102,241,0.08), 0 8px 32px rgba(0,0,0,0.06);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  z-index:5; cursor:pointer;
 }
 .hub-center-icon { font-size:34px; margin-bottom:4px; }
-.hub-center-name { font-size:15px; font-weight:800; color:var(--text); text-align:center; line-height:1.2; letter-spacing:-0.5px; }
-.hub-center-sub { font-size:11px; color:var(--text-light); margin-top:2px; font-weight:500; }
+.hub-center-name { font-size:15px; font-weight:800; text-align:center; line-height:1.2; letter-spacing:-0.5px; }
+.hub-center-sub { font-size:11px; color:var(--text-light); margin-top:2px; }
 
-/* 노드 */
 .hub-node {
   position:absolute; z-index:4;
   transform:translate(-50%,-50%) scale(0);
@@ -126,15 +96,10 @@ body {
 }
 .hub-node.appear { transform:translate(-50%,-50%) scale(1); }
 .hub-node-inner {
-  background:#fff;
-  border:1.5px solid rgba(0,0,0,0.08);
-  border-radius:22px;
-  padding:12px 26px;
-  text-align:center;
-  white-space:nowrap;
-  box-shadow:0 2px 12px rgba(0,0,0,0.04);
-  transition:all 0.3s;
-  min-width:130px;
+  background:#fff; border:1.5px solid rgba(0,0,0,0.08);
+  border-radius:22px; padding:12px 26px;
+  text-align:center; white-space:nowrap; min-width:130px;
+  box-shadow:0 2px 12px rgba(0,0,0,0.04); transition:all 0.3s;
 }
 .hub-node:hover .hub-node-inner {
   border-color:rgba(99,102,241,0.4);
@@ -142,1149 +107,634 @@ body {
   transform:translateY(-3px);
 }
 .hub-node.active .hub-node-inner {
-  border-color:#6366f1;
-  background:rgba(99,102,241,0.06);
-  box-shadow:0 0 0 3px rgba(99,102,241,0.12), 0 0 20px rgba(99,102,241,0.08);
+  border-color:#6366f1; background:rgba(99,102,241,0.06);
+  box-shadow:0 0 0 3px rgba(99,102,241,0.12);
 }
 .hub-node-label { font-size:15px; font-weight:600; color:#374151; letter-spacing:-0.3px; }
-.hub-node-count {
-  display:inline-block; margin-left:6px;
-  padding:1px 8px; border-radius:8px;
-  background:rgba(99,102,241,0.1); color:#6366f1;
-  font-size:12px; font-weight:700;
-}
-.hub-node-count.empty { background:transparent; color:#cbd5e1; }
 
 /* 빛 애니메이션 */
-.hub-pulse-head { fill:#fff; display:none; filter:drop-shadow(0 0 4px #fff) drop-shadow(0 0 10px #818cf8) drop-shadow(0 0 20px #6366f1) drop-shadow(0 0 40px rgba(99,102,241,0.5)); }
-.hub-pulse-head.on { display:block; opacity:1; }
-.hub-pulse-t1 { fill:#818cf8; display:none; filter:drop-shadow(0 0 6px #6366f1); }
-.hub-pulse-t2 { fill:#6366f1; display:none; filter:drop-shadow(0 0 4px rgba(99,102,241,0.5)); }
-.hub-pulse-t3 { fill:rgba(99,102,241,0.5); display:none; }
-.hub-pulse-t1.on { display:block; opacity:0.7; }
-.hub-pulse-t2.on { display:block; opacity:0.4; }
-.hub-pulse-t3.on { display:block; opacity:0.2; }
+.pulse-head { fill:#fff; display:none; filter:drop-shadow(0 0 4px #fff) drop-shadow(0 0 10px #818cf8) drop-shadow(0 0 20px #6366f1) drop-shadow(0 0 40px rgba(99,102,241,0.5)); }
+.pulse-t1 { fill:#818cf8; display:none; filter:drop-shadow(0 0 6px #6366f1); }
+.pulse-t2 { fill:#6366f1; display:none; filter:drop-shadow(0 0 4px rgba(99,102,241,0.5)); }
+.pulse-t3 { fill:rgba(99,102,241,0.5); display:none; }
+.pulse-head.on { display:block; opacity:1; }
+.pulse-t1.on { display:block; opacity:0.7; }
+.pulse-t2.on { display:block; opacity:0.4; }
+.pulse-t3.on { display:block; opacity:0.2; }
 
-/* ── 우측 패널 ── */
-.panel-inner {
-  padding:28px 24px;
-  min-height:100%;
-}
-.panel-header {
+/* ═══════════════════════════════════
+   4. 패널 공통
+   ═══════════════════════════════════ */
+.panel-inner { padding:24px; min-height:100%; }
+.panel-head {
   display:flex; align-items:center; justify-content:space-between;
-  margin-bottom:20px;
-  position:sticky; top:0; z-index:5;
-  background:var(--bg); padding:16px 24px; margin:-28px -24px 20px;
+  margin-bottom:20px; position:sticky; top:0; z-index:5;
+  background:var(--bg-card); padding:16px 24px; margin:-24px -24px 20px;
   border-bottom:1px solid var(--border);
 }
-.panel-title { font-size:18px; font-weight:800; color:var(--text); letter-spacing:-0.5px; }
+.panel-title { font-size:18px; font-weight:800; letter-spacing:-0.5px; }
 .panel-title span { color:var(--primary); }
-.panel-close {
+.panel-x {
   background:none; border:none; color:var(--text-light);
-  font-size:22px; cursor:pointer; padding:4px 8px;
-  border-radius:8px; transition:all 0.2s; line-height:1;
+  font-size:22px; cursor:pointer; padding:4px 8px; border-radius:8px; line-height:1;
 }
-.panel-close:hover { background:var(--primary-bg); color:var(--primary); }
+.panel-x:hover { background:var(--primary-bg); color:var(--primary); }
 
-/* 패널 내부 아이템 */
-.p-item {
+/* 리스트 아이템 */
+.item {
   display:flex; align-items:center; gap:12px;
-  padding:14px 16px; border-radius:14px;
-  cursor:pointer; transition:all 0.2s;
-  border:1px solid transparent;
-  margin-bottom:6px;
+  padding:14px 16px; border-radius:14px; cursor:pointer;
+  transition:all 0.2s; border:1px solid transparent; margin-bottom:6px;
 }
-.p-item:hover { background:var(--primary-bg); border-color:rgba(99,102,241,0.08); }
-.p-type {
-  padding:4px 10px; border-radius:8px;
-  font-size:11px; font-weight:800; flex-shrink:0;
-}
-.p-type.sale { background:rgba(249,115,22,0.1); color:#ea580c; }
-.p-type.jeonse { background:rgba(99,102,241,0.1); color:#4f46e5; }
-.p-type.rent { background:rgba(167,139,250,0.1); color:#7c3aed; }
-.p-type.client { background:rgba(78,205,196,0.1); color:#0d9488; }
-.p-info { flex:1; min-width:0; }
-.p-name { font-size:14px; font-weight:700; color:var(--text); letter-spacing:-0.2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.p-detail { font-size:12px; color:var(--text-sub); margin-top:2px; }
-.p-badge {
-  padding:4px 10px; border-radius:8px;
-  font-size:11px; font-weight:700; flex-shrink:0;
-}
+.item:hover { background:var(--primary-bg); border-color:rgba(99,102,241,0.08); }
+.item-type { padding:4px 10px; border-radius:8px; font-size:11px; font-weight:800; flex-shrink:0; }
+.item-type.sale { background:rgba(249,115,22,0.1); color:#ea580c; }
+.item-type.jeonse { background:rgba(99,102,241,0.1); color:#4f46e5; }
+.item-type.rent { background:rgba(167,139,250,0.1); color:#7c3aed; }
+.item-type.client { background:rgba(78,205,196,0.1); color:#0d9488; }
+.item-body { flex:1; min-width:0; }
+.item-name { font-size:14px; font-weight:700; letter-spacing:-0.2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.item-sub { font-size:12px; color:var(--text-sub); margin-top:2px; }
 
-/* 매물 등록 */
-.register-area { padding:0 24px; }
-.register-input {
-  width:100%; min-height:200px;
-  padding:16px; border-radius:14px;
-  border:1.5px solid var(--border);
-  background:var(--bg-card); color:var(--text);
-  font-size:15px; line-height:1.7;
-  font-family:inherit; resize:vertical; outline:none;
-  transition:border-color 0.2s;
+/* 검색 & 필터 */
+.search { display:flex; gap:8px; margin-bottom:16px; }
+.search input {
+  flex:1; padding:10px 16px; border-radius:10px;
+  border:1px solid var(--border); background:var(--bg-input);
+  color:var(--text); font-size:13px; outline:none;
 }
-.register-input:focus { border-color:var(--primary); }
-.register-input::placeholder { color:#94a3b8; }
-.register-btn {
-  width:100%; padding:14px; margin-top:12px;
-  border-radius:12px; border:none;
+.search input:focus { border-color:var(--primary); }
+.filters { display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap; }
+.filter-btn {
+  padding:6px 14px; border-radius:20px;
+  border:1px solid var(--border); background:transparent;
+  color:var(--text-sub); font-size:12px; font-weight:600; cursor:pointer;
+}
+.filter-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+
+/* 폼 */
+.textarea {
+  width:100%; min-height:200px; padding:16px; border-radius:14px;
+  border:1.5px solid var(--border); background:var(--bg-card);
+  color:var(--text); font-size:15px; line-height:1.7;
+  font-family:inherit; resize:vertical; outline:none;
+}
+.textarea:focus { border-color:var(--primary); }
+.textarea::placeholder { color:#94a3b8; }
+.btn-primary {
+  width:100%; padding:14px; margin-top:12px; border-radius:12px; border:none;
   background:linear-gradient(135deg,#6366f1,#818cf8);
-  color:#fff; font-size:15px; font-weight:700;
-  cursor:pointer; transition:all 0.2s;
+  color:#fff; font-size:15px; font-weight:700; cursor:pointer;
   box-shadow:0 2px 12px rgba(99,102,241,0.3);
 }
-.register-btn:hover { box-shadow:0 4px 20px rgba(99,102,241,0.4); }
-
-/* 검색 */
-.panel-search {
-  display:flex; gap:8px; margin-bottom:16px;
-}
-.panel-search input {
-  flex:1; padding:10px 16px; border-radius:10px;
-  border:1px solid var(--border);
-  background:var(--bg-input); color:var(--text);
-  font-size:13px; outline:none;
-}
-.panel-search input:focus { border-color:var(--primary); }
-
-/* 필터 */
-.panel-filters {
-  display:flex; gap:6px; margin-bottom:12px; flex-wrap:wrap;
-}
-.p-filter {
-  padding:6px 14px; border-radius:20px;
-  border:1px solid var(--border);
-  background:transparent; color:var(--text-sub);
-  font-size:12px; font-weight:600; cursor:pointer;
-  transition:all 0.2s;
-}
-.p-filter.active { background:var(--primary); color:#fff; border-color:var(--primary); }
-
-/* 빈 상태 */
-.p-empty {
-  text-align:center; padding:60px 20px;
-  color:var(--text-light); font-size:14px;
-}
-.p-empty-icon { font-size:48px; margin-bottom:12px; }
-
-/* 로그인 모달 */
-.login-overlay {
-  position:fixed; inset:0; z-index:200;
-  background:rgba(0,0,0,0.4);
-  display:flex; align-items:center; justify-content:center;
-  display:none;
-}
-.login-overlay.show { display:flex; }
-.login-modal {
-  background:#fff; border-radius:24px;
-  padding:40px; text-align:center;
-  max-width:380px; width:90%;
-  box-shadow:0 20px 60px rgba(0,0,0,0.15);
-}
-.login-modal h2 { font-size:32px; font-weight:900; color:var(--primary); margin-bottom:8px; }
-.login-modal p { font-size:14px; color:var(--text-sub); margin-bottom:24px; line-height:1.6; }
-.kakao-btn {
-  width:100%; padding:14px; border-radius:12px; border:none;
-  background:#FEE500; color:#000;
-  font-size:15px; font-weight:700; cursor:pointer;
-  transition:opacity 0.2s;
-}
-.kakao-btn:hover { opacity:0.9; }
-
-/* 타임라인 */
-.tl-item { display:flex; align-items:flex-start; gap:10px; padding:10px 0; }
-.tl-badge { padding:3px 10px; border-radius:8px; font-size:10px; font-weight:700; flex-shrink:0; margin-top:2px; }
-.tl-badge.상담 { background:rgba(96,165,250,0.1); color:#60a5fa; }
-.tl-badge.방문 { background:rgba(74,222,128,0.1); color:#4ade80; }
-.tl-badge.매물소개 { background:rgba(251,146,60,0.1); color:#fb923c; }
-.tl-badge.계약 { background:rgba(248,113,113,0.1); color:#f87171; }
-.tl-badge.메모 { background:rgba(148,163,184,0.06); color:#94a3b8; }
-.tl-content { flex:1; font-size:13px; color:var(--text); font-weight:500; }
-.tl-date { font-size:11px; color:var(--text-light); margin-top:1px; }
+.btn-primary:hover { box-shadow:0 4px 20px rgba(99,102,241,0.4); }
 
 /* 메모 입력 */
-.note-input { display:flex; gap:8px; margin-bottom:16px; }
-.note-input input {
+.note-row { display:flex; gap:8px; margin-bottom:16px; }
+.note-row input {
   flex:1; padding:11px 16px; border-radius:12px;
-  border:1px solid var(--border);
-  background:var(--bg-input); color:var(--text);
-  font-size:13px; outline:none;
+  border:1px solid var(--border); background:var(--bg-input);
+  color:var(--text); font-size:13px; outline:none;
 }
-.note-input input:focus { border-color:var(--primary); }
-.note-input button {
+.note-row input:focus { border-color:var(--primary); }
+.note-row button {
   padding:11px 22px; border-radius:12px; border:none;
   background:linear-gradient(135deg,#6366f1,#818cf8);
   color:#fff; font-weight:700; font-size:13px; cursor:pointer;
 }
 
-/* 알림 아이템 */
-.alert-item {
-  display:flex; align-items:center; gap:12px;
-  padding:12px 16px; border-radius:12px;
-  margin-bottom:6px; cursor:pointer; transition:all 0.2s;
-}
-.alert-item:hover { background:var(--primary-bg); }
-.alert-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-.alert-info { flex:1; }
-.alert-title { font-size:13px; font-weight:600; color:var(--text); }
-.alert-sub { font-size:11px; color:var(--text-light); margin-top:2px; }
+/* 타임라인 */
+.tl { display:flex; align-items:flex-start; gap:10px; padding:10px 0; }
+.tl-tag { padding:3px 10px; border-radius:8px; font-size:10px; font-weight:700; flex-shrink:0; margin-top:2px; }
+.tl-tag.상담 { background:rgba(96,165,250,0.1); color:#60a5fa; }
+.tl-tag.방문 { background:rgba(74,222,128,0.1); color:#4ade80; }
+.tl-tag.매물소개 { background:rgba(251,146,60,0.1); color:#fb923c; }
+.tl-tag.계약 { background:rgba(248,113,113,0.1); color:#f87171; }
+.tl-tag.메모 { background:rgba(148,163,184,0.06); color:#94a3b8; }
+.tl-text { font-size:13px; font-weight:500; }
+.tl-date { font-size:11px; color:var(--text-light); margin-top:1px; }
 
+/* 알림 */
+.alert { display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:12px; margin-bottom:6px; cursor:pointer; }
+.alert:hover { background:var(--primary-bg); }
+.alert-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+/* 빈 상태 */
+.empty { text-align:center; padding:60px 20px; color:var(--text-light); font-size:14px; }
+.empty-icon { font-size:48px; margin-bottom:12px; }
+
+/* 로그인 */
+.login-bg { position:fixed; inset:0; z-index:200; background:rgba(0,0,0,0.4); display:none; align-items:center; justify-content:center; }
+.login-bg.show { display:flex; }
+.login-box { background:#fff; border-radius:24px; padding:40px; text-align:center; max-width:380px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.15); }
+.login-box h2 { font-size:32px; font-weight:900; color:var(--primary); margin-bottom:8px; }
+.login-box p { font-size:14px; color:var(--text-sub); margin-bottom:24px; line-height:1.6; }
+.kakao-btn { width:100%; padding:14px; border-radius:12px; border:none; background:#FEE500; color:#000; font-size:15px; font-weight:700; cursor:pointer; }
+
+/* 섹션 구분 */
+.section-label { font-size:12px; font-weight:700; padding:12px 0 4px; }
+
+/* 반응형 */
 @media (max-width:768px) {
-  .hub-main.split .hub-left { display:none; }
-  .hub-main.split .hub-right { flex:1; }
+  .main.split .hub-area { display:none; }
+  .main.split .panel-area { width:100%; position:relative; top:0; height:auto; }
 }
 </style>
 </head>
 <body>
 
 <!-- 헤더 -->
-<header class="hub-header">
-  <div class="hub-logo" onclick="goBackOrHome()">휙</div>
-  <div class="hub-header-actions" id="headerActions"></div>
+<header class="header">
+  <div class="logo" onclick="Hub.back()">휙</div>
 </header>
 
 <!-- 메인 -->
-<div class="hub-main" id="hubMain">
-  <div class="hub-left">
+<div class="main" id="main">
+  <div class="hub-area">
     <div class="hub-visual" id="hubVisual">
       <svg class="hub-lines" id="hubLines" viewBox="0 0 800 700" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"></svg>
-      <div class="hub-center" id="hubCenter" onclick="openPanel('settings')" style="cursor:pointer;">
+      <div class="hub-center" id="hubCenter" onclick="Hub.openPanel('settings')">
         <div class="hub-center-icon">👤</div>
         <div class="hub-center-name" id="centerName"></div>
         <div class="hub-center-sub" id="centerSub"></div>
       </div>
     </div>
   </div>
-  <div class="hub-right" id="hubRight"></div>
+  <div class="panel-area" id="panelArea"></div>
 </div>
 
-<!-- 로그인 모달 -->
-<div class="login-overlay" id="loginOverlay">
-  <div class="login-modal">
+<!-- 로그인 -->
+<div class="login-bg" id="loginBg">
+  <div class="login-box">
     <h2>휙</h2>
     <p>중개사 전용 허브<br>카카오 로그인으로 시작하세요</p>
-    <button class="kakao-btn" onclick="doLogin()">💬 카카오로 시작하기</button>
+    <button class="kakao-btn" onclick="Auth.login()">💬 카카오로 시작하기</button>
   </div>
 </div>
 
 <script>
-// ── 초기화 ──
-const SUPABASE_URL = HWIK_CONFIG.SUPABASE_URL;
-const SUPABASE_KEY = HWIK_CONFIG.SUPABASE_KEY;
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { clockSkewInSeconds: 300 } });
+/* ═══════════════════════════════════
+   모듈 구조:
+   - Auth: 인증
+   - Data: 데이터 캐시 & 로드
+   - Hub: 허브 렌더링 & 네비게이션
+   - Panel: 패널 빌더
+   - Pulse: 빛 애니메이션
+   ═══════════════════════════════════ */
 
-let currentUser = null;
-let userProfile = null;
-let _activePanel = null;
-let _pulseRaf = null;
-let _hubStack = []; // 허브 레벨 스택 [{type, data, nodes, center}]
-let _currentLevel = null;
+// ── Auth 모듈 ──
+const Auth = {
+  sb: supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_KEY, { auth:{ clockSkewInSeconds:300 } }),
+  user: null,
+  profile: null,
 
-// 데이터 캐시
-let _myCards = [];
-let _sharedCards = [];
-let _clientCards = [];
-let _memos = [];
-let _counts = { my:0, shared:0, client:0, alert:0, memo:0, send:'휙', settings:'', register:'+' };
-
-// ── 엔티티별 노드 정의 ──
-const CLIENT_NODES = [
-  { key:'cl_conditions', label:'희망 조건',  angle:-90 },
-  { key:'cl_match',      label:'매칭 매물',  angle:-30 },
-  { key:'cl_timeline',   label:'상담 기록',  angle:30 },
-  { key:'cl_schedule',   label:'일정/알림',  angle:90 },
-  { key:'cl_contact',    label:'연락처',    angle:150 },
-  { key:'cl_back',       label:'← 돌아가기', angle:210 },
-];
-
-const PROPERTY_NODES = [
-  { key:'pr_detail',   label:'상세 정보',  angle:-90 },
-  { key:'pr_clients',  label:'관심 손님',  angle:-30 },
-  { key:'pr_share',    label:'공유 이력',  angle:30 },
-  { key:'pr_status',   label:'거래 상태',  angle:90 },
-  { key:'pr_send',     label:'휙 보내기',  angle:150 },
-  { key:'pr_back',     label:'← 돌아가기', angle:210 },
-];
-
-// ── 노드 정의 ──
-const HUB_NODES = [
-  { key:'register', label:'매물 등록',  angle:-90 },
-  { key:'my',       label:'내 매물',   angle:-18 },
-  { key:'client',   label:'손님',     angle:54 },
-  { key:'alert',    label:'알림',     angle:126 },
-  { key:'shared',   label:'공유방',   angle:198 },
-];
-
-// ── 인증 ──
-async function checkAuth() {
-  const { data:{ session } } = await sb.auth.getSession();
-  if (session?.user) {
-    currentUser = session.user;
-    const { data } = await sb.from('profiles').select('business_name, agent_name, phone, is_admin').eq('id', currentUser.id).maybeSingle();
-    userProfile = data;
+  async check() {
+    const { data:{ session } } = await this.sb.auth.getSession();
+    if (!session?.user) return false;
+    this.user = session.user;
+    const { data } = await this.sb.from('profiles').select('business_name, agent_name, phone, is_admin').eq('id', this.user.id).maybeSingle();
+    this.profile = data;
     return true;
-  }
-  return false;
-}
+  },
 
-function doLogin() {
-  sb.auth.signInWithOAuth({ provider:'kakao', options:{ redirectTo: window.location.href.split('?')[0].split('#')[0] } });
-}
+  login() {
+    this.sb.auth.signInWithOAuth({ provider:'kakao', options:{ redirectTo: location.href.split('?')[0].split('#')[0] }});
+  },
 
-function logout() {
-  sb.auth.signOut();
-  currentUser = null;
-  userProfile = null;
-  location.reload();
-}
+  logout() {
+    this.sb.auth.signOut();
+    this.user = null; this.profile = null;
+    location.reload();
+  },
 
-sb.auth.onAuthStateChange((event, session) => {
-  if (event === 'SIGNED_IN' && session?.user) {
-    currentUser = session.user;
-    init();
-  }
-});
-
-// ── 초기 로드 ──
-async function init() {
-  if (!currentUser) {
-    document.getElementById('loginOverlay').classList.add('show');
-    return;
-  }
-  document.getElementById('loginOverlay').classList.remove('show');
-
-  // 프로필
-  if (!userProfile) {
-    const { data } = await sb.from('profiles').select('business_name, agent_name, phone, is_admin').eq('id', currentUser.id).maybeSingle();
-    userProfile = data;
-  }
-
-  // renderHub()에서 처리
-
-  // 카운트 병렬 로드
-  const [myRes, clientRes, sharedRes, alertRes, memoRes] = await Promise.all([
-    sb.from('cards').select('id', { count:'exact', head:true }).eq('agent_id', currentUser.id).neq('property->>type', '손님'),
-    sb.from('cards').select('id', { count:'exact', head:true }).eq('agent_id', currentUser.id).eq('property->>type', '손님'),
-    sb.from('card_shares').select('id', { count:'exact', head:true }),
-    sb.from('match_notifications').select('id', { count:'exact', head:true }).eq('agent_id', currentUser.id).eq('is_read', false),
-    sb.from('memos').select('id', { count:'exact', head:true }).eq('agent_id', currentUser.id).eq('is_read', false),
-  ]);
-  _counts = {
-    my: myRes.count || 0,
-    client: clientRes.count || 0,
-    shared: sharedRes.count || 0,
-    alert: alertRes.count || 0,
-    memo: memoRes.count || 0,
-    register: '+',
-    send: '휙',
-    settings: '',
-  };
-
-  renderHub();
-}
-
-// ── 허브 렌더링 ──
-function renderHub(nodes, centerInfo, counts) {
-  nodes = nodes || HUB_NODES;
-  counts = counts || _counts;
-  centerInfo = centerInfo || {
-    icon: '👤',
-    name: userProfile?.business_name || '중개사',
-    sub: ''
-  };
-
-  const visual = document.getElementById('hubVisual');
-  const center = document.getElementById('hubCenter');
-  const vw = 800, vh = 700;
-  const cx = vw/2, cy = vh/2, radius = 230;
-
-  // 중앙 노드 업데이트
-  center.innerHTML = `
-    <div class="hub-center-icon">${centerInfo.icon}</div>
-    <div class="hub-center-name" id="centerName">${esc(centerInfo.name)}</div>
-    <div class="hub-center-sub" id="centerSub">${esc(centerInfo.sub)}</div>
-  `;
-
-  let svgHtml = '';
-  let nodesHtml = '';
-
-  nodes.forEach((node, i) => {
-    const rad = (node.angle * Math.PI) / 180;
-    const nx = cx + radius * Math.cos(rad);
-    const ny = cy + radius * Math.sin(rad);
-    const count = counts[node.key];
-    // 카운트 표시 안 함
-
-    svgHtml += `<line class="hub-line" x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}" />`;
-    svgHtml += `<circle class="hub-pulse-t3" id="pt3-${node.key}" cx="${cx}" cy="${cy}" r="6" />`;
-    svgHtml += `<circle class="hub-pulse-t2" id="pt2-${node.key}" cx="${cx}" cy="${cy}" r="5" />`;
-    svgHtml += `<circle class="hub-pulse-t1" id="pt1-${node.key}" cx="${cx}" cy="${cy}" r="4" />`;
-    svgHtml += `<circle class="hub-pulse-head" id="ph-${node.key}" cx="${cx}" cy="${cy}" r="3.5" />`;
-
-    const leftPct = (nx / vw * 100).toFixed(1);
-    const topPct = (ny / vh * 100).toFixed(1);
-    nodesHtml += `
-      <div class="hub-node" data-key="${node.key}" style="left:${leftPct}%;top:${topPct}%;" onclick="onNodeClick('${node.key}')">
-        <div class="hub-node-inner">
-          <span class="hub-node-label">${node.label}</span>
-        </div>
-      </div>`;
-  });
-
-  document.getElementById('hubLines').innerHTML = svgHtml;
-  visual.querySelectorAll('.hub-node').forEach(el => el.remove());
-  visual.insertAdjacentHTML('beforeend', nodesHtml);
-
-  visual.querySelectorAll('.hub-node').forEach((el, i) => {
-    setTimeout(() => el.classList.add('appear'), 30 + i * 40);
-    el.addEventListener('mouseenter', () => pulseStart(el.dataset.key, nodes, radius));
-    el.addEventListener('mouseleave', () => pulseStop(el.dataset.key));
-  });
-}
-
-// ── 빛 애니메이션 ──
-function pulseStart(key, nodeList, radius) {
-  nodeList = nodeList || _currentLevel?.nodes || HUB_NODES;
-  radius = radius || 230;
-  const node = nodeList.find(n => n.key === key);
-  if (!node) return;
-  const vw=800, vh=700, fromX=vw/2, fromY=vh/2;
-  const rad = (node.angle * Math.PI) / 180;
-  const toX = fromX + radius * Math.cos(rad);
-  const toY = fromY + radius * Math.sin(rad);
-
-  const els = ['ph','pt1','pt2','pt3'].map(p => document.getElementById(`${p}-${key}`));
-  els.forEach(el => { if(el) el.classList.add('on'); });
-
-  const start = performance.now();
-  const dur = 500;
-  const delays = [0,40,90,150];
-
-  function animate(now) {
-    els.forEach((el,i) => {
-      if(!el) return;
-      const t = Math.max(0, Math.min((now-start-delays[i])/dur, 1));
-      const ease = t<0.5 ? 4*t*t*t : 1-Math.pow(-2*t+2,3)/2;
-      el.setAttribute('cx', fromX+(toX-fromX)*ease);
-      el.setAttribute('cy', fromY+(toY-fromY)*ease);
+  init() {
+    this.sb.auth.onAuthStateChange((ev, session) => {
+      if (ev === 'SIGNED_IN' && session?.user) { this.user = session.user; App.init(); }
     });
-    if ((now-start-delays[3])/dur < 1) {
-      _pulseRaf = requestAnimationFrame(animate);
-    } else {
-      els.forEach(el => { if(el) { el.setAttribute('cx',fromX); el.setAttribute('cy',fromY); }});
-      setTimeout(() => { if(document.querySelector(`.hub-node[data-key="${key}"]:hover`)) pulseStart(key); }, 200);
+  }
+};
+
+// ── Data 모듈 ──
+const Data = {
+  myCards: [], clientCards: [], sharedCards: [],
+  counts: {},
+
+  async loadCounts() {
+    const uid = Auth.user.id;
+    const sb = Auth.sb;
+    const [my, cl, sh, al, me] = await Promise.all([
+      sb.from('cards').select('id',{count:'exact',head:true}).eq('agent_id',uid).neq('property->>type','손님'),
+      sb.from('cards').select('id',{count:'exact',head:true}).eq('agent_id',uid).eq('property->>type','손님'),
+      sb.from('card_shares').select('id',{count:'exact',head:true}),
+      sb.from('match_notifications').select('id',{count:'exact',head:true}).eq('agent_id',uid).eq('is_read',false),
+      sb.from('memos').select('id',{count:'exact',head:true}).eq('agent_id',uid).eq('is_read',false),
+    ]);
+    this.counts = { my:my.count||0, client:cl.count||0, shared:sh.count||0, alert:al.count||0, memo:me.count||0 };
+  },
+
+  async loadMyCards() {
+    const { data } = await Auth.sb.from('cards')
+      .select('id,property,trade_status,price_number,created_at')
+      .eq('agent_id',Auth.user.id).neq('property->>type','손님')
+      .order('created_at',{ascending:false}).limit(50);
+    this.myCards = data || [];
+  },
+
+  async loadClientCards() {
+    const { data } = await Auth.sb.from('cards')
+      .select('id,property,private_note,contact_name,contact_phone,created_at')
+      .eq('agent_id',Auth.user.id).eq('property->>type','손님')
+      .order('created_at',{ascending:false}).limit(50);
+    this.clientCards = data || [];
+  },
+
+  async loadSharedCards() {
+    const { data } = await Auth.sb.from('card_shares')
+      .select('card_id,cards(id,property,trade_status,agent_id,created_at)')
+      .order('created_at',{ascending:false}).limit(30);
+    this.sharedCards = (data||[]).map(r=>r.cards).filter(Boolean).filter(c=>c.property?.type!=='손님');
+  },
+
+  async loadAlerts() {
+    const uid = Auth.user.id;
+    const sb = Auth.sb;
+    const [m,o,me] = await Promise.all([
+      sb.from('match_notifications').select('id,card_id,client_card_id,similarity,created_at,is_read').eq('agent_id',uid).order('created_at',{ascending:false}).limit(20),
+      sb.from('client_notes').select('id,client_card_id,content,alert_date,type').eq('agent_id',uid).eq('alert_done',false).not('alert_date','is',null).lt('alert_date',new Date().toISOString()).order('alert_date',{ascending:true}).limit(20),
+      sb.from('memos').select('id,content,is_read,created_at').eq('agent_id',uid).order('created_at',{ascending:false}).limit(20),
+    ]);
+    return { matches:m.data||[], overdue:o.data||[], memos:me.data||[] };
+  },
+
+  async loadClientDetail(cardId) {
+    const [notesRes, matchRes] = await Promise.all([
+      Auth.sb.from('client_notes').select('id,type,content,alert_date,alert_done,created_at').eq('client_card_id',cardId).order('created_at',{ascending:false}),
+      fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/match-properties`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+HWIK_CONFIG.SUPABASE_KEY,'apikey':HWIK_CONFIG.SUPABASE_KEY},
+        body:JSON.stringify({client_card_id:cardId,agent_id:Auth.user.id,limit:10,threshold:0.15})
+      }).then(r=>r.json()).catch(()=>({results:[]}))
+    ]);
+    return { notes:notesRes.data||[], matches:matchRes.results||[] };
+  }
+};
+
+// ── Hub 모듈 ──
+const Hub = {
+  VW:800, VH:700, RADIUS:230,
+  stack: [],
+  current: null,
+  activePanel: null,
+
+  MAIN_NODES: [
+    { key:'register', label:'매물 등록', angle:-90 },
+    { key:'my',       label:'내 매물',  angle:-18 },
+    { key:'client',   label:'손님',    angle:54 },
+    { key:'alert',    label:'알림',    angle:126 },
+    { key:'shared',   label:'공유방',  angle:198 },
+  ],
+  CLIENT_NODES: [
+    { key:'cl_conditions', label:'희망 조건',  angle:-90 },
+    { key:'cl_match',      label:'매칭 매물',  angle:-30 },
+    { key:'cl_timeline',   label:'상담 기록',  angle:30 },
+    { key:'cl_schedule',   label:'일정/알림',  angle:90 },
+    { key:'cl_contact',    label:'연락처',    angle:150 },
+    { key:'cl_back',       label:'← 돌아가기', angle:210 },
+  ],
+  PROPERTY_NODES: [
+    { key:'pr_detail', label:'상세 정보', angle:-90 },
+    { key:'pr_status', label:'거래 상태', angle:30 },
+    { key:'pr_back',   label:'← 돌아가기', angle:150 },
+  ],
+
+  render(nodes, center) {
+    nodes = nodes || this.MAIN_NODES;
+    center = center || { icon:'👤', name:Auth.profile?.business_name||'중개사', sub:'' };
+
+    const visual = document.getElementById('hubVisual');
+    const hubCenter = document.getElementById('hubCenter');
+    const {VW,VH,RADIUS} = this;
+    const cx=VW/2, cy=VH/2;
+
+    hubCenter.innerHTML = `<div class="hub-center-icon">${center.icon}</div><div class="hub-center-name">${esc(center.name)}</div><div class="hub-center-sub">${esc(center.sub)}</div>`;
+
+    let svg='', html='';
+    nodes.forEach(n => {
+      const rad=n.angle*Math.PI/180, nx=cx+RADIUS*Math.cos(rad), ny=cy+RADIUS*Math.sin(rad);
+      svg += `<line class="hub-line" x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}"/>`;
+      ['t3','t2','t1'].forEach((s,i)=> svg+=`<circle class="pulse-${s}" id="p${s}-${n.key}" cx="${cx}" cy="${cy}" r="${6-i}"/>`);
+      svg += `<circle class="pulse-head" id="ph-${n.key}" cx="${cx}" cy="${cy}" r="3.5"/>`;
+      html += `<div class="hub-node" data-key="${n.key}" style="left:${(nx/VW*100).toFixed(1)}%;top:${(ny/VH*100).toFixed(1)}%;" onclick="Hub.onNode('${n.key}')"><div class="hub-node-inner"><span class="hub-node-label">${n.label}</span></div></div>`;
+    });
+
+    document.getElementById('hubLines').innerHTML = svg;
+    visual.querySelectorAll('.hub-node').forEach(el=>el.remove());
+    visual.insertAdjacentHTML('beforeend', html);
+    visual.querySelectorAll('.hub-node').forEach((el,i) => {
+      setTimeout(()=>el.classList.add('appear'), 30+i*40);
+      el.addEventListener('mouseenter', ()=>Pulse.start(el.dataset.key, nodes));
+      el.addEventListener('mouseleave', ()=>Pulse.stop(el.dataset.key));
+    });
+  },
+
+  onNode(key) {
+    if (key==='cl_back'||key==='pr_back') { this.back(); return; }
+    if (key.startsWith('cl_')||key.startsWith('pr_')) { Panel.openSub(key); return; }
+    this.openPanel(key);
+  },
+
+  openPanel(key) {
+    if (this.activePanel===key) { this.closePanel(); return; }
+    document.querySelectorAll('.hub-node').forEach(n=>n.classList.remove('active'));
+    document.querySelector(`.hub-node[data-key="${key}"]`)?.classList.add('active');
+    this.activePanel = key;
+    document.getElementById('main').classList.add('split');
+    Panel.load(key, document.getElementById('panelArea'));
+  },
+
+  closePanel() {
+    document.getElementById('main').classList.remove('split');
+    document.getElementById('main').classList.remove('triple');
+    document.querySelectorAll('.hub-node').forEach(n=>n.classList.remove('active'));
+    this.activePanel = null;
+  },
+
+  enterClient(card) {
+    const p = card.property||{};
+    this.stack.push({ nodes:this.current?.nodes||this.MAIN_NODES, center:this.current?.center });
+    this.current = { type:'client', data:card, nodes:this.CLIENT_NODES,
+      center:{ icon:'🙋', name:card.contact_name||p.location||p.complex||'손님', sub:p.price||'' },
+      _notes:[], _matches:[] };
+    this.closePanel();
+    this.render(this.CLIENT_NODES, this.current.center);
+    Data.loadClientDetail(card.id).then(d => { this.current._notes=d.notes; this.current._matches=d.matches; });
+  },
+
+  enterProperty(card) {
+    const p = card.property||{};
+    this.stack.push({ nodes:this.current?.nodes||this.MAIN_NODES, center:this.current?.center });
+    this.current = { type:'property', data:card, nodes:this.PROPERTY_NODES,
+      center:{ icon:'🏠', name:p.complex||p.location||'매물', sub:[p.type,p.price].filter(Boolean).join(' · ') }};
+    this.closePanel();
+    this.render(this.PROPERTY_NODES, this.current.center);
+  },
+
+  back() {
+    if (!this.stack.length) { this.closePanel(); return; }
+    const prev = this.stack.pop();
+    this.current = this.stack.length ? null : null;
+    this.closePanel();
+    this.render(prev.nodes, prev.center);
+  }
+};
+
+// ── Panel 모듈 ──
+const Panel = {
+  h(title, count) {
+    return `<div class="panel-inner"><div class="panel-head"><div class="panel-title">${title}${count!=null?' <span>'+count+'</span>':''}</div><button class="panel-x" onclick="Hub.closePanel()">✕</button></div>`;
+  },
+
+  async load(key, el) {
+    switch(key) {
+      case 'register': this.register(el); break;
+      case 'my': await this.myCards(el); break;
+      case 'client': await this.clients(el); break;
+      case 'shared': await this.shared(el); break;
+      case 'alert': await this.alerts(el); break;
+      case 'settings': this.settings(el); break;
     }
-  }
-  _pulseRaf = requestAnimationFrame(animate);
-}
+  },
 
-function pulseStop(key) {
-  if(_pulseRaf) { cancelAnimationFrame(_pulseRaf); _pulseRaf=null; }
-  ['ph','pt1','pt2','pt3'].forEach(p => {
-    const el = document.getElementById(`${p}-${key}`);
-    if(el) el.classList.remove('on');
-  });
-}
+  register(el) {
+    el.innerHTML = this.h('매물 등록') + `
+      <div style="padding:0 24px;">
+        <textarea class="textarea" id="regInput" placeholder="매물 정보를 말하듯이 적어보세요\n\n예) 강남구 역삼동 래미안 아파트 34평 전세 5억\n남향 주차가능 학교근처"></textarea>
+        <button class="btn-primary" id="regBtn" onclick="Panel.doRegister()">AI로 카드 만들기</button>
+        <div id="regResult" style="margin-top:16px;"></div>
+      </div></div>`;
+  },
 
-// ── 노드 클릭 핸들러 ──
-function onNodeClick(key) {
-  // 돌아가기
-  if (key === 'cl_back' || key === 'pr_back') { goBack(); return; }
-
-  // 서브 허브 노드 → 패널 열기
-  if (key.startsWith('cl_') || key.startsWith('pr_')) {
-    openSubPanel(key);
-    return;
-  }
-
-  // 메인 허브 노드 → 패널 열기
-  openPanel(key);
-}
-
-function openPanel(key) {
-  console.log('[hub] openPanel:', key);
-  if (_activePanel === key) { closePanel(); return; }
-
-  document.querySelectorAll('.hub-node').forEach(n => n.classList.remove('active'));
-  document.querySelector(`.hub-node[data-key="${key}"]`)?.classList.add('active');
-  _activePanel = key;
-
-  const right = document.getElementById('hubRight');
-  document.getElementById('hubMain').classList.add('split');
-
-  switch(key) {
-    case 'register': loadRegisterPanel(right); break;
-    case 'my':       loadMyPanel(right); break;
-    case 'client':   loadClientPanel(right); break;
-    case 'shared':   loadSharedPanel(right); break;
-    case 'alert':    loadAlertPanel(right); break;
-    case 'settings': loadSettingsPanel(right); break;
-  }
-}
-
-function closePanel() {
-  document.getElementById('hubMain').classList.remove('split');
-  document.querySelectorAll('.hub-node').forEach(n => n.classList.remove('active'));
-  _activePanel = null;
-}
-
-// ── 서브 허브 전환 (손님 → 손님 허브, 매물 → 매물 허브) ──
-function enterClientHub(card) {
-  const p = card.property || {};
-  _hubStack.push({ nodes: _currentLevel?.nodes || HUB_NODES, center: _currentLevel?.center, counts: _currentLevel?.counts || _counts });
-
-  const counts = {};
-  _currentLevel = { type:'client', data: card, nodes: CLIENT_NODES, center: {
-    icon: '🙋',
-    name: card.contact_name || p.location || p.complex || '손님',
-    sub: p.price || ''
-  }, counts };
-
-  closePanel();
-  renderHub(CLIENT_NODES, _currentLevel.center, counts);
-
-  // 비동기로 카운트 로드
-  loadClientCounts(card.id);
-}
-
-async function loadClientCounts(cardId) {
-  const [notesRes, matchRes] = await Promise.all([
-    sb.from('client_notes').select('id, alert_date, alert_done', { count:'exact' }).eq('client_card_id', cardId),
-    fetch(`${SUPABASE_URL}/functions/v1/match-properties`, {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+SUPABASE_KEY, 'apikey':SUPABASE_KEY },
-      body: JSON.stringify({ client_card_id: cardId, agent_id: currentUser.id, limit:10, threshold:0.15 })
-    }).then(r => r.json()).catch(() => ({ results:[] }))
-  ]);
-
-  const notes = notesRes.data || [];
-  const matches = matchRes.results || [];
-  const card = _currentLevel.data;
-
-  const counts = {
-    cl_conditions: (card.property?.features || []).length || 0,
-    cl_match: matches.length,
-    cl_timeline: notes.length,
-    cl_schedule: notes.filter(n => n.alert_date && !n.alert_done).length,
-    cl_contact: (card.contact_phone ? 1 : 0),
-    cl_back: '',
-  };
-
-  _currentLevel.counts = counts;
-  _currentLevel._matches = matches;
-  _currentLevel._notes = notes;
-
-  // 노드 카운트 업데이트 (리렌더 없이)
-  Object.entries(counts).forEach(([k, v]) => {
-    const countEl = document.querySelector(`.hub-node[data-key="${k}"] .hub-node-count`);
-    if (countEl && v) {
-      countEl.textContent = v > 0 ? v : '-';
-      countEl.classList.toggle('empty', !v || v === 0);
+  async doRegister() {
+    const input=document.getElementById('regInput'), btn=document.getElementById('regBtn');
+    if (!input||!input.value.trim()) return;
+    btn.textContent='분석 중...'; btn.disabled=true;
+    try {
+      const res = await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/parse-property`,{
+        method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+HWIK_CONFIG.SUPABASE_KEY},
+        body:JSON.stringify({text:input.value.trim(),agent_id:Auth.user.id})
+      });
+      const d = await res.json();
+      document.getElementById('regResult').innerHTML = d.card_id
+        ? '<div style="padding:16px;border-radius:12px;background:#ecfdf5;border:1px solid #6ee7b7;color:#065f46;font-weight:600;">✅ 매물 카드가 생성되었습니다!</div>'
+        : `<div style="padding:16px;border-radius:12px;background:#fef2f2;border:1px solid #fca5a5;color:#991b1b;">${esc(d.error||'등록 실패')}</div>`;
+      if (d.card_id) input.value='';
+    } catch(e) {
+      document.getElementById('regResult').innerHTML = `<div style="padding:16px;border-radius:12px;background:#fef2f2;border:1px solid #fca5a5;color:#991b1b;">오류: ${esc(e.message)}</div>`;
     }
-  });
-}
+    btn.textContent='AI로 카드 만들기'; btn.disabled=false;
+  },
 
-function enterPropertyHub(card) {
-  const p = card.property || {};
-  _hubStack.push({ nodes: _currentLevel?.nodes || HUB_NODES, center: _currentLevel?.center, counts: _currentLevel?.counts || _counts });
+  async myCards(el) {
+    el.innerHTML = this.h('내 매물', Data.counts.my+'건') + `
+      <div class="search"><input type="text" id="myQ" placeholder="매물 검색..." oninput="Panel.renderMyCards()"></div>
+      <div class="filters" id="myF">
+        <button class="filter-btn active" onclick="Panel._myF='전체';Panel.renderMyCards();document.querySelectorAll('#myF .filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');">전체</button>
+        <button class="filter-btn" onclick="Panel._myF='매매';Panel.renderMyCards();document.querySelectorAll('#myF .filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');">매매</button>
+        <button class="filter-btn" onclick="Panel._myF='전세';Panel.renderMyCards();document.querySelectorAll('#myF .filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');">전세</button>
+        <button class="filter-btn" onclick="Panel._myF='월세';Panel.renderMyCards();document.querySelectorAll('#myF .filter-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');">월세</button>
+      </div>
+      <div id="myList"><div class="empty"><div class="empty-icon">⏳</div>불러오는 중...</div></div>
+    </div>`;
+    await Data.loadMyCards();
+    this._myF = '전체';
+    this.renderMyCards();
+  },
 
-  _currentLevel = { type:'property', data: card, nodes: PROPERTY_NODES, center: {
-    icon: '🏠',
-    name: p.complex || p.location || '매물',
-    sub: [p.type, p.price].filter(Boolean).join(' · ')
-  }, counts: {} };
+  _myF: '전체',
+  renderMyCards() {
+    const q=(document.getElementById('myQ')?.value||'').toLowerCase();
+    let items=Data.myCards;
+    if (this._myF!=='전체') items=items.filter(c=>c.property?.type===this._myF);
+    if (q) items=items.filter(c=>[c.property?.complex,c.property?.location,c.property?.price,c.property?.type].filter(Boolean).join(' ').toLowerCase().includes(q));
+    if (!items.length) { document.getElementById('myList').innerHTML='<div class="empty"><div class="empty-icon">🏠</div>매물이 없어요</div>'; return; }
+    document.getElementById('myList').innerHTML = items.map(c=>{
+      const p=c.property||{}, tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent', st=c.trade_status||'계약가능';
+      return `<div class="item" onclick='Hub.enterProperty(${JSON.stringify(c).replace(/'/g,"&#39;")})'><span class="item-type ${tc}">${esc(p.type||'')}</span><div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div><span style="color:${st==='완료'?'#ef4444':st==='계약중'?'#f59e0b':'#22c55e'};font-size:11px;font-weight:700;">${st}</span></div>`;
+    }).join('');
+  },
 
-  closePanel();
-  renderHub(PROPERTY_NODES, _currentLevel.center, {});
-}
+  async clients(el) {
+    el.innerHTML = this.h('손님', Data.counts.client+'명') + `
+      <div class="search"><input type="text" id="clQ" placeholder="손님 검색 (이름, 전화번호, 조건...)" oninput="Panel.renderClients()"></div>
+      <div id="clList"><div class="empty"><div class="empty-icon">⏳</div>불러오는 중...</div></div>
+    </div>`;
+    await Data.loadClientCards();
+    this.renderClients();
+  },
 
-function goBack() {
-  if (!_hubStack.length) return;
-  const prev = _hubStack.pop();
-  _currentLevel = prev.nodes === HUB_NODES ? null : { nodes: prev.nodes, center: prev.center, counts: prev.counts };
-  closePanel();
-  renderHub(prev.nodes || HUB_NODES, prev.center, prev.counts || _counts);
-}
+  renderClients() {
+    const q=(document.getElementById('clQ')?.value||'').toLowerCase();
+    let items=Data.clientCards;
+    if (q) items=items.filter(c=>[c.property?.rawText,c.property?.complex,c.property?.location,c.property?.price,c.contact_name,c.contact_phone,c.private_note?.memo].filter(Boolean).join(' ').toLowerCase().includes(q));
+    if (!items.length) { document.getElementById('clList').innerHTML='<div class="empty"><div class="empty-icon">🙋</div>손님이 없어요</div>'; return; }
+    document.getElementById('clList').innerHTML = items.map(c=>{
+      const p=c.property||{}, name=c.contact_name||p.location||p.complex||'손님';
+      return `<div class="item" onclick='Hub.enterClient(${JSON.stringify(c).replace(/'/g,"&#39;")})'><span class="item-type client">손님</span><div class="item-body"><div class="item-name">${esc(name)}</div><div class="item-sub">${[p.price,p.location,p.complex].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div>${c.contact_phone?`<span style="font-size:11px;color:#fb923c;">${esc(c.contact_phone)}</span>`:''}</div>`;
+    }).join('');
+  },
 
-// ── 서브 패널 (손님/매물 허브의 노드 클릭) ──
-function openSubPanel(key) {
-  if (_activePanel === key) { closePanel(); return; }
-  document.querySelectorAll('.hub-node').forEach(n => n.classList.remove('active'));
-  document.querySelector(`.hub-node[data-key="${key}"]`)?.classList.add('active');
-  _activePanel = key;
+  async shared(el) {
+    el.innerHTML = this.h('공유방', Data.counts.shared+'건') + `<div id="shList"><div class="empty"><div class="empty-icon">⏳</div>불러오는 중...</div></div></div>`;
+    await Data.loadSharedCards();
+    if (!Data.sharedCards.length) { document.getElementById('shList').innerHTML='<div class="empty"><div class="empty-icon">🤝</div>공유 매물이 없어요</div>'; return; }
+    document.getElementById('shList').innerHTML = Data.sharedCards.map(c=>{
+      const p=c.property||{}, tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';
+      return `<div class="item"><span class="item-type ${tc}">${esc(p.type||'')}</span><div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;
+    }).join('');
+  },
 
-  const right = document.getElementById('hubRight');
-  document.getElementById('hubMain').classList.add('split');
-  const card = _currentLevel?.data;
-  if (!card) return;
+  async alerts(el) {
+    el.innerHTML = this.h('알림') + `<div id="alList"><div class="empty"><div class="empty-icon">⏳</div>불러오는 중...</div></div></div>`;
+    const {matches,overdue,memos} = await Data.loadAlerts();
+    if (!matches.length&&!overdue.length&&!memos.length) { document.getElementById('alList').innerHTML='<div class="empty"><div class="empty-icon">🔔</div>새 알림이 없어요</div>'; return; }
+    let h='';
+    if (overdue.length) { h+=`<div class="section-label" style="color:#ef4444;">지연된 일정 (${overdue.length})</div>`; overdue.forEach(a=>h+=`<div class="alert"><div class="alert-dot" style="background:#ef4444;"></div><div><div style="font-size:13px;font-weight:600;">${esc(a.content||a.type||'일정')}</div><div style="font-size:11px;color:var(--text-light);">${new Date(a.alert_date).toLocaleDateString('ko-KR')} (지연)</div></div></div>`); }
+    if (matches.length) { h+=`<div class="section-label" style="color:var(--primary);">매칭 알림 (${matches.length})</div>`; matches.forEach(m=>h+=`<div class="alert"><div class="alert-dot" style="background:${m.is_read?'#94a3b8':'#6366f1'};"></div><div><div style="font-size:13px;font-weight:600;">🏠 매칭 매물 발견</div><div style="font-size:11px;color:var(--text-light);">${new Date(m.created_at).toLocaleDateString('ko-KR')}</div></div></div>`); }
+    if (memos.length) { h+=`<div class="section-label" style="color:#f59e0b;">모바일 메모 (${memos.length})</div>`; memos.forEach(m=>h+=`<div class="alert" style="${m.is_read?'opacity:0.5;':''}"><div class="alert-dot" style="background:${m.is_read?'#94a3b8':'#f59e0b'};"></div><div><div style="font-size:13px;font-weight:600;">${esc(m.content||'메모')}</div><div style="font-size:11px;color:var(--text-light);">${new Date(m.created_at).toLocaleDateString('ko-KR')}</div></div></div>`); }
+    document.getElementById('alList').innerHTML = h;
+  },
 
-  const p = card.property || {};
-  const pn = card.private_note || {};
+  settings(el) {
+    const pr=Auth.profile||{};
+    el.innerHTML = this.h('내 정보') + `
+      <div style="text-align:center;padding:20px 0;">
+        <div style="width:80px;height:80px;border-radius:24px;background:var(--primary-bg);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:36px;">👤</div>
+        <div style="font-size:18px;font-weight:800;">${esc(pr.business_name||'사무소명')}</div>
+        <div style="font-size:14px;color:var(--text-sub);margin-top:4px;">${esc(pr.agent_name||'이름')}</div>
+        <div style="font-size:13px;color:var(--text-light);margin-top:2px;">${esc(pr.phone||'')}</div>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:20px;">
+        <div class="item" onclick="window.open('my_cards.html','_blank')"><div style="font-size:18px;">📋</div><div class="item-body"><div class="item-name">기존 매물 관리</div><div class="item-sub">상세 편집, 사진 관리, 상태 변경</div></div><span style="color:var(--text-light);">→</span></div>
+        <div class="item" onclick="window.open('card_generator_v2_auth.html','_blank')"><div style="font-size:18px;">✨</div><div class="item-body"><div class="item-name">고급 매물 등록</div><div class="item-sub">파일 대량 등록, 스타일 선택</div></div><span style="color:var(--text-light);">→</span></div>
+        <div class="item" onclick="Auth.logout()"><div style="font-size:18px;">🚪</div><div class="item-body"><div class="item-name" style="color:#ef4444;">로그아웃</div></div></div>
+      </div></div>`;
+  },
 
-  switch(key) {
-    case 'cl_conditions':
-      const features = p.features || [];
-      let condHtml = `<div class="panel-inner"><div class="panel-header"><div class="panel-title">희망 조건</div><button class="panel-close" onclick="closePanel()">✕</button></div>`;
-      [p.price && ['예산', p.price], p.location && ['지역', p.location], p.complex && ['단지', p.complex], p.area && ['면적', p.area]].filter(Boolean).forEach(([label, val]) => {
-        condHtml += `<div style="padding:12px 0;border-bottom:1px solid rgba(0,0,0,0.04);"><div style="font-size:15px;font-weight:700;color:var(--text);">${esc(val)}</div><div style="font-size:12px;color:var(--text-light);">${label}</div></div>`;
-      });
-      if (features.length) condHtml += `<div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;">${features.map(f => `<span style="padding:5px 14px;border-radius:20px;background:rgba(99,102,241,0.06);color:var(--primary);font-size:12px;font-weight:600;border:1px solid rgba(99,102,241,0.1);">${esc(f)}</span>`).join('')}</div>`;
-      if (pn.memo) condHtml += `<div style="margin-top:14px;padding:14px;border-radius:12px;background:rgba(99,102,241,0.04);font-size:13px;color:var(--text-sub);line-height:1.7;">${esc(pn.memo)}</div>`;
-      condHtml += `</div>`;
-      right.innerHTML = condHtml;
-      break;
+  // 서브 패널 (손님/매물 허브)
+  openSub(key) {
+    if (Hub.activePanel===key) { Hub.closePanel(); return; }
+    document.querySelectorAll('.hub-node').forEach(n=>n.classList.remove('active'));
+    document.querySelector(`.hub-node[data-key="${key}"]`)?.classList.add('active');
+    Hub.activePanel = key;
+    document.getElementById('main').classList.add('split');
+    const el=document.getElementById('panelArea');
+    const card=Hub.current?.data; if(!card) return;
+    const p=card.property||{}, pn=card.private_note||{};
 
-    case 'cl_match':
-      const matches = _currentLevel._matches || [];
-      let matchHtml = `<div class="panel-inner"><div class="panel-header"><div class="panel-title">매칭 매물 <span>${matches.length}건</span></div><button class="panel-close" onclick="closePanel()">✕</button></div>`;
-      if (!matches.length) { matchHtml += '<div class="p-empty"><div class="p-empty-icon">🏠</div>매칭되는 매물이 없어요</div>'; }
-      else { matches.forEach(m => {
-        const mp = m.property || {};
-        const tc = mp.type === '매매' ? 'sale' : mp.type === '전세' ? 'jeonse' : 'rent';
-        const score = m.similarity ? Math.round(m.similarity*100) : 0;
-        matchHtml += `<div class="p-item" onclick="enterPropertyHub(${JSON.stringify(m).replace(/"/g,'&quot;')})">
-          <span class="p-type ${tc}">${esc(mp.type||'')}</span>
-          <div class="p-info"><div class="p-name">${esc(mp.complex||mp.location||'매물')}</div>
-          <div class="p-detail">${[mp.price,mp.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div>
-          ${score ? `<span class="p-badge" style="background:rgba(99,102,241,0.08);color:var(--primary);">${score}%</span>` : ''}
-        </div>`;
-      }); }
-      matchHtml += `</div>`;
-      right.innerHTML = matchHtml;
-      break;
-
-    case 'cl_timeline':
-      const notes = _currentLevel._notes || [];
-      let tlHtml = `<div class="panel-inner"><div class="panel-header"><div class="panel-title">상담 기록 <span>${notes.length}건</span></div><button class="panel-close" onclick="closePanel()">✕</button></div>`;
-      tlHtml += `<div class="note-input"><input type="text" id="subNoteInput" placeholder="메모 입력..." onkeydown="if(event.key==='Enter')saveSubNote('${card.id}')"><button onclick="saveSubNote('${card.id}')">저장</button></div>`;
-      if (!notes.length) tlHtml += '<div class="p-empty">아직 상담 기록이 없어요</div>';
-      else notes.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).forEach(n => {
-        const type = n.type || '메모';
-        tlHtml += `<div class="tl-item"><span class="tl-badge ${type}">${type}</span><div><div class="tl-content">${esc(n.content||'')}</div><div class="tl-date">${new Date(n.created_at).toLocaleDateString('ko-KR')}</div></div></div>`;
-      });
-      tlHtml += `</div>`;
-      right.innerHTML = tlHtml;
-      break;
-
-    case 'cl_schedule':
-      const schNotes = (_currentLevel._notes || []).filter(n => n.alert_date && !n.alert_done);
-      let schHtml = `<div class="panel-inner"><div class="panel-header"><div class="panel-title">일정/알림 <span>${schNotes.length}건</span></div><button class="panel-close" onclick="closePanel()">✕</button></div>`;
-      if (!schNotes.length) schHtml += '<div class="p-empty"><div class="p-empty-icon">📅</div>예정된 일정이 없어요</div>';
-      else schNotes.forEach(n => {
-        const isPast = new Date(n.alert_date) < new Date();
-        schHtml += `<div class="alert-item"><div class="alert-dot" style="background:${isPast?'#ef4444':'var(--primary)'}"></div><div class="alert-info"><div class="alert-title" style="${isPast?'color:#ef4444;':''}">${esc(n.content||'일정')}</div><div class="alert-sub">${new Date(n.alert_date).toLocaleDateString('ko-KR')} ${isPast?'(지연)':''}</div></div></div>`;
-      });
-      schHtml += `</div>`;
-      right.innerHTML = schHtml;
-      break;
-
-    case 'cl_contact':
-      let ctHtml = `<div class="panel-inner"><div class="panel-header"><div class="panel-title">연락처</div><button class="panel-close" onclick="closePanel()">✕</button></div>`;
-      if (card.contact_name || card.contact_phone) {
-        ctHtml += `<div style="padding:20px;text-align:center;">
-          <div style="font-size:18px;font-weight:700;">${esc(card.contact_name||'손님')}</div>
-          ${card.contact_phone ? `<div style="margin-top:8px;"><button onclick="navigator.clipboard.writeText('${esc(card.contact_phone)}')" style="padding:10px 24px;border-radius:10px;border:1px solid var(--primary);background:var(--primary-bg);color:var(--primary);font-size:14px;font-weight:600;cursor:pointer;">${esc(card.contact_phone)} 📋</button></div>` : ''}
-        </div>`;
-      } else {
-        const memo = pn.memo || '';
-        const ph = memo.match(/01[016789][-.\s]?\d{3,4}[-.\s]?\d{4}/);
-        if (ph) ctHtml += `<div style="padding:20px;text-align:center;"><button onclick="navigator.clipboard.writeText('${esc(ph[0])}')" style="padding:10px 24px;border-radius:10px;border:1px solid var(--primary);background:var(--primary-bg);color:var(--primary);font-size:14px;font-weight:600;cursor:pointer;">${esc(ph[0])} 📋</button></div>`;
-        else ctHtml += '<div class="p-empty">등록된 연락처가 없어요</div>';
-      }
-      ctHtml += `</div>`;
-      right.innerHTML = ctHtml;
-      break;
-
-    case 'pr_detail':
-      const pp = card.property || {};
-      let dtHtml = `<div class="panel-inner"><div class="panel-header"><div class="panel-title">상세 정보</div><button class="panel-close" onclick="closePanel()">✕</button></div>`;
-      [pp.type&&['거래유형',pp.type], pp.price&&['가격',pp.price], pp.complex&&['단지',pp.complex], pp.location&&['위치',pp.location], pp.area&&['면적',pp.area], pp.floor&&['층',pp.floor], pp.room&&['방',pp.room]].filter(Boolean).forEach(([l,v]) => {
-        dtHtml += `<div style="padding:12px 0;border-bottom:1px solid rgba(0,0,0,0.04);"><div style="font-size:15px;font-weight:700;">${esc(v)}</div><div style="font-size:12px;color:var(--text-light);">${l}</div></div>`;
-      });
-      if ((pp.features||[]).length) dtHtml += `<div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;">${pp.features.map(f=>`<span style="padding:5px 14px;border-radius:20px;background:rgba(99,102,241,0.06);color:var(--primary);font-size:12px;font-weight:600;">${esc(f)}</span>`).join('')}</div>`;
-      dtHtml += `</div>`;
-      right.innerHTML = dtHtml;
-      break;
-
-    case 'pr_status':
-      const st = card.trade_status || '계약가능';
-      right.innerHTML = `<div class="panel-inner"><div class="panel-header"><div class="panel-title">거래 상태</div><button class="panel-close" onclick="closePanel()">✕</button></div>
-        <div style="text-align:center;padding:40px 0;">
-          <div style="font-size:48px;margin-bottom:12px;">${st==='완료'?'✅':st==='계약중'?'📝':'🏠'}</div>
-          <div style="font-size:24px;font-weight:800;color:${st==='완료'?'#22c55e':st==='계약중'?'#f59e0b':'var(--primary)'};">${st}</div>
-        </div></div>`;
-      break;
-
-    default:
-      right.innerHTML = `<div class="panel-inner"><div class="panel-header"><div class="panel-title">${key}</div><button class="panel-close" onclick="closePanel()">✕</button></div><div class="p-empty">준비 중입니다</div></div>`;
-  }
-}
-
-async function saveSubNote(cardId) {
-  const input = document.getElementById('subNoteInput');
-  if (!input || !input.value.trim()) return;
-  await sb.from('client_notes').insert({ client_card_id:cardId, agent_id:currentUser.id, type:'메모', content:input.value.trim(), alert_done:false });
-  input.value = '';
-  await loadClientCounts(cardId);
-  onNodeClick('cl_timeline');
-}
-
-// ── 패널: 매물 등록 ──
-function loadRegisterPanel(el) {
-  el.innerHTML = `<div class="panel-inner">
-    <div class="panel-header">
-      <div class="panel-title">매물 등록</div>
-      <button class="panel-close" onclick="closePanel()">✕</button>
-    </div>
-    <div class="register-area">
-      <textarea class="register-input" id="registerInput" placeholder="매물 정보를 말하듯이 적어보세요&#10;&#10;예) 강남구 역삼동 래미안 아파트 34평 전세 5억&#10;남향 주차가능 학교근처"></textarea>
-      <button class="register-btn" onclick="doRegister()">AI로 카드 만들기</button>
-      <div id="registerResult" style="margin-top:16px;"></div>
-    </div>
-  </div>`;
-}
-
-async function doRegister() {
-  const input = document.getElementById('registerInput');
-  if (!input || !input.value.trim()) return;
-  const text = input.value.trim();
-  const btn = document.querySelector('.register-btn');
-  btn.textContent = '분석 중...'; btn.disabled = true;
-
-  try {
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/parse-property`, {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+SUPABASE_KEY },
-      body: JSON.stringify({ text, agent_id: currentUser.id })
-    });
-    const data = await res.json();
-    if (data.card_id) {
-      document.getElementById('registerResult').innerHTML = `<div style="padding:16px;border-radius:12px;background:#ecfdf5;border:1px solid #6ee7b7;color:#065f46;font-weight:600;">✅ 매물 카드가 생성되었습니다!</div>`;
-      input.value = '';
-      _counts.my++;
-      renderHub();
-    } else {
-      document.getElementById('registerResult').innerHTML = `<div style="padding:16px;border-radius:12px;background:#fef2f2;border:1px solid #fca5a5;color:#991b1b;">${esc(data.error || '등록 실패')}</div>`;
+    if (key==='cl_conditions') {
+      let h=this.h('희망 조건');
+      [p.price&&['예산',p.price],p.location&&['지역',p.location],p.complex&&['단지',p.complex],p.area&&['면적',p.area]].filter(Boolean).forEach(([l,v])=>h+=`<div style="padding:12px 0;border-bottom:1px solid rgba(0,0,0,0.04);"><div style="font-size:15px;font-weight:700;">${esc(v)}</div><div style="font-size:12px;color:var(--text-light);">${l}</div></div>`);
+      if ((p.features||[]).length) h+=`<div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;">${p.features.map(f=>`<span style="padding:5px 14px;border-radius:20px;background:var(--primary-bg);color:var(--primary);font-size:12px;font-weight:600;">${esc(f)}</span>`).join('')}</div>`;
+      if (pn.memo) h+=`<div style="margin-top:14px;padding:14px;border-radius:12px;background:var(--primary-bg);font-size:13px;color:var(--text-sub);line-height:1.7;">${esc(pn.memo)}</div>`;
+      el.innerHTML = h+'</div>';
     }
-  } catch(e) {
-    document.getElementById('registerResult').innerHTML = `<div style="padding:16px;border-radius:12px;background:#fef2f2;border:1px solid #fca5a5;color:#991b1b;">오류: ${esc(e.message)}</div>`;
-  }
-  btn.textContent = 'AI로 카드 만들기'; btn.disabled = false;
-}
-
-// ── 패널: 내 매물 ──
-async function loadMyPanel(el) {
-  console.log('[hub] loadMyPanel 시작, currentUser:', currentUser?.id);
-  el.innerHTML = `<div class="panel-inner">
-    <div class="panel-header">
-      <div class="panel-title">내 매물 <span>${_counts.my}건</span></div>
-      <button class="panel-close" onclick="closePanel()">✕</button>
-    </div>
-    <div class="panel-search"><input type="text" id="mySearch" placeholder="매물 검색..." oninput="filterMyList()"></div>
-    <div class="panel-filters" id="myFilters">
-      <button class="p-filter active" onclick="setMyFilter('전체',this)">전체</button>
-      <button class="p-filter" onclick="setMyFilter('매매',this)">매매</button>
-      <button class="p-filter" onclick="setMyFilter('전세',this)">전세</button>
-      <button class="p-filter" onclick="setMyFilter('월세',this)">월세</button>
-    </div>
-    <div id="myList"><div class="p-empty"><div class="p-empty-icon">⏳</div>불러오는 중...</div></div>
-  </div>`;
-
-  const { data } = await sb.from('cards')
-    .select('id, property, trade_status, price_number, created_at')
-    .eq('agent_id', currentUser.id)
-    .neq('property->>type', '손님')
-    .order('created_at', { ascending:false })
-    .limit(50);
-  console.log('[hub] loadMyPanel 데이터:', data?.length, '건');
-  _myCards = data || [];
-  const listEl = document.getElementById('myList');
-  console.log('[hub] myList 엘리먼트:', listEl ? '있음' : '없음');
-  renderMyList();
-}
-
-let _myFilter = '전체';
-function setMyFilter(f, btn) {
-  _myFilter = f;
-  document.querySelectorAll('#myFilters .p-filter').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  renderMyList();
-}
-
-function filterMyList() { renderMyList(); }
-
-function renderMyList() {
-  const q = (document.getElementById('mySearch')?.value || '').toLowerCase();
-  let items = _myCards;
-  if (_myFilter !== '전체') items = items.filter(c => c.property?.type === _myFilter);
-  if (q) items = items.filter(c => {
-    const p = c.property || {};
-    return [p.complex, p.location, p.price, p.type].filter(Boolean).join(' ').toLowerCase().includes(q);
-  });
-
-  if (!items.length) {
-    document.getElementById('myList').innerHTML = '<div class="p-empty"><div class="p-empty-icon">🏠</div>매물이 없어요</div>';
-    return;
-  }
-
-  document.getElementById('myList').innerHTML = items.map(c => {
-    const p = c.property || {};
-    const typeClass = p.type === '매매' ? 'sale' : p.type === '전세' ? 'jeonse' : 'rent';
-    const status = c.trade_status || '계약가능';
-    return `<div class="p-item" onclick='enterPropertyHub(${JSON.stringify(c).replace(/'/g,"&#39;")})'>
-      <span class="p-type ${typeClass}">${esc(p.type||'')}</span>
-      <div class="p-info">
-        <div class="p-name">${esc(p.complex || p.location || '매물')}</div>
-        <div class="p-detail">${[p.price, p.area, p.floor].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
-      </div>
-      <span class="p-badge" style="color:${status==='완료'?'#ef4444':status==='계약중'?'#f59e0b':'#22c55e'};font-size:11px;">${status}</span>
-    </div>`;
-  }).join('');
-}
-
-// ── 패널: 손님 ──
-async function loadClientPanel(el) {
-  el.innerHTML = `<div class="panel-inner">
-    <div class="panel-header">
-      <div class="panel-title">손님 <span>${_counts.client}명</span></div>
-      <button class="panel-close" onclick="closePanel()">✕</button>
-    </div>
-    <div class="panel-search"><input type="text" id="clientSearch" placeholder="손님 검색 (이름, 전화번호, 조건...)" oninput="renderClientList()"></div>
-    <div id="clientList"><div class="p-empty"><div class="p-empty-icon">⏳</div>불러오는 중...</div></div>
-  </div>`;
-
-  const { data } = await sb.from('cards')
-    .select('id, property, private_note, contact_name, contact_phone, created_at')
-    .eq('agent_id', currentUser.id)
-    .eq('property->>type', '손님')
-    .order('created_at', { ascending:false })
-    .limit(50);
-  _clientCards = data || [];
-  renderClientList();
-}
-
-function renderClientList() {
-  const q = (document.getElementById('clientSearch')?.value || '').toLowerCase();
-  let items = _clientCards;
-  if (q) items = items.filter(c => {
-    const p = c.property || {};
-    return [p.rawText, p.complex, p.location, p.price, c.contact_name, c.contact_phone, c.private_note?.memo].filter(Boolean).join(' ').toLowerCase().includes(q);
-  });
-
-  if (!items.length) {
-    document.getElementById('clientList').innerHTML = '<div class="p-empty"><div class="p-empty-icon">🙋</div>손님이 없어요</div>';
-    return;
-  }
-
-  document.getElementById('clientList').innerHTML = items.map(c => {
-    const p = c.property || {};
-    const name = c.contact_name || p.location || p.complex || '손님';
-    return `<div class="p-item" onclick='enterClientHub(${JSON.stringify(c).replace(/'/g,"&#39;")})'>
-      <span class="p-type client">손님</span>
-      <div class="p-info">
-        <div class="p-name">${esc(name)}</div>
-        <div class="p-detail">${[p.price, p.location, p.complex].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
-      </div>
-      ${c.contact_phone ? `<span style="font-size:11px;color:#fb923c;">${esc(c.contact_phone)}</span>` : ''}
-    </div>`;
-  }).join('');
-}
-
-// ── 패널: 공유 매물 ──
-async function loadSharedPanel(el) {
-  el.innerHTML = `<div class="panel-inner">
-    <div class="panel-header">
-      <div class="panel-title">공유 매물 <span>${_counts.shared}건</span></div>
-      <button class="panel-close" onclick="closePanel()">✕</button>
-    </div>
-    <div id="sharedList"><div class="p-empty"><div class="p-empty-icon">⏳</div>불러오는 중...</div></div>
-  </div>`;
-
-  const { data } = await sb.from('card_shares')
-    .select('card_id, cards(id, property, trade_status, agent_id, created_at)')
-    .order('created_at', { ascending:false })
-    .limit(30);
-
-  const cards = (data || []).map(rc => rc.cards).filter(Boolean).filter(c => c.property?.type !== '손님');
-  _sharedCards = cards;
-
-  if (!cards.length) {
-    document.getElementById('sharedList').innerHTML = '<div class="p-empty"><div class="p-empty-icon">🤝</div>공유 매물이 없어요</div>';
-    return;
-  }
-
-  document.getElementById('sharedList').innerHTML = cards.map(c => {
-    const p = c.property || {};
-    const typeClass = p.type === '매매' ? 'sale' : p.type === '전세' ? 'jeonse' : 'rent';
-    return `<div class="p-item">
-      <span class="p-type ${typeClass}">${esc(p.type||'')}</span>
-      <div class="p-info">
-        <div class="p-name">${esc(p.complex || p.location || '매물')}</div>
-        <div class="p-detail">${[p.price, p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ── 패널: 알림 ──
-async function loadAlertPanel(el) {
-  el.innerHTML = `<div class="panel-inner">
-    <div class="panel-header">
-      <div class="panel-title">알림 <span>${_counts.alert}건</span></div>
-      <button class="panel-close" onclick="closePanel()">✕</button>
-    </div>
-    <div id="alertList"><div class="p-empty"><div class="p-empty-icon">⏳</div>불러오는 중...</div></div>
-  </div>`;
-
-  const [matchRes, overdueRes, memoRes] = await Promise.all([
-    sb.from('match_notifications').select('id, card_id, client_card_id, similarity, created_at, is_read')
-      .eq('agent_id', currentUser.id).order('created_at', { ascending:false }).limit(20),
-    sb.from('client_notes').select('id, client_card_id, content, alert_date, type')
-      .eq('agent_id', currentUser.id).eq('alert_done', false).not('alert_date','is',null).lt('alert_date', new Date().toISOString())
-      .order('alert_date', { ascending:true }).limit(20),
-    sb.from('memos').select('id, content, is_read, created_at')
-      .eq('agent_id', currentUser.id).order('created_at', { ascending:false }).limit(20),
-  ]);
-
-  const matches = matchRes.data || [];
-  const overdue = overdueRes.data || [];
-  const memos = memoRes.data || [];
-
-  if (!matches.length && !overdue.length && !memos.length) {
-    document.getElementById('alertList').innerHTML = '<div class="p-empty"><div class="p-empty-icon">🔔</div>새 알림이 없어요</div>';
-    return;
-  }
-
-  let html = '';
-
-  if (overdue.length) {
-    html += `<div style="font-size:12px;font-weight:700;color:#ef4444;padding:8px 0 4px;">지연된 일정 (${overdue.length})</div>`;
-    overdue.forEach(a => {
-      html += `<div class="alert-item">
-        <div class="alert-dot" style="background:#ef4444;"></div>
-        <div class="alert-info">
-          <div class="alert-title">${esc(a.content || a.type || '일정')}</div>
-          <div class="alert-sub">${new Date(a.alert_date).toLocaleDateString('ko-KR')} (지연)</div>
-        </div>
-      </div>`;
-    });
-  }
-
-  if (matches.length) {
-    html += `<div style="font-size:12px;font-weight:700;color:var(--primary);padding:12px 0 4px;">매칭 알림 (${matches.length})</div>`;
-    matches.forEach(m => {
-      html += `<div class="alert-item">
-        <div class="alert-dot" style="background:${m.is_read ? '#94a3b8' : '#6366f1'};"></div>
-        <div class="alert-info">
-          <div class="alert-title">🏠 매칭 매물 발견</div>
-          <div class="alert-sub">${new Date(m.created_at).toLocaleDateString('ko-KR')}</div>
-        </div>
-      </div>`;
-    });
-  }
-
-  if (memos.length) {
-    html += `<div style="font-size:12px;font-weight:700;color:#f59e0b;padding:12px 0 4px;">모바일 메모 (${memos.length})</div>`;
-    memos.forEach(m => {
-      html += `<div class="alert-item" style="${m.is_read ? 'opacity:0.5;' : ''}">
-        <div class="alert-dot" style="background:${m.is_read ? '#94a3b8' : '#f59e0b'};"></div>
-        <div class="alert-info">
-          <div class="alert-title">${esc(m.content || '메모')}</div>
-          <div class="alert-sub">${new Date(m.created_at).toLocaleDateString('ko-KR')}</div>
-        </div>
-      </div>`;
-    });
-  }
-
-  document.getElementById('alertList').innerHTML = html;
-}
-
-// ── 패널: 메모 ──
-async function loadMemoPanel(el) {
-  el.innerHTML = `<div class="panel-inner">
-    <div class="panel-header">
-      <div class="panel-title">메모</div>
-      <button class="panel-close" onclick="closePanel()">✕</button>
-    </div>
-    <div id="memoList"><div class="p-empty"><div class="p-empty-icon">⏳</div>불러오는 중...</div></div>
-  </div>`;
-
-  const { data } = await sb.from('memos')
-    .select('id, content, is_read, created_at')
-    .eq('agent_id', currentUser.id)
-    .order('created_at', { ascending:false })
-    .limit(30);
-
-  const memos = data || [];
-  if (!memos.length) {
-    document.getElementById('memoList').innerHTML = '<div class="p-empty"><div class="p-empty-icon">📝</div>메모가 없어요</div>';
-    return;
-  }
-
-  document.getElementById('memoList').innerHTML = memos.map(m => {
-    const date = new Date(m.created_at).toLocaleDateString('ko-KR', { month:'long', day:'numeric' });
-    return `<div class="alert-item" style="${m.is_read ? 'opacity:0.6;' : ''}">
-      <div class="alert-dot" style="background:${m.is_read ? '#94a3b8' : '#6366f1'};"></div>
-      <div class="alert-info">
-        <div class="alert-title">${esc(m.content || '메모')}</div>
-        <div class="alert-sub">${date}</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ── 패널: 휙 보내기 ──
-async function loadSendPanel(el) {
-  el.innerHTML = `<div class="panel-inner">
-    <div class="panel-header">
-      <div class="panel-title">휙 보내기</div>
-      <button class="panel-close" onclick="closePanel()">✕</button>
-    </div>
-    <p style="color:var(--text-sub);font-size:13px;margin-bottom:16px;line-height:1.6;">매물을 선택하고 손님에게 링크를 보내세요</p>
-    <div class="panel-search"><input type="text" id="sendSearch" placeholder="매물 검색..." oninput="renderSendList()"></div>
-    <div id="sendSelected" style="margin-bottom:12px;"></div>
-    <div id="sendList"><div class="p-empty"><div class="p-empty-icon">⏳</div>불러오는 중...</div></div>
-    <div id="sendActions" style="display:none;position:sticky;bottom:0;padding:16px 0;background:var(--bg);">
-      <button class="register-btn" onclick="generateSendLink()">🔗 링크 생성하기</button>
-    </div>
-  </div>`;
-
-  if (!_myCards.length) {
-    const { data } = await sb.from('cards')
-      .select('id, property, trade_status, created_at')
-      .eq('agent_id', currentUser.id)
-      .neq('property->>type', '손님')
-      .order('created_at', { ascending:false })
-      .limit(50);
-    _myCards = data || [];
-  }
-  _sendSelected = new Set();
-  renderSendList();
-}
-
-let _sendSelected = new Set();
-
-function renderSendList() {
-  const q = (document.getElementById('sendSearch')?.value || '').toLowerCase();
-  let items = _myCards.filter(c => (c.trade_status || '계약가능') !== '완료');
-  if (q) items = items.filter(c => {
-    const p = c.property || {};
-    return [p.complex, p.location, p.price, p.type].filter(Boolean).join(' ').toLowerCase().includes(q);
-  });
-
-  // 선택된 매물 표시
-  const selEl = document.getElementById('sendSelected');
-  const actEl = document.getElementById('sendActions');
-  if (_sendSelected.size > 0) {
-    selEl.innerHTML = `<div style="padding:10px 14px;border-radius:10px;background:rgba(99,102,241,0.06);border:1px solid rgba(99,102,241,0.1);font-size:13px;font-weight:600;color:var(--primary);">${_sendSelected.size}건 선택됨</div>`;
-    if (actEl) actEl.style.display = '';
-  } else {
-    selEl.innerHTML = '';
-    if (actEl) actEl.style.display = 'none';
-  }
-
-  if (!items.length) {
-    document.getElementById('sendList').innerHTML = '<div class="p-empty"><div class="p-empty-icon">🏠</div>보낼 매물이 없어요</div>';
-    return;
-  }
-
-  document.getElementById('sendList').innerHTML = items.map(c => {
-    const p = c.property || {};
-    const typeClass = p.type === '매매' ? 'sale' : p.type === '전세' ? 'jeonse' : 'rent';
-    const selected = _sendSelected.has(c.id);
-    return `<div class="p-item" style="${selected ? 'background:rgba(99,102,241,0.06);border-color:var(--primary);' : ''}" onclick="toggleSend('${c.id}')">
-      <div style="width:20px;height:20px;border-radius:6px;border:2px solid ${selected ? 'var(--primary)' : 'var(--border)'};background:${selected ? 'var(--primary)' : 'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        ${selected ? '<span style="color:#fff;font-size:12px;font-weight:800;">✓</span>' : ''}
-      </div>
-      <span class="p-type ${typeClass}">${esc(p.type||'')}</span>
-      <div class="p-info">
-        <div class="p-name">${esc(p.complex || p.location || '매물')}</div>
-        <div class="p-detail">${[p.price, p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function toggleSend(id) {
-  if (_sendSelected.has(id)) _sendSelected.delete(id);
-  else _sendSelected.add(id);
-  renderSendList();
-}
-
-async function generateSendLink() {
-  if (!_sendSelected.size) return;
-  const ids = [..._sendSelected];
-  const btn = document.querySelector('#sendActions .register-btn');
-  btn.textContent = '생성 중...'; btn.disabled = true;
-
-  try {
-    // 링크 생성 API 호출
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/create-share-link`, {
-      method:'POST',
-      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+SUPABASE_KEY },
-      body: JSON.stringify({ card_ids: ids, agent_id: currentUser.id })
-    });
-    const data = await res.json();
-    if (data.url) {
-      document.getElementById('sendActions').innerHTML = `
-        <div style="padding:16px;border-radius:12px;background:#ecfdf5;border:1px solid #6ee7b7;">
-          <div style="font-weight:700;color:#065f46;margin-bottom:8px;">✅ 링크가 생성되었습니다!</div>
-          <div style="display:flex;gap:8px;">
-            <input type="text" value="${data.url}" readonly style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid #6ee7b7;font-size:12px;background:#fff;color:var(--text);" onclick="this.select();navigator.clipboard.writeText(this.value);">
-            <button onclick="navigator.clipboard.writeText('${data.url}')" style="padding:8px 16px;border-radius:8px;border:none;background:var(--primary);color:#fff;font-weight:700;font-size:12px;cursor:pointer;">복사</button>
-          </div>
-        </div>`;
-    } else {
-      btn.textContent = '🔗 링크 생성하기'; btn.disabled = false;
+    else if (key==='cl_match') {
+      const ms=Hub.current._matches||[];
+      let h=this.h('매칭 매물',ms.length+'건');
+      if (!ms.length) h+='<div class="empty"><div class="empty-icon">🏠</div>매칭 매물이 없어요</div>';
+      else ms.forEach(m=>{const mp=m.property||{},tc=mp.type==='매매'?'sale':mp.type==='전세'?'jeonse':'rent',sc=m.similarity?Math.round(m.similarity*100):0;
+        h+=`<div class="item" onclick='Hub.enterProperty(${JSON.stringify(m).replace(/"/g,"&quot;")})'><span class="item-type ${tc}">${esc(mp.type||'')}</span><div class="item-body"><div class="item-name">${esc(mp.complex||mp.location||'매물')}</div><div class="item-sub">${[mp.price,mp.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div>${sc?`<span style="background:var(--primary-bg);color:var(--primary);padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;">${sc}%</span>`:''}</div>`;
+      });
+      el.innerHTML = h+'</div>';
     }
-  } catch(e) {
-    btn.textContent = '🔗 링크 생성하기'; btn.disabled = false;
+    else if (key==='cl_timeline') {
+      const ns=Hub.current._notes||[];
+      let h=this.h('상담 기록',ns.length+'건');
+      h+=`<div class="note-row"><input type="text" id="subNote" placeholder="메모 입력..." onkeydown="if(event.key==='Enter')Panel.saveNote('${card.id}')"><button onclick="Panel.saveNote('${card.id}')">저장</button></div>`;
+      if (!ns.length) h+='<div class="empty">아직 상담 기록이 없어요</div>';
+      else ns.forEach(n=>{const t=n.type||'메모';h+=`<div class="tl"><span class="tl-tag ${t}">${t}</span><div><div class="tl-text">${esc(n.content||'')}</div><div class="tl-date">${new Date(n.created_at).toLocaleDateString('ko-KR')}${n.alert_date?' · 📅 '+new Date(n.alert_date).toLocaleDateString('ko-KR'):''}</div></div></div>`;});
+      el.innerHTML = h+'</div>';
+    }
+    else if (key==='cl_schedule') {
+      const sc=(Hub.current._notes||[]).filter(n=>n.alert_date&&!n.alert_done);
+      let h=this.h('일정/알림',sc.length+'건');
+      if (!sc.length) h+='<div class="empty"><div class="empty-icon">📅</div>예정된 일정이 없어요</div>';
+      else sc.forEach(n=>{const past=new Date(n.alert_date)<new Date();h+=`<div class="alert"><div class="alert-dot" style="background:${past?'#ef4444':'var(--primary)'}"></div><div><div style="font-size:13px;font-weight:600;${past?'color:#ef4444;':''}">${esc(n.content||'일정')}</div><div style="font-size:11px;color:var(--text-light);">${new Date(n.alert_date).toLocaleDateString('ko-KR')} ${past?'(지연)':''}</div></div></div>`;});
+      el.innerHTML = h+'</div>';
+    }
+    else if (key==='cl_contact') {
+      let h=this.h('연락처');
+      if (card.contact_name||card.contact_phone) h+=`<div style="padding:20px;text-align:center;"><div style="font-size:18px;font-weight:700;">${esc(card.contact_name||'손님')}</div>${card.contact_phone?`<div style="margin-top:8px;"><button onclick="navigator.clipboard.writeText('${esc(card.contact_phone)}')" style="padding:10px 24px;border-radius:10px;border:1px solid var(--primary);background:var(--primary-bg);color:var(--primary);font-size:14px;font-weight:600;cursor:pointer;">${esc(card.contact_phone)} 📋</button></div>`:''}</div>`;
+      else { const ph=(pn.memo||'').match(/01[016789][-.\s]?\d{3,4}[-.\s]?\d{4}/); h+=ph?`<div style="padding:20px;text-align:center;"><button onclick="navigator.clipboard.writeText('${esc(ph[0])}')" style="padding:10px 24px;border-radius:10px;border:1px solid var(--primary);background:var(--primary-bg);color:var(--primary);font-size:14px;font-weight:600;cursor:pointer;">${esc(ph[0])} 📋</button></div>`:'<div class="empty">등록된 연락처가 없어요</div>'; }
+      el.innerHTML = h+'</div>';
+    }
+    else if (key==='pr_detail') {
+      let h=this.h('상세 정보');
+      [p.type&&['거래유형',p.type],p.price&&['가격',p.price],p.complex&&['단지',p.complex],p.location&&['위치',p.location],p.area&&['면적',p.area],p.floor&&['층',p.floor]].filter(Boolean).forEach(([l,v])=>h+=`<div style="padding:12px 0;border-bottom:1px solid rgba(0,0,0,0.04);"><div style="font-size:15px;font-weight:700;">${esc(v)}</div><div style="font-size:12px;color:var(--text-light);">${l}</div></div>`);
+      if ((p.features||[]).length) h+=`<div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;">${p.features.map(f=>`<span style="padding:5px 14px;border-radius:20px;background:var(--primary-bg);color:var(--primary);font-size:12px;font-weight:600;">${esc(f)}</span>`).join('')}</div>`;
+      el.innerHTML = h+'</div>';
+    }
+    else if (key==='pr_status') {
+      const st=card.trade_status||'계약가능';
+      el.innerHTML = this.h('거래 상태')+`<div style="text-align:center;padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">${st==='완료'?'✅':st==='계약중'?'📝':'🏠'}</div><div style="font-size:24px;font-weight:800;color:${st==='완료'?'#22c55e':st==='계약중'?'#f59e0b':'var(--primary)'};">${st}</div></div></div>`;
+    }
+    else el.innerHTML = this.h(key)+'<div class="empty">준비 중입니다</div></div>';
+  },
+
+  async saveNote(cardId) {
+    const input=document.getElementById('subNote');
+    if (!input||!input.value.trim()) return;
+    await Auth.sb.from('client_notes').insert({client_card_id:cardId,agent_id:Auth.user.id,type:'메모',content:input.value.trim(),alert_done:false});
+    input.value='';
+    const d = await Data.loadClientDetail(cardId);
+    Hub.current._notes=d.notes; Hub.current._matches=d.matches;
+    this.openSub('cl_timeline');
   }
-}
+};
 
-// ── 패널: 설정 ──
-function loadSettingsPanel(el) {
-  const profile = userProfile || {};
-  el.innerHTML = `<div class="panel-inner">
-    <div class="panel-header">
-      <div class="panel-title">설정</div>
-      <button class="panel-close" onclick="closePanel()">✕</button>
-    </div>
+// ── Pulse 모듈 ──
+const Pulse = {
+  raf: null,
 
-    <div style="text-align:center;padding:20px 0;">
-      <div style="width:80px;height:80px;border-radius:24px;background:rgba(99,102,241,0.1);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:36px;">👤</div>
-      <div style="font-size:18px;font-weight:800;color:var(--text);">${esc(profile.business_name || '사무소명')}</div>
-      <div style="font-size:14px;color:var(--text-sub);margin-top:4px;">${esc(profile.agent_name || '이름')}</div>
-      <div style="font-size:13px;color:var(--text-light);margin-top:2px;">${esc(profile.phone || '전화번호')}</div>
-    </div>
+  start(key, nodes) {
+    nodes = nodes || Hub.current?.nodes || Hub.MAIN_NODES;
+    const node = nodes.find(n=>n.key===key);
+    if (!node) return;
+    const {VW,VH,RADIUS}=Hub, fx=VW/2, fy=VH/2;
+    const rad=node.angle*Math.PI/180, tx=fx+RADIUS*Math.cos(rad), ty=fy+RADIUS*Math.sin(rad);
+    const els=['ph','pt1','pt2','pt3'].map(p=>document.getElementById(`${p}-${key}`));
+    els.forEach(e=>{if(e)e.classList.add('on');});
+    const t0=performance.now(), dur=500, delays=[0,40,90,150];
+    const anim = now => {
+      els.forEach((e,i)=>{if(!e)return;const t=Math.max(0,Math.min((now-t0-delays[i])/dur,1)),ease=t<0.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;e.setAttribute('cx',fx+(tx-fx)*ease);e.setAttribute('cy',fy+(ty-fy)*ease);});
+      if((now-t0-delays[3])/dur<1) this.raf=requestAnimationFrame(anim);
+      else{els.forEach(e=>{if(e){e.setAttribute('cx',fx);e.setAttribute('cy',fy);}});setTimeout(()=>{if(document.querySelector(`.hub-node[data-key="${key}"]:hover`))this.start(key,nodes);},200);}
+    };
+    this.raf=requestAnimationFrame(anim);
+  },
 
-    <div style="border-top:1px solid var(--border);padding-top:20px;">
-      <div class="p-item" onclick="window.open('my_cards.html','_blank')">
-        <div style="font-size:18px;">📋</div>
-        <div class="p-info"><div class="p-name">기존 매물 관리</div><div class="p-detail">상세 편집, 사진 관리, 상태 변경</div></div>
-        <span style="color:var(--text-light);">→</span>
-      </div>
-      <div class="p-item" onclick="window.open('card_generator_v2_auth.html','_blank')">
-        <div style="font-size:18px;">✨</div>
-        <div class="p-info"><div class="p-name">고급 매물 등록</div><div class="p-detail">파일 대량 등록, 스타일 선택</div></div>
-        <span style="color:var(--text-light);">→</span>
-      </div>
-      <div class="p-item" onclick="logout()">
-        <div style="font-size:18px;">🚪</div>
-        <div class="p-info"><div class="p-name" style="color:#ef4444;">로그아웃</div><div class="p-detail">계정에서 로그아웃합니다</div></div>
-      </div>
-    </div>
-  </div>`;
-}
+  stop(key) {
+    if(this.raf){cancelAnimationFrame(this.raf);this.raf=null;}
+    ['ph','pt1','pt2','pt3'].forEach(p=>{const e=document.getElementById(`${p}-${key}`);if(e)e.classList.remove('on');});
+  }
+};
 
-function goBackOrHome() {
-  if (_hubStack.length) goBack();
-  else closePanel();
-}
+// ── App ──
+const App = {
+  async init() {
+    if (!Auth.user) { document.getElementById('loginBg').classList.add('show'); return; }
+    document.getElementById('loginBg').classList.remove('show');
+    if (!Auth.profile) await Auth.check();
+    await Data.loadCounts();
+    Hub.render();
+  }
+};
 
 // ── 시작 ──
+Auth.init();
 document.addEventListener('DOMContentLoaded', async () => {
-  const loggedIn = await checkAuth();
-  init();
+  await Auth.check();
+  App.init();
 });
 </script>
 </body>
