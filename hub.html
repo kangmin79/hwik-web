@@ -348,7 +348,7 @@ body {
   <div class="hub-left">
     <div class="hub-visual" id="hubVisual">
       <svg class="hub-lines" id="hubLines" viewBox="0 0 800 700" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"></svg>
-      <div class="hub-center" id="hubCenter">
+      <div class="hub-center" id="hubCenter" onclick="openPanel('settings')" style="cursor:pointer;"
         <div class="hub-center-icon">👤</div>
         <div class="hub-center-name" id="centerName">로딩 중...</div>
         <div class="hub-center-sub" id="centerSub"></div>
@@ -409,11 +409,10 @@ const PROPERTY_NODES = [
 // ── 노드 정의 ──
 const HUB_NODES = [
   { key:'register', label:'매물 등록',  angle:-90 },
-  { key:'my',       label:'내 매물',   angle:-30 },
-  { key:'client',   label:'손님',     angle:30 },
-  { key:'alert',    label:'알림',     angle:90 },
-  { key:'shared',   label:'공유방',   angle:150 },
-  { key:'settings', label:'설정',     angle:210 },
+  { key:'my',       label:'내 매물',   angle:-18 },
+  { key:'client',   label:'손님',     angle:54 },
+  { key:'alert',    label:'알림',     angle:126 },
+  { key:'shared',   label:'공유방',   angle:198 },
 ];
 
 // ── 인증 ──
