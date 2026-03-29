@@ -336,7 +336,7 @@ body {
 
 <!-- 헤더 -->
 <header class="hub-header">
-  <div class="hub-logo" onclick="closePanel()">휙</div>
+  <div class="hub-logo" onclick="goBackOrHome()">휙</div>
   <div class="hub-header-actions" id="headerActions">
     <span class="hub-user-name" id="userName"></span>
   </div>
@@ -376,6 +376,8 @@ let currentUser = null;
 let userProfile = null;
 let _activePanel = null;
 let _pulseRaf = null;
+let _hubStack = []; // 허브 레벨 스택 [{type, data, nodes, center}]
+let _currentLevel = null;
 
 // 데이터 캐시
 let _myCards = [];
@@ -383,6 +385,25 @@ let _sharedCards = [];
 let _clientCards = [];
 let _memos = [];
 let _counts = { my:0, shared:0, client:0, alert:0, memo:0, send:'휙', settings:'', register:'+' };
+
+// ── 엔티티별 노드 정의 ──
+const CLIENT_NODES = [
+  { key:'cl_conditions', label:'희망 조건',  angle:-90 },
+  { key:'cl_match',      label:'매칭 매물',  angle:-30 },
+  { key:'cl_timeline',   label:'상담 기록',  angle:30 },
+  { key:'cl_schedule',   label:'일정/알림',  angle:90 },
+  { key:'cl_contact',    label:'연락처',    angle:150 },
+  { key:'cl_back',       label:'← 돌아가기', angle:210 },
+];
+
+const PROPERTY_NODES = [
+  { key:'pr_detail',   label:'상세 정보',  angle:-90 },
+  { key:'pr_clients',  label:'관심 손님',  angle:-30 },
+  { key:'pr_share',    label:'공유 이력',  angle:30 },
+  { key:'pr_status',   label:'거래 상태',  angle:90 },
+  { key:'pr_send',     label:'휙 보내기',  angle:150 },
+  { key:'pr_back',     label:'← 돌아가기', angle:210 },
+];
 
 // ── 노드 정의 ──
 const HUB_NODES = [
@@ -467,25 +488,39 @@ async function init() {
 }
 
 // ── 허브 렌더링 ──
-function renderHub() {
+function renderHub(nodes, centerInfo, counts) {
+  nodes = nodes || HUB_NODES;
+  counts = counts || _counts;
+  centerInfo = centerInfo || {
+    icon: '👤',
+    name: userProfile?.business_name || '중개사',
+    sub: userProfile?.phone || ''
+  };
+
   const visual = document.getElementById('hubVisual');
+  const center = document.getElementById('hubCenter');
   const vw = 800, vh = 700;
   const cx = vw/2, cy = vh/2, radius = 230;
+
+  // 중앙 노드 업데이트
+  center.innerHTML = `
+    <div class="hub-center-icon">${centerInfo.icon}</div>
+    <div class="hub-center-name" id="centerName">${esc(centerInfo.name)}</div>
+    <div class="hub-center-sub" id="centerSub">${esc(centerInfo.sub)}</div>
+  `;
 
   let svgHtml = '';
   let nodesHtml = '';
 
-  HUB_NODES.forEach((node, i) => {
+  nodes.forEach((node, i) => {
     const rad = (node.angle * Math.PI) / 180;
     const nx = cx + radius * Math.cos(rad);
     const ny = cy + radius * Math.sin(rad);
-    const count = _counts[node.key];
-    const countText = count === '+' ? '+' : (count > 0 ? count : '-');
-    const countClass = (count === 0 || count === '+') ? 'empty' : '';
+    const count = counts[node.key];
+    const countText = count === '+' ? '+' : count === '휙' ? '휙' : (count != null && count !== '' && count > 0 ? count : '-');
+    const countClass = (!count || count === 0 || count === '+' || count === '') ? 'empty' : '';
 
     svgHtml += `<line class="hub-line" x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}" />`;
-
-    // 빛 애니메이션 요소
     svgHtml += `<circle class="hub-pulse-t3" id="pt3-${node.key}" cx="${cx}" cy="${cy}" r="6" />`;
     svgHtml += `<circle class="hub-pulse-t2" id="pt2-${node.key}" cx="${cx}" cy="${cy}" r="5" />`;
     svgHtml += `<circle class="hub-pulse-t1" id="pt1-${node.key}" cx="${cx}" cy="${cy}" r="4" />`;
@@ -494,10 +529,10 @@ function renderHub() {
     const leftPct = (nx / vw * 100).toFixed(1);
     const topPct = (ny / vh * 100).toFixed(1);
     nodesHtml += `
-      <div class="hub-node" data-key="${node.key}" style="left:${leftPct}%;top:${topPct}%;" onclick="openPanel('${node.key}')">
+      <div class="hub-node" data-key="${node.key}" style="left:${leftPct}%;top:${topPct}%;" onclick="onNodeClick('${node.key}')">
         <div class="hub-node-inner">
           <span class="hub-node-label">${node.label}</span>
-          <span class="hub-node-count ${countClass}">${countText}</span>
+          ${countText !== '-' && countText !== '' ? `<span class="hub-node-count ${countClass}">${countText}</span>` : ''}
         </div>
       </div>`;
   });
@@ -506,22 +541,23 @@ function renderHub() {
   visual.querySelectorAll('.hub-node').forEach(el => el.remove());
   visual.insertAdjacentHTML('beforeend', nodesHtml);
 
-  // 순차 등장
   visual.querySelectorAll('.hub-node').forEach((el, i) => {
     setTimeout(() => el.classList.add('appear'), 30 + i * 40);
-    el.addEventListener('mouseenter', () => pulseStart(el.dataset.key));
+    el.addEventListener('mouseenter', () => pulseStart(el.dataset.key, nodes, radius));
     el.addEventListener('mouseleave', () => pulseStop(el.dataset.key));
   });
 }
 
 // ── 빛 애니메이션 ──
-function pulseStart(key) {
-  const node = HUB_NODES.find(n => n.key === key);
+function pulseStart(key, nodeList, radius) {
+  nodeList = nodeList || _currentLevel?.nodes || HUB_NODES;
+  radius = radius || 230;
+  const node = nodeList.find(n => n.key === key);
   if (!node) return;
   const vw=800, vh=700, fromX=vw/2, fromY=vh/2;
   const rad = (node.angle * Math.PI) / 180;
-  const toX = fromX + 230 * Math.cos(rad);
-  const toY = fromY + 230 * Math.sin(rad);
+  const toX = fromX + radius * Math.cos(rad);
+  const toY = fromY + radius * Math.sin(rad);
 
   const els = ['ph','pt1','pt2','pt3'].map(p => document.getElementById(`${p}-${key}`));
   els.forEach(el => { if(el) el.classList.add('on'); });
@@ -556,7 +592,21 @@ function pulseStop(key) {
   });
 }
 
-// ── 패널 열기/닫기 ──
+// ── 노드 클릭 핸들러 ──
+function onNodeClick(key) {
+  // 돌아가기
+  if (key === 'cl_back' || key === 'pr_back') { goBack(); return; }
+
+  // 서브 허브 노드 → 패널 열기
+  if (key.startsWith('cl_') || key.startsWith('pr_')) {
+    openSubPanel(key);
+    return;
+  }
+
+  // 메인 허브 노드 → 패널 열기
+  openPanel(key);
+}
+
 function openPanel(key) {
   if (_activePanel === key) { closePanel(); return; }
 
@@ -582,6 +632,207 @@ function closePanel() {
   document.getElementById('hubMain').classList.remove('split');
   document.querySelectorAll('.hub-node').forEach(n => n.classList.remove('active'));
   _activePanel = null;
+}
+
+// ── 서브 허브 전환 (손님 → 손님 허브, 매물 → 매물 허브) ──
+function enterClientHub(card) {
+  const p = card.property || {};
+  _hubStack.push({ nodes: _currentLevel?.nodes || HUB_NODES, center: _currentLevel?.center, counts: _currentLevel?.counts || _counts });
+
+  const counts = {};
+  _currentLevel = { type:'client', data: card, nodes: CLIENT_NODES, center: {
+    icon: '🙋',
+    name: card.contact_name || p.location || p.complex || '손님',
+    sub: p.price || ''
+  }, counts };
+
+  closePanel();
+  renderHub(CLIENT_NODES, _currentLevel.center, counts);
+
+  // 비동기로 카운트 로드
+  loadClientCounts(card.id);
+}
+
+async function loadClientCounts(cardId) {
+  const [notesRes, matchRes] = await Promise.all([
+    sb.from('client_notes').select('id, alert_date, alert_done', { count:'exact' }).eq('client_card_id', cardId),
+    fetch(`${SUPABASE_URL}/functions/v1/match-properties`, {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+SUPABASE_KEY, 'apikey':SUPABASE_KEY },
+      body: JSON.stringify({ client_card_id: cardId, agent_id: currentUser.id, limit:10, threshold:0.15 })
+    }).then(r => r.json()).catch(() => ({ results:[] }))
+  ]);
+
+  const notes = notesRes.data || [];
+  const matches = matchRes.results || [];
+  const card = _currentLevel.data;
+
+  const counts = {
+    cl_conditions: (card.property?.features || []).length || 0,
+    cl_match: matches.length,
+    cl_timeline: notes.length,
+    cl_schedule: notes.filter(n => n.alert_date && !n.alert_done).length,
+    cl_contact: (card.contact_phone ? 1 : 0),
+    cl_back: '',
+  };
+
+  _currentLevel.counts = counts;
+  _currentLevel._matches = matches;
+  _currentLevel._notes = notes;
+
+  // 노드 카운트 업데이트 (리렌더 없이)
+  Object.entries(counts).forEach(([k, v]) => {
+    const countEl = document.querySelector(`.hub-node[data-key="${k}"] .hub-node-count`);
+    if (countEl && v) {
+      countEl.textContent = v > 0 ? v : '-';
+      countEl.classList.toggle('empty', !v || v === 0);
+    }
+  });
+}
+
+function enterPropertyHub(card) {
+  const p = card.property || {};
+  _hubStack.push({ nodes: _currentLevel?.nodes || HUB_NODES, center: _currentLevel?.center, counts: _currentLevel?.counts || _counts });
+
+  _currentLevel = { type:'property', data: card, nodes: PROPERTY_NODES, center: {
+    icon: '🏠',
+    name: p.complex || p.location || '매물',
+    sub: [p.type, p.price].filter(Boolean).join(' · ')
+  }, counts: {} };
+
+  closePanel();
+  renderHub(PROPERTY_NODES, _currentLevel.center, {});
+}
+
+function goBack() {
+  if (!_hubStack.length) return;
+  const prev = _hubStack.pop();
+  _currentLevel = prev.nodes === HUB_NODES ? null : { nodes: prev.nodes, center: prev.center, counts: prev.counts };
+  closePanel();
+  renderHub(prev.nodes || HUB_NODES, prev.center, prev.counts || _counts);
+}
+
+// ── 서브 패널 (손님/매물 허브의 노드 클릭) ──
+function openSubPanel(key) {
+  if (_activePanel === key) { closePanel(); return; }
+  document.querySelectorAll('.hub-node').forEach(n => n.classList.remove('active'));
+  document.querySelector(`.hub-node[data-key="${key}"]`)?.classList.add('active');
+  _activePanel = key;
+
+  const right = document.getElementById('hubRight');
+  document.getElementById('hubMain').classList.add('split');
+  const card = _currentLevel?.data;
+  if (!card) return;
+
+  const p = card.property || {};
+  const pn = card.private_note || {};
+
+  switch(key) {
+    case 'cl_conditions':
+      const features = p.features || [];
+      let condHtml = `<div class="panel-inner"><div class="panel-header"><div class="panel-title">희망 조건</div><button class="panel-close" onclick="closePanel()">✕</button></div>`;
+      [p.price && ['예산', p.price], p.location && ['지역', p.location], p.complex && ['단지', p.complex], p.area && ['면적', p.area]].filter(Boolean).forEach(([label, val]) => {
+        condHtml += `<div style="padding:12px 0;border-bottom:1px solid rgba(0,0,0,0.04);"><div style="font-size:15px;font-weight:700;color:var(--text);">${esc(val)}</div><div style="font-size:12px;color:var(--text-light);">${label}</div></div>`;
+      });
+      if (features.length) condHtml += `<div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;">${features.map(f => `<span style="padding:5px 14px;border-radius:20px;background:rgba(99,102,241,0.06);color:var(--primary);font-size:12px;font-weight:600;border:1px solid rgba(99,102,241,0.1);">${esc(f)}</span>`).join('')}</div>`;
+      if (pn.memo) condHtml += `<div style="margin-top:14px;padding:14px;border-radius:12px;background:rgba(99,102,241,0.04);font-size:13px;color:var(--text-sub);line-height:1.7;">${esc(pn.memo)}</div>`;
+      condHtml += `</div>`;
+      right.innerHTML = condHtml;
+      break;
+
+    case 'cl_match':
+      const matches = _currentLevel._matches || [];
+      let matchHtml = `<div class="panel-inner"><div class="panel-header"><div class="panel-title">매칭 매물 <span>${matches.length}건</span></div><button class="panel-close" onclick="closePanel()">✕</button></div>`;
+      if (!matches.length) { matchHtml += '<div class="p-empty"><div class="p-empty-icon">🏠</div>매칭되는 매물이 없어요</div>'; }
+      else { matches.forEach(m => {
+        const mp = m.property || {};
+        const tc = mp.type === '매매' ? 'sale' : mp.type === '전세' ? 'jeonse' : 'rent';
+        const score = m.similarity ? Math.round(m.similarity*100) : 0;
+        matchHtml += `<div class="p-item" onclick="enterPropertyHub(${JSON.stringify(m).replace(/"/g,'&quot;')})">
+          <span class="p-type ${tc}">${esc(mp.type||'')}</span>
+          <div class="p-info"><div class="p-name">${esc(mp.complex||mp.location||'매물')}</div>
+          <div class="p-detail">${[mp.price,mp.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div>
+          ${score ? `<span class="p-badge" style="background:rgba(99,102,241,0.08);color:var(--primary);">${score}%</span>` : ''}
+        </div>`;
+      }); }
+      matchHtml += `</div>`;
+      right.innerHTML = matchHtml;
+      break;
+
+    case 'cl_timeline':
+      const notes = _currentLevel._notes || [];
+      let tlHtml = `<div class="panel-inner"><div class="panel-header"><div class="panel-title">상담 기록 <span>${notes.length}건</span></div><button class="panel-close" onclick="closePanel()">✕</button></div>`;
+      tlHtml += `<div class="note-input"><input type="text" id="subNoteInput" placeholder="메모 입력..." onkeydown="if(event.key==='Enter')saveSubNote('${card.id}')"><button onclick="saveSubNote('${card.id}')">저장</button></div>`;
+      if (!notes.length) tlHtml += '<div class="p-empty">아직 상담 기록이 없어요</div>';
+      else notes.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).forEach(n => {
+        const type = n.type || '메모';
+        tlHtml += `<div class="tl-item"><span class="tl-badge ${type}">${type}</span><div><div class="tl-content">${esc(n.content||'')}</div><div class="tl-date">${new Date(n.created_at).toLocaleDateString('ko-KR')}</div></div></div>`;
+      });
+      tlHtml += `</div>`;
+      right.innerHTML = tlHtml;
+      break;
+
+    case 'cl_schedule':
+      const schNotes = (_currentLevel._notes || []).filter(n => n.alert_date && !n.alert_done);
+      let schHtml = `<div class="panel-inner"><div class="panel-header"><div class="panel-title">일정/알림 <span>${schNotes.length}건</span></div><button class="panel-close" onclick="closePanel()">✕</button></div>`;
+      if (!schNotes.length) schHtml += '<div class="p-empty"><div class="p-empty-icon">📅</div>예정된 일정이 없어요</div>';
+      else schNotes.forEach(n => {
+        const isPast = new Date(n.alert_date) < new Date();
+        schHtml += `<div class="alert-item"><div class="alert-dot" style="background:${isPast?'#ef4444':'var(--primary)'}"></div><div class="alert-info"><div class="alert-title" style="${isPast?'color:#ef4444;':''}">${esc(n.content||'일정')}</div><div class="alert-sub">${new Date(n.alert_date).toLocaleDateString('ko-KR')} ${isPast?'(지연)':''}</div></div></div>`;
+      });
+      schHtml += `</div>`;
+      right.innerHTML = schHtml;
+      break;
+
+    case 'cl_contact':
+      let ctHtml = `<div class="panel-inner"><div class="panel-header"><div class="panel-title">연락처</div><button class="panel-close" onclick="closePanel()">✕</button></div>`;
+      if (card.contact_name || card.contact_phone) {
+        ctHtml += `<div style="padding:20px;text-align:center;">
+          <div style="font-size:18px;font-weight:700;">${esc(card.contact_name||'손님')}</div>
+          ${card.contact_phone ? `<div style="margin-top:8px;"><button onclick="navigator.clipboard.writeText('${esc(card.contact_phone)}')" style="padding:10px 24px;border-radius:10px;border:1px solid var(--primary);background:var(--primary-bg);color:var(--primary);font-size:14px;font-weight:600;cursor:pointer;">${esc(card.contact_phone)} 📋</button></div>` : ''}
+        </div>`;
+      } else {
+        const memo = pn.memo || '';
+        const ph = memo.match(/01[016789][-.\s]?\d{3,4}[-.\s]?\d{4}/);
+        if (ph) ctHtml += `<div style="padding:20px;text-align:center;"><button onclick="navigator.clipboard.writeText('${esc(ph[0])}')" style="padding:10px 24px;border-radius:10px;border:1px solid var(--primary);background:var(--primary-bg);color:var(--primary);font-size:14px;font-weight:600;cursor:pointer;">${esc(ph[0])} 📋</button></div>`;
+        else ctHtml += '<div class="p-empty">등록된 연락처가 없어요</div>';
+      }
+      ctHtml += `</div>`;
+      right.innerHTML = ctHtml;
+      break;
+
+    case 'pr_detail':
+      const pp = card.property || {};
+      let dtHtml = `<div class="panel-inner"><div class="panel-header"><div class="panel-title">상세 정보</div><button class="panel-close" onclick="closePanel()">✕</button></div>`;
+      [pp.type&&['거래유형',pp.type], pp.price&&['가격',pp.price], pp.complex&&['단지',pp.complex], pp.location&&['위치',pp.location], pp.area&&['면적',pp.area], pp.floor&&['층',pp.floor], pp.room&&['방',pp.room]].filter(Boolean).forEach(([l,v]) => {
+        dtHtml += `<div style="padding:12px 0;border-bottom:1px solid rgba(0,0,0,0.04);"><div style="font-size:15px;font-weight:700;">${esc(v)}</div><div style="font-size:12px;color:var(--text-light);">${l}</div></div>`;
+      });
+      if ((pp.features||[]).length) dtHtml += `<div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:6px;">${pp.features.map(f=>`<span style="padding:5px 14px;border-radius:20px;background:rgba(99,102,241,0.06);color:var(--primary);font-size:12px;font-weight:600;">${esc(f)}</span>`).join('')}</div>`;
+      dtHtml += `</div>`;
+      right.innerHTML = dtHtml;
+      break;
+
+    case 'pr_status':
+      const st = card.trade_status || '계약가능';
+      right.innerHTML = `<div class="panel-inner"><div class="panel-header"><div class="panel-title">거래 상태</div><button class="panel-close" onclick="closePanel()">✕</button></div>
+        <div style="text-align:center;padding:40px 0;">
+          <div style="font-size:48px;margin-bottom:12px;">${st==='완료'?'✅':st==='계약중'?'📝':'🏠'}</div>
+          <div style="font-size:24px;font-weight:800;color:${st==='완료'?'#22c55e':st==='계약중'?'#f59e0b':'var(--primary)'};">${st}</div>
+        </div></div>`;
+      break;
+
+    default:
+      right.innerHTML = `<div class="panel-inner"><div class="panel-header"><div class="panel-title">${key}</div><button class="panel-close" onclick="closePanel()">✕</button></div><div class="p-empty">준비 중입니다</div></div>`;
+  }
+}
+
+async function saveSubNote(cardId) {
+  const input = document.getElementById('subNoteInput');
+  if (!input || !input.value.trim()) return;
+  await sb.from('client_notes').insert({ client_card_id:cardId, agent_id:currentUser.id, type:'메모', content:input.value.trim(), alert_done:false });
+  input.value = '';
+  await loadClientCounts(cardId);
+  onNodeClick('cl_timeline');
 }
 
 // ── 패널: 매물 등록 ──
@@ -682,7 +933,7 @@ function renderMyList() {
     const p = c.property || {};
     const typeClass = p.type === '매매' ? 'sale' : p.type === '전세' ? 'jeonse' : 'rent';
     const status = c.trade_status || '계약가능';
-    return `<div class="p-item">
+    return `<div class="p-item" onclick='enterPropertyHub(${JSON.stringify(c).replace(/'/g,"&#39;")})'>
       <span class="p-type ${typeClass}">${esc(p.type||'')}</span>
       <div class="p-info">
         <div class="p-name">${esc(p.complex || p.location || '매물')}</div>
@@ -730,7 +981,7 @@ function renderClientList() {
   document.getElementById('clientList').innerHTML = items.map(c => {
     const p = c.property || {};
     const name = c.contact_name || p.location || p.complex || '손님';
-    return `<div class="p-item" onclick="window.open('my_cards.html','_blank')">
+    return `<div class="p-item" onclick='enterClientHub(${JSON.stringify(c).replace(/'/g,"&#39;")})'>
       <span class="p-type client">손님</span>
       <div class="p-info">
         <div class="p-name">${esc(name)}</div>
@@ -1025,6 +1276,11 @@ function loadSettingsPanel(el) {
       </div>
     </div>
   </div>`;
+}
+
+function goBackOrHome() {
+  if (_hubStack.length) goBack();
+  else closePanel();
 }
 
 // ── 시작 ──
