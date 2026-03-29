@@ -468,7 +468,7 @@ async function init() {
   const [myRes, clientRes, sharedRes, alertRes, memoRes] = await Promise.all([
     sb.from('cards').select('id', { count:'exact', head:true }).eq('agent_id', currentUser.id).neq('property->>type', '손님'),
     sb.from('cards').select('id', { count:'exact', head:true }).eq('agent_id', currentUser.id).eq('property->>type', '손님'),
-    sb.from('room_cards').select('id', { count:'exact', head:true }),
+    sb.from('card_shares').select('id', { count:'exact', head:true }),
     sb.from('match_notifications').select('id', { count:'exact', head:true }).eq('agent_id', currentUser.id).eq('is_read', false),
     sb.from('memos').select('id', { count:'exact', head:true }).eq('agent_id', currentUser.id).eq('is_read', false),
   ]);
@@ -999,8 +999,9 @@ async function loadSharedPanel(el) {
     <div id="sharedList"><div class="p-empty"><div class="p-empty-icon">⏳</div>불러오는 중...</div></div>
   </div>`;
 
-  const { data } = await sb.from('room_cards')
+  const { data } = await sb.from('card_shares')
     .select('card_id, cards(id, property, trade_status, agent_id, created_at)')
+    .order('created_at', { ascending:false })
     .limit(30);
 
   const cards = (data || []).map(rc => rc.cards).filter(Boolean).filter(c => c.property?.type !== '손님');
