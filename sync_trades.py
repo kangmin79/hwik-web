@@ -580,20 +580,28 @@ def update_danji_pages(danji_list: list):
     if not danji_list:
         return 0
 
-    batch_size = 50
+    batch_size = 20
     total = 0
     for i in range(0, len(danji_list), batch_size):
         batch = danji_list[i:i + batch_size]
-        resp = sb_session.post(
-            f"{SUPABASE_URL}/rest/v1/danji_pages",
-            headers=SB_HEADERS,
-            json=batch,
-            timeout=30,
-        )
-        if resp.status_code in (200, 201):
-            total += len(batch)
-        else:
-            print(f"  ⚠️ danji_pages upsert: {resp.status_code} {resp.text[:200]}")
+        for attempt in range(3):
+            try:
+                resp = sb_session.post(
+                    f"{SUPABASE_URL}/rest/v1/danji_pages",
+                    headers=SB_HEADERS,
+                    json=batch,
+                    timeout=90,
+                )
+                if resp.status_code in (200, 201):
+                    total += len(batch)
+                else:
+                    print(f"  ⚠️ danji_pages upsert: {resp.status_code} {resp.text[:200]}")
+                break
+            except Exception as e:
+                if attempt < 2:
+                    time.sleep(3)
+                else:
+                    print(f"  ⚠️ danji_pages upsert 실패: {e}")
 
     return total
 
