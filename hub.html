@@ -632,9 +632,10 @@ const Panel = {
     if (!input||!input.value.trim()) return;
     if (!Auth.user) { document.getElementById('regResult').innerHTML='<div style="padding:12px;border-radius:8px;background:#fef2f2;color:#991b1b;">로그인 후 이용해주세요</div>'; return; }
     btn.textContent='분석 중...'; btn.disabled=true;
+    const token = (await Auth.sb.auth.getSession()).data?.session?.access_token || HWIK_CONFIG.SUPABASE_KEY;
     try {
       const res = await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/parse-property`,{
-        method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+HWIK_CONFIG.SUPABASE_KEY},
+        method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':HWIK_CONFIG.SUPABASE_KEY},
         body:JSON.stringify({text:input.value.trim(),agent_id:Auth.user.id})
       });
       const d = await res.json();
