@@ -2417,7 +2417,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             max-height: calc(100vh - 56px);
             padding: 24px 28px 60px 0;
         }
-        .hub-body.split .hub-visual { margin: 0 auto; }
+        .hub-body.split .hub-visual { /* 부모 flex가 중앙 정렬 */ }
 
         /* 우측 패널 카드 */
         .hub-panel-card {
@@ -2463,7 +2463,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .hub-visual {
             position: relative;
             width: 560px; height: 400px;
-            margin: 0 auto;
+            flex-shrink: 0;
         }
 
         /* 중앙 노드 — 글래스 + 글로우 */
