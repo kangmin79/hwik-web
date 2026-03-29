@@ -2406,13 +2406,19 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             width: 0; opacity: 0; overflow: hidden;
             transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .hub-body.split .hub-body-left { flex: 0 0 42%; position: sticky; top: 56px; height: calc(100vh - 56px); }
+        .hub-body.split .hub-body-left {
+            flex: 0 0 44%;
+            position: sticky; top: 56px;
+            height: calc(100vh - 56px);
+            justify-content: center;
+        }
         .hub-body.split .hub-body-right {
-            flex: 0 0 58%; opacity: 1; width: auto;
+            flex: 0 0 56%; opacity: 1; width: auto;
             overflow-y: auto;
+            max-height: calc(100vh - 56px);
             padding: 24px 28px 60px 0;
         }
-        .hub-body.split .hub-visual { transform: scale(0.78); margin-top: 0; }
+        .hub-body.split .hub-visual { transform: scale(0.75); margin: 0; }
 
         /* 우측 패널 카드 */
         .hub-panel-card {
