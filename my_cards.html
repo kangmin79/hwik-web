@@ -2462,8 +2462,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         /* 비주얼 허브 */
         .hub-visual {
             position: relative;
-            width: 560px; height: 400px;
-            flex-shrink: 0;
+            width: 100%; height: 100%;
+            max-width: 900px; max-height: 700px;
         }
 
         /* 중앙 노드 — 글래스 + 글로우 */
@@ -2471,8 +2471,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             position: absolute;
             left: 50%; top: 50%;
             transform: translate(-50%, -50%);
-            width: 130px; height: 130px;
-            border-radius: 30px;
+            width: 150px; height: 150px;
+            border-radius: 32px;
             background: #fff;
             border: 1px solid rgba(99,102,241,0.2);
             box-shadow:
@@ -2490,9 +2490,9 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             box-shadow: 0 0 0 1px rgba(99,102,241,0.08), 0 0 40px rgba(99,102,241,0.1), 0 8px 32px rgba(0,0,0,0.06);
         }
         .hub-center:hover { box-shadow: 0 0 0 1px rgba(99,102,241,0.15), 0 0 80px rgba(99,102,241,0.2), 0 8px 32px rgba(0,0,0,0.08); }
-        .hub-center-icon { font-size: 28px; margin-bottom: 2px; }
+        .hub-center-icon { font-size: 34px; margin-bottom: 4px; }
         .hub-center-name {
-            font-size: 13px; font-weight: 700; color: #1e293b;
+            font-size: 15px; font-weight: 700; color: #1e293b;
             text-align: center; line-height: 1.2; letter-spacing: -0.5px;
         }
         body.dark .hub-center-name { color: #1e293b; }
@@ -2527,8 +2527,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .hub-node-inner {
             background: #fff;
             border: 1.5px solid rgba(0,0,0,0.08);
-            border-radius: 20px;
-            padding: 10px 22px;
+            border-radius: 22px;
+            padding: 12px 26px;
             text-align: center;
             white-space: nowrap;
             box-shadow: 0 2px 12px rgba(0,0,0,0.04);
@@ -2549,7 +2549,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             box-shadow: 0 0 20px rgba(99,102,241,0.1), 0 4px 20px rgba(0,0,0,0.05);
         }
         .hub-node-label {
-            font-size: 13px; font-weight: 600; color: #374151;
+            font-size: 15px; font-weight: 600; color: #374151;
             letter-spacing: -0.3px;
         }
         body.dark .hub-node-label { color: #374151; }
@@ -9292,7 +9292,7 @@ function buildHubSkeleton() {
     <div class="hub-body" id="hubBody">
       <div class="hub-body-left">
         <div class="hub-visual" id="hubVisual">
-          <svg class="hub-lines" id="hubLines" viewBox="0 0 560 400" width="560" height="400"></svg>
+          <svg class="hub-lines" id="hubLines" viewBox="0 0 800 600" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"></svg>
           <div class="hub-center" id="hubCenter">
             <div class="hub-center-icon">👤</div>
             <div class="hub-center-name" id="hubCenterName">로딩 중...</div>
@@ -9363,8 +9363,8 @@ function renderHubNodes(card, notes, matches, interests) {
   const visual = document.getElementById('hubVisual');
   if (!visual) return;
 
-  const vw = 560, vh = 400;
-  const cx = vw / 2, cy = vh / 2, radius = 150;
+  const vw = 800, vh = 600;
+  const cx = vw / 2, cy = vh / 2, radius = 220;
   const counts = {
     conditions: (card.property?.features || []).length || 0,
     match: matches.length,
@@ -9667,10 +9667,10 @@ function hubPulseStart(key) {
 
   const node = HUB_NODES.find(n => n.key === key);
   if (!node) return;
-  const fromX = 280, fromY = 200;
+  const fromX = 400, fromY = 300;
   const rad = (node.angle * Math.PI) / 180;
-  const toX = fromX + 150 * Math.cos(rad);
-  const toY = fromY + 150 * Math.sin(rad);
+  const toX = fromX + 220 * Math.cos(rad);
+  const toY = fromY + 220 * Math.sin(rad);
 
   [head, t1, t2, t3].forEach(el => { if (el) el.classList.add('on'); });
 
