@@ -2389,16 +2389,18 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         .hub-panel-card {
             background: #fff;
-            border: 1px solid rgba(0,0,0,0.06);
+            border: 1.5px solid rgba(0,0,0,0.08);
+            border-left: 3px solid #6366f1;
             border-radius: 20px;
             padding: 28px 32px;
             box-shadow: 0 4px 24px rgba(0,0,0,0.03);
             animation: hubPanelIn 0.35s ease;
         }
         body.dark .hub-panel-card {
-            background: rgba(15,23,42,0.6);
-            border-color: rgba(255,255,255,0.06);
-            box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+            background: rgba(15,23,42,0.65);
+            border-color: rgba(129,140,248,0.18);
+            border-left: 3px solid #818cf8;
+            box-shadow: 0 0 24px rgba(99,102,241,0.06), 0 4px 24px rgba(0,0,0,0.15);
         }
         @keyframes hubPanelIn {
             from { opacity: 0; transform: translateY(12px); }
@@ -2409,12 +2411,12 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .hub-node.active .hub-node-inner {
             border-color: #6366f1;
             background: rgba(99,102,241,0.06);
-            box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.12), 0 0 20px rgba(99,102,241,0.08);
         }
         body.dark .hub-node.active .hub-node-inner {
-            background: rgba(99,102,241,0.12);
+            background: rgba(99,102,241,0.1);
             border-color: #818cf8;
-            box-shadow: 0 0 0 3px rgba(129,140,248,0.15);
+            box-shadow: 0 0 0 3px rgba(129,140,248,0.2), 0 0 24px rgba(99,102,241,0.12);
         }
 
         /* 비주얼 허브 */
@@ -2445,8 +2447,8 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         }
         body.dark .hub-center {
             background: rgba(15,23,42,0.9);
-            border-color: rgba(129,140,248,0.25);
-            box-shadow: 0 0 0 1px rgba(129,140,248,0.1), 0 0 80px rgba(99,102,241,0.15), 0 8px 32px rgba(0,0,0,0.3);
+            border: 1.5px solid rgba(129,140,248,0.35);
+            box-shadow: 0 0 0 1px rgba(129,140,248,0.12), 0 0 60px rgba(99,102,241,0.18), 0 8px 32px rgba(0,0,0,0.3);
         }
         .hub-center:hover { box-shadow: 0 0 0 1px rgba(99,102,241,0.15), 0 0 80px rgba(99,102,241,0.2), 0 8px 32px rgba(0,0,0,0.08); }
         .hub-center-icon { font-size: 28px; margin-bottom: 2px; }
@@ -2460,7 +2462,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         /* SVG 연결선 */
         .hub-lines { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
         .hub-line { stroke: #cbd5e1; stroke-width: 1; opacity: 0.5; }
-        body.dark .hub-line { stroke: #334155; opacity: 0.4; }
+        body.dark .hub-line { stroke: rgba(129,140,248,0.2); opacity: 0.6; }
         .hub-line-dot { fill: #6366f1; opacity: 0.8; }
 
         /* 노드 — 이미지처럼 가볍고 심플 */
@@ -2473,7 +2475,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         .hub-node.appear { transform: translate(-50%, -50%) scale(1); }
         .hub-node-inner {
             background: #fff;
-            border: 1px solid rgba(0,0,0,0.07);
+            border: 1.5px solid rgba(0,0,0,0.08);
             border-radius: 20px;
             padding: 10px 22px;
             text-align: center;
@@ -2482,18 +2484,18 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             transition: all 0.3s;
         }
         body.dark .hub-node-inner {
-            background: rgba(15,23,42,0.8);
-            border-color: rgba(255,255,255,0.08);
-            box-shadow: 0 2px 16px rgba(0,0,0,0.2);
+            background: rgba(15,23,42,0.85);
+            border: 1.5px solid rgba(129,140,248,0.2);
+            box-shadow: 0 0 16px rgba(99,102,241,0.06), 0 2px 12px rgba(0,0,0,0.2);
         }
         .hub-node:hover .hub-node-inner {
-            border-color: rgba(99,102,241,0.3);
-            box-shadow: 0 4px 24px rgba(99,102,241,0.1);
+            border-color: rgba(99,102,241,0.4);
+            box-shadow: 0 0 20px rgba(99,102,241,0.1), 0 4px 20px rgba(0,0,0,0.05);
             transform: translateY(-3px);
         }
         body.dark .hub-node:hover .hub-node-inner {
-            border-color: rgba(129,140,248,0.3);
-            box-shadow: 0 4px 24px rgba(99,102,241,0.15);
+            border-color: rgba(129,140,248,0.45);
+            box-shadow: 0 0 24px rgba(99,102,241,0.15), 0 4px 20px rgba(0,0,0,0.2);
         }
         .hub-node-label {
             font-size: 13px; font-weight: 600; color: #374151;
@@ -2525,7 +2527,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             font-size: 13px; font-weight: 600; color: #374151;
             letter-spacing: -0.3px;
         }
-        body.dark .hub-kpi-chip { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.06); color: #e2e8f0; }
+        body.dark .hub-kpi-chip { background: rgba(255,255,255,0.04); border: 1.5px solid rgba(129,140,248,0.15); color: #e2e8f0; }
         .hub-kpi-chip .kpi-val { font-weight: 800; color: #6366f1; }
         body.dark .hub-kpi-chip .kpi-val { color: #818cf8; }
         .hub-kpi-chip .kpi-val.warn { color: #ef4444; }
