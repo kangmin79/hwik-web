@@ -9295,7 +9295,7 @@ function buildHubSkeleton() {
     <div class="hub-body" id="hubBody">
       <div class="hub-body-left">
         <div class="hub-visual" id="hubVisual">
-          <svg class="hub-lines" id="hubLines"></svg>
+          <svg class="hub-lines" id="hubLines" viewBox="0 0 640 340" preserveAspectRatio="xMidYMid meet"></svg>
           <div class="hub-center" id="hubCenter">
             <div class="hub-center-icon">👤</div>
             <div class="hub-center-name" id="hubCenterName">로딩 중...</div>
@@ -9373,7 +9373,9 @@ function renderHubNodes(card, notes, matches, interests) {
   const visual = document.getElementById('hubVisual');
   if (!visual) return;
 
-  const cx = 320, cy = 170, radius = 140;
+  // viewBox는 640x340, 노드는 % 위치로 배치
+  const vw = 640, vh = 340;
+  const cx = vw / 2, cy = vh / 2, radius = 130;
   const counts = {
     conditions: (card.property?.features || []).length || 0,
     match: matches.length,
@@ -9403,8 +9405,10 @@ function renderHubNodes(card, notes, matches, interests) {
       <animate attributeName="cy" from="${cy}" to="${ny}" dur="0.6s" fill="freeze" begin="indefinite" id="anim-cy-${node.key}" />
     </circle>`;
 
+    const leftPct = (nx / vw * 100).toFixed(1);
+    const topPct = (ny / vh * 100).toFixed(1);
     nodesHtml += `
-      <div class="hub-node" data-key="${node.key}" style="left:${nx}px;top:${ny}px;"
+      <div class="hub-node" data-key="${node.key}" style="left:${leftPct}%;top:${topPct}%;"
            onclick="hubScrollTo('${node.key}')">
         <div class="hub-node-inner">
           <span class="hub-node-label">${node.label}</span>
