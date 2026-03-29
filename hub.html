@@ -580,17 +580,51 @@ const Panel = {
   },
 
   updatePreview(text) {
-    const parsed = this.parsePreview(text);
-    const area = document.getElementById('previewScreen');
-    if (!area) return;
-    const tc = parsed.type==='매매'?'sale':parsed.type==='전세'?'jeonse':'rent';
-    area.innerHTML = `
-      <div style="text-align:center;font-size:18px;font-weight:900;color:#6366f1;margin-bottom:16px;">휙</div>
-      ${parsed.type ? `<span class="card-type ${tc}">${esc(parsed.type)}</span>` : ''}
-      ${parsed.price ? `<div class="card-price">${esc(parsed.price)}</div>` : ''}
-      ${parsed.name ? `<div class="card-name">${esc(parsed.name)}</div>` : ''}
-      <div class="card-detail">${[parsed.area, parsed.floor, parsed.location].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
-      ${parsed.features.length ? `<div class="card-tags">${parsed.features.map(f=>`<span class="card-tag">${esc(f)}</span>`).join('')}</div>` : ''}`;
+    const p = this.parsePreview(text);
+    const screen = document.getElementById('previewScreen');
+    if (!screen) return;
+
+    const type = esc(p.type)||'';
+    const price = esc(p.price)||'-';
+    const name = esc(p.name||p.location)||'-';
+    const location = p.name ? esc(p.location||'') : '';
+    const detailStr = [esc(p.area),esc(p.floor)].filter(Boolean).join(' · ');
+    const features = p.features.map(f=>esc(f));
+    const agentName = esc(Auth.profile?.business_name||'부동산');
+    const agentPhone = esc(Auth.profile?.phone||'');
+    const nameParts = name.length>6 ? name.replace(/\s/g,'<br>') : name;
+    const specs = features.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center;">${features.map(f=>'<span style="font-size:10px;padding:3px 7px;border-radius:16px;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.1);">'+f+'</span>').join('')}</div>` : '';
+
+    const actionBar = `<div style="display:flex;gap:6px;margin-top:10px;">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(78,205,196,0.3);color:rgba(78,205,196,0.9);font-size:9px;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>전화</div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(250,204,21,0.25);color:rgba(250,204,21,0.9);font-size:9px;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c5.8 0 10.5 3.66 10.5 8.17 0 4.51-4.7 8.17-10.5 8.17-.87 0-1.72-.08-2.54-.24l-4.14 2.82.93-4.08C3.92 16.13 1.5 13.37 1.5 11.17 1.5 6.66 6.2 3 12 3z"/></svg>카톡</div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);font-size:9px;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>지도</div>
+    </div>`;
+
+    const agentBelow = `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;margin-top:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;">
+      <div style="width:32px;height:32px;border-radius:50%;background:rgba(78,205,196,0.2);border:1.5px solid #4ecdc4;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#4ecdc4;">${agentName.charAt(0)}</div>
+      <div><div style="font-size:12px;font-weight:700;color:#fff;">${agentName}</div><div style="font-size:11px;color:#4ecdc4;font-weight:600;">${agentPhone}</div></div>
+    </div>`;
+
+    screen.innerHTML = `<div style="border-radius:16px;overflow:hidden;background:linear-gradient(160deg,#0d1b2a 0%,#1b2838 30%,#162032 60%,#0a1628 100%);min-height:280px;display:flex;flex-direction:column;padding:28px 16px 14px;position:relative;">
+      <div style="position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(78,205,196,0.1) 0%,transparent 70%);top:-60px;right:-80px;"></div>
+      <div style="text-align:center;position:relative;z-index:1;">
+        <div style="font-size:20px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:4px;">${nameParts}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);">${location}</div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;z-index:1;">
+        <div style="width:32px;height:1px;background:rgba(255,255,255,0.12);margin-bottom:12px;"></div>
+        <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:8px;">
+          ${type?`<span style="font-size:10px;font-weight:600;color:rgba(78,205,196,0.9);padding:2px 6px;border-radius:6px;background:rgba(78,205,196,0.1);border:1px solid rgba(78,205,196,0.2);">${type}</span>`:''}
+          <span style="font-size:18px;font-weight:800;color:#fff;">${price}</span>
+        </div>
+        ${detailStr?`<div style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.7);">${detailStr}</div>`:''}
+      </div>
+      <div style="position:relative;z-index:1;">${specs}${actionBar}</div>
+    </div>${agentBelow}`;
   },
 
   parsePreview(text) {
