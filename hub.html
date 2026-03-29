@@ -586,8 +586,8 @@ const Panel = {
 
     const type = esc(p.type)||'';
     const price = esc(p.price)||'-';
-    const name = esc(p.name||p.location)||'-';
-    const location = p.name ? esc(p.location||'') : '';
+    const name = esc(p.complex||p.location)||'-';
+    const location = p.complex ? esc(p.location||'') : '';
     const detailStr = [esc(p.area),esc(p.floor)].filter(Boolean).join(' · ');
     const features = p.features.map(f=>esc(f));
     const agentName = esc(Auth.profile?.business_name||'부동산');
@@ -627,38 +627,70 @@ const Panel = {
     </div>${agentBelow}`;
   },
 
-  parsePreview(text) {
-    const result = { type:'', price:'', name:'', location:'', area:'', floor:'', features:[] };
-    if (/매매/.test(text)) result.type='매매';
-    else if (/전세/.test(text)) result.type='전세';
-    else if (/월세/.test(text)) result.type='월세';
+  parsePreview(input) {
+    const r = { type:null, price:null, location:null, complex:null, area:null, floor:null, room:null, moveIn:null, features:[], name:'' };
 
-    const priceMatch = text.match(/(\d+[\d,.]*\s*억[\s\d,만]*|\d+[\d,.]*\s*만?\s*원?)/);
-    if (priceMatch) result.price = priceMatch[0].trim();
+    // 손님 감지
+    const clientKw = ['구합니다','구해요','구해주세요','구함','찾습니다','찾아요','찾아주세요','찾고 있','원합니다','원해요','예산','손님 요청','손님요청','입주 희망','입주희망'];
+    if (clientKw.some(kw => input.includes(kw))) r.type = '손님';
+    else if (input.includes('매매')) r.type = '매매';
+    else if (input.includes('전세')) r.type = '전세';
+    else if (input.includes('월세')) r.type = '월세';
 
-    const areaMatch = text.match(/(\d+)\s*(평|㎡|m2)/);
-    if (areaMatch) result.area = areaMatch[0];
+    // 가격 (월세)
+    const rentM = input.match(/(\d+)\s*\/\s*(\d+)/);
+    if (rentM) { r.price = rentM[1]+'/'+rentM[2]; if (!r.type) r.type='월세'; }
 
-    const floorMatch = text.match(/(\d+)\s*층/);
-    if (floorMatch) result.floor = floorMatch[0];
+    // 가격 (매매/전세)
+    const priceM = input.match(/(\d+\.?\d*)\s*억/);
+    if (priceM && !r.price) r.price = priceM[1]+'억';
 
-    const guMatch = text.match(/([가-힣]+구)/);
-    if (guMatch) result.location = guMatch[0];
-
-    const dongMatch = text.match(/([가-힣]+동)/);
-    if (dongMatch) result.location = (result.location ? result.location + ' ' : '') + dongMatch[0];
-
-    const namePatterns = ['래미안','자이','힐스테이트','푸르지오','더샵','롯데캐슬','e편한세상','아이파크','sk뷰','파크리오','포레나'];
-    namePatterns.forEach(n => { if (text.includes(n)) result.name = n; });
-    if (!result.name) {
-      const complexMatch = text.match(/([가-힣a-zA-Z]+(?:아파트|오피스텔|빌라|상가|사무실))/);
-      if (complexMatch) result.name = complexMatch[0];
+    // 보증금/월세 (만원 단위)
+    if (!r.price) {
+      const manM = input.match(/보증금\s*(\d+)/);
+      const wolM = input.match(/월세\s*(\d+)/);
+      if (manM && wolM) { r.price = manM[1]+'/'+wolM[1]; if (!r.type) r.type='월세'; }
     }
 
-    const featureWords = ['남향','동향','서향','북향','주차','올수리','역세권','학교','신축','복층','테라스','베란다','풀옵션','보안','엘리베이터','반려동물','애견가능','전면넓음','코너'];
-    featureWords.forEach(f => { if (text.includes(f)) result.features.push(f); });
+    // 위치
+    const dongM = input.match(/([가-힣]+동)/);
+    if (dongM) r.location = dongM[1];
+    const guM = input.match(/([가-힣]+구)/);
+    if (guM) r.location = r.location ? guM[1]+' '+r.location : guM[1];
 
-    return result;
+    // 단지명 (아파트 브랜드)
+    const brands = ['래미안','자이','힐스테이트','푸르지오','더샵','롯데캐슬','e편한세상','아이파크','sk뷰','파크리오','포레나','센트레빌','우미린','한화포레나','두산위브','어울림'];
+    brands.forEach(b => { if (input.includes(b)) r.complex = b; });
+    if (!r.complex) {
+      const cM = input.match(/([가-힣a-zA-Z]+(?:아파트|오피스텔|빌라|상가|사무실))/);
+      if (cM) r.complex = cM[0];
+    }
+    r.name = r.complex || '';
+
+    // 면적
+    const areaM = input.match(/(\d+)\s*평/);
+    if (areaM) r.area = areaM[1]+'평';
+    const sqmM = input.match(/(\d+\.?\d*)\s*㎡/);
+    if (sqmM) r.area = sqmM[1]+'㎡';
+
+    // 층
+    const floorM = input.match(/(\d+)\s*층/);
+    if (floorM) r.floor = floorM[1]+'층';
+
+    // 방구조
+    if (input.includes('원룸')) r.room='원룸';
+    else if (input.includes('투룸')||input.includes('2룸')) r.room='투룸';
+    else if (input.includes('쓰리룸')||input.includes('3룸')) r.room='쓰리룸';
+
+    // 입주
+    if (input.includes('즉시입주')||input.includes('즉시 입주')) r.moveIn='즉시입주';
+    else if (input.includes('입주협의')||input.includes('협의가능')) r.moveIn='협의';
+
+    // 특징
+    const fkw = ['풀옵션','올수리','즉시입주','역세권','신축','주차','남향','동향','서향','북향','복층','테라스','베란다','보안','엘리베이터','반려동물','애견가능','전면넓음','코너','학교근처'];
+    fkw.forEach(f => { if (input.includes(f)) r.features.push(f); });
+
+    return r;
   },
 
   async doRegister() {
