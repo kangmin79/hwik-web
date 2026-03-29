@@ -2411,7 +2411,6 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             position: sticky; top: 56px;
             height: calc(100vh - 56px);
             justify-content: center;
-            overflow: hidden;
         }
         .hub-body.split .hub-body-right {
             flex: 0 0 50%; opacity: 1; width: auto;
@@ -2419,7 +2418,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
             max-height: calc(100vh - 56px);
             padding: 24px 28px 60px 0;
         }
-        .hub-body.split .hub-visual { margin: 0; max-width: 100%; max-height: calc(100vh - 100px); overflow: visible; }
+        .hub-body.split .hub-visual { margin: 0 auto; }
 
         /* 우측 패널 카드 */
         .hub-panel-card {
@@ -2464,8 +2463,7 @@ if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
         /* 비주얼 허브 */
         .hub-visual {
             position: relative;
-            width: 100%; max-width: 800px;
-            aspect-ratio: 800 / 440;
+            width: 560px; height: 400px;
             margin: 0 auto;
         }
 
@@ -9295,7 +9293,7 @@ function buildHubSkeleton() {
     <div class="hub-body" id="hubBody">
       <div class="hub-body-left">
         <div class="hub-visual" id="hubVisual">
-          <svg class="hub-lines" id="hubLines" viewBox="0 0 800 440" preserveAspectRatio="xMidYMid meet" width="100%" height="100%"></svg>
+          <svg class="hub-lines" id="hubLines" viewBox="0 0 560 400" width="560" height="400"></svg>
           <div class="hub-center" id="hubCenter">
             <div class="hub-center-icon">👤</div>
             <div class="hub-center-name" id="hubCenterName">로딩 중...</div>
@@ -9366,8 +9364,8 @@ function renderHubNodes(card, notes, matches, interests) {
   const visual = document.getElementById('hubVisual');
   if (!visual) return;
 
-  const vw = 800, vh = 440;
-  const cx = vw / 2, cy = vh / 2, radius = 170;
+  const vw = 560, vh = 400;
+  const cx = vw / 2, cy = vh / 2, radius = 150;
   const counts = {
     conditions: (card.property?.features || []).length || 0,
     match: matches.length,
@@ -9670,11 +9668,10 @@ function hubPulseStart(key) {
 
   const node = HUB_NODES.find(n => n.key === key);
   if (!node) return;
-  const vw = 800, vh = 440;
-  const fromX = vw / 2, fromY = vh / 2;
+  const fromX = 280, fromY = 200;
   const rad = (node.angle * Math.PI) / 180;
-  const toX = fromX + 170 * Math.cos(rad);
-  const toY = fromY + 170 * Math.sin(rad);
+  const toX = fromX + 150 * Math.cos(rad);
+  const toY = fromY + 150 * Math.sin(rad);
 
   [head, t1, t2, t3].forEach(el => { if (el) el.classList.add('on'); });
 
