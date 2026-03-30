@@ -1956,7 +1956,7 @@ const PanelClient = (() => {
 
   async function render(el){
     el.innerHTML=`<div class="panel-inner">${Hub.panelHead('손님')}
-      <div style="margin-bottom:16px;padding:16px;border:1.5px solid var(--border);border-radius:14px;background:var(--bg-card);">
+      <div style="margin-bottom:16px;padding:16px;border:2px solid #4ecdc4;border-radius:14px;background:rgba(78,205,196,0.04);">
         <div style="font-size:13px;font-weight:700;margin-bottom:8px;">+ 손님 등록</div>
         <textarea id="clientRegInput" class="reg-textarea" style="min-height:60px;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:14px;" placeholder="예) 강남구 아파트 전세 5억이하 구합니다&#10;이름: 홍길동 / 010-1234-5678"></textarea>
         <button onclick="PanelClient.registerClient()" class="btn-primary" style="margin-top:8px;padding:10px;" id="clientRegBtn">AI로 손님 등록</button>
