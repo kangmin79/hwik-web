@@ -49,6 +49,7 @@ a{color:var(--primary);text-decoration:none;}
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
   border-bottom:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-between;padding:0 24px;
+  transition:transform 0.3s ease;
 }
 body.dark .header{background:rgba(15,23,42,0.92);}
 .logo{font-size:24px;font-weight:900;color:var(--primary);cursor:pointer;}
@@ -62,7 +63,7 @@ body.dark .header{background:rgba(15,23,42,0.92);}
 /* ═══════════════════════════════════════════════════════════
    3. 메인 레이아웃
    ═══════════════════════════════════════════════════════════ */
-.main{height:calc(100vh - var(--header-h));margin-top:var(--header-h);position:relative;}
+.main{height:calc(100vh - var(--header-h));margin-top:var(--header-h);position:relative;transition:margin-top 0.3s ease,height 0.3s ease;}
 .hub-area{
   width:100%;height:100%;
   display:flex;align-items:center;justify-content:center;
@@ -1375,7 +1376,15 @@ const Hub = (() => {
     if(key.startsWith('pr_'))PanelCards.renderSub(key,el);
   }
 
-  function closePanel() { document.getElementById('main').classList.remove('split');document.querySelectorAll('.hub-node').forEach(n=>n.classList.remove('active'));activePanel=null;setTimeout(()=>render(current?.nodes,current?.center),50); }
+  function closePanel() {
+    document.getElementById('main').classList.remove('split');
+    document.querySelectorAll('.hub-node').forEach(n=>n.classList.remove('active'));
+    activePanel=null;
+    // 헤더 복원
+    const header=document.querySelector('.header'),main=document.getElementById('main');
+    header.style.transform='';main.style.marginTop='';main.style.height='';
+    setTimeout(()=>render(current?.nodes,current?.center),50);
+  }
 
   function enterClient(card) {
     const p=card.property||{};
@@ -1781,12 +1790,16 @@ const PanelCards = (() => {
     const wasSelected=Preview.getSelected().some(s=>s.id===id);
     Preview.toggle(c);
     renderList();Preview.renderSlider('previewPanel');
-    // 새로 선택했으면 마지막(방금 추가한) 카드로 이동
     if(!wasSelected&&Preview.getSelected().length>0)Preview.goTo(Preview.getSelected().length-1);
-    // 미리보기 패널 열기/닫기
     const pp=document.getElementById('previewPanel');
-    if(pp){const has=Preview.getSelected().length>0;pp.style.width=has?'340px':'0';pp.style.opacity=has?'1':'0';pp.style.padding=has?'16px':'0';}
-    const btn=document.querySelector('.btn-send');if(btn)btn.disabled=!Preview.getSelected().length;
+    const has=Preview.getSelected().length>0;
+    if(pp){pp.style.width=has?'340px':'0';pp.style.opacity=has?'1':'0';pp.style.padding=has?'16px':'0';}
+    // 미리보기 열리면 헤더 숨김 → 공간 확보
+    const header=document.querySelector('.header');
+    const main=document.getElementById('main');
+    if(has){header.style.transform='translateY(-100%)';main.style.marginTop='0';main.style.height='100vh';}
+    else{header.style.transform='';main.style.marginTop='';main.style.height='';}
+    const btn=document.querySelector('.btn-send');if(btn)btn.disabled=!has;
   }
 
   function share1(id){const rooms=Data.cache.rooms;if(!rooms.length){Toast.show('공유방을 먼저 만들어주세요');return;}const m=document.getElementById('shareToRoomModal');if(!m)return;m.innerHTML=`<div class="modal-content"><div class="modal-header">공유방 선택<button class="modal-close" onclick="this.closest('.modal-overlay').classList.remove('show')">✕</button></div><div class="modal-body">${rooms.map(r=>`<div class="item" onclick="PanelCards.doShare('${id}','${r.id}')"><div class="item-body"><div class="item-name">${esc(r.name)}</div></div></div>`).join('')}</div></div>`;m.classList.add('show');}
