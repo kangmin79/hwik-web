@@ -681,7 +681,7 @@ const Data = (() => {
   async function loadCounts() {
     const id = uid(); if (!id) return;
     const [total,al,me] = await Promise.all([
-      sb().from('cards').select('id,property',{count:'exact',head:false}).eq('agent_id',id).limit(0),
+      sb().from('cards').select('id',{count:'exact',head:true}).eq('agent_id',id),
       sb().from('match_notifications').select('id',{count:'exact',head:true}).eq('agent_id',id).eq('is_read',false),
       sb().from('memos').select('id',{count:'exact',head:true}).eq('agent_id',id).eq('is_read',false),
     ]);
@@ -796,7 +796,7 @@ const Data = (() => {
     const id=uid(); if(!id) return {matches:[],overdue:[],memos:[]};
     const [m,o,me] = await Promise.all([
       sb().from('match_notifications').select('id,card_id,client_card_id,similarity,created_at,is_read').eq('agent_id',id).order('created_at',{ascending:false}).limit(20),
-      sb().from('client_notes').select('id,client_card_id,content,alert_date,type,alert_done').eq('agent_id',id).eq('alert_done',false).not('alert_date','is',null).lt('alert_date',new Date().toISOString()).order('alert_date',{ascending:true}).limit(20),
+      sb().from('client_notes').select('id,client_card_id,content,alert_date,type,alert_done').eq('agent_id',id).eq('alert_done',false).neq('alert_date',null).lt('alert_date',new Date().toISOString()).order('alert_date',{ascending:true}).limit(20),
       sb().from('memos').select('id,content,is_read,created_at').eq('agent_id',id).order('created_at',{ascending:false}).limit(20),
     ]);
     return { matches:m.data||[], overdue:o.data||[], memos:me.data||[] };
@@ -807,7 +807,7 @@ const Data = (() => {
     const start = `${year}-${String(month).padStart(2,'0')}-01`;
     const em = month===12?1:month+1, ey = month===12?year+1:year;
     const end = `${ey}-${String(em).padStart(2,'0')}-01`;
-    const { data } = await sb().from('client_notes').select('id,client_card_id,content,alert_date,type,alert_done,created_at').eq('agent_id',id).not('alert_date','is',null).gte('alert_date',start).lt('alert_date',end).order('alert_date',{ascending:true});
+    const { data } = await sb().from('client_notes').select('id,client_card_id,content,alert_date,type,alert_done,created_at').eq('agent_id',id).neq('alert_date',null).gte('alert_date',start).lt('alert_date',end).order('alert_date',{ascending:true});
     return data||[];
   }
 
@@ -944,7 +944,7 @@ const Search = (() => {
     try{const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/search-property`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({query,agent_id:Auth.user?.id,limit:30,threshold:0.15,mode})});const d=await res.json();return d.results||[];}catch(_){return [];}
   }
   let _scores={};
-  async function loadScores(){try{const{data}=await Auth.sb.from('search_logs').select('clicked_card_id').eq('agent_id',Auth.user?.id).not('clicked_card_id','is',null).order('created_at',{ascending:false}).limit(200);_scores={};(data||[]).forEach(r=>{if(r.clicked_card_id)_scores[r.clicked_card_id]=(_scores[r.clicked_card_id]||0)+1;});}catch(_){}}
+  async function loadScores(){try{const{data}=await Auth.sb.from('search_logs').select('clicked_card_id').eq('agent_id',Auth.user?.id).neq('clicked_card_id',null).order('created_at',{ascending:false}).limit(200);_scores={};(data||[]).forEach(r=>{if(r.clicked_card_id)_scores[r.clicked_card_id]=(_scores[r.clicked_card_id]||0)+1;});}catch(_){}}
   async function logSearch(query,count){try{await Auth.sb.from('search_logs').insert({agent_id:Auth.user?.id,query,result_count:count||0,source:'hub'});}catch(_){}}
   async function logClick(cardId,query){try{await Auth.sb.from('search_logs').insert({agent_id:Auth.user?.id,query,clicked_card_id:cardId,source:'hub_click'});}catch(_){}}
   return { local, vector, loadScores, logSearch, logClick, _scores };
@@ -1917,9 +1917,11 @@ async function _bgCheckMatches(){
     if(!cards?.length)return;
     const clientCards=cards.filter(c=>c.property?.type==='손님'&&!c.property?.embedding);
     // 최대 3개만 처리 (과부하 방지)
+    const {data:sess}=await Auth.sb.auth.getSession();
+    if(!sess?.session?.access_token)return;
     for(const c of clientCards.slice(0,3)){
       Data.updateEmbedding(c.id);
-      await new Promise(r=>setTimeout(r,1000));
+      await new Promise(r=>setTimeout(r,2000));
     }
   }catch(_){}
 }
