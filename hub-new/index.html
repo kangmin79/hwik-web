@@ -170,10 +170,11 @@ body.dark .hub-node-inner{border-color:rgba(255,255,255,0.08);}
    ═══════════════════════════════════════════════════════════ */
 .preview-label{font-size:12px;color:var(--text-light);text-align:center;margin-bottom:8px;}
 .phone-mockup{
-  width:280px;height:500px;border-radius:32px;
+  width:280px;height:560px;border-radius:32px;
   background:#111;border:3px solid #333;
   overflow:hidden;position:relative;
   box-shadow:0 8px 32px rgba(0,0,0,0.15);
+  flex-shrink:0;
 }
 .phone-notch{width:120px;height:24px;background:#111;border-radius:0 0 16px 16px;margin:0 auto;position:relative;z-index:2;}
 .phone-screen{height:calc(100% - 24px);overflow-y:auto;overflow-x:hidden;background:#fff;position:relative;}
@@ -193,7 +194,7 @@ body.dark .phone-screen{background:#0f172a;}
 .btn-send:disabled{opacity:0.4;cursor:not-allowed;}
 
 /* ═══ 폰 미리보기 카드 (항상 다크) ═══ */
-.phone-screen{background:#0f0f1a!important;}
+.phone-screen{background:#0f0f1a!important;overflow-y:auto!important;}
 .phone-header{padding:14px 12px 4px;text-align:center;flex-shrink:0;}
 .phone-logo{font-size:13px;font-weight:900;color:#facc15;}
 .phone-indicator{font-size:11px;color:#666;margin-top:2px;}
@@ -202,10 +203,10 @@ body.dark .phone-screen{background:#0f172a;}
 .card-slider{height:100%;position:relative;touch-action:pan-y;overflow:hidden;}
 .card-slide{position:absolute;top:0;left:0;width:100%;transition:transform 0.3s ease;cursor:grab;}
 
-.preview-card-full{width:100%;border-radius:12px;overflow:hidden;position:relative;background:#1a1a2e;height:320px;}
+.preview-card-full{width:100%;border-radius:12px;overflow:hidden;position:relative;background:#1a1a2e;height:340px;}
 .preview-inner-slider{display:flex;transition:transform 0.35s ease;}
-.preview-photo-slide{min-width:100%;height:320px;object-fit:cover;}
-.preview-info-slide{min-width:100%;height:320px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px 80px;overflow:hidden;}
+.preview-photo-slide{min-width:100%;height:340px;object-fit:cover;}
+.preview-info-slide{min-width:100%;height:340px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px 80px;overflow:hidden;}
 .preview-info-slide.bg-1{background:linear-gradient(160deg,#0d1b2a 0%,#1b2838 30%,#162032 60%,#0a1628 100%);}
 .preview-info-slide.bg-1::before{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(78,205,196,0.12) 0%,transparent 70%);top:-60px;right:-80px;}
 .preview-info-complex{font-size:28px;font-weight:800;color:#fff;text-align:center;line-height:1.2;margin-bottom:8px;position:relative;z-index:1;}
@@ -214,7 +215,7 @@ body.dark .phone-screen{background:#0f172a;}
 .preview-info-type-price{display:flex;align-items:baseline;gap:8px;position:relative;z-index:1;}
 .preview-info-type{font-size:11px;font-weight:500;color:rgba(78,205,196,0.8);padding:2px 8px;border-radius:6px;background:rgba(78,205,196,0.1);border:1px solid rgba(78,205,196,0.2);}
 .preview-info-price{font-size:22px;font-weight:800;color:#fff;}
-.preview-memo-slide{min-width:100%;height:320px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 24px;background:linear-gradient(160deg,#0d1117 0%,#151c27 40%,#0a0f1a 100%);}
+.preview-memo-slide{min-width:100%;height:340px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 24px;background:linear-gradient(160deg,#0d1117 0%,#151c27 40%,#0a0f1a 100%);}
 .preview-memo-quote{font-family:serif;font-size:48px;line-height:0.6;color:rgba(255,255,255,0.08);align-self:flex-start;margin-bottom:16px;}
 .preview-memo-text{font-size:13px;color:rgba(255,255,255,0.9);line-height:1.8;text-align:center;margin-bottom:20px;word-break:keep-all;}
 .preview-memo-agent{font-size:11px;color:rgba(255,255,255,0.4);}
