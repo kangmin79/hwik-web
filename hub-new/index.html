@@ -1307,20 +1307,6 @@ const Hub = (() => {
   const VW=800,VH=700;
   let RADIUS=180, stack=[], current=null, activePanel=null;
 
-  // 허브 영역 크기에 맞춰 RADIUS 자동 계산
-  let RX=180, RY=180;
-  function _calcRadius(){
-    const area=document.querySelector('.hub-area');
-    if(!area)return;
-    const w=area.offsetWidth, h=area.offsetHeight;
-    // 기본은 원형 (높이 기준)
-    const base=Math.max(80, Math.min(230, h*0.25));
-    RY=base;
-    // 가로가 충분하면 원형, 좁으면 가로만 축소
-    RX=(w*0.28 >= base) ? base : Math.max(70, w*0.28);
-    RADIUS=Math.min(RX,RY);
-  }
-
   const MAIN=[{key:'register',label:'매물 등록',angle:-90},{key:'my',label:'내 매물',angle:-18},{key:'client',label:'손님',angle:54},{key:'alert',label:'알림',angle:126},{key:'shared',label:'공유방',angle:198}];
   const CLIENT=[{key:'cl_conditions',label:'희망 조건',angle:-90},{key:'cl_match',label:'매칭 매물',angle:-30},{key:'cl_timeline',label:'상담 기록',angle:30},{key:'cl_schedule',label:'일정/알림',angle:90},{key:'cl_contact',label:'연락처',angle:150},{key:'cl_back',label:'← 돌아가기',angle:210}];
   const PROPERTY=[{key:'pr_detail',label:'상세 정보',angle:-90},{key:'pr_status',label:'거래 상태',angle:30},{key:'pr_back',label:'← 돌아가기',angle:150}];
@@ -1328,23 +1314,14 @@ const Hub = (() => {
   function render(nodes,center) {
     nodes=nodes||MAIN;center=center||{icon:'👤',name:Auth.profile?.business_name||'중개사',sub:''};
     const v=document.getElementById('hubVisual'),hc=document.getElementById('hubCenter');if(!v||!hc)return;
-    const area=document.querySelector('.hub-area');
-    const areaW=area?area.offsetWidth:999;
-
-    // 가로 550px 이하면 세로 스택 모드 (노드+중앙 겹침 방지)
-    if(areaW<550){
-      _renderStack(v,hc,nodes,center);return;
-    }
-
-    _calcRadius();
+    // 원형 모드 복원
+    hc.style.cssText='';v.style.cssText='';
     const cx=VW/2,cy=VH/2;
     hc.innerHTML=`<div class="hub-center-icon">${center.icon}</div><div class="hub-center-name">${esc(center.name)}</div><div class="hub-center-sub">${esc(center.sub)}</div>`;
-    hc.style.cssText='';// 원형 모드 복원
-    v.style.cssText='';
     let svg='',html='';
     const c=Data.cache.counts;
     nodes.forEach(n=>{
-      const rad=n.angle*Math.PI/180,nx=cx+RX*Math.cos(rad),ny=cy+RY*Math.sin(rad);
+      const rad=n.angle*Math.PI/180,nx=cx+RADIUS*Math.cos(rad),ny=cy+RADIUS*Math.sin(rad);
       svg+=`<line class="hub-line" x1="${cx}" y1="${cy}" x2="${nx}" y2="${ny}"/>`;
       ['t3','t2','t1'].forEach((s,i)=>svg+=`<circle class="pulse-${s}" id="p${s}-${n.key}" cx="${cx}" cy="${cy}" r="${6-i}"/>`);
       svg+=`<circle class="pulse-head" id="ph-${n.key}" cx="${cx}" cy="${cy}" r="3.5"/>`;
@@ -1358,27 +1335,43 @@ const Hub = (() => {
     v.querySelectorAll('.hub-node').forEach((el,i)=>{setTimeout(()=>el.classList.add('appear'),30+i*40);el.addEventListener('mouseenter',()=>Pulse.start(el.dataset.key,nodes));el.addEventListener('mouseleave',()=>Pulse.stop(el.dataset.key));});
   }
 
-  // 세로 스택 모드 (좁은 허브 영역용)
-  function _renderStack(v,hc,nodes,center){
+  // 레이아웃 자동 조정 (패널 열림/닫힘 시)
+  function adjustLayout(){
+    const isSplit=document.getElementById('main').classList.contains('split');
+    const hubArea=document.querySelector('.hub-area');
+    const availW=isSplit&&hubArea?hubArea.offsetWidth:window.innerWidth;
+
+    if(isSplit&&availW<500){
+      _renderVertical();
+    }else{
+      const ratio=availW/window.innerWidth;
+      RADIUS=Math.round(230*Math.max(ratio,0.45));
+      render(current?.nodes,current?.center);
+    }
+  }
+
+  // 세로 리스트 모드 (좁은 허브 영역)
+  function _renderVertical(){
+    const nodes=current?.nodes||MAIN;
+    const center=current?.center||{icon:'👤',name:Auth.profile?.business_name||'중개사',sub:''};
+    const v=document.getElementById('hubVisual'),hc=document.getElementById('hubCenter');
+    if(!v||!hc)return;
+
+    hc.innerHTML=`<div class="hub-center-icon">${center.icon}</div><div class="hub-center-name">${esc(center.name)}</div><div class="hub-center-sub">${esc(center.sub)}</div>`;
     document.getElementById('hubLines').innerHTML='';
     v.querySelectorAll('.hub-node').forEach(el=>el.remove());
-    // 허브 비주얼을 세로 플렉스로 전환
-    v.style.cssText='display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;aspect-ratio:auto;max-height:none;padding:8px 0;';
-    // 중앙 노드 작게
-    hc.style.cssText='position:static;transform:none;width:auto;height:auto;padding:8px 16px;border-radius:16px;display:flex;align-items:center;gap:8px;margin-bottom:4px;';
-    hc.innerHTML=`<div style="font-size:20px;">${center.icon}</div><div style="font-size:12px;font-weight:800;">${esc(center.name)}</div>`;
-    // 노드를 세로로 나열
-    let html='';
-    nodes.forEach(n=>{
+
+    const total=nodes.length;
+    nodes.forEach((n,i)=>{
+      const topPct=55+(i-(total-1)/2)*13;
       const active=activePanel===n.key;
-      html+=`<div class="hub-node" data-key="${n.key}" style="position:static;transform:none;width:100%;max-width:200px;cursor:pointer;" onclick="Hub.onNode('${n.key}')">
-        <div class="hub-node-inner" style="padding:8px 16px;min-width:auto;border-radius:12px;${active?'border-color:var(--primary);background:var(--primary-bg);':''}">
-          <span class="hub-node-label" style="font-size:12px;">${n.label}</span>
-        </div>
-      </div>`;
+      v.insertAdjacentHTML('beforeend',`<div class="hub-node appear" data-key="${n.key}" style="left:50%;top:${topPct}%;" onclick="Hub.onNode('${n.key}')"><div class="hub-node-inner" style="${active?'border-color:var(--primary);background:var(--primary-bg);':''}"><span class="hub-node-label">${n.label}</span></div></div>`);
     });
-    v.insertAdjacentHTML('beforeend',html);
-    v.querySelectorAll('.hub-node').forEach((el,i)=>{setTimeout(()=>el.classList.add('appear'),30+i*30);});
+
+    v.querySelectorAll('.hub-node').forEach(el=>{
+      el.addEventListener('mouseenter',()=>Pulse.start(el.dataset.key,nodes));
+      el.addEventListener('mouseleave',()=>Pulse.stop(el.dataset.key));
+    });
   }
 
   function onNode(key) { if(key==='cl_back'||key==='pr_back'){back();return;} if(key.startsWith('cl_')||key.startsWith('pr_')){openSub(key);return;} openPanel(key); }
@@ -1388,8 +1381,7 @@ const Hub = (() => {
     document.querySelectorAll('.hub-node').forEach(n=>n.classList.remove('active'));
     document.querySelector(`.hub-node[data-key="${key}"]`)?.classList.add('active');
     activePanel=key;document.getElementById('main').classList.add('split');
-    // 허브 축소 — 영역 크기에 맞춰 자동 재배치
-    setTimeout(()=>render(current?.nodes,current?.center),50);
+    setTimeout(()=>adjustLayout(),50);
     const el=document.getElementById('panelArea');
     switch(key){
       case 'register':PanelRegister.render(el);break;
@@ -1419,7 +1411,8 @@ const Hub = (() => {
     // 헤더 복원
     const header=document.querySelector('.header'),main=document.getElementById('main');
     header.style.transform='';main.style.marginTop='';main.style.height='';
-    // 레이아웃 변경 후 허브 재배치 (영역 크기가 변한 후에 계산)
+    // 원래 반지름 복구 + 재배치
+    RADIUS=230;
     setTimeout(()=>render(current?.nodes,current?.center),400);
   }
 
@@ -1496,7 +1489,7 @@ const Hub = (() => {
 
   function _ph(title,count){return `<div class="panel-head"><div class="panel-title">${title}${count!=null?' <span>'+count+'</span>':''}</div><button class="panel-x" onclick="Hub.closePanel()">✕</button></div>`;}
 
-  return { MAIN,CLIENT,PROPERTY, render,onNode,openPanel,openSub,closePanel,enterClient,enterProperty,back, panelHead:_ph, _openMyInfo, _sendOtp, _verifyOtp, _saveMyInfo, get current(){return current;}, get activePanel(){return activePanel;}, get RADIUS(){return RADIUS;}, get RX(){return RX;}, get RY(){return RY;} };
+  return { MAIN,CLIENT,PROPERTY, render,onNode,openPanel,openSub,closePanel,enterClient,enterProperty,back, panelHead:_ph, _openMyInfo, _sendOtp, _verifyOtp, _saveMyInfo, get current(){return current;}, get activePanel(){return activePanel;}, get RADIUS(){return RADIUS;}, adjustLayout };
 })();
 
 /* ═══════════════════════════════════════════════════════════
@@ -1506,7 +1499,7 @@ const Pulse = (() => {
   let raf=null;
   function start(key,nodes) {
     nodes=nodes||Hub.current?.nodes||Hub.MAIN;const n=nodes.find(n=>n.key===key);if(!n)return;
-    const fx=400,fy=350,rad=n.angle*Math.PI/180,tx=fx+(Hub.RX||180)*Math.cos(rad),ty=fy+(Hub.RY||180)*Math.sin(rad);
+    const fx=400,fy=350,R=Hub.RADIUS||180,rad=n.angle*Math.PI/180,tx=fx+R*Math.cos(rad),ty=fy+R*Math.sin(rad);
     const els=['ph','pt1','pt2','pt3'].map(p=>document.getElementById(`${p}-${key}`));
     els.forEach(e=>{if(e)e.classList.add('on');});
     const t0=performance.now(),dur=500,delays=[0,40,90,150];
@@ -2429,7 +2422,7 @@ window.addEventListener('beforeunload',e=>{const b=document.getElementById('leav
 if(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)&&!location.search.includes('desktop'))location.href='../mobile-v6.html';
 
 // 리사이즈 시 허브 재배치
-let _resizeTimer;window.addEventListener('resize',()=>{clearTimeout(_resizeTimer);_resizeTimer=setTimeout(()=>{if(!Hub.activePanel)Hub.render();},200);});
+let _resizeTimer;window.addEventListener('resize',()=>{clearTimeout(_resizeTimer);_resizeTimer=setTimeout(()=>{if(Hub.activePanel)Hub.adjustLayout();else Hub.render();},200);});
 
 // 시작
 Auth.init();
