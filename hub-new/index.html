@@ -673,7 +673,7 @@ const Auth = (() => {
 const Data = (() => {
   const sb = () => Auth.sb;
   const uid = () => Auth.user?.id;
-  const PAGE = 30;
+  const PAGE = 20;
   let _guard = 0;
 
   const cache = { myCards:[], clientCards:[], sharedCards:[], rooms:[], pendingInvites:[], memos:[], counts:{} };
@@ -681,7 +681,7 @@ const Data = (() => {
   async function loadCounts() {
     const id = uid(); if (!id) return;
     const [my,cl,sh,al,me] = await Promise.all([
-      sb().from('cards').select('id',{count:'exact',head:true}).eq('agent_id',id).neq('property->>type','손님'),
+      sb().from('cards').select('id',{count:'exact',head:true}).eq('agent_id',id).not('property->>type','eq','손님'),
       sb().from('cards').select('id',{count:'exact',head:true}).eq('agent_id',id).eq('property->>type','손님'),
       sb().from('share_room_members').select('share_rooms(id)',{count:'exact',head:true}).eq('user_id',id).neq('role','pending'),
       sb().from('match_notifications').select('id',{count:'exact',head:true}).eq('agent_id',id).eq('is_read',false),
@@ -693,10 +693,11 @@ const Data = (() => {
   async function loadMyCards(off=0, reset=false) {
     const id=uid(); if(!id) return [];
     const g = ++_guard;
-    const { data } = await sb().from('cards')
+    const { data, error } = await sb().from('cards')
       .select('id,property,trade_status,price_number,created_at,link_id,photos,agent_comment')
-      .eq('agent_id',id).neq('property->>type','손님')
+      .eq('agent_id',id).not('property->>type','eq','손님')
       .order('created_at',{ascending:false}).range(off, off+PAGE-1);
+    if(error) console.error('loadMyCards error:', error);
     if (g!==_guard) return cache.myCards;
     if (reset||off===0) cache.myCards = data||[];
     else cache.myCards = [...cache.myCards, ...(data||[])];
