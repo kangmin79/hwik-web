@@ -1346,7 +1346,7 @@ const PanelRegister = (() => {
     if(_isBatch(text)){await _doBatch(text);return;}
 
     // 단건 등록
-    document.getElementById('leaveBanner').style.display='';btn.textContent='분석 중...';btn.disabled=true;_runSteps();
+    document.getElementById('leaveBanner').style.display='block';btn.textContent='분석 중...';btn.disabled=true;_runSteps();
     try{
       const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/parse-property`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({text,agent_id:Auth.user.id})});
       const d=await res.json();
@@ -1923,7 +1923,7 @@ window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();_pwaEvent=e
 App.installPwa=async function(){if(!_pwaEvent)return;_pwaEvent.prompt();const r=await _pwaEvent.userChoice;if(r.outcome==='accepted')document.getElementById('pwaBtn')?.remove();_pwaEvent=null;};
 
 // 이탈 방지
-window.addEventListener('beforeunload',e=>{const b=document.getElementById('leaveBanner');if(b&&b.style.display!=='none'){e.preventDefault();e.returnValue='';}});
+window.addEventListener('beforeunload',e=>{const b=document.getElementById('leaveBanner');if(b&&b.style.display==='block'){e.preventDefault();e.returnValue='';}});
 // 모바일 리다이렉트
 if(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)&&!location.search.includes('desktop'))location.href='../mobile-v6.html';
 
