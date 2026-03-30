@@ -1383,7 +1383,8 @@ const Hub = (() => {
     // 헤더 복원
     const header=document.querySelector('.header'),main=document.getElementById('main');
     header.style.transform='';main.style.marginTop='';main.style.height='';
-    setTimeout(()=>render(current?.nodes,current?.center),50);
+    // 레이아웃 변경 후 허브 재배치 (영역 크기가 변한 후에 계산)
+    setTimeout(()=>render(current?.nodes,current?.center),400);
   }
 
   function enterClient(card) {
