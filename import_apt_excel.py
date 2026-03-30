@@ -83,9 +83,9 @@ def import_basic(filepath: str):
 
         update = {"kapt_code": kapt_code}
         if parking_total > 0:
-            update["parking"] = str(parking_total)
+            update["parking"] = int(parking_total)
         if top_floor > 0:
-            update["top_floor"] = str(top_floor)
+            update["top_floor"] = int(top_floor)
         if heating:
             update["heating"] = heating
         if builder:

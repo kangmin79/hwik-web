@@ -16,23 +16,31 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    // 공개 매물만 조회 (trade_status가 '완료'가 아닌 것)
-    const { data: cards, error } = await supabase
-      .from('cards')
-      .select('id, created_at, trade_status')
-      .neq('trade_status', '완료')
-      .neq('property->>type', '손님')
-      .order('created_at', { ascending: false })
-      .limit(5000);
+    // XML 특수문자 이스케이프
+    const escXml = (s: string) => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
-    if (error) throw error;
+    // 페이지네이션으로 전체 데이터 가져오기
+    async function fetchAll(table: string, select: string, filters: any[] = []) {
+      const all: any[] = [];
+      let offset = 0;
+      const limit = 1000;
+      while (true) {
+        let q = supabase.from(table).select(select).order('id' as any, { ascending: true }).range(offset, offset + limit - 1);
+        for (const f of filters) q = q.neq(f[0], f[1]);
+        const { data } = await q;
+        if (!data || data.length === 0) break;
+        all.push(...data);
+        offset += limit;
+        if (data.length < limit) break;
+      }
+      return all;
+    }
 
-    // 단지 페이지 조회
-    const { data: danjiPages } = await supabase
-      .from('danji_pages')
-      .select('id, updated_at')
-      .order('updated_at', { ascending: false })
-      .limit(10000);
+    // 공개 매물 (손님 제외, 완료 제외)
+    const cards = await fetchAll('cards', 'id, created_at', [['trade_status', '완료'], ['property->>type', '손님']]);
+
+    // 단지 페이지 전체
+    const danjiPages = await fetchAll('danji_pages', 'id, updated_at');
 
     let urls = '';
 
@@ -55,7 +63,7 @@ Deno.serve(async (req) => {
 
       urls += `
   <url>
-    <loc>${BASE_URL}/danji.html?id=${page.id}</loc>
+    <loc>${BASE_URL}/danji.html?id=${escXml(page.id)}</loc>
     ${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
@@ -68,7 +76,7 @@ Deno.serve(async (req) => {
 
       urls += `
   <url>
-    <loc>${BASE_URL}/property_view.html?id=${card.id}</loc>
+    <loc>${BASE_URL}/property_view.html?id=${escXml(card.id)}</loc>
     ${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

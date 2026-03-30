@@ -18,7 +18,7 @@ const BASE_URL = 'https://hwik.kr';
 
 function esc(s: string | null | undefined): string {
   if (!s) return '';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 function formatPrice(manwon: number | null): string {

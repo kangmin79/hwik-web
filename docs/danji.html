@@ -171,7 +171,7 @@ let chart = null;
 let volumeChart = null;
 
 // ── 유틸 ──
-function esc(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function esc(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 function formatPrice(manwon) {
   if (!manwon) return '-';
@@ -213,7 +213,7 @@ async function loadData() {
   document.getElementById('tw-title').content = document.title;
   document.getElementById('tw-desc').content = desc;
   document.querySelector('meta[name="description"]').content = desc;
-  document.getElementById('canonical').href = `https://hwik.kr/danji.html?id=${id}`;
+  document.getElementById('canonical').href = `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;
 
   // 첫 번째 평형 선택
   const cats = data.categories || [];

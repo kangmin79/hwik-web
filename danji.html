@@ -198,7 +198,7 @@ let chart = null;
 let volumeChart = null;
 
 // ── 유틸 ──
-function esc(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function esc(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 function formatPrice(manwon) {
   if (!manwon) return '-';
@@ -269,7 +269,7 @@ function applyData(data) {
   document.getElementById('tw-desc').content = desc;
   document.querySelector('meta[name="description"]').content = desc;
   const id = new URLSearchParams(location.search).get('id');
-  const pageUrl = `https://hwik.kr/danji.html?id=${id}`;
+  const pageUrl = `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;
   document.getElementById('canonical').href = pageUrl;
   document.getElementById('og-url').content = pageUrl;
   document.getElementById('meta-keywords').content = [data.complex_name, data.location, '아파트 시세', '실거래가', '전세가율', data.build_year ? data.build_year+'년' : ''].filter(Boolean).join(', ');
