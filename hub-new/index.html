@@ -1307,6 +1307,16 @@ const Hub = (() => {
   const VW=800,VH=700;
   let RADIUS=180, stack=[], current=null, activePanel=null;
 
+  // 허브 영역 크기에 맞춰 RADIUS 자동 계산
+  function _calcRadius(){
+    const area=document.querySelector('.hub-area');
+    if(!area)return 180;
+    const w=area.offsetWidth, h=area.offsetHeight;
+    const min=Math.min(w,h);
+    // 최소 80, 최대 230, 영역 크기의 28%
+    return Math.max(80, Math.min(230, min*0.28));
+  }
+
   const MAIN=[{key:'register',label:'매물 등록',angle:-90},{key:'my',label:'내 매물',angle:-18},{key:'client',label:'손님',angle:54},{key:'alert',label:'알림',angle:126},{key:'shared',label:'공유방',angle:198}];
   const CLIENT=[{key:'cl_conditions',label:'희망 조건',angle:-90},{key:'cl_match',label:'매칭 매물',angle:-30},{key:'cl_timeline',label:'상담 기록',angle:30},{key:'cl_schedule',label:'일정/알림',angle:90},{key:'cl_contact',label:'연락처',angle:150},{key:'cl_back',label:'← 돌아가기',angle:210}];
   const PROPERTY=[{key:'pr_detail',label:'상세 정보',angle:-90},{key:'pr_status',label:'거래 상태',angle:30},{key:'pr_back',label:'← 돌아가기',angle:150}];
@@ -1314,6 +1324,7 @@ const Hub = (() => {
   function render(nodes,center) {
     nodes=nodes||MAIN;center=center||{icon:'👤',name:Auth.profile?.business_name||'중개사',sub:''};
     const v=document.getElementById('hubVisual'),hc=document.getElementById('hubCenter');if(!v||!hc)return;
+    RADIUS=_calcRadius();
     const cx=VW/2,cy=VH/2;
     hc.innerHTML=`<div class="hub-center-icon">${center.icon}</div><div class="hub-center-name">${esc(center.name)}</div><div class="hub-center-sub">${esc(center.sub)}</div>`;
     let svg='',html='';
@@ -1340,8 +1351,8 @@ const Hub = (() => {
     document.querySelectorAll('.hub-node').forEach(n=>n.classList.remove('active'));
     document.querySelector(`.hub-node[data-key="${key}"]`)?.classList.add('active');
     activePanel=key;document.getElementById('main').classList.add('split');
-    // 허브 축소 — 반경 줄여서 노드 겹침 방지
-    RADIUS=130;render(current?.nodes,current?.center);
+    // 허브 축소 — 영역 크기에 맞춰 자동 재배치
+    setTimeout(()=>render(current?.nodes,current?.center),50);
     const el=document.getElementById('panelArea');
     switch(key){
       case 'register':PanelRegister.render(el);break;
@@ -1364,7 +1375,7 @@ const Hub = (() => {
     if(key.startsWith('pr_'))PanelCards.renderSub(key,el);
   }
 
-  function closePanel() { document.getElementById('main').classList.remove('split');document.querySelectorAll('.hub-node').forEach(n=>n.classList.remove('active'));activePanel=null;RADIUS=180;render(current?.nodes,current?.center); }
+  function closePanel() { document.getElementById('main').classList.remove('split');document.querySelectorAll('.hub-node').forEach(n=>n.classList.remove('active'));activePanel=null;setTimeout(()=>render(current?.nodes,current?.center),50); }
 
   function enterClient(card) {
     const p=card.property||{};
@@ -1439,7 +1450,7 @@ const Hub = (() => {
 
   function _ph(title,count){return `<div class="panel-head"><div class="panel-title">${title}${count!=null?' <span>'+count+'</span>':''}</div><button class="panel-x" onclick="Hub.closePanel()">✕</button></div>`;}
 
-  return { MAIN,CLIENT,PROPERTY, render,onNode,openPanel,openSub,closePanel,enterClient,enterProperty,back, panelHead:_ph, _openMyInfo, _sendOtp, _verifyOtp, _saveMyInfo, get current(){return current;}, get activePanel(){return activePanel;} };
+  return { MAIN,CLIENT,PROPERTY, render,onNode,openPanel,openSub,closePanel,enterClient,enterProperty,back, panelHead:_ph, _openMyInfo, _sendOtp, _verifyOtp, _saveMyInfo, get current(){return current;}, get activePanel(){return activePanel;}, get RADIUS(){return RADIUS;} };
 })();
 
 /* ═══════════════════════════════════════════════════════════
@@ -1449,7 +1460,7 @@ const Pulse = (() => {
   let raf=null;
   function start(key,nodes) {
     nodes=nodes||Hub.current?.nodes||Hub.MAIN;const n=nodes.find(n=>n.key===key);if(!n)return;
-    const fx=400,fy=350,R=Hub.activePanel?130:180,rad=n.angle*Math.PI/180,tx=fx+R*Math.cos(rad),ty=fy+R*Math.sin(rad);
+    const fx=400,fy=350,R=Hub.RADIUS||180,rad=n.angle*Math.PI/180,tx=fx+R*Math.cos(rad),ty=fy+R*Math.sin(rad);
     const els=['ph','pt1','pt2','pt3'].map(p=>document.getElementById(`${p}-${key}`));
     els.forEach(e=>{if(e)e.classList.add('on');});
     const t0=performance.now(),dur=500,delays=[0,40,90,150];
@@ -2295,6 +2306,9 @@ App.installPwa=async function(){if(!_pwaEvent)return;_pwaEvent.prompt();const r=
 window.addEventListener('beforeunload',e=>{const b=document.getElementById('leaveBanner');if(b&&b.style.display==='block'){e.preventDefault();e.returnValue='';}});
 // 모바일 리다이렉트
 if(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)&&!location.search.includes('desktop'))location.href='../mobile-v6.html';
+
+// 리사이즈 시 허브 재배치
+let _resizeTimer;window.addEventListener('resize',()=>{clearTimeout(_resizeTimer);_resizeTimer=setTimeout(()=>{if(!Hub.activePanel)Hub.render();},200);});
 
 // 시작
 Auth.init();
