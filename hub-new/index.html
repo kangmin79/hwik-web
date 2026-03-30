@@ -1613,36 +1613,60 @@ const PanelCards = (() => {
 
   function _renderItems(cards,el){
     if(!el)return;if(!cards.length){el.innerHTML='<div class="empty"><div class="empty-icon">🏠</div>매물이 없어요</div>';return;}
-    el.innerHTML=cards.map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent',st=c.trade_status||'계약가능',stC=st==='완료'?'#ef4444':st==='계약중'?'#f59e0b':'#22c55e';
-      const feats=(p.features||[]).slice(0,4),sel=Preview.getSelected().some(s=>s.id===c.id);
+    el.innerHTML=cards.map(c=>{
+      const p=c.property||{};
+      const tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';
+      const st=c.trade_status||'계약가능';
+      const stC=st==='완료'?'#ef4444':st==='계약중'?'#f59e0b':'#22c55e';
+      const feats=(p.features||[]).slice(0,4);
+      const sel=Preview.getSelected().some(s=>s.id===c.id);
       const photos=c.photos||[];
-      const thumbHtml=photos.length?`<div style="width:44px;height:44px;border-radius:6px;overflow:hidden;flex-shrink:0;position:relative;"><img src="${esc(photos[0])}" style="width:100%;height:100%;object-fit:cover;">${photos.length>1?`<span style="position:absolute;bottom:1px;right:2px;font-size:9px;color:#fff;background:rgba(0,0,0,0.6);padding:1px 4px;border-radius:3px;">${photos.length}</span>`:''}</div>`:'';
       const mainText=[p.complex,p.location].filter(Boolean).map(v=>esc(v)).join(' · ');
       const subText=[p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ');
 
-      return `<div class="property-item ${sel?'selected':''}" id="item-${c.id}">
-        <div style="display:flex;align-items:center;gap:8px;width:100%;cursor:pointer;" onclick="PanelCards.toggleSel('${c.id}')">
-          <div class="property-checkbox" style="width:18px;height:18px;border:2px solid ${sel?'var(--primary)':'var(--border)'};border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;${sel?'background:var(--primary);':''}">${sel?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}</div>
-          <div style="flex:1;min-width:0;">
-            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-              <span class="property-type-badge ${tc}">${esc(p.type||'')}</span>
-              <span class="trade-badge" style="color:${stC}">${st}</span>
-              <strong style="font-size:14px;">${esc(p.price||'-')}</strong>
-              ${mainText?`<span style="color:var(--text-sub);font-size:13px;">${mainText}</span>`:''}
-              ${subText?`<span style="color:var(--text-light);font-size:12px;">· ${subText}</span>`:''}
-            </div>
-            ${feats.length?`<div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;">${feats.map(f=>`<span class="list-tag">${esc(f)}</span>`).join('')}</div>`:''}
-          </div>
+      // 사진 썸네일
+      let thumbHtml='';
+      if(photos.length){
+        thumbHtml=`<div style="width:44px;height:44px;border-radius:6px;overflow:hidden;flex-shrink:0;position:relative;margin-left:auto;">
+          <img src="${esc(photos[0])}" style="width:100%;height:100%;object-fit:cover;">
+          ${photos.length>1?`<span style="position:absolute;bottom:1px;right:2px;font-size:9px;color:#fff;background:rgba(0,0,0,0.6);padding:1px 4px;border-radius:3px;">${photos.length}</span>`:''}
+        </div>`;
+      }
+
+      return `<div style="border:1px solid ${sel?'var(--primary)':'transparent'};border-radius:14px;padding:12px;margin-bottom:6px;background:${sel?'var(--primary-bg)':'transparent'};transition:all 0.2s;" id="item-${c.id}">
+        <div style="display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="PanelCards.toggleSel('${c.id}')">
+          <div style="width:20px;height:20px;border:2px solid ${sel?'var(--primary)':'#ccc'};border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${sel?'var(--primary)':'transparent'};">${sel?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}</div>
+          <span style="padding:3px 8px;border-radius:6px;font-size:10px;font-weight:800;flex-shrink:0;background:${tc==='sale'?'rgba(249,115,22,0.1)':tc==='jeonse'?'rgba(99,102,241,0.1)':'rgba(167,139,250,0.1)'};color:${tc==='sale'?'#ea580c':tc==='jeonse'?'#4f46e5':'#7c3aed'};">${esc(p.type||'')}</span>
+          <span style="font-size:11px;font-weight:700;color:${stC};flex-shrink:0;">${st}</span>
+          <strong style="font-size:14px;font-weight:800;">${esc(p.price||'-')}</strong>
+          <span style="font-size:13px;color:var(--text-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${mainText}</span>
+          <span style="font-size:12px;color:var(--text-light);flex-shrink:0;">${subText?'· '+subText:''}</span>
           ${thumbHtml}
-          <div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation()">
-            <button class="prop-action-btn" onclick="PanelCards.share1('${c.id}')">공유</button>
-            <button class="prop-action-btn" onclick="PanelCards.edit('${c.id}')">수정</button>
-            <button class="prop-action-btn delete" onclick="PanelCards.del('${c.id}')">삭제</button>
+        </div>
+        ${feats.length?`<div style="display:flex;gap:4px;margin:6px 0 0 28px;flex-wrap:wrap;">${feats.map(f=>`<span style="padding:2px 8px;border-radius:6px;background:var(--primary-bg);font-size:10px;font-weight:600;color:var(--primary);">${esc(f)}</span>`).join('')}</div>`:''}
+        <div style="display:flex;gap:4px;margin-top:8px;margin-left:28px;">
+          <button onclick="event.stopPropagation();PanelCards.share1('${c.id}')" style="padding:5px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-sub);font-size:11px;font-weight:700;cursor:pointer;">공유</button>
+          <button onclick="event.stopPropagation();PanelCards.toggleDetail('${c.id}')" style="padding:5px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-sub);font-size:11px;font-weight:700;cursor:pointer;">상세</button>
+          <button onclick="event.stopPropagation();PanelCards.edit('${c.id}')" style="padding:5px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-sub);font-size:11px;font-weight:700;cursor:pointer;">수정</button>
+          <button onclick="event.stopPropagation();PanelCards.del('${c.id}')" style="padding:5px 14px;border-radius:8px;border:1px solid rgba(239,68,68,0.3);background:transparent;color:#ef4444;font-size:11px;font-weight:700;cursor:pointer;">삭제</button>
+        </div>
+        <div id="detail-${c.id}" style="display:none;margin-top:8px;margin-left:28px;padding:12px;border-radius:10px;background:var(--bg-input);">
+          ${p.address?`<div style="font-size:12px;color:var(--text-sub);margin-bottom:4px;">📍 ${esc(p.address)}</div>`:''}
+          ${(p.features||[]).length?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;">${(p.features||[]).map(f=>`<span style="padding:2px 8px;border-radius:12px;background:var(--primary-bg);font-size:10px;color:var(--primary);">${esc(f)}</span>`).join('')}</div>`:''}
+          ${c.agent_comment?`<div style="font-size:12px;color:var(--primary);margin-bottom:4px;">💬 ${esc(c.agent_comment)}</div>`:''}
+          <div style="display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
+            <span style="font-size:11px;color:var(--text-light);">거래상태</span>
+            <button onclick="PanelCards.chgStatus('${c.id}','계약가능')" style="padding:3px 10px;border-radius:6px;border:1px solid ${st==='계약가능'?'#22c55e':'var(--border)'};background:${st==='계약가능'?'rgba(34,197,94,0.1)':'transparent'};color:${st==='계약가능'?'#22c55e':'var(--text-light)'};font-size:10px;font-weight:700;cursor:pointer;">계약가능</button>
+            <button onclick="PanelCards.chgStatus('${c.id}','계약중')" style="padding:3px 10px;border-radius:6px;border:1px solid ${st==='계약중'?'#f59e0b':'var(--border)'};background:${st==='계약중'?'rgba(245,158,11,0.1)':'transparent'};color:${st==='계약중'?'#f59e0b':'var(--text-light)'};font-size:10px;font-weight:700;cursor:pointer;">계약중</button>
+            <button onclick="PanelCards.chgStatus('${c.id}','완료')" style="padding:3px 10px;border-radius:6px;border:1px solid ${st==='완료'?'#ef4444':'var(--border)'};background:${st==='완료'?'rgba(239,68,68,0.1)':'transparent'};color:${st==='완료'?'#ef4444':'var(--text-light)'};font-size:10px;font-weight:700;cursor:pointer;">완료</button>
           </div>
+          ${photos.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">${photos.map(u=>`<div style="width:56px;height:56px;border-radius:6px;overflow:hidden;"><img src="${esc(u)}" style="width:100%;height:100%;object-fit:cover;"></div>`).join('')}</div>`:''}
         </div>
       </div>`;
     }).join('');
   }
+
+  function toggleDetail(id){const el=document.getElementById('detail-'+id);if(el)el.style.display=el.style.display==='none'?'':'none';}
 
   function toggleSel(id){
     const c=Data.cache.myCards.find(x=>x.id===id);if(!c)return;
@@ -1703,7 +1727,7 @@ const PanelCards = (() => {
       el.innerHTML=`<div class="panel-inner">${Hub.panelHead('거래 상태')}<div style="text-align:center;padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">${icon}</div><div style="font-size:24px;font-weight:800;color:${color};">${st}</div><div style="margin-top:24px;display:flex;gap:8px;justify-content:center;"><button class="filter-btn ${st==='계약가능'?'active':''}" onclick="PanelCards.chgStatus('${c.id}','계약가능')">계약가능</button><button class="filter-btn ${st==='계약중'?'active':''}" onclick="PanelCards.chgStatus('${c.id}','계약중')">계약중</button><button class="filter-btn ${st==='완료'?'active':''}" onclick="PanelCards.chgStatus('${c.id}','완료')">완료</button></div></div></div>`;}
   }
 
-  return { render, switchTab, setFilter, setCat, setSort, onQ, onQEnter, more, renderList, toggleSel, share1, doShare, edit, addPhotos, addTag, saveEdit, del, chgStatus, renderSub };
+  return { render, switchTab, setFilter, setCat, setSort, onQ, onQEnter, more, renderList, toggleSel, toggleDetail, share1, doShare, edit, addPhotos, addTag, saveEdit, del, chgStatus, renderSub };
 })();
 
 /* ═══════════════════════════════════════════════════════════
