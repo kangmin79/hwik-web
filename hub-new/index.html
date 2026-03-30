@@ -73,7 +73,7 @@ body.dark .header{background:rgba(15,23,42,0.92);}
 .panel-area{
   position:fixed;top:var(--header-h);right:0;
   width:0;height:calc(100vh - var(--header-h));
-  background:var(--bg-card);overflow:hidden;
+  background:var(--bg-card);overflow-y:auto;overflow-x:hidden;
   border-left:1px solid var(--border);transition:width 0.4s ease;z-index:50;
 }
 .main.split .hub-area{width:25%;}
@@ -2421,8 +2421,8 @@ function _initHubBreathing(){
       const inner=n.querySelector('.hub-node-inner');
       if(inner){
         inner.style.transition='all 0.5s cubic-bezier(0.34,1.56,0.64,1)';
-        inner.style.borderColor='rgba(99,102,241,0.7)';
-        inner.style.boxShadow='0 0 20px rgba(99,102,241,0.5),0 0 50px rgba(99,102,241,0.25),0 0 80px rgba(99,102,241,0.1),0 4px 20px rgba(0,0,0,0.1)';
+        inner.style.borderColor='rgba(99,102,241,0.5)';
+        inner.style.boxShadow='0 0 14px rgba(99,102,241,0.35),0 0 35px rgba(99,102,241,0.17),0 0 56px rgba(99,102,241,0.07),0 4px 16px rgba(0,0,0,0.07)';
         inner.style.transform='translateY(-4px) scale(1.03)';
         Pulse.start(n.dataset.key);
       }
