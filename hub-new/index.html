@@ -2142,7 +2142,50 @@ const PanelClient = (() => {
     el.innerHTML=html;
   }
 
-  function _renderList(){let cards=[...Data.cache.clientCards];if(cQuery.trim())cards=Search.local(cQuery,cards);if(cSort==='오래된순')cards.sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));else cards.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));_renderItems(cards);}
+  async function _renderList(){
+    let cards=[...Data.cache.clientCards];
+    if(cQuery.trim()){cards=Search.local(cQuery,cards);_renderItems(cards);return;}
+
+    // 긴급도 정렬: 일정 로드 → 점수 부여
+    const ids=cards.map(c=>c.id);
+    let noteMap={};
+    try{
+      const{data}=await Auth.sb.from('client_notes').select('client_card_id,type,alert_date,alert_done,created_at').in('client_card_id',ids).order('created_at',{ascending:false});
+      (data||[]).forEach(n=>{if(!noteMap[n.client_card_id])noteMap[n.client_card_id]=[];noteMap[n.client_card_id].push(n);});
+    }catch(_){}
+
+    const now=Date.now(),DAY=86400000;
+    cards=cards.map(c=>{
+      const notes=noteMap[c.id]||[];
+      const lastNote=notes[0];
+      const lastDate=lastNote?new Date(lastNote.created_at).getTime():0;
+      const daysSince=lastDate?Math.floor((now-lastDate)/DAY):999;
+
+      let urgency=0;
+      // 지연 일정 (최우선)
+      if(notes.some(n=>n.alert_date&&!n.alert_done&&new Date(n.alert_date)<new Date())) urgency=100;
+      // 오늘 일정
+      else if(notes.some(n=>n.alert_date&&!n.alert_done&&new Date(n.alert_date).toDateString()===new Date().toDateString())) urgency=80;
+      // 최근 활동 (3일 이내)
+      else if(daysSince<=3) urgency=60;
+      // 오래 연락 안 함 (7일+)
+      else if(daysSince>=7&&daysSince<999) urgency=50;
+      // 신규 (메모 없음)
+      else if(!lastNote) urgency=40;
+      // 나머지
+      else urgency=30;
+
+      return {...c,_urgency:urgency,_daysSince:daysSince};
+    });
+
+    // 긴급도순 → 동점이면 최근 등록순
+    cards.sort((a,b)=>{
+      if(b._urgency!==a._urgency)return b._urgency-a._urgency;
+      return new Date(b.created_at)-new Date(a.created_at);
+    });
+
+    _renderItems(cards);
+  }
 
   const _stageMap={
     '메모':{color:'#6366f1',bg:'rgba(99,102,241,0.1)',label:'신규'},
