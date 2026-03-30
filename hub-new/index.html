@@ -1625,26 +1625,29 @@ const PanelCards = (() => {
         </div>`;
       }
 
-      return `<div style="border:1px solid ${sel?'var(--primary)':'transparent'};border-radius:14px;padding:12px;margin-bottom:6px;background:${sel?'var(--primary-bg)':'transparent'};transition:all 0.2s;" id="item-${c.id}">
-        <div style="display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="PanelCards.toggleSel('${c.id}')">
-          <div style="width:20px;height:20px;border:2px solid ${sel?'var(--primary)':'#ccc'};border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${sel?'var(--primary)':'transparent'};">${sel?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}</div>
-          <span style="padding:3px 8px;border-radius:6px;font-size:10px;font-weight:800;flex-shrink:0;background:${tc==='sale'?'rgba(249,115,22,0.1)':tc==='jeonse'?'rgba(99,102,241,0.1)':'rgba(167,139,250,0.1)'};color:${tc==='sale'?'#ea580c':tc==='jeonse'?'#4f46e5':'#7c3aed'};">${esc(p.type||'')}</span>
-          <span style="font-size:11px;font-weight:700;color:${stC};flex-shrink:0;">${st}</span>
-          <strong style="font-size:14px;font-weight:800;">${esc(p.price||'-')}</strong>
-          <span style="font-size:13px;color:var(--text-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${mainText}</span>
-          <span style="font-size:12px;color:var(--text-light);flex-shrink:0;">${subText?'· '+subText:''}</span>
+      return `<div style="border:1px solid ${sel?'var(--primary)':'var(--border)'};border-radius:10px;padding:10px 12px;margin-bottom:4px;background:${sel?'var(--primary-bg)':'transparent'};transition:all 0.15s;" id="item-${c.id}">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div onclick="PanelCards.toggleSel('${c.id}')" style="width:20px;height:20px;border:2px solid ${sel?'var(--primary)':'#ccc'};border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${sel?'var(--primary)':'transparent'};cursor:pointer;">${sel?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}</div>
+          <div style="flex:1;min-width:0;cursor:pointer;" onclick="PanelCards.toggleSel('${c.id}')">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+              <span style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:800;background:${tc==='sale'?'rgba(249,115,22,0.1)':tc==='jeonse'?'rgba(99,102,241,0.1)':'rgba(167,139,250,0.1)'};color:${tc==='sale'?'#ea580c':tc==='jeonse'?'#4f46e5':'#7c3aed'};">${esc(p.type||'')}</span>
+              <span style="font-size:10px;font-weight:700;color:${stC};">${st}</span>
+              <strong style="font-size:14px;">${esc(p.price||'-')}</strong>
+              <span style="font-size:13px;color:var(--text-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${mainText}</span>
+              <span style="font-size:12px;color:var(--text-light);">${subText?'· '+subText:''}</span>
+            </div>
+            ${feats.length?`<div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;">${feats.map(f=>`<span style="padding:1px 6px;border-radius:4px;background:var(--primary-bg);font-size:9px;font-weight:600;color:var(--primary);">${esc(f)}</span>`).join('')}</div>`:''}
+          </div>
           ${thumbHtml}
-        </div>
-        ${feats.length?`<div style="display:flex;gap:4px;margin:6px 0 0 28px;flex-wrap:wrap;">${feats.map(f=>`<span style="padding:2px 8px;border-radius:6px;background:var(--primary-bg);font-size:10px;font-weight:600;color:var(--primary);">${esc(f)}</span>`).join('')}</div>`:''}
-        <div style="display:flex;gap:4px;margin-top:8px;margin-left:28px;">
-          <button onclick="event.stopPropagation();PanelCards.share1('${c.id}')" style="padding:5px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-sub);font-size:11px;font-weight:700;cursor:pointer;">공유</button>
-          <button onclick="event.stopPropagation();PanelCards.toggleDetail('${c.id}')" style="padding:5px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-sub);font-size:11px;font-weight:700;cursor:pointer;">상세</button>
-          <button onclick="event.stopPropagation();PanelCards.edit('${c.id}')" style="padding:5px 14px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-sub);font-size:11px;font-weight:700;cursor:pointer;">수정</button>
-          <button onclick="event.stopPropagation();PanelCards.del('${c.id}')" style="padding:5px 14px;border-radius:8px;border:1px solid rgba(239,68,68,0.3);background:transparent;color:#ef4444;font-size:11px;font-weight:700;cursor:pointer;">삭제</button>
+          <div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation()">
+            <button onclick="PanelCards.share1('${c.id}')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-sub);font-size:11px;font-weight:700;cursor:pointer;">공유</button>
+            <button onclick="PanelCards.toggleDetail('${c.id}')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-sub);font-size:11px;font-weight:700;cursor:pointer;">상세</button>
+            <button onclick="PanelCards.edit('${c.id}')" style="padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-sub);font-size:11px;font-weight:700;cursor:pointer;">수정</button>
+            <button onclick="PanelCards.del('${c.id}')" style="padding:4px 10px;border-radius:6px;border:1px solid rgba(239,68,68,0.3);background:transparent;color:#ef4444;font-size:11px;font-weight:700;cursor:pointer;">삭제</button>
+          </div>
         </div>
         <div id="detail-${c.id}" style="display:none;margin-top:8px;margin-left:28px;padding:12px;border-radius:10px;background:var(--bg-input);">
           ${p.address?`<div style="font-size:12px;color:var(--text-sub);margin-bottom:4px;">📍 ${esc(p.address)}</div>`:''}
-          ${(p.features||[]).length?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px;">${(p.features||[]).map(f=>`<span style="padding:2px 8px;border-radius:12px;background:var(--primary-bg);font-size:10px;color:var(--primary);">${esc(f)}</span>`).join('')}</div>`:''}
           ${c.agent_comment?`<div style="font-size:12px;color:var(--primary);margin-bottom:4px;">💬 ${esc(c.agent_comment)}</div>`:''}
           <div style="display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
             <span style="font-size:11px;color:var(--text-light);">거래상태</span>
