@@ -693,10 +693,11 @@ const Data = (() => {
     const { data, error } = await sb().from('cards')
       .select('*')
       .eq('agent_id',id)
-      .order('created_at',{ascending:false}).range(off, off+PAGE*3-1);
+      .neq('property->>type','손님')
+      .order('created_at',{ascending:false}).range(off, off+PAGE-1);
     if(error) console.error('loadMyCards error:', error);
     if (g!==_guard) return cache.myCards;
-    const filtered=(data||[]).filter(c=>c.property?.type!=='손님').slice(0,PAGE);
+    const filtered=data||[];
     if (reset||off===0) cache.myCards = filtered;
     else cache.myCards = [...cache.myCards, ...filtered];
     return cache.myCards;
@@ -707,8 +708,9 @@ const Data = (() => {
     const { data } = await sb().from('cards')
       .select('id,property,private_note,contact_name,contact_phone,created_at')
       .eq('agent_id',id)
-      .order('created_at',{ascending:false}).range(off, off+PAGE*3-1);
-    const filtered=(data||[]).filter(c=>c.property?.type==='손님').slice(0,PAGE);
+      .eq('property->>type','손님')
+      .order('created_at',{ascending:false}).range(off, off+PAGE-1);
+    const filtered=data||[];
     if (reset||off===0) cache.clientCards = filtered;
     else cache.clientCards = [...cache.clientCards, ...filtered];
     return cache.clientCards;
