@@ -682,19 +682,8 @@ const Data = (() => {
 
   async function loadCounts() {
     const id = uid(); if (!id) return;
-    try {
-      const {data,error} = await sb().from('cards').select('id,property').eq('agent_id',id).limit(1000);
-      if(error){console.warn('loadCounts cards error:',error);cache.counts={my:0,client:0,shared:0,alert:0,memo:0};return;}
-      const allCards=data||[];
-      cache.counts = {
-        my: allCards.filter(c=>c.property?.type!=='손님').length,
-        client: allCards.filter(c=>c.property?.type==='손님').length,
-        shared:0, alert:0, memo:0
-      };
-      // 알림/메모는 별도 (실패해도 무시)
-      try{const{data:al}=await sb().from('match_notifications').select('id').eq('agent_id',id).eq('is_read',false).limit(100);cache.counts.alert=(al||[]).length;}catch(_){}
-      try{const{data:me}=await sb().from('memos').select('id').eq('agent_id',id).eq('is_read',false).limit(100);cache.counts.memo=(me||[]).length;}catch(_){}
-    } catch(e) { console.warn('loadCounts error:', e); cache.counts={my:0,client:0,shared:0,alert:0,memo:0}; }
+    cache.counts={my:0,client:0,shared:0,alert:0,memo:0};
+    // 카운트는 loadMyCards/loadClientCards 후에 cache에서 계산하므로 여기서는 최소한만
   }
 
   async function loadMyCards(off=0, reset=false) {
@@ -1581,8 +1570,8 @@ const PanelCards = (() => {
   let cFilter='전체',cCat='전체',cSort='최근순',cQuery='',cTab='mine',cOff=0,_editNewPhotos=[];
 
   async function render(el){
-    el.innerHTML=`<div class="panel-with-preview"><div class="panel-input"><div class="panel-inner">${Hub.panelHead('내 매물',Data.cache.counts.my+'건')}
-      <div class="sub-tabs"><button class="sub-tab active" onclick="PanelCards.switchTab('mine',this)">내 매물 (${Data.cache.counts.my})</button><button class="sub-tab" onclick="PanelCards.switchTab('completed',this)">실적</button></div>
+    el.innerHTML=`<div class="panel-with-preview"><div class="panel-input"><div class="panel-inner">${Hub.panelHead('내 매물')}
+      <div class="sub-tabs"><button class="sub-tab active" onclick="PanelCards.switchTab('mine',this)">내 매물</button><button class="sub-tab" onclick="PanelCards.switchTab('completed',this)">실적</button></div>
       <div id="tabMine">
         <div class="search"><input type="text" id="myQ" placeholder="예) 강남구 아파트 전세 5억이하" oninput="PanelCards.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelCards.onQEnter()"></div>
         <div id="searchHint" style="display:none;font-size:11px;color:var(--primary);margin:-12px 0 12px 4px;">💡 Enter로 AI 검색 (더 많은 결과)</div>
@@ -1738,7 +1727,7 @@ const PanelClient = (() => {
   let cQuery='',cSort='최근순';
 
   async function render(el){
-    el.innerHTML=`<div class="panel-inner">${Hub.panelHead('손님',Data.cache.counts.client+'명')}
+    el.innerHTML=`<div class="panel-inner">${Hub.panelHead('손님')}
       <div class="search"><input type="text" placeholder="손님 검색 (이름, 전화번호, 조건...)" oninput="PanelClient.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelClient.onQEnter()"></div>
       <div class="filters" style="justify-content:flex-end;">${['최근순','오래된순'].map(s=>`<button class="sort-tag${cSort===s?' active':''}" onclick="PanelClient.setSort('${s}',this)">${s}</button>`).join('')}</div>
       <div id="clList"><div class="empty"><div class="empty-icon">⏳</div>불러오는 중...</div></div>
@@ -1914,7 +1903,7 @@ const PanelShared = (() => {
 
   async function render(el){
     await Promise.all([Data.loadRooms(),Data.loadPendingInvites()]);
-    let h=`<div class="panel-inner">${Hub.panelHead('공유방',Data.cache.counts.shared+'건')}`;
+    let h=`<div class="panel-inner">${Hub.panelHead('공유방')}`;
 
     // 초대 배너
     if(Data.cache.pendingInvites.length) Data.cache.pendingInvites.forEach(inv=>{h+=`<div class="invite-banner"><div class="invite-banner-text">📩 ${esc(inv.name)} 초대가 도착했어요</div><div class="invite-banner-actions"><button class="invite-btn invite-accept" onclick="PanelShared.accept('${inv.id}')">수락</button><button class="invite-btn invite-reject" onclick="PanelShared.reject('${inv.id}')">거절</button></div></div>`;});
