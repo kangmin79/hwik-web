@@ -1328,9 +1328,19 @@ const Hub = (() => {
   function render(nodes,center) {
     nodes=nodes||MAIN;center=center||{icon:'👤',name:Auth.profile?.business_name||'중개사',sub:''};
     const v=document.getElementById('hubVisual'),hc=document.getElementById('hubCenter');if(!v||!hc)return;
+    const area=document.querySelector('.hub-area');
+    const areaW=area?area.offsetWidth:999;
+
+    // 가로 350px 이하면 세로 스택 모드
+    if(areaW<350){
+      _renderStack(v,hc,nodes,center);return;
+    }
+
     _calcRadius();
     const cx=VW/2,cy=VH/2;
     hc.innerHTML=`<div class="hub-center-icon">${center.icon}</div><div class="hub-center-name">${esc(center.name)}</div><div class="hub-center-sub">${esc(center.sub)}</div>`;
+    hc.style.cssText='';// 원형 모드 복원
+    v.style.cssText='';
     let svg='',html='';
     const c=Data.cache.counts;
     nodes.forEach(n=>{
@@ -1346,6 +1356,29 @@ const Hub = (() => {
     v.querySelectorAll('.hub-node').forEach(el=>el.remove());
     v.insertAdjacentHTML('beforeend',html);
     v.querySelectorAll('.hub-node').forEach((el,i)=>{setTimeout(()=>el.classList.add('appear'),30+i*40);el.addEventListener('mouseenter',()=>Pulse.start(el.dataset.key,nodes));el.addEventListener('mouseleave',()=>Pulse.stop(el.dataset.key));});
+  }
+
+  // 세로 스택 모드 (좁은 허브 영역용)
+  function _renderStack(v,hc,nodes,center){
+    document.getElementById('hubLines').innerHTML='';
+    v.querySelectorAll('.hub-node').forEach(el=>el.remove());
+    // 허브 비주얼을 세로 플렉스로 전환
+    v.style.cssText='display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;aspect-ratio:auto;max-height:none;padding:8px 0;';
+    // 중앙 노드 작게
+    hc.style.cssText='position:static;transform:none;width:auto;height:auto;padding:8px 16px;border-radius:16px;display:flex;align-items:center;gap:8px;margin-bottom:4px;';
+    hc.innerHTML=`<div style="font-size:20px;">${center.icon}</div><div style="font-size:12px;font-weight:800;">${esc(center.name)}</div>`;
+    // 노드를 세로로 나열
+    let html='';
+    nodes.forEach(n=>{
+      const active=activePanel===n.key;
+      html+=`<div class="hub-node" data-key="${n.key}" style="position:static;transform:none;width:100%;max-width:200px;cursor:pointer;" onclick="Hub.onNode('${n.key}')">
+        <div class="hub-node-inner" style="padding:8px 16px;min-width:auto;border-radius:12px;${active?'border-color:var(--primary);background:var(--primary-bg);':''}">
+          <span class="hub-node-label" style="font-size:12px;">${n.label}</span>
+        </div>
+      </div>`;
+    });
+    v.insertAdjacentHTML('beforeend',html);
+    v.querySelectorAll('.hub-node').forEach((el,i)=>{setTimeout(()=>el.classList.add('appear'),30+i*30);});
   }
 
   function onNode(key) { if(key==='cl_back'||key==='pr_back'){back();return;} if(key.startsWith('cl_')||key.startsWith('pr_')){openSub(key);return;} openPanel(key); }
