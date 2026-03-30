@@ -2087,7 +2087,7 @@ const PanelClient = (() => {
         </div>
       </div>
       <div class="search"><input type="text" placeholder="예) 강남구 아파트 전세 5억이하 / 찾는분 강남" oninput="PanelClient.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelClient.onQEnter()"></div>
-      <div id="clList">${hwikLoading()}</div>
+      <div id="clList" onmouseenter="PanelClient._collapseReg()" style="min-height:200px;">${hwikLoading()}</div>
     </div>`;
     await Data.loadClientCards(0,true);_renderList();
   }
@@ -2095,9 +2095,18 @@ const PanelClient = (() => {
   let _regOpen=true;
   function toggleReg(){
     _regOpen=!_regOpen;
-    const body=document.getElementById('clientRegBody'),toggle=document.getElementById('clientRegToggle');
+    _applyReg();
+  }
+  function _collapseReg(){
+    if(!_regOpen)return;
+    _regOpen=false;
+    _applyReg();
+  }
+  function _applyReg(){
+    const area=document.getElementById('clientRegArea'),body=document.getElementById('clientRegBody'),toggle=document.getElementById('clientRegToggle');
     if(body)body.style.display=_regOpen?'':'none';
     if(toggle)toggle.style.transform=_regOpen?'':'rotate(-90deg)';
+    if(area)area.style.padding=_regOpen?'16px':'10px 16px';
   }
 
   async function registerClient(){
@@ -2357,7 +2366,7 @@ const PanelClient = (() => {
     if(Hub.current?.data?.id===cardId){Hub.current.data.contact_name=name;Hub.current.data.contact_phone=phone;}
   }
 
-  return { render, registerClient, toggleReg, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact };
+  return { render, registerClient, toggleReg, _collapseReg, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact };
 })();
 
 /* ═══════════════════════════════════════════════════════════
