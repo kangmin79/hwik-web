@@ -1119,7 +1119,7 @@ const Preview = (() => {
     if(!r.price){const bm=input.match(/보증금\s*(\d+)\s*(?:만)?\s*(?:\/|\s)\s*월세?\s*(\d+)/);if(bm){r.price=bm[1]+'/'+bm[2];if(!r.type)r.type='월세';}}
     const brands=['래미안','자이','힐스테이트','푸르지오','더샵','롯데캐슬','e편한세상','아이파크','sk뷰','파크리오','포레나','두산위브','현대','삼성','대림','한화꿈에그린','센트레빌','우미린','어울림'];
     brands.forEach(b=>{if(input.includes(b))r.complex=b;});
-    if(!r.complex){const cm=input.match(/([가-힣a-zA-Z]+(?:아파트|오피스텔|빌라|상가|사무실))/);if(cm)r.complex=cm[0];}
+    if(!r.complex){const cm=input.match(/([가-힣a-zA-Z]+\s*(?:아파트|오피스텔|빌라|상가|사무실))/);if(cm)r.complex=cm[0].trim();}
     const am=input.match(/(\d+)\s*평/); if(am)r.area=am[1]+'평';
     const fm=input.match(/(\d+)\s*층/); if(fm)r.floor=fm[1]+'층';
     ['풀옵션','올수리','즉시입주','역세권','신축','주차','남향','동향','서향','북향','복층','테라스','보안','엘리베이터','학교근처'].forEach(f=>{if(input.includes(f))r.features.push(f);});
