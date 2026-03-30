@@ -1764,7 +1764,38 @@ const PanelCards = (() => {
   function setCat(c,btn){cCat=c;btn?.closest('.filters').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn?.classList.add('active');renderList();}
   function setSort(s,btn){cSort=s;document.querySelectorAll('.sort-tag').forEach(b=>b.classList.remove('active'));btn?.classList.add('active');renderList();}
   function onQ(q){cQuery=q;renderList();const hint=document.getElementById('searchHint');if(hint)hint.style.display=q.trim()?'':'none';}
-  async function onQEnter(){if(!cQuery.trim())return;const r=await Search.vector(cQuery,'my');_renderItems(r,document.getElementById('myList'));Search.logSearch(cQuery,r.length);}
+  async function onQEnter(){
+    if(!cQuery.trim())return;
+    const el=document.getElementById('myList');
+    el.innerHTML=hwikLoading('검색 중...');
+    // 손님 키워드 감지
+    const clientKw=['손님','찾는분','구하는분','구합니다','구해요','찾습니다','찾아요','구함'];
+    const isClient=clientKw.some(k=>cQuery.includes(k));
+    if(isClient){
+      // 손님 검색
+      const r=await Search.vector(cQuery,'client');
+      Search.logSearch(cQuery,r.length);
+      if(!r.length){el.innerHTML='<div class="empty"><div class="empty-icon">🙋</div>손님 검색 결과가 없어요</div>';return;}
+      el.innerHTML=`<div style="font-size:13px;font-weight:700;color:var(--client);margin:12px 0 8px;">손님 (${r.length}건)</div>`+r.map(c=>{const p=c.property||{};return `<div class="item" onclick='Hub.enterClient(JSON.parse(decodeURIComponent("${encodeURIComponent(JSON.stringify(c))}")))'>
+        <span class="item-type client">손님</span><div class="item-body"><div class="item-name">${esc(c.contact_name||p.location||p.complex||'손님')}</div><div class="item-sub">${[p.price,p.location,p.complex].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');
+    }else{
+      // 내 매물 + 공유 매물 병렬 검색
+      const [myR,shR]=await Promise.all([Search.vector(cQuery,'my'),Search.vector(cQuery,'shared')]);
+      Search.logSearch(cQuery,(myR.length+shR.length));
+      let html='';
+      if(myR.length){
+        html+=`<div style="font-size:13px;font-weight:700;color:var(--primary);margin:12px 0 8px;">내 매물 (${myR.length>5?'상위 5건':myR.length+'건'})</div>`;
+        _renderItems(myR.slice(0,5),el);
+        html=el.innerHTML;
+      }
+      if(shR.length){
+        html+=`<div style="font-size:13px;font-weight:700;color:#22c55e;margin:16px 0 8px;">공유 매물 (${shR.length}건)</div>`;
+        html+=shR.map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item"><span class="item-type ${tc}">${esc(p.type||'')}</span><div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');
+      }
+      if(!myR.length&&!shR.length)html='<div class="empty"><div class="empty-icon">🔍</div>검색 결과가 없어요</div>';
+      el.innerHTML=html;
+    }
+  }
   async function more(){cOff+=Data.PAGE;await Data.loadMyCards(cOff);renderList();}
 
   function renderList(){
@@ -1965,7 +1996,7 @@ const PanelClient = (() => {
         <button onclick="PanelClient.registerClient()" class="btn-primary" style="margin-top:8px;padding:10px;" id="clientRegBtn">AI로 손님 등록</button>
         <div id="clientRegResult"></div>
       </div>
-      <div class="search"><input type="text" placeholder="손님 검색 (이름, 전화번호, 조건...)" oninput="PanelClient.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelClient.onQEnter()"></div>
+      <div class="search"><input type="text" placeholder="예) 강남구 아파트 전세 5억이하 / 찾는분 강남" oninput="PanelClient.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelClient.onQEnter()"></div>
       <div class="filters" style="justify-content:flex-end;">${['최근순','오래된순'].map(s=>`<button class="sort-tag${cSort===s?' active':''}" onclick="PanelClient.setSort('${s}',this)">${s}</button>`).join('')}</div>
       <div id="clList">${hwikLoading()}</div>
     </div>`;
@@ -1995,7 +2026,24 @@ const PanelClient = (() => {
 
   function setSort(s,btn){cSort=s;document.querySelectorAll('.sort-tag').forEach(b=>b.classList.remove('active'));btn?.classList.add('active');_renderList();}
   function onQ(q){cQuery=q;_renderList();}
-  async function onQEnter(){if(!cQuery.trim())return;const r=await Search.vector(cQuery,'client');_renderItems(r);}
+  async function onQEnter(){
+    if(!cQuery.trim())return;
+    const el=document.getElementById('clList');el.innerHTML=hwikLoading('검색 중...');
+    // 손님 키워드 없어도 손님 패널에서는 손님 우선 + 내 매물도 표시
+    const [clR,myR]=await Promise.all([Search.vector(cQuery,'client'),Search.vector(cQuery,'my')]);
+    let html='';
+    if(clR.length){
+      html+=`<div style="font-size:13px;font-weight:700;color:var(--client);margin:12px 0 8px;">손님 (${clR.length}건)</div>`;
+      html+=clR.map(c=>{const p=c.property||{};return `<div class="item" onclick='Hub.enterClient(JSON.parse(decodeURIComponent("${encodeURIComponent(JSON.stringify(c))}")))'>
+        <span class="item-type client">손님</span><div class="item-body"><div class="item-name">${esc(c.contact_name||p.location||p.complex||'손님')}</div><div class="item-sub">${[p.price,p.location].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');
+    }
+    if(myR.length){
+      html+=`<div style="font-size:13px;font-weight:700;color:var(--primary);margin:16px 0 8px;">관련 매물 (${myR.length>5?'상위 5건':myR.length+'건'})</div>`;
+      html+=myR.slice(0,5).map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item"><span class="item-type ${tc}">${esc(p.type||'')}</span><div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');
+    }
+    if(!clR.length&&!myR.length)html='<div class="empty"><div class="empty-icon">🔍</div>검색 결과가 없어요</div>';
+    el.innerHTML=html;
+  }
 
   function _renderList(){let cards=[...Data.cache.clientCards];if(cQuery.trim())cards=Search.local(cQuery,cards);if(cSort==='오래된순')cards.sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));else cards.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));_renderItems(cards);}
 
@@ -2174,7 +2222,7 @@ const PanelShared = (() => {
     h+='</div>';
 
     // 검색
-    h+='<div class="search"><input type="text" id="sharedQ" placeholder="공유 매물 검색..." oninput="PanelShared.onSearch(this.value)" onkeydown="if(event.key===\'Enter\')PanelShared.onSearchEnter()"></div>';
+    h+='<div class="search"><input type="text" id="sharedQ" placeholder="예) 강남구 아파트 전세 5억이하 / 찾는분 강남" oninput="PanelShared.onSearch(this.value)" onkeydown="if(event.key===\'Enter\')PanelShared.onSearchEnter()"></div>';
     // 매물 리스트
     h+='<div id="sharedList">'+hwikLoading()+'</div></div>';
     el.innerHTML=h;
@@ -2273,7 +2321,24 @@ const PanelShared = (() => {
 
   let _sharedQuery='';
   function onSearch(q){_sharedQuery=q;_renderList();}
-  async function onSearchEnter(){if(!_sharedQuery.trim())return;const r=await Search.vector(_sharedQuery,'shared');const el=document.getElementById('sharedList');if(!el)return;if(!r.length){el.innerHTML='<div class="empty"><div class="empty-icon">🔍</div>검색 결과가 없어요</div>';return;}el.innerHTML=r.map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item"><span class="item-type ${tc}">${esc(p.type||'')}</span><div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');}
+  async function onSearchEnter(){
+    if(!_sharedQuery.trim())return;
+    const el=document.getElementById('sharedList');if(!el)return;el.innerHTML=hwikLoading('검색 중...');
+    const clientKw=['손님','찾는분','구하는분','구합니다','구해요','찾습니다','구함'];
+    const isClient=clientKw.some(k=>_sharedQuery.includes(k));
+    if(isClient){
+      const r=await Search.vector(_sharedQuery,'client');
+      if(!r.length){el.innerHTML='<div class="empty"><div class="empty-icon">🙋</div>손님 검색 결과가 없어요</div>';return;}
+      el.innerHTML=`<div style="font-size:13px;font-weight:700;color:var(--client);margin:12px 0 8px;">손님 (${r.length}건)</div>`+r.map(c=>{const p=c.property||{};return `<div class="item"><span class="item-type client">손님</span><div class="item-body"><div class="item-name">${esc(c.contact_name||p.location||'손님')}</div><div class="item-sub">${[p.price,p.location].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');
+    }else{
+      const [shR,myR]=await Promise.all([Search.vector(_sharedQuery,'shared'),Search.vector(_sharedQuery,'my')]);
+      let html='';
+      if(myR.length){html+=`<div style="font-size:13px;font-weight:700;color:var(--primary);margin:12px 0 8px;">내 매물 (${myR.length>5?'상위 5건':myR.length+'건'})</div>`+myR.slice(0,5).map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item"><span class="item-type ${tc}">${esc(p.type||'')}</span><div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');}
+      if(shR.length){html+=`<div style="font-size:13px;font-weight:700;color:#22c55e;margin:16px 0 8px;">공유 매물 (${shR.length}건)</div>`+shR.map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item"><span class="item-type ${tc}">${esc(p.type||'')}</span><div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');}
+      if(!shR.length&&!myR.length)html='<div class="empty"><div class="empty-icon">🔍</div>검색 결과가 없어요</div>';
+      el.innerHTML=html;
+    }
+  }
 
   return { render, openRoom, manageRoom, openRoomModal, createRoom, accept, reject, renameRoom, deleteRoom, leaveRoom, invite, unshare, onSearch, onSearchEnter };
 })();
