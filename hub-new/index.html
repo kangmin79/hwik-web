@@ -1307,16 +1307,18 @@ const Hub = (() => {
   const VW=800,VH=700;
   let RADIUS=180, stack=[], current=null, activePanel=null;
 
-  // 허브 영역 크기에 맞춰 RADIUS 자동 계산 (타원형: RX, RY)
+  // 허브 영역 크기에 맞춰 RADIUS 자동 계산
   let RX=180, RY=180;
   function _calcRadius(){
     const area=document.querySelector('.hub-area');
     if(!area)return;
     const w=area.offsetWidth, h=area.offsetHeight;
-    // 가로/세로 각각 계산 — 최소 70, 최대 250
-    RX=Math.max(70, Math.min(250, w*0.28));
-    RY=Math.max(70, Math.min(230, h*0.25));
-    RADIUS=Math.min(RX,RY); // 펄스용
+    // 기본은 원형 (높이 기준)
+    const base=Math.max(80, Math.min(230, h*0.25));
+    RY=base;
+    // 가로가 충분하면 원형, 좁으면 가로만 축소
+    RX=(w*0.28 >= base) ? base : Math.max(70, w*0.28);
+    RADIUS=Math.min(RX,RY);
   }
 
   const MAIN=[{key:'register',label:'매물 등록',angle:-90},{key:'my',label:'내 매물',angle:-18},{key:'client',label:'손님',angle:54},{key:'alert',label:'알림',angle:126},{key:'shared',label:'공유방',angle:198}];
