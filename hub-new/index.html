@@ -683,18 +683,18 @@ const Data = (() => {
   async function loadCounts() {
     const id = uid(); if (!id) return;
     try {
-      const [cards,al,me] = await Promise.all([
-        sb().from('cards').select('id,property').eq('agent_id',id).limit(500),
-        sb().from('match_notifications').select('id').eq('agent_id',id).eq('is_read',false).limit(100),
-        sb().from('memos').select('id').eq('agent_id',id).eq('is_read',false).limit(100),
-      ]);
-      const allCards=cards.data||[];
+      const {data,error} = await sb().from('cards').select('id,property').eq('agent_id',id).limit(1000);
+      if(error){console.warn('loadCounts cards error:',error);cache.counts={my:0,client:0,shared:0,alert:0,memo:0};return;}
+      const allCards=data||[];
       cache.counts = {
         my: allCards.filter(c=>c.property?.type!=='손님').length,
         client: allCards.filter(c=>c.property?.type==='손님').length,
-        shared:0, alert:(al.data||[]).length, memo:(me.data||[]).length
+        shared:0, alert:0, memo:0
       };
-    } catch(e) { console.error('loadCounts error:', e); }
+      // 알림/메모는 별도 (실패해도 무시)
+      try{const{data:al}=await sb().from('match_notifications').select('id').eq('agent_id',id).eq('is_read',false).limit(100);cache.counts.alert=(al||[]).length;}catch(_){}
+      try{const{data:me}=await sb().from('memos').select('id').eq('agent_id',id).eq('is_read',false).limit(100);cache.counts.memo=(me||[]).length;}catch(_){}
+    } catch(e) { console.warn('loadCounts error:', e); cache.counts={my:0,client:0,shared:0,alert:0,memo:0}; }
   }
 
   async function loadMyCards(off=0, reset=false) {
@@ -1162,8 +1162,8 @@ const Share = (() => {
 
   function _link(cards) {
     cards=cards||Preview.getSelected();if(!cards.length)return '';
-    if(cards.length===1){const lid=cards[0].link_id||cards[0].id;return `https://hwik.kr/property_view.html?id=${lid}`;}
-    return `https://hwik.kr/property_view.html?id=${cards.map(c=>c.link_id||c.id).join(',')}&agent=${Auth.user?.id||''}`;
+    if(cards.length===1){const lid=cards[0].id;return `https://hwik.kr/property_view.html?id=${lid}`;}
+    return `https://hwik.kr/property_view.html?id=${cards.map(c=>c.id).join(',')}&agent=${Auth.user?.id||''}`;
   }
 
   async function copyLink(cards) {
@@ -1565,7 +1565,7 @@ const PanelRegister = (() => {
     document.getElementById('leaveBanner').style.display='';const btn=document.getElementById('fiSaveBtn');btn.textContent='저장 중...';btn.disabled=true;let saved=0;
     for(const c of cards){try{const prop={type:c.type,price:c.price,complex:c.complex,location:c.location,area:c.area,floor:c.floor,room:c.room,features:c.features||[],rawText:c.rawText||''};
       const coords=await Data.matchCoords(prop);if(coords.lat){prop.lat=coords.lat;prop.lng=coords.lng;}
-      const {data:sv}=await Auth.sb.from('cards').insert({agent_id:Auth.user.id,property:prop,trade_status:'계약가능',link_id:crypto.randomUUID().slice(0,12)}).select('id').single();
+      const {data:sv}=await Auth.sb.from('cards').insert({agent_id:Auth.user.id,property:prop,trade_status:'계약가능'}).select('id').single();
       if(sv&&prop.type!=='손님')Data.triggerAutoMatch(sv.id);saved++;btn.textContent=`저장 중... (${saved}/${cards.length})`;
     }catch(_){}}
     document.getElementById('leaveBanner').style.display='none';Toast.show(`${saved}건 저장 완료`);btn.textContent='전체 저장';btn.disabled=false;fiParsedCards=[];fiDeletedIds=new Set();document.getElementById('fiResults').style.display='none';document.getElementById('fiDirectInput').value='';
@@ -2106,7 +2106,7 @@ const App = {
     // 검색 학습 점수 로드
     Search.loadScores();
     // 백그라운드: 손님 매칭 체크
-    _bgCheckMatches();
+    // _bgCheckMatches(); // 임시 비활성화 (embed-card 401 방지)
   }
 };
 
