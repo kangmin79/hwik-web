@@ -1138,9 +1138,6 @@ const Hub = (() => {
       ['t3','t2','t1'].forEach((s,i)=>svg+=`<circle class="pulse-${s}" id="p${s}-${n.key}" cx="${cx}" cy="${cy}" r="${6-i}"/>`);
       svg+=`<circle class="pulse-head" id="ph-${n.key}" cx="${cx}" cy="${cy}" r="3.5"/>`;
       let badge='';
-      if(n.key==='my'&&c.my)badge=`<span class="hub-node-badge">${c.my}</span>`;
-      if(n.key==='client'&&c.client)badge=`<span class="hub-node-badge">${c.client}</span>`;
-      if(n.key==='shared'&&c.shared)badge=`<span class="hub-node-badge">${c.shared}</span>`;
       if(n.key==='alert'&&c.alert)badge=`<span class="hub-node-badge alert">${c.alert}</span>`;
       html+=`<div class="hub-node" data-key="${n.key}" style="left:${(nx/VW*100).toFixed(1)}%;top:${(ny/VH*100).toFixed(1)}%;" onclick="Hub.onNode('${n.key}')"><div class="hub-node-inner"><span class="hub-node-label">${n.label}</span>${badge}</div></div>`;
     });
