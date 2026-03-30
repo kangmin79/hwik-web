@@ -680,15 +680,13 @@ const Data = (() => {
 
   async function loadCounts() {
     const id = uid(); if (!id) return;
-    // cards 전체를 한번에 가져와서 클라이언트에서 분류 (JSON 필터 400 에러 방지)
-    const [{count:totalCards},{count:clientCards},sh,al,me] = await Promise.all([
-      sb().from('cards').select('id',{count:'exact',head:true}).eq('agent_id',id),
-      sb().from('cards').select('id',{count:'exact',head:true}).eq('agent_id',id).eq('property->>type','손님'),
-      sb().from('share_room_members').select('id',{count:'exact',head:true}).eq('user_id',id).not('role','eq','pending'),
+    const [total,al,me] = await Promise.all([
+      sb().from('cards').select('id,property',{count:'exact',head:false}).eq('agent_id',id).limit(0),
       sb().from('match_notifications').select('id',{count:'exact',head:true}).eq('agent_id',id).eq('is_read',false),
       sb().from('memos').select('id',{count:'exact',head:true}).eq('agent_id',id).eq('is_read',false),
     ]);
-    cache.counts = { my:(totalCards||0)-(clientCards||0), client:clientCards||0, shared:sh.count||0, alert:al.count||0, memo:me.count||0 };
+    // count만 사용 (head:false + limit(0) = 데이터 안 받고 count만)
+    cache.counts = { my:total.count||0, client:0, shared:0, alert:al.count||0, memo:me.count||0 };
   }
 
   async function loadMyCards(off=0, reset=false) {
@@ -696,12 +694,14 @@ const Data = (() => {
     const g = ++_guard;
     const { data, error } = await sb().from('cards')
       .select('id,property,trade_status,price_number,created_at,link_id,photos,agent_comment')
-      .eq('agent_id',id).not('property->>type','eq','손님')
+      .eq('agent_id',id)
       .order('created_at',{ascending:false}).range(off, off+PAGE-1);
     if(error) console.error('loadMyCards error:', error);
     if (g!==_guard) return cache.myCards;
-    if (reset||off===0) cache.myCards = data||[];
-    else cache.myCards = [...cache.myCards, ...(data||[])];
+    // 클라이언트에서 손님 카드 제외
+    const filtered = (data||[]).filter(c => c.property?.type !== '손님');
+    if (reset||off===0) cache.myCards = filtered;
+    else cache.myCards = [...cache.myCards, ...filtered];
     return cache.myCards;
   }
 
@@ -709,10 +709,11 @@ const Data = (() => {
     const id=uid(); if(!id) return [];
     const { data } = await sb().from('cards')
       .select('id,property,private_note,contact_name,contact_phone,created_at')
-      .eq('agent_id',id).eq('property->>type','손님')
+      .eq('agent_id',id)
       .order('created_at',{ascending:false}).range(off, off+PAGE-1);
-    if (reset||off===0) cache.clientCards = data||[];
-    else cache.clientCards = [...cache.clientCards, ...(data||[])];
+    const filtered = (data||[]).filter(c => c.property?.type === '손님');
+    if (reset||off===0) cache.clientCards = filtered;
+    else cache.clientCards = [...cache.clientCards, ...filtered];
     return cache.clientCards;
   }
 
@@ -1912,9 +1913,9 @@ async function _bgCheckMatches(){
   await new Promise(r=>setTimeout(r,3000));
   try{
     if(!Auth.user)return;
-    const {data:clients}=await Auth.sb.from('cards').select('id,property').eq('agent_id',Auth.user.id).limit(20);
-    if(!clients?.length)return;
-    const clientCards=clients.filter(c=>c.property?.type==='손님'&&!c.property?.embedding);
+    const {data:cards}=await Auth.sb.from('cards').select('id,property').eq('agent_id',Auth.user.id).limit(50);
+    if(!cards?.length)return;
+    const clientCards=cards.filter(c=>c.property?.type==='손님'&&!c.property?.embedding);
     // 최대 3개만 처리 (과부하 방지)
     for(const c of clientCards.slice(0,3)){
       Data.updateEmbedding(c.id);
