@@ -1559,7 +1559,7 @@ const PanelRegister = (() => {
         </div>
 
         <div class="reg-photo-area"><div class="reg-photo-drop" onclick="document.getElementById('photoInput').click()">📷 사진 추가 (최대 20장)</div><input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="PanelRegister.handlePhotos(event)"><div class="reg-photo-list" id="photoList"></div></div>
-        <div style="margin-top:12px;"><label style="font-size:12px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:4px;">손님에게 한마디 (선택)</label><textarea class="edit-textarea" id="regComment" placeholder="예) 채광 정말 좋아요. 역까지 3분" style="min-height:60px;"></textarea><div style="font-size:11px;color:var(--text-light);margin-top:2px;">✓ 손님 카드에만 표시됩니다</div></div>
+        <div style="margin-top:12px;"><label style="font-size:12px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:4px;">손님에게 한마디 (선택)</label><textarea class="edit-textarea" id="regComment" placeholder="예) 채광 정말 좋아요. 역까지 3분" style="min-height:60px;border:2px solid #4ecdc4;"></textarea><div style="font-size:11px;color:var(--text-light);margin-top:2px;">✓ 손님 카드에만 표시됩니다</div></div>
 
         <div class="reg-ai-steps" id="aiSteps" style="display:none"><div class="reg-ai-step" id="step1"><span class="step-dot"></span> 텍스트 분석 중...</div><div class="reg-ai-step" id="step2"><span class="step-dot"></span> 매물 정보 추출...</div><div class="reg-ai-step" id="step3"><span class="step-dot"></span> 카드 생성 중...</div><div class="reg-ai-step" id="step4"><span class="step-dot"></span> 좌표 매칭 중...</div></div>
         <button class="btn-primary" id="regBtn" onclick="PanelRegister.doRegister()">AI로 카드 만들기</button>
