@@ -754,11 +754,11 @@ def fill_nearby_facilities(danji_list: list):
         if not lat1 or not lon1:
             continue
 
-        # 지하철: 1.5km 이내, 가까운 순 3개
+        # 지하철: 1km 이내 (도보 13분), 가까운 순 3개
         nearby_st = []
         for s in stations:
             dist = haversine(lat1, lon1, s.get("lat"), s.get("lon"))
-            if dist < 1500:
+            if dist < 1000:
                 nearby_st.append({
                     "name": s["name"],
                     "line": s.get("line", ""),
