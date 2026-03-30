@@ -1704,7 +1704,11 @@ const PanelCards = (() => {
 
   function toggleSel(id){
     const c=Data.cache.myCards.find(x=>x.id===id);if(!c)return;
-    Preview.toggle(c);renderList();Preview.renderSlider('previewPanel');
+    const wasSelected=Preview.getSelected().some(s=>s.id===id);
+    Preview.toggle(c);
+    renderList();Preview.renderSlider('previewPanel');
+    // 새로 선택했으면 마지막(방금 추가한) 카드로 이동
+    if(!wasSelected&&Preview.getSelected().length>0)Preview.goTo(Preview.getSelected().length-1);
     // 미리보기 패널 열기/닫기
     const pp=document.getElementById('previewPanel');
     if(pp){const has=Preview.getSelected().length>0;pp.style.width=has?'340px':'0';pp.style.opacity=has?'1':'0';pp.style.padding=has?'16px':'0';}
