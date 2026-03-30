@@ -138,14 +138,15 @@ async function loadData() {
     if (mainPrice) { priceSum += mainPrice; priceCount++; }
     if (jr && jr > 0 && jr < 200) { jrSum += jr; jrCount++; }
 
+    const areaNum = parseFloat(mainArea) || 0;
     danjiList.push({
-      id: d.id, name: d.complex_name, price: mainPrice, area: mainArea, py: mainPy,
-      ppPrice: (mainPrice && mainPy > 0) ? Math.round(mainPrice / mainPy) : 0,
+      id: d.id, name: d.complex_name, price: mainPrice, area: mainArea, areaNum,
+      sqmPrice: (mainPrice && areaNum > 0) ? Math.round(mainPrice / areaNum) : 0,
       jr, buildYear: d.build_year, units: d.total_units,
     });
   });
 
-  danjiList.sort((a,b) => (b.ppPrice||0) - (a.ppPrice||0));
+  danjiList.sort((a,b) => (b.sqmPrice||0) - (a.sqmPrice||0));
   const avgPrice = priceCount > 0 ? Math.round(priceSum/priceCount) : null;
   const avgJr = jrCount > 0 ? Math.round(jrSum/jrCount*10)/10 : null;
 
@@ -158,7 +159,7 @@ async function loadData() {
   const html = `
     <header class="header"><div class="header-top">
       <div class="logo" onclick="location.href='/'">휙</div>
-      <div><h1 class="header-name">${esc(gu)} ${esc(dong)} 아파트 시세</h1><div class="header-sub">${data.length}개 단지 · 평당가순</div></div>
+      <div><h1 class="header-name">${esc(gu)} ${esc(dong)} 아파트 시세</h1><div class="header-sub">${data.length}개 단지 · ㎡당 가격순</div></div>
     </div></header>
 
     <nav class="breadcrumb"><a href="/">휙</a><span>&gt;</span><a href="gu.html">서울</a><span>&gt;</span><a href="gu.html?name=${encodeURIComponent(gu)}">${esc(gu)}</a><span>&gt;</span>${esc(dong)}</nav>
@@ -174,9 +175,9 @@ async function loadData() {
     <div class="divider"></div>
 
     <div class="section">
-      <div class="section-title">단지별 시세 (평당가순)</div>
+      <div class="section-title">단지별 시세 (㎡당 가격순, 전용면적 기준)</div>
       <div style="display:flex;flex-direction:column;gap:8px;">
-        ${danjiList.map((d,i) => `<div class="danji-item" onclick="location.href='danji.html?id=${encodeURIComponent(d.id)}'"><div><div class="danji-name">${i+1}. ${esc(d.name)}</div><div class="danji-sub">${d.buildYear?d.buildYear+'년':''}${d.units?' · '+d.units+'세대':''}${d.py?' · '+d.py+'평':''}</div></div><div><div class="danji-price">${d.price?formatPrice(d.price):'-'}</div><div class="danji-rate">${d.ppPrice?'평당 '+formatPrice(d.ppPrice):''}${d.jr?' · 전세'+d.jr+'%':''}</div></div></div>`).join('')}
+        ${danjiList.map((d,i) => `<div class="danji-item" onclick="location.href='danji.html?id=${encodeURIComponent(d.id)}'"><div><div class="danji-name">${i+1}. ${esc(d.name)}</div><div class="danji-sub">${d.buildYear?d.buildYear+'년':''}${d.units?' · '+d.units+'세대':''}${d.area?' · 전용'+d.area+'㎡':''}</div></div><div><div class="danji-price">${d.price?formatPrice(d.price):'-'}</div><div class="danji-rate">${d.sqmPrice?formatPrice(d.sqmPrice)+'/㎡':''}${d.jr?' · 전세'+d.jr+'%':''}</div></div></div>`).join('')}
       </div>
     </div>
 
@@ -185,7 +186,7 @@ async function loadData() {
     <div class="faq-section">
       <div class="section-title">자주 묻는 질문</div>
       <div class="faq-item"><div class="faq-q">${esc(dong)} 아파트 평균 시세는?</div><div class="faq-a">${esc(gu)} ${esc(dong)} ${data.length}개 단지 평균 매매가는 ${avgPrice?formatPrice(avgPrice):'정보 확인 중'}입니다.</div></div>
-      ${danjiList[0] && danjiList[0].ppPrice ? `<div class="faq-item"><div class="faq-q">${esc(dong)}에서 가장 비싼 아파트는?</div><div class="faq-a">평당가 기준 ${esc(danjiList[0].name)}이(가) ${formatPrice(danjiList[0].ppPrice)}/평으로 가장 높습니다.</div></div>` : ''}
+      ${danjiList[0] && danjiList[0].sqmPrice ? `<div class="faq-item"><div class="faq-q">${esc(dong)}에서 가장 비싼 아파트는?</div><div class="faq-a">전용면적 ㎡당 가격 기준 ${esc(danjiList[0].name)}이(가) ${formatPrice(danjiList[0].sqmPrice)}/㎡으로 가장 높습니다.</div></div>` : ''}
       ${subways.length > 0 ? `<div class="faq-item"><div class="faq-q">${esc(dong)} 근처 지하철역은?</div><div class="faq-a">${subways.map(s=>s.name+'('+s.line+') 도보 '+walkMin(s.distance)).join(', ')}</div></div>` : ''}
     </div>
 

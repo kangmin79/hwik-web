@@ -198,23 +198,21 @@ function renderGuDetail(guName, data) {
   // 최근 거래 정렬
   trades.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
-  // 평당가 TOP 10
-  const ppList = [];
+  // ㎡당 가격 TOP 10 (전용면적 기준)
+  const sqmList = [];
   data.forEach(d => {
     const rt = d.recent_trade || {};
     const cats = d.categories || [];
     for (const c of cats) {
       const t = rt[c];
-      if (t && t.price && parseInt(c) > 0) {
-        const py = Math.round(parseInt(c) / 3.3058);
-        if (py > 0) {
-          ppList.push({ name: d.complex_name, id: d.id, location: d.location, price: t.price, py, ppPrice: Math.round(t.price / py) });
-        }
+      const areaNum = parseFloat(c);
+      if (t && t.price && areaNum > 0) {
+        sqmList.push({ name: d.complex_name, id: d.id, location: d.location, price: t.price, area: c, sqmPrice: Math.round(t.price / areaNum) });
         break;
       }
     }
   });
-  ppList.sort((a, b) => b.ppPrice - a.ppPrice);
+  sqmList.sort((a, b) => b.sqmPrice - a.sqmPrice);
 
   // 동 정렬
   const dongList = Object.entries(dongMap).sort((a, b) => b[1].count - a[1].count);
@@ -248,9 +246,9 @@ function renderGuDetail(guName, data) {
     <div class="divider"></div>
 
     <div class="section">
-      <div class="section-title">평당가 TOP 10</div>
+      <div class="section-title">㎡당 가격 TOP 10 <span style="font-size:10px;color:var(--muted);font-weight:400;">(전용면적 기준)</span></div>
       <div style="display:flex;flex-direction:column;gap:8px;">
-        ${ppList.slice(0, 10).map((d, i) => `<div class="danji-item" onclick="location.href='danji.html?id=${encodeURIComponent(d.id)}'"><div><div class="danji-name">${i+1}. ${esc(d.name)}</div><div class="danji-sub">${esc(d.location)} · ${d.py}평</div></div><div><div class="danji-price">${formatPrice(d.price)}</div><div class="danji-rate">평당 ${formatPrice(d.ppPrice)}</div></div></div>`).join('')}
+        ${sqmList.slice(0, 10).map((d, i) => `<div class="danji-item" onclick="location.href='danji.html?id=${encodeURIComponent(d.id)}'"><div><div class="danji-name">${i+1}. ${esc(d.name)}</div><div class="danji-sub">${esc(d.location)} · 전용${d.area}㎡</div></div><div><div class="danji-price">${formatPrice(d.price)}</div><div class="danji-rate">${formatPrice(d.sqmPrice)}/㎡</div></div></div>`).join('')}
       </div>
     </div>
 
@@ -269,7 +267,7 @@ function renderGuDetail(guName, data) {
       <div class="section-title">자주 묻는 질문</div>
       <div class="faq-item"><div class="faq-q">${esc(guName)} 아파트 평균 시세는?</div><div class="faq-a">${esc(guName)} ${data.length}개 단지 평균 매매가는 ${avgPrice ? formatPrice(avgPrice) : '정보 확인 중'}입니다.</div></div>
       ${avgJr ? `<div class="faq-item"><div class="faq-q">${esc(guName)} 전세가율은?</div><div class="faq-a">${esc(guName)} 평균 전세가율은 ${avgJr}%입니다.</div></div>` : ''}
-      ${ppList.length > 0 ? `<div class="faq-item"><div class="faq-q">${esc(guName)}에서 가장 비싼 아파트는?</div><div class="faq-a">평당가 기준 ${esc(ppList[0].name)}이(가) ${formatPrice(ppList[0].ppPrice)}/평으로 가장 높습니다.</div></div>` : ''}
+      ${sqmList.length > 0 ? `<div class="faq-item"><div class="faq-q">${esc(guName)}에서 가장 비싼 아파트는?</div><div class="faq-a">전용면적 ㎡당 가격 기준 ${esc(sqmList[0].name)}이(가) ${formatPrice(sqmList[0].sqmPrice)}/㎡으로 가장 높습니다.</div></div>` : ''}
       <div class="faq-item"><div class="faq-q">${esc(guName)} 아파트 단지 수는?</div><div class="faq-a">${esc(guName)}에는 총 ${data.length}개 아파트/오피스텔 단지, ${totalUnits.toLocaleString()}세대가 있습니다.</div></div>
     </div>
 

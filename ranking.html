@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>서울 아파트 순위 - 휙</title>
-<meta name="description" id="meta-desc" content="서울 아파트 매매가, 평당가, 전세가율 순위를 확인하세요.">
-<meta name="keywords" id="meta-keywords" content="서울 아파트 순위, 비싼 아파트, 평당가 순위, 전세가율 순위">
+<meta name="description" id="meta-desc" content="서울 아파트 매매가, ㎡당 가격, 전세가율 순위를 확인하세요.">
+<meta name="keywords" id="meta-keywords" content="서울 아파트 순위, 비싼 아파트, ㎡당 가격 순위, 전세가율 순위">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="휙">
 <meta property="og:locale" content="ko_KR">
 <meta property="og:title" id="og-title" content="서울 아파트 순위 - 휙">
-<meta property="og:description" id="og-desc" content="서울 아파트 매매가, 평당가, 전세가율 순위를 확인하세요.">
+<meta property="og:description" id="og-desc" content="서울 아파트 매매가, ㎡당 가격, 전세가율 순위를 확인하세요.">
 <meta property="og:image" content="https://hwik.kr/og-image.png">
 <meta property="og:url" id="og-url" content="https://hwik.kr/ranking.html">
 <link rel="canonical" id="canonical" href="https://hwik.kr/ranking.html">
@@ -103,9 +103,10 @@ async function loadData() {
       if (t && t.price) { price = t.price; area = c; py = Math.round(parseInt(c)/3.3058); break; }
     }
     if (!price) return;
+    const areaNum = parseFloat(area) || 0;
     ALL_DATA.push({
       id: d.id, name: d.complex_name, location: d.location,
-      price, area, py, ppPrice: py > 0 ? Math.round(price/py) : 0,
+      price, area, areaNum, py, sqmPrice: areaNum > 0 ? Math.round(price / areaNum) : 0,
       jr: d.jeonse_rate, buildYear: d.build_year, units: d.total_units,
     });
   });
@@ -118,7 +119,7 @@ function render(gu) {
   const pageUrl = 'https://hwik.kr/ranking.html?' + (gu ? 'gu='+encodeURIComponent(gu)+'&' : '') + 'type=' + currentType;
 
   // SEO
-  const typeLabels = { price: '매매가', pprice: '평당가', jeonse: '전세가율 높은', jeonse_low: '전세가율 낮은' };
+  const typeLabels = { price: '매매가', sqm: '㎡당 가격', jeonse: '전세가율 높은', jeonse_low: '전세가율 낮은' };
   const typeLabel = typeLabels[currentType] || '매매가';
   document.title = areaLabel + ' 아파트 ' + typeLabel + ' 순위 TOP 50 - 휙';
   document.getElementById('og-title').content = document.title;
@@ -128,7 +129,7 @@ function render(gu) {
   // 정렬
   let sorted = [...ALL_DATA];
   if (currentType === 'price') sorted.sort((a,b) => b.price - a.price);
-  else if (currentType === 'pprice') sorted.sort((a,b) => b.ppPrice - a.ppPrice);
+  else if (currentType === 'sqm') sorted = sorted.filter(d => d.sqmPrice > 0).sort((a,b) => b.sqmPrice - a.sqmPrice);
   else if (currentType === 'jeonse') sorted = sorted.filter(d => d.jr && d.jr > 0).sort((a,b) => b.jr - a.jr);
   else if (currentType === 'jeonse_low') sorted = sorted.filter(d => d.jr && d.jr > 0).sort((a,b) => a.jr - b.jr);
 
@@ -144,7 +145,7 @@ function render(gu) {
 
     <div class="tabs">
       <div class="tab${currentType==='price'?' active':''}" onclick="switchType('price','${gu||''}')">매매가</div>
-      <div class="tab${currentType==='pprice'?' active':''}" onclick="switchType('pprice','${gu||''}')">평당가</div>
+      <div class="tab${currentType==='sqm'?' active':''}" onclick="switchType('sqm','${gu||''}')">㎡당 가격</div>
       <div class="tab${currentType==='jeonse'?' active':''}" onclick="switchType('jeonse','${gu||''}')">전세가율↑</div>
       <div class="tab${currentType==='jeonse_low'?' active':''}" onclick="switchType('jeonse_low','${gu||''}')">전세가율↓</div>
     </div>
@@ -154,12 +155,12 @@ function render(gu) {
       <div style="display:flex;flex-direction:column;gap:8px;">
         ${top50.map((d,i) => {
           let mainVal, subVal;
-          if (currentType === 'price') { mainVal = formatPrice(d.price); subVal = d.ppPrice ? '평당 '+formatPrice(d.ppPrice) : ''; }
-          else if (currentType === 'pprice') { mainVal = formatPrice(d.ppPrice)+'/평'; subVal = '매매 '+formatPrice(d.price); }
+          if (currentType === 'price') { mainVal = formatPrice(d.price); subVal = d.sqmPrice ? formatPrice(d.sqmPrice)+'/㎡' : ''; }
+          else if (currentType === 'sqm') { mainVal = formatPrice(d.sqmPrice)+'/㎡'; subVal = '매매 '+formatPrice(d.price)+' · '+d.area+'㎡'; }
           else { mainVal = (d.jr||0)+'%'; subVal = '매매 '+formatPrice(d.price); }
           return `<div class="rank-item" onclick="location.href='danji.html?id=${encodeURIComponent(d.id)}'">
             <div class="rank-num${i<3?' top3':''}">${i+1}</div>
-            <div class="rank-info"><div class="rank-name">${esc(d.name)}</div><div class="rank-sub">${esc(d.location)}${d.buildYear?' · '+d.buildYear+'년':''}${d.py?' · '+d.py+'평':''}</div></div>
+            <div class="rank-info"><div class="rank-name">${esc(d.name)}</div><div class="rank-sub">${esc(d.location)}${d.buildYear?' · '+d.buildYear+'년':''}${d.area?' · 전용'+d.area+'㎡':''}</div></div>
             <div class="rank-price"><div class="rank-main">${mainVal}</div><div class="rank-detail">${subVal}</div></div>
           </div>`;
         }).join('')}
@@ -171,7 +172,7 @@ function render(gu) {
     <div class="faq-section">
       <div class="section-title">자주 묻는 질문</div>
       ${top50[0] ? `<div class="faq-item"><div class="faq-q">${esc(areaLabel)}에서 가장 비싼 아파트는?</div><div class="faq-a">${esc(top50[0].name)} (${esc(top50[0].location)})이 ${formatPrice(top50[0].price)}으로 1위입니다.</div></div>` : ''}
-      ${top50[0] && currentType==='pprice' ? `<div class="faq-item"><div class="faq-q">${esc(areaLabel)} 평당가 1위는?</div><div class="faq-a">${esc(top50[0].name)}이 평당 ${formatPrice(top50[0].ppPrice)}으로 1위입니다.</div></div>` : ''}
+      ${top50[0] && currentType==='sqm' ? `<div class="faq-item"><div class="faq-q">${esc(areaLabel)} ㎡당 가격 1위는?</div><div class="faq-a">${esc(top50[0].name)}이 전용면적 기준 ${formatPrice(top50[0].sqmPrice)}/㎡으로 1위입니다.</div></div>` : ''}
     </div>
 
     <div class="seo-section"><div class="seo-text">${esc(areaLabel)} 아파트 ${esc(typeLabel)} 순위 TOP 50. ${top50[0]?esc(top50[0].name)+'('+formatPrice(top50[0].price)+')이 1위.':''} 국토교통부 실거래가 기반.</div><div class="seo-source">데이터 출처: 국토교통부 실거래가 공개시스템 · 매일 업데이트</div></div>
