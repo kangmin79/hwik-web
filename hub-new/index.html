@@ -1613,25 +1613,31 @@ const PanelCards = (() => {
   function _renderItems(cards,el){
     if(!el)return;if(!cards.length){el.innerHTML='<div class="empty"><div class="empty-icon">🏠</div>매물이 없어요</div>';return;}
     el.innerHTML=cards.map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent',st=c.trade_status||'계약가능',stC=st==='완료'?'#ef4444':st==='계약중'?'#f59e0b':'#22c55e';
-      const feats=(p.features||[]).slice(0,3),sel=Preview.getSelected().some(s=>s.id===c.id);
-      const thumb=c.photos?.[0]?('<img class="item-thumb" src="'+c.photos[0]+'">'):'';
-      return `<div class="property-item ${sel?'selected':''}" onclick="PanelCards.toggleSel('${c.id}')">
-        <label class="property-checkbox" onclick="event.stopPropagation()"><input type="checkbox" ${sel?'checked':''} onchange="PanelCards.toggleSel('${c.id}')"></label>
-        <div class="property-body">
-          <div class="property-header">
-            <span class="property-type-badge ${tc}">${esc(p.type||'')}</span>
-            <span class="trade-badge" style="color:${stC}">${st}</span>
-            <strong class="property-price">${esc(p.price||'-')}</strong>
-            <span class="property-name">${esc(p.complex||'')} ${esc(p.location||'')}</span>
-            <span class="property-detail">· ${[p.area,p.floor].filter(Boolean).join(' · ')}</span>
+      const feats=(p.features||[]).slice(0,4),sel=Preview.getSelected().some(s=>s.id===c.id);
+      const photos=c.photos||[];
+      const thumbHtml=photos.length?`<div style="width:44px;height:44px;border-radius:6px;overflow:hidden;flex-shrink:0;position:relative;"><img src="${esc(photos[0])}" style="width:100%;height:100%;object-fit:cover;">${photos.length>1?`<span style="position:absolute;bottom:1px;right:2px;font-size:9px;color:#fff;background:rgba(0,0,0,0.6);padding:1px 4px;border-radius:3px;">${photos.length}</span>`:''}</div>`:'';
+      const mainText=[p.complex,p.location].filter(Boolean).map(v=>esc(v)).join(' · ');
+      const subText=[p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ');
+
+      return `<div class="property-item ${sel?'selected':''}" id="item-${c.id}">
+        <div style="display:flex;align-items:center;gap:8px;width:100%;cursor:pointer;" onclick="PanelCards.toggleSel('${c.id}')">
+          <div class="property-checkbox" style="width:18px;height:18px;border:2px solid ${sel?'var(--primary)':'var(--border)'};border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;${sel?'background:var(--primary);':''}">${sel?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+              <span class="property-type-badge ${tc}">${esc(p.type||'')}</span>
+              <span class="trade-badge" style="color:${stC}">${st}</span>
+              <strong style="font-size:14px;">${esc(p.price||'-')}</strong>
+              ${mainText?`<span style="color:var(--text-sub);font-size:13px;">${mainText}</span>`:''}
+              ${subText?`<span style="color:var(--text-light);font-size:12px;">· ${subText}</span>`:''}
+            </div>
+            ${feats.length?`<div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;">${feats.map(f=>`<span class="list-tag">${esc(f)}</span>`).join('')}</div>`:''}
           </div>
-          ${feats.length?`<div class="property-tags">${feats.map(f=>`<span class="list-tag">${esc(f)}</span>`).join('')}</div>`:''}
-        </div>
-        ${thumb}
-        <div class="property-actions">
-          <button class="prop-action-btn" onclick="event.stopPropagation();PanelCards.share1('${c.id}')">공유</button>
-          <button class="prop-action-btn" onclick="event.stopPropagation();PanelCards.edit('${c.id}')">수정</button>
-          <button class="prop-action-btn delete" onclick="event.stopPropagation();PanelCards.del('${c.id}')">삭제</button>
+          ${thumbHtml}
+          <div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation()">
+            <button class="prop-action-btn" onclick="PanelCards.share1('${c.id}')">공유</button>
+            <button class="prop-action-btn" onclick="PanelCards.edit('${c.id}')">수정</button>
+            <button class="prop-action-btn delete" onclick="PanelCards.del('${c.id}')">삭제</button>
+          </div>
         </div>
       </div>`;
     }).join('');
