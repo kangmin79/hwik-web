@@ -1181,10 +1181,10 @@ const Preview = (() => {
 
     // 손님에게 한마디
     const commentVal=document.getElementById('regComment')?.value?.trim()||'';
-    const commentHtml=`<div style="padding:8px 10px;margin-top:6px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;">
-      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);margin-bottom:4px;">● 손님에게 한마디</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.6);min-height:24px;">${commentVal?esc(commentVal):'<span style="color:rgba(255,255,255,0.25);">예) 채광 정말 좋아요. 역까지 3분</span>'}</div>
-      <div style="font-size:9px;color:rgba(255,255,255,0.3);margin-top:4px;">✓ 손님 카드에만 표시됩니다</div>
+    const commentHtml=`<div style="padding:10px 12px;margin-top:6px;border:1.5px solid rgba(78,205,196,0.3);border-radius:10px;background:rgba(78,205,196,0.06);">
+      <div style="font-size:10px;font-weight:800;color:#4ecdc4;margin-bottom:4px;">● 손님에게 한마디</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.85);min-height:24px;line-height:1.5;">${commentVal?esc(commentVal):'<span style="color:rgba(255,255,255,0.35);">예) 채광 정말 좋아요. 역까지 3분</span>'}</div>
+      <div style="font-size:9px;color:rgba(255,255,255,0.4);margin-top:4px;">✓ 손님 카드에만 표시됩니다</div>
     </div>`;
 
     screenEl.innerHTML=`<div style="padding:8px;">
