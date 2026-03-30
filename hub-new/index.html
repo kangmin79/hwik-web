@@ -2075,17 +2075,29 @@ const PanelClient = (() => {
 
   async function render(el){
     el.innerHTML=`<div class="panel-inner">${Hub.panelHead('손님')}
-      <div style="margin-bottom:16px;padding:16px;border:2px solid #4ecdc4;border-radius:14px;background:rgba(78,205,196,0.04);">
-        <div style="font-size:13px;font-weight:700;margin-bottom:8px;">+ 손님 등록</div>
-        <textarea id="clientRegInput" class="reg-textarea" style="min-height:60px;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:14px;" placeholder="예) 강남구 아파트 전세 5억이하 구합니다&#10;이름: 홍길동 / 010-1234-5678"></textarea>
-        <button onclick="PanelClient.registerClient()" class="btn-primary" style="margin-top:8px;padding:10px;" id="clientRegBtn">AI로 손님 등록</button>
-        <div id="clientRegResult"></div>
+      <div id="clientRegArea" style="margin-bottom:16px;padding:16px;border:2px solid #4ecdc4;border-radius:14px;background:rgba(78,205,196,0.04);transition:all 0.3s;overflow:hidden;">
+        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="PanelClient.toggleReg()">
+          <div style="font-size:13px;font-weight:700;">+ 손님 등록</div>
+          <span id="clientRegToggle" style="font-size:18px;color:var(--text-light);transition:transform 0.3s;">▼</span>
+        </div>
+        <div id="clientRegBody" style="margin-top:8px;">
+          <textarea id="clientRegInput" class="reg-textarea" style="min-height:60px;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:14px;" placeholder="예) 강남구 아파트 전세 5억이하 구합니다&#10;이름: 홍길동 / 010-1234-5678"></textarea>
+          <button onclick="PanelClient.registerClient()" class="btn-primary" style="margin-top:8px;padding:10px;" id="clientRegBtn">AI로 손님 등록</button>
+          <div id="clientRegResult"></div>
+        </div>
       </div>
       <div class="search"><input type="text" placeholder="예) 강남구 아파트 전세 5억이하 / 찾는분 강남" oninput="PanelClient.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelClient.onQEnter()"></div>
-      <div class="filters" style="justify-content:flex-end;">${['최근순','오래된순'].map(s=>`<button class="sort-tag${cSort===s?' active':''}" onclick="PanelClient.setSort('${s}',this)">${s}</button>`).join('')}</div>
       <div id="clList">${hwikLoading()}</div>
     </div>`;
     await Data.loadClientCards(0,true);_renderList();
+  }
+
+  let _regOpen=true;
+  function toggleReg(){
+    _regOpen=!_regOpen;
+    const body=document.getElementById('clientRegBody'),toggle=document.getElementById('clientRegToggle');
+    if(body)body.style.display=_regOpen?'':'none';
+    if(toggle)toggle.style.transform=_regOpen?'':'rotate(-90deg)';
   }
 
   async function registerClient(){
@@ -2132,24 +2144,43 @@ const PanelClient = (() => {
 
   function _renderList(){let cards=[...Data.cache.clientCards];if(cQuery.trim())cards=Search.local(cQuery,cards);if(cSort==='오래된순')cards.sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));else cards.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));_renderItems(cards);}
 
+  const _stageMap={
+    '메모':{color:'#6366f1',bg:'rgba(99,102,241,0.1)',label:'신규'},
+    '상담':{color:'#60a5fa',bg:'rgba(96,165,250,0.1)',label:'상담'},
+    '방문':{color:'#f59e0b',bg:'rgba(245,158,11,0.1)',label:'방문'},
+    '매물소개':{color:'#a78bfa',bg:'rgba(167,139,250,0.1)',label:'소개'},
+    '계약':{color:'#ef4444',bg:'rgba(248,113,113,0.1)',label:'계약'},
+  };
+
   async function _renderItems(cards){const el=document.getElementById('clList');if(!el)return;if(!cards.length){el.innerHTML='<div class="empty"><div class="empty-icon">🙋</div>손님이 없어요</div>';return;}
-    // 마지막 연락일 로드
+    // 마지막 메모 로드 (타입+날짜)
     const ids=cards.map(c=>c.id);
-    let lastDates={};
-    try{const{data}=await Auth.sb.from('client_notes').select('client_card_id,created_at').in('client_card_id',ids).order('created_at',{ascending:false});
-      (data||[]).forEach(n=>{if(!lastDates[n.client_card_id])lastDates[n.client_card_id]=n.created_at;});}catch(_){}
+    let lastNotes={};
+    try{const{data}=await Auth.sb.from('client_notes').select('client_card_id,type,created_at').in('client_card_id',ids).order('created_at',{ascending:false});
+      (data||[]).forEach(n=>{if(!lastNotes[n.client_card_id])lastNotes[n.client_card_id]=n;});}catch(_){}
+
+    // 스크롤 시 등록 영역 접기
+    el.onscroll=()=>{if(_regOpen&&el.scrollTop>50){_regOpen=false;const body=document.getElementById('clientRegBody'),toggle=document.getElementById('clientRegToggle');if(body)body.style.display='none';if(toggle)toggle.style.transform='rotate(-90deg)';}};
 
     el.innerHTML=cards.map(c=>{const p=c.property||{},name=c.contact_name||p.location||p.complex||'손님',conds=[p.price,p.location,p.complex,p.area].filter(Boolean).map(v=>esc(v)).join(' · ');
+      // 상태 색상 (마지막 메모 타입 기반)
+      const lastNote=lastNotes[c.id];
+      const stage=lastNote?(_stageMap[lastNote.type]||_stageMap['메모']):_stageMap['메모'];
       // 마지막 연락 표시
       let lastStr='';
-      const lastDate=lastDates[c.id];
-      if(lastDate){const diff=Math.floor((Date.now()-new Date(lastDate))/(1000*60*60*24));
+      if(lastNote){const diff=Math.floor((Date.now()-new Date(lastNote.created_at))/(1000*60*60*24));
         if(diff===0)lastStr='오늘';else if(diff===1)lastStr='어제';else lastStr=diff+'일 전';
-        const color=diff>7?'#ef4444':diff>3?'#f59e0b':'#22c55e';
-        lastStr=`<div style="font-size:10px;color:${color};margin-top:2px;">마지막 연락 ${lastStr}</div>`;
+        const dateColor=diff>7?'#ef4444':diff>3?'#f59e0b':'#22c55e';
+        lastStr=`<span style="font-size:10px;color:${dateColor};margin-left:8px;">· ${lastStr}</span>`;
       }
-      return `<div class="item client-item" onclick='Hub.enterClient(JSON.parse(decodeURIComponent("${encodeURIComponent(JSON.stringify(c))}")))'>
-        <span class="item-type client">손님</span><div class="item-body"><div class="item-name">${esc(name)}</div><div class="item-sub">${conds}</div>${lastStr}</div>${c.contact_phone?`<span class="client-phone">${esc(c.contact_phone)}</span>`:''}
+
+      return `<div class="item client-item" style="border-left:3px solid ${stage.color};" onclick='Hub.enterClient(JSON.parse(decodeURIComponent("${encodeURIComponent(JSON.stringify(c))}")))'>
+        <span style="padding:3px 8px;border-radius:6px;font-size:10px;font-weight:800;background:${stage.bg};color:${stage.color};flex-shrink:0;">${stage.label}</span>
+        <div class="item-body">
+          <div class="item-name">${esc(name)}${lastStr}</div>
+          <div class="item-sub">${conds}</div>
+        </div>
+        ${c.contact_phone?`<span class="client-phone">${esc(c.contact_phone)}</span>`:''}
       </div>`;}).join('');
   }
 
@@ -2283,7 +2314,7 @@ const PanelClient = (() => {
     if(Hub.current?.data?.id===cardId){Hub.current.data.contact_name=name;Hub.current.data.contact_phone=phone;}
   }
 
-  return { render, registerClient, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact };
+  return { render, registerClient, toggleReg, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact };
 })();
 
 /* ═══════════════════════════════════════════════════════════
