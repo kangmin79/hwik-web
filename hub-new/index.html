@@ -2086,7 +2086,7 @@ const PanelClient = (() => {
           <div id="clientRegResult"></div>
         </div>
       </div>
-      <div onmouseenter="PanelClient._collapseReg()">
+      <div onmouseenter="PanelClient._collapseReg()" onmouseleave="PanelClient._expandReg()">
         <div class="search"><input type="text" placeholder="예) 강남구 아파트 전세 5억이하 / 찾는분 강남" oninput="PanelClient.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelClient.onQEnter()"></div>
         <div id="clList" style="min-height:200px;">${hwikLoading()}</div>
       </div>
@@ -2102,6 +2102,11 @@ const PanelClient = (() => {
   function _collapseReg(){
     if(!_regOpen)return;
     _regOpen=false;
+    _applyReg();
+  }
+  function _expandReg(){
+    if(_regOpen)return;
+    _regOpen=true;
     _applyReg();
   }
   function _applyReg(){
@@ -2371,7 +2376,7 @@ const PanelClient = (() => {
     if(Hub.current?.data?.id===cardId){Hub.current.data.contact_name=name;Hub.current.data.contact_phone=phone;}
   }
 
-  return { render, registerClient, toggleReg, _collapseReg, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact };
+  return { render, registerClient, toggleReg, _collapseReg, _expandReg, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact };
 })();
 
 /* ═══════════════════════════════════════════════════════════
