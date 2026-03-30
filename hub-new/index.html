@@ -81,8 +81,12 @@ body.dark .header{background:rgba(15,23,42,0.92);}
 /* ═══════════════════════════════════════════════════════════
    4. 허브 비주얼
    ═══════════════════════════════════════════════════════════ */
-.hub-visual{position:relative;width:min(90%,700px);aspect-ratio:800/700;max-height:75vh;transition:transform 0.4s ease;}
-.main.split .hub-visual{transform:scale(0.65);}
+.hub-visual{position:relative;width:min(90%,700px);aspect-ratio:800/700;max-height:75vh;}
+.hub-center{transition:all 0.4s ease;}
+.main.split .hub-center{width:80px;height:80px;border-radius:20px;}
+.main.split .hub-center .hub-center-icon{font-size:20px;}
+.main.split .hub-center .hub-center-name{font-size:10px;}
+.main.split .hub-center .hub-center-sub{display:none;}
 .hub-lines{position:absolute;inset:0;z-index:1;pointer-events:none;}
 .hub-line{stroke:#cbd5e1;stroke-width:1;opacity:0.5;}
 body.dark .hub-line{stroke:#475569;}
