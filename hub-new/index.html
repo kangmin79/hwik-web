@@ -2075,13 +2075,13 @@ const PanelClient = (() => {
 
   async function render(el){
     el.innerHTML=`<div class="panel-inner">${Hub.panelHead('손님')}
-      <div id="clientRegArea" style="margin-bottom:16px;padding:16px;border:2px solid #4ecdc4;border-radius:14px;background:rgba(78,205,196,0.04);transition:all 0.3s;overflow:hidden;">
+      <div id="clientRegArea" style="margin-bottom:0;padding:16px;border:2px solid #4ecdc4;border-radius:14px;background:rgba(78,205,196,0.04);transition:max-height 0.4s ease,padding 0.4s ease,margin 0.4s ease,opacity 0.3s ease;overflow:hidden;max-height:300px;opacity:1;">
         <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="PanelClient.toggleReg()">
           <div style="font-size:13px;font-weight:700;">+ 손님 등록</div>
-          <span id="clientRegToggle" style="font-size:18px;color:var(--text-light);transition:transform 0.3s;">▼</span>
+          <span id="clientRegToggle" style="font-size:14px;color:var(--text-light);">▼</span>
         </div>
-        <div id="clientRegBody" style="margin-top:8px;">
-          <textarea id="clientRegInput" class="reg-textarea" style="min-height:60px;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:14px;" placeholder="예) 강남구 아파트 전세 5억이하 구합니다&#10;이름: 홍길동 / 010-1234-5678"></textarea>
+        <div id="clientRegBody">
+          <textarea id="clientRegInput" class="reg-textarea" style="min-height:60px;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:14px;margin-top:8px;" placeholder="예) 강남구 아파트 전세 5억이하 구합니다&#10;이름: 홍길동 / 010-1234-5678"></textarea>
           <button onclick="PanelClient.registerClient()" class="btn-primary" style="margin-top:8px;padding:10px;" id="clientRegBtn">AI로 손님 등록</button>
           <div id="clientRegResult"></div>
         </div>
@@ -2103,10 +2103,13 @@ const PanelClient = (() => {
     _applyReg();
   }
   function _applyReg(){
-    const area=document.getElementById('clientRegArea'),body=document.getElementById('clientRegBody'),toggle=document.getElementById('clientRegToggle');
-    if(body)body.style.display=_regOpen?'':'none';
-    if(toggle)toggle.style.transform=_regOpen?'':'rotate(-90deg)';
-    if(area)area.style.padding=_regOpen?'16px':'10px 16px';
+    const area=document.getElementById('clientRegArea');
+    if(!area)return;
+    if(_regOpen){
+      area.style.maxHeight='300px';area.style.padding='16px';area.style.marginBottom='16px';area.style.opacity='1';area.style.borderWidth='2px';
+    }else{
+      area.style.maxHeight='0';area.style.padding='0 16px';area.style.marginBottom='0';area.style.opacity='0';area.style.borderWidth='0';
+    }
   }
 
   async function registerClient(){
