@@ -1314,6 +1314,8 @@ const Hub = (() => {
   function render(nodes,center) {
     nodes=nodes||MAIN;center=center||{icon:'👤',name:Auth.profile?.business_name||'중개사',sub:''};
     const v=document.getElementById('hubVisual'),hc=document.getElementById('hubCenter');if(!v||!hc)return;
+    // split 상태면 무조건 세로
+    if(document.getElementById('main').classList.contains('split')){current={nodes,center};_renderVertical();return;}
     // 원형 모드 복원
     hc.style.cssText='';v.style.cssText='';
     const cx=VW/2,cy=VH/2;
@@ -1403,6 +1405,7 @@ const Hub = (() => {
     document.querySelectorAll('.hub-node').forEach(n=>n.classList.remove('active'));
     document.querySelector(`.hub-node[data-key="${key}"]`)?.classList.add('active');
     activePanel=key;document.getElementById('main').classList.add('split');
+    _renderVertical();
     const el=document.getElementById('panelArea');
     if(key.startsWith('cl_'))PanelClient.renderSub(key,el);
     if(key.startsWith('pr_'))PanelCards.renderSub(key,el);
