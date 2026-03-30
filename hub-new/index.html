@@ -691,7 +691,7 @@ const Data = (() => {
     const g = ++_guard;
     // JSON 필터 SDK 호환 문제로 더 많이 로드 후 클라이언트 필터
     const { data, error } = await sb().from('cards')
-      .select('id,property,trade_status,price_number,created_at,photos,agent_comment')
+      .select('*')
       .eq('agent_id',id)
       .order('created_at',{ascending:false}).range(off, off+PAGE*3-1);
     if(error) console.error('loadMyCards error:', error);
