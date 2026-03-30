@@ -41,3 +41,15 @@ jobs:
           else
             python sync_trades.py
           fi
+
+      - name: sitemap.xml 커밋 및 푸시
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet sitemap.xml; then
+            echo "sitemap.xml 변경 없음"
+          else
+            git add sitemap.xml
+            git commit -m "sitemap.xml 자동 업데이트 ($(date -u +%Y-%m-%d))"
+            git push
+          fi
