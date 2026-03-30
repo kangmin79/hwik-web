@@ -74,8 +74,8 @@ body.dark .header{background:rgba(15,23,42,0.92);}
   background:var(--bg-card);overflow-y:auto;overflow-x:hidden;
   border-left:1px solid var(--border);transition:width 0.4s ease;z-index:50;
 }
-.main.split .hub-area{width:40%;}
-.main.split .panel-area{width:60%;}
+.main.split .hub-area{width:30%;}
+.main.split .panel-area{width:70%;}
 
 /* ═══════════════════════════════════════════════════════════
    4. 허브 비주얼
@@ -277,9 +277,10 @@ body.dark .phone-screen{background:#0f172a;}
 .property-tags{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;}
 .list-tag{padding:2px 8px;border-radius:6px;background:var(--primary-bg);font-size:10px;font-weight:600;color:var(--primary);}
 .property-actions{display:flex;gap:4px;flex-shrink:0;}
-.prop-action-btn{padding:5px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-sub);font-size:11px;font-weight:600;cursor:pointer;}
+.prop-action-btn{padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-sub);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;}
 .prop-action-btn:hover{background:var(--primary-bg);border-color:var(--primary);color:var(--primary);}
-.prop-action-btn.delete:hover{border-color:#ef4444;color:#ef4444;background:rgba(239,68,68,0.06);}
+.prop-action-btn.delete{color:#ef4444;border-color:rgba(239,68,68,0.3);}
+.prop-action-btn.delete:hover{background:rgba(239,68,68,0.06);}
 
 /* ═══════════════════════════════════════════════════════════
    8. 필터 & 검색 & 탭
@@ -1586,7 +1587,7 @@ const PanelCards = (() => {
       </div>
       <div id="tabDone" style="display:none"><div id="doneList"></div></div>
     </div></div>
-    <div class="panel-preview-wrap preview-right" id="previewPanel"></div>
+    <div class="panel-preview-wrap" id="previewPanel" style="width:0;opacity:0;padding:0;"></div>
     </div>`;
     cOff=0;await Data.loadMyCards(0,true);renderList();
     Preview.clear();Preview.renderSlider('previewPanel');
@@ -1643,7 +1644,14 @@ const PanelCards = (() => {
     }).join('');
   }
 
-  function toggleSel(id){const c=Data.cache.myCards.find(x=>x.id===id);if(!c)return;Preview.toggle(c);renderList();Preview.renderSlider('previewPanel');const btn=document.querySelector('.btn-send');if(btn)btn.disabled=!Preview.getSelected().length;}
+  function toggleSel(id){
+    const c=Data.cache.myCards.find(x=>x.id===id);if(!c)return;
+    Preview.toggle(c);renderList();Preview.renderSlider('previewPanel');
+    // 미리보기 패널 열기/닫기
+    const pp=document.getElementById('previewPanel');
+    if(pp){const has=Preview.getSelected().length>0;pp.style.width=has?'340px':'0';pp.style.opacity=has?'1':'0';pp.style.padding=has?'16px':'0';}
+    const btn=document.querySelector('.btn-send');if(btn)btn.disabled=!Preview.getSelected().length;
+  }
 
   function share1(id){const rooms=Data.cache.rooms;if(!rooms.length){Toast.show('공유방을 먼저 만들어주세요');return;}const m=document.getElementById('shareToRoomModal');if(!m)return;m.innerHTML=`<div class="modal-content"><div class="modal-header">공유방 선택<button class="modal-close" onclick="this.closest('.modal-overlay').classList.remove('show')">✕</button></div><div class="modal-body">${rooms.map(r=>`<div class="item" onclick="PanelCards.doShare('${id}','${r.id}')"><div class="item-body"><div class="item-name">${esc(r.name)}</div></div></div>`).join('')}</div></div>`;m.classList.add('show');}
   async function doShare(cardId,roomId){await Data.shareCardToRoom(cardId,roomId);Toast.show('공유 완료');document.getElementById('shareToRoomModal')?.classList.remove('show');}
