@@ -1432,24 +1432,70 @@ const PanelRegister = (() => {
     // 여러 건이면 대량 파싱으로
     if(_isBatch(text)){await _doBatch(text);return;}
 
-    // 단건 등록
+    // 단건 등록 (기존 card_generator와 동일한 흐름)
     document.getElementById('leaveBanner').style.display='block';btn.textContent='분석 중...';btn.disabled=true;_runSteps();
     try{
-      const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/parse-property`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({text,agent_id:Auth.user.id})});
-      const d=await res.json();
-      if(d.error){document.getElementById('regResult').innerHTML=`<div class="reg-error">${esc(d.error)}</div>`;btn.textContent='AI로 카드 만들기';btn.disabled=false;_resetSteps();document.getElementById('leaveBanner').style.display='none';return;}
-      const cardId=d.card_id||d.id;
-      const [photoUrls,coords]=await Promise.all([pendingPhotos.length?Data.uploadPhotos(cardId,pendingPhotos.map(p=>p.file)):[],Data.matchCoords(d.property||d)]);
-      const updates={};
-      if(photoUrls.length)updates.photos=photoUrls;
-      if(coords.lat){const prop=d.property||{};prop.lat=coords.lat;prop.lng=coords.lng;updates.property=prop;}
-      if(d.ownerPhone||d.tenantPhone||d.memo){updates.private_note={ownerPhone:d.ownerPhone||'',tenantPhone:d.tenantPhone||'',memo:d.memo||''};}
+      // 1. AI 파싱 (DB 저장 안 함 — 파싱만)
+      const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/parse-property`,{
+        method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken()},
+        body:JSON.stringify({text})
+      });
+      const r=await res.json();
+      if(r.error){document.getElementById('regResult').innerHTML=`<div class="reg-error">${esc(r.error)}</div>`;btn.textContent='AI로 카드 만들기';btn.disabled=false;_resetSteps();document.getElementById('leaveBanner').style.display='none';return;}
+
+      // 2. 카드 ID 생성
+      const linkId=crypto.randomUUID().slice(0,12);
+
+      // 3. 파싱 결과에서 property 구성 (필요한 필드만)
+      const property={
+        type:r.type||null, price:r.price||null, location:r.location||null, address:r.address||null,
+        complex:r.complex||null, area:r.area||null, floor:r.floor||null, room:r.room||null,
+        features:r.features||[], moveIn:r.moveIn||null, category:r.category||null, rawText:text
+      };
+
+      // 4. 사진 업로드 + 좌표 매칭 동시 실행
+      const needCoord=!r.lat&&(property.complex||property.location);
+      const [photoUrls,coordResult]=await Promise.all([
+        pendingPhotos.length?Data.uploadPhotos(linkId,pendingPhotos.map(p=>p.file)):[],
+        needCoord?Data.matchCoords(property):Promise.resolve(null)
+      ]);
+
+      // 5. 최종 좌표 (Edge Function 결과 우선 → DB 매칭 → 카카오)
+      const finalLat=r.lat||(coordResult?.lat)||null;
+      const finalLng=r.lng||(coordResult?.lng)||null;
+
+      // 6. 카드 데이터 구성 + DB 저장
       const comment=document.getElementById('regComment')?.value?.trim();
-      if(comment)updates.agent_comment=comment;
-      if(Object.keys(updates).length)await Auth.sb.from('cards').update(updates).eq('id',cardId);
-      if((d.property||{}).type!=='손님')Data.triggerAutoMatch(cardId);
+      const cardData={
+        id:linkId,
+        agent_id:Auth.user.id,
+        property,
+        private_note:{memo:r.memo||null,rawText:text},
+        agent_comment:comment||r.agent_comment||null,
+        lat:finalLat, lng:finalLng,
+        embedding:r.embedding||null,
+        search_text:r.search_text||null,
+        search_text_private:r.search_text_private||null,
+        price_number:r.price_number||null,
+        deposit:r.deposit||null,
+        monthly_rent:r.monthly_rent||null,
+        move_in_date:r.move_in_date||null,
+        wanted_trade_type:r.wanted_trade_type||null,
+        contact_name:r.contact_name||null,
+        contact_phone:r.contact_phone||null,
+        photos:photoUrls.length?photoUrls:null,
+        trade_status:'계약가능'
+      };
+
+      const {error:dbErr}=await Auth.sb.from('cards').insert([cardData]);
+      if(dbErr)throw new Error('저장 실패: '+dbErr.message);
+
+      // 7. 자동 매칭 (백그라운드)
+      if(property.type!=='손님')Data.triggerAutoMatch(linkId);
+
       document.getElementById('regResult').innerHTML='<div class="reg-success">✅ 매물 카드가 생성되었습니다!</div>';
       inp.value='';pendingPhotos=[];_renderPhotos();onInput();
+      document.getElementById('regComment').value='';
     }catch(e){document.getElementById('regResult').innerHTML=`<div class="reg-error">오류: ${esc(e.message)}</div>`;}
     document.getElementById('leaveBanner').style.display='none';btn.textContent='AI로 카드 만들기';btn.disabled=false;_resetSteps();
   }
@@ -1788,10 +1834,21 @@ const PanelClient = (() => {
     const text=document.getElementById('clientEditText')?.value?.trim();if(!text)return;
     const btn=document.getElementById('clientEditBtn');btn.textContent='분석 중...';btn.disabled=true;
     try{
-      const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/parse-property`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({text})});
-      const parsed=await res.json();if(parsed.error)throw new Error(parsed.error);
-      parsed.rawText=text;
-      await Auth.sb.from('cards').update({property:parsed,price_number:parsed.price_number||null,deposit:parsed.deposit||null,monthly_rent:parsed.monthly_rent||null,contact_name:parsed.contact_name||null,contact_phone:parsed.contact_phone||null}).eq('id',cardId).eq('agent_id',Auth.user.id);
+      const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/parse-property`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken()},body:JSON.stringify({text})});
+      const r=await res.json();if(r.error)throw new Error(r.error);
+      // 필요한 필드만 property에 저장 (embedding/search_text 등 제외)
+      const property={
+        type:r.type||null,price:r.price||null,location:r.location||null,address:r.address||null,
+        complex:r.complex||null,area:r.area||null,floor:r.floor||null,room:r.room||null,
+        features:r.features||[],moveIn:r.moveIn||null,category:r.category||null,rawText:text
+      };
+      await Auth.sb.from('cards').update({
+        property,
+        price_number:r.price_number||null,deposit:r.deposit||null,monthly_rent:r.monthly_rent||null,
+        wanted_trade_type:r.wanted_trade_type||null,
+        contact_name:r.contact_name||null,contact_phone:r.contact_phone||null,
+        embedding:r.embedding||null,search_text:r.search_text||null
+      }).eq('id',cardId).eq('agent_id',Auth.user.id);
       document.getElementById('editModal').classList.remove('show');
       Data.updateEmbedding(cardId);Data.updateClientLocation(cardId);
       Toast.show('수정 완료');await Data.loadClientCards(0,true);_renderList();
