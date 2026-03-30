@@ -1331,8 +1331,8 @@ const Hub = (() => {
     const area=document.querySelector('.hub-area');
     const areaW=area?area.offsetWidth:999;
 
-    // 가로 450px 이하면 세로 스택 모드 (노드 겹침 방지)
-    if(areaW<450){
+    // 가로 550px 이하면 세로 스택 모드 (노드+중앙 겹침 방지)
+    if(areaW<550){
       _renderStack(v,hc,nodes,center);return;
     }
 
