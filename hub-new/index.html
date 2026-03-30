@@ -832,7 +832,7 @@ const Data = (() => {
     return cache.pendingInvites;
   }
 
-  async function shareCardToRoom(cardId,roomId) { return sb().from('card_shares').insert({card_id:cardId,room_id:roomId}); }
+  async function shareCardToRoom(cardId,roomId) { return sb().from('card_shares').insert({card_id:cardId,room_id:roomId,shared_by:uid()}); }
   async function unshareCard(cardId,roomId) { let q=sb().from('card_shares').delete().eq('card_id',cardId); if(roomId) q=q.eq('room_id',roomId); return q; }
 
   async function deleteCard(cardId) { return sb().from('cards').delete().eq('id',cardId).eq('agent_id',uid()); }
@@ -1138,7 +1138,7 @@ const Preview = (() => {
       <div class="dots-indicator" style="flex-shrink:0;">${dots}</div>
       <div style="width:100%;max-width:300px;flex-shrink:0;">
         <button class="btn-send" onclick="Share.openSheet()" style="margin-top:0;">${selected.length}개 묶어서 보내기</button>
-        <button class="btn-share-room" onclick="PanelCards.share1('${selected[0]?.id||''}')">📁 공유방에 올리기</button>
+        <button class="btn-share-room" onclick="PanelCards.shareSelected()">📁 공유방에 올리기</button>
       </div>`;
     _setupSwipe();
   }
@@ -1818,8 +1818,55 @@ const PanelCards = (() => {
     const btn=document.querySelector('.btn-send');if(btn)btn.disabled=!has;
   }
 
-  function share1(id){const rooms=Data.cache.rooms;if(!rooms.length){Toast.show('공유방을 먼저 만들어주세요');return;}const m=document.getElementById('shareToRoomModal');if(!m)return;m.innerHTML=`<div class="modal-content"><div class="modal-header">공유방 선택<button class="modal-close" onclick="this.closest('.modal-overlay').classList.remove('show')">✕</button></div><div class="modal-body">${rooms.map(r=>`<div class="item" onclick="PanelCards.doShare('${id}','${r.id}')"><div class="item-body"><div class="item-name">${esc(r.name)}</div></div></div>`).join('')}</div></div>`;m.classList.add('show');}
-  async function doShare(cardId,roomId){await Data.shareCardToRoom(cardId,roomId);Toast.show('공유 완료');document.getElementById('shareToRoomModal')?.classList.remove('show');}
+  function share1(id){
+    const card=Data.cache.myCards.find(x=>x.id===id);
+    _openSharePicker(card?[card]:null, id);
+  }
+  function shareSelected(){
+    const cards=Preview.getSelected();
+    if(!cards.length){Toast.show('매물을 먼저 선택해주세요');return;}
+    _openSharePicker(cards);
+  }
+  function _openSharePicker(cards, singleId){
+    const rooms=Data.cache.rooms;
+    if(!rooms.length){Toast.show('공유방을 먼저 만들어주세요');Hub.openPanel('shared');return;}
+    const m=document.getElementById('shareToRoomModal');if(!m)return;
+    const desc=cards&&cards.length===1?(() =>{const p=cards[0].property||{};return [p.type,p.price,p.complex].filter(Boolean).join(' ');})():`${cards?cards.length:1}개 매물`;
+    m.innerHTML=`<div class="modal-content" style="max-width:400px;">
+      <div class="modal-header">공유방에 올리기<button class="modal-close" onclick="this.closest('.modal-overlay').classList.remove('show')">✕</button></div>
+      <div class="modal-body">
+        <p style="font-size:13px;color:var(--text-sub);margin-bottom:16px;">"${esc(desc)}" 을(를) 어느 공유방에 올릴까요?</p>
+        ${rooms.map(r=>`<div class="item" style="padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;margin-bottom:8px;" onclick="PanelCards.doShare('${singleId||'multi'}','${r.id}')">
+          <div style="font-size:20px;margin-right:12px;">🏠</div>
+          <div class="item-body">
+            <div class="item-name">${esc(r.name)}</div>
+            <div class="item-sub">${r.role==='owner'?'내 방':'참여 중'}</div>
+          </div>
+          <span style="color:var(--text-light);font-size:20px;">→</span>
+        </div>`).join('')}
+      </div>
+    </div>`;
+    m._cards=cards;
+    m.classList.add('show');
+  }
+  async function doShare(singleOrMulti,roomId){
+    const m=document.getElementById('shareToRoomModal');
+    const cards=m?._cards||[];
+    let success=0;
+    if(singleOrMulti!=='multi'){
+      // 단건
+      const {error}=await Data.shareCardToRoom(singleOrMulti,roomId);
+      if(!error)success=1;else if(error.code==='23505')Toast.show('이미 공유된 매물입니다');
+    }else{
+      // 여러 건
+      for(const card of cards){
+        const {error}=await Data.shareCardToRoom(card.id,roomId);
+        if(!error)success++;
+      }
+    }
+    if(success)Toast.show(`${success}개 매물이 공유됐어요!`);
+    m?.classList.remove('show');
+  }
 
   function edit(id){
     const c=Data.cache.myCards.find(x=>x.id===id);if(!c)return;const p=c.property||{},m=document.getElementById('editModal');if(!m)return;_editNewPhotos=[];
@@ -1868,7 +1915,7 @@ const PanelCards = (() => {
       el.innerHTML=`<div class="panel-inner">${Hub.panelHead('거래 상태')}<div style="text-align:center;padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">${icon}</div><div style="font-size:24px;font-weight:800;color:${color};">${st}</div><div style="margin-top:24px;display:flex;gap:8px;justify-content:center;"><button class="filter-btn ${st==='계약가능'?'active':''}" onclick="PanelCards.chgStatus('${c.id}','계약가능')">계약가능</button><button class="filter-btn ${st==='계약중'?'active':''}" onclick="PanelCards.chgStatus('${c.id}','계약중')">계약중</button><button class="filter-btn ${st==='완료'?'active':''}" onclick="PanelCards.chgStatus('${c.id}','완료')">완료</button></div></div></div>`;}
   }
 
-  return { render, switchTab, setFilter, setCat, setSort, onQ, onQEnter, more, renderList, toggleSel, toggleDetail, share1, doShare, edit, addPhotos, addTag, saveEdit, del, chgStatus, renderSub };
+  return { render, switchTab, setFilter, setCat, setSort, onQ, onQEnter, more, renderList, toggleSel, toggleDetail, share1, shareSelected, doShare, edit, addPhotos, addTag, saveEdit, del, chgStatus, renderSub };
 })();
 
 /* ═══════════════════════════════════════════════════════════
