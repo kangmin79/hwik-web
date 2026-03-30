@@ -801,7 +801,7 @@ const Data = (() => {
   }
 
   async function loadSharedCards(roomId) {
-    let q = sb().from('card_shares').select('card_id,room_id,cards(id,property,trade_status,agent_id,created_at,photos)').order('created_at',{ascending:false}).limit(100);
+    let q = sb().from('card_shares').select('card_id,room_id,cards(id,property,trade_status,agent_id,created_at,photos)').order('created_at',{ascending:false}).limit(20);
     if (roomId) q = q.eq('room_id',roomId);
     const { data } = await q;
     cache.sharedCards = (data||[]).map(r=>({...r.cards, room_id:r.room_id})).filter(Boolean).filter(c=>c.property?.type!=='손님');
