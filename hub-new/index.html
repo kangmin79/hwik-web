@@ -680,14 +680,15 @@ const Data = (() => {
 
   async function loadCounts() {
     const id = uid(); if (!id) return;
-    const [my,cl,sh,al,me] = await Promise.all([
-      sb().from('cards').select('id',{count:'exact',head:true}).eq('agent_id',id).not('property->>type','eq','손님'),
+    // cards 전체를 한번에 가져와서 클라이언트에서 분류 (JSON 필터 400 에러 방지)
+    const [{count:totalCards},{count:clientCards},sh,al,me] = await Promise.all([
+      sb().from('cards').select('id',{count:'exact',head:true}).eq('agent_id',id),
       sb().from('cards').select('id',{count:'exact',head:true}).eq('agent_id',id).eq('property->>type','손님'),
-      sb().from('share_room_members').select('share_rooms(id)',{count:'exact',head:true}).eq('user_id',id).neq('role','pending'),
+      sb().from('share_room_members').select('id',{count:'exact',head:true}).eq('user_id',id).not('role','eq','pending'),
       sb().from('match_notifications').select('id',{count:'exact',head:true}).eq('agent_id',id).eq('is_read',false),
       sb().from('memos').select('id',{count:'exact',head:true}).eq('agent_id',id).eq('is_read',false),
     ]);
-    cache.counts = { my:my.count||0, client:cl.count||0, shared:sh.count||0, alert:al.count||0, memo:me.count||0 };
+    cache.counts = { my:(totalCards||0)-(clientCards||0), client:clientCards||0, shared:sh.count||0, alert:al.count||0, memo:me.count||0 };
   }
 
   async function loadMyCards(off=0, reset=false) {
@@ -1905,13 +1906,19 @@ const App = {
   }
 };
 
-// ── 배경 손님 매칭 체크 ──
+// ── 배경 손님 매칭 체크 (지연 실행) ──
 async function _bgCheckMatches(){
+  // 로그인 직후 세션이 안정될 때까지 대기
+  await new Promise(r=>setTimeout(r,3000));
   try{
-    const {data:clients}=await Auth.sb.from('cards').select('id,property').eq('agent_id',Auth.user?.id).eq('property->>type','손님').limit(50);
+    if(!Auth.user)return;
+    const {data:clients}=await Auth.sb.from('cards').select('id,property').eq('agent_id',Auth.user.id).limit(20);
     if(!clients?.length)return;
-    for(const c of clients){
-      if(!c.property?.embedding){Data.updateEmbedding(c.id);}
+    const clientCards=clients.filter(c=>c.property?.type==='손님'&&!c.property?.embedding);
+    // 최대 3개만 처리 (과부하 방지)
+    for(const c of clientCards.slice(0,3)){
+      Data.updateEmbedding(c.id);
+      await new Promise(r=>setTimeout(r,1000));
     }
   }catch(_){}
 }
