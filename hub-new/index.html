@@ -626,6 +626,16 @@ body.dark .phone-screen{background:#0f172a;}
   </div>
 </div>
 
+<!-- ═══ 로딩 스플래시 ═══ -->
+<div id="splash" style="position:fixed;inset:0;z-index:9999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.4s;">
+  <div style="font-size:48px;font-weight:900;color:var(--primary);animation:splashPulse 1.2s ease-in-out infinite;">휙</div>
+  <div style="margin-top:12px;width:40px;height:3px;border-radius:2px;background:var(--border);overflow:hidden;"><div style="width:100%;height:100%;background:var(--primary);animation:splashBar 1.2s ease-in-out infinite;"></div></div>
+</div>
+<style>
+@keyframes splashPulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.1);opacity:0.7;}}
+@keyframes splashBar{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+</style>
+
 <!-- ═══ 토스트 & 이탈방지 ═══ -->
 <div class="toast" id="toast"></div>
 <div class="leave-banner" id="leaveBanner">⚠ 작업이 진행 중입니다. 페이지를 나가면 데이터가 손실될 수 있어요.</div>
@@ -2105,7 +2115,7 @@ function toggleTheme(mode) {
    ═══════════════════════════════════════════════════════════ */
 const App = {
   async init() {
-    if(!Auth.user){document.getElementById('loginBg').classList.add('show');return;}
+    if(!Auth.user){document.getElementById('loginBg').classList.add('show');const sp=document.getElementById('splash');if(sp){sp.style.opacity='0';setTimeout(()=>sp.remove(),400);}return;}
     document.getElementById('loginBg').classList.remove('show');
     if(!Auth.profile) await Auth.check();
     // 헤더 표시
@@ -2130,6 +2140,8 @@ const App = {
     Search.loadScores();
     // 백그라운드: 손님 매칭 체크
     // _bgCheckMatches(); // 임시 비활성화 (embed-card 401 방지)
+    // 스플래시 숨기기
+    const sp=document.getElementById('splash');if(sp){sp.style.opacity='0';setTimeout(()=>sp.remove(),400);}
     // 비활성 자동복귀 + 허브 브리딩 시작
     _initIdleReturn();
     _initHubBreathing();
