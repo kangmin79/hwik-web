@@ -683,7 +683,7 @@ const Data = (() => {
     const [my,cl,sh,al,me] = await Promise.all([
       sb().from('cards').select('id',{count:'exact',head:true}).eq('agent_id',id).neq('property->>type','손님'),
       sb().from('cards').select('id',{count:'exact',head:true}).eq('agent_id',id).eq('property->>type','손님'),
-      sb().from('card_shares').select('id',{count:'exact',head:true}),
+      sb().from('share_room_members').select('share_rooms(id)',{count:'exact',head:true}).eq('user_id',id).neq('role','pending'),
       sb().from('match_notifications').select('id',{count:'exact',head:true}).eq('agent_id',id).eq('is_read',false),
       sb().from('memos').select('id',{count:'exact',head:true}).eq('agent_id',id).eq('is_read',false),
     ]);
