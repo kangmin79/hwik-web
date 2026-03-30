@@ -67,11 +67,12 @@ body.dark .header{background:rgba(15,23,42,0.92);}
   width:100%;height:100%;
   display:flex;align-items:center;justify-content:center;
   padding-bottom:5%;transition:width 0.4s ease;
+  overflow:hidden;
 }
 .panel-area{
   position:fixed;top:var(--header-h);right:0;
   width:0;height:calc(100vh - var(--header-h));
-  background:var(--bg-card);overflow-y:auto;overflow-x:hidden;
+  background:var(--bg-card);overflow:hidden;
   border-left:1px solid var(--border);transition:width 0.4s ease;z-index:50;
 }
 .main.split .hub-area{width:25%;}
@@ -541,13 +542,61 @@ body.dark .phone-screen{background:#0f172a;}
 /* ═══════════════════════════════════════════════════════════
    18. 반응형
    ═══════════════════════════════════════════════════════════ */
-@media(max-width:768px){
+/* ═══ 반응형: 대형 모니터 (1920px+) ═══ */
+@media(min-width:1920px){
+  .main.split .hub-area{width:20%;}
+  .main.split .panel-area{width:80%;}
+  .phone-mockup{width:300px;height:600px;}
+}
+
+/* ═══ 반응형: 일반 모니터 (1280~1919px) — 기본값 유지 ═══ */
+
+/* ═══ 반응형: 작은 모니터/태블릿 가로 (1024~1279px) ═══ */
+@media(max-width:1279px){
+  .main.split .hub-area{width:20%;}
+  .main.split .panel-area{width:80%;}
+  .hub-visual{width:min(95%,500px);}
+  .hub-center{width:100px;height:100px;border-radius:24px;}
+  .hub-center-icon{font-size:24px;}
+  .hub-center-name{font-size:11px;}
+  .hub-node-inner{padding:8px 16px;min-width:80px;border-radius:16px;}
+  .hub-node-label{font-size:12px;}
+  .reg-title{font-size:22px;}
+  .phone-mockup{width:260px;height:520px;}
+}
+
+/* ═══ 반응형: 태블릿 세로 (768~1023px) ═══ */
+@media(max-width:1023px){
+  .main.split .hub-area{width:15%;}
+  .main.split .panel-area{width:85%;}
+  .hub-visual{width:min(98%,400px);}
+  .hub-center{width:80px;height:80px;border-radius:20px;}
+  .hub-center-icon{font-size:20px;}
+  .hub-center-name{font-size:10px;}
+  .hub-center-sub{display:none;}
+  .hub-node-inner{padding:6px 12px;min-width:60px;border-radius:14px;}
+  .hub-node-label{font-size:11px;}
+  .header-right .btn-theme{display:none;}
+  .phone-mockup{width:240px;height:480px;}
+  .preview-card-full,.preview-info-slide,.preview-memo-slide{height:280px;}
+  .preview-photo-slide{height:280px;}
+  .preview-info-complex{font-size:22px;}
+  .preview-info-price{font-size:18px;}
+}
+
+/* ═══ 반응형: 모바일 (767px 이하) ═══ */
+@media(max-width:767px){
   .main.split .hub-area{display:none;}
-  .main.split .panel-area{width:100%;position:relative;top:0;height:auto;}
+  .main.split .panel-area{width:100%;position:relative;top:0;height:auto;min-height:calc(100vh - var(--header-h));}
   .panel-with-preview{flex-direction:column;}
-  .panel-preview-wrap,.preview-right{width:100%!important;border-left:none;border-top:1px solid var(--border);}
+  .panel-preview-wrap{width:100%!important;border-left:none;border-top:1px solid var(--border);padding:16px!important;opacity:1!important;}
   .edit-grid{grid-template-columns:1fr;}
   .completed-stats{grid-template-columns:repeat(2,1fr);}
+  .header-right .btn-theme{display:none;}
+  .header-right .btn-nav{font-size:12px;padding:6px 14px;}
+  .reg-title{font-size:20px;}
+  .reg-subtitle{font-size:12px;}
+  .phone-mockup{width:100%;max-width:300px;height:520px;}
 }
 </style>
 </head>
