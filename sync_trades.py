@@ -791,9 +791,28 @@ def fill_nearby_facilities(danji_list: list):
 # sitemap.xml 자동 생성
 # ========================================================
 def generate_sitemap(danji_list: list):
-    """danji_pages 기반 sitemap.xml 생성"""
+    """DB 전체 danji_pages 기반 sitemap.xml 생성 (--gu 옵션에도 전체 반영)"""
     base = "https://hwik.kr"
     today = datetime.now().strftime("%Y-%m-%d")
+
+    # DB에서 전체 danji_pages ID를 가져옴 (특정 구만 집계해도 sitemap은 전체)
+    all_danji = []
+    offset = 0
+    while True:
+        resp = sb_session.get(
+            f"{SUPABASE_URL}/rest/v1/danji_pages",
+            headers={**SB_HEADERS, "Prefer": ""},
+            params={"select": "id,updated_at", "order": "id", "offset": offset, "limit": 500},
+            timeout=30,
+        )
+        data = resp.json() if resp.status_code == 200 else []
+        if not data:
+            break
+        all_danji.extend(data)
+        offset += 500
+        if len(data) < 500:
+            break
+        time.sleep(0.2)
 
     urls = []
     # 정적 페이지
@@ -801,12 +820,14 @@ def generate_sitemap(danji_list: list):
     urls.append(f'  <url><loc>{base}/mobile-v6.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>')
     urls.append(f'  <url><loc>{base}/llms.txt</loc><changefreq>weekly</changefreq><priority>0.3</priority></url>')
 
-    # 단지 페이지
-    for d in danji_list:
+    # 단지 페이지 (전체 DB 기준)
+    for d in all_danji:
         did = d.get("id", "")
         if not did:
             continue
-        urls.append(f'  <url><loc>{base}/danji.html?id={did}</loc><lastmod>{today}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>')
+        safe_id = did.replace("&", "&amp;")
+        lastmod = (d.get("updated_at") or today)[:10]
+        urls.append(f'  <url><loc>{base}/danji.html?id={safe_id}</loc><lastmod>{lastmod}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>')
 
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
     xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
@@ -817,7 +838,7 @@ def generate_sitemap(danji_list: list):
     sitemap_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sitemap.xml")
     with open(sitemap_path, "w", encoding="utf-8") as f:
         f.write(xml)
-    print(f"\n🗺️  sitemap.xml 생성: {len(danji_list)}개 단지 URL ({sitemap_path})")
+    print(f"\n🗺️  sitemap.xml 생성: {len(all_danji)}개 단지 URL ({sitemap_path})")
 
 
 # ========================================================
