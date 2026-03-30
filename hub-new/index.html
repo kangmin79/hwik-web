@@ -1443,16 +1443,34 @@ const Hub = (() => {
   function _settings(el) {
     const pr=Auth.profile||{};
     el.innerHTML=`<div class="panel-inner">${_ph('내 정보')}
-      <div style="text-align:center;padding:20px 0;">
-        <div style="width:80px;height:80px;border-radius:24px;background:var(--primary-bg);margin:0 auto 12px;display:flex;align-items:center;justify-content:center;font-size:36px;">👤</div>
-        <div style="font-size:18px;font-weight:800;">${esc(pr.business_name||'사무소명')}</div>
-        <div style="font-size:14px;color:var(--text-sub);margin-top:4px;">${esc(pr.agent_name||'이름')}</div>
-        <div style="font-size:13px;color:var(--text-light);margin-top:2px;">${esc(pr.phone||'')}</div>
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
+        <div style="width:64px;height:64px;border-radius:50%;background:var(--primary-bg);border:2px solid var(--primary);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;">👤</div>
+        <div style="font-size:12px;color:var(--text-light);">📷 사진 변경</div>
       </div>
-      <div style="border-top:1px solid var(--border);padding-top:20px;">
-        <div class="item" onclick="Hub._openMyInfo()"><div style="font-size:18px;">✏️</div><div class="item-body"><div class="item-name">프로필 수정</div><div class="item-sub">사무소명, 이름, 전화번호, 주소</div></div><span style="color:var(--text-light);">→</span></div>
+      <div class="edit-field"><label>부동산명</label><input id="sOffice" value="${esc(pr.business_name||'')}" placeholder="부동산 이름"></div>
+      <div class="edit-field" style="margin-top:14px;"><label>담당자 이름</label><input id="sName" value="${esc(pr.agent_name||'')}" placeholder="이름"></div>
+      <div class="edit-field" style="margin-top:14px;"><label>연락처</label><input id="sPhone" value="${esc(pr.phone||'')}" placeholder="01012345678" readonly style="background:var(--bg);color:var(--text-light);"><div style="font-size:11px;color:var(--text-light);margin-top:4px;">📞 연락처 변경은 고객센터에 문의해주세요</div></div>
+      <div class="edit-field" style="margin-top:14px;"><label>주소 (선택)</label><input id="sAddr" value="${esc(pr.address||'')}" placeholder="사무소 주소"></div>
+      <div style="display:flex;gap:8px;margin-top:24px;">
+        <button onclick="Hub.closePanel()" style="padding:12px 24px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--text-sub);font-size:14px;cursor:pointer;">취소</button>
+        <button onclick="Hub._saveSettings()" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-size:15px;font-weight:700;cursor:pointer;">저장하기</button>
+      </div>
+      <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);">
         <div class="item" onclick="Auth.logout()"><div style="font-size:18px;">🚪</div><div class="item-body"><div class="item-name" style="color:#ef4444;">로그아웃</div></div></div>
-      </div></div>`;
+      </div>
+    </div>`;
+  }
+
+  async function _saveSettings(){
+    const office=document.getElementById('sOffice')?.value?.trim();
+    const name=document.getElementById('sName')?.value?.trim();
+    const addr=document.getElementById('sAddr')?.value?.trim();
+    if(!office){Toast.show('부동산 이름을 입력하세요');return;}
+    await Auth.sb.from('profiles').upsert({id:Auth.user.id,business_name:office,agent_name:name||'',address:addr||''});
+    await Auth.loadProfile();
+    Toast.show('저장 완료');
+    const nav=document.getElementById('navAgent');if(nav)nav.textContent=office;
+    render();
   }
 
   function _openMyInfo(){
@@ -1496,7 +1514,7 @@ const Hub = (() => {
 
   function _ph(title,count){return `<div class="panel-head"><div class="panel-title">${title}${count!=null?' <span>'+count+'</span>':''}</div><button class="panel-x" onclick="Hub.closePanel()">✕</button></div>`;}
 
-  return { MAIN,CLIENT,PROPERTY, render,onNode,openPanel,openSub,closePanel,enterClient,enterProperty,back, panelHead:_ph, _openMyInfo, _sendOtp, _verifyOtp, _saveMyInfo, get current(){return current;}, get activePanel(){return activePanel;}, get RADIUS(){return RADIUS;}, adjustLayout };
+  return { MAIN,CLIENT,PROPERTY, render,onNode,openPanel,openSub,closePanel,enterClient,enterProperty,back, panelHead:_ph, _openMyInfo, _sendOtp, _verifyOtp, _saveMyInfo, get current(){return current;}, get activePanel(){return activePanel;}, get RADIUS(){return RADIUS;}, adjustLayout, _saveSettings };
 })();
 
 /* ═══════════════════════════════════════════════════════════
