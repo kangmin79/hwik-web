@@ -1584,9 +1584,6 @@ const PanelCards = (() => {
     el.innerHTML=`<div class="panel-with-preview"><div class="panel-input"><div class="panel-inner">${Hub.panelHead('내 매물',Data.cache.counts.my+'건')}
       <div class="sub-tabs"><button class="sub-tab active" onclick="PanelCards.switchTab('mine',this)">내 매물 (${Data.cache.counts.my})</button><button class="sub-tab" onclick="PanelCards.switchTab('completed',this)">실적</button></div>
       <div id="tabMine">
-        <div class="filters">${['전체','매매','전세','월세'].map(t=>`<button class="filter-btn${cFilter===t?' active':''}" onclick="PanelCards.setFilter('${t}',this)">${t}</button>`).join('')}</div>
-        <div class="filters">${['전체','아파트','오피스텔','원투룸','상가','사무실'].map(t=>`<button class="filter-btn${cCat===t?' active':''}" onclick="PanelCards.setCat('${t}',this)">${t}</button>`).join('')}</div>
-        <div class="filters" style="justify-content:flex-end;">${['최근순','오래된순','가격↓','가격↑'].map(s=>`<button class="sort-tag${cSort===s?' active':''}" onclick="PanelCards.setSort('${s}',this)">${s}</button>`).join('')}</div>
         <div class="search"><input type="text" id="myQ" placeholder="예) 강남구 아파트 전세 5억이하" oninput="PanelCards.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelCards.onQEnter()"></div>
         <div id="searchHint" style="display:none;font-size:11px;color:var(--primary);margin:-12px 0 12px 4px;">💡 Enter로 AI 검색 (더 많은 결과)</div>
         <div id="myList"><div class="empty"><div class="empty-icon">⏳</div>불러오는 중...</div></div>
@@ -1610,10 +1607,7 @@ const PanelCards = (() => {
 
   function renderList(){
     let cards=[...Data.cache.myCards];
-    if(cFilter!=='전체')cards=cards.filter(c=>c.property?.type===cFilter);
-    if(cCat!=='전체')cards=cards.filter(c=>{const p=c.property||{};return categorizeProperty(p.rawText||'',p.room||'',p.area||'',p.floor||'')===cCat;});
     if(cQuery.trim())cards=Search.local(cQuery,cards);
-    switch(cSort){case'오래된순':cards.sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));break;case'가격↓':cards.sort((a,b)=>(b.price_number||0)-(a.price_number||0));break;case'가격↑':cards.sort((a,b)=>(a.price_number||0)-(b.price_number||0));break;default:cards.sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));}
     _renderItems(cards,document.getElementById('myList'));
     const ml=document.getElementById('myMore');if(ml)ml.style.display=Data.cache.myCards.length>=cOff+Data.PAGE?'':'none';
   }
