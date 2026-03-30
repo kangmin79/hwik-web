@@ -1265,7 +1265,7 @@ const PanelRegister = (() => {
           <textarea class="reg-textarea fi-direct-input" id="fiDirectInput" placeholder="카톡/메모/엑셀에서 복사한 매물 정보를 붙여넣으세요"></textarea>
           <button class="btn-primary" id="fiBatchBtn" onclick="PanelRegister.doBatch()">AI로 일괄 분석</button>
           <div class="fi-progress" id="fiProgress" style="display:none"><div class="fi-progress-bar"><div class="fi-progress-fill" id="fiProgressFill"></div></div><div class="fi-progress-text" id="fiProgressText">분석 중...</div></div>
-          <div id="fiResults" style="display:none"><div class="fi-result-header"><span id="fiResultSummary"></span><div class="fi-result-filters"><button class="filter-btn active" onclick="PanelRegister.fiFilter('전체',this)">전체</button><button class="filter-btn" onclick="PanelRegister.fiFilter('매매',this)">매매</button><button class="filter-btn" onclick="PanelRegister.fiFilter('전세',this)">전세</button><button class="filter-btn" onclick="PanelRegister.fiFilter('월세',this)">월세</button></div></div><div id="fiCardList"></div><button class="btn-primary" id="fiSaveBtn" onclick="PanelRegister.fiSaveAll()">전체 저장</button></div>
+          <div id="fiResults" style="display:none"><div class="fi-result-header"><span id="fiResultSummary"></span><div class="fi-result-filters"><button class="filter-btn active" onclick="PanelRegister.setFiFilter('전체',this)">전체</button><button class="filter-btn" onclick="PanelRegister.setFiFilter('매매',this)">매매</button><button class="filter-btn" onclick="PanelRegister.setFiFilter('전세',this)">전세</button><button class="filter-btn" onclick="PanelRegister.setFiFilter('월세',this)">월세</button></div></div><div id="fiCardList"></div><button class="btn-primary" id="fiSaveBtn" onclick="PanelRegister.fiSaveAll()">전체 저장</button></div>
         </div>
       </div>
     </div></div>
@@ -1350,7 +1350,7 @@ const PanelRegister = (() => {
   function _renderFiCards(){const el=document.getElementById('fiCardList');if(!el)return;const cards=fiParsedCards.filter(c=>!fiDeletedIds.has(c._id)&&(fiFilter==='전체'||c.type===fiFilter));
     el.innerHTML=cards.map(c=>{const cat=categorizeProperty(c.rawText||'',c.room||'',c.area||'',c.floor||'');return `<div class="fi-card-item ${c._dup?'duplicate':''}"><div class="fi-card-info"><span class="fi-card-type ${c.type==='매매'?'sale':c.type==='전세'?'jeonse':'rent'}">${esc(c.type||'')}</span><span class="fi-card-cat">${esc(cat)}</span><strong>${esc(c.price||'-')}</strong> ${esc(c.complex||'')} ${esc(c.location||'')}${c.area?' · '+esc(c.area):''}${c._dup?'<span class="fi-dup-badge">중복?</span>':''}</div><div class="fi-card-actions"><button class="fi-card-edit" onclick="PanelRegister.fiEdit('${c._id}')">수정</button><button class="fi-card-delete" onclick="PanelRegister.fiDelete('${c._id}')">삭제</button></div></div>`;}).join('');
   }
-  function fiFilter(t,btn){fiFilter=t;btn?.closest('.fi-result-filters').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn?.classList.add('active');_renderFiCards();}
+  function setFiFilter(t,btn){fiFilter=t;btn?.closest('.fi-result-filters').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn?.classList.add('active');_renderFiCards();}
   function fiEdit(id){const c=fiParsedCards.find(x=>x._id===id);if(!c)return;const m=document.getElementById('batchEditModal');if(!m)return;m.dataset.cardId=id;document.getElementById('beType').value=c.type||'';document.getElementById('bePrice').value=c.price||'';document.getElementById('beComplex').value=c.complex||'';document.getElementById('beLocation').value=c.location||'';document.getElementById('beArea').value=c.area||'';document.getElementById('beFloor').value=c.floor||'';m.classList.add('show');}
   function fiBatchSaveEdit(){const m=document.getElementById('batchEditModal'),c=fiParsedCards.find(x=>x._id===m?.dataset.cardId);if(!c)return;c.type=document.getElementById('beType').value;c.price=document.getElementById('bePrice').value;c.complex=document.getElementById('beComplex').value;c.location=document.getElementById('beLocation').value;c.area=document.getElementById('beArea').value;c.floor=document.getElementById('beFloor').value;m.classList.remove('show');_renderFiCards();}
   function fiDelete(id){fiDeletedIds.add(id);_renderFiCards();document.getElementById('fiResultSummary').textContent=`총 ${fiParsedCards.filter(c=>!fiDeletedIds.has(c._id)).length}건`;}
@@ -1366,7 +1366,7 @@ const PanelRegister = (() => {
     document.getElementById('leaveBanner').style.display='none';Toast.show(`${saved}건 저장 완료`);btn.textContent='전체 저장';btn.disabled=false;fiParsedCards=[];fiDeletedIds=new Set();document.getElementById('fiResults').style.display='none';document.getElementById('fiDirectInput').value='';
   }
 
-  return { render, setMode, onInput, handlePhotos, removePhoto, handleOCR, doRegister, handleFile, doBatch, fiFilter, fiEdit, fiBatchSaveEdit, fiDelete, fiSaveAll };
+  return { render, setMode, onInput, handlePhotos, removePhoto, handleOCR, doRegister, handleFile, doBatch, setFiFilter, fiEdit, fiBatchSaveEdit, fiDelete, fiSaveAll };
 })();
 
 /* ═══════════════════════════════════════════════════════════
