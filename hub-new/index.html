@@ -681,28 +681,34 @@ const Data = (() => {
 
   async function loadCounts() {
     const id = uid(); if (!id) return;
-    const [total,al,me] = await Promise.all([
-      sb().from('cards').select('id',{count:'exact',head:true}).eq('agent_id',id),
-      sb().from('match_notifications').select('id',{count:'exact',head:true}).eq('agent_id',id).eq('is_read',false),
-      sb().from('memos').select('id',{count:'exact',head:true}).eq('agent_id',id).eq('is_read',false),
-    ]);
-    // count만 사용 (head:false + limit(0) = 데이터 안 받고 count만)
-    cache.counts = { my:total.count||0, client:0, shared:0, alert:al.count||0, memo:me.count||0 };
+    try {
+      const [cards,al,me] = await Promise.all([
+        sb().from('cards').select('id,property').eq('agent_id',id).limit(500),
+        sb().from('match_notifications').select('id').eq('agent_id',id).eq('is_read',false).limit(100),
+        sb().from('memos').select('id').eq('agent_id',id).eq('is_read',false).limit(100),
+      ]);
+      const allCards=cards.data||[];
+      cache.counts = {
+        my: allCards.filter(c=>c.property?.type!=='손님').length,
+        client: allCards.filter(c=>c.property?.type==='손님').length,
+        shared:0, alert:(al.data||[]).length, memo:(me.data||[]).length
+      };
+    } catch(e) { console.error('loadCounts error:', e); }
   }
 
   async function loadMyCards(off=0, reset=false) {
     const id=uid(); if(!id) return [];
     const g = ++_guard;
-    // neq 대신 or 필터로 손님 제외 (SDK 호환성)
+    // JSON 필터 SDK 호환 문제로 더 많이 로드 후 클라이언트 필터
     const { data, error } = await sb().from('cards')
       .select('id,property,trade_status,price_number,created_at,link_id,photos,agent_comment')
       .eq('agent_id',id)
-      .or('property->>type.neq.손님,property->>type.is.null')
-      .order('created_at',{ascending:false}).range(off, off+PAGE-1);
+      .order('created_at',{ascending:false}).range(off, off+PAGE*3-1);
     if(error) console.error('loadMyCards error:', error);
     if (g!==_guard) return cache.myCards;
-    if (reset||off===0) cache.myCards = data||[];
-    else cache.myCards = [...cache.myCards, ...(data||[])];
+    const filtered=(data||[]).filter(c=>c.property?.type!=='손님').slice(0,PAGE);
+    if (reset||off===0) cache.myCards = filtered;
+    else cache.myCards = [...cache.myCards, ...filtered];
     return cache.myCards;
   }
 
@@ -711,10 +717,10 @@ const Data = (() => {
     const { data } = await sb().from('cards')
       .select('id,property,private_note,contact_name,contact_phone,created_at')
       .eq('agent_id',id)
-      .filter('property->>type','eq','손님')
-      .order('created_at',{ascending:false}).range(off, off+PAGE-1);
-    if (reset||off===0) cache.clientCards = data||[];
-    else cache.clientCards = [...cache.clientCards, ...(data||[])];
+      .order('created_at',{ascending:false}).range(off, off+PAGE*3-1);
+    const filtered=(data||[]).filter(c=>c.property?.type==='손님').slice(0,PAGE);
+    if (reset||off===0) cache.clientCards = filtered;
+    else cache.clientCards = [...cache.clientCards, ...filtered];
     return cache.clientCards;
   }
 
