@@ -1440,25 +1440,92 @@ const Hub = (() => {
 
   function back() { if(!stack.length){closePanel();return;} const prev=stack.pop();current=null;closePanel();render(prev.nodes,prev.center); }
 
-  function _settings(el) {
+  async function _settings(el) {
     const pr=Auth.profile||{};
-    el.innerHTML=`<div class="panel-inner">${_ph('내 정보')}
-      <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
-        <div style="width:64px;height:64px;border-radius:50%;background:var(--primary-bg);border:2px solid var(--primary);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;">👤</div>
-        <div style="font-size:12px;color:var(--text-light);">📷 사진 변경</div>
+    const ag=Auth.getAgentInfo();
+
+    // 데이터 로드 (병렬)
+    const [todayNotes,overdueNotes,unreadMatch] = await Promise.all([
+      Auth.sb.from('client_notes').select('id,type,content,alert_date,client_card_id').eq('agent_id',Auth.user.id).gte('alert_date',new Date().toISOString().split('T')[0]).lt('alert_date',new Date(Date.now()+86400000).toISOString().split('T')[0]).limit(10).then(r=>r.data||[]),
+      Auth.sb.from('client_notes').select('id,type,content,alert_date').eq('agent_id',Auth.user.id).eq('alert_done',false).lt('alert_date',new Date().toISOString()).limit(10).then(r=>r.data||[]),
+      Auth.sb.from('match_notifications').select('id').eq('agent_id',Auth.user.id).eq('is_read',false).limit(50).then(r=>r.data||[])
+    ]);
+
+    const myCount=Data.cache.myCards?.length||0;
+    const clCount=Data.cache.clientCards?.length||0;
+
+    el.innerHTML=`<div class="panel-inner">${_ph(ag.office||'대시보드')}
+
+      <!-- 프로필 요약 -->
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+        <div style="width:56px;height:56px;border-radius:50%;background:var(--primary-bg);border:2px solid var(--primary);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">👤</div>
+        <div>
+          <div style="font-size:16px;font-weight:800;">${esc(ag.office||'부동산')}</div>
+          <div style="font-size:13px;color:var(--text-sub);">${esc(ag.name||'')} · ${esc(ag.phone||'')}</div>
+        </div>
+        <button onclick="Hub._openProfileEdit()" style="margin-left:auto;padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-sub);font-size:11px;font-weight:700;cursor:pointer;">프로필 수정</button>
       </div>
-      <div class="edit-field"><label>부동산명</label><input id="sOffice" value="${esc(pr.business_name||'')}" placeholder="부동산 이름"></div>
-      <div class="edit-field" style="margin-top:14px;"><label>담당자 이름</label><input id="sName" value="${esc(pr.agent_name||'')}" placeholder="이름"></div>
-      <div class="edit-field" style="margin-top:14px;"><label>연락처</label><input id="sPhone" value="${esc(pr.phone||'')}" placeholder="01012345678" readonly style="background:var(--bg);color:var(--text-light);"><div style="font-size:11px;color:var(--text-light);margin-top:4px;">📞 연락처 변경은 고객센터에 문의해주세요</div></div>
-      <div class="edit-field" style="margin-top:14px;"><label>주소 (선택)</label><input id="sAddr" value="${esc(pr.address||'')}" placeholder="사무소 주소"></div>
-      <div style="display:flex;gap:8px;margin-top:24px;">
-        <button onclick="Hub.closePanel()" style="padding:12px 24px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--text-sub);font-size:14px;cursor:pointer;">취소</button>
-        <button onclick="Hub._saveSettings()" style="flex:1;padding:12px;border-radius:12px;border:none;background:var(--primary);color:#fff;font-size:15px;font-weight:700;cursor:pointer;">저장하기</button>
+
+      <!-- 오늘 할 일 -->
+      <div style="margin-bottom:20px;">
+        <div style="font-size:14px;font-weight:800;margin-bottom:10px;">📋 오늘 할 일</div>
+        ${overdueNotes.length?`<div style="padding:10px 14px;border-radius:10px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);margin-bottom:8px;">
+          <div style="font-size:12px;font-weight:700;color:#ef4444;margin-bottom:4px;">⚠ 지연된 일정 ${overdueNotes.length}건</div>
+          ${overdueNotes.slice(0,3).map(n=>`<div style="font-size:12px;color:var(--text-sub);padding:2px 0;">· ${esc(n.content||n.type||'일정')} <span style="color:var(--text-light);font-size:10px;">${new Date(n.alert_date).toLocaleDateString('ko-KR')}</span></div>`).join('')}
+        </div>`:''}
+        ${todayNotes.length?`<div style="padding:10px 14px;border-radius:10px;background:var(--primary-bg);border:1px solid rgba(99,102,241,0.2);margin-bottom:8px;">
+          <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:4px;">📅 오늘 일정 ${todayNotes.length}건</div>
+          ${todayNotes.slice(0,3).map(n=>`<div style="font-size:12px;color:var(--text-sub);padding:2px 0;">· ${esc(n.content||n.type||'일정')}</div>`).join('')}
+        </div>`:''}
+        ${unreadMatch.length?`<div style="padding:10px 14px;border-radius:10px;background:rgba(250,204,21,0.06);border:1px solid rgba(250,204,21,0.2);margin-bottom:8px;">
+          <div style="font-size:12px;font-weight:700;color:#f59e0b;">🏠 새 매칭 ${unreadMatch.length}건</div>
+        </div>`:''}
+        ${!overdueNotes.length&&!todayNotes.length&&!unreadMatch.length?'<div style="font-size:13px;color:var(--text-light);padding:8px 0;">오늘 예정된 일정이 없어요 ✨</div>':''}
       </div>
-      <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--border);">
+
+      <!-- 숫자 요약 -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px;">
+        <div style="padding:14px;border-radius:12px;background:var(--primary-bg);text-align:center;cursor:pointer;" onclick="Hub.openPanel('my')">
+          <div style="font-size:22px;font-weight:900;color:var(--primary);">${myCount}</div>
+          <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">내 매물</div>
+        </div>
+        <div style="padding:14px;border-radius:12px;background:rgba(78,205,196,0.08);text-align:center;cursor:pointer;" onclick="Hub.openPanel('client')">
+          <div style="font-size:22px;font-weight:900;color:#0d9488;">${clCount}</div>
+          <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">손님</div>
+        </div>
+        <div style="padding:14px;border-radius:12px;background:rgba(250,204,21,0.08);text-align:center;cursor:pointer;" onclick="Hub.openPanel('alert')">
+          <div style="font-size:22px;font-weight:900;color:#f59e0b;">${unreadMatch.length}</div>
+          <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">새 알림</div>
+        </div>
+      </div>
+
+      <!-- 바로가기 -->
+      <div style="margin-bottom:20px;">
+        <div style="font-size:14px;font-weight:800;margin-bottom:10px;">⚡ 바로가기</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div class="item" style="border:1px solid var(--border);border-radius:12px;" onclick="Hub.openPanel('register')"><div style="font-size:18px;">✦</div><div class="item-body"><div class="item-name">매물 등록</div></div></div>
+          <div class="item" style="border:1px solid var(--border);border-radius:12px;" onclick="Hub.openPanel('client')"><div style="font-size:18px;">🙋</div><div class="item-body"><div class="item-name">손님 등록</div></div></div>
+          <div class="item" style="border:1px solid var(--border);border-radius:12px;" onclick="Hub.openPanel('shared')"><div style="font-size:18px;">🤝</div><div class="item-body"><div class="item-name">공유방</div></div></div>
+          <div class="item" style="border:1px solid var(--border);border-radius:12px;" onclick="Hub.openPanel('alert')"><div style="font-size:18px;">🔔</div><div class="item-body"><div class="item-name">알림</div></div></div>
+        </div>
+      </div>
+
+      <!-- 하단 -->
+      <div style="padding-top:16px;border-top:1px solid var(--border);">
         <div class="item" onclick="Auth.logout()"><div style="font-size:18px;">🚪</div><div class="item-body"><div class="item-name" style="color:#ef4444;">로그아웃</div></div></div>
       </div>
     </div>`;
+  }
+
+  function _openProfileEdit(){
+    const pr=Auth.profile||{};const m=document.getElementById('editModal');if(!m)return;
+    m.innerHTML=`<div class="modal-content"><div class="modal-header">프로필 수정<button class="modal-close" onclick="this.closest('.modal-overlay').classList.remove('show')">✕</button></div><div class="modal-body">
+      <div class="edit-field"><label>부동산명</label><input id="sOffice" value="${esc(pr.business_name||'')}"></div>
+      <div class="edit-field" style="margin-top:12px;"><label>담당자 이름</label><input id="sName" value="${esc(pr.agent_name||'')}"></div>
+      <div class="edit-field" style="margin-top:12px;"><label>연락처</label><input value="${esc(pr.phone||'')}" readonly style="background:var(--bg);color:var(--text-light);"><div style="font-size:11px;color:var(--text-light);margin-top:4px;">📞 연락처 변경은 고객센터에 문의</div></div>
+      <div class="edit-field" style="margin-top:12px;"><label>주소 (선택)</label><input id="sAddr" value="${esc(pr.address||'')}"></div>
+      <div class="edit-buttons"><button class="btn-cancel" onclick="this.closest('.modal-overlay').classList.remove('show')">취소</button><button class="btn-primary" style="width:auto;padding:10px 24px;" onclick="Hub._saveSettings()">저장하기</button></div>
+    </div></div>`;m.classList.add('show');
   }
 
   async function _saveSettings(){
@@ -1514,7 +1581,7 @@ const Hub = (() => {
 
   function _ph(title,count){return `<div class="panel-head"><div class="panel-title">${title}${count!=null?' <span>'+count+'</span>':''}</div><button class="panel-x" onclick="Hub.closePanel()">✕</button></div>`;}
 
-  return { MAIN,CLIENT,PROPERTY, render,onNode,openPanel,openSub,closePanel,enterClient,enterProperty,back, panelHead:_ph, _openMyInfo, _sendOtp, _verifyOtp, _saveMyInfo, get current(){return current;}, get activePanel(){return activePanel;}, get RADIUS(){return RADIUS;}, adjustLayout, _saveSettings };
+  return { MAIN,CLIENT,PROPERTY, render,onNode,openPanel,openSub,closePanel,enterClient,enterProperty,back, panelHead:_ph, _openMyInfo, _sendOtp, _verifyOtp, _saveMyInfo, get current(){return current;}, get activePanel(){return activePanel;}, get RADIUS(){return RADIUS;}, adjustLayout, _saveSettings, _openProfileEdit };
 })();
 
 /* ═══════════════════════════════════════════════════════════
