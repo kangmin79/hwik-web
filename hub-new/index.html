@@ -1341,9 +1341,7 @@ const Hub = (() => {
     const hubArea=document.querySelector('.hub-area');
     const availW=isSplit&&hubArea?hubArea.offsetWidth:window.innerWidth;
 
-    if(isSplit){
-      _renderVertical();
-    }else{
+    if(isSplit){_renderVertical();return;}else{
       const ratio=availW/window.innerWidth;
       RADIUS=Math.round(230*Math.max(ratio,0.45));
       render(current?.nodes,current?.center);
@@ -1387,7 +1385,7 @@ const Hub = (() => {
     document.querySelectorAll('.hub-node').forEach(n=>n.classList.remove('active'));
     document.querySelector(`.hub-node[data-key="${key}"]`)?.classList.add('active');
     activePanel=key;document.getElementById('main').classList.add('split');
-    setTimeout(()=>adjustLayout(),50);
+    setTimeout(()=>_renderVertical(),50);
     const el=document.getElementById('panelArea');
     switch(key){
       case 'register':PanelRegister.render(el);break;
