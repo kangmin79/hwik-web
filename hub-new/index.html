@@ -87,15 +87,15 @@ body.dark .hub-line{stroke:#475569;}
 
 .hub-center{
   position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:150px;height:150px;border-radius:32px;
+  width:120px;height:120px;border-radius:28px;
   background:var(--bg-card);border:1px solid rgba(99,102,241,0.2);
   box-shadow:0 0 40px rgba(99,102,241,0.08),0 8px 32px rgba(0,0,0,0.06);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   z-index:5;cursor:pointer;
 }
-.hub-center-icon{font-size:34px;margin-bottom:4px;}
-.hub-center-name{font-size:15px;font-weight:800;text-align:center;line-height:1.2;letter-spacing:-0.5px;}
-.hub-center-sub{font-size:11px;color:var(--text-light);margin-top:2px;}
+.hub-center-icon{font-size:28px;margin-bottom:2px;}
+.hub-center-name{font-size:12px;font-weight:800;text-align:center;line-height:1.2;letter-spacing:-0.5px;}
+.hub-center-sub{font-size:10px;color:var(--text-light);margin-top:1px;}
 
 .hub-node{
   position:absolute;z-index:4;
@@ -105,8 +105,8 @@ body.dark .hub-line{stroke:#475569;}
 .hub-node.appear{transform:translate(-50%,-50%) scale(1);}
 .hub-node-inner{
   background:var(--bg-card);border:1.5px solid rgba(0,0,0,0.08);
-  border-radius:22px;padding:12px 26px;
-  text-align:center;white-space:nowrap;min-width:130px;
+  border-radius:18px;padding:10px 20px;
+  text-align:center;white-space:nowrap;min-width:100px;
   box-shadow:0 1px 2px rgba(0,0,0,0.06),0 6px 16px rgba(0,0,0,0.10),0 16px 40px rgba(0,0,0,0.07),0 24px 60px rgba(0,0,0,0.04);transition:all 0.3s;position:relative;
 }
 body.dark .hub-node-inner{border-color:rgba(255,255,255,0.08);}
@@ -119,7 +119,7 @@ body.dark .hub-node-inner{border-color:rgba(255,255,255,0.08);}
   border-color:var(--primary);background:var(--primary-bg);
   box-shadow:0 0 0 3px rgba(99,102,241,0.12);
 }
-.hub-node-label{font-size:15px;font-weight:600;color:var(--text);letter-spacing:-0.3px;}
+.hub-node-label{font-size:13px;font-weight:600;color:var(--text);letter-spacing:-0.3px;}
 .hub-node-badge{
   position:absolute;top:-6px;right:-6px;
   min-width:20px;height:20px;padding:0 6px;
@@ -1243,7 +1243,7 @@ const Share = (() => {
    7. Hub — 허브 네비게이션
    ═══════════════════════════════════════════════════════════ */
 const Hub = (() => {
-  const VW=800,VH=700,RADIUS=230;
+  const VW=800,VH=700,RADIUS=180;
   let stack=[], current=null, activePanel=null;
 
   const MAIN=[{key:'register',label:'매물 등록',angle:-90},{key:'my',label:'내 매물',angle:-18},{key:'client',label:'손님',angle:54},{key:'alert',label:'알림',angle:126},{key:'shared',label:'공유방',angle:198}];
@@ -1386,7 +1386,7 @@ const Pulse = (() => {
   let raf=null;
   function start(key,nodes) {
     nodes=nodes||Hub.current?.nodes||Hub.MAIN;const n=nodes.find(n=>n.key===key);if(!n)return;
-    const fx=400,fy=350,rad=n.angle*Math.PI/180,tx=fx+230*Math.cos(rad),ty=fy+230*Math.sin(rad);
+    const fx=400,fy=350,rad=n.angle*Math.PI/180,tx=fx+180*Math.cos(rad),ty=fy+180*Math.sin(rad);
     const els=['ph','pt1','pt2','pt3'].map(p=>document.getElementById(`${p}-${key}`));
     els.forEach(e=>{if(e)e.classList.add('on');});
     const t0=performance.now(),dur=500,delays=[0,40,90,150];
