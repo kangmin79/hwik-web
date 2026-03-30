@@ -692,16 +692,16 @@ const Data = (() => {
   async function loadMyCards(off=0, reset=false) {
     const id=uid(); if(!id) return [];
     const g = ++_guard;
+    // neq 대신 or 필터로 손님 제외 (SDK 호환성)
     const { data, error } = await sb().from('cards')
       .select('id,property,trade_status,price_number,created_at,link_id,photos,agent_comment')
       .eq('agent_id',id)
+      .or('property->>type.neq.손님,property->>type.is.null')
       .order('created_at',{ascending:false}).range(off, off+PAGE-1);
     if(error) console.error('loadMyCards error:', error);
     if (g!==_guard) return cache.myCards;
-    // 클라이언트에서 손님 카드 제외
-    const filtered = (data||[]).filter(c => c.property?.type !== '손님');
-    if (reset||off===0) cache.myCards = filtered;
-    else cache.myCards = [...cache.myCards, ...filtered];
+    if (reset||off===0) cache.myCards = data||[];
+    else cache.myCards = [...cache.myCards, ...(data||[])];
     return cache.myCards;
   }
 
@@ -710,10 +710,10 @@ const Data = (() => {
     const { data } = await sb().from('cards')
       .select('id,property,private_note,contact_name,contact_phone,created_at')
       .eq('agent_id',id)
+      .filter('property->>type','eq','손님')
       .order('created_at',{ascending:false}).range(off, off+PAGE-1);
-    const filtered = (data||[]).filter(c => c.property?.type === '손님');
-    if (reset||off===0) cache.clientCards = filtered;
-    else cache.clientCards = [...cache.clientCards, ...filtered];
+    if (reset||off===0) cache.clientCards = data||[];
+    else cache.clientCards = [...cache.clientCards, ...(data||[])];
     return cache.clientCards;
   }
 
@@ -1540,6 +1540,7 @@ const PanelCards = (() => {
         <div class="filters">${['전체','아파트','오피스텔','원투룸','상가','사무실'].map(t=>`<button class="filter-btn${cCat===t?' active':''}" onclick="PanelCards.setCat('${t}',this)">${t}</button>`).join('')}</div>
         <div class="filters" style="justify-content:flex-end;">${['최근순','오래된순','가격↓','가격↑'].map(s=>`<button class="sort-tag${cSort===s?' active':''}" onclick="PanelCards.setSort('${s}',this)">${s}</button>`).join('')}</div>
         <div class="search"><input type="text" id="myQ" placeholder="예) 강남구 아파트 전세 5억이하" oninput="PanelCards.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelCards.onQEnter()"></div>
+        <div id="searchHint" style="display:none;font-size:11px;color:var(--primary);margin:-12px 0 12px 4px;">💡 Enter로 AI 검색 (더 많은 결과)</div>
         <div id="myList"><div class="empty"><div class="empty-icon">⏳</div>불러오는 중...</div></div>
         <div id="myMore" style="display:none;text-align:center;padding:12px;"><button class="btn-load-more" onclick="PanelCards.more()">더 보기</button></div>
       </div>
@@ -1555,7 +1556,7 @@ const PanelCards = (() => {
   function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn?.classList.add('active');renderList();}
   function setCat(c,btn){cCat=c;btn?.closest('.filters').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn?.classList.add('active');renderList();}
   function setSort(s,btn){cSort=s;document.querySelectorAll('.sort-tag').forEach(b=>b.classList.remove('active'));btn?.classList.add('active');renderList();}
-  function onQ(q){cQuery=q;renderList();}
+  function onQ(q){cQuery=q;renderList();const hint=document.getElementById('searchHint');if(hint)hint.style.display=q.trim()?'':'none';}
   async function onQEnter(){if(!cQuery.trim())return;const r=await Search.vector(cQuery,'my');_renderItems(r,document.getElementById('myList'));Search.logSearch(cQuery,r.length);}
   async function more(){cOff+=Data.PAGE;await Data.loadMyCards(cOff);renderList();}
 
