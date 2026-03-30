@@ -158,11 +158,11 @@ body.dark .hub-node-inner{border-color:rgba(255,255,255,0.08);}
 .panel-with-preview{display:flex;height:100%;}
 .panel-input{flex:1;overflow-y:auto;}
 .panel-preview-wrap{
-  display:flex;align-items:center;justify-content:flex-start;flex-direction:column;gap:16px;
+  display:flex;align-items:center;justify-content:flex-start;flex-direction:column;gap:12px;
   border-left:1px solid var(--border);background:var(--bg);
   width:0;opacity:0;overflow-y:auto;overflow-x:hidden;
   transition:width 0.4s ease,opacity 0.3s ease,padding 0.4s ease;
-  padding-top:24px;
+  padding-top:16px;padding-bottom:16px;
 }
 .preview-right{width:320px;opacity:1;padding:16px;}
 
@@ -171,7 +171,7 @@ body.dark .hub-node-inner{border-color:rgba(255,255,255,0.08);}
    ═══════════════════════════════════════════════════════════ */
 .preview-label{font-size:12px;color:var(--text-light);text-align:center;margin-bottom:8px;}
 .phone-mockup{
-  width:280px;height:560px;border-radius:32px;
+  width:280px;height:min(500px, calc(100vh - 260px));border-radius:32px;
   background:#111;border:3px solid #333;
   overflow:hidden;position:relative;
   box-shadow:0 8px 32px rgba(0,0,0,0.15);
@@ -1123,9 +1123,9 @@ const Preview = (() => {
         <div class="phone-header"><div class="phone-logo">휙</div><div class="phone-indicator"><span>${slideIdx+1}</span> / ${selected.length}</div></div>
         <div class="phone-body" id="phoneBody"><div class="card-slider" id="cardSlider">${slides}</div></div>
       </div></div>
-      <div class="dots-indicator">${dots}</div>
-      <div style="width:100%;max-width:300px;">
-        <button class="btn-send" onclick="Share.openSheet()">${selected.length}개 묶어서 보내기</button>
+      <div class="dots-indicator" style="flex-shrink:0;">${dots}</div>
+      <div style="width:100%;max-width:300px;flex-shrink:0;">
+        <button class="btn-send" onclick="Share.openSheet()" style="margin-top:0;">${selected.length}개 묶어서 보내기</button>
         <button class="btn-share-room" onclick="PanelCards.share1('${selected[0]?.id||''}')">📁 공유방에 올리기</button>
       </div>`;
     _setupSwipe();
