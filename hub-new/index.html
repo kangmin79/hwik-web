@@ -74,8 +74,8 @@ body.dark .header{background:rgba(15,23,42,0.92);}
   background:var(--bg-card);overflow-y:auto;overflow-x:hidden;
   border-left:1px solid var(--border);transition:width 0.4s ease;z-index:50;
 }
-.main.split .hub-area{width:30%;}
-.main.split .panel-area{width:70%;}
+.main.split .hub-area{width:25%;}
+.main.split .panel-area{width:75%;}
 
 /* ═══════════════════════════════════════════════════════════
    4. 허브 비주얼
@@ -157,10 +157,11 @@ body.dark .hub-node-inner{border-color:rgba(255,255,255,0.08);}
 .panel-with-preview{display:flex;height:100%;}
 .panel-input{flex:1;overflow-y:auto;}
 .panel-preview-wrap{
-  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;
+  display:flex;align-items:center;justify-content:flex-start;flex-direction:column;gap:16px;
   border-left:1px solid var(--border);background:var(--bg);
-  width:0;opacity:0;overflow:hidden;
+  width:0;opacity:0;overflow-y:auto;overflow-x:hidden;
   transition:width 0.4s ease,opacity 0.3s ease,padding 0.4s ease;
+  padding-top:24px;
 }
 .preview-right{width:320px;opacity:1;padding:16px;}
 
@@ -1401,12 +1402,12 @@ const PanelRegister = (() => {
         <div id="fiResults" style="display:none"><div class="fi-result-header"><span id="fiResultSummary"></span><div class="fi-result-filters"><button class="filter-btn active" onclick="PanelRegister.setFiFilter('전체',this)">전체</button><button class="filter-btn" onclick="PanelRegister.setFiFilter('매매',this)">매매</button><button class="filter-btn" onclick="PanelRegister.setFiFilter('전세',this)">전세</button><button class="filter-btn" onclick="PanelRegister.setFiFilter('월세',this)">월세</button></div></div><div id="fiCardList"></div><button class="btn-primary" id="fiSaveBtn" onclick="PanelRegister.fiSaveAll()">전체 저장</button></div>
       </div>
     </div></div>
-    <div class="panel-preview-wrap" id="previewSlide"><div class="phone-mockup"><div class="phone-notch"></div><div class="phone-screen" id="previewScreen"><div class="preview-empty">📝<br>미리보기</div></div></div></div>
+    <div class="panel-preview-wrap" id="previewSlide"><div style="font-size:12px;color:var(--text-light);text-align:center;margin-bottom:8px;">손님에게 보여질 화면</div><div class="phone-mockup"><div class="phone-notch"></div><div class="phone-screen" id="previewScreen"><div class="preview-empty">📝<br>미리보기</div></div></div></div>
     </div>`;
     _initDrag();
   }
 
-  function onInput(){const text=document.getElementById('regInput')?.value?.trim()||'',slide=document.getElementById('previewSlide');if(text.length>0){if(slide){slide.style.width='300px';slide.style.padding='0 16px';slide.style.opacity='1';}Preview.renderLive(text,document.getElementById('previewScreen'));}else{if(slide){slide.style.width='0';slide.style.padding='0';slide.style.opacity='0';}}}
+  function onInput(){const text=document.getElementById('regInput')?.value?.trim()||'',slide=document.getElementById('previewSlide');if(text.length>0){if(slide){slide.style.width='340px';slide.style.padding='16px';slide.style.opacity='1';}Preview.renderLive(text,document.getElementById('previewScreen'));}else{if(slide){slide.style.width='0';slide.style.padding='0';slide.style.opacity='0';}}}
 
   function handlePhotos(e){const files=Array.from(e.target.files||[]),rem=20-pendingPhotos.length;files.slice(0,rem).forEach(f=>pendingPhotos.push({file:f,url:URL.createObjectURL(f)}));_renderPhotos();}
   function removePhoto(i){URL.revokeObjectURL(pendingPhotos[i]?.url);pendingPhotos.splice(i,1);_renderPhotos();}
