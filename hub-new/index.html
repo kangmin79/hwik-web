@@ -1367,10 +1367,11 @@ const Hub = (() => {
     hc.style.cssText='position:static;transform:none;width:auto;height:auto;padding:10px 20px;border-radius:16px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,0.06);';
     hc.innerHTML=`<div style="font-size:22px;">${center.icon}</div><div><div style="font-size:13px;font-weight:800;">${esc(center.name)}</div>${center.sub?`<div style="font-size:10px;color:var(--text-light);">${esc(center.sub)}</div>`:''}</div>`;
 
-    // 노드를 static flex 아이템으로
-    nodes.forEach(n=>{
+    // 노드를 static flex 아이템으로 — 선택된 노드를 맨 위로
+    const sorted=[...nodes].sort((a,b)=>{if(a.key===activePanel)return -1;if(b.key===activePanel)return 1;return 0;});
+    sorted.forEach(n=>{
       const active=activePanel===n.key;
-      v.insertAdjacentHTML('beforeend',`<div class="hub-node appear" data-key="${n.key}" style="position:static;transform:none;cursor:pointer;" onclick="Hub.onNode('${n.key}')"><div class="hub-node-inner" style="min-width:auto;padding:8px 24px;border-radius:14px;${active?'border-color:var(--primary);background:var(--primary-bg);':''}"><span class="hub-node-label">${n.label}</span></div></div>`);
+      v.insertAdjacentHTML('beforeend',`<div class="hub-node appear" data-key="${n.key}" style="position:static;transform:none;cursor:pointer;width:160px;" onclick="Hub.onNode('${n.key}')"><div class="hub-node-inner" style="min-width:auto;padding:10px 0;border-radius:14px;width:100%;text-align:center;${active?'border-color:var(--primary);background:var(--primary-bg);box-shadow:0 0 0 3px rgba(99,102,241,0.12);':''}"><span class="hub-node-label">${n.label}</span></div></div>`);
     });
 
     v.querySelectorAll('.hub-node').forEach(el=>{
