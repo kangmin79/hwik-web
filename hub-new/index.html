@@ -544,10 +544,10 @@ body.dark .phone-screen{background:#0f172a;}
 <!-- ═══ 헤더 ═══ -->
 <header class="header">
   <div class="logo" onclick="Hub.back()">휙</div>
-  <div class="header-right">
+  <div class="header-right" id="headerRight" style="display:none;">
     <button class="btn-theme" id="btnLight" onclick="toggleTheme('light')">☀ 라이트</button>
     <button class="btn-theme" id="btnDark" onclick="toggleTheme('dark')">🌙 다크</button>
-    <button class="btn-nav btn-nav-agent" id="navAgent" onclick="Hub.openPanel('settings')" style="display:none"></button>
+    <button class="btn-nav btn-nav-agent" id="navAgent" onclick="Hub.openPanel('settings')"></button>
     <button class="btn-nav btn-nav-new" onclick="Hub.openPanel('register')">+ 새 카드</button>
   </div>
 </header>
@@ -1815,9 +1815,10 @@ const App = {
     if(!Auth.user){document.getElementById('loginBg').classList.add('show');return;}
     document.getElementById('loginBg').classList.remove('show');
     if(!Auth.profile) await Auth.check();
-    // 네비 업데이트
+    // 헤더 표시
+    document.getElementById('headerRight').style.display='';
     const nav=document.getElementById('navAgent');
-    if(nav&&Auth.profile){nav.textContent=Auth.profile.business_name||'내 정보';nav.style.display='';}
+    if(nav&&Auth.profile){nav.textContent=Auth.profile.business_name||'내 정보';}
     // 어드민 링크
     if(Auth.getAgentInfo().isAdmin){const hdr=document.querySelector('.header-right');if(hdr)hdr.insertAdjacentHTML('afterbegin','<a href="../admin.html" class="btn-nav btn-nav-new" style="font-size:11px;">관리자</a>');}
     // 테마
