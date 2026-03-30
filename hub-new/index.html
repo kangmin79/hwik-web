@@ -2107,8 +2107,61 @@ const App = {
     Search.loadScores();
     // 백그라운드: 손님 매칭 체크
     // _bgCheckMatches(); // 임시 비활성화 (embed-card 401 방지)
+    // 비활성 자동복귀 + 허브 브리딩 시작
+    _initIdleReturn();
+    _initHubBreathing();
   }
 };
+
+// ── ① 비활성 자동복귀 (3분) ──
+function _initIdleReturn(){
+  let idleTimer=null;
+  const IDLE_MS=3*60*1000; // 3분
+  function reset(){
+    clearTimeout(idleTimer);
+    // 패널이 열려있을 때만 타이머 작동
+    idleTimer=setTimeout(()=>{
+      if(Hub.activePanel){Hub.back();Hub.closePanel();Hub.render();}
+    },IDLE_MS);
+  }
+  ['mousemove','mousedown','keydown','touchstart','scroll'].forEach(ev=>document.addEventListener(ev,reset,{passive:true}));
+  reset();
+}
+
+// ── ② 메인 허브 브리딩 애니메이션 (3분마다) ──
+function _initHubBreathing(){
+  const INTERVAL=3*60*1000; // 3분
+  setInterval(async()=>{
+    // 패널 열려있으면 스킵 (메인 허브 상태에서만)
+    if(Hub.activePanel)return;
+    const nodes=document.querySelectorAll('.hub-node');
+    if(!nodes.length)return;
+    // 중앙으로 모이는 애니메이션
+    nodes.forEach(n=>{
+      n.style.transition='transform 0.8s cubic-bezier(0.4,0,0.2,1)';
+      const cur=n.style.left;const curT=n.style.top;
+      n.style.transform='translate(-50%,-50%) scale(0.7)';
+      // 중앙 방향으로 살짝 이동
+      const rect=n.getBoundingClientRect();
+      const parent=n.parentElement.getBoundingClientRect();
+      const cx=parent.left+parent.width/2,cy=parent.top+parent.height/2;
+      const dx=(cx-rect.left-rect.width/2)*0.15,dy=(cy-rect.top-rect.height/2)*0.15;
+      n.style.transform=`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) scale(0.85)`;
+    });
+    // 중앙 노드도 살짝 축소
+    const center=document.getElementById('hubCenter');
+    if(center){center.style.transition='transform 0.8s cubic-bezier(0.4,0,0.2,1)';center.style.transform='translate(-50%,-50%) scale(0.9)';}
+    // 잠시 후 제자리로 + 카운트 갱신
+    await new Promise(r=>setTimeout(r,1000));
+    await Data.loadCounts();
+    // 다시 펼치기
+    nodes.forEach(n=>{
+      n.style.transition='transform 0.6s cubic-bezier(0.34,1.56,0.64,1)';
+      n.style.transform='translate(-50%,-50%) scale(1)';
+    });
+    if(center){center.style.transition='transform 0.6s cubic-bezier(0.34,1.56,0.64,1)';center.style.transform='translate(-50%,-50%) scale(1)';}
+  },INTERVAL);
+}
 
 // ── 배경 손님 매칭 체크 (지연 실행) ──
 async function _bgCheckMatches(){
