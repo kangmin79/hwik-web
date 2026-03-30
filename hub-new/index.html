@@ -1385,7 +1385,7 @@ const Hub = (() => {
     document.querySelectorAll('.hub-node').forEach(n=>n.classList.remove('active'));
     document.querySelector(`.hub-node[data-key="${key}"]`)?.classList.add('active');
     activePanel=key;document.getElementById('main').classList.add('split');
-    setTimeout(()=>_renderVertical(),50);
+    _renderVertical();
     const el=document.getElementById('panelArea');
     switch(key){
       case 'register':PanelRegister.render(el);break;
