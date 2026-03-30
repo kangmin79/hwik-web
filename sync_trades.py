@@ -693,6 +693,101 @@ def fill_nearby_complex(danji_list: list, apartments: list):
 
 
 # ========================================================
+# 주변 지하철/학교 매칭
+# ========================================================
+def fill_nearby_facilities(danji_list: list):
+    """각 단지에서 가장 가까운 지하철역 3개, 학교 3개를 매칭"""
+    import math
+
+    def haversine(lat1, lon1, lat2, lon2):
+        if not all([lat1, lon1, lat2, lon2]):
+            return 99999
+        R = 6371000
+        p = math.pi / 180
+        a = 0.5 - math.cos((lat2-lat1)*p)/2 + math.cos(lat1*p)*math.cos(lat2*p)*(1-math.cos((lon2-lon1)*p))/2
+        return R * 2 * math.asin(math.sqrt(a))
+
+    # 지하철역 전체 로드 (1282개)
+    print("  지하철역 로드 중...")
+    stations = []
+    offset = 0
+    while True:
+        resp = requests.get(
+            f"{SUPABASE_URL}/rest/v1/stations",
+            headers={**SB_HEADERS, "Prefer": ""},
+            params={"select": "name,line,lat,lon", "offset": offset, "limit": 1000}
+        )
+        data = resp.json() if resp.status_code == 200 else []
+        if not data:
+            break
+        stations.extend(data)
+        offset += 1000
+        if len(data) < 1000:
+            break
+    print(f"  → {len(stations)}개 역 로드")
+
+    # 학교 전체 로드 (13656개) — 서울만 필터 (lat 37.4~37.7)
+    print("  학교 로드 중...")
+    schools = []
+    offset = 0
+    while True:
+        resp = requests.get(
+            f"{SUPABASE_URL}/rest/v1/schools",
+            headers={**SB_HEADERS, "Prefer": ""},
+            params={"select": "name,type,lat,lon", "lat": "gte.37.4", "offset": offset, "limit": 1000}
+        )
+        data = resp.json() if resp.status_code == 200 else []
+        if not data:
+            break
+        schools.extend(data)
+        offset += 1000
+        if len(data) < 1000:
+            break
+    # 서울 범위만
+    schools = [s for s in schools if s.get("lat") and 37.4 < s["lat"] < 37.7 and 126.8 < s.get("lon", 0) < 127.2]
+    print(f"  → {len(schools)}개 학교 로드 (서울)")
+
+    filled = 0
+    for d in danji_list:
+        lat1 = d.get("lat")
+        lon1 = d.get("lng")
+        if not lat1 or not lon1:
+            continue
+
+        # 지하철: 1.5km 이내, 가까운 순 3개
+        nearby_st = []
+        for s in stations:
+            dist = haversine(lat1, lon1, s.get("lat"), s.get("lon"))
+            if dist < 1500:
+                nearby_st.append({
+                    "name": s["name"],
+                    "line": s.get("line", ""),
+                    "distance": round(dist),
+                })
+        nearby_st.sort(key=lambda x: x["distance"])
+        d["nearby_subway"] = nearby_st[:3]
+
+        # 학교: 1km 이내, 가까운 순 3개 (초등학교 우선)
+        nearby_sc = []
+        for s in schools:
+            dist = haversine(lat1, lon1, s.get("lat"), s.get("lon"))
+            if dist < 1000:
+                nearby_sc.append({
+                    "name": s["name"],
+                    "type": s.get("type", ""),
+                    "distance": round(dist),
+                })
+        # 초등학교 우선 → 거리순
+        nearby_sc.sort(key=lambda x: (0 if "초등" in x.get("type","") else 1, x["distance"]))
+        d["nearby_school"] = nearby_sc[:3]
+
+        if nearby_st or nearby_sc:
+            filled += 1
+
+    print(f"  → {filled}개 단지에 지하철/학교 매칭 완료")
+
+
+# ========================================================
 # sitemap.xml 자동 생성
 # ========================================================
 def generate_sitemap(danji_list: list):
@@ -814,6 +909,10 @@ def main():
     # 주변 단지 매칭 (같은 property_type끼리)
     print(f"\n🏘️  주변 단지 매칭 중...")
     fill_nearby_complex(danji_list, apartments)
+
+    # 주변 지하철/학교 매칭
+    print(f"\n🚇 주변 지하철/학교 매칭 중...")
+    fill_nearby_facilities(danji_list)
 
     print(f"\n📦 danji_pages 업데이트: {len(danji_list)}개 단지")
     if danji_list:
