@@ -684,6 +684,10 @@ body.dark .phone-screen{background:#0f172a;}
 <style>
 @keyframes splashPulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.1);opacity:0.7;}}
 @keyframes splashBar{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+.hwik-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:8px;}
+.hwik-loading-logo{font-size:28px;font-weight:900;color:var(--primary);animation:splashPulse 1.2s ease-in-out infinite;}
+.hwik-loading-bar{width:32px;height:2px;border-radius:1px;background:var(--border);overflow:hidden;}
+.hwik-loading-bar>div{width:100%;height:100%;background:var(--primary);animation:splashBar 1s ease-in-out infinite;}
 </style>
 
 <!-- ═══ 토스트 & 이탈방지 ═══ -->
@@ -973,6 +977,9 @@ const Toast = (() => {
   function show(msg,dur) { const el=document.getElementById('toast'); if(!el)return; el.textContent=msg; el.classList.add('show'); clearTimeout(t); t=setTimeout(()=>el.classList.remove('show'),dur||2500); }
   return { show };
 })();
+
+// ── 휙 로딩 인디케이터 ──
+function hwikLoading(msg){return `<div class="hwik-loading"><div class="hwik-loading-logo">휙</div><div class="hwik-loading-bar"><div></div></div>${msg?`<div style="font-size:12px;color:var(--text-light);margin-top:4px;">${msg}</div>`:''}</div>`;}
 
 /* ═══════════════════════════════════════════════════════════
    4. Search — 검색
@@ -1666,7 +1673,7 @@ const PanelCards = (() => {
       <div id="tabMine">
         <div class="search"><input type="text" id="myQ" placeholder="예) 강남구 아파트 전세 5억이하" oninput="PanelCards.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelCards.onQEnter()"></div>
         <div id="searchHint" style="display:none;font-size:11px;color:var(--primary);margin:-12px 0 12px 4px;">💡 Enter로 AI 검색 (더 많은 결과)</div>
-        <div id="myList"><div class="empty"><div class="empty-icon">⏳</div>불러오는 중...</div></div>
+        <div id="myList">${hwikLoading()}</div>
         <div id="myMore" style="display:none;text-align:center;padding:12px;"><button class="btn-load-more" onclick="PanelCards.more()">더 보기</button></div>
       </div>
       <div id="tabDone" style="display:none"><div id="doneList"></div></div>
@@ -1828,7 +1835,7 @@ const PanelClient = (() => {
     el.innerHTML=`<div class="panel-inner">${Hub.panelHead('손님')}
       <div class="search"><input type="text" placeholder="손님 검색 (이름, 전화번호, 조건...)" oninput="PanelClient.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelClient.onQEnter()"></div>
       <div class="filters" style="justify-content:flex-end;">${['최근순','오래된순'].map(s=>`<button class="sort-tag${cSort===s?' active':''}" onclick="PanelClient.setSort('${s}',this)">${s}</button>`).join('')}</div>
-      <div id="clList"><div class="empty"><div class="empty-icon">⏳</div>불러오는 중...</div></div>
+      <div id="clList">${hwikLoading()}</div>
     </div>`;
     await Data.loadClientCards(0,true);_renderList();
   }
@@ -2016,7 +2023,7 @@ const PanelShared = (() => {
     // 검색
     h+='<div class="search"><input type="text" id="sharedQ" placeholder="공유 매물 검색..." oninput="PanelShared.onSearch(this.value)" onkeydown="if(event.key===\'Enter\')PanelShared.onSearchEnter()"></div>';
     // 매물 리스트
-    h+='<div id="sharedList"><div class="empty"><div class="empty-icon">⏳</div>불러오는 중...</div></div></div>';
+    h+='<div id="sharedList">'+hwikLoading()+'</div></div>';
     el.innerHTML=h;
     await Data.loadSharedCards();_renderList();
   }
