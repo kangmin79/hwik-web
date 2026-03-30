@@ -1103,8 +1103,36 @@ const Preview = (() => {
     const detail=[esc(p.area),esc(p.floor)].filter(Boolean).join(' · ');
     const feats=p.features.map(f=>esc(f));
     const np=name.length>6?name.replace(/\s/g,'<br>'):name;
-    const specs=feats.length?`<div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center;">${feats.map(f=>'<span style="font-size:10px;padding:3px 7px;border-radius:16px;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.1);">'+f+'</span>').join('')}</div>`:'';
-    screenEl.innerHTML=`<div style="border-radius:16px;overflow:hidden;background:linear-gradient(160deg,#0d1b2a 0%,#1b2838 30%,#162032 60%,#0a1628 100%);min-height:280px;display:flex;flex-direction:column;padding:28px 16px 14px;position:relative;"><div style="position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(78,205,196,0.1) 0%,transparent 70%);top:-60px;right:-80px;"></div><div style="text-align:center;position:relative;z-index:1;"><div style="font-size:20px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:4px;">${np}</div><div style="font-size:11px;color:rgba(255,255,255,0.4);">${loc}</div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;z-index:1;"><div style="width:32px;height:1px;background:rgba(255,255,255,0.12);margin-bottom:12px;"></div><div style="display:flex;align-items:baseline;gap:6px;margin-bottom:8px;">${type?`<span style="font-size:10px;font-weight:600;color:rgba(78,205,196,0.9);padding:2px 6px;border-radius:6px;background:rgba(78,205,196,0.1);border:1px solid rgba(78,205,196,0.2);">${type}</span>`:''}<span style="font-size:18px;font-weight:800;color:#fff;">${price}</span></div>${detail?`<div style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.7);">${detail}</div>`:''}</div><div style="position:relative;z-index:1;">${specs}</div></div><div class="mini-card-agent"><div class="mini-card-agent-avatar">${an.charAt(0)}</div><div><div class="mini-card-agent-name">${an}</div><div class="mini-card-agent-phone">${ap}</div></div></div>`;
+    const specs=feats.length?`<div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center;">${feats.map(f=>'<span class="preview-bottom-spec">'+f+'</span>').join('')}</div>`:'';
+
+    // 전화/카톡/지도 액션바
+    const actionBar=`<div class="preview-action-bar"><div class="preview-action-btn call"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span>전화</span></div><div class="preview-action-btn kakao"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c5.8 0 10.5 3.66 10.5 8.17 0 4.51-4.7 8.17-10.5 8.17-.87 0-1.72-.08-2.54-.24l-4.14 2.82.93-4.08C3.92 16.13 1.5 13.37 1.5 11.17 1.5 6.66 6.2 3 12 3z"/></svg><span>카톡</span></div><div class="preview-action-btn"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>지도</span></div></div>`;
+
+    // 손님에게 한마디
+    const commentVal=document.getElementById('regComment')?.value?.trim()||'';
+    const commentHtml=`<div style="padding:8px 10px;margin-top:6px;border:1px solid rgba(255,255,255,0.1);border-radius:10px;">
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.5);margin-bottom:4px;">● 손님에게 한마디</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.6);min-height:24px;">${commentVal?esc(commentVal):'<span style="color:rgba(255,255,255,0.25);">예) 채광 정말 좋아요. 역까지 3분</span>'}</div>
+      <div style="font-size:9px;color:rgba(255,255,255,0.3);margin-top:4px;">✓ 손님 카드에만 표시됩니다</div>
+    </div>`;
+
+    screenEl.innerHTML=`<div style="padding:8px;">
+      <div class="preview-card-full"><div class="preview-inner-slider">
+        <div class="preview-info-slide bg-1" style="justify-content:flex-start;padding:36px 20px 70px;">
+          <div style="text-align:center;margin-top:4px;"><div class="preview-info-complex">${np}</div><div class="preview-info-location">${loc}</div></div>
+          <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;">
+            <div class="preview-info-divider"></div>
+            <div class="preview-info-type-price" style="margin-bottom:8px;">${type?`<span class="preview-info-type">${type}</span>`:''}<span class="preview-info-price">${price}</span></div>
+            ${detail?`<div style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.7);">${detail}</div>`:''}
+          </div>
+          ${specs}
+        </div>
+      </div>
+      <div class="preview-bottom">${actionBar}</div>
+      </div>
+      ${commentHtml}
+      <div class="preview-agent-below"><div class="preview-agent-avatar">${an.charAt(0)}</div><div class="preview-agent-name" style="flex:1;">${an}</div><div class="preview-agent-phone">${ap}</div></div>
+    </div>`;
   }
 
   function _parse(input) {
