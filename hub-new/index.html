@@ -2075,18 +2075,19 @@ const PanelClient = (() => {
 
   async function render(el){
     el.innerHTML=`<div class="panel-inner">${Hub.panelHead('손님')}
-      <div id="clientRegArea" style="margin-bottom:0;padding:16px;border:2px solid #4ecdc4;border-radius:14px;background:rgba(78,205,196,0.04);transition:max-height 0.4s ease,padding 0.4s ease,margin 0.4s ease,opacity 0.3s ease;overflow:hidden;max-height:300px;opacity:1;">
-        <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="PanelClient.toggleReg()">
-          <div style="font-size:13px;font-weight:700;">+ 손님 등록</div>
-          <span id="clientRegToggle" style="font-size:14px;color:var(--text-light);">▼</span>
+      <div id="clientRegArea" style="margin-bottom:12px;border:1.5px solid #4ecdc4;border-radius:12px;overflow:hidden;transition:all 0.3s ease;">
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;background:rgba(78,205,196,0.04);" onclick="PanelClient.toggleReg()">
+          <span style="font-size:16px;">🙋</span>
+          <span style="font-size:14px;font-weight:700;color:#0d9488;flex:1;">새 손님 등록</span>
+          <span id="clientRegToggle" style="font-size:12px;color:#0d9488;transition:transform 0.3s;">▼</span>
         </div>
-        <div id="clientRegBody">
-          <textarea id="clientRegInput" class="reg-textarea" style="min-height:60px;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:14px;margin-top:8px;" placeholder="예) 강남구 아파트 전세 5억이하 구합니다&#10;이름: 홍길동 / 010-1234-5678"></textarea>
+        <div id="clientRegBody" style="display:none;padding:0 16px 16px;">
+          <textarea id="clientRegInput" class="reg-textarea" style="min-height:60px;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:14px;" placeholder="예) 강남구 아파트 전세 5억이하 구합니다&#10;이름: 홍길동 / 010-1234-5678"></textarea>
           <button onclick="PanelClient.registerClient()" class="btn-primary" style="margin-top:8px;padding:10px;" id="clientRegBtn">AI로 손님 등록</button>
           <div id="clientRegResult"></div>
         </div>
       </div>
-      <div onmouseenter="PanelClient._collapseReg()" onmouseleave="PanelClient._expandReg()">
+      <div>
         <div class="search"><input type="text" placeholder="예) 강남구 아파트 전세 5억이하 / 찾는분 강남" oninput="PanelClient.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelClient.onQEnter()"></div>
         <div id="clList" style="min-height:200px;">${hwikLoading()}</div>
       </div>
@@ -2094,29 +2095,12 @@ const PanelClient = (() => {
     await Data.loadClientCards(0,true);_renderList();
   }
 
-  let _regOpen=true;
+  let _regOpen=false;
   function toggleReg(){
     _regOpen=!_regOpen;
-    _applyReg();
-  }
-  function _collapseReg(){
-    if(!_regOpen)return;
-    _regOpen=false;
-    _applyReg();
-  }
-  function _expandReg(){
-    if(_regOpen)return;
-    _regOpen=true;
-    _applyReg();
-  }
-  function _applyReg(){
-    const area=document.getElementById('clientRegArea');
-    if(!area)return;
-    if(_regOpen){
-      area.style.maxHeight='300px';area.style.padding='16px';area.style.marginBottom='16px';area.style.opacity='1';area.style.borderWidth='2px';
-    }else{
-      area.style.maxHeight='0';area.style.padding='0 16px';area.style.marginBottom='0';area.style.opacity='0';area.style.borderWidth='0';
-    }
+    const body=document.getElementById('clientRegBody'),toggle=document.getElementById('clientRegToggle');
+    if(body)body.style.display=_regOpen?'':'none';
+    if(toggle)toggle.style.transform=_regOpen?'rotate(180deg)':'';
   }
 
   async function registerClient(){
@@ -2133,8 +2117,9 @@ const PanelClient = (() => {
       const {error:dbErr}=await Auth.sb.from('cards').insert([cardData]);
       if(dbErr)throw new Error(dbErr.message);
       Data.triggerAutoMatch(cardData.id);
-      document.getElementById('clientRegResult').innerHTML='<div class="reg-success" style="margin-top:8px;">✅ 손님이 등록되었습니다!</div>';
-      inp.value='';
+      Toast.show('손님이 등록되었습니다!');
+      inp.value='';document.getElementById('clientRegResult').innerHTML='';
+      _regOpen=false;toggleReg();// 자동 접기
       await Data.loadClientCards(0,true);_renderList();
     }catch(e){document.getElementById('clientRegResult').innerHTML=`<div class="reg-error" style="margin-top:8px;">오류: ${esc(e.message)}</div>`;}
     btn.textContent='AI로 손님 등록';btn.disabled=false;
@@ -2376,7 +2361,7 @@ const PanelClient = (() => {
     if(Hub.current?.data?.id===cardId){Hub.current.data.contact_name=name;Hub.current.data.contact_phone=phone;}
   }
 
-  return { render, registerClient, toggleReg, _collapseReg, _expandReg, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact };
+  return { render, registerClient, toggleReg, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact };
 })();
 
 /* ═══════════════════════════════════════════════════════════
