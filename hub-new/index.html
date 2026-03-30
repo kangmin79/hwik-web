@@ -1357,15 +1357,20 @@ const Hub = (() => {
     const v=document.getElementById('hubVisual'),hc=document.getElementById('hubCenter');
     if(!v||!hc)return;
 
-    hc.innerHTML=`<div class="hub-center-icon">${center.icon}</div><div class="hub-center-name">${esc(center.name)}</div><div class="hub-center-sub">${esc(center.sub)}</div>`;
+    // SVG 숨기기
     document.getElementById('hubLines').innerHTML='';
     v.querySelectorAll('.hub-node').forEach(el=>el.remove());
 
-    const total=nodes.length;
-    nodes.forEach((n,i)=>{
-      const topPct=55+(i-(total-1)/2)*13;
+    // 허브 비주얼을 flex 컬럼으로 전환
+    v.style.cssText='display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;aspect-ratio:unset;max-height:none;padding:10px 0;';
+    // 중앙 노드를 인라인으로
+    hc.style.cssText='position:static;transform:none;width:auto;height:auto;padding:10px 20px;border-radius:16px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,0.06);';
+    hc.innerHTML=`<div style="font-size:22px;">${center.icon}</div><div><div style="font-size:13px;font-weight:800;">${esc(center.name)}</div>${center.sub?`<div style="font-size:10px;color:var(--text-light);">${esc(center.sub)}</div>`:''}</div>`;
+
+    // 노드를 static flex 아이템으로
+    nodes.forEach(n=>{
       const active=activePanel===n.key;
-      v.insertAdjacentHTML('beforeend',`<div class="hub-node appear" data-key="${n.key}" style="left:50%;top:${topPct}%;" onclick="Hub.onNode('${n.key}')"><div class="hub-node-inner" style="${active?'border-color:var(--primary);background:var(--primary-bg);':''}"><span class="hub-node-label">${n.label}</span></div></div>`);
+      v.insertAdjacentHTML('beforeend',`<div class="hub-node appear" data-key="${n.key}" style="position:static;transform:none;cursor:pointer;" onclick="Hub.onNode('${n.key}')"><div class="hub-node-inner" style="min-width:auto;padding:8px 24px;border-radius:14px;${active?'border-color:var(--primary);background:var(--primary-bg);':''}"><span class="hub-node-label">${n.label}</span></div></div>`);
     });
 
     v.querySelectorAll('.hub-node').forEach(el=>{
