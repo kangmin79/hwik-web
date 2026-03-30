@@ -1956,11 +1956,38 @@ const PanelClient = (() => {
 
   async function render(el){
     el.innerHTML=`<div class="panel-inner">${Hub.panelHead('손님')}
+      <div style="margin-bottom:16px;padding:16px;border:1.5px solid var(--border);border-radius:14px;background:var(--bg-card);">
+        <div style="font-size:13px;font-weight:700;margin-bottom:8px;">+ 손님 등록</div>
+        <textarea id="clientRegInput" class="reg-textarea" style="min-height:60px;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:14px;" placeholder="예) 강남구 아파트 전세 5억이하 구합니다&#10;이름: 홍길동 / 010-1234-5678"></textarea>
+        <button onclick="PanelClient.registerClient()" class="btn-primary" style="margin-top:8px;padding:10px;" id="clientRegBtn">AI로 손님 등록</button>
+        <div id="clientRegResult"></div>
+      </div>
       <div class="search"><input type="text" placeholder="손님 검색 (이름, 전화번호, 조건...)" oninput="PanelClient.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelClient.onQEnter()"></div>
       <div class="filters" style="justify-content:flex-end;">${['최근순','오래된순'].map(s=>`<button class="sort-tag${cSort===s?' active':''}" onclick="PanelClient.setSort('${s}',this)">${s}</button>`).join('')}</div>
       <div id="clList">${hwikLoading()}</div>
     </div>`;
     await Data.loadClientCards(0,true);_renderList();
+  }
+
+  async function registerClient(){
+    const inp=document.getElementById('clientRegInput'),btn=document.getElementById('clientRegBtn');
+    if(!inp?.value?.trim()){Toast.show('손님 조건을 입력하세요');return;}
+    if(!Auth.user){Toast.show('로그인이 필요합니다');return;}
+    btn.textContent='분석 중...';btn.disabled=true;
+    try{
+      const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/parse-property`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken()},body:JSON.stringify({text:inp.value.trim()})});
+      const r=await res.json();if(r.error)throw new Error(r.error);
+      // 손님 카드로 강제 설정
+      const property={type:'손님',price:r.price||null,location:r.location||null,complex:r.complex||null,area:r.area||null,floor:r.floor||null,room:r.room||null,features:r.features||[],category:r.category||null,rawText:inp.value.trim()};
+      const cardData={id:crypto.randomUUID().slice(0,12),agent_id:Auth.user.id,property,contact_name:r.contact_name||null,contact_phone:r.contact_phone||null,embedding:r.embedding||null,search_text:r.search_text||null,price_number:r.price_number||null,wanted_trade_type:r.wanted_trade_type||null,trade_status:'계약가능'};
+      const {error:dbErr}=await Auth.sb.from('cards').insert([cardData]);
+      if(dbErr)throw new Error(dbErr.message);
+      Data.triggerAutoMatch(cardData.id);
+      document.getElementById('clientRegResult').innerHTML='<div class="reg-success" style="margin-top:8px;">✅ 손님이 등록되었습니다!</div>';
+      inp.value='';
+      await Data.loadClientCards(0,true);_renderList();
+    }catch(e){document.getElementById('clientRegResult').innerHTML=`<div class="reg-error" style="margin-top:8px;">오류: ${esc(e.message)}</div>`;}
+    btn.textContent='AI로 손님 등록';btn.disabled=false;
   }
 
   function setSort(s,btn){cSort=s;document.querySelectorAll('.sort-tag').forEach(b=>b.classList.remove('active'));btn?.classList.add('active');_renderList();}
@@ -2120,7 +2147,7 @@ const PanelClient = (() => {
     if(Hub.current?.data?.id===cardId){Hub.current.data.contact_name=name;Hub.current.data.contact_phone=phone;}
   }
 
-  return { render, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact };
+  return { render, registerClient, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact };
 })();
 
 /* ═══════════════════════════════════════════════════════════
