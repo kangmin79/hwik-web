@@ -191,40 +191,49 @@ body.dark .phone-screen{background:#0f172a;}
 }
 .btn-send:disabled{opacity:0.4;cursor:not-allowed;}
 
-/* 미니 카드 (noimg) */
-.mini-card-noimg{
-  border-radius:16px;overflow:hidden;
-  background:linear-gradient(160deg,#0d1b2a 0%,#1b2838 30%,#162032 60%,#0a1628 100%);
-  min-height:280px;display:flex;flex-direction:column;padding:28px 16px 14px;position:relative;
-}
-.mini-card-glow{position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(78,205,196,0.1) 0%,transparent 70%);top:-60px;right:-80px;}
-.mini-card-noimg-content{text-align:center;position:relative;z-index:1;flex:1;display:flex;flex-direction:column;justify-content:center;}
-.mini-card-noimg-name{font-size:20px;font-weight:800;color:#fff;line-height:1.2;margin-bottom:4px;}
-.mini-card-noimg-location{font-size:11px;color:rgba(255,255,255,0.4);}
-.mini-card-noimg-divider{width:32px;height:1px;background:rgba(255,255,255,0.12);margin:12px auto;}
-.mini-card-noimg-price-row{display:flex;align-items:baseline;gap:6px;justify-content:center;margin-bottom:8px;}
-.mini-card-noimg-type{font-size:10px;font-weight:600;color:rgba(78,205,196,0.9);padding:2px 6px;border-radius:6px;background:rgba(78,205,196,0.1);border:1px solid rgba(78,205,196,0.2);}
-.mini-card-noimg-price{font-size:18px;font-weight:800;color:#fff;}
-.mini-card-noimg-detail{font-size:12px;font-weight:600;color:rgba(255,255,255,0.7);}
-.mini-card-specs{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:8px;}
-.mini-card-spec{font-size:10px;padding:3px 7px;border-radius:16px;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.1);}
+/* ═══ 폰 미리보기 카드 (항상 다크) ═══ */
+.phone-screen{background:#0f0f1a!important;}
+.phone-header{padding:14px 12px 4px;text-align:center;flex-shrink:0;}
+.phone-logo{font-size:13px;font-weight:900;color:#facc15;}
+.phone-indicator{font-size:11px;color:#666;margin-top:2px;}
+.phone-indicator span{color:#fff;font-weight:600;}
+.phone-body{flex:1;padding:0 8px 6px;overflow-y:auto;overflow-x:hidden;position:relative;}
+.card-slider{height:100%;position:relative;touch-action:pan-y;overflow:hidden;}
+.card-slide{position:absolute;top:0;left:0;width:100%;transition:transform 0.3s ease;cursor:grab;}
 
-/* 미니 카드 (사진) */
-.mini-card-photo{position:relative;min-height:280px;background-size:cover;background-position:center;border-radius:16px;overflow:hidden;}
-.mini-card-photo-overlay{position:absolute;bottom:0;left:0;right:0;padding:20px 16px;background:linear-gradient(transparent,rgba(0,0,0,0.8));}
-.mini-card-photo-overlay .mini-card-type{font-size:10px;font-weight:600;color:rgba(78,205,196,0.9);padding:2px 6px;border-radius:6px;background:rgba(78,205,196,0.1);border:1px solid rgba(78,205,196,0.2);display:inline-block;margin-bottom:4px;}
-.mini-card-photo-overlay .mini-card-price{font-size:22px;font-weight:900;color:#fff;}
-.mini-card-photo-overlay .mini-card-name{font-size:15px;font-weight:700;color:#fff;}
-.mini-card-photo-overlay .mini-card-detail{font-size:12px;color:rgba(255,255,255,0.7);margin-top:4px;}
-
-/* 액션 바 + 중개사 */
-.mini-card-actions{display:flex;gap:6px;margin-top:10px;position:relative;z-index:1;}
-.mini-card-action{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);font-size:9px;cursor:pointer;}
-.mini-card-agent{display:flex;align-items:center;gap:10px;padding:10px 14px;margin-top:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;}
-.mini-card-agent-avatar{width:32px;height:32px;border-radius:50%;background:rgba(78,205,196,0.2);border:1.5px solid #4ecdc4;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#4ecdc4;}
-.mini-card-agent-name{font-size:12px;font-weight:700;color:#fff;}
-.mini-card-agent-phone{font-size:11px;color:#4ecdc4;font-weight:600;}
-.mini-card-comment{padding:10px 14px;margin-top:6px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;font-size:11px;color:rgba(255,255,255,0.6);}
+.preview-card-full{width:100%;border-radius:12px;overflow:hidden;position:relative;background:#1a1a2e;height:320px;}
+.preview-inner-slider{display:flex;transition:transform 0.35s ease;}
+.preview-photo-slide{min-width:100%;height:320px;object-fit:cover;}
+.preview-info-slide{min-width:100%;height:320px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px 80px;overflow:hidden;}
+.preview-info-slide.bg-1{background:linear-gradient(160deg,#0d1b2a 0%,#1b2838 30%,#162032 60%,#0a1628 100%);}
+.preview-info-slide.bg-1::before{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(78,205,196,0.12) 0%,transparent 70%);top:-60px;right:-80px;}
+.preview-info-complex{font-size:28px;font-weight:800;color:#fff;text-align:center;line-height:1.2;margin-bottom:8px;position:relative;z-index:1;}
+.preview-info-location{font-size:12px;color:rgba(255,255,255,0.45);position:relative;z-index:1;margin-bottom:16px;}
+.preview-info-divider{width:32px;height:1px;background:rgba(255,255,255,0.15);position:relative;z-index:1;margin-bottom:16px;}
+.preview-info-type-price{display:flex;align-items:baseline;gap:8px;position:relative;z-index:1;}
+.preview-info-type{font-size:11px;font-weight:500;color:rgba(78,205,196,0.8);padding:2px 8px;border-radius:6px;background:rgba(78,205,196,0.1);border:1px solid rgba(78,205,196,0.2);}
+.preview-info-price{font-size:22px;font-weight:800;color:#fff;}
+.preview-memo-slide{min-width:100%;height:320px;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px 24px;background:linear-gradient(160deg,#0d1117 0%,#151c27 40%,#0a0f1a 100%);}
+.preview-memo-quote{font-family:serif;font-size:48px;line-height:0.6;color:rgba(255,255,255,0.08);align-self:flex-start;margin-bottom:16px;}
+.preview-memo-text{font-size:13px;color:rgba(255,255,255,0.9);line-height:1.8;text-align:center;margin-bottom:20px;word-break:keep-all;}
+.preview-memo-agent{font-size:11px;color:rgba(255,255,255,0.4);}
+.preview-bottom{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(to top,rgba(0,0,0,0.9) 0%,rgba(0,0,0,0.5) 60%,transparent 100%);padding:30px 12px 10px;z-index:5;}
+.preview-bottom-price{font-size:18px;font-weight:800;color:#fff;margin-bottom:1px;}
+.preview-bottom-name{font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.preview-bottom-specs{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:8px;}
+.preview-bottom-spec{font-size:9px;padding:2px 6px;border-radius:12px;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.8);border:1px solid rgba(255,255,255,0.12);}
+.preview-action-bar{display:flex;gap:6px;}
+.preview-action-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 4px;border-radius:8px;background:rgba(255,255,255,0.08);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);font-size:9px;}
+.preview-action-btn.call{border-color:rgba(78,205,196,0.3);color:rgba(78,205,196,0.9);}
+.preview-action-btn.kakao{border-color:rgba(250,204,21,0.25);color:rgba(250,204,21,0.9);}
+.preview-agent-below{display:flex;align-items:center;gap:8px;padding:8px 12px;margin-top:6px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:12px;}
+.preview-agent-avatar{width:32px;height:32px;border-radius:50%;background:rgba(78,205,196,0.2);border:1.5px solid #4ecdc4;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#4ecdc4;flex-shrink:0;}
+.preview-agent-name{font-size:12px;font-weight:700;color:#fff;}
+.preview-agent-phone{font-size:11px;color:#4ecdc4;font-weight:600;}
+.dots-indicator{display:flex;justify-content:center;gap:8px;margin-top:12px;}
+.dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.2);cursor:pointer;transition:all 0.2s;}
+.dot.active{background:var(--primary);width:20px;border-radius:4px;}
+.btn-share-room{width:100%;padding:12px;border-radius:12px;border:2px solid var(--primary);background:transparent;color:var(--primary);font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;}
 
 /* ═══════════════════════════════════════════════════════════
    7. 리스트 아이템
@@ -950,25 +959,54 @@ const Preview = (() => {
 
   function renderSlider(containerId) {
     const el=document.getElementById(containerId||'previewPanel'); if(!el)return;
-    if(!selected.length){ el.innerHTML=`<div class="preview-label">손님에게 보이는 화면</div><div class="phone-mockup"><div class="phone-notch"></div><div class="phone-screen"><div class="preview-empty"><div style="font-size:36px;margin-bottom:12px;">👆</div><div>왼쪽에서 매물을 선택해보세요</div><div style="margin-top:8px;color:var(--primary);font-size:12px;">손님에게 보낼 카드 미리보기</div></div></div></div><button class="btn-send" disabled>손님에게 보내기</button>`; return; }
-    const dots=selected.map((_,i)=>`<div class="preview-dot${i===slideIdx?' active':''}" onclick="Preview.goTo(${i})"></div>`).join('');
-    el.innerHTML=`<div class="preview-label">손님에게 보이는 화면</div><div class="phone-mockup"><div class="phone-notch"></div><div class="phone-screen" id="phoneScreen"><div class="card-slider" id="cardSlider" style="transform:translateX(-${slideIdx*100}%)">${selected.map(c=>miniCard(c)).join('')}</div></div></div><div class="preview-dots">${dots}</div><button class="btn-send" onclick="Share.openSheet()">손님에게 보내기</button>`;
+    if(!selected.length){
+      el.innerHTML=`<div class="preview-label">손님에게 보이는 화면</div>
+        <div class="phone-mockup"><div class="phone-notch"></div><div class="phone-screen" style="display:flex;flex-direction:column;">
+          <div class="phone-header"><div class="phone-logo">휙</div></div>
+          <div class="phone-body"><div style="height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#666;font-size:12px;text-align:center;"><div style="font-size:32px;margin-bottom:12px;opacity:0.5;">👆</div>왼쪽에서 매물을<br>선택해보세요</div></div>
+        </div></div>
+        <div class="dots-indicator"></div>
+        <div style="width:100%;max-width:300px;"><button class="btn-send" disabled>손님에게 보내기</button></div>`;
+      return;
+    }
+    const dots=selected.map((_,i)=>`<div class="dot${i===slideIdx?' active':''}" onclick="Preview.goTo(${i})"></div>`).join('');
+    let slides='';
+    selected.forEach((c,i)=>{const off=(i-slideIdx)*100;slides+=`<div class="card-slide" style="transform:translateX(${off}%)">${miniCard(c)}</div>`;});
+    el.innerHTML=`<div class="preview-label">손님에게 보이는 화면</div>
+      <div class="phone-mockup"><div class="phone-notch"></div><div class="phone-screen" style="display:flex;flex-direction:column;">
+        <div class="phone-header"><div class="phone-logo">휙</div><div class="phone-indicator"><span>${slideIdx+1}</span> / ${selected.length}</div></div>
+        <div class="phone-body" id="phoneBody"><div class="card-slider" id="cardSlider">${slides}</div></div>
+      </div></div>
+      <div class="dots-indicator">${dots}</div>
+      <div style="width:100%;max-width:300px;">
+        <button class="btn-send" onclick="Share.openSheet()">${selected.length}개 묶어서 보내기</button>
+        <button class="btn-share-room" onclick="PanelCards.share1('${selected[0]?.id||''}')">📁 공유방에 올리기</button>
+      </div>`;
     _setupSwipe();
   }
 
   function miniCard(card) {
-    const p=card.property||{},photos=card.photos||[],ag=Auth.getAgentInfo(),an=esc(ag.office||ag.name||'부동산'),ap=esc(ag.phone||'');
-    const type=esc(p.type||''),price=esc(p.price||'-'),name=esc(p.complex||p.location||'매물'),loc=p.complex?esc(p.location||''):'';
-    const detail=[p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · '),feats=(p.features||[]).map(f=>esc(f));
-    const comment=esc(card.agent_comment||p.agentComment||'');
-    const actions=`<div class="mini-card-actions"><div class="mini-card-action" style="border-color:rgba(78,205,196,0.3);color:rgba(78,205,196,0.9);"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span>전화</span></div><div class="mini-card-action" style="border-color:rgba(250,204,21,0.25);color:rgba(250,204,21,0.9);"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c5.8 0 10.5 3.66 10.5 8.17 0 4.51-4.7 8.17-10.5 8.17-.87 0-1.72-.08-2.54-.24l-4.14 2.82.93-4.08C3.92 16.13 1.5 13.37 1.5 11.17 1.5 6.66 6.2 3 12 3z"/></svg><span>카톡</span></div><div class="mini-card-action" style="border-color:rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>지도</span></div></div>`;
-    const agentBlock=`<div class="mini-card-agent"><div class="mini-card-agent-avatar">${an.charAt(0)}</div><div><div class="mini-card-agent-name">${an}</div><div class="mini-card-agent-phone">${ap}</div></div></div>`;
+    const p=card.property||{},photos=card.photos||[],hasPhotos=photos.length>0;
+    const ag=Auth.getAgentInfo(),an=esc(ag.office||ag.name||'부동산'),ap=esc(ag.phone||'');
+    const type=esc(p.type||'매물'),price=esc(p.price||'-'),name=esc(p.complex||p.location||'-'),loc=p.complex?esc(p.location||''):'';
+    const area=esc(p.area||''),floor=esc(p.floor||''),feats=(p.features||[]).map(f=>esc(f));
+    const comment=card.agent_comment||'';
+    const specs=[floor,...feats].filter(Boolean);
+    const cardNameStr=[loc,name,area].filter(Boolean).join(' · ');
 
-    if(photos.length) return `<div class="mini-card"><div class="mini-card-photo" style="background-image:url('${photos[0]}')"><div class="mini-card-photo-overlay"><div class="mini-card-type">${type}</div><div class="mini-card-price">${price}</div><div class="mini-card-name">${name}</div>${detail?`<div class="mini-card-detail">${detail}</div>`:''}</div></div>${actions}${comment?`<div class="mini-card-comment">${comment}</div>`:''}${agentBlock}</div>`;
+    const actionBar=`<div class="preview-action-bar"><div class="preview-action-btn call"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg><span>전화</span></div><div class="preview-action-btn kakao"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c5.8 0 10.5 3.66 10.5 8.17 0 4.51-4.7 8.17-10.5 8.17-.87 0-1.72-.08-2.54-.24l-4.14 2.82.93-4.08C3.92 16.13 1.5 13.37 1.5 11.17 1.5 6.66 6.2 3 12 3z"/></svg><span>카톡</span></div><div class="preview-action-btn"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>지도</span></div></div>`;
+    const memoSlide=comment?`<div class="preview-memo-slide"><div class="preview-memo-quote">"</div><div class="preview-memo-text">${esc(comment).replace(/\\n/g,'<br>')}</div><div class="preview-memo-agent">${an}</div></div>`:'';
+    const bottomHtml=`<div class="preview-bottom"><div class="preview-bottom-price">${price}</div><div class="preview-bottom-name">${cardNameStr}</div>${specs.length?'<div class="preview-bottom-specs">'+specs.map(s=>'<span class="preview-bottom-spec">'+s+'</span>').join('')+'</div>':''}${actionBar}</div>`;
+    const agentBelow=`<div class="preview-agent-below"><div class="preview-agent-avatar">${an.charAt(0)}</div><div class="preview-agent-name" style="flex:1;">${an}</div><div class="preview-agent-phone">${ap}</div></div>`;
 
-    const np=name.length>6?name.replace(/\s/g,'<br>'):name;
-    const specs=feats.length?`<div class="mini-card-specs">${feats.map(f=>`<span class="mini-card-spec">${f}</span>`).join('')}</div>`:'';
-    return `<div class="mini-card"><div class="mini-card-noimg"><div class="mini-card-glow"></div><div class="mini-card-noimg-content"><div class="mini-card-noimg-name">${np}</div><div class="mini-card-noimg-location">${loc}</div><div class="mini-card-noimg-divider"></div><div class="mini-card-noimg-price-row">${type?`<span class="mini-card-noimg-type">${type}</span>`:''}<span class="mini-card-noimg-price">${price}</span></div>${detail?`<div class="mini-card-noimg-detail">${detail}</div>`:''}${specs}</div>${actions}</div>${comment?`<div class="mini-card-comment">${comment}</div>`:''}${agentBlock}</div>`;
+    if(hasPhotos){
+      return `<div class="preview-card-full"><div class="preview-inner-slider"><img class="preview-photo-slide" src="${esc(photos[0])}" loading="lazy">${memoSlide}</div>${bottomHtml}</div>${agentBelow}`;
+    }
+    // noimg
+    const nameParts=name.length>6?name.replace(/\s/g,'<br>'):name;
+    const detailStr=[area,floor].filter(Boolean).join(' · ');
+    const tagsHtml=feats.length?`<div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center;">${feats.map(f=>'<span class="preview-bottom-spec">'+f+'</span>').join('')}</div>`:'';
+    return `<div class="preview-card-full"><div class="preview-inner-slider"><div class="preview-info-slide bg-1" style="justify-content:flex-start;padding:36px 20px 70px;"><div style="text-align:center;margin-top:4px;"><div class="preview-info-complex">${nameParts}</div><div class="preview-info-location">${loc}</div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;"><div class="preview-info-divider"></div><div class="preview-info-type-price" style="margin-bottom:8px;"><span class="preview-info-type">${type}</span><span class="preview-info-price">${price}</span></div>${detailStr?`<div style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.7);">${detailStr}</div>`:''}</div>${tagsHtml}</div>${memoSlide}</div><div class="preview-bottom">${actionBar}</div></div>${agentBelow}`;
   }
 
   function renderLive(text,screenEl) {
@@ -1001,12 +1039,20 @@ const Preview = (() => {
     return r;
   }
 
-  function goTo(i) { slideIdx=Math.max(0,Math.min(i,selected.length-1));const s=document.getElementById('cardSlider');if(s)s.style.transform=`translateX(-${slideIdx*100}%)`;document.querySelectorAll('.preview-dot').forEach((d,j)=>d.classList.toggle('active',j===slideIdx)); }
+  function goTo(i) {
+    slideIdx=Math.max(0,Math.min(i,selected.length-1));
+    document.querySelectorAll('.card-slide').forEach((s,j)=>{s.style.transform=`translateX(${(j-slideIdx)*100}%)`;});
+    const ind=document.querySelector('.phone-indicator');if(ind)ind.innerHTML=`<span>${slideIdx+1}</span> / ${selected.length}`;
+    document.querySelectorAll('.dot').forEach((d,j)=>d.classList.toggle('active',j===slideIdx));
+  }
   function _setupSwipe() {
-    const s=document.getElementById('phoneScreen');if(!s)return;
+    const s=document.getElementById('phoneBody');if(!s)return;
     s.onmousedown=e=>{dragging=true;sx=e.clientX;cx=e.clientX;};
     s.onmousemove=e=>{if(dragging)cx=e.clientX;};
     s.onmouseup=s.onmouseleave=()=>{if(!dragging)return;dragging=false;const d=sx-cx;if(Math.abs(d)>50){if(d>0&&slideIdx<selected.length-1)goTo(slideIdx+1);else if(d<0&&slideIdx>0)goTo(slideIdx-1);}};
+    s.addEventListener('touchstart',e=>{dragging=true;sx=e.touches[0].clientX;cx=sx;},{passive:true});
+    s.addEventListener('touchmove',e=>{if(dragging)cx=e.touches[0].clientX;},{passive:true});
+    s.addEventListener('touchend',()=>{if(!dragging)return;dragging=false;const d=sx-cx;if(Math.abs(d)>50){if(d>0&&slideIdx<selected.length-1)goTo(slideIdx+1);else if(d<0&&slideIdx>0)goTo(slideIdx-1);}});
   }
 
   return { toggle, clear, getSelected, renderSlider, miniCard, renderLive, goTo };
