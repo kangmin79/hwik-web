@@ -1341,7 +1341,7 @@ const Hub = (() => {
     const hubArea=document.querySelector('.hub-area');
     const availW=isSplit&&hubArea?hubArea.offsetWidth:window.innerWidth;
 
-    if(isSplit&&availW<500){
+    if(isSplit){
       _renderVertical();
     }else{
       const ratio=availW/window.innerWidth;
