@@ -918,36 +918,126 @@ const Toast = (() => {
    4. Search — 검색
    ═══════════════════════════════════════════════════════════ */
 const Search = (() => {
+  // ── 가격 파싱 (억+천+만 지원) ──
   function _parsePriceToMan(s) {
-    if(!s)return null; s=s.replace(/,/g,'').trim();
-    const e=s.match(/([\d.]+)\s*억\s*(\d+)?/);
-    if(e) return parseFloat(e[1])*10000+(e[2]?parseInt(e[2]):0);
-    const m=s.match(/(\d+)\s*만/); if(m) return parseInt(m[1]);
-    const n=parseInt(s); return isNaN(n)?null:n;
+    if(!s)return null; let total=0;
+    const ek=s.match(/([\d.]+)\s*억/), chun=s.match(/([\d.]+)\s*천/), man=s.match(/([\d.]+)\s*만/);
+    if(ek)total+=parseFloat(ek[1])*10000;
+    if(chun)total+=parseFloat(chun[1])*1000;
+    if(man)total+=parseFloat(man[1]);
+    if(total>0)return total;
+    const num=parseFloat(s.replace(/,/g,''));return isNaN(num)?null:num;
   }
+
+  // ── 가격 조건 추출 ──
+  function _extractPrice(words) {
+    let minP=null,maxP=null; const filtered=[];
+    const priceKw=['이하','이상','미만','초과','넘는','부터','까지','아래','정도','근처','부근'];
+    for(let i=0;i<words.length;i++){
+      const w=words[i];
+      // 가격+키워드 붙은 패턴 (5억이하)
+      const attached=w.match(/^([\d.]+억[\d]*|[\d]+천[\d]*|[\d]+만?)(이하|이상|미만|초과|넘는|까지|부터|아래|정도|근처|부근)$/);
+      if(attached){const val=_parsePriceToMan(attached[1]),kw=attached[2];
+        if(val){if(['이하','미만','까지','아래'].includes(kw))maxP=val;else if(['이상','초과','넘는','부터'].includes(kw))minP=val;else if(['정도','근처','부근'].includes(kw)){minP=val*0.9;maxP=val*1.1;}}continue;}
+      // 가격 + 다음 단어 키워드
+      const pm=w.match(/([\d.]+억[\d]*|[\d]+천[\d]*|[\d]+만?)/);
+      if(pm){const val=_parsePriceToMan(pm[1]);if(val){const next=words[i+1]||'';
+        if(['이하','미만','까지','아래'].includes(next)){maxP=val;i++;continue;}
+        if(['이상','초과','넘는','부터'].includes(next)){minP=val;i++;continue;}
+        if(['정도','근처','부근'].includes(next)){minP=val*0.9;maxP=val*1.1;i++;continue;}
+        maxP=val;continue;}}
+      if(!priceKw.includes(w))filtered.push(w);
+    }
+    return {minP,maxP,filtered};
+  }
+
+  // ── 하드 필터 키워드 추출 ──
+  const _typeKw={매매:'매매',전세:'전세',월세:'월세'};
+  const _catKw={아파트:'아파트',오피스텔:'오피스텔',원투룸:'원투룸',빌라:'원투룸',상가:'상가',사무실:'사무실'};
+  const _statusKw={계약가능:'계약가능',계약중:'계약중',완료:'완료'};
+
+  function _extractHardFilters(words) {
+    let typeF=null,catF=null,statusF=null; const rest=[];
+    words.forEach(w=>{
+      if(!typeF&&_typeKw[w])typeF=_typeKw[w];
+      else if(!catF&&_catKw[w])catF=_catKw[w];
+      else if(!statusF&&_statusKw[w])statusF=_statusKw[w];
+      else rest.push(w);
+    });
+    return {typeF,catF,statusF,rest};
+  }
+
+  // ── 로컬 검색 (가중치 스코어링) ──
   function local(query,cards) {
     if(!query?.trim()) return cards;
     const words=query.trim().toLowerCase().split(/\s+/);
-    let minP=null,maxP=null; const filtered=[];
-    for(let i=0;i<words.length;i++){const w=words[i];const pm=w.match(/([\d.]+억[\d]*|[\d]+만?)/);
-      if(pm){const val=_parsePriceToMan(pm[1]);if(val){const next=words[i+1]||'';if(next==='이하'){maxP=val;i++;continue;}if(next==='이상'){minP=val;i++;continue;}if(next==='정도'){minP=val*0.9;maxP=val*1.1;i++;continue;}maxP=val;continue;}}
-      if(w!=='이하'&&w!=='이상'&&w!=='정도')filtered.push(w);
-    }
-    return cards.map(card=>{const p=card.property||{};let score=0;
-      const fields={complex:{v:(p.complex||'').toLowerCase(),w:3},location:{v:(p.location||'').toLowerCase(),w:2},type:{v:(p.type||'').toLowerCase(),w:2},price:{v:(p.price||'').toLowerCase(),w:1},area:{v:(p.area||'').toLowerCase(),w:1},features:{v:(p.features||[]).join(' ').toLowerCase(),w:1}};
-      filtered.forEach(w=>{Object.values(fields).forEach(f=>{if(f.v.includes(w))score+=f.w;});});
-      if(minP||maxP){const cp=card.price_number||_parsePriceToMan(p.price);if(cp){if(minP&&cp<minP)score=-1;if(maxP&&cp>maxP)score=-1;}}
-      return {...card,_score:score};
-    }).filter(c=>c._score>0).sort((a,b)=>b._score-a._score);
+    const {minP,maxP,filtered:priceFiltered}=_extractPrice(words);
+    const {typeF,catF,statusF,rest}=_extractHardFilters(priceFiltered);
+
+    return cards.map(card=>{
+      const p=card.property||{};let score=0;
+      // 하드 필터
+      if(typeF&&(p.type||'')!==typeF)return null;
+      if(catF){const cat=categorizeProperty(p.rawText||'',p.room||'',p.area||'',p.floor||'');if(cat!==catF)return null;}
+      if(statusF&&(card.trade_status||'계약가능')!==statusF)return null;
+      // 하드필터 매치 보너스
+      if(typeF)score+=10;if(catF)score+=7;
+
+      // 필드 가중치 스코어링
+      const fields={
+        type:{v:(p.type||'').toLowerCase(),w:10},
+        complex:{v:(p.complex||'').toLowerCase(),w:8},
+        location:{v:(p.location||'').toLowerCase(),w:8},
+        address:{v:(p.address||'').toLowerCase(),w:6},
+        features:{v:(p.features||[]).join(' ').toLowerCase(),w:6},
+        price:{v:(p.price||'').toLowerCase(),w:5},
+        room:{v:(p.room||'').toLowerCase(),w:4},
+        area:{v:(p.area||'').toLowerCase(),w:4},
+        floor:{v:(p.floor||'').toLowerCase(),w:3},
+        moveIn:{v:(p.moveIn||'').toLowerCase(),w:3},
+        comment:{v:(card.agent_comment||'').toLowerCase(),w:2},
+      };
+
+      rest.forEach(w=>{
+        Object.values(fields).forEach(f=>{
+          if(f.v.includes(w)){score+=f.w;if(f.v===w||f.v.split(/\s+/).includes(w))score+=3;}
+        });
+      });
+
+      // 가격 필터
+      if(minP||maxP){const cp=card.price_number||_parsePriceToMan(p.price);
+        if(cp){if(minP&&cp<minP)return null;if(maxP&&cp>maxP)return null;score+=5;}
+      }
+
+      // 검색어 없으면 하드필터만으로 통과
+      if(!rest.length&&score>0)return {...card,_score:score};
+      return score>0?{...card,_score:score}:null;
+    }).filter(Boolean).sort((a,b)=>b._score-a._score);
   }
+
+  // ── 벡터 검색 (서버) ──
   async function vector(query,mode='my') {
-    try{const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/search-property`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({query,agent_id:Auth.user?.id,limit:30,threshold:0.15,mode})});const d=await res.json();return d.results||[];}catch(_){return [];}
+    try{
+      // 손님 키워드 자동 감지
+      const clientKw=['손님','찾는분','구하는분','구하시는','찾으시는'];
+      if(mode==='my'&&clientKw.some(k=>query.includes(k)))mode='client';
+      const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/search-property`,{
+        method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},
+        body:JSON.stringify({query,agent_id:Auth.user?.id,limit:50,threshold:0.15,search_mode:mode})
+      });
+      const d=await res.json();
+      if(d.error){Toast.show('검색 오류: '+d.error);return [];}
+      return d.results||[];
+    }catch(e){Toast.show('검색 실패');return [];}
   }
+
+  // ── 학습 점수 ──
   let _scores={};
-  async function loadScores(){try{const{data}=await Auth.sb.from('search_logs').select('clicked_card_id').eq('agent_id',Auth.user?.id).neq('clicked_card_id',null).order('created_at',{ascending:false}).limit(200);_scores={};(data||[]).forEach(r=>{if(r.clicked_card_id)_scores[r.clicked_card_id]=(_scores[r.clicked_card_id]||0)+1;});}catch(_){}}
+  async function loadScores(){try{const{data}=await Auth.sb.from('search_logs').select('clicked_card_id').eq('agent_id',Auth.user?.id).neq('clicked_card_id',null).order('created_at',{ascending:false}).limit(500);_scores={};(data||[]).forEach(r=>{if(r.clicked_card_id)_scores[r.clicked_card_id]=(_scores[r.clicked_card_id]||0)+1;});}catch(_){}}
   async function logSearch(query,count){try{await Auth.sb.from('search_logs').insert({agent_id:Auth.user?.id,query,result_count:count||0,source:'hub'});}catch(_){}}
-  async function logClick(cardId,query){try{await Auth.sb.from('search_logs').insert({agent_id:Auth.user?.id,query,clicked_card_id:cardId,source:'hub_click'});}catch(_){}}
-  return { local, vector, loadScores, logSearch, logClick, _scores };
+  async function logClick(cardId,query){try{await Auth.sb.from('search_logs').insert({agent_id:Auth.user?.id,query,clicked_card_id:cardId,source:'hub_click'});if(cardId)_scores[cardId]=(_scores[cardId]||0)+1;}catch(_){}}
+
+  return { local, vector, loadScores, logSearch, logClick, _scores, _parsePriceToMan };
 })();
 
 /* ═══════════════════════════════════════════════════════════
@@ -1725,15 +1815,12 @@ const PanelShared = (() => {
     if(owned.length<3)h+=`<div class="room-box empty" onclick="PanelShared.createRoom()">+ 새 공유방</div>`;
     h+='</div>';
 
+    // 검색
+    h+='<div class="search"><input type="text" id="sharedQ" placeholder="공유 매물 검색..." oninput="PanelShared.onSearch(this.value)" onkeydown="if(event.key===\'Enter\')PanelShared.onSearchEnter()"></div>';
     // 매물 리스트
     h+='<div id="sharedList"><div class="empty"><div class="empty-icon">⏳</div>불러오는 중...</div></div></div>';
     el.innerHTML=h;
     await Data.loadSharedCards();_renderList();
-  }
-
-  function _renderList(){const el=document.getElementById('sharedList');if(!el)return;const cards=Data.cache.sharedCards.filter(c=>!selRoom||c.room_id===selRoom);
-    if(!cards.length){el.innerHTML='<div class="empty"><div class="empty-icon">🤝</div>공유 매물이 없어요</div>';return;}
-    el.innerHTML=cards.map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item"><span class="item-type ${tc}">${esc(p.type||'')}</span><div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');
   }
 
   function openRoom(id){selRoom=selRoom===id?null:id;_renderList();}
@@ -1767,7 +1854,8 @@ const PanelShared = (() => {
   async function reject(id){await Data.rejectInvite(id);Toast.show('거절됨');render(document.getElementById('panelArea'));}
 
   // 공유 해제 버튼 포함 리스트 렌더링 업데이트
-  function _renderList(){const el=document.getElementById('sharedList');if(!el)return;const cards=Data.cache.sharedCards.filter(c=>!selRoom||c.room_id===selRoom);
+  function _renderList(){const el=document.getElementById('sharedList');if(!el)return;let cards=Data.cache.sharedCards.filter(c=>!selRoom||c.room_id===selRoom);
+    if(_sharedQuery.trim())cards=Search.local(_sharedQuery,cards);
     if(!cards.length){el.innerHTML='<div class="empty"><div class="empty-icon">🤝</div>공유 매물이 없어요</div>';return;}
     // 에이전트별 그룹
     const groups={};cards.forEach(c=>{const aid=c.agent_id||'unknown';if(!groups[aid])groups[aid]=[];groups[aid].push(c);});
@@ -1784,7 +1872,11 @@ const PanelShared = (() => {
   }
   async function unshare(cardId,roomId){await Data.unshareCard(cardId,roomId||null);Toast.show('공유 해제');await Data.loadSharedCards(selRoom||undefined);_renderList();}
 
-  return { render, openRoom, manageRoom, createRoom, accept, reject, renameRoom, deleteRoom, leaveRoom, invite, unshare };
+  let _sharedQuery='';
+  function onSearch(q){_sharedQuery=q;_renderList();}
+  async function onSearchEnter(){if(!_sharedQuery.trim())return;const r=await Search.vector(_sharedQuery,'shared');const el=document.getElementById('sharedList');if(!el)return;if(!r.length){el.innerHTML='<div class="empty"><div class="empty-icon">🔍</div>검색 결과가 없어요</div>';return;}el.innerHTML=r.map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item"><span class="item-type ${tc}">${esc(p.type||'')}</span><div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');}
+
+  return { render, openRoom, manageRoom, createRoom, accept, reject, renameRoom, deleteRoom, leaveRoom, invite, unshare, onSearch, onSearchEnter };
 })();
 
 /* ═══════════════════════════════════════════════════════════
