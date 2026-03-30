@@ -643,7 +643,7 @@ const Auth = (() => {
 
   async function loadProfile(uid) {
     const id = uid || user?.id; if (!id) return null;
-    const { data } = await sb.from('profiles').select('business_name,agent_name,phone,address,og_design_version,profile_photo_url').eq('id',id).maybeSingle();
+    const { data } = await sb.from('profiles').select('business_name,agent_name,phone,address,og_version,profile_photo_url').eq('id',id).maybeSingle();
     profile = data;
     if (data) localStorage.setItem('hwik_agent', JSON.stringify({ name:data.agent_name||'', office:data.business_name||'', phone:data.phone||'', address:data.address||'', isAdmin:false }));
     return data;
@@ -1179,11 +1179,11 @@ const Share = (() => {
   }
   async function _getOgUrl(){
     const uid=Auth.user?.id;if(!uid)return null;
-    const ver=Auth.profile?.og_design_version,path=`agents/${uid}/og.png`;
+    const ver=Auth.profile?.og_version,path=`agents/${uid}/og.png`;
     if(ver==='v2b'){const{data}=Auth.sb.storage.from('og-images').getPublicUrl(path);return data?.publicUrl||null;}
     const blob=await _genOgBlob(Auth.getAgentInfo());if(!blob)return null;
     await Auth.sb.storage.from('og-images').upload(path,blob,{upsert:true,contentType:'image/png'});
-    await Auth.sb.from('profiles').update({og_design_version:'v2b'}).eq('id',uid);
+    await Auth.sb.from('profiles').update({og_version:'v2b'}).eq('id',uid);
     const{data}=Auth.sb.storage.from('og-images').getPublicUrl(path);return data?.publicUrl||null;
   }
 
