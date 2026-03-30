@@ -918,126 +918,120 @@ const Toast = (() => {
    4. Search — 검색
    ═══════════════════════════════════════════════════════════ */
 const Search = (() => {
-  // ── 가격 파싱 (억+천+만 지원) ──
+  // ── 키워드 → 필터 매핑 (기존 my_cards 동일) ──
+  const _typeKeywords = {매매:'매매',전세:'전세',월세:'월세',손님:'손님'};
+  const _catKeywords = {아파트:'apartment',오피스텔:'officetel',원투룸:'room',원룸:'room',투룸:'room',빌라:'room',상가:'commercial',사무실:'office'};
+  const _statusKeywords = {계약가능:'계약가능',계약중:'계약중',완료:'완료',거래가능:'계약가능',거래완료:'완료'};
+  const _categoryKo = {apartment:'아파트',officetel:'오피스텔',room:'원투룸',commercial:'상가',office:'사무실'};
+  const _fieldWeights = {type:10,price:5,complex:8,location:8,address:6,area:4,floor:3,room:4,features:6,moveIn:3,comment:2,memo:1,status:2};
+
+  // ── 가격 파싱 (억+천+만) ──
   function _parsePriceToMan(s) {
-    if(!s)return null; let total=0;
-    const ek=s.match(/([\d.]+)\s*억/), chun=s.match(/([\d.]+)\s*천/), man=s.match(/([\d.]+)\s*만/);
-    if(ek)total+=parseFloat(ek[1])*10000;
-    if(chun)total+=parseFloat(chun[1])*1000;
-    if(man)total+=parseFloat(man[1]);
+    if(!s)return null;let total=0;
+    const ek=s.match(/([\d.]+)\s*억/),chun=s.match(/([\d.]+)\s*천/),man=s.match(/([\d.]+)\s*만/);
+    if(ek)total+=parseFloat(ek[1])*10000;if(chun)total+=parseFloat(chun[1])*1000;if(man)total+=parseFloat(man[1]);
     if(total>0)return total;
     const num=parseFloat(s.replace(/,/g,''));return isNaN(num)?null:num;
   }
 
-  // ── 가격 조건 추출 ──
-  function _extractPrice(words) {
-    let minP=null,maxP=null; const filtered=[];
-    const priceKw=['이하','이상','미만','초과','넘는','부터','까지','아래','정도','근처','부근'];
+  // ── 가격 조건 추출 (기존 my_cards 동일) ──
+  function _extractPriceConditions(words) {
+    const minKw=['이상','초과','넘는','부터'],maxKw=['이하','미만','아래','까지'],allKw=[...minKw,...maxKw];
+    const priceCtx=['보증금','월세','전세','매매','매매가','전세가','보증','deposit'];
+    let minPrice=null,maxPrice=null;const textWords=[];const used=new Set();
     for(let i=0;i<words.length;i++){
-      const w=words[i];
-      // 가격+키워드 붙은 패턴 (5억이하)
-      const attached=w.match(/^([\d.]+억[\d]*|[\d]+천[\d]*|[\d]+만?)(이하|이상|미만|초과|넘는|까지|부터|아래|정도|근처|부근)$/);
-      if(attached){const val=_parsePriceToMan(attached[1]),kw=attached[2];
-        if(val){if(['이하','미만','까지','아래'].includes(kw))maxP=val;else if(['이상','초과','넘는','부터'].includes(kw))minP=val;else if(['정도','근처','부근'].includes(kw)){minP=val*0.9;maxP=val*1.1;}}continue;}
-      // 가격 + 다음 단어 키워드
-      const pm=w.match(/([\d.]+억[\d]*|[\d]+천[\d]*|[\d]+만?)/);
-      if(pm){const val=_parsePriceToMan(pm[1]);if(val){const next=words[i+1]||'';
-        if(['이하','미만','까지','아래'].includes(next)){maxP=val;i++;continue;}
-        if(['이상','초과','넘는','부터'].includes(next)){minP=val;i++;continue;}
-        if(['정도','근처','부근'].includes(next)){minP=val*0.9;maxP=val*1.1;i++;continue;}
-        maxP=val;continue;}}
-      if(!priceKw.includes(w))filtered.push(w);
+      if(used.has(i))continue;const w=words[i];
+      // "2000 이하" 패턴
+      if(allKw.includes(w)&&i>0){const price=_parsePriceToMan(words[i-1]);if(price!==null){if(minKw.includes(w))minPrice=price;else maxPrice=price;used.add(i);used.add(i-1);continue;}}
+      // "2000이하" 붙어있는 패턴
+      for(const kw of allKw){if(w.endsWith(kw)){const price=_parsePriceToMan(w.slice(0,-kw.length));if(price!==null){if(minKw.includes(kw))minPrice=price;else maxPrice=price;used.add(i);break;}}}
+      // "보증금 2000" 패턴
+      if(!used.has(i)&&priceCtx.includes(w)&&i+1<words.length){const nextPrice=_parsePriceToMan(words[i+1]);if(nextPrice!==null&&!allKw.includes(words[i+2]||'')){maxPrice=nextPrice;used.add(i);used.add(i+1);continue;}}
     }
-    return {minP,maxP,filtered};
+    for(let i=0;i<words.length;i++){if(!used.has(i))textWords.push(words[i]);}
+    return {minPrice,maxPrice,textWords};
   }
 
-  // ── 하드 필터 키워드 추출 ──
-  const _typeKw={매매:'매매',전세:'전세',월세:'월세'};
-  const _catKw={아파트:'아파트',오피스텔:'오피스텔',원투룸:'원투룸',빌라:'원투룸',상가:'상가',사무실:'사무실'};
-  const _statusKw={계약가능:'계약가능',계약중:'계약중',완료:'완료'};
-
-  function _extractHardFilters(words) {
-    let typeF=null,catF=null,statusF=null; const rest=[];
-    words.forEach(w=>{
-      if(!typeF&&_typeKw[w])typeF=_typeKw[w];
-      else if(!catF&&_catKw[w])catF=_catKw[w];
-      else if(!statusF&&_statusKw[w])statusF=_statusKw[w];
-      else rest.push(w);
-    });
-    return {typeF,catF,statusF,rest};
-  }
-
-  // ── 로컬 검색 (가중치 스코어링) ──
+  // ── 로컬 검색 (기존 my_cards 동일 — 하드필터+가중치) ──
   function local(query,cards) {
-    if(!query?.trim()) return cards;
-    const words=query.trim().toLowerCase().split(/\s+/);
-    const {minP,maxP,filtered:priceFiltered}=_extractPrice(words);
-    const {typeF,catF,statusF,rest}=_extractHardFilters(priceFiltered);
+    if(!query?.trim())return cards;
+    const q=query.toLowerCase();const words=q.split(/\s+/).filter(w=>w.length>0);
+    const {minPrice,maxPrice,textWords}=_extractPriceConditions(words);
+    // 하드 필터 분리
+    let filterType=null,filterCat=null,filterStatus=null;const searchWords=[];
+    for(const w of textWords){
+      if(_typeKeywords[w]&&!filterType)filterType=_typeKeywords[w];
+      else if(_catKeywords[w]&&!filterCat)filterCat=_catKeywords[w];
+      else if(_statusKeywords[w]&&!filterStatus)filterStatus=_statusKeywords[w];
+      else searchWords.push(w);
+    }
 
-    return cards.map(card=>{
-      const p=card.property||{};let score=0;
+    const scored=cards.map(c=>{
+      const p=c.property||{},pn=c.private_note||{};
+      const catFromFn=categorizeProperty([p.complex,p.location,p.price,p.type].filter(Boolean).join(' '),p.room,p.area,p.floor);
       // 하드 필터
-      if(typeF&&(p.type||'')!==typeF)return null;
-      if(catF){const cat=categorizeProperty(p.rawText||'',p.room||'',p.area||'',p.floor||'');if(cat!==catF)return null;}
-      if(statusF&&(card.trade_status||'계약가능')!==statusF)return null;
-      // 하드필터 매치 보너스
-      if(typeF)score+=10;if(catF)score+=7;
+      if(filterType&&p.type!==filterType)return null;
+      if(filterCat){const catKoMatch=_categoryKo[filterCat]||'';if((p.category||'')!==filterCat&&catFromFn!==catKoMatch)return null;}
+      if(filterStatus&&(c.trade_status||'계약가능')!==filterStatus)return null;
 
-      // 필드 가중치 스코어링
       const fields={
-        type:{v:(p.type||'').toLowerCase(),w:10},
-        complex:{v:(p.complex||'').toLowerCase(),w:8},
-        location:{v:(p.location||'').toLowerCase(),w:8},
-        address:{v:(p.address||'').toLowerCase(),w:6},
-        features:{v:(p.features||[]).join(' ').toLowerCase(),w:6},
-        price:{v:(p.price||'').toLowerCase(),w:5},
-        room:{v:(p.room||'').toLowerCase(),w:4},
-        area:{v:(p.area||'').toLowerCase(),w:4},
-        floor:{v:(p.floor||'').toLowerCase(),w:3},
-        moveIn:{v:(p.moveIn||'').toLowerCase(),w:3},
-        comment:{v:(card.agent_comment||'').toLowerCase(),w:2},
+        type:(p.type||'').toLowerCase(),complex:(p.complex||'').toLowerCase(),location:(p.location||'').toLowerCase(),
+        address:(p.address||'').toLowerCase(),area:(p.area||'').toLowerCase(),floor:(p.floor||'').toLowerCase(),
+        room:(p.room||'').toLowerCase(),features:(p.features||[]).join(' ').toLowerCase(),moveIn:(p.moveIn||'').toLowerCase(),
+        comment:(c.agent_comment||'').toLowerCase(),memo:(pn.memo||'').toLowerCase(),status:(c.trade_status||'계약가능').toLowerCase(),
+        price:(p.price||'').toLowerCase()
       };
-
-      rest.forEach(w=>{
-        Object.values(fields).forEach(f=>{
-          if(f.v.includes(w)){score+=f.w;if(f.v===w||f.v.split(/\s+/).includes(w))score+=3;}
-        });
-      });
+      const allText=Object.values(fields).join(' ');
 
       // 가격 필터
-      if(minP||maxP){const cp=card.price_number||_parsePriceToMan(p.price);
-        if(cp){if(minP&&cp<minP)return null;if(maxP&&cp>maxP)return null;score+=5;}
-      }
+      if(minPrice!==null||maxPrice!==null){const pNum=c.price_number||_parsePriceToMan(p.price||'');if(pNum===null)return null;if(minPrice!==null&&pNum<minPrice)return null;if(maxPrice!==null&&pNum>maxPrice)return null;}
+      // 텍스트 매칭
+      if(searchWords.length>0&&!searchWords.every(w=>allText.includes(w)))return null;
 
-      // 검색어 없으면 하드필터만으로 통과
-      if(!rest.length&&score>0)return {...card,_score:score};
-      return score>0?{...card,_score:score}:null;
-    }).filter(Boolean).sort((a,b)=>b._score-a._score);
+      let score=0;
+      if(filterType)score+=10;if(filterCat)score+=7;if(minPrice!==null||maxPrice!==null)score+=5;
+      for(const w of searchWords){for(const [fn,fv] of Object.entries(fields)){if(fv.includes(w)){score+=_fieldWeights[fn]||1;if(fv===w||fv.split(' ').includes(w))score+=3;}}}
+
+      return {card:c,score,created:c.created_at};
+    }).filter(Boolean);
+
+    scored.sort((a,b)=>{if(b.score!==a.score)return b.score-a.score;return new Date(b.created||0)-new Date(a.created||0);});
+    return scored.map(s=>s.card);
   }
 
-  // ── 벡터 검색 (서버) ──
+  // ── 벡터 검색 (기존 my_cards 동일 — 하드필터 적용) ──
   async function vector(query,mode='my') {
     try{
-      // 손님 키워드 자동 감지
-      const clientKw=['손님','찾는분','구하는분','구하시는','찾으시는'];
-      if(mode==='my'&&clientKw.some(k=>query.includes(k)))mode='client';
+      const _clientKw=['손님','찾는분','구하는분','구합니다','구해요','찾습니다','찾아요','구함','요청'];
+      const isClient=query.split(/\s+/).some(w=>_clientKw.includes(w));
+      if(mode==='my'&&isClient)mode='client';
+
       const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/search-property`,{
         method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},
-        body:JSON.stringify({query,agent_id:Auth.user?.id,limit:50,threshold:0.15,search_mode:mode})
+        body:JSON.stringify({query,agent_id:Auth.user?.id,limit:50,search_mode:mode})
       });
       const d=await res.json();
       if(d.error){Toast.show('검색 오류: '+d.error);return [];}
-      return d.results||[];
+
+      // 하드필터 적용 (기존 my_cards 동일)
+      let results=d.results||[];
+      const qWords=query.toLowerCase().split(/\s+/);
+      for(const w of qWords){
+        if(_typeKeywords[w])results=results.filter(c=>c.property?.type===_typeKeywords[w]);
+        if(_statusKeywords[w])results=results.filter(c=>(c.trade_status||'계약가능')===_statusKeywords[w]);
+        if(_catKeywords[w]){const cat=_catKeywords[w];results=results.filter(c=>{if(c.property?.category===cat)return true;const fn=categorizeProperty([c.property?.complex,c.property?.location].filter(Boolean).join(' '),c.property?.room,c.property?.area,c.property?.floor);return fn===(_categoryKo[cat]||'');});}
+      }
+      return results;
     }catch(e){Toast.show('검색 실패');return [];}
   }
 
-  // ── 학습 점수 ──
-  let _scores={};
-  async function loadScores(){try{const{data}=await Auth.sb.from('search_logs').select('clicked_card_id').eq('agent_id',Auth.user?.id).neq('clicked_card_id',null).order('created_at',{ascending:false}).limit(500);_scores={};(data||[]).forEach(r=>{if(r.clicked_card_id)_scores[r.clicked_card_id]=(_scores[r.clicked_card_id]||0)+1;});}catch(_){}}
-  async function logSearch(query,count){try{await Auth.sb.from('search_logs').insert({agent_id:Auth.user?.id,query,result_count:count||0,source:'hub'});}catch(_){}}
-  async function logClick(cardId,query){try{await Auth.sb.from('search_logs').insert({agent_id:Auth.user?.id,query,clicked_card_id:cardId,source:'hub_click'});if(cardId)_scores[cardId]=(_scores[cardId]||0)+1;}catch(_){}}
+  // ── 학습 점수 (기존 my_cards 동일) ──
+  let _clickScores={},_queryClickScores={};
+  async function loadScores(){try{const{data}=await Auth.sb.from('search_logs').select('query,clicked_card_id').neq('clicked_card_id',null).limit(5000);if(!data)return;_clickScores={};_queryClickScores={};data.forEach(log=>{const cid=log.clicked_card_id,q=(log.query||'').toLowerCase();_clickScores[cid]=(_clickScores[cid]||0)+1;_queryClickScores[`${q}::${cid}`]=(_queryClickScores[`${q}::${cid}`]||0)+1;});}catch(_){}}
+  function logSearch(query,count){if(!Auth.user)return;Auth.sb.from('search_logs').insert({agent_id:Auth.user.id,query,result_count:count||0,search_mode:'local'}).then(()=>{}).catch(()=>{});}
+  function logClick(query,cardId){if(!Auth.user)return;Auth.sb.from('search_logs').insert({agent_id:Auth.user.id,query,clicked_card_id:cardId,search_mode:'click'}).then(()=>{_clickScores[cardId]=(_clickScores[cardId]||0)+1;_queryClickScores[`${query.toLowerCase()}::${cardId}`]=(_queryClickScores[`${query.toLowerCase()}::${cardId}`]||0)+1;}).catch(()=>{});}
 
-  return { local, vector, loadScores, logSearch, logClick, _scores, _parsePriceToMan };
+  return { local, vector, loadScores, logSearch, logClick, _parsePriceToMan, _typeKeywords, _catKeywords, _statusKeywords, _categoryKo };
 })();
 
 /* ═══════════════════════════════════════════════════════════
