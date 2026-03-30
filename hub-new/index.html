@@ -2086,8 +2086,10 @@ const PanelClient = (() => {
           <div id="clientRegResult"></div>
         </div>
       </div>
-      <div class="search"><input type="text" placeholder="예) 강남구 아파트 전세 5억이하 / 찾는분 강남" oninput="PanelClient.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelClient.onQEnter()"></div>
-      <div id="clList" onmouseenter="PanelClient._collapseReg()" style="min-height:200px;">${hwikLoading()}</div>
+      <div onmouseenter="PanelClient._collapseReg()">
+        <div class="search"><input type="text" placeholder="예) 강남구 아파트 전세 5억이하 / 찾는분 강남" oninput="PanelClient.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelClient.onQEnter()"></div>
+        <div id="clList" style="min-height:200px;">${hwikLoading()}</div>
+      </div>
     </div>`;
     await Data.loadClientCards(0,true);_renderList();
   }
