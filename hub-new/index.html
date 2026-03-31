@@ -2135,7 +2135,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
       const r=await Search.vector(cQuery,'client');
       Search.logSearch(cQuery,r.length);
       if(!r.length){el.innerHTML='<div class="empty"><div class="empty-icon">🙋</div>손님 검색 결과가 없어요</div>';return;}
-      el.innerHTML=`<div style="font-size:13px;font-weight:700;color:var(--client);margin:12px 0 8px;">손님 (${r.length}건)</div>`+r.map(c=>{const p=c.property||{};return `<div class="item" onclick='Hub.enterClient(JSON.parse(decodeURIComponent("${encodeURIComponent(JSON.stringify(c))}")))'>
+      el.innerHTML=`<div style="font-size:13px;font-weight:700;color:var(--client);margin:12px 0 8px;">손님 (${r.length}건)</div>`+r.map(c=>{const p=c.property||{};return `<div class="item" onclick='PanelClient.selectClient(JSON.parse(decodeURIComponent("${encodeURIComponent(JSON.stringify(c))}")))'>
         <span class="item-type client">손님</span><div class="item-body"><div class="item-name">${esc(c.contact_name||p.location||p.complex||'손님')}</div><div class="item-sub">${[p.price,p.location,p.complex].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');
     }else{
       // 내 매물 + 공유 매물 병렬 검색
@@ -2341,8 +2341,10 @@ const PanelClient = (() => {
   function _getRecent(){try{return JSON.parse(localStorage.getItem(RECENT_KEY))||[];}catch{return [];}}
   function _addRecent(id){const list=_getRecent().filter(x=>x!==id);list.unshift(id);localStorage.setItem(RECENT_KEY,JSON.stringify(list.slice(0,RECENT_MAX)));}
 
+  let _selectedClient=null;
+
   async function render(el){
-    el.innerHTML=`<div class="panel-inner">${Hub.panelHead('손님')}
+    el.innerHTML=`<div class="panel-with-preview"><div class="panel-input"><div class="panel-inner">${Hub.panelHead('손님')}
       <div id="clientRegArea" style="margin-bottom:12px;border:1.5px solid #4ecdc4;border-radius:12px;overflow:hidden;transition:all 0.3s ease;">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;background:rgba(78,205,196,0.04);" onclick="PanelClient.toggleReg()">
           <span style="font-size:16px;">🙋</span>
@@ -2359,8 +2361,109 @@ const PanelClient = (() => {
         <div class="search"><input type="text" placeholder="예) 강남구 아파트 전세 5억이하 / 찾는분 강남" oninput="PanelClient.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelClient.onQEnter()"></div>
         <div id="clList" style="min-height:200px;">${hwikLoading()}</div>
       </div>
+    </div></div>
+    <div class="panel-preview-wrap" id="clientDetailPanel" style="width:0;opacity:0;padding:0;overflow-y:auto;"></div>
     </div>`;
+    _selectedClient=null;
     await Data.loadClientCards(0,true);_renderList();
+  }
+
+  async function selectClient(card){
+    _selectedClient=card;
+    _addRecent(card.id);
+    const dp=document.getElementById('clientDetailPanel');if(!dp)return;
+    dp.style.width='400px';dp.style.opacity='1';dp.style.padding='16px';
+    // 헤더 숨김
+    const header=document.querySelector('.header'),main=document.getElementById('main');
+    if(header){header.style.transform='translateY(-100%)';main.style.marginTop='0';main.style.height='100vh';}
+    // 상세 렌더
+    _renderClientDetail(card,dp);
+  }
+
+  async function _renderClientDetail(card,el){
+    const p=card.property||{},pn=card.private_note||{};
+    const name=card.contact_name||p.location||'손님';
+    const wantLbl=clientWantLabel(card);
+    const conds=[p.price,p.location,p.area].filter(Boolean).map(v=>esc(v)).join(' · ');
+
+    // 메모/매칭 로드
+    let notes=[],matches=[];
+    try{const d=await Data.loadClientDetail(card.id);notes=d.notes||[];matches=d.matches||[];}catch(_){}
+
+    const stageMap={'메모':{color:'#6366f1',label:'신규'},'상담':{color:'#60a5fa',label:'상담'},'방문':{color:'#f59e0b',label:'방문'},'매물소개':{color:'#a78bfa',label:'소개'},'계약':{color:'#ef4444',label:'계약'}};
+    const lastNote=notes[0];
+    const stage=lastNote?(stageMap[lastNote.type]||stageMap['메모']):stageMap['메모'];
+
+    let h=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <span style="font-size:24px;">🙋</span>
+      <div style="flex:1;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span style="font-size:15px;font-weight:800;">${esc(name)}</span>
+          <span style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;background:${stage.color}20;border:1px solid ${stage.color};color:${stage.color};">${stage.label}</span>
+          ${clientWantTag(card)}
+        </div>
+        <div style="font-size:12px;color:var(--text-sub);margin-top:2px;">${conds}</div>
+        ${card.contact_phone?`<div style="font-size:12px;margin-top:2px;"><span style="font-weight:600;">${esc(card.contact_phone)}</span> <button onclick="navigator.clipboard.writeText('${esc(card.contact_phone)}');Toast.show('복사됨')" style="padding:1px 6px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-light);font-size:10px;cursor:pointer;">복사</button></div>`:''}
+      </div>
+      <button onclick="PanelClient.editClient('${card.id}')" style="padding:4px 12px;border-radius:8px;border:1.5px solid var(--primary);background:transparent;color:var(--primary);font-size:11px;font-weight:700;cursor:pointer;">수정</button>
+      <button onclick="PanelClient.closeDetail()" style="padding:4px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-light);font-size:14px;cursor:pointer;">✕</button>
+    </div>`;
+
+    // 탭
+    h+=`<div style="display:flex;gap:4px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:8px;">
+      <button class="sub-tab active" onclick="PanelClient.detailTab('match',this)">매칭 매물 (${matches.length})</button>
+      <button class="sub-tab" onclick="PanelClient.detailTab('timeline',this)">상담 기록 (${notes.length})</button>
+      <button class="sub-tab" onclick="PanelClient.detailTab('conditions',this)">희망 조건</button>
+    </div>`;
+    h+=`<div id="clientDetailContent"></div>`;
+    el.innerHTML=h;
+    // 기본: 매칭 매물
+    _selectedClient._notes=notes;_selectedClient._matches=matches;
+    _renderDetailTab('match');
+  }
+
+  function detailTab(tab,btn){
+    document.querySelectorAll('#clientDetailPanel .sub-tab').forEach(b=>b.classList.remove('active'));
+    btn?.classList.add('active');
+    _renderDetailTab(tab);
+  }
+
+  function _renderDetailTab(tab){
+    const el=document.getElementById('clientDetailContent');if(!el||!_selectedClient)return;
+    const card=_selectedClient,p=card.property||{},pn=card.private_note||{};
+    const matches=card._matches||[],notes=card._notes||[];
+
+    if(tab==='match'){
+      if(!matches.length){el.innerHTML='<div class="empty"><div class="empty-icon">🏠</div>매칭 매물이 없어요</div>';return;}
+      el.innerHTML=matches.map(m=>Hub._renderMatchItem(m)).join('')+
+        `<button class="btn-primary" style="margin-top:12px;" onclick="PanelClient.reMatch('${card.id}')">매칭 다시 찾기</button>`;
+    }
+    else if(tab==='timeline'){
+      let h=`<div class="note-row" style="margin-bottom:12px;"><input type="text" id="noteIn" placeholder="메모 입력... (예: 내일 2시 방문 예정)" onkeydown="if(event.key==='Enter')PanelClient.saveNote('${card.id}')"><button onclick="PanelClient.saveNote('${card.id}')">저장</button></div>`;
+      if(!notes.length)h+='<div class="empty">아직 상담 기록이 없어요</div>';
+      else{h+='<div class="timeline">';notes.forEach(n=>{const t=n.type||'메모',ds=new Date(n.created_at).toLocaleDateString('ko-KR'),as=n.alert_date?' · 📅 '+new Date(n.alert_date).toLocaleDateString('ko-KR'):'';
+        const done=n.alert_date&&n.alert_done;
+        h+=`<div class="tl-item" style="${done?'opacity:0.5;':''}cursor:pointer;" onclick="var d=document.getElementById('tl-detail-${n.id}');if(d)d.style.display=d.style.display==='none'?'':'none';">
+          <span class="tl-tag ${t}">${t}</span><div class="tl-body" style="flex:1;"><div class="tl-text" style="${done?'text-decoration:line-through;':''}overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px;">${esc(n.content||'')}</div><div class="tl-date">${ds}${as}${done?' ✅ 완료':''}</div>
+          <div id="tl-detail-${n.id}" style="display:none;margin-top:8px;padding:10px;border-radius:8px;background:var(--bg-input);font-size:13px;white-space:pre-wrap;color:var(--text);" onclick="event.stopPropagation();">${esc(n.content||'')}</div>
+          </div><div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation();">${n.alert_date&&!n.alert_done?`<button class="tl-done-btn" onclick="PanelClient.noteDone('${n.id}','${card.id}')">완료</button>`:''}<button class="tl-delete-btn" onclick="PanelClient.noteDel('${n.id}','${card.id}')">삭제</button></div></div>`;});h+='</div>';}
+      el.innerHTML=h;
+    }
+    else if(tab==='conditions'){
+      const _wl=clientWantLabel(card);
+      let h='';[['찾는 매물',_wl],['예산',p.price],['지역',p.location],['단지',p.complex],['면적',p.area]].filter(([,v])=>v).forEach(([l,v])=>h+=`<div class="detail-row"><div class="detail-value">${esc(v)}</div><div class="detail-label">${l}</div></div>`);
+      if((p.features||[]).length)h+=`<div class="detail-tags">${p.features.map(f=>`<span class="detail-tag">${esc(f)}</span>`).join('')}</div>`;
+      if(pn.memo)h+=`<div style="padding:8px 12px;border-radius:8px;background:var(--primary-bg);font-size:12px;color:var(--text-sub);margin-top:8px;">${esc(pn.memo)}</div>`;
+      el.innerHTML=h;
+    }
+  }
+
+  function closeDetail(){
+    _selectedClient=null;
+    const dp=document.getElementById('clientDetailPanel');
+    if(dp){dp.style.width='0';dp.style.opacity='0';dp.style.padding='0';}
+    const header=document.querySelector('.header'),main=document.getElementById('main');
+    if(header){header.style.transform='';main.style.marginTop='';main.style.height='';}
   }
 
   let _regOpen=false;
@@ -2417,7 +2520,7 @@ const PanelClient = (() => {
     let html='';
     if(clR.length){
       html+=`<div style="font-size:13px;font-weight:700;color:var(--client);margin:12px 0 8px;">손님 (${clR.length}건)</div>`;
-      html+=clR.map(c=>{const p=c.property||{};return `<div class="item" onclick='Hub.enterClient(JSON.parse(decodeURIComponent("${encodeURIComponent(JSON.stringify(c))}")))'>
+      html+=clR.map(c=>{const p=c.property||{};return `<div class="item" onclick='PanelClient.selectClient(JSON.parse(decodeURIComponent("${encodeURIComponent(JSON.stringify(c))}")))'>
         <span class="item-type client">손님</span><div class="item-body"><div class="item-name">${esc(c.contact_name||p.location||p.complex||'손님')}</div><div class="item-sub">${[p.price,p.location].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');
     }
     if(myR.length){
@@ -2510,7 +2613,7 @@ const PanelClient = (() => {
         lastStr=`<span style="font-size:10px;color:${dateColor};margin-left:8px;">· ${lastStr}</span>`;
       }
 
-      html+=`<div class="item client-item" style="border-left:3px solid ${stage.color};" onclick='Hub.enterClient(JSON.parse(decodeURIComponent("${encodeURIComponent(JSON.stringify(c))}")))'>
+      html+=`<div class="item client-item" style="border-left:3px solid ${stage.color};" onclick='PanelClient.selectClient(JSON.parse(decodeURIComponent("${encodeURIComponent(JSON.stringify(c))}")))'>
         <span style="padding:3px 8px;border-radius:6px;font-size:10px;font-weight:800;background:${stage.bg};color:${stage.color};flex-shrink:0;">${stage.label}</span>
         ${clientWantTag(c)}
         <div class="item-body">
@@ -2673,7 +2776,7 @@ const PanelClient = (() => {
     if(Hub.current?.data?.id===cardId){Hub.current.data.contact_name=name;Hub.current.data.contact_phone=phone;}
   }
 
-  return { render, registerClient, toggleReg, _addRecent, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact };
+  return { render, registerClient, toggleReg, _addRecent, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact, selectClient, closeDetail, detailTab };
 })();
 
 /* ═══════════════════════════════════════════════════════════
