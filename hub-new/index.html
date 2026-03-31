@@ -1070,6 +1070,12 @@ function clientWantTag(card){
   return [...new Set(tags)].join(' ');
 }
 
+// 중개사 사무실 주소에서 구 이름 추출 (예시용)
+function _agentGu(){
+  const addr=Auth.profile?.address||localStorage.getItem('hwik_agent')&&JSON.parse(localStorage.getItem('hwik_agent')||'{}').address||'';
+  const m=addr.match(/([\uAC00-\uD7AF]+구)/);
+  return m?m[1]:'강남구';
+}
 function propertyTypeTag(card){
   const label=propertyTypeLabel(card);
   const p=card.property||{};
@@ -1983,7 +1989,8 @@ const PanelRegister = (() => {
             <button class="reg-ocr-btn" onclick="document.getElementById('fiFileInput').click()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>파일</button>
             <input type="file" id="fiFileInput" accept=".xlsx,.xls,.txt" style="display:none" onchange="PanelRegister.handleFile(event)">
           </div>
-          <textarea class="reg-textarea" id="regInput" placeholder="예) 강남구 역삼동 래미안 아파트 34평 전세 5억 남향 주차가능&#10;&#10;여러 매물을 한번에 넣어도 됩니다:&#10;매물1: 중랑구 신내동 빌라 전세 2억&#10;매물2: 강북구 수유동 오피스텔 월세 500/40" oninput="PanelRegister.onInput()"></textarea>
+          <textarea class="reg-textarea" id="regInput" oninput="PanelRegister.onInput()"></textarea>
+          <script>document.getElementById('regInput').placeholder=`예) ${_agentGu()} 역삼동 래미안 아파트 34평 전세 5억 남향 주차가능\n\n여러 매물을 한번에 넣어도 됩니다:\n매물1: ${_agentGu()} 신내동 빌라 전세 2억\n매물2: ${_agentGu()} 수유동 오피스텔 월세 500/40`;</script>
           <div class="reg-input-footer"><span class="reg-hint">📍 아파트·빌라·오피스텔·상가·사무실 모두 가능</span><span class="reg-hint-right">Enter로 줄바꿈</span></div>
         </div>
 
@@ -2197,7 +2204,8 @@ const PanelCards = (() => {
   async function render(el){
     el.innerHTML=`<div class="panel-with-preview"><div class="panel-input"><div class="panel-inner">${Hub.panelHead('내 매물')}
       <div id="tabMine">
-        <div class="search"><input type="text" id="myQ" placeholder="예) 강남구 아파트 전세 5억이하" oninput="PanelCards.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelCards.onQEnter()"></div>
+        <div class="search"><input type="text" id="myQ" oninput="PanelCards.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelCards.onQEnter()"></div>
+        <script>document.getElementById('myQ').placeholder=`예) ${_agentGu()} 아파트 전세 5억이하`;</script>
         <div id="searchHint" style="display:none;font-size:11px;color:var(--primary);margin:-12px 0 12px 4px;">💡 Enter로 AI 검색 (더 많은 결과)</div>
         <div id="myList">${hwikLoading()}</div>
         <div id="myMore" style="display:none;text-align:center;padding:12px;"><button class="btn-load-more" onclick="PanelCards.more()">더 보기</button></div>
@@ -2449,13 +2457,15 @@ const PanelClient = (() => {
           <span id="clientRegToggle" style="font-size:12px;color:#0d9488;transition:transform 0.3s;">▼</span>
         </div>
         <div id="clientRegBody" style="display:none;padding:0 16px 16px;">
-          <textarea id="clientRegInput" class="reg-textarea" style="min-height:60px;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:14px;" placeholder="예) 강남구 아파트 전세 5억이하 구합니다&#10;이름: 홍길동 / 010-1234-5678"></textarea>
+          <textarea id="clientRegInput" class="reg-textarea" style="min-height:60px;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:14px;"></textarea>
+          <script>document.getElementById('clientRegInput').placeholder=`예) ${_agentGu()} 아파트 전세 5억이하 구합니다\n이름: 홍길동 / 010-1234-5678`;</script>
           <button onclick="PanelClient.registerClient()" class="btn-primary" style="margin-top:8px;padding:10px;" id="clientRegBtn">AI로 손님 등록</button>
           <div id="clientRegResult"></div>
         </div>
       </div>
       <div>
-        <div class="search"><input type="text" placeholder="예) 강남구 아파트 전세 5억이하 / 찾는분 강남" oninput="PanelClient.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelClient.onQEnter()"></div>
+        <div class="search"><input type="text" id="clQ" oninput="PanelClient.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelClient.onQEnter()"></div>
+        <script>document.getElementById('clQ')&&(document.getElementById('clQ').placeholder=`예) ${_agentGu()} 아파트 전세 5억이하 / 찾는분`);</script>
         <div id="clList" style="min-height:200px;">${hwikLoading()}</div>
       </div>
     </div>`;
@@ -2952,7 +2962,7 @@ const PanelShared = (() => {
     h+='</div>';
 
     // 검색
-    h+='<div class="search"><input type="text" id="sharedQ" placeholder="예) 강남구 아파트 전세 5억이하 / 찾는분 강남" oninput="PanelShared.onSearch(this.value)" onkeydown="if(event.key===\'Enter\')PanelShared.onSearchEnter()"></div>';
+    h+=`<div class="search"><input type="text" id="sharedQ" placeholder="예) ${_agentGu()} 아파트 전세 5억이하" oninput="PanelShared.onSearch(this.value)" onkeydown="if(event.key==='Enter')PanelShared.onSearchEnter()"></div>`;
     // 매물 리스트
     h+='<div id="sharedList">'+hwikLoading()+'</div></div>';
     el.innerHTML=h;
