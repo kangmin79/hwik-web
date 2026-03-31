@@ -774,7 +774,7 @@ const Data = (() => {
   async function loadClientCards(off=0, reset=false) {
     const id=uid(); if(!id) return [];
     const { data } = await sb().from('cards')
-      .select('id,property,private_note,contact_name,contact_phone,created_at')
+      .select('id,property,private_note,contact_name,contact_phone,wanted_trade_type,created_at')
       .eq('agent_id',id)
       .eq('property->>type','손님')
       .order('created_at',{ascending:false}).range(off, off+PAGE-1);
@@ -981,6 +981,15 @@ const Data = (() => {
 
   return { cache, PAGE, loadCounts, loadMyCards, loadClientCards, loadClientDetail, loadRooms, loadSharedCards, loadPendingInvites, createRoom, deleteRoom, renameRoom, leaveRoom, inviteMember, acceptInvite, rejectInvite, shareCardToRoom, unshareCard, deleteCard, updateTradeStatus, uploadPhotos, _resize, loadAlerts, loadCalendarAlerts, loadMemos, deleteMemo, markMemoRead, saveClientNote, deleteClientNote, updateNoteAlertDone, matchCoords, parseSinglePrice, parsePriceFields, updateEmbedding, updateClientLocation, triggerAutoMatch, loadCompletedCards };
 })();
+
+// 손님이 찾는 매물 유형 라벨 (예: "상가 월세", "아파트 전세")
+function clientWantLabel(card){
+  const p=card.property||{};
+  const cat=p.category?({'apartment':'아파트','officetel':'오피스텔','room':'원투룸','commercial':'상가','office':'사무실'}[p.category]||p.category):'';
+  const trade=card.wanted_trade_type||'';
+  const fromText=!cat&&p.rawText?(/아파트/.test(p.rawText)?'아파트':/오피스텔/.test(p.rawText)?'오피스텔':/상가/.test(p.rawText)?'상가':/사무실/.test(p.rawText)?'사무실':/빌라/.test(p.rawText)?'빌라':/원룸|투룸|쓰리룸/.test(p.rawText)?'원투룸':''):'';
+  return [cat||fromText,trade].filter(Boolean).join(' ')||'손님';
+}
 
 /* ═══════════════════════════════════════════════════════════
    3. Toast
@@ -1440,7 +1449,8 @@ const Hub = (() => {
     const p=card.property||{};
     stack.push({nodes:current?.nodes||MAIN,center:current?.center});
     const _cname=card.contact_name||(p.location?p.location:'손님');
-    const _csub=[p.location&&card.contact_name?p.location:null,p.type,p.price].filter(Boolean).join(' ');
+    const _wantLbl=clientWantLabel(card);
+    const _csub=[_wantLbl!=='손님'?_wantLbl:null,p.price,p.location&&card.contact_name?p.location:null].filter(Boolean).join(' ');
     current={type:'client',data:card,nodes:CLIENT,center:{icon:'🙋',name:_cname,sub:_csub},_notes:[],_matches:[]};
     closePanel();render(CLIENT,current.center);
     Data.loadClientDetail(card.id).then(d=>{current._notes=d.notes;current._matches=d.matches;});
@@ -1618,7 +1628,8 @@ const Hub = (() => {
     const card=current?.data;if(!card)return;
     const p=card.property||{},pn=card.private_note||{};
     const name=card.contact_name||p.location||p.complex||'손님';
-    const conds=[p.price,p.location,p.complex,p.area].filter(Boolean).map(v=>esc(v)).join(' · ');
+    const wantLbl=clientWantLabel(card);
+    const conds=[wantLbl!=='손님'?wantLbl:null,p.price,p.location,p.area].filter(Boolean).map(v=>esc(v)).join(' · ');
 
     // 마지막 메모에서 상태 판별
     const stageMap={'메모':{color:'#6366f1',label:'신규'},'상담':{color:'#60a5fa',label:'상담'},'방문':{color:'#f59e0b',label:'방문'},'매물소개':{color:'#a78bfa',label:'소개'},'계약':{color:'#ef4444',label:'계약'}};
@@ -2421,8 +2432,10 @@ const PanelClient = (() => {
         lastStr=`<span style="font-size:10px;color:${dateColor};margin-left:8px;">· ${lastStr}</span>`;
       }
 
+      const wantLbl=clientWantLabel(c);
       html+=`<div class="item client-item" style="border-left:3px solid ${stage.color};" onclick='Hub.enterClient(JSON.parse(decodeURIComponent("${encodeURIComponent(JSON.stringify(c))}")))'>
         <span style="padding:3px 8px;border-radius:6px;font-size:10px;font-weight:800;background:${stage.bg};color:${stage.color};flex-shrink:0;">${stage.label}</span>
+        <span style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;background:rgba(78,205,196,0.1);color:#0d9488;flex-shrink:0;">${esc(wantLbl)}</span>
         <div class="item-body">
           <div class="item-name">${esc(name)}${lastStr}</div>
           <div class="item-sub">${conds}</div>
@@ -2434,7 +2447,7 @@ const PanelClient = (() => {
 
   function renderSub(key,el){
     const card=Hub.current?.data;if(!card)return;const p=card.property||{},pn=card.private_note||{};
-    if(key==='cl_conditions'){let h=`<div class="panel-inner">${Hub.panelHead('희망 조건')}`;[['예산',p.price],['지역',p.location],['단지',p.complex],['면적',p.area],['유형',p.type]].filter(([,v])=>v).forEach(([l,v])=>h+=`<div class="detail-row"><div class="detail-value">${esc(v)}</div><div class="detail-label">${l}</div></div>`);if((p.features||[]).length)h+=`<div class="detail-tags">${p.features.map(f=>`<span class="detail-tag">${esc(f)}</span>`).join('')}</div>`;if(pn.memo)h+=`<div class="client-memo">${esc(pn.memo)}</div>`;h+=`<button class="btn-primary" style="margin-top:16px;" onclick="PanelClient.editClient('${card.id}')">손님 정보 수정</button>`;el.innerHTML=h+'</div>';}
+    if(key==='cl_conditions'){const _wl=clientWantLabel(card);let h=`<div class="panel-inner">${Hub.panelHead('희망 조건')}`;[['찾는 매물',_wl],['예산',p.price],['지역',p.location],['단지',p.complex],['면적',p.area]].filter(([,v])=>v).forEach(([l,v])=>h+=`<div class="detail-row"><div class="detail-value">${esc(v)}</div><div class="detail-label">${l}</div></div>`);if((p.features||[]).length)h+=`<div class="detail-tags">${p.features.map(f=>`<span class="detail-tag">${esc(f)}</span>`).join('')}</div>`;if(pn.memo)h+=`<div class="client-memo">${esc(pn.memo)}</div>`;h+=`<button class="btn-primary" style="margin-top:16px;" onclick="PanelClient.editClient('${card.id}')">손님 정보 수정</button>`;el.innerHTML=h+'</div>';}
 
     else if(key==='cl_match'){const ms=Hub.current?._matches||[];
       let h=`<div class="panel-with-preview"><div class="panel-input"><div class="panel-inner">${Hub.panelHead('매칭 매물',ms.length+'건')}`;
@@ -2446,7 +2459,7 @@ const PanelClient = (() => {
       h+=`</div></div><div class="panel-preview-wrap" id="matchPreviewPanel" style="width:0;opacity:0;padding:0;"></div></div>`;
       el.innerHTML=h;}
 
-    else if(key==='cl_timeline'){const ns=Hub.current?._notes||[];const cn=card.contact_name||p.location||'손님';const cc=[p.type!=='손님'?p.type:null,p.price,p.location].filter(Boolean).map(v=>esc(v)).join(' · ');
+    else if(key==='cl_timeline'){const ns=Hub.current?._notes||[];const cn=card.contact_name||p.location||'손님';const _wl=clientWantLabel(card);const cc=[_wl!=='손님'?_wl:null,p.price,p.location].filter(Boolean).map(v=>esc(v)).join(' · ');
       let h=`<div class="panel-inner">${Hub.panelHead('상담 기록',ns.length+'건')}
       <div style="display:flex;align-items:center;gap:10px;padding:10px 0;margin-bottom:12px;border-bottom:1px solid var(--border);">
         <span style="font-size:24px;">🙋</span>
