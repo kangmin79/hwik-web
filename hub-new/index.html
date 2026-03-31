@@ -1583,7 +1583,7 @@ const Hub = (() => {
     Hub.render(); // 허브 중앙 이름 업데이트
   }
 
-  function _ph(title,count){return `<div class="panel-head" style="padding:8px 24px;margin:-24px -24px 12px;"><button class="panel-x" onclick="Hub.closePanel()" style="margin-left:auto;">✕</button></div>`;}
+  function _ph(title,count){return '';}
 
   function onCenterClick(){
     if(current?.type==='client'){
