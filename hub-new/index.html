@@ -442,7 +442,7 @@ body.dark .phone-screen{background:#0f172a;}
 .cal-title{font-size:16px;font-weight:800;}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:left;}
 .cal-day-label{font-size:10px;font-weight:700;color:var(--text-light);padding:4px;text-align:center;}
-.cal-day{padding:4px;border-radius:6px;font-size:11px;cursor:pointer;min-height:60px;border:1px solid transparent;vertical-align:top;}
+.cal-day{padding:4px;border-radius:6px;font-size:11px;cursor:pointer;min-height:60px;border:1px solid var(--border);vertical-align:top;}
 .cal-day:hover{background:var(--primary-bg);border-color:var(--primary);box-shadow:0 2px 8px rgba(99,102,241,0.12);transform:scale(1.03);transition:all 0.15s;}
 .cal-day.today{font-weight:800;border-color:var(--primary);}
 .cal-day.selected{background:var(--primary-bg);border-color:var(--primary);}
@@ -1441,7 +1441,7 @@ const Hub = (() => {
   const MAIN=[{key:'register',label:'매물 등록',angle:-90},{key:'my',label:'내 매물',angle:-18},{key:'client',label:'손님',angle:54},{key:'alert',label:'알림',angle:126},{key:'shared',label:'공유방',angle:198}];
   const CLIENT=[{key:'cl_conditions',label:'희망 조건',angle:-90},{key:'cl_match',label:'매칭 매물',angle:-30},{key:'cl_timeline',label:'상담 기록',angle:30},{key:'cl_schedule',label:'일정/알림',angle:90},{key:'cl_contact',label:'연락처',angle:150},{key:'cl_back',label:'← 돌아가기',angle:210}];
   const PROPERTY=[{key:'pr_detail',label:'상세 정보',angle:-90},{key:'pr_status',label:'거래 상태',angle:30},{key:'pr_back',label:'← 돌아가기',angle:150}];
-  const ALERT=[{key:'al_all',label:'전체 알림',angle:-90},{key:'al_match',label:'매칭 알림',angle:-30},{key:'al_schedule',label:'일정',angle:30},{key:'al_nocontact',label:'미연락 손님',angle:90},{key:'al_calendar',label:'달력',angle:150},{key:'al_back',label:'← 돌아가기',angle:210}];
+  const ALERT=[{key:'al_calendar',label:'달력',angle:-90},{key:'al_match',label:'매칭 알림',angle:-18},{key:'al_schedule',label:'일정',angle:54},{key:'al_nocontact',label:'미연락 손님',angle:126},{key:'al_back',label:'← 돌아가기',angle:198}];
 
   function render(nodes,center) {
     nodes=nodes||MAIN;center=center||{icon:'👤',name:Auth.profile?.business_name||'중개사',sub:''};
@@ -1529,7 +1529,7 @@ const Hub = (() => {
     current={type:'alert',nodes:ALERT,center:{icon:'🔔',name:'알림',sub:''}};
     closePanel();render(ALERT,current.center);
     // 바로 전체 알림 패널 열기
-    setTimeout(()=>_openAlertSub('al_all'),100);
+    setTimeout(()=>_openAlertSub('al_calendar'),100);
   }
 
   function _openAlertSub(key){
