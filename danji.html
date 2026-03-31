@@ -343,21 +343,34 @@ function render() {
   function shortSchool(n) { return n.replace(/서울/g,'').replace(/초등학교/g,'초').replace(/중학교/g,'중').replace(/고등학교/g,'고'); }
   function lineColor(line) {
     if (!line) return '#888';
-    const l = line.replace('수도권  도시철도 ','').replace('호선','');
-    const colors = {'1':'#0052A4','2':'#00A84D','3':'#EF7C1C','4':'#00A5DE','5':'#996CAC','6':'#CD7C2F','7':'#747F00','8':'#E6186C','9':'#BDB092'};
-    if (colors[l]) return colors[l];
+    const l = line.replace(/수도권\s+도시철도\s*/,'').replace(/서울\s+도시철도\s*/,'').replace(/수도권\s+광역철도\s*/,'').replace(/수도권\s+경량도시철도\s*/,'');
+    const numColors = {'1호선':'#0052A4','2호선':'#00A84D','3호선':'#EF7C1C','4호선':'#00A5DE','5호선':'#996CAC','6호선':'#CD7C2F','7호선':'#747F00','8호선':'#E6186C','9호선':'#BDB092'};
+    if (numColors[l]) return numColors[l];
     if (l.includes('경의') || l.includes('중앙')) return '#77C4A3';
     if (l.includes('분당') || l.includes('수인')) return '#F5A200';
     if (l.includes('신분당')) return '#D4003B';
     if (l.includes('우이')) return '#B7C452';
     if (l.includes('경춘')) return '#0C8E72';
-    if (l.includes('공항')) return '#0090D2';
+    if (l.includes('공항') || l.includes('인천국제')) return '#0090D2';
     if (l.includes('신림')) return '#6789CA';
+    if (l.includes('서해')) return '#8BC53F';
+    if (l.includes('경강')) return '#0054A6';
+    if (l.includes('김포')) return '#AD8602';
+    if (l.includes('에버라인')) return '#56AD2D';
+    if (l.includes('의정부')) return '#FDA600';
+    if (l.includes('안산') || l.includes('과천')) return '#00A5DE';
+    if (l.includes('경부') || l.includes('경원') || l.includes('경인') || l.includes('코레일')) return '#144278';
+    if (l.includes('동해') || l.includes('대경')) return '#144278';
+    if (l.includes('부산')) return '#F06A00';
+    if (l.includes('대구')) return '#D93F5A';
+    if (l.includes('대전')) return '#00B5B5';
+    if (l.includes('광주')) return '#009088';
+    if (l.includes('인천')) return '#7CA8D5';
     return '#888';
   }
   function shortLine(line) {
     if (!line) return '';
-    return line.replace('수도권  도시철도 ','').replace('호선','');
+    return line.replace(/수도권\s+도시철도\s*/,'').replace(/서울\s+도시철도\s*/,'').replace(/수도권\s+광역철도\s*/,'').replace(/수도권\s+경량도시철도\s*/,'').replace(/부산\s+도시철도\s*/,'부산 ').replace(/대구\s+도시철도\s*/,'대구 ').replace(/대전\s+도시철도\s*/,'대전 ').replace(/광주도시철도\s*/,'광주 ').replace(/부산\s+경량도시철도\s*/,'부산 ').replace(/인천국제공항선/,'공항').replace('호선','');
   }
   let tagHtml = '';
   if (subway.length > 0) {
