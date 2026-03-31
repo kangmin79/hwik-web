@@ -1007,7 +1007,14 @@ function _clientCats(card){
 function _clientTrades(card){
   // wanted_conditions에서 복수 거래유형 추출
   if(card.wanted_conditions?.length) return [...new Set(card.wanted_conditions.map(c=>c.trade_type))];
-  return card.wanted_trade_type?[card.wanted_trade_type]:[];
+  if(card.wanted_trade_type) return [card.wanted_trade_type];
+  // fallback: rawText에서 추론
+  const raw=(card.property?.rawText||'')+(card.property?.price||'');
+  const trades=[];
+  if(/매매|매도|분양/.test(raw))trades.push('매매');
+  if(/전세/.test(raw))trades.push('전세');
+  if(/월세|임대|\/\d/.test(raw))trades.push('월세');
+  return trades;
 }
 function clientWantLabel(card){
   const cats=_clientCats(card);
@@ -1511,7 +1518,11 @@ const Hub = (() => {
     const _cname=card.contact_name||(p.location?p.location:'손님');
     const _wantLbl=clientWantLabel(card);
     const _csub=[p.price,p.location&&card.contact_name?p.location:null].filter(Boolean).join(' ');
-    const _wtag=_wantLbl!=='손님'?clientWantTag(card):'';
+    // 중앙 노드용 작은 태그
+    const _trades=_clientTrades(card);const _cats=_clientCats(card);
+    let _wtag='';
+    if(_trades.length){_trades.forEach(t=>{const color=t==='매매'?'#ea580c':t==='전세'?'#4f46e5':'#7c3aed';const bg=t==='매매'?'rgba(249,115,22,0.15)':t==='전세'?'rgba(99,102,241,0.15)':'rgba(167,139,250,0.15)';_cats.forEach(c=>{_wtag+=`<span style="padding:1px 6px;border-radius:5px;font-size:9px;font-weight:700;background:${bg};color:${color};margin-bottom:1px;">${esc([c,t].filter(Boolean).join(' '))}</span> `;});});
+    }else if(_cats[0]!=='손님'){_cats.forEach(c=>{_wtag+=`<span style="padding:1px 6px;border-radius:5px;font-size:9px;font-weight:700;background:rgba(148,163,184,0.1);color:#64748b;margin-bottom:1px;">${esc(c)}</span> `;});}
     current={type:'client',data:card,nodes:CLIENT,center:{icon:'🙋',name:_cname,sub:_csub,tag:_wtag},_notes:[],_matches:[]};
     closePanel();render(CLIENT,current.center);
     Data.loadClientDetail(card.id).then(d=>{current._notes=d.notes;current._matches=d.matches;});
