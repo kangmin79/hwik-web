@@ -2396,10 +2396,14 @@ const PanelClient = (() => {
     _selectedClient=card;
     _addRecent(card.id);
     const dp=document.getElementById('clientDetailPanel');if(!dp)return;
-    dp.style.width='400px';dp.style.opacity='1';dp.style.padding='16px';
+    dp.style.width='50%';dp.style.opacity='1';dp.style.padding='16px';
     // 헤더 숨김
     const header=document.querySelector('.header'),main=document.getElementById('main');
     if(header){header.style.transform='translateY(-100%)';main.style.marginTop='0';main.style.height='100vh';}
+    // 선택된 아이템 하이라이트
+    document.querySelectorAll('.client-item').forEach(el=>el.style.background='');
+    const itemEl=document.querySelector(`.client-item[data-id="${card.id}"]`);
+    if(itemEl)itemEl.style.background='var(--primary-bg)';
     // 상세 렌더
     _renderClientDetail(card,dp);
   }
@@ -2488,6 +2492,7 @@ const PanelClient = (() => {
     if(dp){dp.style.width='0';dp.style.opacity='0';dp.style.padding='0';}
     const header=document.querySelector('.header'),main=document.getElementById('main');
     if(header){header.style.transform='';main.style.marginTop='';main.style.height='';}
+    document.querySelectorAll('.client-item').forEach(el=>el.style.background='');
   }
 
   let _regOpen=false;
@@ -2637,7 +2642,7 @@ const PanelClient = (() => {
         lastStr=`<span style="font-size:10px;color:${dateColor};margin-left:8px;">· ${lastStr}</span>`;
       }
 
-      html+=`<div class="item client-item" style="border-left:3px solid ${stage.color};" onclick='PanelClient.selectClient(JSON.parse(decodeURIComponent("${encodeURIComponent(JSON.stringify(c))}")))'>
+      html+=`<div class="item client-item" data-id="${c.id}" style="border-left:3px solid ${stage.color};${_selectedClient?.id===c.id?'background:var(--primary-bg);':''}" onclick='PanelClient.selectClient(JSON.parse(decodeURIComponent("${encodeURIComponent(JSON.stringify(c))}")))'>
         <span style="padding:3px 8px;border-radius:6px;font-size:10px;font-weight:800;background:${stage.bg};color:${stage.color};flex-shrink:0;">${stage.label}</span>
         ${clientWantTag(c)}
         <div class="item-body">
