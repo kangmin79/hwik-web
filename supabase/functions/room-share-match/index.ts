@@ -28,9 +28,9 @@ Deno.serve(async (req) => {
     // ★ 보안: 요청자가 해당 방의 멤버인지 확인
     const { data: membership } = await supabase
       .from('share_room_members')
-      .select('user_id')
-      .eq('share_rooms_id', room_id)
-      .eq('user_id', shared_by)
+      .select('member_id')
+      .eq('room_id', room_id)
+      .eq('member_id', shared_by)
       .single();
     if (!membership) throw new Error('공유방 멤버가 아닙니다');
 
@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
     // 2. 방 멤버 조회 (공유한 사람 제외)
     const { data: members } = await supabase
       .from('share_room_members')
-      .select('user_id')
+      .select('member_id')
       .eq('room_id', room_id)
       .neq('role', 'pending');
 
@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
     }
 
     // 공유한 사람 제외
-    const memberIds = members.map(m => m.user_id).filter(id => id !== shared_by);
+    const memberIds = members.map(m => m.member_id).filter(id => id !== shared_by);
     if (memberIds.length === 0) {
       return new Response(JSON.stringify({ success: true, matched: 0, reason: '다른 멤버 없음' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
