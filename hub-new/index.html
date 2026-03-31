@@ -1612,6 +1612,7 @@ const Hub = (() => {
     openPanel('settings');
   }
 
+  let _matchSelected=[];
   function _clientCard(el){
     const card=current?.data;if(!card)return;
     const p=card.property||{},pn=card.private_note||{};
@@ -1626,10 +1627,11 @@ const Hub = (() => {
     const dateStr=card.created_at?new Date(card.created_at).toLocaleDateString('ko-KR'):'';
 
     activePanel='cl_card';
+    _matchSelected=[];
     document.getElementById('main').classList.add('split');
     _renderVertical();
 
-    el.innerHTML=`<div class="panel-inner">${_ph(esc(name))}
+    el.innerHTML=`<div class="panel-with-preview"><div class="panel-input"><div class="panel-inner">${_ph(esc(name))}
       <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);margin-bottom:12px;">
         <div style="font-size:28px;">🙋</div>
         <div style="flex:1;min-width:0;">
@@ -1652,10 +1654,36 @@ const Hub = (() => {
         <div style="font-size:14px;font-weight:800;margin-bottom:8px;">🏠 AI 매칭 매물</div>
         <div id="clientMatchList">${hwikLoading()}</div>
       </div>
+    </div></div>
+    <div class="panel-preview-wrap" id="matchPreviewPanel" style="width:0;opacity:0;padding:0;"></div>
     </div>`;
 
     // 매칭 매물 로드 (promise 체인 — race condition 방지)
     _loadClientMatches(card.id);
+  }
+
+  function _toggleMatchSel(id){
+    const matches=current?._matches||[];
+    const m=matches.find(x=>x.id===id);if(!m)return;
+    const idx=_matchSelected.findIndex(x=>x.id===id);
+    if(idx>=0)_matchSelected.splice(idx,1);else _matchSelected.push(m);
+    // 미리보기 업데이트
+    Preview.clear();_matchSelected.forEach(c=>Preview.toggle(c));
+    _refreshMatchList();
+    Preview.renderSlider('matchPreviewPanel');
+    if(idx<0&&_matchSelected.length>0)Preview.goTo(_matchSelected.length-1);
+    const pp=document.getElementById('matchPreviewPanel');
+    const has=_matchSelected.length>0;
+    if(pp){pp.style.width=has?'340px':'0';pp.style.opacity=has?'1':'0';pp.style.padding=has?'16px':'0';}
+    const header=document.querySelector('.header'),main=document.getElementById('main');
+    if(has){header.style.transform='translateY(-100%)';main.style.marginTop='0';main.style.height='100vh';}
+    else{header.style.transform='';main.style.marginTop='';main.style.height='';}
+  }
+
+  function _refreshMatchList(){
+    const el=document.getElementById('clientMatchList');if(!el)return;
+    const matches=current?._matches||[];
+    if(matches.length)_renderMatches(matches,el);
   }
 
   async function _loadClientMatches(cardId){
@@ -1683,6 +1711,7 @@ const Hub = (() => {
     const score=m._score||(m.similarity?Math.round(m.similarity*100):0);
     const scoreLabel=score>0?score+(m._score?'점':'%'):'';
     const isMine=!m.agent_id||m.agent_id===Auth.user?.id;
+    const sel=_matchSelected.some(s=>s.id===m.id);
 
     let thumbHtml='';
     if(photos.length){
@@ -1703,8 +1732,9 @@ const Hub = (() => {
       </div>`;
     }
 
-    return `<div style="border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:4px;" id="item-${m.id}">
+    return `<div style="border:1px solid ${sel?'var(--primary)':'var(--border)'};border-radius:10px;padding:10px 12px;margin-bottom:4px;background:${sel?'var(--primary-bg)':'transparent'};transition:all 0.15s;cursor:pointer;" id="item-${m.id}" onclick="Hub._toggleMatchSel('${m.id}')">
       <div style="display:flex;align-items:center;gap:8px;">
+        <div onclick="event.stopPropagation();Hub._toggleMatchSel('${m.id}')" style="width:20px;height:20px;border:2px solid ${sel?'var(--primary)':'#ccc'};border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${sel?'var(--primary)':'transparent'};cursor:pointer;">${sel?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}</div>
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
             <span style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:800;background:${tc==='sale'?'rgba(249,115,22,0.1)':tc==='jeonse'?'rgba(99,102,241,0.1)':'rgba(167,139,250,0.1)'};color:${tc==='sale'?'#ea580c':tc==='jeonse'?'#4f46e5':'#7c3aed'};">${esc(mp.type||'')}</span>
@@ -1731,7 +1761,7 @@ const Hub = (() => {
     (matches.length>5?`<div style="text-align:center;padding:8px;"><button onclick="Hub.openSub('cl_match')" style="padding:6px 20px;border-radius:8px;border:1px solid var(--primary);background:transparent;color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;">전체 ${matches.length}건 보기</button></div>`:'');
   }
 
-  return { MAIN,CLIENT,PROPERTY, render,onNode,onCenterClick,openPanel,openSub,closePanel,enterClient,enterProperty,back, panelHead:_ph, _openMyInfo, _sendOtp, _verifyOtp, _saveMyInfo, get current(){return current;}, get activePanel(){return activePanel;}, get RADIUS(){return RADIUS;}, adjustLayout, _saveSettings, _openProfileEdit, _renderMatchItem };
+  return { MAIN,CLIENT,PROPERTY, render,onNode,onCenterClick,openPanel,openSub,closePanel,enterClient,enterProperty,back, panelHead:_ph, _openMyInfo, _sendOtp, _verifyOtp, _saveMyInfo, get current(){return current;}, get activePanel(){return activePanel;}, get RADIUS(){return RADIUS;}, adjustLayout, _saveSettings, _openProfileEdit, _renderMatchItem, _toggleMatchSel };
 })();
 
 /* ═══════════════════════════════════════════════════════════
