@@ -449,6 +449,7 @@ body.dark .phone-screen{background:#0f172a;}
 .cal-day .cal-num{font-weight:700;margin-bottom:2px;}
 .cal-day .cal-evt{font-size:9px;padding:1px 4px;border-radius:3px;margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;}
 .cal-day .cal-evt.overdue{background:#fef2f2;color:#ef4444;}
+.cal-day.overdue-day{background:#fef2f2;border-color:#fca5a5;}
 .cal-day .cal-evt.schedule{background:#eef2ff;color:#4f46e5;}
 .cal-day .cal-evt.done{background:#f1f5f9;color:#94a3b8;text-decoration:line-through;}
 
@@ -3143,7 +3144,8 @@ const PanelAlert = (() => {
         evtHtml+=`<span class="cal-evt ${cls}">${esc((a.content||a.type||'').slice(0,8))}</span>`;
       });
       if(evts.length>2)evtHtml+=`<span style="font-size:8px;color:var(--text-light);">+${evts.length-2}건</span>`;
-      html+=`<div class="cal-day${isToday?' today':''}" onclick="PanelAlert.selectDate(${d})"><div class="cal-num">${d}</div>${evtHtml}</div>`;
+      const hasOverdue=evts.some(a=>new Date(a.alert_date)<today&&!a.alert_done);
+      html+=`<div class="cal-day${isToday?' today':''}${hasOverdue?' overdue-day':''}" onclick="PanelAlert.selectDate(${d})"><div class="cal-num">${d}</div>${evtHtml}</div>`;
     }
     grid.innerHTML=`<div class="cal-grid">${html}</div>`;
   }
