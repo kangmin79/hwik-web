@@ -4,7 +4,7 @@ import { DISTRICT_COORDS, haversineDistance } from '../_shared/geo.ts'
 import { TYPO_MAP, fixTypos } from '../_shared/typo.ts'
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',  // TODO: 프로덕션에서 'https://hwik.kr'로 제한
+  'Access-Control-Allow-Origin': 'https://hwik.kr',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 

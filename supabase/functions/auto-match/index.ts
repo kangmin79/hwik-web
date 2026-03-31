@@ -4,7 +4,7 @@ import { DISTRICT_COORDS, haversineDistance } from '../_shared/geo.ts'
 import { fixTypos } from '../_shared/typo.ts'
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://hwik.kr',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
