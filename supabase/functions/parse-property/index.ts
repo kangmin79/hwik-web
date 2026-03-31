@@ -506,17 +506,59 @@ ${text}`
 
     const moveInDate = parseMoveInDate(parsedResult.moveIn);
 
-    // ★ 손님일 때 거래유형을 별도 필드로 추출 (property.type이 "손님"으로 덮이니까)
+    // ★ 손님일 때 거래유형 복수 추출 + 각 유형별 가격 조건
     let wantedTradeType: string | null = null;
+    let wantedConditions: any[] = [];
     if (parsedResult.type === '손님') {
       const allText = [parsedResult.price, parsedResult.location, parsedResult.memo, text].join(' ');
-      if (/매매|매도|분양|사려|매입|구매/.test(allText)) wantedTradeType = '매매';
-      else if (/전세/.test(allText)) wantedTradeType = '전세';
-      else if (/월세|임대|빌려|렌트/.test(allText)) wantedTradeType = '월세';
-      // ★ 가격 패턴으로 추론: "보증금/월" → 월세, "억/천" → 매매 or 전세
-      if (!wantedTradeType) {
-        if (/\/\s*\d|월\s*\d|보증금.*월/.test(allText)) wantedTradeType = '월세';
-        else if (/억|천만/.test(allText)) wantedTradeType = '전세';
+      const wantedTypes: string[] = [];
+      if (/매매|매도|분양|사려|매입|구매/.test(allText)) wantedTypes.push('매매');
+      if (/전세/.test(allText)) wantedTypes.push('전세');
+      if (/월세|임대|빌려|렌트/.test(allText)) wantedTypes.push('월세');
+      // 가격 패턴으로 추론
+      if (!wantedTypes.length) {
+        if (/\/\s*\d|월\s*\d|보증금.*월/.test(allText)) wantedTypes.push('월세');
+        else if (/억|천만/.test(allText)) wantedTypes.push('전세');
+      }
+      wantedTradeType = wantedTypes[0] || null;
+
+      // 각 유형별 가격 조건 추출
+      // 헬퍼: 한글 가격 파싱
+      function _pk(s: string): number {
+        let t = 0;
+        const ek = s.match(/(\d+\.?\d*)\s*억/);
+        const ch = s.match(/(\d+)\s*천/);
+        if (ek) t += parseFloat(ek[1]) * 10000;
+        if (ch) t += parseInt(ch[1]) * 1000;
+        if (t > 0) return t;
+        const n = parseInt(s.replace(/[^\d]/g, ''));
+        return isNaN(n) ? 0 : n;
+      }
+
+      for (const tt of wantedTypes) {
+        const cond: any = { trade_type: tt };
+        if (tt === '월세') {
+          // "보증금 1000/월 50" 또는 "1000/50"
+          const slash = allText.match(/(\d+)\s*\/\s*(\d+)/);
+          if (slash) { cond.deposit = parseInt(slash[1]); cond.monthly = parseInt(slash[2]); }
+          const depM = allText.match(/보증금\s*(\d+)/);
+          if (depM && !cond.deposit) cond.deposit = parseInt(depM[1]);
+          const monM = allText.match(/월(?:세)?\s*(\d+)/);
+          if (monM && !cond.monthly) cond.monthly = parseInt(monM[1]);
+        } else {
+          // 매매/전세: "3억", "3억5천", "3억 3억5천까지 가능"
+          const range = allText.match(/(\d+\.?\d*억(?:\s*\d+천)?)\s*[~에서]\s*(\d+\.?\d*억(?:\s*\d+천)?)/);
+          if (range) { cond.min_price = _pk(range[1]); cond.max_price = _pk(range[2]); }
+          const dual = allText.match(/(\d+\.?\d*억(?:\s*\d+천)?)\s+(\d+\.?\d*억(?:\s*\d+천)?)\s*(?:까지|이하|이내|도|면)?\s*(?:가능|괜찮|OK)/i);
+          if (dual && !cond.max_price) { cond.min_price = _pk(dual[1]); cond.max_price = _pk(dual[2]); }
+          const maxM = allText.match(/(\d+\.?\d*)\s*억\s*(\d+)?\s*천?\s*(?:이내|이하|미만|까지)/);
+          if (maxM && !cond.max_price) cond.max_price = parseFloat(maxM[1]) * 10000 + (maxM[2] ? parseInt(maxM[2]) * 1000 : 0);
+          if (!cond.min_price && !cond.max_price) {
+            const bare = allText.match(/(\d+\.?\d*)\s*억/);
+            if (bare) { const b = parseFloat(bare[1]) * 10000; cond.min_price = Math.round(b * 0.85); cond.max_price = Math.round(b * 1.15); }
+          }
+        }
+        wantedConditions.push(cond);
       }
     }
 
@@ -567,6 +609,7 @@ ${text}`
       move_in_date: moveInDate,
       wanted_trade_type: wantedTradeType,
       wanted_categories: wantedCategories.length ? wantedCategories : null,
+      wanted_conditions: wantedConditions.length ? wantedConditions : null,
       // ★ 좌표는 클라이언트에서 DB 매칭 + 카카오 API 폴백으로 처리
       lat: null,
       lng: null,

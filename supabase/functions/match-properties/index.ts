@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
     // 1. 손님 카드 조회
     const { data: clientCard, error: clientError } = await supabase
       .from('cards')
-      .select('id, property, private_note, embedding, agent_id, wanted_trade_type, wanted_categories, move_in_date')
+      .select('id, property, private_note, embedding, agent_id, wanted_trade_type, wanted_categories, wanted_conditions, move_in_date')
       .eq('id', client_card_id)
       .single();
 
@@ -77,13 +77,16 @@ Deno.serve(async (req) => {
     // ★ 오타/한글숫자 교정
     allText = fixTypos(allText);
 
-    // 거래유형 — DB에 wanted_trade_type 있으면 우선 사용
-    let wantedTradeType: string | null = (clientCard as any).wanted_trade_type || null;
-    if (!wantedTradeType) {
-      if (/매매|매도|분양|ㅁㅁ/.test(allText)) wantedTradeType = '매매';
-      else if (/전세|ㅈㅅ|젼세/.test(allText)) wantedTradeType = '전세';
-      else if (/월세|임대|ㅇㅅ|웜세/.test(allText)) wantedTradeType = '월세';
+    // 거래유형 — wanted_conditions에서 복수 추출, fallback: wanted_trade_type
+    const wantedConds: any[] = (clientCard as any).wanted_conditions || [];
+    let wantedTradeTypes: string[] = wantedConds.length ? [...new Set(wantedConds.map((c: any) => c.trade_type))] : [];
+    if (!wantedTradeTypes.length && (clientCard as any).wanted_trade_type) wantedTradeTypes = [(clientCard as any).wanted_trade_type];
+    if (!wantedTradeTypes.length) {
+      if (/매매|매도|분양|ㅁㅁ/.test(allText)) wantedTradeTypes.push('매매');
+      if (/전세|ㅈㅅ|젼세/.test(allText)) wantedTradeTypes.push('전세');
+      if (/월세|임대|ㅇㅅ|웜세/.test(allText)) wantedTradeTypes.push('월세');
     }
+    const wantedTradeType = wantedTradeTypes[0] || null;
 
     // 카테고리 (복수 지원)
     let wantedCats: string[] = [];
@@ -273,8 +276,8 @@ Deno.serve(async (req) => {
     const effectiveAgentId = agent_id || clientCard.agent_id || '';
 
     // 구조화 조건 개수 확인
-    const structuredCount = [wantedTradeType, wantedCategory, minPrice || maxPrice, wantedLocation].filter(Boolean).length;
-    console.log(`매칭 조건: trade=${wantedTradeType} cat=${wantedCategory} loc=${wantedLocation} price=${minPrice}~${maxPrice} area=${wantedMinArea}~${wantedMaxArea} (구조화 ${structuredCount}개)`);
+    const structuredCount = [wantedTradeTypes.length?true:null, wantedCategory, minPrice || maxPrice, wantedLocation].filter(Boolean).length;
+    console.log(`매칭 조건: trade=${wantedTradeTypes.join('+')} cat=${wantedCats.join('+')} loc=${wantedLocation} price=${minPrice}~${maxPrice} (구조화 ${structuredCount}개)`);
 
     let results: any[] = [];
 
@@ -287,7 +290,8 @@ Deno.serve(async (req) => {
         .neq('property->>type', '손님')
         .eq('trade_status', '계약가능');
 
-      if (wantedTradeType) sqlQuery = sqlQuery.eq('property->>type', wantedTradeType);
+      if (wantedTradeTypes.length === 1) sqlQuery = sqlQuery.eq('property->>type', wantedTradeTypes[0]);
+      else if (wantedTradeTypes.length > 1) sqlQuery = sqlQuery.in('property->>type', wantedTradeTypes);
       // 복수 카테고리 OR 조건
       if (wantedCats.length === 1) sqlQuery = sqlQuery.eq('property->>category', wantedCats[0]);
       else if (wantedCats.length > 1) sqlQuery = sqlQuery.in('property->>category', wantedCats);
@@ -340,9 +344,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ★ Fix 8: 거래유형 하드필터 (벡터 보조 후 재확인)
-    if (wantedTradeType) {
-      results = results.filter((r: any) => r.property?.type === wantedTradeType);
+    // ★ Fix 8: 거래유형 하드필터 (벡터 보조 후 재확인, 복수 허용)
+    if (wantedTradeTypes.length) {
+      results = results.filter((r: any) => wantedTradeTypes.includes(r.property?.type));
     }
 
     // 4. ★ 후필터: 카테고리 (복수 OR), 가격, 지역
@@ -394,7 +398,8 @@ Deno.serve(async (req) => {
               .eq('trade_status', '계약가능')
               .order('created_at', { ascending: false })
               .limit(limit * 5);
-            if (wantedTradeType) locQuery = locQuery.eq('property->>type', wantedTradeType);
+            if (wantedTradeTypes.length === 1) locQuery = locQuery.eq('property->>type', wantedTradeTypes[0]);
+            else if (wantedTradeTypes.length > 1) locQuery = locQuery.in('property->>type', wantedTradeTypes);
             if (wantedCats.length === 1) locQuery = locQuery.eq('property->>category', wantedCats[0]);
             else if (wantedCats.length > 1) locQuery = locQuery.in('property->>category', wantedCats);
             const { data: locData } = await locQuery;
@@ -613,7 +618,7 @@ Deno.serve(async (req) => {
     // ★ 최종 검증: 엉뚱한 매물 절대 방지
     results = results.filter((r: any) => {
       const p = r.property || {};
-      if (wantedTradeType && p.type && p.type !== wantedTradeType) return false;
+      if (wantedTradeTypes.length && p.type && !wantedTradeTypes.includes(p.type)) return false;
       if (wantedCats.length && p.category && !wantedCats.includes(p.category)) return false;
       if (wantedLocation) {
         const pLoc = p.location || '';
@@ -645,7 +650,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       success: true,
       client_card_id,
-      wanted_trade_type: wantedTradeType,
+      wanted_trade_types: wantedTradeTypes,
       wanted_categories: wantedCats,
       wanted_location: wantedLocation,
       wanted_price: { min: minPrice, max: maxPrice },

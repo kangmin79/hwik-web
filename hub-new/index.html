@@ -774,7 +774,7 @@ const Data = (() => {
   async function loadClientCards(off=0, reset=false) {
     const id=uid(); if(!id) return [];
     const { data } = await sb().from('cards')
-      .select('id,property,private_note,contact_name,contact_phone,wanted_trade_type,wanted_categories,created_at')
+      .select('id,property,private_note,contact_name,contact_phone,wanted_trade_type,wanted_categories,wanted_conditions,created_at')
       .eq('agent_id',id)
       .eq('property->>type','손님')
       .order('created_at',{ascending:false}).range(off, off+PAGE-1);
@@ -1004,17 +1004,33 @@ function _clientCats(card){
   }
   return cats.length?cats:['손님'];
 }
+function _clientTrades(card){
+  // wanted_conditions에서 복수 거래유형 추출
+  if(card.wanted_conditions?.length) return [...new Set(card.wanted_conditions.map(c=>c.trade_type))];
+  return card.wanted_trade_type?[card.wanted_trade_type]:[];
+}
 function clientWantLabel(card){
   const cats=_clientCats(card);
-  const trade=card.wanted_trade_type||'';
-  return cats.map(c=>[c,trade].filter(Boolean).join(' ')).join('/');
+  const trades=_clientTrades(card);
+  if(!trades.length) return cats.join('/')||'손님';
+  // 카테고리 × 거래유형 조합
+  const labels=[];
+  for(const t of trades){ for(const c of cats){ labels.push([c,t].filter(Boolean).join(' ')); } }
+  return [...new Set(labels)].join(' / ')||'손님';
 }
 function clientWantTag(card){
   const cats=_clientCats(card);
-  const trade=card.wanted_trade_type||'';
-  const color=trade==='매매'?'#ea580c':trade==='전세'?'#4f46e5':'#7c3aed';
-  const bg=trade==='매매'?'rgba(249,115,22,0.1)':trade==='전세'?'rgba(99,102,241,0.1)':'rgba(167,139,250,0.1)';
-  return cats.map(c=>`<span style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;background:${bg};color:${color};white-space:nowrap;">${esc([c,trade].filter(Boolean).join(' '))}</span>`).join(' ');
+  const trades=_clientTrades(card);
+  if(!trades.length){
+    return cats.map(c=>`<span style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;background:rgba(148,163,184,0.1);color:#64748b;white-space:nowrap;">${esc(c)}</span>`).join(' ');
+  }
+  const tags=[];
+  for(const t of trades){
+    const color=t==='매매'?'#ea580c':t==='전세'?'#4f46e5':'#7c3aed';
+    const bg=t==='매매'?'rgba(249,115,22,0.1)':t==='전세'?'rgba(99,102,241,0.1)':'rgba(167,139,250,0.1)';
+    for(const c of cats){ tags.push(`<span style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;background:${bg};color:${color};white-space:nowrap;">${esc([c,t].filter(Boolean).join(' '))}</span>`); }
+  }
+  return [...new Set(tags)].join(' ');
 }
 
 // 매물 유형+거래 라벨 (예: "빌라 월세", "아파트 전세")
@@ -2354,7 +2370,7 @@ const PanelClient = (() => {
       const r=await res.json();if(r.error)throw new Error(r.error);
       // 손님 카드로 강제 설정
       const property={type:'손님',price:r.price||null,location:r.location||null,complex:r.complex||null,area:r.area||null,floor:r.floor||null,room:r.room||null,features:r.features||[],category:r.category||null,rawText:inp.value.trim()};
-      const cardData={id:crypto.randomUUID().slice(0,12),agent_id:Auth.user.id,property,contact_name:r.contact_name||null,contact_phone:r.contact_phone||null,embedding:r.embedding||null,search_text:r.search_text||null,search_text_private:r.search_text_private||null,price_number:r.price_number||null,deposit:r.deposit||null,monthly_rent:r.monthly_rent||null,move_in_date:r.move_in_date||null,wanted_trade_type:r.wanted_trade_type||null,wanted_categories:r.wanted_categories||[],trade_status:'계약가능'};
+      const cardData={id:crypto.randomUUID().slice(0,12),agent_id:Auth.user.id,property,contact_name:r.contact_name||null,contact_phone:r.contact_phone||null,embedding:r.embedding||null,search_text:r.search_text||null,search_text_private:r.search_text_private||null,price_number:r.price_number||null,deposit:r.deposit||null,monthly_rent:r.monthly_rent||null,move_in_date:r.move_in_date||null,wanted_trade_type:r.wanted_trade_type||null,wanted_categories:r.wanted_categories||[],wanted_conditions:r.wanted_conditions||[],trade_status:'계약가능'};
       const {error:dbErr}=await Auth.sb.from('cards').insert([cardData]);
       if(dbErr)throw new Error(dbErr.message);
       Toast.show('손님이 등록되었습니다!');
