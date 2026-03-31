@@ -1553,7 +1553,7 @@ const Hub = (() => {
       case 'my':PanelCards.render(el);break;
       case 'client':PanelClient.render(el);break;
       case 'shared':PanelShared.render(el);break;
-      case 'alert':PanelAlert.render(el);break;
+      case 'alert':_enterAlert();return;
       case 'memo':PanelMemo.render(el);break;
       case 'settings':_settings(el);break;
     }
