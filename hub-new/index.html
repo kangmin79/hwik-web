@@ -757,13 +757,9 @@ const Data = (() => {
 
   async function loadCounts() {
     const id = uid(); if (!id) return;
-    const [matchRes,overdueRes,memoRes] = await Promise.all([
-      sb().from('match_notifications').select('id',{count:'exact',head:true}).eq('agent_id',id).eq('is_read',false),
-      sb().from('client_notes').select('id',{count:'exact',head:true}).eq('agent_id',id).eq('alert_done',false).not('alert_date','is',null).lt('alert_date',new Date().toISOString()),
-      sb().from('memos').select('id',{count:'exact',head:true}).eq('agent_id',id).eq('is_read',false)
-    ]);
-    const alertCount=(matchRes.count||0)+(overdueRes.count||0);
-    cache.counts={my:cache.myCards?.length||0,client:cache.clientCards?.length||0,shared:cache.sharedCards?.length||0,alert:alertCount,memo:memoRes.count||0};
+    // 미완료 일정 수 (지연+오늘) — 봤어도 처리 안 하면 계속 표시
+    const {count:overdueCount} = await sb().from('client_notes').select('id',{count:'exact',head:true}).eq('agent_id',id).eq('alert_done',false).not('alert_date','is',null).lte('alert_date',new Date().toISOString());
+    cache.counts={my:cache.myCards?.length||0,client:cache.clientCards?.length||0,shared:cache.sharedCards?.length||0,alert:overdueCount||0,memo:0};
   }
 
   async function loadMyCards(off=0, reset=false) {
