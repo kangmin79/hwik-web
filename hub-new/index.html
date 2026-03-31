@@ -750,8 +750,13 @@ const Data = (() => {
 
   async function loadCounts() {
     const id = uid(); if (!id) return;
-    cache.counts={my:0,client:0,shared:0,alert:0,memo:0};
-    // 카운트는 loadMyCards/loadClientCards 후에 cache에서 계산하므로 여기서는 최소한만
+    const [matchRes,overdueRes,memoRes] = await Promise.all([
+      sb().from('match_notifications').select('id',{count:'exact',head:true}).eq('agent_id',id).eq('is_read',false),
+      sb().from('client_notes').select('id',{count:'exact',head:true}).eq('agent_id',id).eq('alert_done',false).not('alert_date','is',null).lt('alert_date',new Date().toISOString()),
+      sb().from('memos').select('id',{count:'exact',head:true}).eq('agent_id',id).eq('is_read',false)
+    ]);
+    const alertCount=(matchRes.count||0)+(overdueRes.count||0);
+    cache.counts={my:cache.myCards?.length||0,client:cache.clientCards?.length||0,shared:cache.sharedCards?.length||0,alert:alertCount,memo:memoRes.count||0};
   }
 
   async function loadMyCards(off=0, reset=false) {
@@ -870,13 +875,25 @@ const Data = (() => {
   }
 
   async function loadAlerts() {
-    const id=uid(); if(!id) return {matches:[],overdue:[],memos:[]};
+    const id=uid(); if(!id) return {matches:[],overdue:[],memos:[],noContact:[]};
     const [m,o,me] = await Promise.all([
       sb().from('match_notifications').select('id,card_id,client_card_id,similarity,created_at,is_read').eq('agent_id',id).order('created_at',{ascending:false}).limit(20),
       sb().from('client_notes').select('id,client_card_id,content,alert_date,type,alert_done').eq('agent_id',id).eq('alert_done',false).neq('alert_date',null).lt('alert_date',new Date().toISOString()).order('alert_date',{ascending:true}).limit(20),
       sb().from('memos').select('id,content,is_read,created_at').eq('agent_id',id).order('created_at',{ascending:false}).limit(20),
     ]);
-    return { matches:m.data||[], overdue:o.data||[], memos:me.data||[] };
+    // 9. 미연락 손님 (7일+ 연락 없음)
+    let noContact=[];
+    try{
+      const clients=cache.clientCards||[];
+      if(clients.length){
+        const ids=clients.map(c=>c.id);
+        const{data:notes}=await sb().from('client_notes').select('client_card_id,created_at').in('client_card_id',ids).order('created_at',{ascending:false});
+        const lastContact={};(notes||[]).forEach(n=>{if(!lastContact[n.client_card_id])lastContact[n.client_card_id]=n.created_at;});
+        const sevenDaysAgo=Date.now()-7*86400000;
+        noContact=clients.filter(c=>{const last=lastContact[c.id];return !last||new Date(last).getTime()<sevenDaysAgo;}).slice(0,10);
+      }
+    }catch(_){}
+    return { matches:m.data||[], overdue:o.data||[], memos:me.data||[], noContact };
   }
 
   async function loadCalendarAlerts(year,month) {
@@ -1438,6 +1455,7 @@ const Hub = (() => {
       svg+=`<circle class="pulse-head" id="ph-${n.key}" cx="${cx}" cy="${cy}" r="3.5"/>`;
       let badge='';
       if(n.key==='alert'&&c.alert)badge=`<span class="hub-node-badge alert">${c.alert}</span>`;
+      if(n.key==='memo'&&c.memo)badge=`<span class="hub-node-badge">${c.memo}</span>`;
       html+=`<div class="hub-node" data-key="${n.key}" style="left:${(nx/VW*100).toFixed(1)}%;top:${(ny/VH*100).toFixed(1)}%;" onclick="Hub.onNode('${n.key}')"><div class="hub-node-inner"><span class="hub-node-label">${n.label}</span>${badge}</div></div>`;
     });
     document.getElementById('hubLines').innerHTML=svg;
@@ -1480,7 +1498,10 @@ const Hub = (() => {
     const sorted=[...nodes].sort((a,b)=>{if(a.key===activePanel)return -1;if(b.key===activePanel)return 1;return 0;});
     sorted.forEach(n=>{
       const active=activePanel===n.key;
-      v.insertAdjacentHTML('beforeend',`<div class="hub-node appear" data-key="${n.key}" style="position:static;transform:none;cursor:pointer;width:160px;" onclick="Hub.onNode('${n.key}')"><div class="hub-node-inner" style="min-width:auto;padding:10px 0;border-radius:14px;width:100%;text-align:center;${active?'border-color:var(--primary);background:var(--primary-bg);box-shadow:0 0 0 3px rgba(99,102,241,0.12);':''}"><span class="hub-node-label">${n.label}</span></div></div>`);
+      const c=Data.cache.counts;let badge='';
+      if(n.key==='alert'&&c.alert)badge=`<span class="hub-node-badge alert">${c.alert}</span>`;
+      if(n.key==='memo'&&c.memo)badge=`<span class="hub-node-badge">${c.memo}</span>`;
+      v.insertAdjacentHTML('beforeend',`<div class="hub-node appear" data-key="${n.key}" style="position:static;transform:none;cursor:pointer;width:160px;" onclick="Hub.onNode('${n.key}')"><div class="hub-node-inner" style="min-width:auto;padding:10px 0;border-radius:14px;width:100%;text-align:center;position:relative;${active?'border-color:var(--primary);background:var(--primary-bg);box-shadow:0 0 0 3px rgba(99,102,241,0.12);':''}"><span class="hub-node-label">${n.label}</span>${badge}</div></div>`);
     });
 
     v.querySelectorAll('.hub-node').forEach(el=>{
@@ -3010,21 +3031,68 @@ const PanelAlert = (() => {
   async function render(el){
     const now=new Date();calYear=now.getFullYear();calMonth=now.getMonth()+1;
     const alerts=await Data.loadAlerts();
+
+    // 모든 알림을 시간순 통합
+    const all=[];
+    alerts.overdue.forEach(a=>all.push({type:'overdue',icon:'⚠️',label:esc(a.content||a.type||'일정'),sub:new Date(a.alert_date).toLocaleDateString('ko-KR')+' (지연)',time:new Date(a.alert_date),color:'#ef4444',read:false,id:a.id}));
+    alerts.matches.forEach(m=>all.push({type:'match',icon:'🏠',label:'매칭 매물 발견',sub:new Date(m.created_at).toLocaleDateString('ko-KR'),time:new Date(m.created_at),color:'var(--primary)',read:m.is_read,id:m.id}));
+    alerts.memos.forEach(m=>all.push({type:'memo',icon:'📝',label:esc(m.content||'메모'),sub:new Date(m.created_at).toLocaleDateString('ko-KR'),time:new Date(m.created_at),color:'#f59e0b',read:m.is_read,id:m.id}));
+    // 9. 미연락 손님 리마인더
+    (alerts.noContact||[]).forEach(c=>{const p=c.property||{};const name=c.contact_name||p.location||'손님';all.push({type:'nocontact',icon:'📞',label:`${esc(name)} — 연락 필요`,sub:'7일+ 미연락',time:new Date(c.created_at),color:'#f97316',read:false,id:'nc_'+c.id});});
+    // 7. 우선순위 정렬: 안 읽은 것 우선 → 긴급도(지연>매칭>메모) → 최신순
+    const _priority={'overdue':4,'nocontact':3,'match':2,'memo':1};
+    all.sort((a,b)=>{
+      if(a.read!==b.read)return a.read?1:-1;
+      const pa=_priority[a.type]||0,pb=_priority[b.type]||0;
+      if(pa!==pb)return pb-pa;
+      return b.time-a.time;
+    });
+
     let h=`<div class="panel-inner">${Hub.panelHead('알림')}`;
-
-    // 지연 일정
-    if(alerts.overdue.length){h+=`<div class="section-label" style="color:#ef4444;">지연된 일정 (${alerts.overdue.length})</div>`;alerts.overdue.forEach(a=>h+=`<div class="alert-item"><div class="alert-dot" style="background:#ef4444;"></div><div><div class="alert-text">${esc(a.content||a.type||'일정')}</div><div class="alert-date">${new Date(a.alert_date).toLocaleDateString('ko-KR')} (지연)</div></div></div>`);}
-    // 매칭 알림
-    if(alerts.matches.length){h+=`<div class="section-label" style="color:var(--primary);">매칭 알림 (${alerts.matches.length})</div>`;alerts.matches.forEach(m=>h+=`<div class="alert-item"><div class="alert-dot" style="background:${m.is_read?'#94a3b8':'var(--primary)'}"></div><div><div class="alert-text">🏠 매칭 매물 발견</div><div class="alert-date">${new Date(m.created_at).toLocaleDateString('ko-KR')}</div></div></div>`);}
-    // 메모
-    if(alerts.memos.length){h+=`<div class="section-label" style="color:#f59e0b;">모바일 메모 (${alerts.memos.length})</div>`;alerts.memos.forEach(m=>h+=`<div class="alert-item" style="${m.is_read?'opacity:0.5':''}"><div class="alert-dot" style="background:${m.is_read?'#94a3b8':'#f59e0b'}"></div><div><div class="alert-text">${esc(m.content||'메모')}</div><div class="alert-date">${new Date(m.created_at).toLocaleDateString('ko-KR')}</div></div></div>`);}
-
-    if(!alerts.overdue.length&&!alerts.matches.length&&!alerts.memos.length)h+='<div class="empty"><div class="empty-icon">🔔</div>새 알림이 없어요</div>';
+    if(!all.length)h+='<div class="empty"><div class="empty-icon">🔔</div>새 알림이 없어요</div>';
+    else{
+      // 8. 그룹핑: 같은 타입 안 읽은 것 묶기
+      let lastType='';
+      const unreadByType={};all.filter(a=>!a.read).forEach(a=>{unreadByType[a.type]=(unreadByType[a.type]||0)+1;});
+      const shownGroup={};
+      all.forEach(a=>{
+        // 안 읽은 매칭이 3건 이상이면 그룹 헤더
+        if(!a.read&&!shownGroup[a.type]&&unreadByType[a.type]>=3){
+          shownGroup[a.type]=true;
+          const typeLabel={'overdue':'지연된 일정','match':'매칭 매물 발견','memo':'새 메모'}[a.type]||'알림';
+          h+=`<div style="padding:8px 12px;border-radius:8px;background:${a.color}15;border:1px solid ${a.color}30;margin-bottom:6px;display:flex;align-items:center;gap:8px;">
+            <span style="font-size:16px;">${a.icon}</span>
+            <div style="flex:1;font-size:13px;font-weight:700;color:${a.color};">${typeLabel} ${unreadByType[a.type]}건</div>
+            <div style="width:8px;height:8px;border-radius:50%;background:${a.color};"></div>
+          </div>`;
+          return;
+        }
+        if(!a.read&&shownGroup[a.type])return; // 그룹화된 것은 개별 표시 안 함
+        h+=`<div class="tl-item" style="${a.read?'opacity:0.5;':''}">
+          <span style="font-size:16px;flex-shrink:0;">${a.icon}</span>
+          <div style="flex:1;"><div class="tl-text">${a.label}</div><div class="tl-date">${a.sub}</div></div>
+          <div style="width:8px;height:8px;border-radius:50%;background:${a.read?'#cbd5e1':a.color};flex-shrink:0;"></div>
+        </div>`;
+      });
+    }
 
     // 달력
     h+=`<div style="margin-top:24px;border-top:1px solid var(--border);padding-top:20px;"><div class="cal-header"><button class="cal-nav" onclick="PanelAlert.calNav(-1)">◀</button><div class="cal-title" id="calTitle">${calYear}년 ${calMonth}월</div><button class="cal-nav" onclick="PanelAlert.calNav(1)">▶</button></div><div id="calGrid"></div></div></div>`;
     el.innerHTML=h;
+
+    // 3. 읽음 처리 — 패널 열면 자동
+    _markAllRead(alerts);
     await _renderCal();
+  }
+
+  async function _markAllRead(alerts){
+    const uid=Auth.user?.id;if(!uid)return;
+    const unreadMatches=alerts.matches.filter(m=>!m.is_read).map(m=>m.id);
+    const unreadMemos=alerts.memos.filter(m=>!m.is_read).map(m=>m.id);
+    const ops=[];
+    if(unreadMatches.length)ops.push(Auth.sb.from('match_notifications').update({is_read:true}).in('id',unreadMatches));
+    if(unreadMemos.length)ops.push(Auth.sb.from('memos').update({is_read:true}).in('id',unreadMemos));
+    if(ops.length){await Promise.all(ops);await Data.loadCounts();Hub.render();}
   }
 
   async function _renderCal(){
@@ -3122,8 +3190,46 @@ const App = {
     const sp=document.getElementById('splash');if(sp){sp.style.opacity='0';setTimeout(()=>sp.remove(),400);}
     // 비활성 자동복귀 + 허브 브리딩 시작
     _initHubBreathing();
+    // 4. 브라우저 알림 권한 요청
+    if('Notification' in window && Notification.permission==='default'){
+      Notification.requestPermission();
+    }
+    // 5. 알림 폴링 (60초마다 새 알림 체크)
+    _startAlertPolling();
   }
 };
+
+function _startAlertPolling(){
+  let _lastAlertCount=Data.cache.counts.alert||0;
+  // Realtime 구독 시도
+  try{
+    Auth.sb.channel('alerts')
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'match_notifications',filter:`agent_id=eq.${Auth.user.id}`},()=>_onNewAlert())
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'memos',filter:`agent_id=eq.${Auth.user.id}`},()=>_onNewAlert())
+      .subscribe();
+  }catch(_){
+    // Realtime 실패 시 폴링 fallback (60초)
+    setInterval(async()=>{
+      if(!Auth.user)return;
+      await Data.loadCounts();
+      const newCount=Data.cache.counts.alert||0;
+      if(newCount>_lastAlertCount)_onNewAlert();
+      _lastAlertCount=newCount;
+    },60000);
+  }
+
+  async function _onNewAlert(){
+    await Data.loadCounts();
+    const newCount=Data.cache.counts.alert||0;
+    if(newCount>_lastAlertCount){
+      Hub.render();
+      if('Notification' in window && Notification.permission==='granted'){
+        new Notification('휙 — 새 알림',{body:`${newCount-_lastAlertCount}건의 새 알림이 있습니다`,icon:'/favicon.ico'});
+      }
+    }
+    _lastAlertCount=newCount;
+  }
+}
 
 // ── ① 비활성 자동복귀 (3분) ──
 function _initIdleReturn(){

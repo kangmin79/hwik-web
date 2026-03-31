@@ -218,7 +218,11 @@ Deno.serve(async (req) => {
           ignoreDuplicates: true
         });
 
-      if (!insertErr) saved++;
+      if (!insertErr) {
+        saved++;
+        // TODO: 카카오 알림톡 발송 (비즈 채널 등록 후)
+        // await sendKakaoAlimtalk(agent_id, card_id, match.clientId, match.similarity);
+      }
     }
 
     console.log(`자동 매칭 완료: ${Date.now() - startTime}ms | ${saved}건 알림 저장`);
