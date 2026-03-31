@@ -315,9 +315,9 @@ body.dark .phone-screen{background:#0f172a;}
 /* ═══════════════════════════════════════════════════════════
    9. 매물 등록 패널
    ═══════════════════════════════════════════════════════════ */
-.reg-title{font-size:28px;font-weight:900;letter-spacing:-1px;margin-bottom:4px;}
+.reg-title{font-size:20px;font-weight:900;letter-spacing:-0.5px;margin-bottom:2px;}
 .reg-title em{color:var(--primary);font-style:normal;}
-.reg-subtitle{font-size:13px;color:var(--text-sub);margin-bottom:24px;}
+.reg-subtitle{font-size:12px;color:var(--text-sub);margin-bottom:12px;}
 .reg-modes{display:flex;gap:12px;margin-bottom:20px;}
 .reg-mode{flex:1;padding:16px;border-radius:16px;border:1.5px solid var(--border);background:var(--bg-card);cursor:pointer;transition:all 0.2s;}
 .reg-mode.active{border-color:var(--primary);background:var(--primary-bg);}
@@ -335,8 +335,8 @@ body.dark .phone-screen{background:#0f172a;}
 .reg-ocr-btn{background:var(--bg-input);border:1.5px solid var(--border);color:var(--text-sub);cursor:pointer;padding:8px 12px;border-radius:10px;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;transition:all 0.2s;}
 .reg-ocr-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-bg);}
 .reg-textarea{
-  width:100%;min-height:200px;padding:16px;border:none;
-  background:transparent;color:var(--text);font-size:15px;line-height:1.7;
+  width:100%;min-height:120px;padding:12px 16px;border:none;
+  background:transparent;color:var(--text);font-size:14px;line-height:1.6;
   font-family:inherit;resize:vertical;outline:none;
 }
 .reg-textarea::placeholder{color:#64748b;}
@@ -344,7 +344,7 @@ body.dark .phone-screen{background:#0f172a;}
 .reg-hint{font-size:11px;color:var(--text-sub);}
 .reg-hint-right{font-size:11px;color:var(--text-sub);}
 
-.reg-photo-area{margin-top:12px;}
+.reg-photo-area{margin-top:8px;}
 .reg-photo-drop{padding:16px;border:2px dashed var(--border);border-radius:12px;text-align:center;color:var(--text-light);font-size:13px;cursor:pointer;}
 .reg-photo-drop:hover{border-color:var(--primary);color:var(--primary);}
 .reg-photo-list{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
@@ -1806,7 +1806,7 @@ const PanelRegister = (() => {
         </div>
 
         <div class="reg-photo-area"><div class="reg-photo-drop" onclick="document.getElementById('photoInput').click()">📷 사진 추가 (최대 20장)</div><input type="file" id="photoInput" accept="image/*" multiple style="display:none" onchange="PanelRegister.handlePhotos(event)"><div class="reg-photo-list" id="photoList"></div></div>
-        <div style="margin-top:12px;"><label style="font-size:12px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:4px;">손님에게 한마디 (선택)</label><textarea class="edit-textarea" id="regComment" placeholder="예) 채광 정말 좋아요. 역까지 3분" style="min-height:60px;border:2px solid #4ecdc4;"></textarea><div style="font-size:11px;color:var(--text-light);margin-top:2px;">✓ 손님 카드에만 표시됩니다</div></div>
+        <div style="margin-top:8px;"><label style="font-size:12px;font-weight:700;color:var(--text-sub);display:block;margin-bottom:2px;">손님에게 한마디 (선택)</label><textarea class="edit-textarea" id="regComment" placeholder="예) 채광 정말 좋아요. 역까지 3분" style="min-height:50px;border:2px solid #4ecdc4;"></textarea><div style="font-size:11px;color:var(--text-light);margin-top:2px;">✓ 손님 카드에만 표시됩니다</div></div>
 
         <div class="reg-ai-steps" id="aiSteps" style="display:none"><div class="reg-ai-step" id="step1"><span class="step-dot"></span> 텍스트 분석 중...</div><div class="reg-ai-step" id="step2"><span class="step-dot"></span> 매물 정보 추출...</div><div class="reg-ai-step" id="step3"><span class="step-dot"></span> 카드 생성 중...</div><div class="reg-ai-step" id="step4"><span class="step-dot"></span> 좌표 매칭 중...</div></div>
         <button class="btn-primary" id="regBtn" onclick="PanelRegister.doRegister()">AI로 카드 만들기</button>
