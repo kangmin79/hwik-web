@@ -992,6 +992,7 @@ const Data = (() => {
   }
 
   function triggerAutoMatch(cardId) { fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/auto-match`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({card_id:cardId})}).catch(e=>console.warn('auto-match failed:',e)); }
+  async function batchGenerateTags() { try{const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/batch-generate-tags`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY}});return await res.json();}catch(e){return {error:e.message};} }
 
   async function loadCompletedCards() {
     const id=uid(); if(!id) return [];
@@ -999,7 +1000,7 @@ const Data = (() => {
     return data||[];
   }
 
-  return { cache, PAGE, loadCounts, loadMyCards, loadClientCards, loadClientDetail, loadRooms, loadSharedCards, loadPendingInvites, createRoom, deleteRoom, renameRoom, leaveRoom, inviteMember, acceptInvite, rejectInvite, shareCardToRoom, unshareCard, deleteCard, updateTradeStatus, uploadPhotos, _resize, loadAlerts, loadCalendarAlerts, loadMemos, deleteMemo, markMemoRead, saveClientNote, deleteClientNote, updateNoteAlertDone, matchCoords, parseSinglePrice, parsePriceFields, updateEmbedding, updateClientLocation, triggerAutoMatch, loadCompletedCards };
+  return { cache, PAGE, loadCounts, loadMyCards, loadClientCards, loadClientDetail, loadRooms, loadSharedCards, loadPendingInvites, createRoom, deleteRoom, renameRoom, leaveRoom, inviteMember, acceptInvite, rejectInvite, shareCardToRoom, unshareCard, deleteCard, updateTradeStatus, uploadPhotos, _resize, loadAlerts, loadCalendarAlerts, loadMemos, deleteMemo, markMemoRead, saveClientNote, deleteClientNote, updateNoteAlertDone, matchCoords, parseSinglePrice, parsePriceFields, updateEmbedding, updateClientLocation, triggerAutoMatch, loadCompletedCards, batchGenerateTags };
 })();
 
 // 손님이 찾는 매물 유형 라벨 (예: "상가 월세", "아파트 전세")
@@ -3365,6 +3366,8 @@ const App = {
     }
     // 5. 알림 폴링 (60초마다 새 알림 체크)
     _startAlertPolling();
+    // 기존 매물 태그 일괄 생성 (백그라운드, 1회)
+    Data.batchGenerateTags().then(r=>{if(r?.updated)console.log(`태그 생성: ${r.updated}건`);});
   }
 };
 
