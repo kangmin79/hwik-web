@@ -2,30 +2,18 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="google-site-verification" content="R2ye41AVVTRs8BxEXyEafFSTqMSiHKdb9zgTklrktSI" />
-<meta name="naver-site-verification" content="367bd1e77a8ad48b74e345be3e4a0f8125c2c4e1" />
-<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>단지 시세 - 휙</title>
 <meta name="description" content="아파트 실거래가, 시세 추이, 전세가율을 한눈에. 휙에서 확인하세요.">
-<meta name="keywords" id="meta-keywords" content="아파트 시세, 실거래가, 전세가율, 서울 부동산, 매매가, 전세, 월세">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="휙">
-<meta property="og:locale" content="ko_KR">
 <meta property="og:title" id="og-title" content="단지 시세 - 휙">
 <meta property="og:description" id="og-desc" content="아파트 실거래가, 시세 추이, 전세가율을 한눈에">
 <meta property="og:image" content="https://hwik.kr/og-image.png">
-<meta property="og:image:width" content="800">
-<meta property="og:image:height" content="420">
-<meta property="og:url" id="og-url" content="https://hwik.kr/danji.html">
 <link rel="canonical" id="canonical" href="https://hwik.kr/danji.html">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" id="tw-title" content="단지 시세 - 휙">
 <meta name="twitter:description" id="tw-desc" content="아파트 실거래가, 시세 추이, 전세가율을 한눈에">
-<meta name="twitter:image" content="https://hwik.kr/og-image.png">
-<!-- GA4 -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -66,34 +54,22 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 .line-badge { display:inline-block; padding:1px 5px; border-radius:8px; font-size:9px; font-weight:600; color:#fff; margin-right:2px; }
 .station-name { color:rgba(255,255,255,0.85); }
 .station-time { color:rgba(255,255,255,0.5); font-size:11px; }
-.tag-subway { background:rgba(100,180,255,0.2); }
-.tag-school { background:rgba(100,220,150,0.2); }
 
 /* 탭 */
 .tabs { display:flex; border-bottom:1px solid var(--border); }
-.tab { flex:1; padding:12px; text-align:center; font-size:13px; color:var(--sub); cursor:pointer; border-bottom:2px solid transparent; transition:all .2s; -webkit-tap-highlight-color:transparent; }
-.tab:active { transform:scale(0.97); }
 .tab.active { color:var(--text); font-weight:500; border-bottom-color:var(--yellow); }
 
 /* 평형 */
-.pyeong-row { padding:12px 16px; display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+.pyeong-row { padding:12px 16px; display:flex; gap:8px; overflow-x:auto; }
 .pyeong-row::-webkit-scrollbar { display:none; }
-.pyeong-row.many { justify-content:flex-start; }
-.pyeong-row.many::before, .pyeong-row.many::after { content:''; min-width:calc(50% - 30px); flex-shrink:0; }
-.pyeong-btn { padding:6px 14px; border-radius:20px; font-size:12px; cursor:pointer; white-space:nowrap; flex-shrink:0; border:1px solid var(--border); background:var(--card); color:var(--sub); transition:all .15s; -webkit-tap-highlight-color:transparent; }
 .pyeong-btn.active { background:var(--yellow); border-color:var(--yellow); color:var(--dark); font-weight:500; }
 
 /* 지표 */
-.metrics { padding:0 16px 10px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
-.metric { background:var(--surface); border-radius:var(--radius); padding:12px 10px; border:1px solid var(--border); position:relative; overflow:hidden; }
-.metric::before { content:''; position:absolute; top:0; left:0; width:3px; height:100%; background:var(--border); }
-.metric.accent-yellow::before { background:var(--yellow); }
-.metric.accent-red::before { background:var(--red); }
-.metric.accent-green::before { background:var(--green); }
-.metric.accent-blue::before { background:#5b9ef5; }
-.metric-label { font-size:10px; color:var(--sub); margin-bottom:4px; letter-spacing:-0.3px; }
-.metric-value { font-size:16px; font-weight:700; }
-.metric-change { font-size:10px; margin-top:3px; font-weight:500; }
+.metrics { padding:0 16px 12px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+.metric { background:var(--card); border-radius:var(--radius); padding:12px; }
+.metric-label { font-size:10px; color:var(--sub); margin-bottom:4px; }
+.metric-value { font-size:15px; font-weight:500; }
+.metric-change { font-size:10px; margin-top:2px; }
 .metric-change.down { color:var(--red); }
 .metric-change.up { color:var(--green); }
 .metric-change.neutral { color:var(--sub); }
@@ -112,11 +88,6 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 .trade-price { font-size:16px; font-weight:700; color:var(--dark); }
 .trade-detail { font-size:11px; color:var(--sub); margin-top:3px; }
 .trade-date { font-size:11px; color:var(--muted); align-self:center; white-space:nowrap; }
-
-/* 면적 토글 */
-.area-toggle { display:flex; justify-content:flex-end; padding:8px 16px 0; gap:4px; }
-.area-toggle-btn { font-size:10px; padding:2px 8px; border-radius:10px; border:1px solid var(--border); background:var(--surface); color:var(--sub); cursor:pointer; }
-.area-toggle-btn.active { background:var(--dark); color:#fff; border-color:var(--dark); }
 
 /* 구분선 */
 .divider { height:8px; background:var(--card); }
@@ -147,6 +118,9 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 .btn-primary:active { transform:scale(0.97); }
 .btn-secondary { width:100%; padding:12px; background:transparent; border:1px solid var(--border); border-radius:var(--radius); font-size:13px; color:var(--sub); cursor:pointer; font-family:inherit; transition:transform .1s; }
 .btn-secondary:active { transform:scale(0.97); }
+.tab { flex:1; padding:12px; text-align:center; font-size:13px; color:var(--sub); cursor:pointer; border-bottom:2px solid transparent; transition:all .2s; -webkit-tap-highlight-color:transparent; }
+.pyeong-btn { padding:6px 14px; border-radius:20px; font-size:12px; cursor:pointer; white-space:nowrap; border:1px solid var(--border); background:var(--card); color:var(--sub); transition:all .15s; -webkit-tap-highlight-color:transparent; }
+
 /* SEO */
 .seo-section { padding:16px; border-top:1px solid var(--border); background:var(--card); }
 .seo-text { font-size:11px; color:var(--muted); line-height:1.7; }
@@ -200,7 +174,6 @@ const $$ = s => document.querySelectorAll(s);
 let DATA = null;
 let currentTab = '매매';
 let currentPyeong = null;
-let areaMode = 'exclu'; // 'exclu' or 'supply'
 let chart = null;
 let volumeChart = null;
 
@@ -219,24 +192,6 @@ function formatPrice(manwon) {
   return `${manwon.toLocaleString()}만`;
 }
 
-// 현재 평형의 평수
-function getCurrentPy() {
-  if (!DATA || !currentPyeong) return 0;
-  const pm = (DATA.pyeongs_map || {})[currentPyeong];
-  if (areaMode === 'supply' && pm && pm.supply > pm.exclu) return Math.round(pm.supply / 3.3058);
-  return Math.round(parseInt(currentPyeong) / 3.3058);
-}
-// 현재 평형의 라벨
-function getCurrentPyLabel() {
-  if (!DATA || !currentPyeong) return '';
-  const pm = (DATA.pyeongs_map || {})[currentPyeong];
-  if (areaMode === 'supply' && pm && pm.supply > pm.exclu) return '공급 ' + Math.round(pm.supply) + '㎡';
-  return '전용 ' + currentPyeong + '㎡';
-}
-
-// 햅틱 진동 (10ms)
-function haptic() { if (navigator.vibrate) navigator.vibrate(10); }
-
 function distText(m) {
   if (!m) return '';
   return m >= 1000 ? (m/1000).toFixed(1) + 'km' : m + 'm';
@@ -247,83 +202,31 @@ function walkMin(m) {
   return Math.round(m / 67) + '분'; // 도보 평균 80m/분 → 67m/분 보수적
 }
 
-// ── 캐시 ──
-function cacheKey(id) { return 'danji_' + id; }
+// ── 데이터 로드 ──
+async function loadData() {
+  const id = new URLSearchParams(location.search).get('id');
+  if (!id) { showError('단지 ID가 없습니다'); return; }
 
-function saveCache(id, data) {
-  try {
-    localStorage.setItem(cacheKey(id), JSON.stringify({ data, ts: Date.now() }));
-  } catch(e) {}
-}
+  const { data, error } = await sb.from('danji_pages').select('id,complex_name,location,address,build_year,total_units,categories,recent_trade,all_time_high,jeonse_rate,price_history,nearby_subway,nearby_school,nearby_complex,active_listings,lat,lng,top_floor,parking,heating,builder,mgmt_fee,seo_text,updated_at').eq('id', id).single();
+  if (error || !data) { showError('단지 정보를 찾을 수 없습니다'); return; }
 
-function loadCache(id) {
-  try {
-    const raw = localStorage.getItem(cacheKey(id));
-    if (!raw) return null;
-    const { data, ts } = JSON.parse(raw);
-    return { data, ts };
-  } catch(e) { return null; }
-}
-
-function applyData(data) {
   DATA = data;
+
   // SEO 메타 업데이트
   document.title = `${data.complex_name} 실거래가 시세 - 휙`;
-  const desc = `${data.complex_name} ${data.location} ${data.total_units || ''}세대 ${data.build_year || ''}년 아파트 실거래가, 전세가, 시세 추이`;
+  const desc = `${data.complex_name} ${data.location} ${data.total_units}세대 ${data.build_year}년 아파트 실거래가, 전세가, 시세 추이`;
   document.getElementById('og-title').content = document.title;
   document.getElementById('og-desc').content = desc;
   document.getElementById('tw-title').content = document.title;
   document.getElementById('tw-desc').content = desc;
   document.querySelector('meta[name="description"]').content = desc;
-  const id = new URLSearchParams(location.search).get('id');
-  const pageUrl = `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;
-  document.getElementById('canonical').href = pageUrl;
-  document.getElementById('og-url').content = pageUrl;
-  document.getElementById('meta-keywords').content = [data.complex_name, data.location, '아파트 시세', '실거래가', '전세가율', data.build_year ? data.build_year+'년' : ''].filter(Boolean).join(', ');
+  document.getElementById('canonical').href = `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;
+
   // 첫 번째 평형 선택
   const cats = data.categories || [];
-  // 기본 평형: 전용 84㎡(국민평수 34평)에 가장 가까운 것 선택
-  if (cats.length > 0 && !currentPyeong) {
-    const target = 84;
-    let bestCat = cats[0], bestDiff = 999;
-    cats.forEach(c => {
-      const diff = Math.abs(parseInt(c) - target);
-      if (diff < bestDiff) { bestDiff = diff; bestCat = c; }
-    });
-    currentPyeong = bestCat;
-  }
+  if (cats.length > 0) currentPyeong = cats[0];
+
   render();
-}
-
-// ── 데이터 로드 (stale-while-revalidate) ──
-async function loadData() {
-  const id = new URLSearchParams(location.search).get('id');
-  if (!id) { showError('단지 ID가 없습니다'); return; }
-
-  // 1. 캐시 있으면 즉시 렌더 (로딩 스피너 제거)
-  const cached = loadCache(id);
-  if (cached) {
-    applyData(cached.data);
-  }
-
-  // 2. Supabase에서 최신 데이터 요청 (5초 타임아웃)
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
-
-    const { data, error } = await sb.from('danji_pages').select('*').eq('id', id).single();
-    clearTimeout(timeout);
-
-    if (!error && data) {
-      saveCache(id, data);
-      applyData(data);
-    } else if (!cached) {
-      showError('단지 정보를 찾을 수 없습니다');
-    }
-  } catch (e) {
-    // 네트워크 에러 — 캐시 있으면 그대로, 없으면 에러
-    if (!cached) showError('네트워크 오류. 잠시 후 다시 시도해주세요.');
-  }
 }
 
 // ── 렌더링 ──
@@ -344,8 +247,10 @@ function render() {
   function lineColor(line) {
     if (!line) return '#888';
     const l = line.replace(/수도권\s+도시철도\s*/,'').replace(/서울\s+도시철도\s*/,'').replace(/수도권\s+광역철도\s*/,'').replace(/수도권\s+경량도시철도\s*/,'');
+    // 1~9호선
     const numColors = {'1호선':'#0052A4','2호선':'#00A84D','3호선':'#EF7C1C','4호선':'#00A5DE','5호선':'#996CAC','6호선':'#CD7C2F','7호선':'#747F00','8호선':'#E6186C','9호선':'#BDB092'};
     if (numColors[l]) return numColors[l];
+    // 광역/신설 노선
     if (l.includes('경의') || l.includes('중앙')) return '#77C4A3';
     if (l.includes('분당') || l.includes('수인')) return '#F5A200';
     if (l.includes('신분당')) return '#D4003B';
@@ -359,8 +264,10 @@ function render() {
     if (l.includes('에버라인')) return '#56AD2D';
     if (l.includes('의정부')) return '#FDA600';
     if (l.includes('안산') || l.includes('과천')) return '#00A5DE';
+    // KTX/일반철도
     if (l.includes('경부') || l.includes('경원') || l.includes('경인') || l.includes('코레일')) return '#144278';
     if (l.includes('동해') || l.includes('대경')) return '#144278';
+    // 지방 도시철도
     if (l.includes('부산')) return '#F06A00';
     if (l.includes('대구')) return '#D93F5A';
     if (l.includes('대전')) return '#00B5B5';
@@ -387,53 +294,12 @@ function render() {
   }
 
   // 평형 버튼
-  const pm = d.pyeongs_map || {};
-  const hasSupply = Object.values(pm).some(p => p.supply > 0 && p.supply !== p.exclu);
-
-  // 선택된 평형부터 시작하도록 정렬
-  const curIdx = cats.indexOf(currentPyeong);
-  const sortedCats = curIdx > 0 ? [...cats.slice(curIdx), ...cats.slice(0, curIdx)] : cats;
-
-  // 공급면적 중복 시 A,B,C 접미사 계산
-  const supplyCount = {};
-  const supplySuffix = {};
-  if (areaMode === 'supply') {
-    sortedCats.forEach(c => {
-      if (pm[c] && pm[c].supply > pm[c].exclu && pm[c].supply > 0) {
-        const s = Math.round(pm[c].supply);
-        supplyCount[s] = (supplyCount[s] || 0) + 1;
-      }
-    });
-    const supplyIdx = {};
-    sortedCats.forEach(c => {
-      if (pm[c] && pm[c].supply > pm[c].exclu && pm[c].supply > 0) {
-        const s = Math.round(pm[c].supply);
-        if (supplyCount[s] > 1) {
-          supplyIdx[s] = (supplyIdx[s] || 0) + 1;
-          supplySuffix[c] = String.fromCharCode(64 + supplyIdx[s]); // A, B, C...
-        }
-      }
-    });
-  }
-
-  const pyeongHtml = sortedCats.map(c => {
-    let label;
-    if (areaMode === 'supply' && pm[c] && pm[c].supply > pm[c].exclu && pm[c].supply > 0) {
-      const s = Math.round(pm[c].supply);
-      label = supplySuffix[c] ? `${s}${supplySuffix[c]}㎡` : `${s}㎡`;
-    } else {
-      label = `${c}㎡`;
-    }
+  const pyeongHtml = cats.map(c => {
+    const py = Math.round(parseInt(c) / 3.3058);
+    const label = py > 0 ? `${py}평(${c})` : c;
     const active = c === currentPyeong ? ' active' : '';
     return `<div class="pyeong-btn${active}" data-cat="${esc(c)}">${esc(label)}</div>`;
   }).join('');
-
-  const areaTypeLabel = hasSupply
-    ? `<div style="display:flex;gap:4px;padding:8px 16px 0;">
-        <div style="font-size:11px;padding:3px 10px;border-radius:12px;cursor:pointer;${areaMode==='exclu'?'background:var(--dark);color:#fff;':'background:var(--card);color:var(--sub);border:1px solid var(--border);'}" onclick="areaMode='exclu';render();">전용</div>
-        <div style="font-size:11px;padding:3px 10px;border-radius:12px;cursor:pointer;${areaMode==='supply'?'background:var(--dark);color:#fff;':'background:var(--card);color:var(--sub);border:1px solid var(--border);'}" onclick="areaMode='supply';render();">공급</div>
-      </div>`
-    : '';
 
   // 현재 평형 기준 지표
   const tradeKey = currentPyeong;
@@ -446,7 +312,7 @@ function render() {
     highData = high[tradeKey];
   } else if (currentTab === '전세') {
     recentData = recent[jeonseKey];
-    highData = high[jeonseKey];
+    highData = null;
   } else {
     recentData = recent[wolseKey];
     highData = null;
@@ -475,8 +341,8 @@ function render() {
   // 최근 거래 목록 (현재 선택 평형 + 탭 기준)
   const tradeKeyFull = currentPyeong + (currentTab === '전세' ? '_jeonse' : (currentTab === '월세' ? '_wolse' : ''));
   const ph = (d.price_history || {})[tradeKeyFull] || [];
-  const pyNum = getCurrentPy();
-  const pyLabel = getCurrentPyLabel();
+  const pyNum = currentPyeong ? Math.round(parseInt(currentPyeong) / 3.3058) : 0;
+  const pyLabel = pyNum > 0 ? currentPyeong + '㎡(' + pyNum + '평)' : (currentPyeong ? currentPyeong + '㎡' : '');
 
   // price_history에 개별 거래가 있으면 그걸 사용
   let tradeItems = [];
@@ -488,20 +354,15 @@ function render() {
     if (val) tradeItems = [val];
   }
 
-  const tradeListHtml = tradeItems.slice(0,5).map(t => {
-    // 월세는 "보증금/월세" 형태
-    const priceText = (currentTab === '월세' && t.monthly)
-      ? formatPrice(t.price) + ' / ' + t.monthly + '만'
-      : formatPrice(t.price);
-    return `
+  const tradeListHtml = tradeItems.slice(0,5).map(t => `
     <div class="trade-item">
       <div>
-        <div class="trade-price">${priceText}</div>
+        <div class="trade-price">${formatPrice(t.price)}</div>
         <div class="trade-detail">${pyLabel}${t.floor ? ' · ' + t.floor + '층' : ''}</div>
       </div>
       <div class="trade-date">${esc(t.date || '')}</div>
-    </div>`;
-  }).join('');
+    </div>
+  `).join('');
 
   // 휙 매물
   const listingCount = {};
@@ -517,39 +378,24 @@ function render() {
     </div>
   `).join('');
 
-  // 주변 단지 (현재 선택 평형 기준으로 비교)
-  const curArea = parseInt(currentPyeong) || 84;
-  const myPrice = recentPrice;
-  const nearbyFiltered = nearby.map(n => {
-    const prices = n.prices || {};
-    // 현재 평형 ±10㎡ 내에서 가장 가까운 평형 찾기
-    let bestKey = null, bestDiff = 999;
-    for (const k of Object.keys(prices)) {
-      const diff = Math.abs(parseInt(k) - curArea);
-      if (diff <= 10 && diff < bestDiff) { bestDiff = diff; bestKey = k; }
+  // 주변 단지 (현재 단지 대비 가격 차이)
+  const myPrice84 = recent['84A'] ? recent['84A'].price : (recent['84'] ? recent['84'].price : recentPrice);
+  const nearbyHtml = nearby.map(n => {
+    let diffHtml = '';
+    if (n.price_84 && myPrice84) {
+      const diff = n.price_84 - myPrice84;
+      if (diff > 0) diffHtml = `<div class="nearby-diff pricier">▲ ${formatPrice(diff)} 비쌈</div>`;
+      else if (diff < 0) diffHtml = `<div class="nearby-diff cheaper">▼ ${formatPrice(Math.abs(diff))} 저렴</div>`;
+      else diffHtml = `<div class="nearby-diff" style="color:var(--sub)">동일</div>`;
     }
-    if (!bestKey) return null; // 비슷한 평형 없으면 제외
-    const p = prices[bestKey];
-    // 평당가 계산 (전용면적 기준)
-    const ppPrice = p.exclu > 0 ? Math.round(p.price / (p.exclu / 3.3058)) : 0;
-    return { ...n, matchedPrice: p.price, matchedExclu: p.exclu, matchedSupply: p.supply, ppPrice };
-  }).filter(Boolean);
-
-  // 평당가 순 정렬 (비싼 순)
-  nearbyFiltered.sort((a, b) => (b.ppPrice || 0) - (a.ppPrice || 0));
-
-  const nearbyHtml = nearbyFiltered.map(n => {
-    const diffHtml = '';
-    const areaLabel = (areaMode === 'supply' && n.matchedSupply && n.matchedSupply > n.matchedExclu) ? '공급' + Math.round(n.matchedSupply) + '㎡' : '전용' + n.matchedExclu + '㎡';
     return `
     <div class="nearby-item" onclick="location.href='danji.html?id=${esc(n.id)}'">
       <div>
         <div class="nearby-name">${esc(n.name)}</div>
-        <div class="nearby-sub">${esc(n.location)} ${n.distance ? '· '+distText(n.distance) : ''} · ${areaLabel}</div>
+        <div class="nearby-sub">${esc(n.location)} ${n.distance ? '· '+distText(n.distance) : ''}</div>
       </div>
       <div style="text-align:right">
-        <div class="nearby-price">${n.matchedPrice ? formatPrice(n.matchedPrice) : '-'}</div>
-        ${n.ppPrice ? '<div style="font-size:10px;color:var(--sub);margin-top:1px;">평당 '+formatPrice(n.ppPrice)+'</div>' : ''}
+        <div class="nearby-price">${n.price_84 ? formatPrice(n.price_84) : '-'}</div>
         ${diffHtml}
       </div>
     </div>`;
@@ -575,10 +421,12 @@ function render() {
   if (d.heating) specParts.push(d.heating);
   if (d.builder) specParts.push('시공 ' + d.builder);
   if (specParts.length > 0) seoParts.push(specParts.join(', ') + '.');
+  if (d.mgmt_fee) seoParts.push('세대당 월 평균 관리비 약 ' + Math.round(d.mgmt_fee/10000) + '만원.');
 
   // 평형 (DB categories 기반)
   if (cats.length > 0) {
-    seoParts.push('전용면적 ' + cats.map(c => c + '㎡').join(', ') + ' 타입이 있습니다.');
+    const pyList = cats.map(c => { const p = Math.round(parseInt(c)/3.3058); return p > 0 ? p+'평('+c+'㎡)' : c+'㎡'; });
+    seoParts.push(pyList.join(', ') + ' 평형이 있습니다.');
   }
 
   // 지하철 (DB nearby_subway 기반)
@@ -601,7 +449,7 @@ function render() {
     seoParts.push(priceText);
   }
   if (highPrice && highData) {
-    seoParts.push('3년 내 최고가는 ' + formatPrice(highPrice) + (highData.date ? ' (' + highData.date + ')' : '') + '입니다.');
+    seoParts.push('역대 최고가는 ' + formatPrice(highPrice) + (highData.date ? ' (' + highData.date + ')' : '') + '입니다.');
   }
   if (jeonseRate) {
     seoParts.push('전세가율은 ' + jeonseRate + '%입니다.');
@@ -622,21 +470,18 @@ function render() {
   // FAQ 데이터 — 확실한 데이터가 있는 항목만 표시
   const faqItems = [];
   if (recentPrice) {
-    const _tradeLabel = currentTab === '전세' ? '전세' : (currentTab === '월세' ? '월세' : '매매');
-    faqItems.push({ q: `${d.complex_name} 최근 ${_tradeLabel} 실거래가는?`, a: `${d.complex_name} 최근 ${_tradeLabel} 실거래가는 ${formatPrice(recentPrice)}입니다.${recentData && recentData.date ? ' ('+recentData.date+' 기준)' : ''}` });
-    const _py = getCurrentPy();
-    if (_py > 0) faqItems.push({ q: `${d.complex_name} 평당가는?`, a: `${_py}평(${getCurrentPyLabel()}) 기준 평당 ${formatPrice(Math.round(recentPrice / _py))}입니다.` });
+    faqItems.push({ q: `${d.complex_name} 최근 실거래가는?`, a: `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentPrice)}입니다.${recentData && recentData.date ? ' ('+recentData.date+' 기준)' : ''}` });
+    const _py = currentPyeong ? Math.round(parseInt(currentPyeong) / 3.3058) : 0;
+    if (_py > 0) faqItems.push({ q: `${d.complex_name} 평당가는?`, a: `${_py}평 기준 평당 ${formatPrice(Math.round(recentPrice / _py))}입니다.` });
   }
   if (jeonseRate) faqItems.push({ q: `${d.complex_name} 전세가율은?`, a: `${d.complex_name}의 전세가율은 ${jeonseRate}%입니다.` });
   if (subway.length > 0) faqItems.push({ q: `${d.complex_name} 근처 지하철역은?`, a: subway.map(s => `${s.name}(${s.line || ''}) 도보 ${walkMin(s.distance)}`).join(', ') });
-  if (highPrice) {
-    const tradeLabel = currentTab === '전세' ? '전세' : '매매';
-    faqItems.push({ q: `${d.complex_name} ${tradeLabel} 3년 내 최고가는?`, a: `${tradeLabel} 3년 내 최고가는 ${formatPrice(highPrice)}입니다.${highData && highData.date ? ' ('+highData.date+')' : ''}` });
-  }
+  if (highPrice) faqItems.push({ q: `${d.complex_name} 역대 최고가는?`, a: `역대 최고가는 ${formatPrice(highPrice)}입니다.${highData && highData.date ? ' ('+highData.date+')' : ''}` });
   if (parseInt(d.parking || 0) > 0 && d.total_units) {
     const _ratio = (parseInt(d.parking) / d.total_units).toFixed(1);
     faqItems.push({ q: `${d.complex_name} 주차 대수는?`, a: `총 ${parseInt(d.parking).toLocaleString()}대 (세대당 ${_ratio}대)입니다.` });
   }
+  if (d.mgmt_fee) faqItems.push({ q: `${d.complex_name} 관리비는?`, a: `세대당 월 평균 관리비는 약 ${Math.round(d.mgmt_fee/10000)}만원입니다. (공용관리비 + 개별사용료 포함)` });
   if (d.heating) faqItems.push({ q: `${d.complex_name} 난방 방식은?`, a: `${d.heating}입니다.` });
   if (d.builder) faqItems.push({ q: `${d.complex_name} 시공사는?`, a: `${esc(d.builder)}입니다.` });
 
@@ -673,74 +518,75 @@ function render() {
     </div>
 
     <!-- 평형 -->
-    ${areaTypeLabel}
-    <div class="pyeong-row${cats.length > 5 ? ' many' : ''}">${pyeongHtml}</div>
+    <div class="pyeong-row">${pyeongHtml}</div>
 
-    <!-- 지표 1행: 시세 (월세 탭에서는 숨김) -->
-    ${currentTab !== '월세' ? `<div class="metrics">
-      <div class="metric accent-yellow">
+    <!-- 지표 1행: 시세 -->
+    <div class="metrics">
+      <div class="metric">
         <div class="metric-label">최근 실거래</div>
         <div class="metric-value">${recentPrice ? formatPrice(recentPrice) : '-'}</div>
         ${changeHtml}
       </div>
-      <div class="metric accent-red">
-        <div class="metric-label">3년 내 최고가</div>
+      <div class="metric">
+        <div class="metric-label">역대 최고가</div>
         <div class="metric-value">${highPrice ? formatPrice(highPrice) : '-'}</div>
         <div class="metric-change neutral">${highData && highData.date ? highData.date : ''}</div>
       </div>
-      <div class="metric accent-blue">
+      <div class="metric">
         <div class="metric-label">전세가율</div>
         <div class="metric-value">${jeonseRate ? jeonseRate + '%' : '-'}</div>
       </div>
-    </div>` : ''}
-    <!-- 지표 2행: 평당가 + 최고 대비 + 거래량 (월세 탭 숨김) -->
-    ${currentTab !== '월세' ? `<div class="metrics">` : `<div style="display:none">`}
-      ${(() => {
-        const py = getCurrentPy();
-        const ppPrice = (recentPrice && py > 0) ? Math.round(recentPrice / py) : null;
-        return ppPrice ? '<div class="metric accent-yellow"><div class="metric-label">평당가</div><div class="metric-value">'+formatPrice(ppPrice)+'</div><div class="metric-change neutral">'+py+'평('+getCurrentPyLabel()+') 기준</div></div>' : '<div class="metric"><div class="metric-label">평당가</div><div class="metric-value">-</div></div>';
-      })()}
-      ${(() => {
-        if (!recentPrice || !highPrice) return '<div class="metric"><div class="metric-label">최고 대비</div><div class="metric-value">-</div></div>';
-        const pct = Math.round((recentPrice - highPrice) / highPrice * 1000) / 10;
-        const cls = pct < 0 ? 'down' : (pct > 0 ? 'up' : 'neutral');
-        const sign = pct > 0 ? '+' : '';
-        return '<div class="metric accent-red"><div class="metric-label">최고 대비</div><div class="metric-value">'+ sign + pct + '%</div><div class="metric-change '+cls+'">'+ formatPrice(Math.abs(recentPrice - highPrice)) + (pct < 0 ? ' 하락' : (pct > 0 ? ' 상승' : '')) +'</div></div>';
-      })()}
-      ${(() => {
-        const suffix = currentTab === '전세' ? '_jeonse' : (currentTab === '월세' ? '_wolse' : '');
-        const key = currentPyeong + (suffix || '');
-        const ph = (d.price_history || {})[key] || [];
-        // 최근 6개월 거래 건수
-        const now = new Date();
-        const m6 = new Date(now.getFullYear(), now.getMonth() - 6, 1).toISOString().slice(0,10);
-        const recent6 = ph.filter(p => p.date >= m6).length;
-        return '<div class="metric accent-green"><div class="metric-label">최근 거래</div><div class="metric-value">'+recent6+'건</div><div class="metric-change neutral">최근 6개월</div></div>';
-      })()}
     </div>
-    <!-- 단지 정보 (텍스트) -->
+    <!-- 지표 2행: 동적으로 채움 (데이터 있는 것만, 3열 그리드) -->
     ${(() => {
-      const items = [];
+      const cells = [];
+      // 평당가
+      const py = currentPyeong ? Math.round(parseInt(currentPyeong) / 3.3058) : 0;
+      const ppPrice = (recentPrice && py > 0) ? Math.round(recentPrice / py) : null;
+      if (ppPrice) cells.push({label:'평당가', value:formatPrice(ppPrice), sub:py+'평 기준'});
+      // 주차
       const pk = parseInt(d.parking || 0);
       const hh = parseInt(d.total_units || 0);
-      if (pk > 0) items.push('주차 ' + pk.toLocaleString() + '대' + (hh > 0 ? ' (세대당 '+(pk/hh).toFixed(1)+'대)' : ''));
-      if (d.top_floor) items.push('최고 ' + d.top_floor + '층');
-      if (d.heating) items.push(esc(d.heating));
-      if (items.length === 0) return '';
-      return '<div style="padding:0 16px 12px;font-size:12px;color:var(--sub);line-height:1.8;">'+items.join(' · ')+'</div>';
+      if (pk > 0) cells.push({label:'주차', value:pk.toLocaleString()+'대', sub: hh > 0 ? '세대당 '+(pk/hh).toFixed(1)+'대' : ''});
+      // 최고층
+      if (d.top_floor) cells.push({label:'최고층', value:d.top_floor+'층'});
+      // 관리비
+      if (d.mgmt_fee) cells.push({label:'월 관리비', value:Math.round(d.mgmt_fee/10000)+'만원', sub:'세대당 평균'});
+      // 난방
+      if (d.heating) cells.push({label:'난방', value:d.heating});
+      // 시공사
+      if (d.builder) cells.push({label:'시공', value:d.builder});
+      // 준공
+      if (d.build_year) cells.push({label:'준공', value:d.build_year+'년'});
+      // 세대수
+      if (d.total_units) cells.push({label:'세대수', value:d.total_units.toLocaleString()+'세대'});
+
+      if (cells.length === 0) return '';
+      // 3열씩 묶어서 출력
+      let html = '';
+      for (let i = 0; i < cells.length; i += 3) {
+        const row = cells.slice(i, i + 3);
+        html += '<div class="metrics">';
+        row.forEach(c => {
+          const fontSize = (c.value && c.value.length > 6) ? ' style="font-size:13px"' : '';
+          html += '<div class="metric"><div class="metric-label">'+esc(c.label)+'</div><div class="metric-value"'+fontSize+'>'+esc(c.value)+'</div>'+(c.sub ? '<div class="metric-change neutral">'+esc(c.sub)+'</div>' : '')+'</div>';
+        });
+        html += '</div>';
+      }
+      return html;
     })()}
 
-    <!-- 거래량 + 그래프 (월세 탭 숨김) -->
-    ${currentTab !== '월세' ? `<div class="chart-section">
+    <!-- 거래량 + 그래프 -->
+    <div class="chart-section">
       <div class="chart-title">거래량</div>
       <div style="height:40px;position:relative;"><canvas id="volumeChart"></canvas></div>
       <div class="chart-title" style="margin-top:8px;">실거래가</div>
       <div class="chart-wrap"><canvas id="priceChart"></canvas></div>
-    </div>` : ''}
+    </div>
 
     <!-- 최근 실거래 -->
     <div class="section">
-      <div class="section-title">최근 ${currentTab === '전세' ? '전세' : (currentTab === '월세' ? '월세' : '매매')} 실거래</div>
+      <div class="section-title">최근 실거래</div>
       <div class="trade-list">${tradeListHtml || '<div style="font-size:12px;color:var(--sub);padding:8px 0;">거래 내역이 없습니다</div>'}</div>
     </div>
 
@@ -754,7 +600,7 @@ function render() {
       </div>
       ${listingHtml
         ? '<div class="trade-list">' + listingHtml + '</div>'
-        : '<div class="listing-empty" onclick="location.href=\'card_generator_v2_auth.html\'" style="cursor:pointer;"><div class="listing-empty-text">이 단지에 등록된 매물이 아직 없습니다</div><div class="listing-empty-cta">중개사님, 매물을 등록해보세요 →</div></div>'
+        : '<div class="listing-empty"><div class="listing-empty-text">이 단지에 등록된 매물이 아직 없습니다</div><div class="listing-empty-cta" onclick="location.href=\'card_generator_v2_auth.html\'">중개사님, 매물을 등록해보세요 →</div></div>'
       }
     </div>
 
@@ -763,7 +609,7 @@ function render() {
     <!-- 주변 단지 -->
     <div class="section">
       <div class="section-title">${esc(dong)} 주변 단지</div>
-      <div style="font-size:11px;color:var(--sub);margin-bottom:12px;margin-top:-6px;">${getCurrentPyLabel()} 근처 매매 기준</div>
+      <div style="font-size:11px;color:var(--sub);margin-bottom:12px;margin-top:-6px;">84㎡ 기준</div>
       <div style="display:flex;flex-direction:column;gap:8px;">${nearbyHtml || '<div style="font-size:12px;color:var(--sub);">주변 단지 정보가 없습니다</div>'}</div>
     </div>
 
@@ -771,6 +617,24 @@ function render() {
     <div class="faq-section">
       <div class="section-title">자주 묻는 질문</div>
       ${faqHtml}
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 내부 링크 (SEO) -->
+    <div class="section">
+      <div class="section-title">더 알아보기</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <a href="dong.html?gu=${encodeURIComponent(gu)}&dong=${encodeURIComponent(dong)}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
+          <span style="font-size:13px;">${esc(dong)} 다른 단지 시세</span><span style="color:var(--sub);font-size:12px;">→</span>
+        </a>
+        <a href="gu.html?name=${encodeURIComponent(gu)}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
+          <span style="font-size:13px;">${esc(gu)} 전체 시세</span><span style="color:var(--sub);font-size:12px;">→</span>
+        </a>
+        <a href="ranking.html" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
+          <span style="font-size:13px;">서울 아파트 순위</span><span style="color:var(--sub);font-size:12px;">→</span>
+        </a>
+      </div>
     </div>
 
     <div class="divider"></div>
@@ -792,36 +656,13 @@ function render() {
 
   // 이벤트 바인딩
   $$('.tab').forEach(el => el.addEventListener('click', () => {
-    haptic();
     currentTab = el.dataset.tab;
     render();
   }));
   $$('.pyeong-btn').forEach(el => el.addEventListener('click', () => {
-    haptic();
     currentPyeong = el.dataset.cat;
     render();
-    // 선택한 버튼을 왼쪽 첫번째로 스크롤
-    setTimeout(() => {
-      const active = document.querySelector('.pyeong-btn.active');
-      if (active) {
-        const row = active.parentElement;
-        const rowRect = row.getBoundingClientRect();
-        const btnRect = active.getBoundingClientRect();
-        row.scrollLeft += btnRect.left - rowRect.left - 16;
-      }
-    }, 50);
   }));
-
-  // 렌더할 때마다 active 버튼을 왼쪽 첫번째로
-  setTimeout(() => {
-    const active = document.querySelector('.pyeong-btn.active');
-    if (active) {
-      const row = active.parentElement;
-      const rowRect = row.getBoundingClientRect();
-      const btnRect = active.getBoundingClientRect();
-      row.scrollLeft = btnRect.left - rowRect.left - 16 + row.scrollLeft;
-    }
-  }, 10);
 
   // 차트
   drawChart();
@@ -834,17 +675,6 @@ function drawChart() {
 
   if (chart) { chart.destroy(); chart = null; }
   if (volumeChart) { volumeChart.destroy(); volumeChart = null; }
-
-  // 월세는 보증금/월세 두 축이라 그래프 불가
-  if (currentTab === '월세') {
-    canvas.parentElement.innerHTML = '';
-    const volCanvas = document.getElementById('volumeChart');
-    if (volCanvas) volCanvas.parentElement.innerHTML = '';
-    // 거래량/실거래가 타이틀도 숨김
-    document.querySelectorAll('.chart-title').forEach(el => el.style.display = 'none');
-    return;
-  }
-  document.querySelectorAll('.chart-title').forEach(el => el.style.display = '');
 
   const suffix = currentTab === '전세' ? '_jeonse' : (currentTab === '월세' ? '_wolse' : '');
   const key = currentPyeong + (suffix || '');
@@ -904,20 +734,15 @@ function drawChart() {
   const min = Math.floor(Math.min(...yValues) * 0.92);
   const max = Math.ceil(Math.max(...yValues) * 1.05);
 
-  // 점 개수에 따라 크기/투명도 조절
-  const ptCount = points.length;
-  const ptRadius = ptCount > 200 ? 2.5 : ptCount > 50 ? 3.5 : 5;
-  const ptAlpha = ptCount > 200 ? 0.35 : ptCount > 50 ? 0.5 : 0.7;
-
   chart = new Chart(canvas, {
     type: 'scatter',
     data: {
       datasets: [{
         data: points.map(p => ({ x: p.x, y: p.y })),
-        backgroundColor: `rgba(245,200,66,${ptAlpha})`,
-        borderColor: 'rgba(245,200,66,0.3)',
-        borderWidth: 0.5,
-        pointRadius: ptRadius,
+        backgroundColor: 'rgba(245,200,66,0.7)',
+        borderColor: '#f5c842',
+        borderWidth: 1,
+        pointRadius: 5,
         pointHoverRadius: 7,
         pointHoverBackgroundColor: '#f5c842',
       }]
@@ -925,12 +750,6 @@ function drawChart() {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      onClick: () => haptic(),
-      interaction: {
-        mode: 'nearest',
-        intersect: false,
-        axis: 'x',
-      },
       plugins: {
         legend: { display: false },
         tooltip: {
@@ -943,15 +762,16 @@ function drawChart() {
             beforeBody: ctx => {
               const p = points[ctx[0].dataIndex];
               const tabLabel = currentTab || '매매';
-              const py = getCurrentPy();
-              const pyLabel = getCurrentPyLabel();
+              const py = currentPyeong ? Math.round(parseInt(currentPyeong) / 3.3058) : 0;
+              const pyLabel = py > 0 ? currentPyeong + '(' + py + '평)' : (currentPyeong || '');
               const parts = [tabLabel];
               if (pyLabel) parts.push(pyLabel);
+              if (p.floor) parts.push(p.floor + '층');
               return parts.join(' · ');
             },
             label: ctx => {
               const p = points[ctx.dataIndex];
-              return formatPrice(p.price) + (p.floor ? '  ' + p.floor + '층' : '');
+              return formatPrice(p.price);
             }
           }
         }
@@ -1025,7 +845,6 @@ function drawChart() {
 
 // ── 에러 ──
 function showError(msg) {
-  document.querySelector('meta[name="robots"]').content = 'noindex, nofollow';
   $('#app').innerHTML = `
     <div class="error">
       <div class="error-icon">🏠</div>
@@ -1050,12 +869,12 @@ function injectJsonLd() {
   let jr = d.jeonse_rate;
   if (jeonseFirst && recentFirst && recentFirst.price > 0) jr = Math.round(jeonseFirst.price / recentFirst.price * 1000) / 10;
 
-  // FAQ — 데이터 있는 항목만 (placeholder 금지)
-  const faq = [];
-  if (recentFirst) faq.push({ q: `${d.complex_name} 최근 실거래가는?`, a: `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentFirst.price)}입니다.${recentFirst.date ? ' ('+recentFirst.date+' 기준)' : ''}` });
-  if (jr) faq.push({ q: `${d.complex_name} 전세가율은?`, a: `${d.complex_name}의 전세가율은 ${jr}%입니다.` });
-  if (subway.length > 0) faq.push({ q: `${d.complex_name} 근처 지하철역은?`, a: subway.map(s => `${s.name}(${s.line || ''}) 도보 ${walkMin(s.distance)}`).join(', ') });
-  if (highFirst) faq.push({ q: `${d.complex_name} 3년 내 최고가는?`, a: `3년 내 최고가는 ${formatPrice(highFirst.price)}입니다.${highFirst.date ? ' ('+highFirst.date+')' : ''}` });
+  const faq = [
+    { q: `${d.complex_name} 최근 실거래가는?`, a: recentFirst ? `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentFirst.price)}입니다.${recentFirst.date ? ' ('+recentFirst.date+' 기준)' : ''}` : '최근 거래 내역을 확인 중입니다.' },
+    { q: `${d.complex_name} 전세가율은?`, a: jr ? `${d.complex_name}의 전세가율은 약 ${jr}%입니다.` : '전세가율 정보를 확인 중입니다.' },
+    { q: `${d.complex_name} 근처 지하철역은?`, a: subway.length > 0 ? subway.map(s => `${s.name}(${s.line || ''}) 도보 ${walkMin(s.distance)}`).join(', ') : '주변 지하철 정보를 확인 중입니다.' },
+    { q: `${d.complex_name} 역대 최고가는?`, a: highFirst ? `${d.complex_name} 역대 최고가는 ${formatPrice(highFirst.price)}입니다.${highFirst.date ? ' ('+highFirst.date+')' : ''}` : '역대 최고가 정보를 확인 중입니다.' },
+  ];
 
   const ld = {
     "@context": "https://schema.org",
@@ -1063,13 +882,11 @@ function injectJsonLd() {
       {
         "@type": "Residence",
         "name": d.complex_name,
-        "url": canonUrl,
         "address": { "@type": "PostalAddress", "addressLocality": d.location, "streetAddress": d.address, "addressRegion": "서울특별시", "addressCountry": "KR" },
         "geo": { "@type": "GeoCoordinates", "latitude": d.lat, "longitude": d.lng },
         "description": d.seo_text || '',
         "numberOfRooms": d.total_units,
         "yearBuilt": d.build_year,
-        "priceCurrency": "KRW",
       },
       {
         "@type": "BreadcrumbList",

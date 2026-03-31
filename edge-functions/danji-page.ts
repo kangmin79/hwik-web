@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
 
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-    const { data, error } = await supabase.from('danji_pages').select('*').eq('id', id).single();
+    const { data, error } = await supabase.from('danji_pages').select('id,complex_name,location,address,build_year,total_units,categories,recent_trade,all_time_high,jeonse_rate,price_history,nearby_subway,nearby_school,nearby_complex,active_listings,lat,lng,top_floor,parking,heating,builder,mgmt_fee,seo_text,updated_at').eq('id', id).single();
 
     if (error || !data) {
       return new Response('<html><body>단지 정보를 찾을 수 없습니다</body></html>', { status: 404, headers });

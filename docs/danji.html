@@ -207,7 +207,7 @@ async function loadData() {
   const id = new URLSearchParams(location.search).get('id');
   if (!id) { showError('단지 ID가 없습니다'); return; }
 
-  const { data, error } = await sb.from('danji_pages').select('*').eq('id', id).single();
+  const { data, error } = await sb.from('danji_pages').select('id,complex_name,location,address,build_year,total_units,categories,recent_trade,all_time_high,jeonse_rate,price_history,nearby_subway,nearby_school,nearby_complex,active_listings,lat,lng,top_floor,parking,heating,builder,mgmt_fee,seo_text,updated_at').eq('id', id).single();
   if (error || !data) { showError('단지 정보를 찾을 수 없습니다'); return; }
 
   DATA = data;
