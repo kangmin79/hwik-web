@@ -227,7 +227,7 @@ Deno.serve(async (req) => {
     if (structuredCount >= 2) {
       let sqlQuery = supabase
         .from('cards')
-        .select('id, property, agent_comment, price_number, trade_status, photos, lat, lng, created_at, search_text, contact_name, contact_phone')
+        .select('id, property, agent_id, agent_comment, price_number, trade_status, photos, lat, lng, created_at, search_text, contact_name, contact_phone')
         .eq('agent_id', effectiveAgentId)
         .neq('property->>type', '손님')
         .eq('trade_status', '계약가능');
@@ -331,7 +331,7 @@ Deno.serve(async (req) => {
           for (const radius of [5, 8]) {
             let locQuery = supabase
               .from('cards')
-              .select('id, property, agent_comment, price_number, trade_status, photos, lat, lng, created_at, search_text, contact_name, contact_phone')
+              .select('id, property, agent_id, agent_comment, price_number, trade_status, photos, lat, lng, created_at, search_text, contact_name, contact_phone')
               .eq('agent_id', effectiveAgentId)
               .neq('property->>type', '손님')
               .eq('trade_status', '계약가능')
@@ -568,6 +568,7 @@ Deno.serve(async (req) => {
     results = results.slice(0, limit).map((r: any) => ({
       id: r.id,
       property: r.property,
+      agent_id: r.agent_id || null,
       agent_comment: r.agent_comment,
       price_number: r.price_number,
       trade_status: r.trade_status,
