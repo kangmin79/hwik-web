@@ -2451,17 +2451,12 @@ const PanelClient = (() => {
     let notes=[],matches=[];
     try{const d=await Data.loadClientDetail(card.id);notes=d.notes||[];matches=d.matches||[];}catch(_){}
 
-    const stageMap={'메모':{color:'#6366f1',label:'신규'},'상담':{color:'#60a5fa',label:'상담'},'방문':{color:'#f59e0b',label:'방문'},'매물소개':{color:'#a78bfa',label:'소개'},'계약':{color:'#ef4444',label:'계약'}};
-    const lastNote=notes[0];
-    const stage=lastNote?(stageMap[lastNote.type]||stageMap['메모']):stageMap['메모'];
-
     let h=`<div onclick="PanelClient.closeDetail()" style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-sub);font-size:12px;font-weight:600;cursor:pointer;margin-bottom:12px;">← 손님 목록</div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
       <span style="font-size:24px;">🙋</span>
       <div style="flex:1;">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
           <span style="font-size:15px;font-weight:800;">${esc(name)}</span>
-          <span style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;background:${stage.color}20;border:1px solid ${stage.color};color:${stage.color};">${stage.label}</span>
           ${clientWantTag(card)}
         </div>
         <div style="font-size:12px;color:var(--text-sub);margin-top:2px;">${conds}</div>
