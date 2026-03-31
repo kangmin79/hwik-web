@@ -2440,8 +2440,13 @@ const PanelClient = (() => {
     const card=Hub.current?.data;if(!card)return;const p=card.property||{},pn=card.private_note||{};
     if(key==='cl_conditions'){let h=`<div class="panel-inner">${Hub.panelHead('희망 조건')}`;[['예산',p.price],['지역',p.location],['단지',p.complex],['면적',p.area],['유형',p.type]].filter(([,v])=>v).forEach(([l,v])=>h+=`<div class="detail-row"><div class="detail-value">${esc(v)}</div><div class="detail-label">${l}</div></div>`);if((p.features||[]).length)h+=`<div class="detail-tags">${p.features.map(f=>`<span class="detail-tag">${esc(f)}</span>`).join('')}</div>`;if(pn.memo)h+=`<div class="client-memo">${esc(pn.memo)}</div>`;h+=`<button class="btn-primary" style="margin-top:16px;" onclick="PanelClient.editClient('${card.id}')">손님 정보 수정</button>`;el.innerHTML=h+'</div>';}
 
-    else if(key==='cl_match'){const ms=Hub.current?._matches||[];let h=`<div class="panel-inner">${Hub.panelHead('매칭 매물',ms.length+'건')}`;if(!ms.length)h+='<div class="empty"><div class="empty-icon">🏠</div>매칭 매물이 없어요</div>';else ms.forEach(m=>{h+=Hub._renderMatchItem(m);});
-      h+=`<button class="btn-primary" style="margin-top:16px;" onclick="PanelClient.reMatch('${card.id}')">매칭 다시 찾기</button>`;el.innerHTML=h+'</div>';}
+    else if(key==='cl_match'){const ms=Hub.current?._matches||[];
+      let h=`<div class="panel-with-preview"><div class="panel-input"><div class="panel-inner">${Hub.panelHead('매칭 매물',ms.length+'건')}`;
+      if(!ms.length)h+='<div class="empty"><div class="empty-icon">🏠</div>매칭 매물이 없어요</div>';
+      else ms.forEach(m=>{h+=Hub._renderMatchItem(m);});
+      h+=`<button class="btn-primary" style="margin-top:16px;" onclick="PanelClient.reMatch('${card.id}')">매칭 다시 찾기</button>`;
+      h+=`</div></div><div class="panel-preview-wrap" id="matchPreviewPanel" style="width:0;opacity:0;padding:0;"></div></div>`;
+      el.innerHTML=h;}
 
     else if(key==='cl_timeline'){const ns=Hub.current?._notes||[];let h=`<div class="panel-inner">${Hub.panelHead('상담 기록',ns.length+'건')}
       <div class="note-row"><input type="text" id="noteIn" placeholder="메모 입력... (예: 내일 2시 방문 예정)" onkeydown="if(event.key==='Enter')PanelClient.saveNote('${card.id}')" oninput="PanelClient.pvNote(this.value)"><button onclick="PanelClient.saveNote('${card.id}')">저장</button></div><div id="notePv" class="note-preview" style="display:none"></div>`;
