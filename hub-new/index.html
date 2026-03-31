@@ -985,10 +985,20 @@ const Data = (() => {
 // 손님이 찾는 매물 유형 라벨 (예: "상가 월세", "아파트 전세")
 function clientWantLabel(card){
   const p=card.property||{};
-  const cat=p.category?({'apartment':'아파트','officetel':'오피스텔','room':'원투룸','commercial':'상가','office':'사무실'}[p.category]||p.category):'';
+  const catMap={'apartment':'아파트','officetel':'오피스텔','room':'원투룸','commercial':'상가','office':'사무실'};
+  let cat=p.category?(catMap[p.category]||p.category):'';
+  if(!cat){
+    // rawText + location + complex + features 전체에서 추출
+    const all=[p.rawText,p.location,p.complex,...(p.features||[])].filter(Boolean).join(' ');
+    if(/상가|점포|매장|식당|카페|편의점/.test(all))cat='상가';
+    else if(/사무실|오피스|업무/.test(all))cat='사무실';
+    else if(/아파트/.test(all))cat='아파트';
+    else if(/오피스텔/.test(all))cat='오피스텔';
+    else if(/빌라|다세대|연립/.test(all))cat='빌라';
+    else if(/원룸|투룸|쓰리룸|1룸|2룸/.test(all))cat='원투룸';
+  }
   const trade=card.wanted_trade_type||'';
-  const fromText=!cat&&p.rawText?(/아파트/.test(p.rawText)?'아파트':/오피스텔/.test(p.rawText)?'오피스텔':/상가/.test(p.rawText)?'상가':/사무실/.test(p.rawText)?'사무실':/빌라/.test(p.rawText)?'빌라':/원룸|투룸|쓰리룸/.test(p.rawText)?'원투룸':''):'';
-  return [cat||fromText,trade].filter(Boolean).join(' ')||'손님';
+  return [cat,trade].filter(Boolean).join(' ')||'손님';
 }
 function clientWantTag(card){
   const label=clientWantLabel(card);
