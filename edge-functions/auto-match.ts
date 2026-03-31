@@ -4,7 +4,7 @@ import { DISTRICT_COORDS, haversineDistance } from '../_shared/geo.ts'
 import { fixTypos } from '../_shared/typo.ts'
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': 'https://hwik.kr',
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
@@ -45,7 +45,8 @@ Deno.serve(async (req) => {
       }
       const cp = card.property || {};
       const catKo = {apartment:'아파트',officetel:'오피스텔',room:'원투룸',commercial:'상가',office:'사무실'}[cp.category] || '';
-      const embedText = [cp.type, catKo, cp.price, cp.location, cp.complex, cp.area, cp.floor, cp.room, (cp.features||[]).join(' '), cp.moveIn].filter(Boolean).join(' ');
+      const cardMemo = card.property?.memo || '';
+      const embedText = [cp.type, catKo, cp.price, cp.location, cp.complex, cp.area, cp.floor, cp.room, (cp.features||[]).join(' '), cp.moveIn, cardMemo].filter(Boolean).join(' ');
       const embedResp = await fetch('https://api.openai.com/v1/embeddings', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
@@ -77,7 +78,7 @@ Deno.serve(async (req) => {
     //    - 임베딩 있는 것만
     const { data: clients, error: clientErr } = await supabase
       .from('cards')
-      .select('id, property, private_note, embedding, price_number')
+      .select('id, property, private_note, embedding, price_number, wanted_trade_type')
       .eq('agent_id', agent_id)
       .eq('property->>type', '손님')
       .not('embedding', 'is', null)
@@ -104,10 +105,17 @@ Deno.serve(async (req) => {
       // ★ 오타/한글숫자 교정
       allText = fixTypos(allText);
 
-      // 거래유형 체크
-      if (tradeType === '매매' && !/매매|매도|분양|ㅁㅁ/.test(allText)) return false;
-      if (tradeType === '전세' && !/전세|ㅈㅅ|젼세/.test(allText)) return false;
-      if (tradeType === '월세' && !/월세|임대|ㅇㅅ|웜세/.test(allText)) return false;
+      // 거래유형 체크 (DB 컬럼 우선, 텍스트 파싱 보조)
+      const clientWanted = c.wanted_trade_type || '';
+      if (clientWanted) {
+        // DB에 wanted_trade_type이 있으면 정확 매칭
+        if (clientWanted !== tradeType) return false;
+      } else {
+        // 텍스트 파싱 폴백
+        if (tradeType === '매매' && !/매매|매도|분양|ㅁㅁ/.test(allText)) return false;
+        if (tradeType === '전세' && !/전세|ㅈㅅ|젼세/.test(allText)) return false;
+        if (tradeType === '월세' && !/월세|임대|ㅇㅅ|웜세/.test(allText)) return false;
+      }
 
       // 카테고리 체크 (손님이 특정 카테고리를 원하면)
       if (cp.category && cardCategory && cp.category !== cardCategory) return false;
