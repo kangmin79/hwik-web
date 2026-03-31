@@ -1440,7 +1440,9 @@ const Hub = (() => {
   function enterClient(card) {
     const p=card.property||{};
     stack.push({nodes:current?.nodes||MAIN,center:current?.center});
-    current={type:'client',data:card,nodes:CLIENT,center:{icon:'🙋',name:card.contact_name||p.location||p.complex||'손님',sub:[p.price,p.location,p.type].filter(Boolean).join(' · ')},_notes:[],_matches:[]};
+    const _cname=card.contact_name||(p.location?p.location:'손님');
+    const _csub=[p.location&&card.contact_name?p.location:null,p.type,p.price].filter(Boolean).join(' ');
+    current={type:'client',data:card,nodes:CLIENT,center:{icon:'🙋',name:_cname,sub:_csub},_notes:[],_matches:[]};
     closePanel();render(CLIENT,current.center);
     Data.loadClientDetail(card.id).then(d=>{current._notes=d.notes;current._matches=d.matches;});
     // 최근 본 손님 기록
