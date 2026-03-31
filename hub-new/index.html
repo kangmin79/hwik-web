@@ -1436,6 +1436,7 @@ const Hub = (() => {
   const MAIN=[{key:'register',label:'매물 등록',angle:-90},{key:'my',label:'내 매물',angle:-18},{key:'client',label:'손님',angle:54},{key:'alert',label:'알림',angle:126},{key:'shared',label:'공유방',angle:198}];
   const CLIENT=[{key:'cl_conditions',label:'희망 조건',angle:-90},{key:'cl_match',label:'매칭 매물',angle:-30},{key:'cl_timeline',label:'상담 기록',angle:30},{key:'cl_schedule',label:'일정/알림',angle:90},{key:'cl_contact',label:'연락처',angle:150},{key:'cl_back',label:'← 돌아가기',angle:210}];
   const PROPERTY=[{key:'pr_detail',label:'상세 정보',angle:-90},{key:'pr_status',label:'거래 상태',angle:30},{key:'pr_back',label:'← 돌아가기',angle:150}];
+  const ALERT=[{key:'al_all',label:'전체 알림',angle:-90},{key:'al_match',label:'매칭 알림',angle:-30},{key:'al_schedule',label:'일정',angle:30},{key:'al_nocontact',label:'미연락 손님',angle:90},{key:'al_calendar',label:'달력',angle:150},{key:'al_back',label:'← 돌아가기',angle:210}];
 
   function render(nodes,center) {
     nodes=nodes||MAIN;center=center||{icon:'👤',name:Auth.profile?.business_name||'중개사',sub:''};
@@ -1510,7 +1511,30 @@ const Hub = (() => {
     });
   }
 
-  function onNode(key) { if(key==='cl_back'||key==='pr_back'){back();return;} if(key.startsWith('cl_')||key.startsWith('pr_')){openSub(key);return;} openPanel(key); }
+  function onNode(key) {
+    if(key==='cl_back'||key==='pr_back'||key==='al_back'){back();return;}
+    if(key.startsWith('cl_')||key.startsWith('pr_')){openSub(key);return;}
+    if(key.startsWith('al_')){_openAlertSub(key);return;}
+    if(key==='alert'){_enterAlert();return;}
+    openPanel(key);
+  }
+
+  function _enterAlert(){
+    stack.push({nodes:current?.nodes||MAIN,center:current?.center});
+    current={type:'alert',nodes:ALERT,center:{icon:'🔔',name:'알림',sub:''}};
+    closePanel();render(ALERT,current.center);
+    // 바로 전체 알림 패널 열기
+    setTimeout(()=>_openAlertSub('al_all'),100);
+  }
+
+  function _openAlertSub(key){
+    document.querySelectorAll('.hub-node').forEach(n=>n.classList.remove('active'));
+    document.querySelector(`.hub-node[data-key="${key}"]`)?.classList.add('active');
+    activePanel=key;document.getElementById('main').classList.add('split');
+    _renderVertical();_hideHeaderBtns();
+    const el=document.getElementById('panelArea');
+    PanelAlert.renderSub(key,el);
+  }
 
   function openPanel(key) {
     if(activePanel===key){closePanel();return;}
@@ -1916,7 +1940,7 @@ const Hub = (() => {
     (matches.length>5?`<div style="text-align:center;padding:8px;"><button onclick="Hub.openSub('cl_match')" style="padding:6px 20px;border-radius:8px;border:1px solid var(--primary);background:transparent;color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;">전체 ${matches.length}건 보기</button></div>`:'');
   }
 
-  return { MAIN,CLIENT,PROPERTY, render,onNode,onCenterClick,openPanel,openSub,closePanel,enterClient,enterProperty,back, panelHead:_ph, _openMyInfo, _sendOtp, _verifyOtp, _saveMyInfo, get current(){return current;}, get activePanel(){return activePanel;}, get RADIUS(){return RADIUS;}, adjustLayout, _saveSettings, _openProfileEdit, _renderMatchItem, _toggleMatchSel, _enterClientDirect, _renderVerticalDirect };
+  return { MAIN,CLIENT,PROPERTY,ALERT, render,onNode,onCenterClick,openPanel,openSub,closePanel,enterClient,enterProperty,back, panelHead:_ph, _openMyInfo, _sendOtp, _verifyOtp, _saveMyInfo, get current(){return current;}, get activePanel(){return activePanel;}, get RADIUS(){return RADIUS;}, adjustLayout, _saveSettings, _openProfileEdit, _renderMatchItem, _toggleMatchSel, _enterClientDirect, _renderVerticalDirect };
 })();
 
 /* ═══════════════════════════════════════════════════════════
@@ -3115,7 +3139,36 @@ const PanelAlert = (() => {
 
   async function calNav(dir){calMonth+=dir;if(calMonth>12){calMonth=1;calYear++;}if(calMonth<1){calMonth=12;calYear--;}await _renderCal();}
 
-  return { render, calNav };
+  async function renderSub(key,el){
+    const alerts=await Data.loadAlerts();
+    const all=[];
+    alerts.overdue.forEach(a=>all.push({type:'overdue',icon:'⚠️',label:esc(a.content||a.type||'일정'),sub:new Date(a.alert_date).toLocaleDateString('ko-KR')+' (지연)',time:new Date(a.alert_date),color:'#ef4444',read:false}));
+    alerts.matches.forEach(m=>all.push({type:'match',icon:'🏠',label:'매칭 매물 발견',sub:new Date(m.created_at).toLocaleDateString('ko-KR'),time:new Date(m.created_at),color:'var(--primary)',read:m.is_read}));
+    alerts.memos.forEach(m=>all.push({type:'memo',icon:'📝',label:esc(m.content||'메모'),sub:new Date(m.created_at).toLocaleDateString('ko-KR'),time:new Date(m.created_at),color:'#f59e0b',read:m.is_read}));
+    (alerts.noContact||[]).forEach(c=>{const p=c.property||{};all.push({type:'nocontact',icon:'📞',label:`${esc(c.contact_name||p.location||'손님')} — 연락 필요`,sub:'7일+ 미연락',time:new Date(c.created_at),color:'#f97316',read:false});});
+
+    let filtered=all;
+    if(key==='al_match')filtered=all.filter(a=>a.type==='match');
+    else if(key==='al_schedule')filtered=all.filter(a=>a.type==='overdue');
+    else if(key==='al_nocontact')filtered=all.filter(a=>a.type==='nocontact');
+
+    if(key==='al_calendar'){
+      const now=new Date();calYear=now.getFullYear();calMonth=now.getMonth()+1;
+      el.innerHTML=`<div class="panel-inner">${Hub.panelHead('달력')}<div class="cal-header"><button class="cal-nav" onclick="PanelAlert.calNav(-1)">◀</button><div class="cal-title" id="calTitle">${calYear}년 ${calMonth}월</div><button class="cal-nav" onclick="PanelAlert.calNav(1)">▶</button></div><div id="calGrid"></div></div>`;
+      await _renderCal();return;
+    }
+
+    const titles={'al_all':'전체 알림','al_match':'매칭 알림','al_schedule':'일정','al_nocontact':'미연락 손님'};
+    const _priority={'overdue':4,'nocontact':3,'match':2,'memo':1};
+    filtered.sort((a,b)=>{if(a.read!==b.read)return a.read?1:-1;const pa=_priority[a.type]||0,pb=_priority[b.type]||0;if(pa!==pb)return pb-pa;return b.time-a.time;});
+    let h=`<div class="panel-inner">${Hub.panelHead(titles[key]||'알림',filtered.length+'건')}`;
+    if(!filtered.length)h+='<div class="empty"><div class="empty-icon">🔔</div>알림이 없어요</div>';
+    else filtered.forEach(a=>{h+=`<div class="tl-item" style="${a.read?'opacity:0.5;':''}"><span style="font-size:16px;flex-shrink:0;">${a.icon}</span><div style="flex:1;"><div class="tl-text">${a.label}</div><div class="tl-date">${a.sub}</div></div><div style="width:8px;height:8px;border-radius:50%;background:${a.read?'#cbd5e1':a.color};flex-shrink:0;"></div></div>`;});
+    el.innerHTML=h+'</div>';
+    _markAllRead(alerts);
+  }
+
+  return { render, renderSub, calNav };
 })();
 
 /* ═══════════════════════════════════════════════════════════
