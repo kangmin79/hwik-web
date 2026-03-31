@@ -1536,23 +1536,34 @@ const Hub = (() => {
     setTimeout(()=>render(current?.nodes,current?.center),400);
   }
 
-  function enterClient(card) {
+  function _buildClientCenter(card){
     const p=card.property||{};
-    stack.push({nodes:current?.nodes||MAIN,center:current?.center});
     const _cname=card.contact_name||(p.location?p.location:'손님');
-    const _wantLbl=clientWantLabel(card);
     const _csub=[p.price,p.location&&card.contact_name?p.location:null].filter(Boolean).join(' ');
-    // 중앙 노드용 태그 (같은 스타일, 작은 폰트)
     const _trades=_clientTrades(card);const _cats=_clientCats(card);
     let _wtag='';
     if(_trades.length){_trades.forEach(t=>{_cats.forEach(c=>{const s=_catStyle[c]||_catStyle['손님'];const tc=_tradeColor[t]||'#475569';_wtag+=`<span style="padding:1px 6px;border-radius:5px;font-size:8px;font-weight:700;background:${s.bg};border:1px solid ${s.border};color:${tc};margin-bottom:1px;">${esc([c,t].filter(Boolean).join(' '))}</span> `;});});
     }else if(_cats[0]!=='손님'){_cats.forEach(c=>{const s=_catStyle[c]||_catStyle['손님'];_wtag+=`<span style="padding:1px 6px;border-radius:5px;font-size:8px;font-weight:700;background:${s.bg};border:1px solid ${s.border};color:#475569;margin-bottom:1px;">${esc(c)}</span> `;});}
-    current={type:'client',data:card,nodes:CLIENT,center:{icon:'🙋',name:_cname,sub:_csub,tag:_wtag},_notes:[],_matches:[]};
+    return {icon:'🙋',name:_cname,sub:_csub,tag:_wtag};
+  }
+
+  function enterClient(card) {
+    stack.push({nodes:current?.nodes||MAIN,center:current?.center});
+    current={type:'client',data:card,nodes:CLIENT,center:_buildClientCenter(card),_notes:[],_matches:[]};
     closePanel();render(CLIENT,current.center);
     Data.loadClientDetail(card.id).then(d=>{current._notes=d.notes;current._matches=d.matches;});
-    // 최근 본 손님 기록
     if(typeof PanelClient!=='undefined'&&PanelClient._addRecent)PanelClient._addRecent(card.id);
   }
+
+  // 원형 렌더 없이 상태만 전환 (손님 목록에서 클릭 시)
+  function _enterClientDirect(card){
+    if(!current||current.type!=='client'||current.data?.id!==card.id){
+      stack.push({nodes:current?.nodes||MAIN,center:current?.center});
+    }
+    current={type:'client',data:card,nodes:CLIENT,center:_buildClientCenter(card),_notes:[],_matches:[]};
+    activePanel='cl_card';
+  }
+  function _renderVerticalDirect(){_renderVertical();_hideHeaderBtns();}
 
   function enterProperty(card) {
     const p=card.property||{};
@@ -1877,7 +1888,7 @@ const Hub = (() => {
     (matches.length>5?`<div style="text-align:center;padding:8px;"><button onclick="Hub.openSub('cl_match')" style="padding:6px 20px;border-radius:8px;border:1px solid var(--primary);background:transparent;color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;">전체 ${matches.length}건 보기</button></div>`:'');
   }
 
-  return { MAIN,CLIENT,PROPERTY, render,onNode,onCenterClick,openPanel,openSub,closePanel,enterClient,enterProperty,back, panelHead:_ph, _openMyInfo, _sendOtp, _verifyOtp, _saveMyInfo, get current(){return current;}, get activePanel(){return activePanel;}, get RADIUS(){return RADIUS;}, adjustLayout, _saveSettings, _openProfileEdit, _renderMatchItem, _toggleMatchSel };
+  return { MAIN,CLIENT,PROPERTY, render,onNode,onCenterClick,openPanel,openSub,closePanel,enterClient,enterProperty,back, panelHead:_ph, _openMyInfo, _sendOtp, _verifyOtp, _saveMyInfo, get current(){return current;}, get activePanel(){return activePanel;}, get RADIUS(){return RADIUS;}, adjustLayout, _saveSettings, _openProfileEdit, _renderMatchItem, _toggleMatchSel, _enterClientDirect, _renderVerticalDirect };
 })();
 
 /* ═══════════════════════════════════════════════════════════
@@ -2398,10 +2409,16 @@ const PanelClient = (() => {
   async function selectClient(card){
     _selectedClient=card;
     _addRecent(card.id);
+    // 노드를 손님 관련 노드로 전환 (허브 상태 업데이트)
+    const p=card.property||{};
+    Hub._enterClientDirect(card);
+    // 패널 열고 상세로 전환
+    document.getElementById('main').classList.add('split');
+    Hub._renderVerticalDirect();
     const el=document.getElementById('panelArea');if(!el)return;
-    // 패널 전체를 상세로 전환
     el.innerHTML=`<div class="panel-inner" id="clientDetailView">${hwikLoading()}</div>`;
     _renderClientDetail(card,document.getElementById('clientDetailView'));
+    Data.loadClientDetail(card.id).then(d=>{if(_selectedClient?.id===card.id){_selectedClient._notes=d.notes;_selectedClient._matches=d.matches;}});
   }
 
   async function _renderClientDetail(card,el){
@@ -2484,9 +2501,9 @@ const PanelClient = (() => {
 
   async function closeDetail(){
     _selectedClient=null;
-    const el=document.getElementById('panelArea');if(!el)return;
-    _renderListView(el);
-    await Data.loadClientCards(0,true);_renderList();
+    // 메인 허브로 돌아가고 손님 패널 다시 열기
+    Hub.back();
+    setTimeout(()=>Hub.openPanel('client'),100);
   }
 
   let _regOpen=false;
