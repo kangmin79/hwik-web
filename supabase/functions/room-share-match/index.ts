@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { DISTRICT_COORDS, haversineDistance } from '../_shared/geo.ts'
 import { fixTypos } from '../_shared/typo.ts'
+import { getAuthUserId } from '../_shared/auth.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://hwik.kr',
@@ -17,10 +18,21 @@ Deno.serve(async (req) => {
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const { card_id, room_id, shared_by } = await req.json();
+    const { card_id, room_id } = await req.json();
     if (!card_id || !room_id) throw new Error('card_id, room_id 필요');
+    const shared_by = getAuthUserId(req);
+    if (!shared_by) throw new Error('인증이 필요합니다');
 
     const startTime = Date.now();
+
+    // ★ 보안: 요청자가 해당 방의 멤버인지 확인
+    const { data: membership } = await supabase
+      .from('share_room_members')
+      .select('user_id')
+      .eq('share_rooms_id', room_id)
+      .eq('user_id', shared_by)
+      .single();
+    if (!membership) throw new Error('공유방 멤버가 아닙니다');
 
     // 1. 공유된 매물 조회
     const { data: card, error: cardErr } = await supabase

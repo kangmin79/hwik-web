@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { DISTRICT_COORDS, haversineDistance } from '../_shared/geo.ts'
 import { fixTypos } from '../_shared/typo.ts'
+import { getAuthUserId } from '../_shared/auth.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://hwik.kr',
@@ -16,8 +17,10 @@ Deno.serve(async (req) => {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    const { card_id, agent_id } = await req.json();
-    if (!card_id || !agent_id) throw new Error('card_id, agent_id 필요');
+    const { card_id } = await req.json();
+    if (!card_id) throw new Error('card_id 필요');
+    const agent_id = getAuthUserId(req);
+    if (!agent_id) throw new Error('인증이 필요합니다');
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 

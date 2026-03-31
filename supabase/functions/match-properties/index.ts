@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { DISTRICT_COORDS, haversineDistance } from '../_shared/geo.ts'
 import { fixTypos } from '../_shared/typo.ts'
+import { getAuthUserId } from '../_shared/auth.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://hwik.kr',
@@ -15,8 +16,10 @@ Deno.serve(async (req) => {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    const { client_card_id, agent_id, limit = 10, threshold = 0.15 } = await req.json();
+    const { client_card_id, limit = 10, threshold = 0.15 } = await req.json();
     if (!client_card_id) throw new Error('client_card_id가 필요합니다');
+    const agent_id = getAuthUserId(req);
+    if (!agent_id) throw new Error('인증이 필요합니다');
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -227,7 +230,7 @@ Deno.serve(async (req) => {
     if (structuredCount >= 2) {
       let sqlQuery = supabase
         .from('cards')
-        .select('id, property, agent_id, agent_comment, price_number, trade_status, photos, lat, lng, created_at, search_text, contact_name, contact_phone')
+        .select('id, property, agent_id, agent_comment, price_number, trade_status, photos, lat, lng, created_at, search_text')
         .eq('agent_id', effectiveAgentId)
         .neq('property->>type', '손님')
         .eq('trade_status', '계약가능');
@@ -331,7 +334,7 @@ Deno.serve(async (req) => {
           for (const radius of [5, 8]) {
             let locQuery = supabase
               .from('cards')
-              .select('id, property, agent_id, agent_comment, price_number, trade_status, photos, lat, lng, created_at, search_text, contact_name, contact_phone')
+              .select('id, property, agent_id, agent_comment, price_number, trade_status, photos, lat, lng, created_at, search_text')
               .eq('agent_id', effectiveAgentId)
               .neq('property->>type', '손님')
               .eq('trade_status', '계약가능')
@@ -576,10 +579,7 @@ Deno.serve(async (req) => {
       lat: r.lat,
       lng: r.lng,
       created_at: r.created_at,
-      contact_name: r.contact_name || null,
-      contact_phone: r.contact_phone || null,
       _score: r._score || null,
-      _scoreDetail: r._scoreDetail || null,
       similarity: r.similarity ? Math.round(r.similarity * 100) / 100 : null
     }));
 

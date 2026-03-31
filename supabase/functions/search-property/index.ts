@@ -2,6 +2,7 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { DISTRICT_COORDS, haversineDistance } from '../_shared/geo.ts'
 import { TYPO_MAP, fixTypos } from '../_shared/typo.ts'
+import { getAuthUserId } from '../_shared/auth.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://hwik.kr',
@@ -505,22 +506,16 @@ Deno.serve(async (req) => {
 
     if (!ANTHROPIC_API_KEY) throw new Error('서버 설정 오류');
 
-    const { query, agent_id, limit = 10, search_mode = 'my', trade_type = null, property_type = null, min_price = null, max_price = null } = await req.json();
+    const { query, limit = 10, search_mode = 'my', trade_type = null, property_type = null, min_price = null, max_price = null } = await req.json();
     if (!query) throw new Error('검색어가 필요합니다');
     if (query.length < 2) throw new Error('검색어는 2글자 이상 입력하세요');
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // ★ 인증 확인 (선택적 — 공유매물 검색은 비인증 허용)
-    const authHeader = req.headers.get('Authorization');
-    let authUser: string | null = null;
-    if (authHeader && authHeader !== `Bearer ${Deno.env.get('SUPABASE_ANON_KEY')}`) {
-      try {
-        const token = authHeader.replace('Bearer ', '');
-        const { data: { user } } = await supabase.auth.getUser(token);
-        if (user) authUser = user.id;
-      } catch(e) { /* anon access allowed */ }
-    }
+    // ★ 인증: JWT에서 agent_id 추출
+    const agent_id = getAuthUserId(req);
+    if (!agent_id) throw new Error('인증이 필요합니다');
+    const authUser = agent_id;
 
     const startTime = Date.now();
 

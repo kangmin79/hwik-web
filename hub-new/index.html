@@ -705,7 +705,7 @@ const Auth = (() => {
   const sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_KEY, { auth:{ clockSkewInSeconds:300 } });
   let user = null, profile = null, _token = '';
 
-  function getToken() { return _token || HWIK_CONFIG.SUPABASE_KEY; }
+  function getToken() { return _token || ''; }
   function login() { sb.auth.signInWithOAuth({ provider:'kakao', options:{ redirectTo: location.href.split('?')[0].split('#')[0] }}); }
   function logout() { sb.auth.signOut(); user=null; profile=null; localStorage.removeItem('hwik_agent'); location.reload(); }
 
@@ -787,7 +787,7 @@ const Data = (() => {
   async function loadClientDetail(cardId) {
     const [notesRes, matchRes] = await Promise.all([
       sb().from('client_notes').select('id,type,content,alert_date,alert_done,created_at').eq('client_card_id',cardId).order('created_at',{ascending:false}),
-      fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/match-properties`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(Auth.getToken()),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({client_card_id:cardId,agent_id:uid(),limit:10,threshold:0.15})}).then(r=>r.json()).catch(()=>({results:[]}))
+      fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/match-properties`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(Auth.getToken()),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({client_card_id:cardId,limit:10,threshold:0.15})}).then(r=>r.json()).catch(()=>({results:[]}))
     ]);
     return { notes:notesRes.data||[], matches:matchRes.results||[] };
   }
@@ -836,8 +836,8 @@ const Data = (() => {
     // 공유방 매칭 트리거 (백그라운드)
     if(!result.error){
       fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/room-share-match`,{
-        method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(Auth?.getToken?Auth.getToken():HWIK_CONFIG.SUPABASE_KEY),'apikey':HWIK_CONFIG.SUPABASE_KEY},
-        body:JSON.stringify({card_id:cardId,room_id:roomId,shared_by:uid()})
+        method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},
+        body:JSON.stringify({card_id:cardId,room_id:roomId})
       }).catch(e=>console.warn('room-share-match:',e));
     }
     return result;
@@ -971,7 +971,7 @@ const Data = (() => {
     for(const d of dongs){if(allText.includes(d)){const{data}=await sb().from('stations').select('lat,lon').ilike('name','%'+d+'%').limit(1);if(data?.[0]){await sb().from('cards').update({lat:data[0].lat,lng:data[0].lon}).eq('id',cardId);return;}}}
   }
 
-  function triggerAutoMatch(cardId) { fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/auto-match`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(Auth?.getToken?Auth.getToken():HWIK_CONFIG.SUPABASE_KEY),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({card_id:cardId,agent_id:uid()})}).catch(e=>console.warn('auto-match failed:',e)); }
+  function triggerAutoMatch(cardId) { fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/auto-match`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({card_id:cardId})}).catch(e=>console.warn('auto-match failed:',e)); }
 
   async function loadCompletedCards() {
     const id=uid(); if(!id) return [];
@@ -1088,7 +1088,7 @@ const Search = (() => {
 
       const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/search-property`,{
         method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},
-        body:JSON.stringify({query,agent_id:Auth.user?.id,limit:50,search_mode:mode})
+        body:JSON.stringify({query,limit:50,search_mode:mode})
       });
       const d=await res.json();
       if(d.error){Toast.show('검색 오류: '+d.error);return [];}
