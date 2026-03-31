@@ -1681,9 +1681,13 @@ const Hub = (() => {
   }
 
   function _refreshMatchList(){
-    const el=document.getElementById('clientMatchList');if(!el)return;
-    const matches=current?._matches||[];
-    if(matches.length)_renderMatches(matches,el);
+    const matches=current?._matches||[];if(!matches.length)return;
+    // 손님 카드 내 매칭 목록
+    const el1=document.getElementById('clientMatchList');
+    if(el1)_renderMatches(matches,el1);
+    // cl_match 서브패널 매칭 목록
+    const el2=document.getElementById('clMatchList');
+    if(el2)el2.innerHTML=matches.map(m=>_renderMatchItem(m)).join('');
   }
 
   async function _loadClientMatches(cardId){
@@ -2442,8 +2446,10 @@ const PanelClient = (() => {
 
     else if(key==='cl_match'){const ms=Hub.current?._matches||[];
       let h=`<div class="panel-with-preview"><div class="panel-input"><div class="panel-inner">${Hub.panelHead('매칭 매물',ms.length+'건')}`;
+      h+=`<div id="clMatchList">`;
       if(!ms.length)h+='<div class="empty"><div class="empty-icon">🏠</div>매칭 매물이 없어요</div>';
       else ms.forEach(m=>{h+=Hub._renderMatchItem(m);});
+      h+=`</div>`;
       h+=`<button class="btn-primary" style="margin-top:16px;" onclick="PanelClient.reMatch('${card.id}')">매칭 다시 찾기</button>`;
       h+=`</div></div><div class="panel-preview-wrap" id="matchPreviewPanel" style="width:0;opacity:0;padding:0;"></div></div>`;
       el.innerHTML=h;}
