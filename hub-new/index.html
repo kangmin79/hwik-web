@@ -1513,6 +1513,13 @@ const Hub = (() => {
     if(activePanel===key){closePanel();return;}
     document.querySelectorAll('.hub-node').forEach(n=>n.classList.remove('active'));
     document.querySelector(`.hub-node[data-key="${key}"]`)?.classList.add('active');
+    // 손님 상세가 열린 상태면 탭 전환으로 처리
+    if(key.startsWith('cl_')&&PanelClient._hasSelectedClient()){
+      const tabMap={'cl_match':'match','cl_timeline':'timeline','cl_conditions':'conditions','cl_schedule':'timeline','cl_contact':'conditions'};
+      const tab=tabMap[key];
+      if(tab){PanelClient.detailTab(tab);return;}
+    }
+    if(key==='cl_back'){if(PanelClient._hasSelectedClient()){PanelClient.closeDetail();return;}Hub.back();return;}
     activePanel=key;document.getElementById('main').classList.add('split');
     _renderVertical();_hideHeaderBtns();
     const el=document.getElementById('panelArea');
@@ -2477,10 +2484,12 @@ const PanelClient = (() => {
   }
 
   function detailTab(tab,btn){
-    document.querySelectorAll('#clientDetailPanel .sub-tab').forEach(b=>b.classList.remove('active'));
-    btn?.classList.add('active');
+    document.querySelectorAll('#clientDetailView .sub-tab').forEach(b=>b.classList.remove('active'));
+    if(btn)btn.classList.add('active');
+    else{document.querySelectorAll('#clientDetailView .sub-tab').forEach(b=>{if(b.textContent.includes(tab==='match'?'매칭':tab==='timeline'?'상담':'희망'))b.classList.add('active');});}
     _renderDetailTab(tab);
   }
+  function _hasSelectedClient(){return !!_selectedClient;}
 
   function _renderDetailTab(tab){
     const el=document.getElementById('clientDetailContent');if(!el||!_selectedClient)return;
@@ -2852,7 +2861,7 @@ const PanelClient = (() => {
     if(Hub.current?.data?.id===cardId){Hub.current.data.contact_name=name;Hub.current.data.contact_phone=phone;}
   }
 
-  return { render, registerClient, toggleReg, _addRecent, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact, selectClient, closeDetail, detailTab, toggleMatchSel };
+  return { render, registerClient, toggleReg, _addRecent, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact, selectClient, closeDetail, detailTab, toggleMatchSel, _hasSelectedClient };
 })();
 
 /* ═══════════════════════════════════════════════════════════
