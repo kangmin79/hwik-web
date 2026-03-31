@@ -1387,7 +1387,7 @@ const Hub = (() => {
     document.querySelectorAll('.hub-node').forEach(n=>n.classList.remove('active'));
     document.querySelector(`.hub-node[data-key="${key}"]`)?.classList.add('active');
     activePanel=key;document.getElementById('main').classList.add('split');
-    _renderVertical();
+    _renderVertical();_hideHeaderBtns();
     const el=document.getElementById('panelArea');
     switch(key){
       case 'register':PanelRegister.render(el);break;
@@ -1405,11 +1405,14 @@ const Hub = (() => {
     document.querySelectorAll('.hub-node').forEach(n=>n.classList.remove('active'));
     document.querySelector(`.hub-node[data-key="${key}"]`)?.classList.add('active');
     activePanel=key;document.getElementById('main').classList.add('split');
-    _renderVertical();
+    _renderVertical();_hideHeaderBtns();
     const el=document.getElementById('panelArea');
     if(key.startsWith('cl_'))PanelClient.renderSub(key,el);
     if(key.startsWith('pr_'))PanelCards.renderSub(key,el);
   }
+
+  function _hideHeaderBtns(){const hr=document.getElementById('headerRight');if(hr)hr.style.display='none';}
+  function _showHeaderBtns(){const hr=document.getElementById('headerRight');if(hr)hr.style.display='';}
 
   function closePanel() {
     document.getElementById('main').classList.remove('split');
@@ -1418,6 +1421,7 @@ const Hub = (() => {
     // 헤더 복원
     const header=document.querySelector('.header'),main=document.getElementById('main');
     header.style.transform='';main.style.marginTop='';main.style.height='';
+    _showHeaderBtns();
     // 원래 반지름 복구 + 재배치
     RADIUS=265;
     setTimeout(()=>render(current?.nodes,current?.center),400);
@@ -1579,7 +1583,7 @@ const Hub = (() => {
     Hub.render(); // 허브 중앙 이름 업데이트
   }
 
-  function _ph(title,count){return `<div class="panel-head"><div class="panel-title">${title}${count!=null?' <span>'+count+'</span>':''}</div><button class="panel-x" onclick="Hub.closePanel()">✕</button></div>`;}
+  function _ph(title,count){return `<div class="panel-head" style="padding:8px 24px;margin:-24px -24px 12px;"><button class="panel-x" onclick="Hub.closePanel()" style="margin-left:auto;">✕</button></div>`;}
 
   function onCenterClick(){
     if(current?.type==='client'){
