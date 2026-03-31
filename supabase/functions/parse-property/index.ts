@@ -368,14 +368,18 @@ Deno.serve(async (req) => {
 - 초성/축약: ㅁㅁ=매매, ㅈㅅ=전세, ㅇㅅ=월세
 
 ★ 손님 요청의 특징:
-- 구합니다, 구해요, 찾습니다, 원합니다 등 요청 동사
-- 예산 ~, 손님 요청, 이사 예정
-- 예산/희망가 표현: 예산 5억, ~이하로
+- 구합니다, 구해요, 찾습니다, 원합니다, 원해요 등 요청 동사
+- "사려고", "사길", "매입", "구매" → 손님 (매매)
+- "빌려요", "빌리고", "임차", "렌트" → 손님 (월세)
+- 예산 ~, 손님 요청, 이사 예정, 급구
+- 예산/희망가 표현: 예산 5억, ~이하, ~이내, ~까지
+- "이하", "이내", "미만" 등 상한 표현 → 손님
 
 ⚠️ 오분류 방지:
-1. "구해드립니다" = 매물 등록
-2. 확신 없으면 매물로 처리
-3. 호수(~호)는 절대 비공개 → memo에만
+1. "구해드립니다" = 매물 등록 (중개사가 매물을 올리는 것)
+2. "사려고 합니다" = 손님 (매수 희망)
+3. 확신 없으면 매물로 처리
+4. 호수(~호)는 절대 비공개 → memo에만
 
 ■ ㎡ → 평 자동변환:
 area 필드에 ㎡가 있으면 평수도 함께 표기 (예: "84.8㎡(25.7평)")
@@ -464,6 +468,12 @@ ${text}`
     for (const field of requiredFields) {
       if (!parsedResult[field]) throw new Error(`필수 정보 누락: ${field}`);
     }
+    // ★ category 유효성 검증 — 한글 반환 시 영문 코드로 변환
+    const VALID_CATEGORIES = ['apartment', 'officetel', 'room', 'commercial', 'office'];
+    const CATEGORY_FIX: Record<string, string> = {'아파트':'apartment','오피스텔':'officetel','원투룸':'room','빌라':'room','다세대':'room','주택':'room','상가':'commercial','점포':'commercial','사무실':'office'};
+    if (parsedResult.category && !VALID_CATEGORIES.includes(parsedResult.category)) {
+      parsedResult.category = CATEGORY_FIX[parsedResult.category] || 'room';
+    }
 
     console.log(`PARSED (${Date.now() - startTime}ms):`, parsedResult);
 
@@ -500,9 +510,14 @@ ${text}`
     let wantedTradeType: string | null = null;
     if (parsedResult.type === '손님') {
       const allText = [parsedResult.price, parsedResult.location, parsedResult.memo, text].join(' ');
-      if (/매매|매도|분양/.test(allText)) wantedTradeType = '매매';
+      if (/매매|매도|분양|사려|매입|구매/.test(allText)) wantedTradeType = '매매';
       else if (/전세/.test(allText)) wantedTradeType = '전세';
-      else if (/월세|임대/.test(allText)) wantedTradeType = '월세';
+      else if (/월세|임대|빌려|렌트/.test(allText)) wantedTradeType = '월세';
+      // ★ 가격 패턴으로 추론: "보증금/월" → 월세, "억/천" → 매매 or 전세
+      if (!wantedTradeType) {
+        if (/\/\s*\d|월\s*\d|보증금.*월/.test(allText)) wantedTradeType = '월세';
+        else if (/억|천만/.test(allText)) wantedTradeType = '전세';
+      }
     }
 
     // ★ 가격 필드 파싱 (매물: type 기준, 손님: wantedTradeType 기준)

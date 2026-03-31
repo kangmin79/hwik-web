@@ -1934,6 +1934,11 @@ const PanelRegister = (() => {
       const r=await res.json();
       if(r.error){document.getElementById('regResult').innerHTML=`<div class="reg-error">${esc(r.error)}</div>`;btn.textContent='AI로 카드 만들기';btn.disabled=false;_resetSteps();document.getElementById('leaveBanner').style.display='none';return;}
 
+      // ★ 오분류 감지: 손님 요청인데 매물로 파싱된 경우
+      if(r.type!=='손님'&&/구합|구해요|찾습|찾아요|원합|원해요|이사\s*예정|급구/.test(text)){
+        if(!confirm('입력이 손님 요청처럼 보입니다.\n\n매물로 등록하시겠습니까?\n(취소 → 손님 패널에서 등록)')){btn.textContent='AI로 카드 만들기';btn.disabled=false;_resetSteps();document.getElementById('leaveBanner').style.display='none';return;}
+      }
+
       // 2. 카드 ID 생성
       const linkId=crypto.randomUUID().slice(0,12);
 
@@ -2340,7 +2345,7 @@ const PanelClient = (() => {
       const r=await res.json();if(r.error)throw new Error(r.error);
       // 손님 카드로 강제 설정
       const property={type:'손님',price:r.price||null,location:r.location||null,complex:r.complex||null,area:r.area||null,floor:r.floor||null,room:r.room||null,features:r.features||[],category:r.category||null,rawText:inp.value.trim()};
-      const cardData={id:crypto.randomUUID().slice(0,12),agent_id:Auth.user.id,property,contact_name:r.contact_name||null,contact_phone:r.contact_phone||null,embedding:r.embedding||null,search_text:r.search_text||null,price_number:r.price_number||null,wanted_trade_type:r.wanted_trade_type||null,trade_status:'계약가능'};
+      const cardData={id:crypto.randomUUID().slice(0,12),agent_id:Auth.user.id,property,contact_name:r.contact_name||null,contact_phone:r.contact_phone||null,embedding:r.embedding||null,search_text:r.search_text||null,search_text_private:r.search_text_private||null,price_number:r.price_number||null,deposit:r.deposit||null,monthly_rent:r.monthly_rent||null,move_in_date:r.move_in_date||null,wanted_trade_type:r.wanted_trade_type||null,trade_status:'계약가능'};
       const {error:dbErr}=await Auth.sb.from('cards').insert([cardData]);
       if(dbErr)throw new Error(dbErr.message);
       Toast.show('손님이 등록되었습니다!');
