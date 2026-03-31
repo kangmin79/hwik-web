@@ -797,6 +797,106 @@ def fill_nearby_facilities(danji_list: list):
 
 
 # ========================================================
+# 변동사항 보고서 이메일 발송
+# ========================================================
+def send_report(total_trades, total_cached, danji_count, danji_list, elapsed, is_init=False):
+    """동기화 결과 보고서를 이메일로 발송"""
+    import smtplib
+    from email.mime.text import MIMEText
+
+    smtp_user = os.environ.get("SMTP_USER", "")
+    smtp_pass = os.environ.get("SMTP_PASS", "")
+    report_to = os.environ.get("REPORT_EMAIL", "bgtrfvcdewsx77@gmail.com")
+
+    if not smtp_user or not smtp_pass:
+        print("📧 이메일 설정 없음 (SMTP_USER/SMTP_PASS) → 보고서 건너뜀")
+        return
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    mode = "초기 수집 (36개월)" if is_init else "일일 동기화"
+    minutes = round(elapsed / 60, 1)
+
+    # 구별 집계
+    gu_stats = defaultdict(lambda: {"count": 0, "new_trades": 0})
+    for d in danji_list:
+        loc = d.get("location", "")
+        gu = loc.split(" ")[0] if loc else "기타"
+        gu_stats[gu]["count"] += 1
+        # 최근 거래 날짜가 이번달/전월이면 새 거래
+        rt = d.get("recent_trade") or {}
+        for k, v in rt.items():
+            if isinstance(v, dict) and v.get("date", "").startswith(today[:7]):
+                gu_stats[gu]["new_trades"] += 1
+
+    # 최고가 거래 TOP 5
+    top_trades = []
+    for d in danji_list:
+        rt = d.get("recent_trade") or {}
+        cats = d.get("categories") or []
+        for c in cats:
+            t = rt.get(c)
+            if t and t.get("price") and t.get("date", "").startswith(today[:7]):
+                top_trades.append({
+                    "name": d.get("complex_name", ""),
+                    "location": d.get("location", ""),
+                    "price": t["price"],
+                    "date": t["date"],
+                    "area": c,
+                })
+                break
+    top_trades.sort(key=lambda x: -x["price"])
+
+    # 보고서 본문
+    body = f"""휙 실거래가 동기화 보고서 ({today})
+{'='*50}
+
+모드: {mode}
+소요시간: {minutes}분
+수집 거래: {total_trades:,}건
+캐시 저장: {total_cached}행
+집계 단지: {danji_count:,}개
+
+구별 집계:
+"""
+    for gu in sorted(gu_stats.keys()):
+        s = gu_stats[gu]
+        body += f"  {gu}: {s['count']}개 단지"
+        if s["new_trades"] > 0:
+            body += f" (이번달 새 거래 {s['new_trades']}건)"
+        body += "\n"
+
+    if top_trades:
+        body += f"\n이번달 고가 거래 TOP 5:\n"
+        for i, t in enumerate(top_trades[:5]):
+            price_uk = t["price"] // 10000
+            price_rest = t["price"] % 10000
+            price_str = f"{price_uk}억" if price_uk > 0 else ""
+            if price_rest > 0:
+                price_str += f" {price_rest:,}"
+            body += f"  {i+1}. {t['name']} ({t['location']}) — {price_str}만원 ({t['area']}㎡, {t['date']})\n"
+
+    body += f"""
+{'='*50}
+자동 생성 보고서 — hwik.kr
+"""
+
+    # 이메일 발송
+    try:
+        msg = MIMEText(body, "plain", "utf-8")
+        msg["Subject"] = f"[휙] 실거래가 동기화 완료 — {today} ({danji_count:,}개 단지, {total_trades:,}건)"
+        msg["From"] = smtp_user
+        msg["To"] = report_to
+
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(smtp_user, report_to, msg.as_string())
+
+        print(f"📧 보고서 이메일 발송 완료 → {report_to}")
+    except Exception as e:
+        print(f"⚠️ 이메일 발송 실패: {e}")
+
+
+# ========================================================
 # sitemap.xml 자동 생성
 # ========================================================
 def generate_sitemap(danji_list: list):
@@ -951,6 +1051,17 @@ def main():
 
     # sitemap.xml 자동 생성
     generate_sitemap(danji_list)
+
+    # 변동사항 보고서 생성 + 이메일 발송
+    elapsed = (datetime.now() - now).total_seconds()
+    send_report(
+        total_trades=total_trades,
+        total_cached=total_cached,
+        danji_count=len(danji_list),
+        danji_list=danji_list,
+        elapsed=elapsed,
+        is_init=args.init,
+    )
 
     print(f"\n{'='*50}")
     print(f"🏁 동기화 완료")

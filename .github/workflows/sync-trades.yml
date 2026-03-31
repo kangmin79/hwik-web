@@ -38,6 +38,9 @@ jobs:
           GOV_SERVICE_KEY: ${{ secrets.GOV_SERVICE_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          REPORT_EMAIL: bgtrfvcdewsx77@gmail.com
         run: |
           if [ "${{ github.event.inputs.mode }}" = "init" ]; then
             python sync_trades.py --init
