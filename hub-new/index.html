@@ -1337,7 +1337,7 @@ const Hub = (() => {
     // 원형 모드 복원
     hc.style.cssText='';v.style.cssText='';
     const cx=VW/2,cy=VH/2;
-    hc.innerHTML=`<div class="hub-center-icon">${center.icon}</div><div class="hub-center-name">${esc(center.name)}</div><div class="hub-center-sub">${esc(center.sub)}</div>`;
+    hc.innerHTML=`${center.tag?`<div style="padding:2px 8px;border-radius:6px;font-size:9px;font-weight:700;background:rgba(78,205,196,0.15);color:#0d9488;margin-bottom:2px;white-space:nowrap;">${esc(center.tag)}</div>`:''}<div class="hub-center-icon">${center.icon}</div><div class="hub-center-name">${esc(center.name)}</div><div class="hub-center-sub">${esc(center.sub)}</div>`;
     let svg='',html='';
     const c=Data.cache.counts;
     nodes.forEach(n=>{
@@ -1450,8 +1450,8 @@ const Hub = (() => {
     stack.push({nodes:current?.nodes||MAIN,center:current?.center});
     const _cname=card.contact_name||(p.location?p.location:'손님');
     const _wantLbl=clientWantLabel(card);
-    const _csub=[_wantLbl!=='손님'?_wantLbl:null,p.price,p.location&&card.contact_name?p.location:null].filter(Boolean).join(' ');
-    current={type:'client',data:card,nodes:CLIENT,center:{icon:'🙋',name:_cname,sub:_csub},_notes:[],_matches:[]};
+    const _csub=[p.price,p.location&&card.contact_name?p.location:null].filter(Boolean).join(' ');
+    current={type:'client',data:card,nodes:CLIENT,center:{icon:'🙋',name:_cname,sub:_csub,tag:_wantLbl!=='손님'?_wantLbl:null},_notes:[],_matches:[]};
     closePanel();render(CLIENT,current.center);
     Data.loadClientDetail(card.id).then(d=>{current._notes=d.notes;current._matches=d.matches;});
     // 최근 본 손님 기록
