@@ -406,7 +406,7 @@ body.dark .phone-screen{background:#0f172a;}
 .note-row button{padding:11px 22px;border-radius:12px;border:none;background:linear-gradient(135deg,#6366f1,#818cf8);color:#fff;font-weight:700;font-size:13px;cursor:pointer;}
 .note-preview{padding:8px 12px;border-radius:8px;background:var(--primary-bg);font-size:12px;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
 .timeline{padding:8px 0;}
-.tl-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.04);}
+.tl-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(0,0,0,0.04);}
 .tl-tag{padding:3px 10px;border-radius:8px;font-size:10px;font-weight:700;flex-shrink:0;margin-top:2px;}
 .tl-tag.상담{background:rgba(96,165,250,0.1);color:#60a5fa;}
 .tl-tag.방문{background:rgba(74,222,128,0.1);color:#4ade80;}
@@ -416,9 +416,8 @@ body.dark .phone-screen{background:#0f172a;}
 .tl-body{flex:1;}
 .tl-text{font-size:13px;font-weight:500;}
 .tl-date{font-size:11px;color:var(--text-light);margin-top:1px;}
-.tl-done-btn,.tl-delete-btn{background:none;border:none;color:var(--text-light);font-size:10px;cursor:pointer;margin-left:6px;}
-.tl-done-btn:hover{color:#22c55e;}
-.tl-delete-btn:hover{color:#ef4444;}
+.tl-done-btn{padding:4px 12px;border-radius:6px;border:1.5px solid #22c55e;background:rgba(34,197,94,0.06);color:#22c55e;font-size:11px;font-weight:700;cursor:pointer;}
+.tl-delete-btn{padding:4px 12px;border-radius:6px;border:1.5px solid #ef4444;background:rgba(239,68,68,0.06);color:#ef4444;font-size:11px;font-weight:700;cursor:pointer;}
 
 /* ═══════════════════════════════════════════════════════════
    11. 매칭
@@ -2451,7 +2450,7 @@ const PanelClient = (() => {
       <div class="note-row"><input type="text" id="noteIn" placeholder="메모 입력... (예: 내일 2시 방문 예정)" onkeydown="if(event.key==='Enter')PanelClient.saveNote('${card.id}')" oninput="PanelClient.pvNote(this.value)"><button onclick="PanelClient.saveNote('${card.id}')">저장</button></div><div id="notePv" class="note-preview" style="display:none"></div>`;
       if(!ns.length)h+='<div class="empty">아직 상담 기록이 없어요</div>';
       else{h+='<div class="timeline">';ns.forEach(n=>{const t=n.type||'메모',ds=new Date(n.created_at).toLocaleDateString('ko-KR'),as=n.alert_date?' · 📅 '+new Date(n.alert_date).toLocaleDateString('ko-KR'):'';
-        h+=`<div class="tl-item"><span class="tl-tag ${t}">${t}</span><div class="tl-body"><div class="tl-text">${esc(n.content||'')}</div><div class="tl-date">${ds}${as}${n.alert_date&&!n.alert_done?` <button class="tl-done-btn" onclick="PanelClient.noteDone('${n.id}','${card.id}')">완료</button>`:''}<button class="tl-delete-btn" onclick="PanelClient.noteDel('${n.id}','${card.id}')">삭제</button></div></div></div>`;});h+='</div>';}
+        h+=`<div class="tl-item"><span class="tl-tag ${t}">${t}</span><div class="tl-body" style="flex:1;"><div class="tl-text">${esc(n.content||'')}</div><div class="tl-date">${ds}${as}</div></div><div style="display:flex;gap:4px;flex-shrink:0;">${n.alert_date&&!n.alert_done?`<button class="tl-done-btn" onclick="PanelClient.noteDone('${n.id}','${card.id}')">완료</button>`:''}<button class="tl-delete-btn" onclick="PanelClient.noteDel('${n.id}','${card.id}')">삭제</button></div></div>`;});h+='</div>';}
       el.innerHTML=h+'</div>';}
 
     else if(key==='cl_schedule'){const ns=(Hub.current?._notes||[]).filter(n=>n.alert_date&&!n.alert_done);let h=`<div class="panel-inner">${Hub.panelHead('일정/알림',ns.length+'건')}`;if(!ns.length)h+='<div class="empty"><div class="empty-icon">📅</div>예정된 일정이 없어요</div>';else ns.forEach(n=>{const past=new Date(n.alert_date)<new Date();h+=`<div class="alert-item"><div class="alert-dot" style="background:${past?'#ef4444':'var(--primary)'}"></div><div><div class="alert-text" style="${past?'color:#ef4444;':''}">${esc(n.content||'일정')}</div><div class="alert-date">${new Date(n.alert_date).toLocaleDateString('ko-KR')} ${past?'(지연)':''}</div></div><button class="tl-done-btn" onclick="PanelClient.noteDone('${n.id}','${card.id}')">완료</button></div>`;});el.innerHTML=h+'</div>';}
