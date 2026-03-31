@@ -446,7 +446,9 @@ body.dark .phone-screen{background:#0f172a;}
 .cal-day:hover{background:var(--primary-bg);border-color:var(--primary);box-shadow:0 2px 8px rgba(99,102,241,0.12);transform:scale(1.03);transition:all 0.15s;}
 .cal-day.today{font-weight:800;border-color:var(--primary);}
 .cal-day.selected{background:var(--primary-bg);border-color:var(--primary);}
-.cal-day .cal-num{font-weight:700;margin-bottom:2px;}
+.cal-day .cal-num{font-weight:800;font-size:13px;margin-bottom:2px;color:var(--text);}
+.cal-day.sun .cal-num{color:#ef4444;}
+.cal-day.sat .cal-num{color:#3b82f6;}
 .cal-day .cal-evt{font-size:9px;padding:1px 4px;border-radius:3px;margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;}
 .cal-day .cal-evt.overdue{background:#fef2f2;color:#ef4444;}
 .cal-day.overdue-day{background:#fef2f2;border-color:#fca5a5;}
@@ -3132,7 +3134,7 @@ const PanelAlert = (() => {
     const startDay=first.getDay(),days=last.getDate(),today=new Date();
     const alertDates={};calAlerts.forEach(a=>{const d=new Date(a.alert_date).getDate();if(!alertDates[d])alertDates[d]=[];alertDates[d].push(a);});
 
-    let html='';['일','월','화','수','목','금','토'].forEach(d=>html+=`<div class="cal-day-label">${d}</div>`);
+    let html='';['일','월','화','수','목','금','토'].forEach((d,i)=>html+=`<div class="cal-day-label" style="${i===0?'color:#ef4444;':''}${i===6?'color:#3b82f6;':''}">${d}</div>`);
     for(let i=0;i<startDay;i++)html+='<div class="cal-day" style="min-height:0;border:none;cursor:default;"></div>';
     for(let d=1;d<=days;d++){
       const isToday=d===today.getDate()&&calMonth===today.getMonth()+1&&calYear===today.getFullYear();
@@ -3145,7 +3147,9 @@ const PanelAlert = (() => {
       });
       if(evts.length>2)evtHtml+=`<span style="font-size:8px;color:var(--text-light);">+${evts.length-2}건</span>`;
       const hasOverdue=evts.some(a=>new Date(a.alert_date)<today&&!a.alert_done);
-      html+=`<div class="cal-day${isToday?' today':''}${hasOverdue?' overdue-day':''}" onclick="PanelAlert.selectDate(${d})"><div class="cal-num">${d}</div>${evtHtml}</div>`;
+      const dayOfWeek=(startDay+d-1)%7;
+      const dayClass=dayOfWeek===0?' sun':dayOfWeek===6?' sat':'';
+      html+=`<div class="cal-day${isToday?' today':''}${hasOverdue?' overdue-day':''}${dayClass}" onclick="PanelAlert.selectDate(${d})"><div class="cal-num">${d}</div>${evtHtml}</div>`;
     }
     grid.innerHTML=`<div class="cal-grid">${html}</div>`;
   }
