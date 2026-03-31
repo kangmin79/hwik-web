@@ -2368,7 +2368,14 @@ const PanelClient = (() => {
   let _selectedClient=null;
 
   async function render(el){
-    el.innerHTML=`<div class="panel-with-preview"><div class="panel-input"><div class="panel-inner">${Hub.panelHead('손님')}
+    _selectedClient=null;
+    _renderListView(el);
+    await Data.loadClientCards(0,true);_renderList();
+  }
+
+  function _renderListView(el){
+    if(!el)el=document.getElementById('panelArea');if(!el)return;
+    el.innerHTML=`<div class="panel-inner">${Hub.panelHead('손님')}
       <div id="clientRegArea" style="margin-bottom:12px;border:1.5px solid #4ecdc4;border-radius:12px;overflow:hidden;transition:all 0.3s ease;">
         <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;cursor:pointer;background:rgba(78,205,196,0.04);" onclick="PanelClient.toggleReg()">
           <span style="font-size:16px;">🙋</span>
@@ -2385,27 +2392,16 @@ const PanelClient = (() => {
         <div class="search"><input type="text" placeholder="예) 강남구 아파트 전세 5억이하 / 찾는분 강남" oninput="PanelClient.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelClient.onQEnter()"></div>
         <div id="clList" style="min-height:200px;">${hwikLoading()}</div>
       </div>
-    </div></div>
-    <div class="panel-preview-wrap" id="clientDetailPanel" style="width:0;opacity:0;padding:0;overflow-y:auto;"></div>
     </div>`;
-    _selectedClient=null;
-    await Data.loadClientCards(0,true);_renderList();
   }
 
   async function selectClient(card){
     _selectedClient=card;
     _addRecent(card.id);
-    const dp=document.getElementById('clientDetailPanel');if(!dp)return;
-    dp.style.width='50%';dp.style.opacity='1';dp.style.padding='16px';
-    // 헤더 숨김
-    const header=document.querySelector('.header'),main=document.getElementById('main');
-    if(header){header.style.transform='translateY(-100%)';main.style.marginTop='0';main.style.height='100vh';}
-    // 선택된 아이템 하이라이트
-    document.querySelectorAll('.client-item').forEach(el=>el.style.background='');
-    const itemEl=document.querySelector(`.client-item[data-id="${card.id}"]`);
-    if(itemEl)itemEl.style.background='var(--primary-bg)';
-    // 상세 렌더
-    _renderClientDetail(card,dp);
+    const el=document.getElementById('panelArea');if(!el)return;
+    // 패널 전체를 상세로 전환
+    el.innerHTML=`<div class="panel-inner" id="clientDetailView">${hwikLoading()}</div>`;
+    _renderClientDetail(card,document.getElementById('clientDetailView'));
   }
 
   async function _renderClientDetail(card,el){
@@ -2422,7 +2418,8 @@ const PanelClient = (() => {
     const lastNote=notes[0];
     const stage=lastNote?(stageMap[lastNote.type]||stageMap['메모']):stageMap['메모'];
 
-    let h=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+    let h=`<div onclick="PanelClient.closeDetail()" style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-sub);font-size:12px;font-weight:600;cursor:pointer;margin-bottom:12px;">← 손님 목록</div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
       <span style="font-size:24px;">🙋</span>
       <div style="flex:1;">
         <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
@@ -2434,7 +2431,6 @@ const PanelClient = (() => {
         ${card.contact_phone?`<div style="font-size:12px;margin-top:2px;"><span style="font-weight:600;">${esc(card.contact_phone)}</span> <button onclick="navigator.clipboard.writeText('${esc(card.contact_phone)}');Toast.show('복사됨')" style="padding:1px 6px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-light);font-size:10px;cursor:pointer;">복사</button></div>`:''}
       </div>
       <button onclick="PanelClient.editClient('${card.id}')" style="padding:4px 12px;border-radius:8px;border:1.5px solid var(--primary);background:transparent;color:var(--primary);font-size:11px;font-weight:700;cursor:pointer;">수정</button>
-      <button onclick="PanelClient.closeDetail()" style="padding:4px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-light);font-size:14px;cursor:pointer;">✕</button>
     </div>`;
 
     // 탭
@@ -2486,13 +2482,11 @@ const PanelClient = (() => {
     }
   }
 
-  function closeDetail(){
+  async function closeDetail(){
     _selectedClient=null;
-    const dp=document.getElementById('clientDetailPanel');
-    if(dp){dp.style.width='0';dp.style.opacity='0';dp.style.padding='0';}
-    const header=document.querySelector('.header'),main=document.getElementById('main');
-    if(header){header.style.transform='';main.style.marginTop='';main.style.height='';}
-    document.querySelectorAll('.client-item').forEach(el=>el.style.background='');
+    const el=document.getElementById('panelArea');if(!el)return;
+    _renderListView(el);
+    await Data.loadClientCards(0,true);_renderList();
   }
 
   let _regOpen=false;
