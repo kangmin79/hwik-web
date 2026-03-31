@@ -1630,31 +1630,26 @@ const Hub = (() => {
     _renderVertical();
 
     el.innerHTML=`<div class="panel-inner">${_ph(esc(name))}
-      <div style="text-align:center;padding:24px 0;">
-        <div style="font-size:48px;margin-bottom:8px;">🙋</div>
-        <div style="display:flex;align-items:center;justify-content:center;gap:8px;">
-          <div style="font-size:20px;font-weight:800;">${esc(name)}</div>
-          <button onclick="PanelClient.editClient('${card.id}')" style="padding:4px 12px;border-radius:8px;border:1.5px solid var(--primary);background:transparent;color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;">수정</button>
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);margin-bottom:12px;">
+        <div style="font-size:28px;">🙋</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:16px;font-weight:800;">${esc(name)}</span>
+            <span style="padding:3px 10px;border-radius:6px;background:${stage.color}20;border:1px solid ${stage.color};color:${stage.color};font-size:11px;font-weight:700;">${stage.label}</span>
+          </div>
+          <div style="font-size:13px;color:var(--text-sub);margin-top:2px;">${conds}</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+            ${card.contact_phone?`<span style="font-size:13px;font-weight:600;">${esc(card.contact_phone)}</span><button onclick="navigator.clipboard.writeText('${esc(card.contact_phone)}');Toast.show('복사됨')" style="padding:2px 8px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-light);font-size:10px;cursor:pointer;">복사</button>`:''}<span style="font-size:11px;color:var(--text-light);">${dateStr}</span>
+          </div>
         </div>
-        <div style="font-size:14px;color:var(--text-sub);margin-top:4px;">${conds}</div>
+        <button onclick="PanelClient.editClient('${card.id}')" style="padding:5px 14px;border-radius:8px;border:1.5px solid var(--primary);background:transparent;color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;">수정</button>
       </div>
 
-      <div style="display:flex;gap:12px;justify-content:center;margin-bottom:20px;">
-        <div style="padding:8px 20px;border-radius:10px;background:${stage.color}20;border:1.5px solid ${stage.color};color:${stage.color};font-size:13px;font-weight:700;">상태: ${stage.label}</div>
-      </div>
-
-      ${card.contact_phone?`<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px;">
-        <span style="font-size:15px;font-weight:700;">${esc(card.contact_phone)}</span>
-        <button onclick="navigator.clipboard.writeText('${esc(card.contact_phone)}');Toast.show('복사됨')" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-sub);font-size:12px;cursor:pointer;">📋 복사</button>
-      </div>`:''}
-
-      <div style="font-size:12px;color:var(--text-light);text-align:center;margin-bottom:20px;">등록일: ${dateStr}</div>
-
-      ${pn.memo?`<div style="padding:12px;border-radius:10px;background:var(--primary-bg);font-size:13px;color:var(--text-sub);margin-bottom:16px;">${esc(pn.memo)}</div>`:''}
+      ${pn.memo?`<div style="padding:8px 12px;border-radius:8px;background:var(--primary-bg);font-size:12px;color:var(--text-sub);margin-bottom:12px;">${esc(pn.memo)}</div>`:''}
 
       <!-- 매칭 매물 -->
-      <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
-        <div style="font-size:14px;font-weight:800;margin-bottom:12px;">🏠 AI 매칭 매물</div>
+      <div>
+        <div style="font-size:14px;font-weight:800;margin-bottom:8px;">🏠 AI 매칭 매물</div>
         <div id="clientMatchList">${hwikLoading()}</div>
       </div>
     </div>`;
