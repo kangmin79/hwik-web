@@ -520,6 +520,23 @@ ${text}`
       }
     }
 
+    // ★ 손님일 때 원하는 카테고리 복수 추출
+    let wantedCategories: string[] = [];
+    if (parsedResult.type === '손님') {
+      const allText = [parsedResult.location, parsedResult.complex, parsedResult.memo, text, ...(parsedResult.features || [])].filter(Boolean).join(' ');
+      if (/아파트|주상복합/.test(allText)) wantedCategories.push('apartment');
+      if (/오피스텔|옵텔/.test(allText)) wantedCategories.push('officetel');
+      if (/원룸|투룸|쓰리룸|빌라|다세대|연립|주택/.test(allText)) wantedCategories.push('room');
+      if (/상가|점포|매장|식당|카페|편의점|치킨|미용|베이커리/.test(allText)) wantedCategories.push('commercial');
+      if (/사무실|오피스(?!텔)|업무|코워킹/.test(allText)) wantedCategories.push('office');
+      // category 필드가 있으면 포함
+      if (parsedResult.category && !wantedCategories.includes(parsedResult.category)) {
+        wantedCategories.push(parsedResult.category);
+      }
+      // 빈 배열이면 category에서 단일값 사용
+      if (!wantedCategories.length && parsedResult.category) wantedCategories = [parsedResult.category];
+    }
+
     // ★ 가격 필드 파싱 (매물: type 기준, 손님: wantedTradeType 기준)
     const priceType = parsedResult.type === '손님' ? (wantedTradeType || '') : parsedResult.type;
     const priceFields = parsePriceFields(parsedResult.price, priceType);
@@ -549,6 +566,7 @@ ${text}`
       ...parsedResult,
       move_in_date: moveInDate,
       wanted_trade_type: wantedTradeType,
+      wanted_categories: wantedCategories.length ? wantedCategories : null,
       // ★ 좌표는 클라이언트에서 DB 매칭 + 카카오 API 폴백으로 처리
       lat: null,
       lng: null,

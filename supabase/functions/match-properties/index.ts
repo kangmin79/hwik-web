@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
     // 1. 손님 카드 조회
     const { data: clientCard, error: clientError } = await supabase
       .from('cards')
-      .select('id, property, private_note, embedding, agent_id, wanted_trade_type, move_in_date')
+      .select('id, property, private_note, embedding, agent_id, wanted_trade_type, wanted_categories, move_in_date')
       .eq('id', client_card_id)
       .single();
 
@@ -85,15 +85,21 @@ Deno.serve(async (req) => {
       else if (/월세|임대|ㅇㅅ|웜세/.test(allText)) wantedTradeType = '월세';
     }
 
-    // 카테고리 (더 많은 패턴)
-    let wantedCategory: string | null = null;
-    if (/사무실|오피스(?!텔)|코워킹/.test(allText)) wantedCategory = 'office';
-    else if (/상가|점포|매장|카페|음식점|식당|치킨|베이커리|미용/.test(allText)) wantedCategory = 'commercial';
-    else if (/오피스텔|옵텔/.test(allText)) wantedCategory = 'officetel';
-    else if (/원룸|투룸|빌라|다세대|주택|쓰리룸|방\s?\d|룸/.test(allText)) wantedCategory = 'room';
-    else if (/아파트|아빠트|apt/i.test(allText)) wantedCategory = 'apartment';
-    // 텍스트에서 못 찾으면 property.category 사용 (텍스트가 우선)
-    if (!wantedCategory && cp.category) wantedCategory = cp.category;
+    // 카테고리 (복수 지원)
+    let wantedCats: string[] = [];
+    // DB에 wanted_categories 배열이 있으면 우선 사용
+    if ((clientCard as any).wanted_categories?.length) {
+      wantedCats = (clientCard as any).wanted_categories;
+    } else {
+      // 텍스트에서 복수 추출
+      if (/사무실|오피스(?!텔)|코워킹/.test(allText)) wantedCats.push('office');
+      if (/상가|점포|매장|카페|음식점|식당|치킨|베이커리|미용/.test(allText)) wantedCats.push('commercial');
+      if (/오피스텔|옵텔/.test(allText)) wantedCats.push('officetel');
+      if (/원룸|투룸|빌라|다세대|주택|쓰리룸|방\s?\d|룸/.test(allText)) wantedCats.push('room');
+      if (/아파트|아빠트|apt/i.test(allText)) wantedCats.push('apartment');
+      if (!wantedCats.length && cp.category) wantedCats = [cp.category];
+    }
+    const wantedCategory = wantedCats[0] || null;
 
     // 가격 범위 (더 정밀한 파싱)
     let minPrice: number | null = null;
@@ -236,7 +242,9 @@ Deno.serve(async (req) => {
         .eq('trade_status', '계약가능');
 
       if (wantedTradeType) sqlQuery = sqlQuery.eq('property->>type', wantedTradeType);
-      if (wantedCategory) sqlQuery = sqlQuery.eq('property->>category', wantedCategory);
+      // 복수 카테고리 OR 조건
+      if (wantedCats.length === 1) sqlQuery = sqlQuery.eq('property->>category', wantedCats[0]);
+      else if (wantedCats.length > 1) sqlQuery = sqlQuery.in('property->>category', wantedCats);
       // ★ 월세는 price_number가 보증금이라 월세금과 비교 불가 → SQL 가격 필터 스킵
       if (wantedTradeType !== '월세') {
         if (minPrice) sqlQuery = sqlQuery.gte('price_number', minPrice);
@@ -291,10 +299,10 @@ Deno.serve(async (req) => {
       results = results.filter((r: any) => r.property?.type === wantedTradeType);
     }
 
-    // 4. ★ 후필터: 카테고리, 가격, 지역
-    if (wantedCategory) {
-      const catFiltered = results.filter((r: any) => r.property?.category === wantedCategory);
-      if (catFiltered.length >= 1) results = catFiltered; // 1개 이상이면 필터 적용
+    // 4. ★ 후필터: 카테고리 (복수 OR), 가격, 지역
+    if (wantedCats.length) {
+      const catFiltered = results.filter((r: any) => wantedCats.includes(r.property?.category));
+      if (catFiltered.length >= 1) results = catFiltered;
     }
 
     if (maxPrice && wantedTradeType !== '월세') {
@@ -341,7 +349,8 @@ Deno.serve(async (req) => {
               .order('created_at', { ascending: false })
               .limit(limit * 5);
             if (wantedTradeType) locQuery = locQuery.eq('property->>type', wantedTradeType);
-            if (wantedCategory) locQuery = locQuery.eq('property->>category', wantedCategory);
+            if (wantedCats.length === 1) locQuery = locQuery.eq('property->>category', wantedCats[0]);
+            else if (wantedCats.length > 1) locQuery = locQuery.in('property->>category', wantedCats);
             const { data: locData } = await locQuery;
 
             if (locData && locData.length > 0) {
@@ -557,7 +566,7 @@ Deno.serve(async (req) => {
     results = results.filter((r: any) => {
       const p = r.property || {};
       if (wantedTradeType && p.type && p.type !== wantedTradeType) return false;
-      if (wantedCategory && p.category && p.category !== wantedCategory) return false;
+      if (wantedCats.length && p.category && !wantedCats.includes(p.category)) return false;
       if (wantedLocation) {
         const pLoc = p.location || '';
         const st = r.search_text || '';
@@ -589,7 +598,7 @@ Deno.serve(async (req) => {
       success: true,
       client_card_id,
       wanted_trade_type: wantedTradeType,
-      wanted_category: wantedCategory,
+      wanted_categories: wantedCats,
       wanted_location: wantedLocation,
       wanted_price: { min: minPrice, max: maxPrice },
       wanted_area: { min: wantedMinArea, max: wantedMaxArea },

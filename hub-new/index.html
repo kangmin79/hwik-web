@@ -774,7 +774,7 @@ const Data = (() => {
   async function loadClientCards(off=0, reset=false) {
     const id=uid(); if(!id) return [];
     const { data } = await sb().from('cards')
-      .select('id,property,private_note,contact_name,contact_phone,wanted_trade_type,created_at')
+      .select('id,property,private_note,contact_name,contact_phone,wanted_trade_type,wanted_categories,created_at')
       .eq('agent_id',id)
       .eq('property->>type','손님')
       .order('created_at',{ascending:false}).range(off, off+PAGE-1);
@@ -983,29 +983,38 @@ const Data = (() => {
 })();
 
 // 손님이 찾는 매물 유형 라벨 (예: "상가 월세", "아파트 전세")
-function clientWantLabel(card){
+const _catKo={'apartment':'아파트','officetel':'오피스텔','room':'원투룸','commercial':'상가','office':'사무실'};
+function _clientCats(card){
   const p=card.property||{};
-  const catMap={'apartment':'아파트','officetel':'오피스텔','room':'원투룸','commercial':'상가','office':'사무실'};
-  let cat=p.category?(catMap[p.category]||p.category):'';
-  if(!cat){
-    // rawText + location + complex + features 전체에서 추출
-    const all=[p.rawText,p.location,p.complex,...(p.features||[])].filter(Boolean).join(' ');
-    if(/상가|점포|매장|식당|카페|편의점/.test(all))cat='상가';
-    else if(/사무실|오피스|업무/.test(all))cat='사무실';
-    else if(/아파트/.test(all))cat='아파트';
-    else if(/오피스텔/.test(all))cat='오피스텔';
-    else if(/빌라|다세대|연립/.test(all))cat='빌라';
-    else if(/원룸|투룸|쓰리룸|1룸|2룸/.test(all))cat='원투룸';
+  // wanted_categories 배열이 있으면 우선 사용
+  if(card.wanted_categories&&card.wanted_categories.length){
+    return card.wanted_categories.map(c=>_catKo[c]||c);
   }
+  // fallback: 단일 category 또는 텍스트 추출
+  let cats=[];
+  if(p.category){cats.push(_catKo[p.category]||p.category);}
+  if(!cats.length){
+    const all=[p.rawText,p.location,p.complex,...(p.features||[])].filter(Boolean).join(' ');
+    if(/상가|점포|매장|식당|카페|편의점/.test(all))cats.push('상가');
+    if(/사무실|오피스(?!텔)|업무/.test(all))cats.push('사무실');
+    if(/아파트/.test(all))cats.push('아파트');
+    if(/오피스텔/.test(all))cats.push('오피스텔');
+    if(/빌라|다세대|연립/.test(all))cats.push('빌라');
+    if(/원룸|투룸|쓰리룸/.test(all))cats.push('원투룸');
+  }
+  return cats.length?cats:['손님'];
+}
+function clientWantLabel(card){
+  const cats=_clientCats(card);
   const trade=card.wanted_trade_type||'';
-  return [cat,trade].filter(Boolean).join(' ')||'손님';
+  return cats.map(c=>[c,trade].filter(Boolean).join(' ')).join('/');
 }
 function clientWantTag(card){
-  const label=clientWantLabel(card);
+  const cats=_clientCats(card);
   const trade=card.wanted_trade_type||'';
   const color=trade==='매매'?'#ea580c':trade==='전세'?'#4f46e5':'#7c3aed';
   const bg=trade==='매매'?'rgba(249,115,22,0.1)':trade==='전세'?'rgba(99,102,241,0.1)':'rgba(167,139,250,0.1)';
-  return `<span style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;background:${bg};color:${color};white-space:nowrap;">${esc(label)}</span>`;
+  return cats.map(c=>`<span style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;background:${bg};color:${color};white-space:nowrap;">${esc([c,trade].filter(Boolean).join(' '))}</span>`).join(' ');
 }
 
 // 매물 유형+거래 라벨 (예: "빌라 월세", "아파트 전세")
@@ -2345,7 +2354,7 @@ const PanelClient = (() => {
       const r=await res.json();if(r.error)throw new Error(r.error);
       // 손님 카드로 강제 설정
       const property={type:'손님',price:r.price||null,location:r.location||null,complex:r.complex||null,area:r.area||null,floor:r.floor||null,room:r.room||null,features:r.features||[],category:r.category||null,rawText:inp.value.trim()};
-      const cardData={id:crypto.randomUUID().slice(0,12),agent_id:Auth.user.id,property,contact_name:r.contact_name||null,contact_phone:r.contact_phone||null,embedding:r.embedding||null,search_text:r.search_text||null,search_text_private:r.search_text_private||null,price_number:r.price_number||null,deposit:r.deposit||null,monthly_rent:r.monthly_rent||null,move_in_date:r.move_in_date||null,wanted_trade_type:r.wanted_trade_type||null,trade_status:'계약가능'};
+      const cardData={id:crypto.randomUUID().slice(0,12),agent_id:Auth.user.id,property,contact_name:r.contact_name||null,contact_phone:r.contact_phone||null,embedding:r.embedding||null,search_text:r.search_text||null,search_text_private:r.search_text_private||null,price_number:r.price_number||null,deposit:r.deposit||null,monthly_rent:r.monthly_rent||null,move_in_date:r.move_in_date||null,wanted_trade_type:r.wanted_trade_type||null,wanted_categories:r.wanted_categories||[],trade_status:'계약가능'};
       const {error:dbErr}=await Auth.sb.from('cards').insert([cardData]);
       if(dbErr)throw new Error(dbErr.message);
       Toast.show('손님이 등록되었습니다!');
