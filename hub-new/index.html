@@ -440,13 +440,17 @@ body.dark .phone-screen{background:#0f172a;}
 .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
 .cal-nav{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-sub);padding:4px 8px;}
 .cal-title{font-size:16px;font-weight:800;}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;}
-.cal-day-label{font-size:10px;font-weight:700;color:var(--text-light);padding:4px 0;}
-.cal-day{padding:8px 4px;border-radius:8px;font-size:12px;cursor:pointer;position:relative;}
-.cal-day:hover{background:var(--primary-bg);}
-.cal-day.today{font-weight:800;color:var(--primary);}
-.cal-day.has-alert::after{content:'';position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--primary);}
-.cal-day.has-overdue::after{background:#ef4444;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:left;}
+.cal-day-label{font-size:10px;font-weight:700;color:var(--text-light);padding:4px;text-align:center;}
+.cal-day{padding:4px;border-radius:6px;font-size:11px;cursor:pointer;min-height:60px;border:1px solid transparent;vertical-align:top;}
+.cal-day:hover{background:var(--primary-bg);border-color:var(--border);}
+.cal-day.today{font-weight:800;border-color:var(--primary);}
+.cal-day.selected{background:var(--primary-bg);border-color:var(--primary);}
+.cal-day .cal-num{font-weight:700;margin-bottom:2px;}
+.cal-day .cal-evt{font-size:9px;padding:1px 4px;border-radius:3px;margin-bottom:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;}
+.cal-day .cal-evt.overdue{background:#fef2f2;color:#ef4444;}
+.cal-day .cal-evt.schedule{background:#eef2ff;color:#4f46e5;}
+.cal-day .cal-evt.done{background:#f1f5f9;color:#94a3b8;text-decoration:line-through;}
 
 /* ═══════════════════════════════════════════════════════════
    13. 상세 정보
@@ -3101,7 +3105,7 @@ const PanelAlert = (() => {
     }
 
     // 달력
-    h+=`<div style="margin-top:24px;border-top:1px solid var(--border);padding-top:20px;"><div class="cal-header"><button class="cal-nav" onclick="PanelAlert.calNav(-1)">◀</button><div class="cal-title" id="calTitle">${calYear}년 ${calMonth}월</div><button class="cal-nav" onclick="PanelAlert.calNav(1)">▶</button></div><div id="calGrid"></div></div></div>`;
+    h+=`<div style="margin-top:24px;border-top:1px solid var(--border);padding-top:20px;"><div id="calDetail" style="margin-bottom:12px;"></div><div class="cal-header"><button class="cal-nav" onclick="PanelAlert.calNav(-1)">◀</button><div class="cal-title" id="calTitle">${calYear}년 ${calMonth}월</div><button class="cal-nav" onclick="PanelAlert.calNav(1)">▶</button></div><div id="calGrid"></div></div></div>`;
     el.innerHTML=h;
 
     // 3. 읽음 처리 — 패널 열면 자동
@@ -3128,13 +3132,42 @@ const PanelAlert = (() => {
     const alertDates={};calAlerts.forEach(a=>{const d=new Date(a.alert_date).getDate();if(!alertDates[d])alertDates[d]=[];alertDates[d].push(a);});
 
     let html='';['일','월','화','수','목','금','토'].forEach(d=>html+=`<div class="cal-day-label">${d}</div>`);
-    for(let i=0;i<startDay;i++)html+='<div class="cal-day"></div>';
+    for(let i=0;i<startDay;i++)html+='<div class="cal-day" style="min-height:0;border:none;cursor:default;"></div>';
     for(let d=1;d<=days;d++){
       const isToday=d===today.getDate()&&calMonth===today.getMonth()+1&&calYear===today.getFullYear();
-      const hasAlert=alertDates[d];const hasOverdue=hasAlert?.some(a=>new Date(a.alert_date)<today&&!a.alert_done);
-      html+=`<div class="cal-day${isToday?' today':''}${hasAlert?' has-alert':''}${hasOverdue?' has-overdue':''}">${d}</div>`;
+      const evts=alertDates[d]||[];
+      let evtHtml='';
+      evts.slice(0,2).forEach(a=>{
+        const past=new Date(a.alert_date)<today&&!a.alert_done;
+        const cls=a.alert_done?'done':past?'overdue':'schedule';
+        evtHtml+=`<span class="cal-evt ${cls}">${esc((a.content||a.type||'').slice(0,8))}</span>`;
+      });
+      if(evts.length>2)evtHtml+=`<span style="font-size:8px;color:var(--text-light);">+${evts.length-2}건</span>`;
+      html+=`<div class="cal-day${isToday?' today':''}" onclick="PanelAlert.selectDate(${d})"><div class="cal-num">${d}</div>${evtHtml}</div>`;
     }
     grid.innerHTML=`<div class="cal-grid">${html}</div>`;
+  }
+
+  function selectDate(day){
+    // 선택 하이라이트
+    document.querySelectorAll('.cal-day').forEach(el=>el.classList.remove('selected'));
+    event?.target?.closest('.cal-day')?.classList.add('selected');
+    // 상단에 해당 날짜 일정 표시
+    const detail=document.getElementById('calDetail');if(!detail)return;
+    const evts=(calAlerts||[]).filter(a=>new Date(a.alert_date).getDate()===day);
+    if(!evts.length){detail.innerHTML=`<div style="padding:12px;font-size:13px;color:var(--text-light);">${calMonth}월 ${day}일 — 일정 없음</div>`;return;}
+    const today=new Date();
+    let h=`<div style="font-size:13px;font-weight:700;margin-bottom:8px;">${calMonth}월 ${day}일 (${evts.length}건)</div>`;
+    evts.forEach(a=>{
+      const past=new Date(a.alert_date)<today&&!a.alert_done;
+      const done=a.alert_done;
+      h+=`<div class="tl-item" style="${done?'opacity:0.5;':''}">
+        <span class="tl-tag ${a.type||'메모'}">${a.type||'메모'}</span>
+        <div style="flex:1;"><div class="tl-text" style="${done?'text-decoration:line-through;':''}">${esc(a.content||'')}</div>
+        <div class="tl-date">${new Date(a.alert_date).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}${past?' (지연)':''}${done?' ✅':''}</div></div>
+      </div>`;
+    });
+    detail.innerHTML=h;
   }
 
   async function calNav(dir){calMonth+=dir;if(calMonth>12){calMonth=1;calYear++;}if(calMonth<1){calMonth=12;calYear--;}await _renderCal();}
@@ -3154,7 +3187,7 @@ const PanelAlert = (() => {
 
     if(key==='al_calendar'){
       const now=new Date();calYear=now.getFullYear();calMonth=now.getMonth()+1;
-      el.innerHTML=`<div class="panel-inner">${Hub.panelHead('달력')}<div class="cal-header"><button class="cal-nav" onclick="PanelAlert.calNav(-1)">◀</button><div class="cal-title" id="calTitle">${calYear}년 ${calMonth}월</div><button class="cal-nav" onclick="PanelAlert.calNav(1)">▶</button></div><div id="calGrid"></div></div>`;
+      el.innerHTML=`<div class="panel-inner">${Hub.panelHead('달력')}<div id="calDetail" style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border);"></div><div class="cal-header"><button class="cal-nav" onclick="PanelAlert.calNav(-1)">◀</button><div class="cal-title" id="calTitle">${calYear}년 ${calMonth}월</div><button class="cal-nav" onclick="PanelAlert.calNav(1)">▶</button></div><div id="calGrid"></div></div>`;
       await _renderCal();return;
     }
 
@@ -3168,7 +3201,7 @@ const PanelAlert = (() => {
     _markAllRead(alerts);
   }
 
-  return { render, renderSub, calNav };
+  return { render, renderSub, calNav, selectDate };
 })();
 
 /* ═══════════════════════════════════════════════════════════
