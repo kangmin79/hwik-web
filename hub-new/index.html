@@ -2406,19 +2406,32 @@ const PanelClient = (() => {
     </div>`;
   }
 
+  let _matchSelected=[];
   async function selectClient(card){
     _selectedClient=card;
+    _matchSelected=[];
     _addRecent(card.id);
-    // 노드를 손님 관련 노드로 전환 (허브 상태 업데이트)
-    const p=card.property||{};
     Hub._enterClientDirect(card);
-    // 패널 열고 상세로 전환
     document.getElementById('main').classList.add('split');
     Hub._renderVerticalDirect();
     const el=document.getElementById('panelArea');if(!el)return;
-    el.innerHTML=`<div class="panel-inner" id="clientDetailView">${hwikLoading()}</div>`;
+    el.innerHTML=`<div class="panel-with-preview"><div class="panel-input"><div class="panel-inner" id="clientDetailView">${hwikLoading()}</div></div><div class="panel-preview-wrap" id="clientMatchPreview" style="width:0;opacity:0;padding:0;"></div></div>`;
     _renderClientDetail(card,document.getElementById('clientDetailView'));
     Data.loadClientDetail(card.id).then(d=>{if(_selectedClient?.id===card.id){_selectedClient._notes=d.notes;_selectedClient._matches=d.matches;}});
+  }
+
+  function toggleMatchSel(id){
+    const matches=_selectedClient?._matches||[];
+    const m=matches.find(x=>x.id===id);if(!m)return;
+    const idx=_matchSelected.findIndex(x=>x.id===id);
+    if(idx>=0)_matchSelected.splice(idx,1);else _matchSelected.push(m);
+    Preview.clear();_matchSelected.forEach(c=>Preview.toggle(c));
+    _renderDetailTab('match');
+    Preview.renderSlider('clientMatchPreview');
+    if(idx<0&&_matchSelected.length>0)Preview.goTo(_matchSelected.length-1);
+    const pp=document.getElementById('clientMatchPreview');
+    const has=_matchSelected.length>0;
+    if(pp){pp.style.width=has?'340px':'0';pp.style.opacity=has?'1':'0';pp.style.padding=has?'16px':'0';}
   }
 
   async function _renderClientDetail(card,el){
@@ -2476,8 +2489,31 @@ const PanelClient = (() => {
 
     if(tab==='match'){
       if(!matches.length){el.innerHTML='<div class="empty"><div class="empty-icon">🏠</div>매칭 매물이 없어요</div>';return;}
-      el.innerHTML=matches.map(m=>Hub._renderMatchItem(m)).join('')+
-        `<button class="btn-primary" style="margin-top:12px;" onclick="PanelClient.reMatch('${card.id}')">매칭 다시 찾기</button>`;
+      el.innerHTML=matches.map(m=>{
+        const mp=m.property||{};
+        const tc=mp.type==='매매'?'sale':mp.type==='전세'?'jeonse':'rent';
+        const st=m.trade_status||'계약가능';
+        const stC=st==='완료'?'#ef4444':st==='계약중'?'#f59e0b':'#22c55e';
+        const feats=(mp.features||[]).slice(0,4);
+        const photos=m.photos||[];
+        const mainText=[mp.complex,mp.location].filter(Boolean).map(v=>esc(v)).join(' · ');
+        const subText=[mp.area,mp.floor].filter(Boolean).map(v=>esc(v)).join(' · ');
+        const score=m._score||(m.similarity?Math.round(m.similarity*100):0);
+        const scoreLabel=score>0?score+(m._score?'점':'%'):'';
+        const isMine=!m.agent_id||m.agent_id===Auth.user?.id;
+        const sel=_matchSelected.some(s=>s.id===m.id);
+        let thumbHtml='';
+        if(photos.length){thumbHtml=`<div style="width:44px;height:44px;border-radius:6px;overflow:hidden;flex-shrink:0;position:relative;"><img src="${esc(photos[0])}" style="width:100%;height:100%;object-fit:cover;">${photos.length>1?`<span style="position:absolute;bottom:1px;right:2px;font-size:9px;color:#fff;background:rgba(0,0,0,0.6);padding:1px 4px;border-radius:3px;">${photos.length}</span>`:''}</div>`;}
+        let btns=isMine?`<div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation()"><button onclick="PanelCards.share1('${m.id}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #22c55e;background:rgba(34,197,94,0.06);color:#22c55e;font-size:11px;font-weight:700;cursor:pointer;">공유</button><button onclick="PanelCards.toggleDetail('${m.id}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #60a5fa;background:rgba(96,165,250,0.06);color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer;">상세</button><button onclick="PanelCards.edit('${m.id}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #f59e0b;background:rgba(245,158,11,0.06);color:#f59e0b;font-size:11px;font-weight:700;cursor:pointer;">수정</button><button onclick="PanelCards.del('${m.id}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #ef4444;background:rgba(239,68,68,0.06);color:#ef4444;font-size:11px;font-weight:700;cursor:pointer;">삭제</button></div>`:`<div style="flex-shrink:0;" onclick="event.stopPropagation()"><button onclick="PanelCards.toggleDetail('${m.id}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #60a5fa;background:rgba(96,165,250,0.06);color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer;">상세</button></div>`;
+        return `<div style="border:1px solid ${sel?'var(--primary)':'var(--border)'};border-radius:10px;padding:10px 12px;margin-bottom:4px;background:${sel?'var(--primary-bg)':'transparent'};cursor:pointer;" onclick="PanelClient.toggleMatchSel('${m.id}')">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div onclick="event.stopPropagation();PanelClient.toggleMatchSel('${m.id}')" style="width:20px;height:20px;border:2px solid ${sel?'var(--primary)':'#ccc'};border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${sel?'var(--primary)':'transparent'};cursor:pointer;">${sel?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${propertyTypeTag(m)}<span style="font-size:10px;font-weight:700;color:${stC};">${st}</span><strong style="font-size:14px;">${esc(mp.price||'-')}</strong><span style="font-size:13px;color:var(--text-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${mainText}</span><span style="font-size:12px;color:var(--text-light);">${subText?'· '+subText:''}</span>${scoreLabel?`<span style="padding:2px 8px;border-radius:6px;background:var(--primary-bg);color:var(--primary);font-size:10px;font-weight:700;">${scoreLabel}</span>`:''}</div>
+              ${feats.length?`<div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;">${feats.map(f=>`<span style="padding:1px 6px;border-radius:4px;background:var(--primary-bg);font-size:9px;font-weight:600;color:var(--primary);">${esc(f)}</span>`).join('')}</div>`:''}
+            </div>${thumbHtml}${btns}
+          </div></div>`;
+      }).join('')+`<button class="btn-primary" style="margin-top:12px;" onclick="PanelClient.reMatch('${card.id}')">매칭 다시 찾기</button>`;
     }
     else if(tab==='timeline'){
       let h=`<div class="note-row" style="margin-bottom:12px;"><input type="text" id="noteIn" placeholder="메모 입력... (예: 내일 2시 방문 예정)" onkeydown="if(event.key==='Enter')PanelClient.saveNote('${card.id}')"><button onclick="PanelClient.saveNote('${card.id}')">저장</button></div>`;
@@ -2816,7 +2852,7 @@ const PanelClient = (() => {
     if(Hub.current?.data?.id===cardId){Hub.current.data.contact_name=name;Hub.current.data.contact_phone=phone;}
   }
 
-  return { render, registerClient, toggleReg, _addRecent, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact, selectClient, closeDetail, detailTab };
+  return { render, registerClient, toggleReg, _addRecent, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact, selectClient, closeDetail, detailTab, toggleMatchSel };
 })();
 
 /* ═══════════════════════════════════════════════════════════
