@@ -57,13 +57,12 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 .logo { width:36px; height:36px; background:var(--yellow); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; color:var(--dark); flex-shrink:0; }
 .header-name { font-size:17px; font-weight:500; color:#fff; }
 .header-sub { font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px; }
-.tags { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
-.tag { display:inline-flex; align-items:center; gap:4px; padding:5px 10px; border-radius:16px; font-size:11px; font-weight:400; letter-spacing:-0.2px; }
-.tag-subway { background:rgba(59,130,246,0.15); color:#93bbfd; }
-.tag-subway .tag-icon { font-size:10px; }
-.tag-school { background:rgba(99,153,34,0.15); color:#a3d468; }
-.tag-school .tag-icon { font-size:10px; }
-.tag-time { opacity:0.7; font-size:10px; }
+.tags { display:flex; flex-direction:column; gap:4px; margin-top:8px; }
+.tag-line { display:flex; align-items:center; gap:4px; font-size:12px; line-height:1.4; }
+.tag-icon { flex-shrink:0; width:16px; text-align:center; font-size:11px; }
+.tag-subway-line { color:rgba(147,187,253,0.9); }
+.tag-school-line { color:rgba(163,212,104,0.9); }
+.tag-sep { color:rgba(255,255,255,0.25); margin:0 2px; }
 .tag-subway { background:rgba(100,180,255,0.2); }
 .tag-school { background:rgba(100,220,150,0.2); }
 
@@ -338,10 +337,19 @@ function render() {
   const listings = d.active_listings || [];
 
   // 지하철/학교 태그
-  const tagHtml = [
-    ...subway.map(s => `<div class="tag tag-subway"><span class="tag-icon">🚇</span>${esc(s.name)}${s.line ? '<span class="tag-time">'+esc(s.line)+'</span>' : ''}<span class="tag-time">${walkMin(s.distance)}</span></div>`),
-    ...school.slice(0,2).map(s => `<div class="tag tag-school"><span class="tag-icon">🏫</span>${esc(s.name)}<span class="tag-time">${walkMin(s.distance)}</span></div>`)
-  ].join('');
+  function shortSchool(n) { return n.replace(/서울/g,'').replace(/초등학교/g,'초').replace(/중학교/g,'중').replace(/고등학교/g,'고'); }
+  let tagHtml = '';
+  if (subway.length > 0) {
+    const subwayText = subway.map(s => {
+      const line = s.line ? '('+esc(s.line).replace('수도권  도시철도 ','').replace('호선','')+')' : '';
+      return esc(s.name) + line + ' ' + walkMin(s.distance);
+    }).join(' <span class="tag-sep">·</span> ');
+    tagHtml += `<div class="tag-line tag-subway-line"><span class="tag-icon">🚇</span>${subwayText}</div>`;
+  }
+  if (school.length > 0) {
+    const schoolText = school.slice(0,2).map(s => shortSchool(esc(s.name)) + ' ' + walkMin(s.distance)).join(' <span class="tag-sep">·</span> ');
+    tagHtml += `<div class="tag-line tag-school-line"><span class="tag-icon">🏫</span>${schoolText}</div>`;
+  }
 
   // 평형 버튼
   const pm = d.pyeongs_map || {};
