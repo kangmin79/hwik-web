@@ -1025,21 +1025,45 @@ function clientWantLabel(card){
   for(const t of trades){ for(const c of cats){ labels.push([c,t].filter(Boolean).join(' ')); } }
   return [...new Set(labels)].join(' / ')||'손님';
 }
+// 카테고리별 배경색 (배경으로 유형 구분) + 거래유형별 글자색 (글자로 거래 구분)
+const _catStyle={
+  '아파트':{bg:'#dbeafe',border:'#93c5fd'},      // 파란
+  '오피스텔':{bg:'#ccfbf1',border:'#5eead4'},     // 청록
+  '원투룸':{bg:'#dcfce7',border:'#86efac'},       // 초록
+  '빌라':{bg:'#dcfce7',border:'#86efac'},         // 초록 (원투룸과 같은 계열)
+  '상가':{bg:'#ffedd5',border:'#fdba74'},         // 주황
+  '사무실':{bg:'#f1f5f9',border:'#cbd5e1'},       // 회색
+  '손님':{bg:'#f1f5f9',border:'#cbd5e1'},
+};
+const _tradeColor={'매매':'#c2410c','전세':'#3730a3','월세':'#6d28d9'};
+function _tagHtml(cat,trade){
+  const s=_catStyle[cat]||_catStyle['손님'];
+  const tc=_tradeColor[trade]||'#475569';
+  return `<span style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;background:${s.bg};border:1px solid ${s.border};color:${tc};white-space:nowrap;">${esc([cat,trade].filter(Boolean).join(' '))}</span>`;
+}
 function clientWantTag(card){
   const cats=_clientCats(card);
   const trades=_clientTrades(card);
-  if(!trades.length){
-    return cats.map(c=>`<span style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;background:rgba(148,163,184,0.1);color:#64748b;white-space:nowrap;">${esc(c)}</span>`).join(' ');
-  }
+  if(!trades.length) return cats.map(c=>_tagHtml(c,'')).join(' ');
   const tags=[];
-  for(const t of trades){
-    const color=t==='매매'?'#ea580c':t==='전세'?'#4f46e5':'#7c3aed';
-    const bg=t==='매매'?'rgba(249,115,22,0.1)':t==='전세'?'rgba(99,102,241,0.1)':'rgba(167,139,250,0.1)';
-    for(const c of cats){ tags.push(`<span style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;background:${bg};color:${color};white-space:nowrap;">${esc([c,t].filter(Boolean).join(' '))}</span>`); }
-  }
+  for(const t of trades){ for(const c of cats){ tags.push(_tagHtml(c,t)); } }
   return [...new Set(tags)].join(' ');
 }
 
+function propertyTypeTag(card){
+  const label=propertyTypeLabel(card);
+  const p=card.property||{};
+  // 카테고리 추출
+  let cat='';
+  const catMap={'apartment':'아파트','officetel':'오피스텔','room':'원투룸','commercial':'상가','office':'사무실'};
+  if(p.category)cat=catMap[p.category]||p.category;
+  if(!cat){const all=[p.complex,p.location,p.rawText,...(p.features||[])].filter(Boolean).join(' ');
+    if(/상가|점포|매장|식당|카페/.test(all))cat='상가';else if(/사무실|오피스|업무/.test(all))cat='사무실';
+    else if(/아파트/.test(all))cat='아파트';else if(/오피스텔/.test(all))cat='오피스텔';
+    else if(/빌라|다세대|연립/.test(all))cat='빌라';else if(/원룸|투룸|쓰리룸/.test(all))cat='원투룸';
+  }
+  return _tagHtml(cat||'손님',p.type||'');
+}
 // 매물 유형+거래 라벨 (예: "빌라 월세", "아파트 전세")
 function propertyTypeLabel(card){
   const p=card.property||{};
@@ -1518,11 +1542,11 @@ const Hub = (() => {
     const _cname=card.contact_name||(p.location?p.location:'손님');
     const _wantLbl=clientWantLabel(card);
     const _csub=[p.price,p.location&&card.contact_name?p.location:null].filter(Boolean).join(' ');
-    // 중앙 노드용 작은 태그
+    // 중앙 노드용 태그 (같은 스타일, 작은 폰트)
     const _trades=_clientTrades(card);const _cats=_clientCats(card);
     let _wtag='';
-    if(_trades.length){_trades.forEach(t=>{const color=t==='매매'?'#ea580c':t==='전세'?'#4f46e5':'#7c3aed';const bg=t==='매매'?'rgba(249,115,22,0.15)':t==='전세'?'rgba(99,102,241,0.15)':'rgba(167,139,250,0.15)';_cats.forEach(c=>{_wtag+=`<span style="padding:1px 6px;border-radius:5px;font-size:9px;font-weight:700;background:${bg};color:${color};margin-bottom:1px;">${esc([c,t].filter(Boolean).join(' '))}</span> `;});});
-    }else if(_cats[0]!=='손님'){_cats.forEach(c=>{_wtag+=`<span style="padding:1px 6px;border-radius:5px;font-size:9px;font-weight:700;background:rgba(148,163,184,0.1);color:#64748b;margin-bottom:1px;">${esc(c)}</span> `;});}
+    if(_trades.length){_trades.forEach(t=>{_cats.forEach(c=>{const s=_catStyle[c]||_catStyle['손님'];const tc=_tradeColor[t]||'#475569';_wtag+=`<span style="padding:1px 6px;border-radius:5px;font-size:8px;font-weight:700;background:${s.bg};border:1px solid ${s.border};color:${tc};margin-bottom:1px;">${esc([c,t].filter(Boolean).join(' '))}</span> `;});});
+    }else if(_cats[0]!=='손님'){_cats.forEach(c=>{const s=_catStyle[c]||_catStyle['손님'];_wtag+=`<span style="padding:1px 6px;border-radius:5px;font-size:8px;font-weight:700;background:${s.bg};border:1px solid ${s.border};color:#475569;margin-bottom:1px;">${esc(c)}</span> `;});}
     current={type:'client',data:card,nodes:CLIENT,center:{icon:'🙋',name:_cname,sub:_csub,tag:_wtag},_notes:[],_matches:[]};
     closePanel();render(CLIENT,current.center);
     Data.loadClientDetail(card.id).then(d=>{current._notes=d.notes;current._matches=d.matches;});
@@ -1829,7 +1853,7 @@ const Hub = (() => {
         <div onclick="event.stopPropagation();Hub._toggleMatchSel('${m.id}')" style="width:20px;height:20px;border:2px solid ${sel?'var(--primary)':'#ccc'};border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${sel?'var(--primary)':'transparent'};cursor:pointer;">${sel?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}</div>
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-            <span style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:800;background:${tc==='sale'?'rgba(249,115,22,0.1)':tc==='jeonse'?'rgba(99,102,241,0.1)':'rgba(167,139,250,0.1)'};color:${tc==='sale'?'#ea580c':tc==='jeonse'?'#4f46e5':'#7c3aed'};">${esc(propertyTypeLabel(m))}</span>
+            ${propertyTypeTag(m)}
             <span style="font-size:10px;font-weight:700;color:${stC};">${st}</span>
             <strong style="font-size:14px;">${esc(mp.price||'-')}</strong>
             <span style="font-size:13px;color:var(--text-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${mainText}</span>
@@ -2149,7 +2173,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
       }
       if(shR.length){
         html+=`<div style="font-size:13px;font-weight:700;color:#22c55e;margin:16px 0 8px;">공유 매물 (${shR.length}건)</div>`;
-        html+=shR.map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item"><span class="item-type ${tc}">${esc(propertyTypeLabel(c))}</span><div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');
+        html+=shR.map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item">${propertyTypeTag(c)}<div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');
       }
       if(!myR.length&&!shR.length)html='<div class="empty"><div class="empty-icon">🔍</div>검색 결과가 없어요</div>';
       el.innerHTML=html;
@@ -2191,7 +2215,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
           <div onclick="PanelCards.toggleSel('${c.id}')" style="width:20px;height:20px;border:2px solid ${sel?'var(--primary)':'#ccc'};border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${sel?'var(--primary)':'transparent'};cursor:pointer;">${sel?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}</div>
           <div style="flex:1;min-width:0;cursor:pointer;" onclick="PanelCards.toggleSel('${c.id}')">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-              <span style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:800;background:${tc==='sale'?'rgba(249,115,22,0.1)':tc==='jeonse'?'rgba(99,102,241,0.1)':'rgba(167,139,250,0.1)'};color:${tc==='sale'?'#ea580c':tc==='jeonse'?'#4f46e5':'#7c3aed'};">${esc(propertyTypeLabel(c))}</span>
+              ${propertyTypeTag(c)}
               <span style="font-size:10px;font-weight:700;color:${stC};">${st}</span>
               <strong style="font-size:14px;">${esc(p.price||'-')}</strong>
               <span style="font-size:13px;color:var(--text-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${mainText}</span>
@@ -2525,7 +2549,7 @@ const PanelClient = (() => {
     }
     if(myR.length){
       html+=`<div style="font-size:13px;font-weight:700;color:var(--primary);margin:16px 0 8px;">관련 매물 (${myR.length>5?'상위 5건':myR.length+'건'})</div>`;
-      html+=myR.slice(0,5).map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item"><span class="item-type ${tc}">${esc(propertyTypeLabel(c))}</span><div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');
+      html+=myR.slice(0,5).map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item">${propertyTypeTag(c)}<div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');
     }
     if(!clR.length&&!myR.length)html='<div class="empty"><div class="empty-icon">🔍</div>검색 결과가 없어요</div>';
     el.innerHTML=html;
@@ -2890,7 +2914,7 @@ const PanelShared = (() => {
       const isMine=aid===myId;
       html+=`<div class="section-label" style="color:${isMine?'var(--primary)':'var(--text-sub)'};">${isMine?'내 매물':'다른 중개사'} (${list.length}건)</div>`;
       list.forEach(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';
-        html+=`<div class="item"><span class="item-type ${tc}">${esc(propertyTypeLabel(c))}</span><div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div>${isMine?`<button class="prop-action-btn delete" onclick="event.stopPropagation();PanelShared.unshare('${c.id}','${c.room_id||''}')">해제</button>`:''}</div>`;
+        html+=`<div class="item">${propertyTypeTag(c)}<div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div>${isMine?`<button class="prop-action-btn delete" onclick="event.stopPropagation();PanelShared.unshare('${c.id}','${c.room_id||''}')">해제</button>`:''}</div>`;
       });
     });
     el.innerHTML=html;
@@ -2911,8 +2935,8 @@ const PanelShared = (() => {
     }else{
       const [shR,myR]=await Promise.all([Search.vector(_sharedQuery,'shared'),Search.vector(_sharedQuery,'my')]);
       let html='';
-      if(myR.length){html+=`<div style="font-size:13px;font-weight:700;color:var(--primary);margin:12px 0 8px;">내 매물 (${myR.length>5?'상위 5건':myR.length+'건'})</div>`+myR.slice(0,5).map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item"><span class="item-type ${tc}">${esc(propertyTypeLabel(c))}</span><div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');}
-      if(shR.length){html+=`<div style="font-size:13px;font-weight:700;color:#22c55e;margin:16px 0 8px;">공유 매물 (${shR.length}건)</div>`+shR.map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item"><span class="item-type ${tc}">${esc(propertyTypeLabel(c))}</span><div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');}
+      if(myR.length){html+=`<div style="font-size:13px;font-weight:700;color:var(--primary);margin:12px 0 8px;">내 매물 (${myR.length>5?'상위 5건':myR.length+'건'})</div>`+myR.slice(0,5).map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item">${propertyTypeTag(c)}<div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');}
+      if(shR.length){html+=`<div style="font-size:13px;font-weight:700;color:#22c55e;margin:16px 0 8px;">공유 매물 (${shR.length}건)</div>`+shR.map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item">${propertyTypeTag(c)}<div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');}
       if(!shR.length&&!myR.length)html='<div class="empty"><div class="empty-icon">🔍</div>검색 결과가 없어요</div>';
       el.innerHTML=html;
     }
