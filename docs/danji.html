@@ -621,6 +621,24 @@ function render() {
 
     <div class="divider"></div>
 
+    <!-- 내부 링크 (SEO) -->
+    <div class="section">
+      <div class="section-title">더 알아보기</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <a href="dong.html?gu=${encodeURIComponent(gu)}&dong=${encodeURIComponent(dong)}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
+          <span style="font-size:13px;">${esc(dong)} 다른 단지 시세</span><span style="color:var(--sub);font-size:12px;">→</span>
+        </a>
+        <a href="gu.html?name=${encodeURIComponent(gu)}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
+          <span style="font-size:13px;">${esc(gu)} 전체 시세</span><span style="color:var(--sub);font-size:12px;">→</span>
+        </a>
+        <a href="ranking.html" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
+          <span style="font-size:13px;">서울 아파트 순위</span><span style="color:var(--sub);font-size:12px;">→</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
     <!-- CTA -->
     <div class="cta-section">
       <button class="btn-primary" onclick="location.href='mobile-v6.html'">이 단지 매물 전체보기</button>

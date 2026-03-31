@@ -233,6 +233,39 @@ function renderGuDetail(guName, data) {
 
     <div class="divider"></div>
 
+    <!-- 큐레이션 섹션 -->
+    ${(() => {
+      // 전세가율 높은 TOP 3
+      const jrTop = data.filter(d => d.jeonse_rate && d.jeonse_rate > 30 && d.jeonse_rate < 150)
+        .sort((a,b) => b.jeonse_rate - a.jeonse_rate).slice(0,3);
+      // 최근 거래 활발한 TOP 3 (price_history 개수 기준 → recent_trade 키 개수로 대체)
+      const activeTop = data.filter(d => d.recent_trade && Object.keys(d.recent_trade).length > 0)
+        .sort((a,b) => Object.keys(b.recent_trade||{}).length - Object.keys(a.recent_trade||{}).length).slice(0,3);
+
+      let html = '';
+      if (jrTop.length > 0) {
+        html += '<div class="section"><div class="section-title">전세가율 높은 단지</div><div style="display:flex;flex-direction:column;gap:8px;">';
+        jrTop.forEach((d,i) => {
+          html += '<div class="danji-item" onclick="location.href=\\'danji.html?id='+encodeURIComponent(d.id)+'\\'"><div><div class="danji-name">'+(i+1)+'. '+esc(d.complex_name)+'</div><div class="danji-sub">'+esc(d.location)+'</div></div><div><div class="danji-price">'+d.jeonse_rate+'%</div><div class="danji-rate">전세가율</div></div></div>';
+        });
+        html += '</div></div>';
+      }
+      if (activeTop.length > 0) {
+        html += '<div class="section"><div class="section-title">거래 활발한 단지</div><div style="display:flex;flex-direction:column;gap:8px;">';
+        activeTop.forEach((d,i) => {
+          const rt = d.recent_trade || {};
+          const cats = d.categories || [];
+          let price = null;
+          for (const c of cats) { if (rt[c] && rt[c].price) { price = rt[c].price; break; } }
+          html += '<div class="danji-item" onclick="location.href=\\'danji.html?id='+encodeURIComponent(d.id)+'\\'"><div><div class="danji-name">'+(i+1)+'. '+esc(d.complex_name)+'</div><div class="danji-sub">'+esc(d.location)+'</div></div><div><div class="danji-price">'+(price?formatPrice(price):'-')+'</div></div></div>';
+        });
+        html += '</div>';
+      }
+      return html;
+    })()}
+
+    <div class="divider"></div>
+
     <div class="section">
       <div class="section-title">동별 단지</div>
       <div class="dong-grid">
