@@ -1643,7 +1643,48 @@ const Hub = (() => {
         <button onclick="PanelClient.editClient('${card.id}')" style="padding:10px 24px;border-radius:10px;border:1.5px solid var(--primary);background:transparent;color:var(--primary);font-size:14px;font-weight:700;cursor:pointer;">수정</button>
         <button onclick="Hub.openSub('cl_match')" style="padding:10px 24px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:14px;font-weight:700;cursor:pointer;">매물 보내기</button>
       </div>
+
+      <!-- 매칭 매물 -->
+      <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
+        <div style="font-size:14px;font-weight:800;margin-bottom:12px;">🏠 AI 매칭 매물</div>
+        <div id="clientMatchList">${hwikLoading()}</div>
+      </div>
     </div>`;
+
+    // 매칭 매물 로드
+    _loadClientMatches(card.id);
+  }
+
+  async function _loadClientMatches(cardId){
+    const el=document.getElementById('clientMatchList');if(!el)return;
+    const matches=current?._matches||[];
+    if(!matches.length){
+      // 아직 로드 안 됐으면 잠시 후 재시도
+      setTimeout(async()=>{
+        const ms=current?._matches||[];
+        if(!ms.length){el.innerHTML='<div style="font-size:13px;color:var(--text-light);padding:8px 0;">매칭 매물이 없어요. 매물을 더 등록해보세요.</div>';return;}
+        _renderMatches(ms,el);
+      },1500);
+      return;
+    }
+    _renderMatches(matches,el);
+  }
+
+  function _renderMatches(matches,el){
+    el.innerHTML=matches.slice(0,5).map(m=>{
+      const mp=m.property||{};
+      const tc=mp.type==='매매'?'sale':mp.type==='전세'?'jeonse':'rent';
+      const score=m.similarity?Math.round(m.similarity*100):0;
+      return `<div class="item" style="border:1px solid var(--border);border-radius:10px;margin-bottom:6px;padding:10px 12px;">
+        <span style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:800;background:${tc==='sale'?'rgba(249,115,22,0.1)':tc==='jeonse'?'rgba(99,102,241,0.1)':'rgba(167,139,250,0.1)'};color:${tc==='sale'?'#ea580c':tc==='jeonse'?'#4f46e5':'#7c3aed'};flex-shrink:0;">${esc(mp.type||'')}</span>
+        <div class="item-body">
+          <div class="item-name">${esc(mp.complex||mp.location||'매물')}</div>
+          <div class="item-sub">${[mp.price,mp.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
+        </div>
+        ${score?`<span style="padding:3px 10px;border-radius:8px;background:var(--primary-bg);color:var(--primary);font-size:11px;font-weight:700;">${score}%</span>`:''}
+      </div>`;
+    }).join('')+
+    (matches.length>5?`<div style="text-align:center;padding:8px;"><button onclick="Hub.openSub('cl_match')" style="padding:6px 20px;border-radius:8px;border:1px solid var(--primary);background:transparent;color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;">전체 ${matches.length}건 보기</button></div>`:'');
   }
 
   return { MAIN,CLIENT,PROPERTY, render,onNode,onCenterClick,openPanel,openSub,closePanel,enterClient,enterProperty,back, panelHead:_ph, _openMyInfo, _sendOtp, _verifyOtp, _saveMyInfo, get current(){return current;}, get activePanel(){return activePanel;}, get RADIUS(){return RADIUS;}, adjustLayout, _saveSettings, _openProfileEdit };
