@@ -3132,7 +3132,7 @@ const PanelAlert = (() => {
     }
 
     // 달력
-    h+=`<div style="margin-top:24px;border-top:1px solid var(--border);padding-top:20px;"><div id="calDetail" style="margin-bottom:12px;"></div><div class="cal-header"><button class="cal-nav" onclick="PanelAlert.calNav(-1)">◀</button><div class="cal-title" id="calTitle">${calYear}년 ${calMonth}월</div><button class="cal-nav" onclick="PanelAlert.calNav(1)">▶</button></div><div id="calGrid"></div></div></div>`;
+    h+=`<div style="margin-top:24px;border-top:1px solid var(--border);padding-top:20px;"><div id="calDetail" style="margin-bottom:12px;max-height:200px;overflow-y:auto;"></div><div class="cal-header"><button class="cal-nav" onclick="PanelAlert.calNav(-1)">◀</button><div class="cal-title" id="calTitle">${calYear}년 ${calMonth}월</div><button class="cal-nav" onclick="PanelAlert.calNav(1)">▶</button></div><div id="calGrid"></div></div></div>`;
     el.innerHTML=h;
 
     // 3. 읽음 처리 — 패널 열면 자동
@@ -3227,7 +3227,7 @@ const PanelAlert = (() => {
 
     if(key==='al_calendar'){
       const now=new Date();calYear=now.getFullYear();calMonth=now.getMonth()+1;
-      el.innerHTML=`<div class="panel-inner">${Hub.panelHead('달력')}<div id="calDetail" style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border);"></div><div class="cal-header"><button class="cal-nav" onclick="PanelAlert.calNav(-1)">◀</button><div class="cal-title" id="calTitle">${calYear}년 ${calMonth}월</div><button class="cal-nav" onclick="PanelAlert.calNav(1)">▶</button></div><div id="calGrid"></div></div>`;
+      el.innerHTML=`<div class="panel-inner">${Hub.panelHead('달력')}<div id="calDetail" style="margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border);max-height:200px;overflow-y:auto;"></div><div class="cal-header"><button class="cal-nav" onclick="PanelAlert.calNav(-1)">◀</button><div class="cal-title" id="calTitle">${calYear}년 ${calMonth}월</div><button class="cal-nav" onclick="PanelAlert.calNav(1)">▶</button></div><div id="calGrid"></div></div>`;
       await _renderCal();return;
     }
 
