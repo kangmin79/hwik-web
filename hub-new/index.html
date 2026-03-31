@@ -623,7 +623,7 @@ body.dark .phone-screen{background:#0f172a;}
   <div class="hub-area">
     <div class="hub-visual" id="hubVisual">
       <svg class="hub-lines" id="hubLines" viewBox="0 0 800 700" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"></svg>
-      <div class="hub-center" id="hubCenter" onclick="Hub.openPanel('settings')"></div>
+      <div class="hub-center" id="hubCenter" onclick="Hub.onCenterClick()"></div>
     </div>
   </div>
   <div class="panel-area" id="panelArea"></div>
@@ -1581,7 +1581,66 @@ const Hub = (() => {
 
   function _ph(title,count){return `<div class="panel-head"><div class="panel-title">${title}${count!=null?' <span>'+count+'</span>':''}</div><button class="panel-x" onclick="Hub.closePanel()">✕</button></div>`;}
 
-  return { MAIN,CLIENT,PROPERTY, render,onNode,openPanel,openSub,closePanel,enterClient,enterProperty,back, panelHead:_ph, _openMyInfo, _sendOtp, _verifyOtp, _saveMyInfo, get current(){return current;}, get activePanel(){return activePanel;}, get RADIUS(){return RADIUS;}, adjustLayout, _saveSettings, _openProfileEdit };
+  function onCenterClick(){
+    if(current?.type==='client'){
+      // 손님 허브 → 손님 카드 패널
+      _clientCard(document.getElementById('panelArea'));
+      return;
+    }
+    if(current?.type==='property'){
+      // 매물 허브 → 상세 정보
+      openSub('pr_detail');
+      return;
+    }
+    // 메인 허브 → 대시보드
+    openPanel('settings');
+  }
+
+  function _clientCard(el){
+    const card=current?.data;if(!card)return;
+    const p=card.property||{},pn=card.private_note||{};
+    const name=card.contact_name||p.location||p.complex||'손님';
+    const conds=[p.price,p.location,p.complex,p.area].filter(Boolean).map(v=>esc(v)).join(' · ');
+
+    // 마지막 메모에서 상태 판별
+    const stageMap={'메모':{color:'#6366f1',label:'신규'},'상담':{color:'#60a5fa',label:'상담'},'방문':{color:'#f59e0b',label:'방문'},'매물소개':{color:'#a78bfa',label:'소개'},'계약':{color:'#ef4444',label:'계약'}};
+    const notes=current._notes||[];
+    const lastNote=notes[0];
+    const stage=lastNote?(stageMap[lastNote.type]||stageMap['메모']):stageMap['메모'];
+    const dateStr=card.created_at?new Date(card.created_at).toLocaleDateString('ko-KR'):'';
+
+    activePanel='cl_card';
+    document.getElementById('main').classList.add('split');
+    _renderVertical();
+
+    el.innerHTML=`<div class="panel-inner">${_ph(esc(name))}
+      <div style="text-align:center;padding:24px 0;">
+        <div style="font-size:48px;margin-bottom:8px;">🙋</div>
+        <div style="font-size:20px;font-weight:800;">${esc(name)}</div>
+        <div style="font-size:14px;color:var(--text-sub);margin-top:4px;">${conds}</div>
+      </div>
+
+      <div style="display:flex;gap:12px;justify-content:center;margin-bottom:20px;">
+        <div style="padding:8px 20px;border-radius:10px;background:${stage.color}20;border:1.5px solid ${stage.color};color:${stage.color};font-size:13px;font-weight:700;">상태: ${stage.label}</div>
+      </div>
+
+      ${card.contact_phone?`<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px;">
+        <span style="font-size:15px;font-weight:700;">${esc(card.contact_phone)}</span>
+        <button onclick="navigator.clipboard.writeText('${esc(card.contact_phone)}');Toast.show('복사됨')" style="padding:4px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-sub);font-size:12px;cursor:pointer;">📋 복사</button>
+      </div>`:''}
+
+      <div style="font-size:12px;color:var(--text-light);text-align:center;margin-bottom:20px;">등록일: ${dateStr}</div>
+
+      ${pn.memo?`<div style="padding:12px;border-radius:10px;background:var(--primary-bg);font-size:13px;color:var(--text-sub);margin-bottom:16px;">${esc(pn.memo)}</div>`:''}
+
+      <div style="display:flex;gap:8px;justify-content:center;">
+        <button onclick="PanelClient.editClient('${card.id}')" style="padding:10px 24px;border-radius:10px;border:1.5px solid var(--primary);background:transparent;color:var(--primary);font-size:14px;font-weight:700;cursor:pointer;">수정</button>
+        <button onclick="Hub.openSub('cl_match')" style="padding:10px 24px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:14px;font-weight:700;cursor:pointer;">매물 보내기</button>
+      </div>
+    </div>`;
+  }
+
+  return { MAIN,CLIENT,PROPERTY, render,onNode,onCenterClick,openPanel,openSub,closePanel,enterClient,enterProperty,back, panelHead:_ph, _openMyInfo, _sendOtp, _verifyOtp, _saveMyInfo, get current(){return current;}, get activePanel(){return activePanel;}, get RADIUS(){return RADIUS;}, adjustLayout, _saveSettings, _openProfileEdit };
 })();
 
 /* ═══════════════════════════════════════════════════════════
