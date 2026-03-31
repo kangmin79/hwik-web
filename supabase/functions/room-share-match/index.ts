@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
     // 3. 멤버들의 손님 카드 일괄 조회
     const { data: clients } = await supabase
       .from('cards')
-      .select('id, agent_id, property, private_note, embedding, price_number, wanted_trade_type')
+      .select('id, agent_id, property, embedding, price_number, wanted_trade_type, search_text')
       .in('agent_id', memberIds)
       .eq('property->>type', '손님')
       .not('embedding', 'is', null)
@@ -125,8 +125,8 @@ Deno.serve(async (req) => {
 
     const filteredClients = clients.filter(c => {
       const cp = c.property || {};
-      const memo = (c as any).private_note?.memo || '';
-      let allText = [cp.price, cp.location, memo, ...(cp.features || [])].filter(Boolean).join(' ');
+      const st = (c as any).search_text || '';
+      let allText = [cp.price, cp.location, st, ...(cp.features || [])].filter(Boolean).join(' ');
       allText = fixTypos(allText);
 
       // 거래유형 체크
