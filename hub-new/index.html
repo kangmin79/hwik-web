@@ -2014,18 +2014,16 @@ const PanelRegister = (() => {
    10. PanelCards — 내 매물
    ═══════════════════════════════════════════════════════════ */
 const PanelCards = (() => {
-  let cFilter='전체',cCat='전체',cSort='최근순',cQuery='',cTab='mine',cOff=0,_editNewPhotos=[];
+  let cFilter='전체',cCat='전체',cSort='최근순',cQuery='',cOff=0,_editNewPhotos=[];
 
   async function render(el){
     el.innerHTML=`<div class="panel-with-preview"><div class="panel-input"><div class="panel-inner">${Hub.panelHead('내 매물')}
-      <div class="sub-tabs"><button class="sub-tab active" onclick="PanelCards.switchTab('mine',this)">내 매물</button><button class="sub-tab" onclick="PanelCards.switchTab('completed',this)">실적</button></div>
       <div id="tabMine">
         <div class="search"><input type="text" id="myQ" placeholder="예) 강남구 아파트 전세 5억이하" oninput="PanelCards.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelCards.onQEnter()"></div>
         <div id="searchHint" style="display:none;font-size:11px;color:var(--primary);margin:-12px 0 12px 4px;">💡 Enter로 AI 검색 (더 많은 결과)</div>
         <div id="myList">${hwikLoading()}</div>
         <div id="myMore" style="display:none;text-align:center;padding:12px;"><button class="btn-load-more" onclick="PanelCards.more()">더 보기</button></div>
       </div>
-      <div id="tabDone" style="display:none"><div id="doneList"></div></div>
     </div></div>
     <div class="panel-preview-wrap" id="previewPanel" style="width:0;opacity:0;padding:0;"></div>
     </div>`;
@@ -2033,8 +2031,7 @@ const PanelCards = (() => {
     Preview.clear();Preview.renderSlider('previewPanel');
   }
 
-  function switchTab(t,btn){cTab=t;document.querySelectorAll('.sub-tab').forEach(b=>b.classList.remove('active'));btn?.classList.add('active');document.getElementById('tabMine').style.display=t==='mine'?'':'none';document.getElementById('tabDone').style.display=t==='completed'?'':'none';if(t==='completed')_renderDone();}
-  function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn?.classList.add('active');renderList();}
+function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn?.classList.add('active');renderList();}
   function setCat(c,btn){cCat=c;btn?.closest('.filters').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn?.classList.add('active');renderList();}
   function setSort(s,btn){cSort=s;document.querySelectorAll('.sort-tag').forEach(b=>b.classList.remove('active'));btn?.classList.add('active');renderList();}
   function onQ(q){cQuery=q;renderList();const hint=document.getElementById('searchHint');if(hint)hint.style.display=q.trim()?'':'none';}
@@ -2236,15 +2233,6 @@ const PanelCards = (() => {
   async function del(id){if(!confirm('매물을 삭제하시겠습니까?'))return;await Data.deleteCard(id);Toast.show('삭제 완료');await Data.loadMyCards(0,true);renderList();}
   async function chgStatus(id,st){await Data.updateTradeStatus(id,st);Toast.show('상태 변경: '+st);await Data.loadMyCards(0,true);renderList();}
 
-  async function _renderDone(){
-    const cards=await Data.loadCompletedCards(),el=document.getElementById('doneList');if(!el)return;
-    if(!cards.length){el.innerHTML='<div class="empty"><div class="empty-icon">📊</div>완료된 거래가 없어요</div>';return;}
-    const now=new Date(),tm=cards.filter(c=>{const d=new Date(c.updated_at);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();}),total=cards.reduce((s,c)=>s+(c.price_number||0),0);
-    const lastM=cards.filter(c=>{const d=new Date(c.updated_at),lm=now.getMonth()===0?11:now.getMonth()-1,ly=now.getMonth()===0?now.getFullYear()-1:now.getFullYear();return d.getMonth()===lm&&d.getFullYear()===ly;});
-    const diff=tm.length-lastM.length;const diffStr=diff>=0?`+${diff}`:`${diff}`;const diffColor=diff>=0?'#4ade80':'#f87171';
-    const tc={};cards.forEach(c=>{const t=c.property?.type||'기타';tc[t]=(tc[t]||0)+1;});
-    el.innerHTML=`<div class="completed-stats"><div class="stat-card"><div class="stat-num">${cards.length}</div><div class="stat-label">총 거래</div></div><div class="stat-card"><div class="stat-num">${tm.length}</div><div class="stat-label">이번 달</div><div style="font-size:11px;color:${diffColor};margin-top:2px;">전월 대비 ${diffStr}건</div></div><div class="stat-card"><div class="stat-num">${total?(total/10000).toFixed(0)+'억':'-'}</div><div class="stat-label">총 거래액</div></div></div><div class="completed-breakdown">${Object.entries(tc).map(([t,n])=>`<span class="filter-btn">${t} ${n}건</span>`).join('')}</div>`+cards.map(c=>{const p=c.property||{};return `<div class="property-item completed"><div class="property-body"><div class="property-header"><span class="property-type-badge ${p.type==='매매'?'sale':'jeonse'}">${esc(p.type||'')}</span><span class="trade-badge" style="color:#22c55e">✅</span><strong>${esc(p.price||'-')}</strong><span>${esc(p.complex||'')} ${esc(p.location||'')}</span></div></div></div>`;}).join('');
-  }
 
   function renderSub(key,el){
     const c=Hub.current?.data;if(!c)return;const p=c.property||{};
@@ -2253,7 +2241,7 @@ const PanelCards = (() => {
       el.innerHTML=`<div class="panel-inner">${Hub.panelHead('거래 상태')}<div style="text-align:center;padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">${icon}</div><div style="font-size:24px;font-weight:800;color:${color};">${st}</div><div style="margin-top:24px;display:flex;gap:8px;justify-content:center;"><button class="filter-btn ${st==='계약가능'?'active':''}" onclick="PanelCards.chgStatus('${c.id}','계약가능')">계약가능</button><button class="filter-btn ${st==='계약중'?'active':''}" onclick="PanelCards.chgStatus('${c.id}','계약중')">계약중</button><button class="filter-btn ${st==='완료'?'active':''}" onclick="PanelCards.chgStatus('${c.id}','완료')">완료</button></div></div></div>`;}
   }
 
-  return { render, switchTab, setFilter, setCat, setSort, onQ, onQEnter, more, renderList, toggleSel, toggleDetail, share1, shareSelected, doShare, edit, addPhotos, addTag, saveEdit, del, chgStatus, renderSub };
+  return { render, setFilter, setCat, setSort, onQ, onQEnter, more, renderList, toggleSel, toggleDetail, share1, shareSelected, doShare, edit, addPhotos, addTag, saveEdit, del, chgStatus, renderSub };
 })();
 
 /* ═══════════════════════════════════════════════════════════
