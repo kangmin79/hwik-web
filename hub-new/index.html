@@ -3179,25 +3179,35 @@ const PanelAlert = (() => {
   }
 
   function selectDate(day){
-    // 선택 하이라이트
     document.querySelectorAll('.cal-day').forEach(el=>el.classList.remove('selected'));
     event?.target?.closest('.cal-day')?.classList.add('selected');
-    // 상단에 해당 날짜 일정 표시
     const detail=document.getElementById('calDetail');if(!detail)return;
     const evts=(calAlerts||[]).filter(a=>new Date(a.alert_date).getDate()===day);
     if(!evts.length){detail.innerHTML=`<div style="padding:12px;font-size:13px;color:var(--text-light);">${calMonth}월 ${day}일 — 일정 없음</div>`;return;}
     const today=new Date();
-    let h=`<div style="font-size:13px;font-weight:700;margin-bottom:8px;">${calMonth}월 ${day}일 (${evts.length}건)</div>`;
+    // 손님 이름 매칭 (캐시에서)
+    const clients=Data.cache.clientCards||[];
+    const clientMap={};clients.forEach(c=>{clientMap[c.id]=c.contact_name||c.property?.location||'손님';});
+    let h=`<div style="font-size:14px;font-weight:800;margin-bottom:10px;">${calMonth}월 ${day}일 <span style="font-size:12px;font-weight:600;color:var(--text-sub);">(${evts.length}건)</span></div>`;
     evts.forEach(a=>{
       const past=new Date(a.alert_date)<today&&!a.alert_done;
       const done=a.alert_done;
-      h+=`<div class="tl-item" style="${done?'opacity:0.5;':''}">
+      const clientName=clientMap[a.client_card_id]||'';
+      h+=`<div class="tl-item" style="${done?'opacity:0.5;':''}cursor:pointer;" onclick="PanelAlert.goToClient('${a.client_card_id}')">
         <span class="tl-tag ${a.type||'메모'}">${a.type||'메모'}</span>
-        <div style="flex:1;"><div class="tl-text" style="${done?'text-decoration:line-through;':''}">${esc(a.content||'')}</div>
-        <div class="tl-date">${new Date(a.alert_date).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}${past?' (지연)':''}${done?' ✅':''}</div></div>
+        <div style="flex:1;">
+          ${clientName?`<div style="font-size:11px;font-weight:700;color:var(--primary);margin-bottom:2px;">🙋 ${esc(clientName)}</div>`:''}
+          <div class="tl-text" style="${done?'text-decoration:line-through;':''}">${esc(a.content||'')}</div>
+          <div class="tl-date">${new Date(a.alert_date).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}${past?' (지연)':''}${done?' ✅':''}</div>
+        </div>
       </div>`;
     });
     detail.innerHTML=h;
+  }
+
+  function goToClient(cardId){
+    const card=(Data.cache.clientCards||[]).find(c=>c.id===cardId);
+    if(card)PanelClient.selectClient(card);
   }
 
   async function calNav(dir){calMonth+=dir;if(calMonth>12){calMonth=1;calYear++;}if(calMonth<1){calMonth=12;calYear--;}await _renderCal();}
@@ -3231,7 +3241,7 @@ const PanelAlert = (() => {
     _markAllRead(alerts);
   }
 
-  return { render, renderSub, calNav, selectDate };
+  return { render, renderSub, calNav, selectDate, goToClient };
 })();
 
 /* ═══════════════════════════════════════════════════════════
