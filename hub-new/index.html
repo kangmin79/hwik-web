@@ -1443,7 +1443,7 @@ const Hub = (() => {
   const MAIN=[{key:'register',label:'매물 등록',angle:-90},{key:'my',label:'내 매물',angle:-18},{key:'client',label:'손님',angle:54},{key:'alert',label:'알림',angle:126},{key:'shared',label:'공유방',angle:198}];
   const CLIENT=[{key:'cl_conditions',label:'희망 조건',angle:-90},{key:'cl_match',label:'매칭 매물',angle:-30},{key:'cl_timeline',label:'상담 기록',angle:30},{key:'cl_schedule',label:'일정/알림',angle:90},{key:'cl_contact',label:'연락처',angle:150},{key:'cl_back',label:'← 돌아가기',angle:210}];
   const PROPERTY=[{key:'pr_detail',label:'상세 정보',angle:-90},{key:'pr_status',label:'거래 상태',angle:30},{key:'pr_back',label:'← 돌아가기',angle:150}];
-  const ALERT=[{key:'al_calendar',label:'달력',angle:-90},{key:'al_match',label:'매칭 알림',angle:0},{key:'al_nocontact',label:'미연락 손님',angle:90},{key:'al_back',label:'← 돌아가기',angle:180}];
+  const ALERT=[{key:'al_calendar',label:'달력',angle:-90},{key:'al_match',label:'매칭 알림',angle:30},{key:'al_back',label:'← 돌아가기',angle:150}];
 
   function render(nodes,center) {
     nodes=nodes||MAIN;center=center||{icon:'👤',name:Auth.profile?.business_name||'중개사',sub:''};
@@ -2809,12 +2809,12 @@ const PanelClient = (() => {
     const r={type:'메모',content:text,alert_date:null,hasTime:false,timeStr:'',urgent:false};if(!text)return r;
     const t=text;
     // 타입 판별
-    if(/방문|현장|보러|봤|투어|임장|이사|입주|퇴거|명도/.test(t))r.type='방문';
-    else if(/상담|전화|통화|연락|문의|콜백|콜|부재|재연락|답장|회신|문자/.test(t))r.type='상담';
-    else if(/계약|사인|도장|잔금|입금|중도금|계약금|특약|날인/.test(t))r.type='계약';
+    if(/방문|현장|보러|봤|투어|임장|이사|입주|퇴거|명도|인도/.test(t))r.type='방문';
+    else if(/상담|전화|통화|연락|문의|콜백|콜|부재|재연락|답장|회신|문자|전달/.test(t))r.type='상담';
+    else if(/계약|사인|도장|잔금|입금|중도금|계약금|특약|날인|서류|등기|확인서|인감/.test(t))r.type='계약';
     else if(/보내|전송|카톡|소개|공유|휙/.test(t))r.type='매물소개';
     // 긴급
-    if(/급|빨리|긴급|ASAP|당장|즉시/.test(t))r.urgent=true;
+    if(/급|빨리|긴급|ASAP|당장|즉시|최대한\s*빨리/.test(t))r.urgent=true;
     // 시간 파싱
     let hour=null,minute=0;
     const pmM=t.match(/오후\s*(\d{1,2})\s*시?\s*(?:(\d{1,2})\s*분|반)?/);
@@ -2822,27 +2822,51 @@ const PanelClient = (() => {
     if(hour===null){const amM=t.match(/오전\s*(\d{1,2})\s*시?\s*(?:(\d{1,2})\s*분|반)?/);if(amM){hour=parseInt(amM[1]);minute=amM[2]?parseInt(amM[2]):(/오전.*반/.test(t)?30:0);}}
     if(hour===null){const hm=t.match(/(\d{1,2})\s*시\s*반/);if(hm){hour=parseInt(hm[1]);minute=30;if(hour>=1&&hour<=6&&!/오전|새벽/.test(t))hour+=12;}
       else{const tm=t.match(/(\d{1,2})\s*시\s*(?:(\d{1,2})\s*분)?/);if(tm){hour=parseInt(tm[1]);minute=parseInt(tm[2])||0;if(hour>=1&&hour<=6&&!/오전|새벽/.test(t))hour+=12;}}}
-    if(hour===null){if(/새벽/.test(t))hour=6;else if(/아침/.test(t))hour=9;else if(/점심/.test(t))hour=12;else if(/오후/.test(t))hour=14;else if(/저녁/.test(t))hour=18;else if(/퇴근\s*후|퇴근후/.test(t))hour=19;else if(/밤/.test(t))hour=21;}
-    if(hour!==null){r.hasTime=true;r.timeStr=hour<12?`오전 ${hour}시${minute?minute+'분':''}`:hour===12?`낮 12시${minute?minute+'분':''}`:`오후 ${hour-12}시${minute?minute+'분':''}`;}
+    if(hour===null){if(/새벽/.test(t))hour=5;else if(/아침/.test(t))hour=9;else if(/오전/.test(t))hour=10;else if(/점심/.test(t))hour=12;else if(/오후/.test(t))hour=14;else if(/저녁/.test(t))hour=18;else if(/퇴근\s*후|퇴근후/.test(t))hour=19;else if(/밤/.test(t))hour=21;}
+    if(hour===0){r.hasTime=true;r.timeStr='자정';}
+    else if(hour!==null){r.hasTime=true;r.timeStr=hour<12?`오전 ${hour}시${minute?minute+'분':''}`:hour===12?`낮 12시${minute?minute+'분':''}`:`오후 ${hour-12}시${minute?minute+'분':''}`;}
     // 날짜 파싱
     const now=new Date();let bd=null;const dayN={일:0,월:1,화:2,수:3,목:4,금:5,토:6};
-    const nwD=t.match(/다음\s*주\s*(일|월|화|수|목|금|토)/);if(nwD){bd=new Date(now);bd.setDate(bd.getDate()+(7-now.getDay())+dayN[nwD[1]]);}
+    // "다다음주 X요일"
+    const nnwD=t.match(/다다음\s*주\s*(일|월|화|수|목|금|토)/);
+    if(nnwD){bd=new Date(now);bd.setDate(bd.getDate()+(14-now.getDay())+dayN[nnwD[1]]);}
+    // "다음주 X요일"
+    if(!bd){const nwD=t.match(/다음\s*주\s*(일|월|화|수|목|금|토)/);if(nwD){bd=new Date(now);bd.setDate(bd.getDate()+(7-now.getDay())+dayN[nwD[1]]);}}
+    // "이번주 X요일"
     if(!bd){const twD=t.match(/이번\s*주\s*(일|월|화|수|목|금|토)/);if(twD){bd=new Date(now);const diff=dayN[twD[1]]-now.getDay();bd.setDate(bd.getDate()+(diff>=0?diff:diff+7));}}
     if(!bd){
       if(/오늘/.test(t))bd=new Date(now);
       else if(/내일/.test(t)){bd=new Date(now);bd.setDate(bd.getDate()+1);}
       else if(/모레/.test(t)){bd=new Date(now);bd.setDate(bd.getDate()+2);}
       else if(/글피/.test(t)){bd=new Date(now);bd.setDate(bd.getDate()+3);}
-      else if(/주말/.test(t)){bd=new Date(now);bd.setDate(bd.getDate()+((6-now.getDay()+7)%7||7));}
+      // 주말 버그 수정: 토요일까지 남은 일수 (0이면 다음주 토요일)
+      else if(/주말/.test(t)){bd=new Date(now);const daysToSat=(6-now.getDay()+7)%7;bd.setDate(bd.getDate()+(daysToSat===0?7:daysToSat));}
+      // "다다음주" (요일 없이)
+      else if(/다다음\s*주/.test(t)){bd=new Date(now);bd.setDate(bd.getDate()+14);}
       else if(/다음\s*주/.test(t)){bd=new Date(now);bd.setDate(bd.getDate()+7);}
-      else{const nD=t.match(/(\d+)\s*일\s*[후뒤]/);if(nD){bd=new Date(now);bd.setDate(bd.getDate()+parseInt(nD[1]));}
+      // "월말"
+      else if(/월말/.test(t)){bd=new Date(now.getFullYear(),now.getMonth()+1,0);}
+      // "월초"
+      else if(/월초/.test(t)){const m=now.getDate()<=5?now.getMonth():now.getMonth()+1;bd=new Date(now.getFullYear(),m,1);}
+      else{
+        // "N일 후/뒤"
+        const nD=t.match(/(\d+)\s*일\s*[후뒤]/);if(nD){bd=new Date(now);bd.setDate(bd.getDate()+parseInt(nD[1]));}
+        // "N주 후/뒤"
+        if(!bd){const nW=t.match(/(\d+)\s*주\s*[후뒤]/);if(nW){bd=new Date(now);bd.setDate(bd.getDate()+parseInt(nW[1])*7);}}
+        // "M월 D일"
         if(!bd){const dm=t.match(/(\d{1,2})\s*월\s*(\d{1,2})\s*일/);if(dm){const m=parseInt(dm[1])-1,d=parseInt(dm[2]);let y=now.getFullYear();if(m<now.getMonth()||(m===now.getMonth()&&d<now.getDate()))y++;bd=new Date(y,m,d);}}
+        // "M/D"
         if(!bd){const sm=t.match(/(?<!\d)(\d{1,2})\/(\d{1,2})(?!\d)/);if(sm&&parseInt(sm[1])<=12&&parseInt(sm[2])<=31){const m=parseInt(sm[1])-1,d=parseInt(sm[2]);let y=now.getFullYear();if(m<now.getMonth()||(m===now.getMonth()&&d<now.getDate()))y++;bd=new Date(y,m,d);}}
+        // "X요일"
         if(!bd){const dowM=t.match(/(일|월|화|수|목|금|토)\s*요일/);if(dowM){bd=new Date(now);bd.setDate(bd.getDate()+((dayN[dowM[1]]-now.getDay()+7)%7||7));}}
       }
     }
-    if(!bd&&/콜백|재연락|다시\s*전화|다시\s*연락|팔로업|follow/i.test(t))bd=new Date(now);
-    if(!bd&&hour!==null)bd=new Date(now);
+    // 콜백/재연락 — 시간 없으면 1시간 후로
+    if(!bd&&/콜백|재연락|다시\s*전화|다시\s*연락|팔로업|follow/i.test(t)){
+      bd=new Date(now);if(hour===null){bd.setTime(bd.getTime()+3600000);hour=bd.getHours();minute=bd.getMinutes();r.hasTime=true;r.timeStr=hour<12?`오전 ${hour}시`:`오후 ${hour-12}시`;}
+    }
+    // 시간만 있고 날짜 없으면 오늘 (단, 이미 지난 시간이면 내일)
+    if(!bd&&hour!==null){bd=new Date(now);if(hour<now.getHours()||(hour===now.getHours()&&minute<=now.getMinutes())){bd.setDate(bd.getDate()+1);}}
     if(bd){if(hour!==null)bd.setHours(hour,minute,0,0);else bd.setHours(9,0,0,0);r.alert_date=bd.toISOString();}
     return r;
   }
