@@ -1990,7 +1990,6 @@ const PanelRegister = (() => {
             <input type="file" id="fiFileInput" accept=".xlsx,.xls,.txt" style="display:none" onchange="PanelRegister.handleFile(event)">
           </div>
           <textarea class="reg-textarea" id="regInput" oninput="PanelRegister.onInput()"></textarea>
-          <script>document.getElementById('regInput').placeholder=`예) ${_agentGu()} 역삼동 래미안 아파트 34평 전세 5억 남향 주차가능\n\n여러 매물을 한번에 넣어도 됩니다:\n매물1: ${_agentGu()} 신내동 빌라 전세 2억\n매물2: ${_agentGu()} 수유동 오피스텔 월세 500/40`;</script>
           <div class="reg-input-footer"><span class="reg-hint">📍 아파트·빌라·오피스텔·상가·사무실 모두 가능</span><span class="reg-hint-right">Enter로 줄바꿈</span></div>
         </div>
 
@@ -2009,6 +2008,10 @@ const PanelRegister = (() => {
     <div class="panel-preview-wrap" id="previewSlide"><div style="font-size:12px;color:var(--text-light);text-align:center;margin-bottom:8px;">손님에게 보여질 화면</div><div class="phone-mockup"><div class="phone-notch"></div><div class="phone-screen" id="previewScreen"><div class="preview-empty">📝<br>미리보기</div></div></div></div>
     </div>`;
     _initDrag();
+    // 동적 placeholder
+    const g=_agentGu();
+    const ri=document.getElementById('regInput');
+    if(ri)ri.placeholder=`예) ${g} 역삼동 래미안 아파트 34평 전세 5억 남향 주차가능\n\n여러 매물을 한번에 넣어도 됩니다:\n매물1: ${g} 신내동 빌라 전세 2억\n매물2: ${g} 수유동 오피스텔 월세 500/40`;
   }
 
   function onInput(){
@@ -2205,7 +2208,6 @@ const PanelCards = (() => {
     el.innerHTML=`<div class="panel-with-preview"><div class="panel-input"><div class="panel-inner">${Hub.panelHead('내 매물')}
       <div id="tabMine">
         <div class="search"><input type="text" id="myQ" oninput="PanelCards.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelCards.onQEnter()"></div>
-        <script>document.getElementById('myQ').placeholder=`예) ${_agentGu()} 아파트 전세 5억이하`;</script>
         <div id="searchHint" style="display:none;font-size:11px;color:var(--primary);margin:-12px 0 12px 4px;">💡 Enter로 AI 검색 (더 많은 결과)</div>
         <div id="myList">${hwikLoading()}</div>
         <div id="myMore" style="display:none;text-align:center;padding:12px;"><button class="btn-load-more" onclick="PanelCards.more()">더 보기</button></div>
@@ -2214,6 +2216,7 @@ const PanelCards = (() => {
     <div class="panel-preview-wrap" id="previewPanel" style="width:0;opacity:0;padding:0;"></div>
     </div>`;
     cOff=0;await Data.loadMyCards(0,true);renderList();
+    const mq=document.getElementById('myQ');if(mq)mq.placeholder=`예) ${_agentGu()} 아파트 전세 5억이하`;
     Preview.clear();Preview.renderSlider('previewPanel');
   }
 
@@ -2445,6 +2448,9 @@ const PanelClient = (() => {
     _selectedClient=null;
     _renderListView(el);
     await Data.loadClientCards(0,true);_renderList();
+    const g=_agentGu();
+    const ci=document.getElementById('clientRegInput');if(ci)ci.placeholder=`예) ${g} 아파트 전세 5억이하 구합니다\n이름: 홍길동 / 010-1234-5678`;
+    const cq=document.getElementById('clQ');if(cq)cq.placeholder=`예) ${g} 아파트 전세 5억이하 / 찾는분`;
   }
 
   function _renderListView(el){
@@ -2458,14 +2464,12 @@ const PanelClient = (() => {
         </div>
         <div id="clientRegBody" style="display:none;padding:0 16px 16px;">
           <textarea id="clientRegInput" class="reg-textarea" style="min-height:60px;border:1px solid var(--border);border-radius:10px;padding:12px;font-size:14px;"></textarea>
-          <script>document.getElementById('clientRegInput').placeholder=`예) ${_agentGu()} 아파트 전세 5억이하 구합니다\n이름: 홍길동 / 010-1234-5678`;</script>
           <button onclick="PanelClient.registerClient()" class="btn-primary" style="margin-top:8px;padding:10px;" id="clientRegBtn">AI로 손님 등록</button>
           <div id="clientRegResult"></div>
         </div>
       </div>
       <div>
         <div class="search"><input type="text" id="clQ" oninput="PanelClient.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelClient.onQEnter()"></div>
-        <script>document.getElementById('clQ')&&(document.getElementById('clQ').placeholder=`예) ${_agentGu()} 아파트 전세 5억이하 / 찾는분`);</script>
         <div id="clList" style="min-height:200px;">${hwikLoading()}</div>
       </div>
     </div>`;
