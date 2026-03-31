@@ -1,5 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from 'jsr:@supabase/supabase-js@2'
+import { generateTags } from '../_shared/tags.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://hwik.kr',
@@ -610,7 +611,6 @@ ${text}`
       wanted_trade_type: wantedTradeType,
       wanted_categories: wantedCategories.length ? wantedCategories : null,
       wanted_conditions: wantedConditions.length ? wantedConditions : null,
-      // ★ 좌표는 클라이언트에서 DB 매칭 + 카카오 API 폴백으로 처리
       lat: null,
       lng: null,
       coord_type: 'none',
@@ -625,6 +625,20 @@ ${text}`
       recent_sales_count: salesData.length,
       public_data: publicData,
     };
+
+    // ★ 태그 자동 생성
+    const tags = generateTags({
+      property: parsedResult,
+      price_number: priceFields.price_number,
+      deposit: priceFields.deposit,
+      monthly_rent: priceFields.monthly_rent,
+      move_in_date: moveInDate,
+      wanted_trade_type: wantedTradeType,
+      wanted_categories: wantedCategories,
+      wanted_conditions: wantedConditions,
+    });
+    (result as any).tags = tags;
+    console.log(`태그 생성: ${tags.length}개 [${tags.join(', ')}]`);
 
     console.log(`총 소요: ${Date.now() - startTime}ms`);
     console.log('OUTPUT:', { ...result, embedding: embedding ? `[${embedding.length}d]` : null });

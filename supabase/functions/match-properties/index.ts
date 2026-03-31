@@ -3,6 +3,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { DISTRICT_COORDS, haversineDistance } from '../_shared/geo.ts'
 import { fixTypos } from '../_shared/typo.ts'
 import { getAuthUserId } from '../_shared/auth.ts'
+import { generateTags, TAG_WEIGHTS } from '../_shared/tags.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://hwik.kr',
@@ -29,7 +30,7 @@ Deno.serve(async (req) => {
     // 1. 손님 카드 조회
     const { data: clientCard, error: clientError } = await supabase
       .from('cards')
-      .select('id, property, private_note, embedding, agent_id, wanted_trade_type, wanted_categories, wanted_conditions, move_in_date')
+      .select('id, property, private_note, embedding, agent_id, wanted_trade_type, wanted_categories, wanted_conditions, move_in_date, tags, required_tags, price_number, deposit, monthly_rent')
       .eq('id', client_card_id)
       .single();
 
@@ -285,7 +286,7 @@ Deno.serve(async (req) => {
     if (structuredCount >= 2) {
       let sqlQuery = supabase
         .from('cards')
-        .select('id, property, agent_id, agent_comment, price_number, trade_status, photos, lat, lng, created_at, search_text')
+        .select('id, property, agent_id, agent_comment, price_number, deposit, monthly_rent, trade_status, photos, lat, lng, created_at, search_text, tags')
         .eq('agent_id', effectiveAgentId)
         .neq('property->>type', '손님')
         .eq('trade_status', '계약가능');
@@ -392,7 +393,7 @@ Deno.serve(async (req) => {
           for (const radius of [5, 8]) {
             let locQuery = supabase
               .from('cards')
-              .select('id, property, agent_id, agent_comment, price_number, trade_status, photos, lat, lng, created_at, search_text')
+              .select('id, property, agent_id, agent_comment, price_number, deposit, monthly_rent, trade_status, photos, lat, lng, created_at, search_text, tags')
               .eq('agent_id', effectiveAgentId)
               .neq('property->>type', '손님')
               .eq('trade_status', '계약가능')
@@ -468,10 +469,31 @@ Deno.serve(async (req) => {
       return status === '계약가능';
     });
 
-    // ★ 중개사 실전 랭킹 (예산이하&가까운순 → 넓은순 → 최신순 → 계약가능)
+    // ★ 손님 태그 (DB 또는 실시간 생성)
+    const clientTags: string[] = (clientCard as any).tags?.length
+      ? (clientCard as any).tags
+      : generateTags(clientCard);
+    const clientRequired: string[] = (clientCard as any).required_tags || [];
+
+    // ★ 중개사 실전 랭킹 — 태그 매칭 + 숫자 비교
     results = results.map((r: any) => {
       let score = 0;
       const pn = r.price_number || 0;
+
+      // ⓪ 태그 매칭 (0~50점)
+      const propTags: string[] = r.tags?.length ? r.tags : generateTags(r);
+      // required_tags 체크 — 하나라도 없으면 제외
+      if (clientRequired.length) {
+        const missingRequired = clientRequired.filter((t: string) => !propTags.includes(t));
+        if (missingRequired.length) { r._score = -1; return r; }
+      }
+      // 겹치는 태그 수 (시설/환경 태그)
+      const facilityEnvTags = clientTags.filter((t: string) =>
+        !['서울','매매','전세','월세','반전세','아파트','오피스텔','빌라','원룸','투룸','쓰리룸','주택','상가','사무실','건물','토지','공장창고'].includes(t) &&
+        !t.includes('구') && !t.includes('동') && !t.includes('억') && !t.includes('평') && !t.includes('보증금') && !t.includes('월세')
+      );
+      const matchedFacility = facilityEnvTags.filter((t: string) => propTags.includes(t));
+      score += matchedFacility.length * 10; // 각 태그당 10점
 
       // ① 가격 (0~50점)
       if (wantedTradeType === '월세' && (wantedDeposit || wantedMonthly)) {
@@ -629,6 +651,9 @@ Deno.serve(async (req) => {
       return true;
     });
 
+    // required_tags 미충족 제외
+    results = results.filter((r: any) => (r._score || 0) >= 0);
+
     // 상위 N개
     results = results.slice(0, limit).map((r: any) => ({
       id: r.id,
@@ -641,6 +666,7 @@ Deno.serve(async (req) => {
       lat: r.lat,
       lng: r.lng,
       created_at: r.created_at,
+      tags: r.tags || [],
       _score: r._score || null,
       similarity: r.similarity ? Math.round(r.similarity * 100) / 100 : null
     }));

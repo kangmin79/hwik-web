@@ -2116,7 +2116,8 @@ const PanelRegister = (() => {
         contact_name:r.contact_name||null,
         contact_phone:r.contact_phone||null,
         photos:photoUrls.length?photoUrls:null,
-        trade_status:'계약가능'
+        trade_status:'계약가능',
+        tags:r.tags||[]
       };
 
       const {error:dbErr}=await Auth.sb.from('cards').insert([cardData]);
@@ -2626,7 +2627,7 @@ const PanelClient = (() => {
       const r=await res.json();if(r.error)throw new Error(r.error);
       // 손님 카드로 강제 설정
       const property={type:'손님',price:r.price||null,location:r.location||null,complex:r.complex||null,area:r.area||null,floor:r.floor||null,room:r.room||null,features:r.features||[],category:r.category||null,rawText:inp.value.trim()};
-      const cardData={id:crypto.randomUUID().slice(0,12),agent_id:Auth.user.id,property,contact_name:r.contact_name||null,contact_phone:r.contact_phone||null,embedding:r.embedding||null,search_text:r.search_text||null,search_text_private:r.search_text_private||null,price_number:r.price_number||null,deposit:r.deposit||null,monthly_rent:r.monthly_rent||null,move_in_date:r.move_in_date||null,wanted_trade_type:r.wanted_trade_type||null,wanted_categories:r.wanted_categories||[],wanted_conditions:r.wanted_conditions||[],trade_status:'계약가능'};
+      const cardData={id:crypto.randomUUID().slice(0,12),agent_id:Auth.user.id,property,contact_name:r.contact_name||null,contact_phone:r.contact_phone||null,embedding:r.embedding||null,search_text:r.search_text||null,search_text_private:r.search_text_private||null,price_number:r.price_number||null,deposit:r.deposit||null,monthly_rent:r.monthly_rent||null,move_in_date:r.move_in_date||null,wanted_trade_type:r.wanted_trade_type||null,wanted_categories:r.wanted_categories||[],wanted_conditions:r.wanted_conditions||[],tags:r.tags||[],trade_status:'계약가능'};
       const {error:dbErr}=await Auth.sb.from('cards').insert([cardData]);
       if(dbErr)throw new Error(dbErr.message);
       Toast.show('손님이 등록되었습니다!');
@@ -2889,7 +2890,39 @@ const PanelClient = (() => {
     if(p.alert_date){const d=new Date(p.alert_date),days=['일','월','화','수','목','금','토'];parts.push(`<span style="color:#facc15;">📅 ${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]})${p.hasTime?' '+p.timeStr:''}</span>`);}
     el.innerHTML=parts.join(' · ');el.style.display='';}
 
-  async function saveNote(cardId){const inp=document.getElementById('noteIn');if(!inp?.value?.trim())return;const p=_parseNote(inp.value.trim());await Data.saveClientNote(cardId,p);inp.value='';document.getElementById('notePv').style.display='none';
+  // 메모에서 태그 감지 → 손님 태그 업데이트
+  const _memoTagKeywords={
+    '남향':'남향','동향':'동향','서향':'서향','북향':'북향','정남향':'남향',
+    '주차':'주차가능','주차필요':'주차가능','주차꼭':'주차가능',
+    '역세권':'역세권','지하철':'역세권',
+    '엘리베이터':'엘리베이터','승강기':'엘리베이터',
+    '올수리':'올수리','풀옵션':'풀옵션','신축':'신축',
+    '애견':'애견가능','반려동물':'애견가능','펫':'애견가능',
+    '학군':'학군좋음','학교':'학군좋음',
+    '공원':'공원뷰','한강':'한강뷰',
+    '베란다확장':'베란다확장','시스템에어컨':'시스템에어컨',
+    '복층':'복층','테라스':'테라스',
+    '즉시입주':'즉시입주','바로입주':'즉시입주',
+  };
+  async function _updateClientTags(cardId,text){
+    try{
+      const newTags=[];const isRequired=/꼭|필수|반드시|무조건/.test(text);
+      for(const[kw,tag]of Object.entries(_memoTagKeywords)){if(text.includes(kw))newTags.push(tag);}
+      if(!newTags.length)return;
+      // 기존 태그 로드
+      const{data:card}=await Auth.sb.from('cards').select('tags,required_tags').eq('id',cardId).single();
+      if(!card)return;
+      const tags=[...new Set([...(card.tags||[]),...newTags])];
+      const updates={tags};
+      if(isRequired){const rt=[...new Set([...(card.required_tags||[]),...newTags])];(updates as any).required_tags=rt;}
+      await Auth.sb.from('cards').update(updates).eq('id',cardId);
+    }catch(_){}
+  }
+
+  async function saveNote(cardId){const inp=document.getElementById('noteIn');if(!inp?.value?.trim())return;const p=_parseNote(inp.value.trim());await Data.saveClientNote(cardId,p);
+    // 메모에서 태그 감지
+    _updateClientTags(cardId,inp.value.trim());
+    inp.value='';document.getElementById('notePv').style.display='none';
     Data.updateEmbedding(cardId);Data.updateClientLocation(cardId);
     const d=await Data.loadClientDetail(cardId);if(Hub.current){Hub.current._notes=d.notes;Hub.current._matches=d.matches;}Hub.openSub('cl_timeline');
     let msg='메모 저장됨';if(p.alert_date){const d2=new Date(p.alert_date),days=['일','월','화','수','목','금','토'];msg=`저장 · 📅 ${d2.getMonth()+1}/${d2.getDate()}(${days[d2.getDay()]})${p.hasTime?' '+p.timeStr:''} 알림`;}Toast.show(msg);}

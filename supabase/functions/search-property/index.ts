@@ -3,6 +3,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { DISTRICT_COORDS, haversineDistance } from '../_shared/geo.ts'
 import { TYPO_MAP, fixTypos } from '../_shared/typo.ts'
 import { getAuthUserId } from '../_shared/auth.ts'
+import { SYNONYM_MAP } from '../_shared/tags.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://hwik.kr',
@@ -640,7 +641,7 @@ Deno.serve(async (req) => {
 
       let sqlQuery = supabase
         .from('cards')
-        .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number, agent_comment')
+        .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number, agent_comment, tags')
         .eq('agent_id', agent_id)
         .neq('property->>type', '손님');
 
@@ -676,7 +677,7 @@ Deno.serve(async (req) => {
         console.log(`AND 0건 → OR 재시도: ${orCondition}`);
         let orQuery = supabase
           .from('cards')
-          .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number, agent_comment')
+          .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number, agent_comment, tags')
           .eq('agent_id', agent_id)
           .neq('property->>type', '손님');
         if (finalTradeType) orQuery = orQuery.eq('property->>type', finalTradeType);
@@ -764,7 +765,7 @@ Deno.serve(async (req) => {
         if (results.length >= limit) break;
         let kwQuery = supabase
           .from('cards')
-          .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number')
+          .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number, tags')
           .eq('agent_id', agent_id)
           .neq('property->>type', '손님')
           .ilike('search_text', `%${kwTerm}%`)
@@ -790,7 +791,7 @@ Deno.serve(async (req) => {
       console.log(`단지명 '${brandName}' 키워드 검색`);
       let brandQuery = supabase
         .from('cards')
-        .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number')
+        .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number, tags')
         .eq('agent_id', agent_id)
         .neq('property->>type', '손님')
         .ilike('search_text', `%${brandName}%`)
@@ -908,7 +909,7 @@ Deno.serve(async (req) => {
           for (const radius of [5, 8]) {
             let locQuery1 = supabase
               .from('cards')
-              .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number')
+              .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number, tags')
               .eq('agent_id', agent_id)
               .neq('property->>type', '손님')
               .order('created_at', { ascending: false })
@@ -946,7 +947,7 @@ Deno.serve(async (req) => {
         } else {
           let locQuery2 = supabase
             .from('cards')
-            .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number')
+            .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number, tags')
             .eq('agent_id', agent_id)
             .neq('property->>type', '손님')
             .ilike('search_text', `%${loc}%`)
@@ -1042,7 +1043,7 @@ Deno.serve(async (req) => {
         if (results.length > 0) break;
         let fbQuery = supabase
           .from('cards')
-          .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number')
+          .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number, tags')
           .eq('agent_id', agent_id)
           .neq('property->>type', '손님')
           .ilike('search_text', `%${term}%`)
