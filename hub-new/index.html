@@ -832,7 +832,17 @@ const Data = (() => {
     return cache.pendingInvites;
   }
 
-  async function shareCardToRoom(cardId,roomId) { return sb().from('card_shares').insert({card_id:cardId,room_id:roomId,shared_by:uid()}); }
+  async function shareCardToRoom(cardId,roomId) {
+    const result = await sb().from('card_shares').insert({card_id:cardId,room_id:roomId,shared_by:uid()});
+    // 공유방 매칭 트리거 (백그라운드)
+    if(!result.error){
+      fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/room-share-match`,{
+        method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(Auth?.getToken?Auth.getToken():HWIK_CONFIG.SUPABASE_KEY),'apikey':HWIK_CONFIG.SUPABASE_KEY},
+        body:JSON.stringify({card_id:cardId,room_id:roomId,shared_by:uid()})
+      }).catch(e=>console.warn('room-share-match:',e));
+    }
+    return result;
+  }
   async function unshareCard(cardId,roomId) { let q=sb().from('card_shares').delete().eq('card_id',cardId); if(roomId) q=q.eq('room_id',roomId); return q; }
 
   async function deleteCard(cardId) { return sb().from('cards').delete().eq('id',cardId).eq('agent_id',uid()); }
