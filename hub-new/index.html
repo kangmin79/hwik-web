@@ -2446,7 +2446,13 @@ const PanelClient = (() => {
       h+=`</div></div><div class="panel-preview-wrap" id="matchPreviewPanel" style="width:0;opacity:0;padding:0;"></div></div>`;
       el.innerHTML=h;}
 
-    else if(key==='cl_timeline'){const ns=Hub.current?._notes||[];let h=`<div class="panel-inner">${Hub.panelHead('상담 기록',ns.length+'건')}
+    else if(key==='cl_timeline'){const ns=Hub.current?._notes||[];const cn=card.contact_name||p.location||'손님';const cc=[p.type!=='손님'?p.type:null,p.price,p.location].filter(Boolean).map(v=>esc(v)).join(' · ');
+      let h=`<div class="panel-inner">${Hub.panelHead('상담 기록',ns.length+'건')}
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;margin-bottom:12px;border-bottom:1px solid var(--border);">
+        <span style="font-size:24px;">🙋</span>
+        <div style="flex:1;"><div style="font-size:15px;font-weight:800;">${esc(cn)}</div>${cc?`<div style="font-size:12px;color:var(--text-sub);margin-top:2px;">${cc}</div>`:''}</div>
+        ${card.contact_phone?`<span style="font-size:12px;color:var(--text-sub);">${esc(card.contact_phone)}</span>`:''}
+      </div>
       <div class="note-row"><input type="text" id="noteIn" placeholder="메모 입력... (예: 내일 2시 방문 예정)" onkeydown="if(event.key==='Enter')PanelClient.saveNote('${card.id}')" oninput="PanelClient.pvNote(this.value)"><button onclick="PanelClient.saveNote('${card.id}')">저장</button></div><div id="notePv" class="note-preview" style="display:none"></div>`;
       if(!ns.length)h+='<div class="empty">아직 상담 기록이 없어요</div>';
       else{h+='<div class="timeline">';ns.forEach(n=>{const t=n.type||'메모',ds=new Date(n.created_at).toLocaleDateString('ko-KR'),as=n.alert_date?' · 📅 '+new Date(n.alert_date).toLocaleDateString('ko-KR'):'';
