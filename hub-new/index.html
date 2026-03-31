@@ -1008,6 +1008,24 @@ function clientWantTag(card){
   return `<span style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;background:${bg};color:${color};white-space:nowrap;">${esc(label)}</span>`;
 }
 
+// 매물 유형+거래 라벨 (예: "빌라 월세", "아파트 전세")
+function propertyTypeLabel(card){
+  const p=card.property||{};
+  const type=p.type||'';
+  let cat='';
+  if(p.category){cat=({'apartment':'아파트','officetel':'오피스텔','room':'원투룸','commercial':'상가','office':'사무실'}[p.category]||p.category);}
+  if(!cat){
+    const all=[p.complex,p.location,p.rawText,...(p.features||[])].filter(Boolean).join(' ');
+    if(/상가|점포|매장|식당|카페|편의점/.test(all))cat='상가';
+    else if(/사무실|오피스|업무/.test(all))cat='사무실';
+    else if(/아파트/.test(all))cat='아파트';
+    else if(/오피스텔/.test(all))cat='오피스텔';
+    else if(/빌라|다세대|연립/.test(all))cat='빌라';
+    else if(/원룸|투룸|쓰리룸|1룸|2룸/.test(all))cat='원투룸';
+  }
+  return [cat,type].filter(Boolean).join(' ')||type||'매물';
+}
+
 /* ═══════════════════════════════════════════════════════════
    3. Toast
    ═══════════════════════════════════════════════════════════ */
@@ -1775,7 +1793,7 @@ const Hub = (() => {
         <div onclick="event.stopPropagation();Hub._toggleMatchSel('${m.id}')" style="width:20px;height:20px;border:2px solid ${sel?'var(--primary)':'#ccc'};border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${sel?'var(--primary)':'transparent'};cursor:pointer;">${sel?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}</div>
         <div style="flex:1;min-width:0;">
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-            <span style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:800;background:${tc==='sale'?'rgba(249,115,22,0.1)':tc==='jeonse'?'rgba(99,102,241,0.1)':'rgba(167,139,250,0.1)'};color:${tc==='sale'?'#ea580c':tc==='jeonse'?'#4f46e5':'#7c3aed'};">${esc(mp.type||'')}</span>
+            <span style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:800;background:${tc==='sale'?'rgba(249,115,22,0.1)':tc==='jeonse'?'rgba(99,102,241,0.1)':'rgba(167,139,250,0.1)'};color:${tc==='sale'?'#ea580c':tc==='jeonse'?'#4f46e5':'#7c3aed'};">${esc(propertyTypeLabel(m))}</span>
             <span style="font-size:10px;font-weight:700;color:${stC};">${st}</span>
             <strong style="font-size:14px;">${esc(mp.price||'-')}</strong>
             <span style="font-size:13px;color:var(--text-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${mainText}</span>
@@ -2090,7 +2108,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
       }
       if(shR.length){
         html+=`<div style="font-size:13px;font-weight:700;color:#22c55e;margin:16px 0 8px;">공유 매물 (${shR.length}건)</div>`;
-        html+=shR.map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item"><span class="item-type ${tc}">${esc(p.type||'')}</span><div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');
+        html+=shR.map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item"><span class="item-type ${tc}">${esc(propertyTypeLabel(c))}</span><div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');
       }
       if(!myR.length&&!shR.length)html='<div class="empty"><div class="empty-icon">🔍</div>검색 결과가 없어요</div>';
       el.innerHTML=html;
@@ -2132,7 +2150,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
           <div onclick="PanelCards.toggleSel('${c.id}')" style="width:20px;height:20px;border:2px solid ${sel?'var(--primary)':'#ccc'};border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${sel?'var(--primary)':'transparent'};cursor:pointer;">${sel?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}</div>
           <div style="flex:1;min-width:0;cursor:pointer;" onclick="PanelCards.toggleSel('${c.id}')">
             <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-              <span style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:800;background:${tc==='sale'?'rgba(249,115,22,0.1)':tc==='jeonse'?'rgba(99,102,241,0.1)':'rgba(167,139,250,0.1)'};color:${tc==='sale'?'#ea580c':tc==='jeonse'?'#4f46e5':'#7c3aed'};">${esc(p.type||'')}</span>
+              <span style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:800;background:${tc==='sale'?'rgba(249,115,22,0.1)':tc==='jeonse'?'rgba(99,102,241,0.1)':'rgba(167,139,250,0.1)'};color:${tc==='sale'?'#ea580c':tc==='jeonse'?'#4f46e5':'#7c3aed'};">${esc(propertyTypeLabel(c))}</span>
               <span style="font-size:10px;font-weight:700;color:${stC};">${st}</span>
               <strong style="font-size:14px;">${esc(p.price||'-')}</strong>
               <span style="font-size:13px;color:var(--text-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${mainText}</span>
@@ -2363,7 +2381,7 @@ const PanelClient = (() => {
     }
     if(myR.length){
       html+=`<div style="font-size:13px;font-weight:700;color:var(--primary);margin:16px 0 8px;">관련 매물 (${myR.length>5?'상위 5건':myR.length+'건'})</div>`;
-      html+=myR.slice(0,5).map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item"><span class="item-type ${tc}">${esc(p.type||'')}</span><div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');
+      html+=myR.slice(0,5).map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item"><span class="item-type ${tc}">${esc(propertyTypeLabel(c))}</span><div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');
     }
     if(!clR.length&&!myR.length)html='<div class="empty"><div class="empty-icon">🔍</div>검색 결과가 없어요</div>';
     el.innerHTML=html;
@@ -2728,7 +2746,7 @@ const PanelShared = (() => {
       const isMine=aid===myId;
       html+=`<div class="section-label" style="color:${isMine?'var(--primary)':'var(--text-sub)'};">${isMine?'내 매물':'다른 중개사'} (${list.length}건)</div>`;
       list.forEach(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';
-        html+=`<div class="item"><span class="item-type ${tc}">${esc(p.type||'')}</span><div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div>${isMine?`<button class="prop-action-btn delete" onclick="event.stopPropagation();PanelShared.unshare('${c.id}','${c.room_id||''}')">해제</button>`:''}</div>`;
+        html+=`<div class="item"><span class="item-type ${tc}">${esc(propertyTypeLabel(c))}</span><div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div>${isMine?`<button class="prop-action-btn delete" onclick="event.stopPropagation();PanelShared.unshare('${c.id}','${c.room_id||''}')">해제</button>`:''}</div>`;
       });
     });
     el.innerHTML=html;
@@ -2749,8 +2767,8 @@ const PanelShared = (() => {
     }else{
       const [shR,myR]=await Promise.all([Search.vector(_sharedQuery,'shared'),Search.vector(_sharedQuery,'my')]);
       let html='';
-      if(myR.length){html+=`<div style="font-size:13px;font-weight:700;color:var(--primary);margin:12px 0 8px;">내 매물 (${myR.length>5?'상위 5건':myR.length+'건'})</div>`+myR.slice(0,5).map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item"><span class="item-type ${tc}">${esc(p.type||'')}</span><div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');}
-      if(shR.length){html+=`<div style="font-size:13px;font-weight:700;color:#22c55e;margin:16px 0 8px;">공유 매물 (${shR.length}건)</div>`+shR.map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item"><span class="item-type ${tc}">${esc(p.type||'')}</span><div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');}
+      if(myR.length){html+=`<div style="font-size:13px;font-weight:700;color:var(--primary);margin:12px 0 8px;">내 매물 (${myR.length>5?'상위 5건':myR.length+'건'})</div>`+myR.slice(0,5).map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item"><span class="item-type ${tc}">${esc(propertyTypeLabel(c))}</span><div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');}
+      if(shR.length){html+=`<div style="font-size:13px;font-weight:700;color:#22c55e;margin:16px 0 8px;">공유 매물 (${shR.length}건)</div>`+shR.map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item"><span class="item-type ${tc}">${esc(propertyTypeLabel(c))}</span><div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');}
       if(!shR.length&&!myR.length)html='<div class="empty"><div class="empty-icon">🔍</div>검색 결과가 없어요</div>';
       el.innerHTML=html;
     }
