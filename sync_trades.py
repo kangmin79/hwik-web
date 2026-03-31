@@ -767,19 +767,28 @@ def fill_nearby_facilities(danji_list: list):
         nearby_st.sort(key=lambda x: x["distance"])
         d["nearby_subway"] = nearby_st[:3]
 
-        # 학교: 1km 이내, 가까운 순 3개 (초등학교 우선)
-        nearby_sc = []
+        # 학교: 1.5km 이내, 초/중/고 각 1개씩 (가장 가까운)
+        school_candidates = []
         for s in schools:
             dist = haversine(lat1, lon1, s.get("lat"), s.get("lon"))
-            if dist < 1000:
-                nearby_sc.append({
+            if dist < 1500:
+                school_candidates.append({
                     "name": s["name"],
                     "type": s.get("type", ""),
                     "distance": round(dist),
                 })
-        # 초등학교 우선 → 거리순
-        nearby_sc.sort(key=lambda x: (0 if "초등" in x.get("type","") else 1, x["distance"]))
-        d["nearby_school"] = nearby_sc[:3]
+        school_candidates.sort(key=lambda x: x["distance"])
+        nearby_sc = []
+        picked = set()
+        for s in school_candidates:
+            t = s["type"]
+            cat = "초" if "초등" in t else ("중" if "중학" in t else ("고" if "고등" in t else None))
+            if cat and cat not in picked:
+                nearby_sc.append(s)
+                picked.add(cat)
+            if len(picked) >= 3:
+                break
+        d["nearby_school"] = nearby_sc
 
         if nearby_st or nearby_sc:
             filled += 1
