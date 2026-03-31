@@ -57,12 +57,15 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 .logo { width:36px; height:36px; background:var(--yellow); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; color:var(--dark); flex-shrink:0; }
 .header-name { font-size:17px; font-weight:500; color:#fff; }
 .header-sub { font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px; }
-.tags { display:flex; flex-direction:column; gap:4px; margin-top:8px; }
-.tag-line { display:flex; align-items:center; gap:4px; font-size:12px; line-height:1.4; }
-.tag-icon { flex-shrink:0; width:16px; text-align:center; font-size:11px; }
-.tag-subway-line { color:rgba(147,187,253,0.9); }
+.tags { display:flex; flex-direction:column; gap:5px; margin-top:8px; }
+.tag-line { display:flex; align-items:center; gap:0; font-size:12px; line-height:1.4; flex-wrap:wrap; }
+.tag-icon { flex-shrink:0; width:18px; text-align:center; font-size:11px; }
 .tag-school-line { color:rgba(163,212,104,0.9); }
-.tag-sep { color:rgba(255,255,255,0.25); margin:0 2px; }
+.tag-sep { color:rgba(255,255,255,0.2); margin:0 4px; }
+.station-tag { display:inline-flex; align-items:center; gap:3px; }
+.line-badge { display:inline-block; padding:1px 5px; border-radius:8px; font-size:9px; font-weight:600; color:#fff; margin-right:2px; }
+.station-name { color:rgba(255,255,255,0.85); }
+.station-time { color:rgba(255,255,255,0.5); font-size:11px; }
 .tag-subway { background:rgba(100,180,255,0.2); }
 .tag-school { background:rgba(100,220,150,0.2); }
 
@@ -338,13 +341,32 @@ function render() {
 
   // 지하철/학교 태그
   function shortSchool(n) { return n.replace(/서울/g,'').replace(/초등학교/g,'초').replace(/중학교/g,'중').replace(/고등학교/g,'고'); }
+  function lineColor(line) {
+    if (!line) return '#888';
+    const l = line.replace('수도권  도시철도 ','').replace('호선','');
+    const colors = {'1':'#0052A4','2':'#00A84D','3':'#EF7C1C','4':'#00A5DE','5':'#996CAC','6':'#CD7C2F','7':'#747F00','8':'#E6186C','9':'#BDB092'};
+    if (colors[l]) return colors[l];
+    if (l.includes('경의') || l.includes('중앙')) return '#77C4A3';
+    if (l.includes('분당') || l.includes('수인')) return '#F5A200';
+    if (l.includes('신분당')) return '#D4003B';
+    if (l.includes('우이')) return '#B7C452';
+    if (l.includes('경춘')) return '#0C8E72';
+    if (l.includes('공항')) return '#0090D2';
+    if (l.includes('신림')) return '#6789CA';
+    return '#888';
+  }
+  function shortLine(line) {
+    if (!line) return '';
+    return line.replace('수도권  도시철도 ','').replace('호선','');
+  }
   let tagHtml = '';
   if (subway.length > 0) {
-    const subwayText = subway.map(s => {
-      const line = s.line ? '('+esc(s.line).replace('수도권  도시철도 ','').replace('호선','')+')' : '';
-      return esc(s.name) + line + ' ' + walkMin(s.distance);
-    }).join(' <span class="tag-sep">·</span> ');
-    tagHtml += `<div class="tag-line tag-subway-line"><span class="tag-icon">🚇</span>${subwayText}</div>`;
+    const subwayItems = subway.map(s => {
+      const ln = shortLine(s.line);
+      const bg = lineColor(s.line);
+      return `<span class="station-tag"><span class="line-badge" style="background:${bg}">${esc(ln)}</span><span class="station-name">${esc(s.name)}</span> <span class="station-time">${walkMin(s.distance)}</span></span>`;
+    }).join('<span class="tag-sep">·</span>');
+    tagHtml += `<div class="tag-line">${subwayItems}</div>`;
   }
   if (school.length > 0) {
     const schoolText = school.slice(0,2).map(s => shortSchool(esc(s.name)) + ' ' + walkMin(s.distance)).join(' <span class="tag-sep">·</span> ');
