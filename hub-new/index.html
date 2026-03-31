@@ -962,7 +962,7 @@ const Data = (() => {
     for(const d of dongs){if(allText.includes(d)){const{data}=await sb().from('stations').select('lat,lon').ilike('name','%'+d+'%').limit(1);if(data?.[0]){await sb().from('cards').update({lat:data[0].lat,lng:data[0].lon}).eq('id',cardId);return;}}}
   }
 
-  function triggerAutoMatch(cardId) { fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/auto-match`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+HWIK_CONFIG.SUPABASE_KEY,'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({card_id:cardId,agent_id:uid()})}).catch(()=>{}); }
+  function triggerAutoMatch(cardId) { fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/auto-match`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(Auth?.getToken?Auth.getToken():HWIK_CONFIG.SUPABASE_KEY),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({card_id:cardId,agent_id:uid()})}).catch(e=>console.warn('auto-match failed:',e)); }
 
   async function loadCompletedCards() {
     const id=uid(); if(!id) return [];
@@ -1651,37 +1651,37 @@ const Hub = (() => {
       </div>
     </div>`;
 
-    // 매칭 매물 로드
+    // 매칭 매물 로드 (promise 체인 — race condition 방지)
     _loadClientMatches(card.id);
   }
 
   async function _loadClientMatches(cardId){
     const el=document.getElementById('clientMatchList');if(!el)return;
-    const matches=current?._matches||[];
-    if(!matches.length){
-      // 아직 로드 안 됐으면 잠시 후 재시도
-      setTimeout(async()=>{
-        const ms=current?._matches||[];
-        if(!ms.length){el.innerHTML='<div style="font-size:13px;color:var(--text-light);padding:8px 0;">매칭 매물이 없어요. 매물을 더 등록해보세요.</div>';return;}
-        _renderMatches(ms,el);
-      },1500);
-      return;
-    }
-    _renderMatches(matches,el);
+    // 이미 로드됐으면 바로 표시
+    if(current?._matches?.length){_renderMatches(current._matches,el);return;}
+    // 아직이면 직접 로드
+    try{
+      const d=await Data.loadClientDetail(cardId);
+      if(current){current._notes=d.notes;current._matches=d.matches;}
+      if(d.matches?.length){_renderMatches(d.matches,el);}
+      else{el.innerHTML='<div style="font-size:13px;color:var(--text-light);padding:8px 0;">매칭 매물이 없어요. 매물을 더 등록해보세요.</div>';}
+    }catch(_){el.innerHTML='<div style="font-size:13px;color:var(--text-light);padding:8px 0;">매칭 로드 실패</div>';}
   }
 
   function _renderMatches(matches,el){
     el.innerHTML=matches.slice(0,5).map(m=>{
       const mp=m.property||{};
       const tc=mp.type==='매매'?'sale':mp.type==='전세'?'jeonse':'rent';
-      const score=m.similarity?Math.round(m.similarity*100):0;
+      // _score(구조 매칭 점수) 우선, similarity(벡터 유사도) 보조
+      const score=m._score||( m.similarity?Math.round(m.similarity*100):0);
+      const scoreLabel=score>0?score+(m._score?'점':'%'):'';
       return `<div class="item" style="border:1px solid var(--border);border-radius:10px;margin-bottom:6px;padding:10px 12px;">
         <span style="padding:2px 8px;border-radius:6px;font-size:10px;font-weight:800;background:${tc==='sale'?'rgba(249,115,22,0.1)':tc==='jeonse'?'rgba(99,102,241,0.1)':'rgba(167,139,250,0.1)'};color:${tc==='sale'?'#ea580c':tc==='jeonse'?'#4f46e5':'#7c3aed'};flex-shrink:0;">${esc(mp.type||'')}</span>
         <div class="item-body">
           <div class="item-name">${esc(mp.complex||mp.location||'매물')}</div>
           <div class="item-sub">${[mp.price,mp.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
         </div>
-        ${score?`<span style="padding:3px 10px;border-radius:8px;background:var(--primary-bg);color:var(--primary);font-size:11px;font-weight:700;">${score}%</span>`:''}
+        ${scoreLabel?`<span style="padding:3px 10px;border-radius:8px;background:var(--primary-bg);color:var(--primary);font-size:11px;font-weight:700;">${scoreLabel}</span>`:''}
       </div>`;
     }).join('')+
     (matches.length>5?`<div style="text-align:center;padding:8px;"><button onclick="Hub.openSub('cl_match')" style="padding:6px 20px;border-radius:8px;border:1px solid var(--primary);background:transparent;color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;">전체 ${matches.length}건 보기</button></div>`:'');
@@ -2225,7 +2225,7 @@ const PanelClient = (() => {
       const cardData={id:crypto.randomUUID().slice(0,12),agent_id:Auth.user.id,property,contact_name:r.contact_name||null,contact_phone:r.contact_phone||null,embedding:r.embedding||null,search_text:r.search_text||null,price_number:r.price_number||null,wanted_trade_type:r.wanted_trade_type||null,trade_status:'계약가능'};
       const {error:dbErr}=await Auth.sb.from('cards').insert([cardData]);
       if(dbErr)throw new Error(dbErr.message);
-      Data.triggerAutoMatch(cardData.id);
+      // 손님 카드는 auto-match 불필요 (edge function에서 '매물 아님'으로 무시)
       Toast.show('손님이 등록되었습니다!');
       inp.value='';document.getElementById('clientRegResult').innerHTML='';
       _regOpen=false;toggleReg();// 자동 접기
@@ -2352,8 +2352,8 @@ const PanelClient = (() => {
     const card=Hub.current?.data;if(!card)return;const p=card.property||{},pn=card.private_note||{};
     if(key==='cl_conditions'){let h=`<div class="panel-inner">${Hub.panelHead('희망 조건')}`;[['예산',p.price],['지역',p.location],['단지',p.complex],['면적',p.area],['유형',p.type]].filter(([,v])=>v).forEach(([l,v])=>h+=`<div class="detail-row"><div class="detail-value">${esc(v)}</div><div class="detail-label">${l}</div></div>`);if((p.features||[]).length)h+=`<div class="detail-tags">${p.features.map(f=>`<span class="detail-tag">${esc(f)}</span>`).join('')}</div>`;if(pn.memo)h+=`<div class="client-memo">${esc(pn.memo)}</div>`;h+=`<button class="btn-primary" style="margin-top:16px;" onclick="PanelClient.editClient('${card.id}')">손님 정보 수정</button>`;el.innerHTML=h+'</div>';}
 
-    else if(key==='cl_match'){const ms=Hub.current?._matches||[];let h=`<div class="panel-inner">${Hub.panelHead('매칭 매물',ms.length+'건')}`;if(!ms.length)h+='<div class="empty"><div class="empty-icon">🏠</div>매칭 매물이 없어요</div>';else ms.forEach(m=>{const mp=m.property||{},tc=mp.type==='매매'?'sale':mp.type==='전세'?'jeonse':'rent',sc=m.similarity?Math.round(m.similarity*100):0;h+=`<div class="item" onclick='Hub.enterProperty(JSON.parse(decodeURIComponent("${encodeURIComponent(JSON.stringify(m))}")))'>
-      <span class="item-type ${tc}">${esc(mp.type||'')}</span><div class="item-body"><div class="item-name">${esc(mp.complex||mp.location||'매물')}</div><div class="item-sub">${[mp.price,mp.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div>${sc?`<span class="match-score">${sc}%</span>`:''}</div>`;});
+    else if(key==='cl_match'){const ms=Hub.current?._matches||[];let h=`<div class="panel-inner">${Hub.panelHead('매칭 매물',ms.length+'건')}`;if(!ms.length)h+='<div class="empty"><div class="empty-icon">🏠</div>매칭 매물이 없어요</div>';else ms.forEach(m=>{const mp=m.property||{},tc=mp.type==='매매'?'sale':mp.type==='전세'?'jeonse':'rent';const sc=m._score||(m.similarity?Math.round(m.similarity*100):0);const scLabel=sc>0?sc+(m._score?'점':'%'):'';h+=`<div class="item" onclick='Hub.enterProperty(JSON.parse(decodeURIComponent("${encodeURIComponent(JSON.stringify(m))}")))'>
+      <span class="item-type ${tc}">${esc(mp.type||'')}</span><div class="item-body"><div class="item-name">${esc(mp.complex||mp.location||'매물')}</div><div class="item-sub">${[mp.price,mp.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div>${scLabel?`<span class="match-score">${scLabel}</span>`:''}</div>`;});
       h+=`<button class="btn-primary" style="margin-top:16px;" onclick="PanelClient.reMatch('${card.id}')">매칭 다시 찾기</button>`;el.innerHTML=h+'</div>';}
 
     else if(key==='cl_timeline'){const ns=Hub.current?._notes||[];let h=`<div class="panel-inner">${Hub.panelHead('상담 기록',ns.length+'건')}
