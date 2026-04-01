@@ -1406,19 +1406,26 @@ const Preview = (() => {
   function _parse(input) {
     const r={type:null,price:null,location:null,complex:null,area:null,floor:null,features:[]};
     const ckw=['구합니다','구해요','구해주세요','구함','찾습니다','찾아요','원합니다','예산','손님요청'];
-    if(ckw.some(k=>input.includes(k)))r.type='손님'; else if(input.includes('매매'))r.type='매매'; else if(input.includes('전세'))r.type='전세'; else if(input.includes('월세'))r.type='월세';
+    if(ckw.some(k=>input.includes(k)))r.type='손님'; else if(input.includes('매매'))r.type='매매'; else if(/전세|전셰|젼세/.test(input))r.type='전세'; else if(/월세|웜세/.test(input))r.type='월세';
+    // 가격: 슬래시(월세) → 억+천 → 보증금패턴
     const rm=input.match(/(\d+)\s*\/\s*(\d+)/); if(rm){r.price=rm[1]+'/'+rm[2];if(!r.type)r.type='월세';}
-    const pm=input.match(/(\d+\.?\d*)\s*억/); if(pm&&!r.price)r.price=pm[1]+'억';
-    const dm=input.match(/([가-힣]+동)/); if(dm)r.location=dm[1];
-    const gm=input.match(/([가-힣]+구)/); if(gm)r.location=r.location?gm[1]+' '+r.location:gm[1];
-    // 보증금/월세 (슬래시 없는 패턴)
+    if(!r.price){const pm=input.match(/(\d+\.?\d*)\s*억\s*(\d+)?\s*(천)?/);if(pm){let p=pm[1]+'억';if(pm[2])p+=pm[2]+(pm[3]||'천');r.price=p;}}
     if(!r.price){const bm=input.match(/보증금\s*(\d+)\s*(?:만)?\s*(?:\/|\s)\s*월세?\s*(\d+)/);if(bm){r.price=bm[1]+'/'+bm[2];if(!r.type)r.type='월세';}}
-    const brands=['래미안','자이','힐스테이트','푸르지오','더샵','롯데캐슬','e편한세상','아이파크','sk뷰','파크리오','포레나','두산위브','현대','삼성','대림','한화꿈에그린','센트레빌','우미린','어울림'];
-    brands.forEach(b=>{if(input.includes(b))r.complex=b;});
+    if(!r.price){const cm=input.match(/(\d+)\s*천/);if(cm)r.price=cm[1]+'천';}
+    // 지역: 구+동 (순서 유연하게)
+    const gm=input.match(/(강남|서초|송파|마포|용산|성동|광진|영등포|강동|동작|관악|종로|중구|강서|양천|구로|노원|서대문|은평|중랑|도봉|동대문|성북|금천|강북)구?/);
+    const dm=input.match(/([가-힣]{2,4}동)/);
+    if(gm&&dm)r.location=gm[0]+(gm[0].endsWith('구')?'':'구')+' '+dm[1];
+    else if(gm)r.location=gm[0]+(gm[0].endsWith('구')?'':'구');
+    else if(dm)r.location=dm[1];
+    // 단지명: 브랜드 + 뒤 단어 (래미안대치팰리스, 자이 더시티 등)
+    const brands=['래미안','자이','힐스테이트','푸르지오','더샵','롯데캐슬','e편한세상','아이파크','sk뷰','파크리오','포레나','두산위브','현대','삼성','대림','한화꿈에그린','센트레빌','우미린','어울림','엘스','리센츠','하이페리온','텐즈힐'];
+    for(const b of brands){const bi=input.indexOf(b);if(bi>=0){const after=input.slice(bi+b.length).match(/^([가-힣a-zA-Z0-9]+)/);r.complex=after?b+after[1]:b;break;}}
     if(!r.complex){const cm=input.match(/([가-힣a-zA-Z]+\s*(?:아파트|오피스텔|빌라|상가|사무실))/);if(cm)r.complex=cm[0].trim();}
     const am=input.match(/(\d+)\s*평/); if(am)r.area=am[1]+'평';
     const fm=input.match(/(\d+)\s*층/); if(fm)r.floor=fm[1]+'층';
-    ['풀옵션','올수리','즉시입주','역세권','신축','주차','남향','동향','서향','북향','복층','테라스','보안','엘리베이터','학교근처'].forEach(f=>{if(input.includes(f))r.features.push(f);});
+    const dm2=input.match(/(\d+)\s*동/); if(dm2&&fm)r.floor=dm2[1]+'동 '+r.floor;
+    ['풀옵션','올수리','즉시입주','역세권','초역세권','신축','주차가능','주차','남향','동향','서향','북향','남동향','남서향','정남향','복층','테라스','보안','엘리베이터','학군좋음','초품아','한강뷰','공원뷰','HUG가능','무융자','대출가능','애견가능','시스템에어컨','베란다확장','드레스룸','빌트인','분리형','루프탑','고층','저층','채광좋음','슬세권','런세권'].forEach(f=>{if(input.includes(f))r.features.push(f);});
     return r;
   }
 
