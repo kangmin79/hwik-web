@@ -986,6 +986,10 @@ const Data = (() => {
     // 학교
     const schM=allText.match(/(\S+(?:대학교|대학|초등학교|중학교|고등학교|초|중|고))/);
     if(schM){const nm=schM[1].replace(/대학교|대학|초등학교|중학교|고등학교/g,'').replace(/[대초중고]$/,'');if(nm.length>=1){const{data}=await sb().from('schools').select('lat,lon').ilike('name','%'+nm+'%').limit(1);if(data?.[0]){await sb().from('cards').update({lat:data[0].lat,lng:data[0].lon}).eq('id',cardId);return;}}}
+    // 구 이름→DISTRICT_COORDS 좌표
+    const guCoords={'강남구':{lat:37.5172,lng:127.0473},'강동구':{lat:37.5301,lng:127.1238},'강북구':{lat:37.6397,lng:127.0255},'강서구':{lat:37.5510,lng:126.8496},'관악구':{lat:37.4784,lng:126.9516},'광진구':{lat:37.5384,lng:127.0822},'구로구':{lat:37.4954,lng:126.8874},'금천구':{lat:37.4519,lng:126.9020},'노원구':{lat:37.6542,lng:127.0568},'도봉구':{lat:37.6688,lng:127.0471},'동대문구':{lat:37.5744,lng:127.0400},'동작구':{lat:37.5124,lng:126.9393},'마포구':{lat:37.5633,lng:126.9085},'서대문구':{lat:37.5791,lng:126.9368},'서초구':{lat:37.4836,lng:127.0327},'성동구':{lat:37.5633,lng:127.0371},'성북구':{lat:37.5894,lng:127.0167},'송파구':{lat:37.5145,lng:127.1059},'양천구':{lat:37.5170,lng:126.8665},'영등포구':{lat:37.5264,lng:126.8963},'용산구':{lat:37.5326,lng:126.9906},'은평구':{lat:37.6027,lng:126.9291},'종로구':{lat:37.5735,lng:126.9790},'중구':{lat:37.5641,lng:126.9979},'중랑구':{lat:37.6063,lng:127.0925}};
+    const guM=allText.match(/([\uAC00-\uD7AF]+구)/);
+    if(guM&&guCoords[guM[1]]){await sb().from('cards').update({lat:guCoords[guM[1]].lat,lng:guCoords[guM[1]].lng}).eq('id',cardId);return;}
     // 동네명→역
     const dongs=['홍대','합정','상수','망원','연남','공덕','잠실','문정','가락','석촌','역삼','삼성','대치','논현','신사','청담','압구정','반포','서초','방배','이태원','한남','성수','건대','여의도','당산','천호','사당','신림','강남','신촌','종로','명동','혜화','왕십리','용산','동대문','신도림','구로','노원','수유'];
     for(const d of dongs){if(allText.includes(d)){const{data}=await sb().from('stations').select('lat,lon').ilike('name','%'+d+'%').limit(1);if(data?.[0]){await sb().from('cards').update({lat:data[0].lat,lng:data[0].lon}).eq('id',cardId);return;}}}
@@ -2911,17 +2915,25 @@ const PanelClient = (() => {
     '복층':'복층','테라스':'테라스',
     '즉시입주':'즉시입주','바로입주':'즉시입주',
   };
+  const _guCoords={'강남구':{lat:37.5172,lng:127.0473},'강동구':{lat:37.5301,lng:127.1238},'강북구':{lat:37.6397,lng:127.0255},'강서구':{lat:37.5510,lng:126.8496},'관악구':{lat:37.4784,lng:126.9516},'광진구':{lat:37.5384,lng:127.0822},'구로구':{lat:37.4954,lng:126.8874},'금천구':{lat:37.4519,lng:126.9020},'노원구':{lat:37.6542,lng:127.0568},'도봉구':{lat:37.6688,lng:127.0471},'동대문구':{lat:37.5744,lng:127.0400},'동작구':{lat:37.5124,lng:126.9393},'마포구':{lat:37.5633,lng:126.9085},'서대문구':{lat:37.5791,lng:126.9368},'서초구':{lat:37.4836,lng:127.0327},'성동구':{lat:37.5633,lng:127.0371},'성북구':{lat:37.5894,lng:127.0167},'송파구':{lat:37.5145,lng:127.1059},'양천구':{lat:37.5170,lng:126.8665},'영등포구':{lat:37.5264,lng:126.8963},'용산구':{lat:37.5326,lng:126.9906},'은평구':{lat:37.6027,lng:126.9291},'종로구':{lat:37.5735,lng:126.9790},'중구':{lat:37.5641,lng:126.9979},'중랑구':{lat:37.6063,lng:127.0925}};
   async function _updateClientTags(cardId,text){
     try{
       const newTags=[];const isRequired=/꼭|필수|반드시|무조건/.test(text);
       for(const[kw,tag]of Object.entries(_memoTagKeywords)){if(text.includes(kw))newTags.push(tag);}
+      // 지역 태그 감지
+      const guM=text.match(/([\uAC00-\uD7AF]+구)/);
+      if(guM&&_guCoords[guM[1]]){newTags.push(guM[1]);newTags.push('서울');}
+      const dongM=text.match(/([\uAC00-\uD7AF]+동)/);
+      if(dongM)newTags.push(dongM[1]);
       if(!newTags.length)return;
       // 기존 태그 로드
-      const{data:card}=await Auth.sb.from('cards').select('tags,required_tags').eq('id',cardId).single();
+      const{data:card}=await Auth.sb.from('cards').select('tags,required_tags,lat,lng').eq('id',cardId).single();
       if(!card)return;
       const tags=[...new Set([...(card.tags||[]),...newTags])];
       const updates={tags};
       if(isRequired){const rt=[...new Set([...(card.required_tags||[]),...newTags])];(updates as any).required_tags=rt;}
+      // 좌표 없으면 구 좌표 설정
+      if(!card.lat&&guM&&_guCoords[guM[1]]){(updates as any).lat=_guCoords[guM[1]].lat;(updates as any).lng=_guCoords[guM[1]].lng;}
       await Auth.sb.from('cards').update(updates).eq('id',cardId);
     }catch(_){}
   }
