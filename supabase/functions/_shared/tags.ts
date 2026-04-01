@@ -113,7 +113,7 @@ export const TAG_WEIGHTS: Record<string, number> = {
 // ── 가격 구간 (검색/UI용, 매칭은 숫자 직접비교) ──
 export function priceBracket(priceNumber: number, tradeType: string): string[] {
   const tags: string[] = [];
-  if (tradeType === '월세') return tags; // 월세는 별도 처리
+  if (tradeType === '월세' || !priceNumber || priceNumber <= 0 || isNaN(priceNumber)) return tags;
   if (priceNumber <= 5000) tags.push('5천이하');
   else if (priceNumber <= 10000) tags.push('5천~1억');
   else if (priceNumber <= 20000) tags.push('1~2억');
@@ -128,6 +128,7 @@ export function priceBracket(priceNumber: number, tradeType: string): string[] {
 }
 
 export function depositBracket(deposit: number): string {
+  if (!deposit || deposit <= 0 || isNaN(deposit)) return '';
   if (deposit <= 500) return '보증금500이하';
   if (deposit <= 1000) return '보증금500~1천';
   if (deposit <= 2000) return '보증금1~2천';
@@ -138,6 +139,7 @@ export function depositBracket(deposit: number): string {
 }
 
 export function monthlyBracket(monthly: number): string {
+  if (!monthly || monthly <= 0 || isNaN(monthly)) return '';
   if (monthly <= 30) return '월세30이하';
   if (monthly <= 50) return '월세30~50';
   if (monthly <= 80) return '월세50~80';
@@ -149,6 +151,7 @@ export function monthlyBracket(monthly: number): string {
 
 // ── 면적 구간 ──
 export function areaBracket(pyeong: number): string {
+  if (!pyeong || pyeong <= 0 || isNaN(pyeong)) return '';
   if (pyeong <= 5) return '5평이하';
   if (pyeong <= 10) return '5~10평';
   if (pyeong <= 15) return '10~15평';
@@ -196,7 +199,7 @@ export function moveinBracket(moveIn: string): string {
 
 // ── 카테고리 코드 → 표준 태그 ──
 const CAT_MAP: Record<string, string> = {
-  apartment: '아파트', officetel: '오피스텔', room: '빌라',
+  apartment: '아파트', officetel: '오피스텔', room: '원투룸',
   commercial: '상가', office: '사무실',
 };
 
@@ -249,6 +252,7 @@ function extractFromText(text: string): string[] {
 // generateTags — 카드 데이터 → 표준 태그 배열
 // ═══════════════════════════════════════════════════════════
 export function generateTags(card: any): string[] {
+  if (!card) return [];
   const p = card.property || {};
   const tags: string[] = [];
 
@@ -266,26 +270,29 @@ export function generateTags(card: any): string[] {
 
   // 2. 거래유형
   const type = p.type || '';
-  if (type !== '손님') {
+  if (type && type !== '손님') {
     const stdType = SYNONYM_MAP[type] || type;
-    if (['매매','전세','월세','반전세'].includes(stdType)) tags.push(stdType);
+    if (stdType && ['매매','전세','월세','반전세'].includes(stdType)) tags.push(stdType);
   }
 
   // 3. 매물유형
   let propType = CAT_MAP[p.category] || '';
   if (!propType) {
-    // rawText에서 추론
     const all = [p.complex, p.location, p.rawText, ...(p.features || [])].filter(Boolean).join(' ');
     if (/상가|점포|매장|식당|카페|편의점/.test(all)) propType = '상가';
     else if (/사무실|오피스(?!텔)|업무/.test(all)) propType = '사무실';
     else if (/오피스텔/.test(all)) propType = '오피스텔';
     else if (/아파트/.test(all)) propType = '아파트';
     else if (APT_BRANDS.some(b => all.includes(b))) propType = '아파트';
-    else if (/빌라|다세대|연립/.test(all)) propType = '빌라';
-    else if (/원룸|1룸/.test(all)) propType = '원룸';
-    else if (/투룸|2룸/.test(all)) propType = '투룸';
+    else if (/빌라|다세대|연립|원룸|투룸|쓰리룸|1룸|2룸|3룸/.test(all)) propType = '원투룸';
   }
   if (propType) tags.push(propType);
+  // 세부 유형 태그 (카테고리와 별도)
+  const allForSub = [p.complex, p.location, p.rawText, ...(p.features || [])].filter(Boolean).join(' ');
+  if (/빌라|다세대|연립/.test(allForSub) && !tags.includes('빌라')) tags.push('빌라');
+  if (/원룸|1룸/.test(allForSub) && !tags.includes('원룸')) tags.push('원룸');
+  if (/투룸|2룸/.test(allForSub) && !tags.includes('투룸')) tags.push('투룸');
+  if (/쓰리룸|3룸/.test(allForSub) && !tags.includes('쓰리룸')) tags.push('쓰리룸');
 
   // 4. 가격대 (UI/검색용 태그)
   const pn = card.price_number || 0;
@@ -349,6 +356,6 @@ export function generateTags(card: any): string[] {
     });
   }
 
-  // 중복 제거
-  return [...new Set(tags)];
+  // 중복 제거 + 빈 문자열 필터
+  return [...new Set(tags)].filter(t => t && t.trim());
 }

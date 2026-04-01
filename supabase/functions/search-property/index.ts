@@ -649,7 +649,7 @@ Deno.serve(async (req) => {
       const searchTags: string[] = [];
       if (finalTradeType) searchTags.push(finalTradeType);
       // 카테고리 → 태그 변환
-      const catTagMap: Record<string,string> = {apartment:'아파트',officetel:'오피스텔',room:'빌라',commercial:'상가',office:'사무실'};
+      const catTagMap: Record<string,string> = {apartment:'아파트',officetel:'오피스텔',room:'원투룸',commercial:'상가',office:'사무실'};
       if (finalPropertyType && catTagMap[finalPropertyType]) searchTags.push(catTagMap[finalPropertyType]);
       // 지역/특징 키워드 → 태그
       for (const word of searchWords) {
