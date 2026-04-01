@@ -515,121 +515,91 @@ Deno.serve(async (req) => {
       ? (clientCard as any).excluded_tags
       : extractExcludedTags(allText);
 
-    // ★ 중개사 실전 랭킹 — 태그 매칭 + 숫자 비교
+    // ═══════════════════════════════════════════════════════════
+    // ★ 125점 만점 매칭 점수 (중개사 14년 실전 기반)
+    // ═══════════════════════════════════════════════════════════
     results = results.map((r: any) => {
       let score = 0;
       const pn = r.price_number || 0;
-
-      // ⓪ 태그 매칭 (0~50점)
       const propTags: string[] = r.tags?.length ? r.tags : generateTags(r);
-      // required_tags 체크 — 하나라도 없으면 제외
+
+      // ── 사전 체크: required_tags / excluded_tags ──
       if (clientRequired.length) {
-        const missingRequired = clientRequired.filter((t: string) => !propTags.includes(t));
-        if (missingRequired.length) { r._score = -1; return r; }
+        if (clientRequired.some((t: string) => !propTags.includes(t))) { r._score = -1; return r; }
       }
-      // excluded_tags 체크 — 하나라도 있으면 제외
       if (clientExcluded.length) {
-        const hasExcluded = clientExcluded.some((t: string) => propTags.includes(t));
-        if (hasExcluded) { r._score = -1; return r; }
+        if (clientExcluded.some((t: string) => propTags.includes(t))) { r._score = -50; return r; }
       }
-      // 겹치는 태그 수 (시설/환경 태그)
-      const facilityEnvTags = clientTags.filter((t: string) =>
-        !['서울','매매','전세','월세','반전세','아파트','오피스텔','빌라','원룸','투룸','쓰리룸','주택','상가','사무실','건물','토지','공장창고'].includes(t) &&
-        !t.includes('구') && !t.includes('동') && !t.includes('억') && !t.includes('평') && !t.includes('보증금') && !t.includes('월세')
-      );
-      const matchedFacility = facilityEnvTags.filter((t: string) => propTags.includes(t));
-      score += matchedFacility.length * 10; // 각 태그당 10점
 
-      // ① 가격 (0~50점)
+      // ① 거래유형 (40점) — 불일치 시 0점 즉시 리턴
+      const propType = r.property?.type || '';
+      if (wantedTradeTypes.length && wantedTradeTypes.includes(propType)) {
+        score += 40;
+      } else if (wantedTradeTypes.length) {
+        r._score = 0; return r; // Hard Filter — 전세 찾는데 월세 추천 금지
+      }
+
+      // ② 가격 적합도 (30점) — 예산 범위 내 포함 여부
       if (wantedTradeType === '월세' && (wantedDeposit || wantedMonthly)) {
-        // 월세: DB 필드 우선, 없으면 텍스트 파싱 폴백
-        let propDeposit = r.deposit || 0;
-        let propMonthly = r.monthly_rent || 0;
-        if (!propDeposit && !propMonthly) {
-          const priceStr = (r.property?.price || '').replace(/,/g,'');
-          const slashM = priceStr.match(/(\d+)\s*\/\s*(?:월?\s*)?(\d+)/);
-          if (slashM) { propDeposit = parseInt(slashM[1]); propMonthly = parseInt(slashM[2]); }
+        let propDep = r.deposit || 0, propMon = r.monthly_rent || 0;
+        if (!propDep && !propMon) {
+          const ps = (r.property?.price || '').replace(/,/g, '');
+          const sm = ps.match(/(\d+)\s*\/\s*(\d+)/);
+          if (sm) { propDep = parseInt(sm[1]); propMon = parseInt(sm[2]); }
         }
-
-        let depScore = 25, monScore = 25; // 기본 만점
-        const effMaxDep = maxDeposit || (wantedDeposit ? wantedDeposit * 1.1 : 0);
-        const effMaxMon = maxMonthly || (wantedMonthly ? wantedMonthly * 1.1 : 0);
-        // 보증금 비교
-        if (wantedDeposit && propDeposit > 0) {
-          if (propDeposit <= effMaxDep) depScore = 25;           // 최대 범위 이내
-          else if (propDeposit <= effMaxDep * 1.2) depScore = 15; // 약간 초과
-          else depScore = -10;
-        }
-        // 월세금 비교
-        if (wantedMonthly && propMonthly > 0) {
-          if (propMonthly <= effMaxMon) monScore = 25;
-          else if (propMonthly <= effMaxMon * 1.2) monScore = 15;
-          else monScore = -10;
-        }
-        score += depScore + monScore;
+        const effMaxDep = maxDeposit || (wantedDeposit ? wantedDeposit * 1.1 : 999999);
+        const effMaxMon = maxMonthly || (wantedMonthly ? wantedMonthly * 1.1 : 999999);
+        let priceScore = 30;
+        // 보증금 초과 감점
+        if (propDep > effMaxDep) { const over = (propDep - effMaxDep) / effMaxDep; priceScore -= Math.min(Math.round(over * 60), 30); }
+        // 월세 초과 감점
+        if (propMon > effMaxMon) { const over = (propMon - effMaxMon) / effMaxMon; priceScore -= Math.min(Math.round(over * 60), 30); }
+        score += Math.max(priceScore, 0);
       } else if (maxPrice && pn > 0) {
-        // 매매/전세: 기존 로직
         if (pn <= maxPrice) {
-          const ratio = pn / maxPrice;
-          if (ratio >= 0.90) score += 50;
-          else if (ratio >= 0.75) score += 42;
-          else if (ratio >= 0.50) score += 30;
-          else score += 15;
+          score += 30;
         } else {
-          const overRate = (pn - maxPrice) / maxPrice;
-          if (overRate <= 0.05) score += 20;
-          else if (overRate <= 0.10) score += 5;
-          else score -= 30;
+          const overPct = ((pn - maxPrice) / maxPrice) * 100;
+          score += Math.max(30 - Math.round(overPct), 0); // 5% 초과마다 5점 감점
         }
       } else if (minPrice && pn > 0) {
-        if (pn >= minPrice) {
-          const overRate = (pn - minPrice) / minPrice;
-          if (overRate <= 0.15) score += 50;
-          else if (overRate <= 0.30) score += 35;
-          else score += 20;
-        } else score -= 20;
+        if (pn >= minPrice) score += 30;
+        else score += Math.max(30 - Math.round(((minPrice - pn) / minPrice) * 60), 0);
       }
 
-      // ② 가성비 (0~20점) — 같은 가격이면 넓은 게 좋음
-      const areaStr = r.property?.area || '';
-      const pyeongMatch = areaStr.match(/(\d+)평/);
-      const sqmMatch = areaStr.match(/(\d+)㎡/);
-      const pyeong = pyeongMatch ? parseInt(pyeongMatch[1]) : (sqmMatch ? Math.round(parseInt(sqmMatch[1]) / 3.305785) : 0);
-      if ((wantedMinArea || wantedMaxArea) && pyeong > 0) {
-        const targetArea = wantedMinArea || wantedMaxArea!;
-        const areaDiff = Math.abs(pyeong - targetArea) / targetArea;
-        if (areaDiff <= 0.1) score += 20;
-        else if (areaDiff <= 0.25) score += 14;
-        else if (areaDiff <= 0.50) score += 7;
-      } else if (pn > 0 && pyeong > 0) {
-        const ppPrice = pn / pyeong;
-        if (ppPrice < 500) score += 15;
-        else if (ppPrice < 1000) score += 10;
-        else if (ppPrice < 2000) score += 5;
+      // ③ 위치/입지 (20점) — 동 일치 20점, 인접 15점, 3km 10점
+      if (wantedLocation) {
+        const propLoc = r.property?.location || '';
+        if (propLoc.includes(wantedLocation)) {
+          score += 20; // 동/구 완전 일치
+        } else if (r.lat && r.lng && DISTRICT_COORDS[wantedLocation]) {
+          const coord = DISTRICT_COORDS[wantedLocation];
+          const dist = haversineDistance(coord.lat, coord.lng, r.lat, r.lng);
+          if (dist <= 1) score += 15;
+          else if (dist <= 3) score += 10;
+          else if (dist <= 5) score += 5;
+        }
       }
 
-      // ③ 위치 근접도 (0~10점)
-      if (wantedLocation && DISTRICT_COORDS[wantedLocation] && r.lat && r.lng) {
-        const coord = DISTRICT_COORDS[wantedLocation];
-        const dist = haversineDistance(coord.lat, coord.lng, r.lat, r.lng);
-        if (dist <= 0.5) score += 10;
-        else if (dist <= 1.0) score += 8;
-        else if (dist <= 2.0) score += 5;
-        else if (dist <= 3.0) score += 2;
+      // ④ 매물유형 (15점) — 아파트/빌라/오피스텔 일치
+      if (wantedCats.length) {
+        const propCat = r.property?.category || '';
+        const catMatch = wantedCats.includes(propCat) || wantedCats.some((c: string) => propTags.includes(c));
+        if (catMatch) score += 15;
       }
 
-      // ④ 계약가능 (0~8점)
-      const status = r.trade_status || '계약가능';
-      if (status === '계약가능') score += 8;
-
-      // ⑤ 최신 등록 (0~7점)
-      if (r.created_at) {
-        const days = (Date.now() - new Date(r.created_at).getTime()) / (1000*60*60*24);
-        if (days <= 1) score += 7;
-        else if (days <= 3) score += 5;
-        else if (days <= 7) score += 3;
-        else if (days <= 14) score += 1;
+      // ⑤ 특수조건 태그 (20점, 캡) — 태그당 5점, HUG 10점
+      const specialTags = clientTags.filter((t: string) =>
+        !['서울','매매','전세','월세','반전세','아파트','오피스텔','원투룸','빌라','원룸','투룸','쓰리룸','주택','상가','사무실','건물','토지','공장창고'].includes(t) &&
+        !t.includes('구') && !t.includes('동') && !t.includes('억') && !t.includes('평') && !t.includes('보증금') && !t.includes('월세')
+      );
+      let tagScore = 0;
+      for (const t of specialTags) {
+        if (propTags.includes(t)) {
+          tagScore += (t === 'HUG가능' || t === '무융자') ? 10 : 5;
+        }
       }
+      score += Math.min(tagScore, 20); // 캡 20점
 
       // ⑥ 입주시기 매칭 (0~15점, -10점)
       if (wantedMoveBy) {
@@ -662,10 +632,11 @@ Deno.serve(async (req) => {
         }
       }
 
-      // ⑦ 임베딩 보너스 (보험 — 최대 5점, 태그 점수 대비 5% 이하)
+      // ⑦ 임베딩 보너스 (보험 — 최대 5점)
       if (r.similarity) score += Math.min(Math.round(r.similarity * 5), 5);
 
-      return { ...r, _score: score };
+      // ★ 80점 이상 = 강추 매물
+      return { ...r, _score: score, _recommend: score >= 80 };
     });
 
     results.sort((a: any, b: any) => {
@@ -712,7 +683,8 @@ Deno.serve(async (req) => {
       lng: r.lng,
       created_at: r.created_at,
       tags: r.tags || [],
-      _score: r._score || null
+      _score: r._score || null,
+      _recommend: r._recommend || false
     }));
 
     console.log(`매칭 완료: ${Date.now() - startTime}ms | ${results.length}건`);
