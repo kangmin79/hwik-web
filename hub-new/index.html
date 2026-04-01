@@ -3224,7 +3224,10 @@ const PanelShared = (() => {
       html+=`<div class="section-label" style="color:${isMine?'var(--primary)':'var(--text-sub)'};">${esc(agentLabel)} (${list.length}건)</div>`;
       list.forEach(c=>{const p=c.property||{};
         const feats=(p.features||[]).slice(0,3);
+        const photos=c.photos||[];
         const toggleFn=`(function(e){e.stopPropagation();var d=document.getElementById('sd-${c.id}');if(d)d.style.display=d.style.display==='none'?'':'none';})`;
+        let thumbHtml='';
+        if(photos.length){thumbHtml=`<div style="width:44px;height:44px;border-radius:6px;overflow:hidden;flex-shrink:0;position:relative;"><img src="${esc(photos[0])}" style="width:100%;height:100%;object-fit:cover;">${photos.length>1?`<span style="position:absolute;bottom:1px;right:2px;font-size:9px;color:#fff;background:rgba(0,0,0,0.6);padding:1px 4px;border-radius:3px;">${photos.length}</span>`:''}</div>`;}
         html+=`<div class="item" style="flex-wrap:wrap;cursor:pointer;" onclick="${toggleFn}(event)">
           ${propertyTypeTag(c)}
           <div class="item-body" style="flex:1;min-width:0;">
@@ -3232,9 +3235,15 @@ const PanelShared = (() => {
             <div class="item-sub">${[p.price,p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
             <div style="display:flex;gap:3px;margin-top:2px;flex-wrap:wrap;">${feats.map(f=>`<span style="padding:1px 5px;border-radius:3px;background:var(--primary-bg);font-size:9px;font-weight:600;color:var(--primary);">${esc(f)}</span>`).join('')}${c._room_name?`<span style="padding:1px 5px;border-radius:3px;background:rgba(99,102,241,0.08);font-size:9px;font-weight:600;color:#6366f1;">${esc(c._room_name)}</span>`:''}${!isMine&&c._agent_name?`<span style="padding:1px 5px;border-radius:3px;background:rgba(249,115,22,0.08);font-size:9px;font-weight:600;color:#f97316;">${esc(c._agent_name)}</span>`:''}</div>
           </div>
-          ${isMine?`<button class="prop-action-btn delete" onclick="event.stopPropagation();PanelShared.unshare('${c.id}','${c.room_id||''}')">해제</button>`:`<button onclick="${toggleFn}(event)" style="padding:4px 12px;border-radius:6px;border:1.5px solid #60a5fa;background:rgba(96,165,250,0.06);color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">상세</button>`}
+          ${thumbHtml}
+          <div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation();">
+            <button onclick="${toggleFn}(event)" style="padding:4px 12px;border-radius:6px;border:1.5px solid #60a5fa;background:rgba(96,165,250,0.06);color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer;">상세</button>
+            <button onclick="PanelCards.share1('${c.id}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #22c55e;background:rgba(34,197,94,0.06);color:#22c55e;font-size:11px;font-weight:700;cursor:pointer;">보내기</button>
+            ${isMine?`<button onclick="PanelShared.unshare('${c.id}','${c.room_id||''}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #ef4444;background:rgba(239,68,68,0.06);color:#ef4444;font-size:11px;font-weight:700;cursor:pointer;">해제</button>`:''}
+          </div>
           <div id="sd-${c.id}" style="display:none;width:100%;margin-top:8px;padding:12px;border-radius:10px;background:var(--bg-input);font-size:12px;" onclick="event.stopPropagation();">
             ${!isMine&&c._agent_name?`<div style="font-weight:700;margin-bottom:6px;">🏢 ${esc(c._agent_name)}${c._agent_phone?' · <a href="tel:'+esc(c._agent_phone)+'" style="color:#60a5fa;">'+esc(c._agent_phone)+'</a>':''}${c._room_name?' · <span style="color:#6366f1;">'+esc(c._room_name)+'</span>':''}</div>`:''}
+            ${photos.length?`<div style="display:flex;gap:6px;margin-bottom:8px;overflow-x:auto;">${photos.map(u=>`<img src="${esc(u)}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0;cursor:pointer;" onclick="window.open('${esc(u)}','_blank')">`).join('')}</div>`:''}
             ${c.agent_comment?`<div style="color:var(--primary);margin-bottom:4px;">${esc(c.agent_comment)}</div>`:''}
             ${c.private_note?.shared_memo?`<div style="color:#f97316;margin-bottom:4px;">🔶 ${esc(c.private_note.shared_memo)}</div>`:''}
             ${p.rawText?`<div style="color:var(--text-sub);white-space:pre-wrap;">${esc(p.rawText)}</div>`:''}
