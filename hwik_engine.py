@@ -3240,7 +3240,7 @@ def _line_emoji(line_name):
     return "🚇"  # 기본
 
 
-def generate_documents(detail, sales, jeonse, wolse, nearby_sales, schools, output_dir, property_type="apt", supply_map=None, stations=None):
+def generate_documents(detail, sales, jeonse, wolse, nearby_sales, schools, output_dir, property_type="apt", supply_map=None, stations=None, is_update=False):
     """
     docx 원고 8개 생성
     01_블로그제목 / 02_아파트개요 / 03_매매카드 / 05_전세카드 /
@@ -3313,13 +3313,21 @@ def generate_documents(detail, sales, jeonse, wolse, nearby_sales, schools, outp
     # 단지명만 (suffix 없이) — 짧은 제목용
     name_short = f"{prefix}{apt_name}" if prefix else apt_name
 
-    title_templates = [
-        # 1. 질문형
-        f"{apt_name}{apt_suffix} 지금 얼마? {price_str} [{year} 실거래가]",
-        # 2. 정보형
-        f"[{year} 최신] {gu if gu else ''} {name_full} {price_str} 실거래가 분석".strip(),
-        # 3. 혼합형
-        f"{name_full} {year}년 {price_str} 실거래가 시세 총정리",
+    month = datetime.now().month
+    if is_update:
+        title_templates = [
+            f"[{year}년 {month}월 업데이트] {apt_name}{apt_suffix} {price_str} 실거래가",
+            f"{apt_name} {year}.{month:02d} 최신 시세 업데이트 — {price_str}",
+            f"[시세 변동] {name_full} {year}년 {month}월 {price_str} 실거래가",
+        ]
+    else:
+        title_templates = [
+            # 1. 질문형
+            f"{apt_name}{apt_suffix} 지금 얼마? {price_str} [{year} 실거래가]",
+            # 2. 정보형
+            f"[{year} 최신] {gu if gu else ''} {name_full} {price_str} 실거래가 분석".strip(),
+            # 3. 혼합형
+            f"{name_full} {year}년 {price_str} 실거래가 시세 총정리",
     ]
     title = random.choice(title_templates)
 
@@ -3846,6 +3854,30 @@ def run_pipeline(user_input, output_base=None, auto_mode=False, photo_paths=None
     lawd_cd  = detail["bjd_code"][:5]
     road_address = detail.get("doroJuso", "")
 
+    # ── 중복 포스팅 체크 ──
+    _is_update_mode = False
+    _prev_post = None
+    existing_posts = [p for p in load_blog_posts() if p.get("apt_name") == apt_name]
+    if existing_posts:
+        latest = max(existing_posts, key=lambda p: p.get("created_at", ""))
+        days_ago = (datetime.now() - datetime.fromisoformat(latest["created_at"])).days
+        if days_ago < 90:
+            print(f"\n⚠️  '{apt_name}' 이미 {days_ago}일 전 포스팅됨")
+            print(f"   URL: {latest.get('blog_url', '없음')}")
+            print(f"   3개월(90일) 이내 → 중복 콘텐츠 위험!")
+            if not auto_mode:
+                answer = input("   계속 진행? (y=업데이트 원고 / n=중단): ").strip().lower()
+                if answer != "y":
+                    print("   → 중단됨")
+                    return
+            _is_update_mode = True
+            _prev_post = latest
+            print(f"   → 업데이트 원고 모드로 전환")
+        else:
+            print(f"\n📝 '{apt_name}' 이전 포스팅 {days_ago}일 전 → 업데이트 원고 생성")
+            _is_update_mode = True
+            _prev_post = latest
+
     # 도로명+본번 추출 (매매 PRIMARY 필터용)
     road_nm, road_bonbun = _extract_road_info(road_address)
 
@@ -4013,7 +4045,7 @@ def run_pipeline(user_input, output_base=None, auto_mode=False, photo_paths=None
     # 10. 원고 docx
     generate_documents(detail, sales, jeonse, wolse, nearby_sales, schools,
                        output_dir, property_type=property_type, supply_map=supply_map,
-                       stations=stations_nearby)
+                       stations=stations_nearby, is_update=_is_update_mode)
 
     # 11. 매물 사진 Vision 분석 → 12_매물사진원고.docx
     if photo_paths:
