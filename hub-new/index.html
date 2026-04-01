@@ -926,12 +926,16 @@ const Data = (() => {
     const p=property, cat=categorizeProperty(p.rawText||'',p.room||'',p.area||'',p.floor||'');
     if (cat==='아파트'||cat==='오피스텔') {
       const complex=(p.complex||'').replace(/아파트|오피스텔/g,'').trim();
-      if (complex) {
-        let q=sb().from('apartments').select('lat,lon,kapt_name').ilike('kapt_name',`%${complex}%`);
+      if (complex&&complex.length>=2) {
         const dong=(p.location||'').match(/([가-힣]+동)/)?.[1], gu=(p.location||'').match(/([가-힣]+구)/)?.[1];
-        if(dong) q=q.ilike('umd_nm',`%${dong}%`); else if(gu) q=q.ilike('sgg',`%${gu}%`);
-        const { data } = await q.limit(1);
-        if (data?.[0]?.lat) return {lat:data[0].lat, lng:data[0].lon};
+        const parts=complex.split(/\s+/).filter(w=>w.length>=2);
+        for(const keyword of [complex,...parts]){
+          let q=sb().from('apartments').select('lat,lon,kapt_name').ilike('kapt_name',`%${keyword}%`);
+          if(dong) q=q.ilike('umd_nm',`%${dong}%`); else if(gu) q=q.ilike('sgg',`%${gu}%`);
+          const{data}=await q.limit(3);
+          if(data?.length===1&&data[0].lat)return{lat:data[0].lat,lng:data[0].lon};
+          if(data?.length>1){const exact=data.find(d=>d.kapt_name?.replace(/\s/g,'').includes(complex.replace(/\s/g,'')));if(exact?.lat)return{lat:exact.lat,lng:exact.lon};}
+        }
       }
     }
     for (const query of [p.address, p.location&&p.complex?`${p.location} ${p.complex}`:null, p.complex, p.location].filter(Boolean)) {
@@ -983,11 +987,23 @@ const Data = (() => {
     // ★ 1순위: 단지명 → apartments DB (가장 정확)
     const complex=(p.complex||'').replace(/아파트|오피스텔/g,'').trim();
     if(complex&&complex.length>=2){
-      let q=sb().from('apartments').select('lat,lon,kapt_name').ilike('kapt_name',`%${complex}%`);
       const dong=(p.location||'').match(/([가-힣]+동)/)?.[1],gu=(p.location||'').match(/([가-힣]+구)/)?.[1];
-      if(dong)q=q.ilike('umd_nm',`%${dong}%`);else if(gu)q=q.ilike('sgg',`%${gu}%`);
-      const{data}=await q.limit(1);
-      if(data?.[0]?.lat){await sb().from('cards').update({lat:data[0].lat,lng:data[0].lon}).eq('id',cardId);return;}
+      // 단지명에서 브랜드+지역 분리 (예: "수유 래미안" → ["수유","래미안"])
+      const parts=complex.split(/\s+/).filter(w=>w.length>=2);
+      for(const keyword of [complex,...parts]){
+        let q=sb().from('apartments').select('lat,lon,kapt_name').ilike('kapt_name',`%${keyword}%`);
+        // 지역으로 한정 (동 > 구)
+        if(dong)q=q.ilike('umd_nm',`%${dong}%`);else if(gu)q=q.ilike('sgg',`%${gu}%`);
+        const{data}=await q.limit(3);
+        // 1건만 매칭되면 확실 → 좌표 사용
+        if(data?.length===1&&data[0].lat){await sb().from('cards').update({lat:data[0].lat,lng:data[0].lon}).eq('id',cardId);return;}
+        // 여러 건이면 가장 이름 유사한 것 선택
+        if(data?.length>1){
+          const exact=data.find(d=>d.kapt_name?.replace(/\s/g,'').includes(complex.replace(/\s/g,'')));
+          if(exact?.lat){await sb().from('cards').update({lat:exact.lat,lng:exact.lon}).eq('id',cardId);return;}
+          // 정확 매칭 없으면 → 건너뜀 (틀린 좌표보다 없는 게 나음)
+        }
+      }
     }
     // 역이름
     const stM=allText.match(/(\S+역)/);
