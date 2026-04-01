@@ -2443,7 +2443,8 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
       <div class="edit-grid"><div class="edit-field"><label>거래유형</label><select id="eType"><option ${p.type==='매매'?'selected':''}>매매</option><option ${p.type==='전세'?'selected':''}>전세</option><option ${p.type==='월세'?'selected':''}>월세</option></select></div><div class="edit-field"><label>가격</label><input id="ePrice" value="${esc(p.price||'')}"></div><div class="edit-field"><label>단지명</label><input id="eComplex" value="${esc(p.complex||'')}"></div><div class="edit-field"><label>위치</label><input id="eLocation" value="${esc(p.location||'')}"></div><div class="edit-field"><label>면적</label><input id="eArea" value="${esc(p.area||'')}"></div><div class="edit-field"><label>층</label><input id="eFloor" value="${esc(p.floor||'')}"></div></div>
       <div class="edit-field" style="margin-top:12px;"><label>특징 태그</label><div class="edit-tags" id="eTags">${(p.features||[]).map(f=>`<span class="edit-chip">${esc(f)} <button onclick="this.parentElement.remove()">✕</button></span>`).join('')}<input class="edit-tag-input" placeholder="태그 추가 (Enter)" onkeydown="if(event.key==='Enter'){event.preventDefault();PanelCards.addTag(this)}"></div></div>
       <div class="edit-field" style="margin-top:12px;"><label>사진</label><div class="edit-photos" id="ePhotos">${(c.photos||[]).map(u=>`<div class="edit-photo-thumb"><img src="${u}"><button onclick="this.parentElement.remove()">✕</button></div>`).join('')}<button class="edit-photo-add" onclick="document.getElementById('ePhotoIn').click()">+</button><input type="file" id="ePhotoIn" accept="image/*" multiple style="display:none" onchange="PanelCards.addPhotos(event)"></div></div>
-      <div class="edit-field" style="margin-top:12px;"><label>손님에게 한마디</label><textarea id="eComment" class="edit-textarea">${esc(c.agent_comment||'')}</textarea></div>
+      <div class="edit-field" style="margin-top:12px;"><label>손님에게 한마디</label><textarea id="eComment" class="edit-textarea" style="min-height:50px;border:2px solid #4ecdc4;">${esc(c.agent_comment||'')}</textarea><div style="font-size:10px;color:var(--text-light);margin-top:2px;">✓ 손님 카드에 표시됩니다</div></div>
+      <div class="edit-field" style="margin-top:12px;"><label>비공개 메모</label><textarea id="eMemo" class="edit-textarea" style="min-height:50px;border:2px solid #6366f1;">${esc((c.private_note||{}).memo||'')}</textarea><div style="font-size:10px;color:var(--text-light);margin-top:2px;">🔒 나만 볼 수 있습니다</div></div>
       <div class="edit-buttons"><button class="btn-cancel" onclick="this.closest('.modal-overlay').classList.remove('show')">취소</button><button class="btn-primary" style="width:auto;padding:10px 24px;" onclick="PanelCards.saveEdit('${c.id}')">저장</button></div>
     </div></div>`;m.classList.add('show');
   }
@@ -2458,7 +2459,9 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
     let newUrls=[];if(_editNewPhotos.length)newUrls=await Data.uploadPhotos(id,_editNewPhotos);
     const coords=await Data.matchCoords(prop);if(coords.lat){prop.lat=coords.lat;prop.lng=coords.lng;}
     const _pf=Data.parsePriceFields(prop.price,prop.type);
-    await Auth.sb.from('cards').update({property:prop,photos:[...existPhotos,...newUrls],agent_comment:document.getElementById('eComment').value,price_number:_pf.price_number,deposit:_pf.deposit,monthly_rent:_pf.monthly_rent}).eq('id',id);
+    const memoVal=document.getElementById('eMemo')?.value||'';
+    const pn={...(c.private_note||{}),memo:memoVal||null};
+    await Auth.sb.from('cards').update({property:prop,photos:[...existPhotos,...newUrls],agent_comment:document.getElementById('eComment').value,private_note:pn,price_number:_pf.price_number,deposit:_pf.deposit,monthly_rent:_pf.monthly_rent}).eq('id',id);
     Data.updateEmbedding(id);Data.triggerAutoMatch(id);
     document.getElementById('editModal').classList.remove('show');_editNewPhotos=[];Toast.show('수정 완료');
     await Data.loadMyCards(0,true);renderList();
