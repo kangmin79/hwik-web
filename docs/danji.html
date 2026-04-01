@@ -314,7 +314,8 @@ function render() {
     const active = c === currentPyeong ? ' active' : '';
     let label = c + '㎡';
     if (showSupply && pm[c] && pm[c].supply) {
-      label = Math.round(pm[c].supply) + '㎡';
+      const supplyVal = Math.round(pm[c].supply);
+      label = supplyVal + '㎡(' + c + ')';
     }
     return `<div class="pyeong-btn${active}" data-cat="${esc(c)}">${esc(label)}</div>`;
   }).join('');
