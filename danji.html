@@ -321,7 +321,8 @@ function render() {
     let label = c + '㎡';
     if (showSupply && pm[c] && pm[c].supply) {
       const supplyVal = Math.round(pm[c].supply);
-      label = supplyVal + '㎡(' + c + ')';
+      const pyeong = Math.round(supplyVal / 3.3058);
+      label = pyeong + '평(' + supplyVal + '㎡)';
     }
     return `<div class="pyeong-btn${active}" data-cat="${esc(c)}">${esc(label)}</div>`;
   }).join('');
