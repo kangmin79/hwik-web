@@ -2191,7 +2191,7 @@ const PanelRegister = (() => {
       const _pf=Data.parsePriceFields(property.price,property.type);
 
       const cardData={
-        id:linkId, agent_id:Auth.user.id, style:'memo', property,
+        id:linkId, agent_id:Auth.user.id, style:'memo', color:property.type==='전세'?'mint':property.type==='매매'?'coral':'blue', property,
         private_note:{memo:privateMemo||null,shared_memo:sharedMemo||null,rawText:text},
         agent_comment:comment||r.agent_comment||null,
         lat:finalLat, lng:finalLng,
