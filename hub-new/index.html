@@ -412,6 +412,10 @@ body.dark .phone-screen{background:#0f172a;}
 .tl-tag.방문{background:rgba(74,222,128,0.1);color:#4ade80;}
 .tl-tag.매물소개{background:rgba(251,146,60,0.1);color:#fb923c;}
 .tl-tag.계약{background:rgba(248,113,113,0.1);color:#f87171;}
+.tl-tag.서류{background:rgba(139,92,246,0.1);color:#8b5cf6;}
+.tl-tag.대출{background:rgba(14,165,233,0.1);color:#0ea5e9;}
+.tl-tag.세금{background:rgba(234,179,8,0.1);color:#ca8a04;}
+.tl-tag.정산{background:rgba(16,185,129,0.1);color:#10b981;}
 .tl-tag.메모{background:rgba(148,163,184,0.06);color:#94a3b8;}
 .tl-body{flex:1;}
 .tl-text{font-size:13px;font-weight:500;}
@@ -2857,10 +2861,14 @@ const PanelClient = (() => {
   function _parseNote(text){
     const r={type:'메모',content:text,alert_date:null,hasTime:false,timeStr:'',urgent:false};if(!text)return r;
     const t=text;
-    // 타입 판별
-    if(/방문|현장|보러|봤|투어|임장|이사|입주|퇴거|명도|인도/.test(t))r.type='방문';
+    // 타입 판별 (우선순위: 계약 > 서류 > 대출 > 방문 > 상담 > 매물소개)
+    if(/계약|사인|도장|잔금|입금|중도금|계약금|특약|날인|가계약|배액|계약서/.test(t))r.type='계약';
+    else if(/등기|등기부|인감증명|건축물대장|확정일자|전입신고|HUG|전세보증보험|전세권|소유권이전|말소|등기필증|권리증/.test(t))r.type='서류';
+    else if(/대출|은행|디딤돌|버팀목|신생아특례|LTV|대출실행|대출승인|대출상담/.test(t))r.type='대출';
+    else if(/법무사|취득세|양도세|실거래신고|인지세|종부세|세금/.test(t))r.type='세금';
+    else if(/관리비정산|공과금|복비|중개수수료|열쇠인수|열쇠|정산/.test(t))r.type='정산';
+    else if(/방문|현장|보러|봤|투어|임장|이사|입주|퇴거|명도|인도/.test(t))r.type='방문';
     else if(/상담|전화|통화|연락|문의|콜백|콜|부재|재연락|답장|회신|문자|전달/.test(t))r.type='상담';
-    else if(/계약|사인|도장|잔금|입금|중도금|계약금|특약|날인|서류|등기|확인서|인감/.test(t))r.type='계약';
     else if(/보내|전송|카톡|소개|공유|휙/.test(t))r.type='매물소개';
     // 긴급
     if(/급|빨리|긴급|ASAP|당장|즉시|최대한\s*빨리/.test(t))r.urgent=true;
@@ -2923,7 +2931,7 @@ const PanelClient = (() => {
   function pvNote(text){const el=document.getElementById('notePv');if(!el)return;if(!text.trim()){el.style.display='none';return;}
     const p=_parseNote(text),parts=[];
     if(p.urgent)parts.push('<span style="color:#ef4444;">🔴 긴급</span>');
-    const tc={'방문':'#4ecdc4','상담':'#60a5fa','계약':'#f59e0b','매물소개':'#a78bfa','메모':'#64748b'};
+    const tc={'방문':'#4ecdc4','상담':'#60a5fa','계약':'#f59e0b','매물소개':'#a78bfa','서류':'#8b5cf6','대출':'#0ea5e9','세금':'#ca8a04','정산':'#10b981','메모':'#64748b'};
     parts.push(`<span style="color:${tc[p.type]}">${p.type}</span>`);
     if(p.alert_date){const d=new Date(p.alert_date),days=['일','월','화','수','목','금','토'];parts.push(`<span style="color:#facc15;">📅 ${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]})${p.hasTime?' '+p.timeStr:''}</span>`);}
     el.innerHTML=parts.join(' · ');el.style.display='';}
@@ -2941,6 +2949,12 @@ const PanelClient = (() => {
     '베란다확장':'베란다확장','시스템에어컨':'시스템에어컨',
     '복층':'복층','테라스':'테라스',
     '즉시입주':'즉시입주','바로입주':'즉시입주',
+    // 금융
+    'HUG':'HUG가능','허그':'HUG가능','안심전세':'HUG가능','보증보험':'HUG가능',
+    '무융자':'무융자','융자없음':'무융자',
+    '대출가능':'대출가능','디딤돌':'대출가능','버팀목':'대출가능','신생아특례':'대출가능',
+    // 신조어
+    '초품아':'초품아','슬세권':'슬세권','런세권':'런세권',
   };
   const _guCoords={'강남구':{lat:37.5172,lng:127.0473},'강동구':{lat:37.5301,lng:127.1238},'강북구':{lat:37.6397,lng:127.0255},'강서구':{lat:37.5510,lng:126.8496},'관악구':{lat:37.4784,lng:126.9516},'광진구':{lat:37.5384,lng:127.0822},'구로구':{lat:37.4954,lng:126.8874},'금천구':{lat:37.4519,lng:126.9020},'노원구':{lat:37.6542,lng:127.0568},'도봉구':{lat:37.6688,lng:127.0471},'동대문구':{lat:37.5744,lng:127.0400},'동작구':{lat:37.5124,lng:126.9393},'마포구':{lat:37.5633,lng:126.9085},'서대문구':{lat:37.5791,lng:126.9368},'서초구':{lat:37.4836,lng:127.0327},'성동구':{lat:37.5633,lng:127.0371},'성북구':{lat:37.5894,lng:127.0167},'송파구':{lat:37.5145,lng:127.1059},'양천구':{lat:37.5170,lng:126.8665},'영등포구':{lat:37.5264,lng:126.8963},'용산구':{lat:37.5326,lng:126.9906},'은평구':{lat:37.6027,lng:126.9291},'종로구':{lat:37.5735,lng:126.9790},'중구':{lat:37.5641,lng:126.9979},'중랑구':{lat:37.6063,lng:127.0925}};
   async function _updateClientTags(cardId,text){
