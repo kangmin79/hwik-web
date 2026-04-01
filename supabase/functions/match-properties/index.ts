@@ -30,37 +30,12 @@ Deno.serve(async (req) => {
     // 1. 손님 카드 조회
     const { data: clientCard, error: clientError } = await supabase
       .from('cards')
-      .select('id, property, private_note, embedding, agent_id, wanted_trade_type, wanted_categories, wanted_conditions, move_in_date, tags, required_tags, price_number, deposit, monthly_rent')
+      .select('id, property, private_note, agent_id, wanted_trade_type, wanted_categories, wanted_conditions, move_in_date, tags, required_tags, excluded_tags, price_number, deposit, monthly_rent')
       .eq('id', client_card_id)
       .single();
 
     if (clientError || !clientCard) throw new Error('손님 카드를 찾을 수 없습니다');
     if (clientCard.property?.type !== '손님') throw new Error('손님 카드가 아닙니다');
-
-    // ★ 임베딩 없으면 즉시 생성
-    if (!clientCard.embedding) {
-      const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-      if (!OPENAI_API_KEY) throw new Error('임베딩 생성 불가 (API 키 없음)');
-
-      const cp = clientCard.property || {};
-      const memo = clientCard.private_note?.memo || '';
-      const catKo = {apartment:'아파트',officetel:'오피스텔',room:'원투룸',commercial:'상가',office:'사무실'}[cp.category] || '';
-      const embedText = [cp.type, catKo, cp.price, cp.location, cp.complex, cp.area, cp.floor, cp.room, (cp.features||[]).join(' '), cp.moveIn, memo].filter(Boolean).join(' ');
-
-      const embedResp = await fetch('https://api.openai.com/v1/embeddings', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${OPENAI_API_KEY}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: 'text-embedding-3-small', input: embedText })
-      });
-      const embedData = await embedResp.json();
-      const embedding = embedData.data?.[0]?.embedding;
-      if (!embedding) throw new Error('임베딩 생성 실패');
-
-      // DB 업데이트
-      await supabase.from('cards').update({ embedding, search_text: embedText }).eq('id', client_card_id);
-      clientCard.embedding = embedding;
-      console.log('임베딩 즉시 생성 완료');
-    }
 
     // ★ 보안: 본인 손님만 조회 가능 (agent_id 필수)
     if (!agent_id) {
@@ -369,38 +344,26 @@ Deno.serve(async (req) => {
       }
     }
 
-    // SQL 결과 부족하면 벡터 검색 보조
-    if (results.length < 3 && clientCard.embedding) {
-      const { data: matches, error: matchError } = await supabase.rpc('match_properties_for_client', {
-        p_client_embedding: clientCard.embedding,
-        p_agent_id: effectiveAgentId,
-        p_trade_type: wantedTradeType,
-        p_threshold: threshold,
-        p_limit: limit * 5
-      });
-
-      if (!matchError && matches && matches.length > 0) {
+    // SQL 결과 부족하면 — 태그 조건 완화 (지역만으로 재검색)
+    if (results.length < 3 && mustTags.length) {
+      const { data: fallbackData } = await supabase
+        .from('cards')
+        .select('id, property, agent_id, agent_comment, price_number, deposit, monthly_rent, trade_status, photos, lat, lng, created_at, search_text, tags')
+        .eq('agent_id', effectiveAgentId)
+        .neq('property->>type', '손님')
+        .eq('trade_status', '계약가능')
+        .contains('tags', mustTags)
+        .order('created_at', { ascending: false })
+        .limit(limit * 3);
+      if (fallbackData?.length) {
         const existingIds = new Set(results.map(r => r.id));
-        let newResults = matches.filter((r: any) => !existingIds.has(r.id));
-        // ★ 벡터 결과에도 위치 필터 적용 (엉뚱한 지역 방지)
-        if (wantedLocation && DISTRICT_COORDS[wantedLocation]) {
-          const lc = DISTRICT_COORDS[wantedLocation];
-          newResults = newResults.filter((r: any) => {
-            if (!r.lat || !r.lng) {
-              const loc = r.property?.location || '';
-              return loc.includes(wantedLocation);
-            }
-            return haversineDistance(lc.lat, lc.lng, r.lat, r.lng) <= 5; // 5km
-          });
-        }
+        const newResults = fallbackData.filter((r: any) => !existingIds.has(r.id)).map((r: any) => ({ ...r, similarity: 0 }));
         results = [...results, ...newResults];
-        console.log(`벡터 보조: +${newResults.length}건 (총 ${results.length}건)`);
-      } else if (matchError) {
-        console.warn('RPC 실패:', matchError.message);
+        console.log(`태그 완화 재검색: +${newResults.length}건`);
       }
     }
 
-    // ★ Fix 8: 거래유형 하드필터 (벡터 보조 후 재확인, 복수 허용)
+    // ★ 거래유형 하드필터 (복수 허용)
     if (wantedTradeTypes.length) {
       results = results.filter((r: any) => wantedTradeTypes.includes(r.property?.type));
     }
@@ -680,8 +643,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      // ⑦ 벡터 유사도 보너스 (0~5점)
-      score += Math.round((r.similarity || 0) * 5);
+      // ⑦ (임베딩 제거됨 — 태그 매칭이 대체)
 
       return { ...r, _score: score };
     });
@@ -730,8 +692,7 @@ Deno.serve(async (req) => {
       lng: r.lng,
       created_at: r.created_at,
       tags: r.tags || [],
-      _score: r._score || null,
-      similarity: r.similarity ? Math.round(r.similarity * 100) / 100 : null
+      _score: r._score || null
     }));
 
     console.log(`매칭 완료: ${Date.now() - startTime}ms | ${results.length}건`);
