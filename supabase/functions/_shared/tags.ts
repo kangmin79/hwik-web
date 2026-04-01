@@ -260,6 +260,10 @@ export function generateTags(card: any): string[] {
   const dongMatch = loc.match(/([\uAC00-\uD7AF]+동)/);
   if (dongMatch && dongMatch[1] !== guMatch?.[1]) tags.push(dongMatch[1]);
 
+  // 1-1. 단지명 태그
+  const complex = (p.complex || '').replace(/아파트|오피스텔/g, '').trim();
+  if (complex && complex.length >= 2) tags.push(complex);
+
   // 2. 거래유형
   const type = p.type || '';
   if (type !== '손님') {

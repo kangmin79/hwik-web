@@ -980,6 +980,15 @@ const Data = (() => {
     if(!card||card.lat)return;
     const p=card.property||{},memo=card.private_note?.memo||'';
     const allText=[p.location,p.complex,p.price,memo,...(p.features||[])].filter(Boolean).join(' ');
+    // ★ 1순위: 단지명 → apartments DB (가장 정확)
+    const complex=(p.complex||'').replace(/아파트|오피스텔/g,'').trim();
+    if(complex&&complex.length>=2){
+      let q=sb().from('apartments').select('lat,lon,kapt_name').ilike('kapt_name',`%${complex}%`);
+      const dong=(p.location||'').match(/([가-힣]+동)/)?.[1],gu=(p.location||'').match(/([가-힣]+구)/)?.[1];
+      if(dong)q=q.ilike('umd_nm',`%${dong}%`);else if(gu)q=q.ilike('sgg',`%${gu}%`);
+      const{data}=await q.limit(1);
+      if(data?.[0]?.lat){await sb().from('cards').update({lat:data[0].lat,lng:data[0].lon}).eq('id',cardId);return;}
+    }
     // 역이름
     const stM=allText.match(/(\S+역)/);
     if(stM){const nm=stM[1].replace('역','');if(nm.length>=1){const{data}=await sb().from('stations').select('lat,lon').ilike('name','%'+nm+'%').limit(1);if(data?.[0]){await sb().from('cards').update({lat:data[0].lat,lng:data[0].lon}).eq('id',cardId);return;}}}
