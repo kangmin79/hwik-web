@@ -422,11 +422,11 @@ function render() {
   const curArea = currentPyeong ? parseInt(currentPyeong) : 84;
   const nearbyHtml = nearby.map(n => {
     const prices = n.prices || {};
-    // 현재 선택 평형 ±10㎡ 범위에서 가장 가까운 가격 찾기
+    // 현재 선택 평형에서 가장 가까운 가격 찾기 (±10㎡ 우선, 없으면 가장 가까운 면적)
     let bestKey = null, bestDiff = 999, bestPrice = null, bestExclu = null, bestSupply = null, bestDate = null;
     for (const k of Object.keys(prices)) {
       const diff = Math.abs(parseInt(k) - curArea);
-      if (diff <= 10 && diff < bestDiff) {
+      if (diff < bestDiff) {
         bestDiff = diff;
         bestKey = k;
         bestPrice = prices[k].price;
