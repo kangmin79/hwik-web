@@ -95,14 +95,16 @@ const SPACING_FIX: [RegExp, string][] = [
 
 // 텍스트에 오타 + 띄어쓰기 교정 적용
 export function fixTypos(text: string): string {
+  if (!text) return '';
   let result = text;
   // 1. 문자열 치환 (TYPO_MAP)
   for (const [typo, fix] of Object.entries(TYPO_MAP)) {
     if (result.includes(typo)) result = result.replace(new RegExp(typo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), fix);
   }
-  // 2. 정규식 패턴 (띄어쓰기)
+  // 2. 정규식 패턴 (띄어쓰기) — replacement가 함수일 수 있으므로 타입 분기
   for (const [pattern, replacement] of SPACING_FIX) {
-    result = result.replace(pattern, replacement as string);
+    if (typeof replacement === 'function') result = result.replace(pattern, replacement as any);
+    else result = result.replace(pattern, replacement);
   }
   return result;
 }

@@ -261,7 +261,7 @@ Deno.serve(async (req) => {
       else if (/소형|작은\s*집/.test(allText)) wantedMaxArea = 15;
     }
     // 숫자만 ("25평") → ±5
-    if (!wantedMinArea && !wantedMaxArea) { const areaMatch = allText.match(/(\d+)\s*평/); if (areaMatch) { const p = parseInt(areaMatch[1]); wantedMinArea = p - 5; wantedMaxArea = p + 5; } }
+    if (!wantedMinArea && !wantedMaxArea) { const areaMatch = allText.match(/(\d+)\s*평/); if (areaMatch) { const p = parseInt(areaMatch[1]); wantedMinArea = Math.max(p - 5, 1); wantedMaxArea = p + 5; } }
 
     // 방 수
     let wantedRooms: number | null = null;

@@ -487,7 +487,7 @@ ${text}`
 
     let parsedResult: any;
     try {
-      let jsonText = claudeData.content[0].text || '';
+      let jsonText = claudeData.content?.[0]?.text || '';
       jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       const firstBrace = jsonText.indexOf('{');
       const lastBrace = jsonText.lastIndexOf('}');
@@ -502,7 +502,7 @@ ${text}`
     parsedResult.location = normalizeText(parsedResult.location);
     parsedResult.complex = normalizeText(parsedResult.complex);
     if (parsedResult.floor) {
-      parsedResult.floor = parsedResult.floor.replace(/\s+/g, ' ').replace(/\d*호/g, '').trim();
+      parsedResult.floor = parsedResult.floor.replace(/\s+/g, ' ').replace(/\d+호/g, '').trim();
     }
 
     // ㎡ → 평 변환 보완

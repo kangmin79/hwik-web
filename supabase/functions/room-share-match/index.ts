@@ -142,7 +142,7 @@ Deno.serve(async (req) => {
       if (cp.category && cardCategory && cp.category !== cardCategory) return false;
 
       // 지역 체크
-      const clientLoc = [cp.location, memo].join(' ');
+      const clientLoc = [cp.location, c.search_text].join(' ');
       const guPattern = /(강남|서초|송파|마포|용산|성동|광진|영등포|강동|동작|관악|종로|중구|강서|양천|구로|노원|서대문|은평|중랑|도봉|동대문|성북|금천|강북)/;
       const clientGuMatch = clientLoc.match(guPattern);
       if (clientGuMatch) {
