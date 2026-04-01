@@ -993,6 +993,9 @@ const Data = (() => {
     // 동네명→역
     const dongs=['홍대','합정','상수','망원','연남','공덕','잠실','문정','가락','석촌','역삼','삼성','대치','논현','신사','청담','압구정','반포','서초','방배','이태원','한남','성수','건대','여의도','당산','천호','사당','신림','강남','신촌','종로','명동','혜화','왕십리','용산','동대문','신도림','구로','노원','수유'];
     for(const d of dongs){if(allText.includes(d)){const{data}=await sb().from('stations').select('lat,lon').ilike('name','%'+d+'%').limit(1);if(data?.[0]){await sb().from('cards').update({lat:data[0].lat,lng:data[0].lon}).eq('id',cardId);return;}}}
+    // 최종 fallback: 카카오 API로 동 좌표 검색
+    const locQuery=p.location||allText.match(/([\uAC00-\uD7AF]+구\s*[\uAC00-\uD7AF]+동)/)?.[1];
+    if(locQuery){try{const res=await fetch(`https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(locQuery)}&size=1`,{headers:{'Authorization':`KakaoAK ${HWIK_CONFIG.KAKAO_REST_KEY}`}});const d=await res.json();if(d.documents?.[0]){await sb().from('cards').update({lat:parseFloat(d.documents[0].y),lng:parseFloat(d.documents[0].x)}).eq('id',cardId);return;}}catch(_){}}
   }
 
   function triggerAutoMatch(cardId) { fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/auto-match`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({card_id:cardId})}).catch(e=>console.warn('auto-match failed:',e)); }
