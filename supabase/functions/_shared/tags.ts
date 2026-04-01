@@ -84,8 +84,7 @@ export const SYNONYM_MAP: Record<string, string> = {
   '환한':'채광좋음','밝은':'채광좋음','일조량':'채광좋음',
   '마트':'편의시설근처','편의점근처':'편의시설근처','상가근처':'편의시설근처',
   '의원':'병원근처','약국근처':'병원근처',
-  '반려동물':'애견가능','펫':'애견가능','강아지':'애견가능','고양이':'애견가능',
-  '바로입주':'즉시입주','입주가능':'즉시입주',
+  '반려동물':'애견가능','펫':'애견가능','고양이':'애견가능','캣프렌들리':'애견가능',
   '협의가능':'입주협의',
   // 상가
   '전면':'전면넓음','전면광고':'전면넓음',
@@ -203,17 +202,20 @@ export function floorBracket(floorStr: string): string {
 export function moveinBracket(moveIn: string): string {
   if (/즉시|바로|공실|입주가능/.test(moveIn)) return '즉시입주';
   if (/협의/.test(moveIn)) return '입주협의';
+  const now = new Date();
+  const thisYear = now.getFullYear();
   const ym = moveIn.match(/(20\d{2})\s*[-년.]\s*(\d{1,2})/);
   if (ym) {
     const y = parseInt(ym[1]), mo = parseInt(ym[2]);
-    if (y === 2026 && mo <= 6) return '2026상반기';
-    if (y === 2026 && mo > 6) return '2026하반기';
+    if (y === thisYear) return mo <= 6 ? `${y}상반기` : `${y}하반기`;
+    if (y === thisYear + 1) return mo <= 6 ? `${y}상반기` : `${y}하반기`;
     return `${y}년`;
   }
   const mm = moveIn.match(/(\d{1,2})\s*월/);
   if (mm) {
     const mo = parseInt(mm[1]);
-    return mo <= 6 ? '2026상반기' : '2026하반기';
+    const y = mo < now.getMonth() + 1 ? thisYear + 1 : thisYear;
+    return mo <= 6 ? `${y}상반기` : `${y}하반기`;
   }
   return '';
 }
@@ -308,18 +310,25 @@ export function generateTags(card: any): string[] {
 
   // 1. 지역 (계층: 서울 > 구 > 동)
   tags.push('서울'); // 현재 서울만
-  const loc = p.location || '';
-  const guMatch = loc.match(/([\uAC00-\uD7AF]+구)/);
+  const type = p.type || '';
+  // 손님 카드: property.location + rawText + private_note에서 지역 추출
+  const locSources = [p.location, p.rawText, card.private_note?.memo].filter(Boolean).join(' ');
+  const loc = locSources || '';
+  const guMatch = loc.match(/(강남구|서초구|송파구|마포구|용산구|성동구|광진구|영등포구|강동구|동작구|관악구|종로구|중구|강서구|양천구|구로구|노원구|서대문구|은평구|중랑구|도봉구|동대문구|성북구|금천구|강북구)/);
   if (guMatch) tags.push(guMatch[1]);
-  const dongMatch = loc.match(/([\uAC00-\uD7AF]+동)/);
-  if (dongMatch && dongMatch[1] !== guMatch?.[1]) tags.push(dongMatch[1]);
+  // "구" 없이 입력된 경우 보정
+  if (!guMatch) {
+    const guShort = loc.match(/(강남|서초|송파|마포|용산|성동|광진|영등포|강동|동작|관악|종로|강서|양천|구로|노원|서대문|은평|중랑|도봉|동대문|성북|금천|강북)/);
+    if (guShort) tags.push(guShort[1] + '구');
+  }
+  const dongMatch = loc.match(/([\uAC00-\uD7AF]{2,4}동)(?!\uAC00-\uD7AF)/);
+  if (dongMatch && !dongMatch[1].endsWith('구')) tags.push(dongMatch[1]);
 
   // 1-1. 단지명 태그
   const complex = (p.complex || '').replace(/아파트|오피스텔/g, '').trim();
   if (complex && complex.length >= 2) tags.push(complex);
 
   // 2. 거래유형
-  const type = p.type || '';
   if (type && type !== '손님') {
     const stdType = SYNONYM_MAP[type] || type;
     if (stdType && ['매매','전세','월세','반전세'].includes(stdType)) tags.push(stdType);
