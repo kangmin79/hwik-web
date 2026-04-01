@@ -186,6 +186,56 @@ def _danji_page_to_nearby(danji_data):
     return nearby_sales
 
 
+# ── 블로그 포스팅 URL 로컬 저장소 ──
+BLOG_POSTS_FILE = os.path.join(os.path.expanduser("~"), "Desktop", "원고", "_blog_posts.json")
+
+
+def save_blog_post(apt_name, gu, dong, blog_url, keywords=None):
+    """블로그 포스팅 URL을 로컬 JSON에 저장"""
+    posts = load_blog_posts()
+    posts.append({
+        "apt_name": apt_name,
+        "gu": gu,
+        "dong": dong,
+        "blog_url": blog_url,
+        "keywords": keywords or [],
+        "created_at": datetime.now().isoformat(),
+    })
+    os.makedirs(os.path.dirname(BLOG_POSTS_FILE), exist_ok=True)
+    with open(BLOG_POSTS_FILE, "w", encoding="utf-8") as f:
+        json.dump(posts, f, ensure_ascii=False, indent=2)
+    print(f"  📝 블로그 URL 저장: {apt_name} → {blog_url}")
+
+
+def load_blog_posts():
+    """저장된 블로그 포스팅 목록 로드"""
+    if os.path.exists(BLOG_POSTS_FILE):
+        try:
+            with open(BLOG_POSTS_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return []
+
+
+def find_related_posts(apt_name, gu, dong, max_count=3):
+    """같은 구/동의 관련 블로그 글 찾기"""
+    posts = load_blog_posts()
+    related = []
+    for p in posts:
+        if p["apt_name"] == apt_name:
+            continue  # 자기 자신 제외
+        score = 0
+        if p.get("dong") == dong:
+            score += 2  # 같은 동
+        elif p.get("gu") == gu:
+            score += 1  # 같은 구
+        if score > 0:
+            related.append((score, p))
+    related.sort(key=lambda x: -x[0])
+    return [p for _, p in related[:max_count]]
+
+
 SALES_API_URL      = 'http://apis.data.go.kr/1613000/RTMSDataSvcAptTradeDev/getRTMSDataSvcAptTradeDev'
 RENT_API_URL       = 'http://apis.data.go.kr/1613000/RTMSDataSvcAptRent/getRTMSDataSvcAptRent'
 OFFI_SALES_API_URL = 'https://apis.data.go.kr/1613000/RTMSDataSvcOffiTrade/getRTMSDataSvcOffiTrade'
@@ -3674,6 +3724,31 @@ def generate_documents(detail, sales, jeonse, wolse, nearby_sales, schools, outp
         "\n📊 매주 새로운 아파트 분석이 업데이트됩니다\n\n💗 이 정보가 유익하셨다면 공감 버튼 클릭!\n💬 알고 싶은 단지를 댓글로 남겨주세요",
     ])
     doc.add_paragraph(engagement)
+    # 관련 글 링크 (같은 구/동의 이전 포스팅)
+    related = find_related_posts(apt_name, gu, dong)
+    if related:
+        doc.add_paragraph("")
+        p = doc.add_paragraph()
+        r = p.add_run("📌 이 지역 다른 단지도 확인해보세요")
+        r.bold = True
+        r.font.size = Pt(13)
+        for rp in related:
+            p = doc.add_paragraph()
+            r = p.add_run(f"▸ {rp['apt_name']} 실거래가 시세 분석")
+            r.font.size = Pt(12)
+            r.font.color.rgb = RGBColor(0, 100, 200)
+            if rp.get("blog_url"):
+                from docx.oxml.ns import qn as _qn
+                from docx.oxml import OxmlElement
+                # 하이퍼링크 추가
+                hyperlink = OxmlElement("w:hyperlink")
+                hyperlink.set(_qn("r:id"), "")
+                hyperlink.set(_qn("w:history"), "1")
+                # 간단하게 URL을 괄호로 표시 (docx 하이퍼링크는 복잡)
+                p2 = doc.add_paragraph(f"  {rp['blog_url']}")
+                p2.runs[0].font.size = Pt(10)
+                p2.runs[0].font.color.rgb = RGBColor(100, 100, 100)
+
     doc.save(os.path.join(output_dir, "10_자료출처.docx"))
 
     # ── 11 연관태그 ─────────────────────────────────────
@@ -3999,7 +4074,12 @@ def run_pipeline(user_input, output_base=None, auto_mode=False, photo_paths=None
     print(f"  이미지: {len([p for p in img_paths.values() if p])}장")
     print(f"  매매:   {len(sales)}건 / 전세: {len(jeonse)}건 / 월세: {len(wolse)}건")
     print(f"  학교:   {len(schools)}개")
-    print(f"{'='*50}\n")
+    print(f"{'='*50}")
+
+    # 블로그 URL 등록 안내
+    print(f"\n💡 블로그에 포스팅 후 URL을 등록하면 다음 원고에 관련 글로 연결됩니다:")
+    print(f"   python hwik_engine.py --save-blog \"{apt_name}\" \"블로그URL\"")
+    print()
 
     # 메모리 명시적 해제 — 배치 실행 시 단지별 데이터 누적 방지
     del sales, jeonse, wolse, nearby_sales, nearby_jeonse, schools
@@ -4021,7 +4101,24 @@ if __name__ == "__main__":
                         help="배치 모드: 여러 단지 한번에 처리 (예: --batch '단지1' '단지2')")
     parser.add_argument("--output", default=None,
                         help="출력 디렉토리 (기본값: 바탕화면/원고)")
+    parser.add_argument("--save-blog", nargs=2, metavar=("단지명", "URL"),
+                        help="블로그 URL 저장 (예: --save-blog '래미안강동팰리스' 'https://blog.naver.com/...')")
     args = parser.parse_args()
+
+    # 블로그 URL 저장 모드
+    if args.save_blog:
+        apt, url = args.save_blog
+        # 단지명에서 구/동 추출 시도
+        gu, dong = "", ""
+        danji = fetch_danji_page_data(apt)
+        if danji:
+            loc = danji.get("location", "")
+            parts = loc.split(" ")
+            gu = parts[0] if len(parts) >= 1 else ""
+            dong = parts[1] if len(parts) >= 2 else ""
+        save_blog_post(apt, gu, dong, url, keywords=[gu, dong, apt])
+        print("✅ 저장 완료!")
+        sys.exit(0)
 
     if args.batch:
         # 배치 모드 — 에러 나도 다음 단지 계속 진행
