@@ -1274,9 +1274,19 @@ const Search = (() => {
       const isClient=query.split(/\s+/).some(w=>_clientKw.includes(w));
       if(mode==='my'&&isClient)mode='client';
 
+      // ★ 검색어에 지역 없으면 중개사 사무실 위치 자동 추가
+      const _guList=['강남','서초','송파','마포','용산','성동','광진','영등포','강동','동작','관악','종로','중구','강서','양천','구로','노원','서대문','은평','중랑','도봉','동대문','성북','금천','강북'];
+      const hasGu=_guList.some(g=>query.includes(g));
+      let finalQuery=query;
+      if(!hasGu){
+        const addr=Auth.getAgentInfo()?.address||'';
+        const guMatch=addr.match(/(강남|서초|송파|마포|용산|성동|광진|영등포|강동|동작|관악|종로|중구|강서|양천|구로|노원|서대문|은평|중랑|도봉|동대문|성북|금천|강북)구?/);
+        if(guMatch)finalQuery=guMatch[0]+(guMatch[0].endsWith('구')?'':'구')+' '+query;
+      }
+
       const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/search-property`,{
         method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},
-        body:JSON.stringify({query,limit:50,search_mode:mode})
+        body:JSON.stringify({query:finalQuery,limit:50,search_mode:mode})
       });
       const d=await res.json();
       if(d.error){Toast.show('검색 오류: '+d.error);return [];}
