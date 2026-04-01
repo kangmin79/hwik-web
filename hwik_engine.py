@@ -3368,6 +3368,11 @@ def generate_documents(detail, sales, jeonse, wolse, nearby_sales, schools, outp
             _add_bullet(doc,
                 f"{emoji} 역세권: {s['name']} ({s['line']}) 도보 {s['walk_min']}분 ({s['dist']:.0f}m)",
                 f"도보 {s['walk_min']}분")
+    p = doc.add_paragraph()
+    p.paragraph_format.space_before = Pt(12)
+    r = p.add_run("자료 제공: 휙(HWIK)")
+    r.font.size = Pt(9)
+    r.font.color.rgb = RGBColor(150, 150, 150)
     doc.save(os.path.join(output_dir, "02_아파트개요.docx"))
 
     # ── 03 매매 카드 ────────────────────────────────────
@@ -3610,7 +3615,7 @@ def generate_documents(detail, sales, jeonse, wolse, nearby_sales, schools, outp
     _add_section_title(doc, 8, f"{prefix}{apt_name} 종합 의견")
 
     p = doc.add_paragraph()
-    r = p.add_run("🔷 휙(Hwik) 전문가 의견")
+    r = p.add_run("🔷 휙(HWIK) 전문가의 종합 의견입니다")
     r.bold = True
     r.font.size = Pt(14)
     r.font.color.rgb = RGBColor(10, 132, 255)
@@ -3724,7 +3729,11 @@ def generate_documents(detail, sales, jeonse, wolse, nearby_sales, schools, outp
     r = p.add_run(f"국토교통부 실거래가 (최근 3년, {now.year}년 {now.month}월까지)")
     r.bold = True
     r.font.size = Pt(13)
-    p.add_run(", 카카오맵 지도")
+    p.add_run(", 카카오맵 지도 · ")
+    r2 = p.add_run("휙(HWIK) 분석")
+    r2.bold = True
+    r2.font.size = Pt(13)
+    r2.font.color.rgb = RGBColor(10, 132, 255)
 
     engagement = random.choice([
         "\n✨ 정보가 도움이 되셨다면 공감(💗) 한번 눌러주세요!\n궁금하신 점이나 관심지역은 댓글로 남겨주세요 😊",
