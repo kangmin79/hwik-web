@@ -3295,8 +3295,30 @@ const PanelShared = (() => {
     }else{
       const [shR,myR]=await Promise.all([Search.vector(_sharedQuery,'shared'),Search.vector(_sharedQuery,'my')]);
       let html='';
-      if(myR.length){html+=`<div style="font-size:13px;font-weight:700;color:var(--primary);margin:12px 0 8px;">내 매물 (${myR.length>5?'상위 5건':myR.length+'건'})</div>`+myR.slice(0,5).map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item">${propertyTypeTag(c)}<div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');}
-      if(shR.length){html+=`<div style="font-size:13px;font-weight:700;color:#22c55e;margin:16px 0 8px;">공유 매물 (${shR.length}건)</div>`+shR.map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item">${propertyTypeTag(c)}<div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');}
+      const _renderSearchCard=(c,isMine)=>{
+        const p=c.property||{},feats=(p.features||[]).slice(0,3),photos=c.photos||[];
+        const toggleFn=`(function(e){e.stopPropagation();var d=document.getElementById('sd-${c.id}');if(d)d.style.display=d.style.display==='none'?'':'none';})`;
+        let thumbHtml='';
+        if(photos.length){thumbHtml=`<div style="width:44px;height:44px;border-radius:6px;overflow:hidden;flex-shrink:0;position:relative;"><img src="${esc(photos[0])}" style="width:100%;height:100%;object-fit:cover;">${photos.length>1?`<span style="position:absolute;bottom:1px;right:2px;font-size:9px;color:#fff;background:rgba(0,0,0,0.6);padding:1px 4px;border-radius:3px;">${photos.length}</span>`:''}</div>`;}
+        return `<div class="item" style="flex-wrap:wrap;cursor:pointer;" onclick="${toggleFn}(event)">
+          ${propertyTypeTag(c)}
+          <div class="item-body" style="flex:1;min-width:0;">
+            <div class="item-name">${esc(p.complex||p.location||'매물')}</div>
+            <div class="item-sub">${[p.price,p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
+            ${feats.length?`<div style="display:flex;gap:3px;margin-top:2px;flex-wrap:wrap;">${feats.map(f=>`<span style="padding:1px 5px;border-radius:3px;background:var(--primary-bg);font-size:9px;font-weight:600;color:var(--primary);">${esc(f)}</span>`).join('')}</div>`:''}
+          </div>${thumbHtml}
+          <div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation();">
+            <button onclick="${toggleFn}(event)" style="padding:4px 12px;border-radius:6px;border:1.5px solid #60a5fa;background:rgba(96,165,250,0.06);color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer;">상세</button>
+            <button onclick="PanelCards.share1('${c.id}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #22c55e;background:rgba(34,197,94,0.06);color:#22c55e;font-size:11px;font-weight:700;cursor:pointer;">보내기</button>
+          </div>
+          <div id="sd-${c.id}" style="display:none;width:100%;margin-top:8px;padding:12px;border-radius:10px;background:var(--bg-input);font-size:12px;" onclick="event.stopPropagation();">
+            ${c.agent_comment?`<div style="color:var(--primary);margin-bottom:4px;">${esc(c.agent_comment)}</div>`:''}
+            ${p.rawText?`<div style="color:var(--text-sub);white-space:pre-wrap;">${esc(p.rawText)}</div>`:''}
+          </div>
+        </div>`;
+      };
+      if(myR.length){html+=`<div style="font-size:13px;font-weight:700;color:var(--primary);margin:12px 0 8px;">내 매물 (${myR.length>5?'상위 5건':myR.length+'건'})</div>`+myR.slice(0,5).map(c=>_renderSearchCard(c,true)).join('');}
+      if(shR.length){html+=`<div style="font-size:13px;font-weight:700;color:#22c55e;margin:16px 0 8px;">공유 매물 (${shR.length}건)</div>`+shR.map(c=>_renderSearchCard(c,false)).join('');}
       if(!shR.length&&!myR.length)html='<div class="empty"><div class="empty-icon">🔍</div>검색 결과가 없어요</div>';
       el.innerHTML=html;
     }
