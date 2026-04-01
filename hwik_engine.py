@@ -65,6 +65,127 @@ SUPABASE_HEADERS = {
     "Authorization": f"Bearer {SUPABASE_KEY}",
 }
 
+# ── danji_pages DB에서 캐시 데이터 조회 ──
+def fetch_danji_page_data(apt_name, gu="", dong=""):
+    """danji_pages 테이블에서 단지 데이터 조회 (블로그 원고용 캐시)"""
+    if not SUPABASE_KEY:
+        return None
+    try:
+        # 단지명으로 검색
+        search = apt_name.replace(" ", "")
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/danji_pages",
+            headers=SUPABASE_HEADERS,
+            params={
+                "select": "id,complex_name,location,address,build_year,total_units,categories,recent_trade,all_time_high,jeonse_rate,price_history,nearby_subway,nearby_school,nearby_complex,lat,lng,top_floor,parking,heating,builder,pyeongs_map",
+                "complex_name": f"ilike.*{search}*",
+                "limit": "5",
+            },
+            timeout=15,
+        )
+        if r.status_code != 200 or not r.json():
+            return None
+        candidates = r.json()
+        # 구/동으로 필터
+        best = None
+        for c in candidates:
+            loc = c.get("location", "")
+            if gu and gu not in loc:
+                continue
+            if dong and dong not in loc:
+                continue
+            best = c
+            break
+        if not best and candidates:
+            best = candidates[0]
+        if best:
+            print(f"  ✅ danji_pages 캐시 히트: {best['complex_name']} ({best.get('location','')})")
+        return best
+    except Exception as e:
+        print(f"  ⚠️ danji_pages 조회 실패: {e}")
+        return None
+
+
+def _danji_page_to_sales(danji_data):
+    """danji_pages의 price_history를 hwik_engine 매매 데이터 형식으로 변환"""
+    sales = []
+    ph = danji_data.get("price_history") or {}
+    for key, trades in ph.items():
+        if "_" in key:  # 전세/월세 키는 스킵
+            continue
+        if not isinstance(trades, list):
+            continue
+        for t in trades:
+            if not t.get("date") or not t.get("price"):
+                continue
+            sales.append({
+                "dealAmount": str(t["price"]),
+                "excluUseAr": key,
+                "floor": str(t.get("floor", "")),
+                "dealYear": t["date"][:4],
+                "dealMonth": t["date"][5:7],
+                "dealDay": t["date"][8:10] if len(t["date"]) >= 10 else "1",
+                "aptNm": danji_data.get("complex_name", ""),
+                "_parsed_price": t["price"],
+                "_date": t["date"],
+            })
+    sales.sort(key=lambda x: x.get("_date", ""), reverse=True)
+    return sales
+
+
+def _danji_page_to_rent(danji_data):
+    """danji_pages의 price_history에서 전세/월세 데이터 추출"""
+    jeonse, wolse = [], []
+    ph = danji_data.get("price_history") or {}
+    for key, trades in ph.items():
+        if not isinstance(trades, list):
+            continue
+        for t in trades:
+            if not t.get("date") or not t.get("price"):
+                continue
+            row = {
+                "deposit": str(t["price"]),
+                "excluUseAr": key.replace("_jeonse", "").replace("_wolse", ""),
+                "floor": str(t.get("floor", "")),
+                "dealYear": t["date"][:4],
+                "dealMonth": t["date"][5:7],
+                "dealDay": t["date"][8:10] if len(t["date"]) >= 10 else "1",
+                "aptNm": danji_data.get("complex_name", ""),
+                "_parsed_price": t["price"],
+                "_date": t["date"],
+            }
+            if "_wolse" in key:
+                row["monthlyRent"] = str(t.get("monthly", 0))
+                wolse.append(row)
+            elif "_jeonse" in key:
+                row["monthlyRent"] = "0"
+                jeonse.append(row)
+    jeonse.sort(key=lambda x: x.get("_date", ""), reverse=True)
+    wolse.sort(key=lambda x: x.get("_date", ""), reverse=True)
+    return jeonse, wolse
+
+
+def _danji_page_to_nearby(danji_data):
+    """danji_pages의 nearby_complex를 hwik_engine 형식으로 변환"""
+    nearby_sales = {}
+    nc = danji_data.get("nearby_complex") or []
+    for n in nc:
+        prices = n.get("prices") or {}
+        # 가장 큰 면적의 가격을 대표로
+        best_price = 0
+        for k, v in prices.items():
+            if v.get("price", 0) > best_price:
+                best_price = v["price"]
+        if best_price > 0:
+            nearby_sales[n["name"]] = {
+                "price": best_price,
+                "dist": n.get("distance", 0),
+                "lat": 0, "lon": 0,
+                "trades": [{"dealAmount": str(best_price), "aptNm": n["name"]}],
+            }
+    return nearby_sales
+
+
 SALES_API_URL      = 'http://apis.data.go.kr/1613000/RTMSDataSvcAptTradeDev/getRTMSDataSvcAptTradeDev'
 RENT_API_URL       = 'http://apis.data.go.kr/1613000/RTMSDataSvcAptRent/getRTMSDataSvcAptRent'
 OFFI_SALES_API_URL = 'https://apis.data.go.kr/1613000/RTMSDataSvcOffiTrade/getRTMSDataSvcOffiTrade'
@@ -3663,9 +3784,35 @@ def run_pipeline(user_input, output_base=None, auto_mode=False, photo_paths=None
         if jibun_str:
             print(f"  지번: {umd_nm_str} {jibun_str}")
 
-    # 3. 매매 실거래가
-    # 아파트: 도로명 PRIMARY → jibun fallback / 오피스텔: 키워드 PRIMARY
-    sales, property_type = fetch_sales_auto(apt_name, lawd_cd, months=36,
+    # ── danji_pages 캐시 시도 (API 호출 대폭 감소) ──
+    danji_cache = fetch_danji_page_data(apt_name, gu=detail.get("gu",""), dong=detail.get("dong",""))
+
+    if danji_cache and danji_cache.get("price_history"):
+        print(f"\n⚡ danji_pages 캐시 사용 — API 호출 스킵")
+        sales = _danji_page_to_sales(danji_cache)
+        property_type = "offi" if forced_offi else "apt"
+        if sales:
+            type_label = "아파트" if property_type == "apt" else "오피스텔"
+            print(f"  🏢 건물 유형: {type_label} (매매 {len(sales)}건)")
+            jeonse, wolse = _danji_page_to_rent(danji_cache)
+            print(f"  전세 {len(jeonse)}건, 월세 {len(wolse)}건")
+            schools = danji_cache.get("nearby_school") or []
+            print(f"  학교 {len(schools)}개")
+            stations_nearby = danji_cache.get("nearby_subway") or []
+            print(f"  지하철 {len(stations_nearby)}개")
+            nearby_sales = _danji_page_to_nearby(danji_cache)
+            nearby_jeonse = {}
+            print(f"  주변 단지 {len(nearby_sales)}개")
+        else:
+            print("  ⚠️ 캐시에 매매 데이터 없음 → API 폴백")
+            danji_cache = None
+
+    if not danji_cache or not danji_cache.get("price_history") or not sales:
+        print(f"\n📡 API 직접 조회 (캐시 없음)")
+
+        # 3. 매매 실거래가
+        # 아파트: 도로명 PRIMARY → jibun fallback / 오피스텔: 키워드 PRIMARY
+        sales, property_type = fetch_sales_auto(apt_name, lawd_cd, months=36,
                                             force_offi=forced_offi,
                                             road_address=road_address,
                                             jibun=jibun_str, umd_nm=umd_nm_str)
