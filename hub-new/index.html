@@ -3298,23 +3298,27 @@ const PanelShared = (() => {
       let html='';
       const _renderSearchCard=(c,isMine)=>{
         const p=c.property||{},feats=(p.features||[]).slice(0,3),photos=c.photos||[];
+        const st=c.trade_status||'계약가능';const stC=st==='계약가능'?'#22c55e':st==='계약중'?'#f59e0b':'#ef4444';
         const toggleFn=`(function(e){e.stopPropagation();var d=document.getElementById('sd-${c.id}');if(d)d.style.display=d.style.display==='none'?'':'none';})`;
         let thumbHtml='';
         if(photos.length){thumbHtml=`<div style="width:44px;height:44px;border-radius:6px;overflow:hidden;flex-shrink:0;position:relative;"><img src="${esc(photos[0])}" style="width:100%;height:100%;object-fit:cover;">${photos.length>1?`<span style="position:absolute;bottom:1px;right:2px;font-size:9px;color:#fff;background:rgba(0,0,0,0.6);padding:1px 4px;border-radius:3px;">${photos.length}</span>`:''}</div>`;}
-        return `<div class="item" style="flex-wrap:wrap;cursor:pointer;" onclick="${toggleFn}(event)">
-          ${propertyTypeTag(c)}
+        // 공유 매물 정보 (검색 결과에서도 기본 목록과 동일)
+        const agentName=c._agent_name||'';const roomName=c._room_name||'';
+        return `<div class="item" style="flex-wrap:wrap;cursor:pointer;${st!=='계약가능'?'opacity:0.6;':''}" onclick="${toggleFn}(event)">
+          ${propertyTypeTag(c)}<span style="font-size:10px;font-weight:700;color:${stC};">${st}</span>
           <div class="item-body" style="flex:1;min-width:0;">
             <div class="item-name">${esc(p.complex||p.location||'매물')}</div>
             <div class="item-sub">${[p.price,p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
-            ${feats.length?`<div style="display:flex;gap:3px;margin-top:2px;flex-wrap:wrap;">${feats.map(f=>`<span style="padding:1px 5px;border-radius:3px;background:var(--primary-bg);font-size:9px;font-weight:600;color:var(--primary);">${esc(f)}</span>`).join('')}</div>`:''}
+            <div style="display:flex;gap:3px;margin-top:2px;flex-wrap:wrap;">${feats.map(f=>`<span style="padding:1px 5px;border-radius:3px;background:var(--primary-bg);font-size:9px;font-weight:600;color:var(--primary);">${esc(f)}</span>`).join('')}${roomName?`<span style="padding:1px 5px;border-radius:3px;background:rgba(99,102,241,0.08);font-size:9px;font-weight:600;color:#6366f1;">${esc(roomName)}</span>`:''}${!isMine&&agentName?`<span style="padding:1px 5px;border-radius:3px;background:rgba(249,115,22,0.08);font-size:9px;font-weight:600;color:#f97316;">${esc(agentName)}</span>`:''}</div>
           </div>${thumbHtml}
           <div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation();">
             <button onclick="${toggleFn}(event)" style="padding:4px 12px;border-radius:6px;border:1.5px solid #60a5fa;background:rgba(96,165,250,0.06);color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer;">상세</button>
-            <button onclick="PanelCards.share1('${c.id}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #22c55e;background:rgba(34,197,94,0.06);color:#22c55e;font-size:11px;font-weight:700;cursor:pointer;">보내기</button>
           </div>
           <div id="sd-${c.id}" style="display:none;width:100%;margin-top:8px;padding:12px;border-radius:10px;background:var(--bg-input);font-size:12px;" onclick="event.stopPropagation();">
+            ${!isMine&&agentName?`<div style="font-weight:700;margin-bottom:6px;">🏢 ${esc(agentName)}</div>`:''}
             ${c.agent_comment?`<div style="color:var(--primary);margin-bottom:4px;">${esc(c.agent_comment)}</div>`:''}
-            ${p.rawText?`<div style="color:var(--text-sub);white-space:pre-wrap;">${esc(p.rawText)}</div>`:''}
+            <div style="color:var(--text-sub);">${[p.type,p.price,p.location,p.complex,p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
+            ${(p.features||[]).length?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:4px;">${p.features.map(f=>`<span style="padding:1px 5px;border-radius:3px;background:var(--primary-bg);font-size:9px;font-weight:600;color:var(--primary);">${esc(f)}</span>`).join('')}</div>`:''}
           </div>
         </div>`;
       };
