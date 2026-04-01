@@ -521,24 +521,26 @@ function render() {
   const locationParts2 = (d.location || '').split(' ');
   const gu = locationParts2[0] || '';
 
-  // FAQ 데이터 — 월세 탭에서는 표시 안 함
+  // FAQ 데이터
   const faqItems = [];
   if (currentTab !== '월세') {
+    // 매매/전세: 가격 관련 FAQ
     if (recentPrice) {
       faqItems.push({ q: `${d.complex_name} 최근 실거래가는?`, a: `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentPrice)}입니다.${recentData && recentData.date ? ' ('+recentData.date+' 기준)' : ''}` });
       const _areaNum = currentPyeong ? parseFloat(currentPyeong) : 0;
       if (_areaNum > 0) faqItems.push({ q: `${d.complex_name} ㎡당 가격은?`, a: `전용 ${currentPyeong}㎡ 기준 ㎡당 ${formatPrice(Math.round(recentPrice / _areaNum))}입니다.` });
     }
     if (jeonseRate) faqItems.push({ q: `${d.complex_name} 전세가율은?`, a: `${d.complex_name}의 전세가율은 ${jeonseRate}%입니다.` });
-    if (subway.length > 0) faqItems.push({ q: `${d.complex_name} 근처 지하철역은?`, a: subway.map(s => `${s.name}(${s.line || ''}) 도보 ${walkMin(s.distance)}`).join(', ') });
     if (highPrice) faqItems.push({ q: `${d.complex_name} 역대 최고가는?`, a: `역대 최고가는 ${formatPrice(highPrice)}입니다.${highData && highData.date ? ' ('+highData.date+')' : ''}` });
-    if (parseInt(d.parking || 0) > 0 && d.total_units) {
-      const _ratio = (parseInt(d.parking) / d.total_units).toFixed(1);
-      faqItems.push({ q: `${d.complex_name} 주차 대수는?`, a: `총 ${parseInt(d.parking).toLocaleString()}대 (세대당 ${_ratio}대)입니다.` });
-    }
-    if (d.heating) faqItems.push({ q: `${d.complex_name} 난방 방식은?`, a: `${d.heating}입니다.` });
-    if (d.builder) faqItems.push({ q: `${d.complex_name} 시공사는?`, a: `${esc(d.builder)}입니다.` });
   }
+  // 매매/전세/월세 공통 FAQ
+  if (subway.length > 0) faqItems.push({ q: `${d.complex_name} 근처 지하철역은?`, a: subway.map(s => `${s.name}(${s.line || ''}) 도보 ${walkMin(s.distance)}`).join(', ') });
+  if (parseInt(d.parking || 0) > 0 && d.total_units) {
+    const _ratio = (parseInt(d.parking) / d.total_units).toFixed(1);
+    faqItems.push({ q: `${d.complex_name} 주차 대수는?`, a: `총 ${parseInt(d.parking).toLocaleString()}대 (세대당 ${_ratio}대)입니다.` });
+  }
+  if (d.heating) faqItems.push({ q: `${d.complex_name} 난방 방식은?`, a: `${d.heating}입니다.` });
+  if (d.builder) faqItems.push({ q: `${d.complex_name} 시공사는?`, a: `${esc(d.builder)}입니다.` });
 
   const faqHtml = faqItems.map(f => `
     <div class="faq-item">
