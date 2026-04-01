@@ -534,7 +534,7 @@ function render() {
     if (highPrice) faqItems.push({ q: `${d.complex_name} 역대 최고가는?`, a: `역대 최고가는 ${formatPrice(highPrice)}입니다.${highData && highData.date ? ' ('+highData.date+')' : ''}` });
   }
   // 매매/전세/월세 공통 FAQ
-  if (subway.length > 0) faqItems.push({ q: `${d.complex_name} 근처 지하철역은?`, a: subway.map(s => `${s.name}(${s.line || ''}) 도보 ${walkMin(s.distance)}`).join(', ') });
+  if (subway.length > 0) faqItems.push({ q: `${d.complex_name} 근처 지하철역은?`, a: subway.map(s => `<span style="color:${lineColor(s.line)};font-weight:500;">${esc(s.name)}</span>(${esc(shortLine(s.line))}) 도보 ${walkMin(s.distance)}`).join(', '), html: true });
   if (parseInt(d.parking || 0) > 0 && d.total_units) {
     const _ratio = (parseInt(d.parking) / d.total_units).toFixed(1);
     faqItems.push({ q: `${d.complex_name} 주차 대수는?`, a: `총 ${parseInt(d.parking).toLocaleString()}대 (세대당 ${_ratio}대)입니다.` });
@@ -545,7 +545,7 @@ function render() {
   const faqHtml = faqItems.map(f => `
     <div class="faq-item">
       <div class="faq-q">${esc(f.q)}</div>
-      <div class="faq-a">${esc(f.a)}</div>
+      <div class="faq-a">${f.html ? f.a : esc(f.a)}</div>
     </div>
   `).join('');
 
