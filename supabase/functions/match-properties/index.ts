@@ -206,6 +206,23 @@ Deno.serve(async (req) => {
           wantedMonthly = parseInt(slashMatch[2]);
         }
       }
+      // "천에 50" / "오백에 30" 패턴 (말하듯 입력)
+      if (!wantedDeposit && !wantedMonthly) {
+        const koMatch = allText.match(/([\d]+천|[\d]+백|[\d]+억|천|오백|이천|삼천|오천)\s*에\s*(\d+)/);
+        if (koMatch) {
+          let dep = koMatch[1];
+          if (dep === '천') dep = '1000';
+          else if (dep === '오백') dep = '500';
+          else if (dep === '이천') dep = '2000';
+          else if (dep === '삼천') dep = '3000';
+          else if (dep === '오천') dep = '5000';
+          else if (dep.includes('억')) dep = String(parseInt(dep) * 10000);
+          else if (dep.includes('천')) dep = String(parseInt(dep) * 1000);
+          else if (dep.includes('백')) dep = String(parseInt(dep) * 100);
+          wantedDeposit = parseInt(dep);
+          wantedMonthly = parseInt(koMatch[2]);
+        }
+      }
       // "1000/50 2000/40도 가능" — 두 번째 조건이 max
       const dualSlash = allText.match(/(\d+)\s*\/\s*(\d+)\s+(\d+)\s*\/\s*(\d+)\s*(?:도|면|까지)?\s*(?:가능|괜찮|OK)/i);
       if (dualSlash) {
@@ -245,17 +262,26 @@ Deno.serve(async (req) => {
     // 평수/면적
     let wantedMinArea: number | null = null;
     let wantedMaxArea: number | null = null;
-    const areaMatch = allText.match(/(\d+)\s*평/);
-    if (areaMatch) {
-      const pyeong = parseInt(areaMatch[1]);
-      if (/대/.test(allText.slice(allText.indexOf(areaMatch[0])))) {
-        wantedMinArea = pyeong;
-        wantedMaxArea = pyeong + 9;
-      } else {
-        wantedMinArea = pyeong - 5;
-        wantedMaxArea = pyeong + 5;
-      }
+    // "30평대" → 30~39
+    const areaDaeMatch = allText.match(/(\d+)\s*평\s*대/);
+    if (areaDaeMatch) { wantedMinArea = parseInt(areaDaeMatch[1]); wantedMaxArea = parseInt(areaDaeMatch[1]) + 9; }
+    // "25평 내외" → ±10%
+    if (!wantedMinArea) { const areaNaeMatch = allText.match(/(\d+)\s*평\s*내외/); if (areaNaeMatch) { const p = parseInt(areaNaeMatch[1]); wantedMinArea = Math.round(p * 0.9); wantedMaxArea = Math.round(p * 1.1); } }
+    // "20평 이상" / "최소 20평" / "적어도 25평" / "20평 넘는"
+    if (!wantedMinArea) { const areaMinMatch = allText.match(/(?:최소|적어도)?\s*(\d+)\s*평\s*(?:이상|넘는|넘게)/); if (areaMinMatch) wantedMinArea = parseInt(areaMinMatch[1]); }
+    if (!wantedMinArea) { const areaMinMatch2 = allText.match(/(?:최소|적어도)\s*(\d+)\s*평/); if (areaMinMatch2) wantedMinArea = parseInt(areaMinMatch2[1]); }
+    // "20평 이하" / "최대 25평"
+    if (!wantedMaxArea) { const areaMaxMatch = allText.match(/(?:최대)?\s*(\d+)\s*평\s*(?:이하|까지|미만)/); if (areaMaxMatch) wantedMaxArea = parseInt(areaMaxMatch[1]); }
+    if (!wantedMaxArea) { const areaMaxMatch2 = allText.match(/최대\s*(\d+)\s*평/); if (areaMaxMatch2) wantedMaxArea = parseInt(areaMaxMatch2[1]); }
+    // "20평~30평" / "20평에서 30평 사이"
+    if (!wantedMinArea && !wantedMaxArea) { const areaRange = allText.match(/(\d+)\s*평\s*[~에서]\s*(\d+)\s*평/); if (areaRange) { wantedMinArea = parseInt(areaRange[1]); wantedMaxArea = parseInt(areaRange[2]); } }
+    // "넓은 집" → 30평 이상 / "소형" → 15평 이하
+    if (!wantedMinArea && !wantedMaxArea) {
+      if (/넓은\s*집|넓은\s*곳/.test(allText)) wantedMinArea = 30;
+      else if (/소형|작은\s*집/.test(allText)) wantedMaxArea = 15;
     }
+    // 숫자만 ("25평") → ±5
+    if (!wantedMinArea && !wantedMaxArea) { const areaMatch = allText.match(/(\d+)\s*평/); if (areaMatch) { const p = parseInt(areaMatch[1]); wantedMinArea = p - 5; wantedMaxArea = p + 5; } }
 
     // 방 수
     let wantedRooms: number | null = null;
