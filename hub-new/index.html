@@ -1544,8 +1544,8 @@ const Hub = (() => {
     // 허브 비주얼을 flex 컬럼으로 전환
     v.style.cssText='display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;aspect-ratio:unset;max-height:none;padding:10px 0;';
     // 중앙 노드를 인라인으로
-    hc.style.cssText='position:static;transform:none;width:auto;height:auto;padding:10px 20px;border-radius:16px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,0.06);';
-    hc.innerHTML=`<div style="font-size:22px;">${center.icon}</div><div><div style="font-size:13px;font-weight:800;">${esc(center.name)}</div>${center.sub?`<div style="font-size:10px;color:var(--text-light);">${esc(center.sub)}</div>`:''}</div>`;
+    hc.style.cssText='position:static;transform:none;width:auto;height:auto;padding:8px 16px;border-radius:14px;display:flex;align-items:center;gap:6px;box-shadow:0 2px 8px rgba(0,0,0,0.06);';
+    hc.innerHTML=`<div style="font-size:18px;">${center.icon}</div><div style="font-size:12px;font-weight:800;">${esc(center.name)}</div>`;
 
     // 노드를 static flex 아이템으로 — 원래 순서 유지
     nodes.forEach(n=>{
@@ -2600,7 +2600,6 @@ const PanelClient = (() => {
       if(!matches.length){el.innerHTML='<div class="empty"><div class="empty-icon">🏠</div>매칭 매물이 없어요</div>';return;}
       el.innerHTML=matches.map(m=>{
         const mp=m.property||{};
-        const tc=mp.type==='매매'?'sale':mp.type==='전세'?'jeonse':'rent';
         const st=m.trade_status||'계약가능';
         const stC=st==='완료'?'#ef4444':st==='계약중'?'#f59e0b':'#22c55e';
         const feats=(mp.features||[]).slice(0,4);
@@ -2611,16 +2610,25 @@ const PanelClient = (() => {
         const scoreLabel=score>0?score+(m._score?'점':'%'):'';
         const isMine=!m.agent_id||m.agent_id===Auth.user?.id;
         const sel=_matchSelected.some(s=>s.id===m.id);
+        const agentLabel=m._agent?m._agent.name||'공유 매물':'';
+        const roomLabel=m._room||'';
         let thumbHtml='';
         if(photos.length){thumbHtml=`<div style="width:44px;height:44px;border-radius:6px;overflow:hidden;flex-shrink:0;position:relative;"><img src="${esc(photos[0])}" style="width:100%;height:100%;object-fit:cover;">${photos.length>1?`<span style="position:absolute;bottom:1px;right:2px;font-size:9px;color:#fff;background:rgba(0,0,0,0.6);padding:1px 4px;border-radius:3px;">${photos.length}</span>`:''}</div>`;}
-        let btns=isMine?`<div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation()"><button onclick="PanelCards.share1('${m.id}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #22c55e;background:rgba(34,197,94,0.06);color:#22c55e;font-size:11px;font-weight:700;cursor:pointer;">공유</button><button onclick="PanelCards.toggleDetail('${m.id}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #60a5fa;background:rgba(96,165,250,0.06);color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer;">상세</button><button onclick="PanelCards.edit('${m.id}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #f59e0b;background:rgba(245,158,11,0.06);color:#f59e0b;font-size:11px;font-weight:700;cursor:pointer;">수정</button><button onclick="PanelCards.del('${m.id}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #ef4444;background:rgba(239,68,68,0.06);color:#ef4444;font-size:11px;font-weight:700;cursor:pointer;">삭제</button></div>`:`<div style="flex-shrink:0;" onclick="event.stopPropagation()"><button onclick="PanelCards.toggleDetail('${m.id}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #60a5fa;background:rgba(96,165,250,0.06);color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer;">상세</button></div>`;
+        const toggleFn=`(function(e){e.stopPropagation();var d=document.getElementById('mdet-${m.id}');if(d)d.style.display=d.style.display==='none'?'':'none';})`;
+        let btns=isMine?`<div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation()"><button onclick="PanelCards.share1('${m.id}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #22c55e;background:rgba(34,197,94,0.06);color:#22c55e;font-size:11px;font-weight:700;cursor:pointer;">공유</button><button onclick="${toggleFn}(event)" style="padding:4px 12px;border-radius:6px;border:1.5px solid #60a5fa;background:rgba(96,165,250,0.06);color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer;">상세</button><button onclick="PanelCards.edit('${m.id}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #f59e0b;background:rgba(245,158,11,0.06);color:#f59e0b;font-size:11px;font-weight:700;cursor:pointer;">수정</button><button onclick="PanelCards.del('${m.id}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #ef4444;background:rgba(239,68,68,0.06);color:#ef4444;font-size:11px;font-weight:700;cursor:pointer;">삭제</button></div>`:`<div style="flex-shrink:0;" onclick="event.stopPropagation()"><button onclick="${toggleFn}(event)" style="padding:4px 12px;border-radius:6px;border:1.5px solid #60a5fa;background:rgba(96,165,250,0.06);color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer;">상세</button></div>`;
         return `<div style="border:1px solid ${sel?'var(--primary)':'var(--border)'};border-radius:10px;padding:10px 12px;margin-bottom:4px;background:${sel?'var(--primary-bg)':'transparent'};cursor:pointer;" onclick="PanelClient.toggleMatchSel('${m.id}')">
           <div style="display:flex;align-items:center;gap:8px;">
             <div onclick="event.stopPropagation();PanelClient.toggleMatchSel('${m.id}')" style="width:20px;height:20px;border:2px solid ${sel?'var(--primary)':'#ccc'};border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${sel?'var(--primary)':'transparent'};cursor:pointer;">${sel?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}</div>
             <div style="flex:1;min-width:0;">
               <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${propertyTypeTag(m)}<span style="font-size:10px;font-weight:700;color:${stC};">${st}</span><strong style="font-size:14px;">${esc(mp.price||'-')}</strong><span style="font-size:13px;color:var(--text-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${mainText}</span><span style="font-size:12px;color:var(--text-light);">${subText?'· '+subText:''}</span>${scoreLabel?`<span style="padding:2px 8px;border-radius:6px;background:var(--primary-bg);color:var(--primary);font-size:10px;font-weight:700;">${scoreLabel}</span>`:''}</div>
-              ${feats.length?`<div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;">${feats.map(f=>`<span style="padding:1px 6px;border-radius:4px;background:var(--primary-bg);font-size:9px;font-weight:600;color:var(--primary);">${esc(f)}</span>`).join('')}</div>`:''}
+              <div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;">${feats.map(f=>`<span style="padding:1px 6px;border-radius:4px;background:var(--primary-bg);font-size:9px;font-weight:600;color:var(--primary);">${esc(f)}</span>`).join('')}${agentLabel?`<span style="padding:1px 6px;border-radius:4px;background:rgba(249,115,22,0.08);font-size:9px;font-weight:600;color:#f97316;">${esc(agentLabel)}</span>`:''}${roomLabel?`<span style="padding:1px 6px;border-radius:4px;background:rgba(99,102,241,0.08);font-size:9px;font-weight:600;color:#6366f1;">${esc(roomLabel)}</span>`:''}</div>
             </div>${thumbHtml}${btns}
+          </div>
+          <div id="mdet-${m.id}" style="display:none;margin-top:8px;padding:12px;border-radius:10px;background:var(--bg-input);font-size:12px;color:var(--text-sub);">
+            ${m._agent?`<div style="margin-bottom:6px;font-weight:700;color:var(--text);">🏢 ${esc(m._agent.name||'')}${m._agent.phone?' · <a href="tel:'+esc(m._agent.phone)+'" style="color:#60a5fa;">'+esc(m._agent.phone)+'</a>':''}${m._room?' · <span style="color:#6366f1;">'+esc(m._room)+'</span>':''}</div>`:''}
+            ${mp.rawText?`<div style="margin-bottom:4px;white-space:pre-wrap;">${esc(mp.rawText)}</div>`:''}
+            ${m.agent_comment?`<div style="color:var(--primary);margin-bottom:4px;">💬 ${esc(m.agent_comment)}</div>`:''}
+            ${mp.moveIn?`<div>입주: ${esc(mp.moveIn)}</div>`:''}
           </div></div>`;
       }).join('')+`<button class="btn-primary" style="margin-top:12px;" onclick="PanelClient.reMatch('${card.id}')">매칭 다시 찾기</button>`;
     }
@@ -2628,8 +2636,8 @@ const PanelClient = (() => {
       let h=`<div class="note-row" style="margin-bottom:12px;"><input type="text" id="noteIn" placeholder="메모 입력... (예: 내일 2시 방문 예정)" onkeydown="if(event.key==='Enter')PanelClient.saveNote('${card.id}')"><button onclick="PanelClient.saveNote('${card.id}')">저장</button></div>`;
       if(!notes.length)h+='<div class="empty">아직 상담 기록이 없어요</div>';
       else{h+='<div class="timeline">';notes.forEach(n=>{const t=n.type||'메모',ds=new Date(n.created_at).toLocaleDateString('ko-KR'),as=n.alert_date?' · 📅 '+new Date(n.alert_date).toLocaleDateString('ko-KR'):'';
-        const done=n.alert_date&&n.alert_done;
-        h+=`<div class="tl-item" style="${done?'opacity:0.5;':''}cursor:pointer;" onclick="var d=document.getElementById('tl-detail-${n.id}');if(d)d.style.display=d.style.display==='none'?'':'none';">
+        const done=n.alert_date&&n.alert_done;const past=!n.alert_date;
+        h+=`<div class="tl-item" style="${done||past?'opacity:0.5;':''}cursor:pointer;" onclick="var d=document.getElementById('tl-detail-${n.id}');if(d)d.style.display=d.style.display==='none'?'':'none';">
           <span class="tl-tag ${t}">${t}</span><div class="tl-body" style="flex:1;"><div class="tl-text" style="${done?'text-decoration:line-through;':''}overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px;">${esc(n.content||'')}</div><div class="tl-date">${ds}${as}${done?' ✅ 완료':''}</div>
           <div id="tl-detail-${n.id}" style="display:none;margin-top:8px;padding:10px;border-radius:8px;background:var(--bg-input);font-size:13px;white-space:pre-wrap;color:var(--text);" onclick="event.stopPropagation();">${esc(n.content||'')}</div>
           </div><div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation();">${n.alert_date&&!n.alert_done?`<button class="tl-done-btn" onclick="PanelClient.noteDone('${n.id}','${card.id}')">완료</button>`:''}<button class="tl-delete-btn" onclick="PanelClient.noteDel('${n.id}','${card.id}')">삭제</button></div></div>`;});h+='</div>';}
@@ -2793,8 +2801,8 @@ const PanelClient = (() => {
       // 마지막 연락 표시
       let lastStr='';
       if(lastNote){const diff=Math.floor((Date.now()-new Date(lastNote.created_at))/(1000*60*60*24));
-        if(diff===0)lastStr='오늘';else if(diff===1)lastStr='어제';else lastStr=diff+'일 전';
-        const dateColor=diff>7?'#ef4444':diff>3?'#f59e0b':'#22c55e';
+        if(diff<0)lastStr='방금';else if(diff===0)lastStr='오늘';else if(diff===1)lastStr='어제';else lastStr=diff+'일 전';
+        const dateColor=diff<0?'#22c55e':diff>7?'#ef4444':diff>3?'#f59e0b':'#22c55e';
         lastStr=`<span style="font-size:10px;color:${dateColor};margin-left:8px;">· ${lastStr}</span>`;
       }
 
@@ -2834,8 +2842,8 @@ const PanelClient = (() => {
       <div class="note-row"><input type="text" id="noteIn" placeholder="메모 입력... (예: 내일 2시 방문 예정)" onkeydown="if(event.key==='Enter')PanelClient.saveNote('${card.id}')" oninput="PanelClient.pvNote(this.value)"><button onclick="PanelClient.saveNote('${card.id}')">저장</button></div><div id="notePv" class="note-preview" style="display:none"></div>`;
       if(!ns.length)h+='<div class="empty">아직 상담 기록이 없어요</div>';
       else{h+='<div class="timeline">';ns.forEach(n=>{const t=n.type||'메모',ds=new Date(n.created_at).toLocaleDateString('ko-KR'),as=n.alert_date?' · 📅 '+new Date(n.alert_date).toLocaleDateString('ko-KR'):'';
-        const done=n.alert_date&&n.alert_done;
-        h+=`<div class="tl-item" style="${done?'opacity:0.5;':''}cursor:pointer;" onclick="var d=document.getElementById('tl-detail-${n.id}');if(d)d.style.display=d.style.display==='none'?'':'none';">
+        const done=n.alert_date&&n.alert_done;const past=!n.alert_date;
+        h+=`<div class="tl-item" style="${done||past?'opacity:0.5;':''}cursor:pointer;" onclick="var d=document.getElementById('tl-detail-${n.id}');if(d)d.style.display=d.style.display==='none'?'':'none';">
           <span class="tl-tag ${t}">${t}</span>
           <div class="tl-body" style="flex:1;">
             <div class="tl-text" style="${done?'text-decoration:line-through;':''}overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:600px;">${esc(n.content||'')}</div>
