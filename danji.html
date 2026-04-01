@@ -293,12 +293,10 @@ function render() {
     tagHtml += `<div class="tag-line tag-school-line"><span class="tag-icon">🏫</span>${schoolText}</div>`;
   }
 
-  // 평형 버튼
+  // 면적 버튼 (전용면적 ㎡ 기본)
   const pyeongHtml = cats.map(c => {
-    const py = Math.round(parseInt(c) / 3.3058);
-    const label = py > 0 ? `${py}평(${c})` : c;
     const active = c === currentPyeong ? ' active' : '';
-    return `<div class="pyeong-btn${active}" data-cat="${esc(c)}">${esc(label)}</div>`;
+    return `<div class="pyeong-btn${active}" data-cat="${esc(c)}">${esc(c)}㎡</div>`;
   }).join('');
 
   // 현재 평형 기준 지표
@@ -341,8 +339,7 @@ function render() {
   // 최근 거래 목록 (현재 선택 평형 + 탭 기준)
   const tradeKeyFull = currentPyeong + (currentTab === '전세' ? '_jeonse' : (currentTab === '월세' ? '_wolse' : ''));
   const ph = (d.price_history || {})[tradeKeyFull] || [];
-  const pyNum = currentPyeong ? Math.round(parseInt(currentPyeong) / 3.3058) : 0;
-  const pyLabel = pyNum > 0 ? currentPyeong + '㎡(' + pyNum + '평)' : (currentPyeong ? currentPyeong + '㎡' : '');
+  const pyLabel = currentPyeong ? '전용 ' + currentPyeong + '㎡' : '';
 
   // price_history에 개별 거래가 있으면 그걸 사용
   let tradeItems = [];
@@ -425,8 +422,8 @@ function render() {
 
   // 평형 (DB categories 기반)
   if (cats.length > 0) {
-    const pyList = cats.map(c => { const p = Math.round(parseInt(c)/3.3058); return p > 0 ? p+'평('+c+'㎡)' : c+'㎡'; });
-    seoParts.push(pyList.join(', ') + ' 평형이 있습니다.');
+    const pyList = cats.map(c => '전용 ' + c + '㎡');
+    seoParts.push(pyList.join(', ') + ' 면적이 있습니다.');
   }
 
   // 지하철 (DB nearby_subway 기반)
@@ -471,8 +468,8 @@ function render() {
   const faqItems = [];
   if (recentPrice) {
     faqItems.push({ q: `${d.complex_name} 최근 실거래가는?`, a: `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentPrice)}입니다.${recentData && recentData.date ? ' ('+recentData.date+' 기준)' : ''}` });
-    const _py = currentPyeong ? Math.round(parseInt(currentPyeong) / 3.3058) : 0;
-    if (_py > 0) faqItems.push({ q: `${d.complex_name} 평당가는?`, a: `${_py}평 기준 평당 ${formatPrice(Math.round(recentPrice / _py))}입니다.` });
+    const _areaNum = currentPyeong ? parseFloat(currentPyeong) : 0;
+    if (_areaNum > 0) faqItems.push({ q: `${d.complex_name} ㎡당 가격은?`, a: `전용 ${currentPyeong}㎡ 기준 ㎡당 ${formatPrice(Math.round(recentPrice / _areaNum))}입니다.` });
   }
   if (jeonseRate) faqItems.push({ q: `${d.complex_name} 전세가율은?`, a: `${d.complex_name}의 전세가율은 ${jeonseRate}%입니다.` });
   if (subway.length > 0) faqItems.push({ q: `${d.complex_name} 근처 지하철역은?`, a: subway.map(s => `${s.name}(${s.line || ''}) 도보 ${walkMin(s.distance)}`).join(', ') });
@@ -745,8 +742,7 @@ function drawChart() {
             beforeBody: ctx => {
               const p = points[ctx[0].dataIndex];
               const tabLabel = currentTab || '매매';
-              const py = currentPyeong ? Math.round(parseInt(currentPyeong) / 3.3058) : 0;
-              const pyLabel = py > 0 ? currentPyeong + '(' + py + '평)' : (currentPyeong || '');
+              const pyLabel = currentPyeong ? currentPyeong + '㎡' : '';
               const parts = [tabLabel];
               if (pyLabel) parts.push(pyLabel);
               if (p.floor) parts.push(p.floor + '층');
