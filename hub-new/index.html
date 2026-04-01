@@ -2952,13 +2952,18 @@ const PanelClient = (() => {
       if(guM&&_guCoords[guM[1]]){newTags.push(guM[1]);newTags.push('서울');}
       const dongM=text.match(/([\uAC00-\uD7AF]+동)/);
       if(dongM)newTags.push(dongM[1]);
-      if(!newTags.length)return;
+      // 제외 태그 감지 ("반지하 빼고", "옥탑 싫어요")
+      const excludeMap={'반지하':'반지하','옥탑':'옥탑','1층':'1층','저층':'저층','북향':'북향','복도식':'복도식'};
+      const newExcluded=[];
+      for(const[kw,tag]of Object.entries(excludeMap)){if(new RegExp(kw+'\\s*(?:빼|싫|안돼|제외|말고|안되)').test(text))newExcluded.push(tag);}
+      if(!newTags.length&&!newExcluded.length)return;
       // 기존 태그 로드
-      const{data:card}=await Auth.sb.from('cards').select('tags,required_tags,lat,lng').eq('id',cardId).single();
+      const{data:card}=await Auth.sb.from('cards').select('tags,required_tags,excluded_tags,lat,lng').eq('id',cardId).single();
       if(!card)return;
       const tags=[...new Set([...(card.tags||[]),...newTags])];
       const updates={tags};
       if(isRequired){const rt=[...new Set([...(card.required_tags||[]),...newTags])];updates.required_tags=rt;}
+      if(newExcluded.length){const et=[...new Set([...(card.excluded_tags||[]),...newExcluded])];updates.excluded_tags=et;}
       // 좌표 없으면 구 좌표 설정
       if(!card.lat&&guM&&_guCoords[guM[1]]){updates.lat=_guCoords[guM[1]].lat;updates.lng=_guCoords[guM[1]].lng;}
       await Auth.sb.from('cards').update(updates).eq('id',cardId);

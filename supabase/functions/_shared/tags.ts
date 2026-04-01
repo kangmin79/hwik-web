@@ -207,6 +207,19 @@ const CAT_MAP: Record<string, string> = {
 function extractFromText(text: string): string[] {
   const tags: string[] = [];
   const t = text;
+  // 지하철 노선
+  if (/1호선/.test(t)) tags.push('1호선');
+  if (/2호선/.test(t)) tags.push('2호선');
+  if (/3호선/.test(t)) tags.push('3호선');
+  if (/4호선/.test(t)) tags.push('4호선');
+  if (/5호선/.test(t)) tags.push('5호선');
+  if (/6호선/.test(t)) tags.push('6호선');
+  if (/7호선/.test(t)) tags.push('7호선');
+  if (/8호선/.test(t)) tags.push('8호선');
+  if (/9호선/.test(t)) tags.push('9호선');
+  if (/신분당/.test(t)) tags.push('신분당선');
+  if (/경의중앙/.test(t)) tags.push('경의중앙선');
+  if (/분당/.test(t)&&!/신분당/.test(t)) tags.push('분당선');
   // 교통
   if (/지하철\s*[1-5]\s*분|역\s*도보\s*[1-3]\s*분|역\s*바로/.test(t)) tags.push('초역세권');
   else if (/지하철|역\s*도보|역세권|역\s*\d분/.test(t)) tags.push('역세권');
@@ -358,4 +371,27 @@ export function generateTags(card: any): string[] {
 
   // 중복 제거 + 빈 문자열 필터
   return [...new Set(tags)].filter(t => t && t.trim());
+}
+
+// ═══════════════════════════════════════════════════════════
+// 제외 태그 추출 — "빼고", "싫어요", "안돼요", "제외"
+// ═══════════════════════════════════════════════════════════
+export function extractExcludedTags(text: string): string[] {
+  const excluded: string[] = [];
+  const patterns = [
+    /반지하\s*(?:빼고|싫|안돼|제외|말고|NO)/i,
+    /옥탑\s*(?:빼고|싫|안돼|제외|말고|NO)/i,
+    /1층\s*(?:빼고|싫|안돼|제외|말고|NO)/i,
+    /저층\s*(?:빼고|싫|안돼|제외|말고|NO)/i,
+    /북향\s*(?:빼고|싫|안돼|제외|말고|NO)/i,
+    /복도식\s*(?:빼고|싫|안돼|제외|말고|NO)/i,
+  ];
+  const tagMap: Record<string, string> = {
+    '반지하':'반지하','옥탑':'옥탑','1층':'1층','저층':'저층','북향':'북향','복도식':'복도식'
+  };
+  for (const [keyword, tag] of Object.entries(tagMap)) {
+    const re = new RegExp(`${keyword}\\s*(?:빼고|싫|안돼|안됨|제외|말고|NO|안되|빼|빼주)`, 'i');
+    if (re.test(text)) excluded.push(tag);
+  }
+  return excluded;
 }

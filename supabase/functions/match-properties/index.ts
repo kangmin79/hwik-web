@@ -3,7 +3,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { DISTRICT_COORDS, haversineDistance } from '../_shared/geo.ts'
 import { fixTypos } from '../_shared/typo.ts'
 import { getAuthUserId } from '../_shared/auth.ts'
-import { generateTags, TAG_WEIGHTS } from '../_shared/tags.ts'
+import { generateTags, TAG_WEIGHTS, extractExcludedTags } from '../_shared/tags.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://hwik.kr',
@@ -138,24 +138,29 @@ Deno.serve(async (req) => {
         maxPrice = parseFloat(rangeMatch[2]) * 10000;
       }
     }
-    // "3억5천 이내/이하/미만/까지/밑으로/내로/안넘는"
+    // "3억5천 이내/이하/미만/까지/밑으로/내로/안넘는/넘지않게"
     if (!maxPrice) {
-      const maxMatch = allText.match(/(\d+\.?\d*)\s*억\s*(\d+)?\s*천?\s*(?:이내|이하|미만|까지|밑으로|내로|안넘는|못넘는)/);
+      const maxMatch = allText.match(/(\d+\.?\d*)\s*억\s*(\d+)?\s*천?\s*(?:이내|이하|미만|까지|밑으로|내로|안넘는|못넘는|넘지\s*않게|안넘게|초과\s*안)/);
       if (maxMatch) maxPrice = parseFloat(maxMatch[1]) * 10000 + (maxMatch[2] ? parseInt(maxMatch[2]) * 1000 : 0);
     }
     // "5천만원 이내" / "5천 이하"
     if (!maxPrice) {
-      const chun = allText.match(/(\d+)\s*천\s*(?:만원?)?\s*(?:이내|이하|밑으로|까지)/);
+      const chun = allText.match(/(\d+)\s*천\s*(?:만원?)?\s*(?:이내|이하|밑으로|까지|넘지\s*않게)/);
       if (chun) maxPrice = parseInt(chun[1]) * 1000;
+    }
+    // "2억에서 3억 사이"
+    if (!maxPrice) {
+      const betw = allText.match(/(\d+\.?\d*)\s*억\s*(?:에서|부터)\s*(\d+\.?\d*)\s*억\s*(?:사이|까지)/);
+      if (betw) { minPrice = parseFloat(betw[1]) * 10000; maxPrice = parseFloat(betw[2]) * 10000; }
     }
     // "3억 이상/초과/넘는/부터/위로"
     if (!minPrice) {
       const minMatch = allText.match(/(\d+\.?\d*)\s*억\s*(?:이상|초과|넘는|부터|위로|넘게)/);
       if (minMatch) minPrice = parseFloat(minMatch[1]) * 10000;
     }
-    // "3억 정도/쯤/선/대/내외/안팎/전후/언저리" → 희망가 ±15%
+    // "3억선" / "3억대" / "3억 정도/쯤/내외/안팎/전후/언저리" → ±15%
     if (!maxPrice && !minPrice) {
-      const approx = allText.match(/(\d+\.?\d*)\s*억\s*(?:\d*천?\s*)?(?:정도|쯤|선|대|내외|안팎|전후|언저리)/);
+      const approx = allText.match(/(\d+\.?\d*)\s*억\s*(?:\d*천?\s*)?(?:정도|쯤|선에서|선|대|내외|안팎|전후|언저리)/);
       if (approx) {
         const base = parseFloat(approx[1]) * 10000;
         minPrice = Math.round(base * 0.85);
@@ -208,6 +213,18 @@ Deno.serve(async (req) => {
         wantedMonthly = parseInt(dualSlash[2]);
         maxDeposit = parseInt(dualSlash[3]);
         maxMonthly = parseInt(dualSlash[4]);
+      }
+      // "무보증" / "보증금 없이"
+      if (/무보증|보증금\s*없|보증금\s*0/.test(allText)) { wantedDeposit = 0; maxDeposit = 0; }
+      // "보증금 2000 이하/까지/이내/넘지않게"
+      if (!maxDeposit) {
+        const depMax = allText.match(/보증금\s*(\d+)\s*(?:이하|까지|이내|넘지\s*않게|미만)/);
+        if (depMax) maxDeposit = parseInt(depMax[1]);
+      }
+      // "월세 50 이하/까지"
+      if (!maxMonthly) {
+        const monMax = allText.match(/월(?:세)?\s*(\d+)\s*(?:이하|까지|이내|넘지\s*않게|미만)/);
+        if (monMax) maxMonthly = parseInt(monMax[1]);
       }
       maxPrice = null;
       minPrice = null;
@@ -486,6 +503,9 @@ Deno.serve(async (req) => {
       ? (clientCard as any).tags
       : generateTags(clientCard);
     const clientRequired: string[] = (clientCard as any).required_tags || [];
+    const clientExcluded: string[] = (clientCard as any).excluded_tags?.length
+      ? (clientCard as any).excluded_tags
+      : extractExcludedTags(allText);
 
     // ★ 중개사 실전 랭킹 — 태그 매칭 + 숫자 비교
     results = results.map((r: any) => {
@@ -498,6 +518,11 @@ Deno.serve(async (req) => {
       if (clientRequired.length) {
         const missingRequired = clientRequired.filter((t: string) => !propTags.includes(t));
         if (missingRequired.length) { r._score = -1; return r; }
+      }
+      // excluded_tags 체크 — 하나라도 있으면 제외
+      if (clientExcluded.length) {
+        const hasExcluded = clientExcluded.some((t: string) => propTags.includes(t));
+        if (hasExcluded) { r._score = -1; return r; }
       }
       // 겹치는 태그 수 (시설/환경 태그)
       const facilityEnvTags = clientTags.filter((t: string) =>
