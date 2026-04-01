@@ -2557,17 +2557,18 @@ const PanelClient = (() => {
     try{const d=await Data.loadClientDetail(card.id);notes=d.notes||[];matches=d.matches||[];}catch(_){}
 
     let h=`<div onclick="PanelClient.closeDetail()" style="display:inline-flex;align-items:center;gap:4px;padding:4px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-sub);font-size:12px;font-weight:600;cursor:pointer;margin-bottom:12px;">← 손님 목록</div>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-      <span style="font-size:24px;">🙋</span>
-      <div style="flex:1;">
-        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-          <span style="font-size:15px;font-weight:800;">${esc(name)}</span>
+    <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;">
+      <span style="font-size:24px;margin-top:2px;">🙋</span>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
+          <span style="font-size:16px;font-weight:800;">${esc(name)}</span>
           ${clientWantTag(card)}
         </div>
-        <div style="font-size:12px;color:var(--text-sub);margin-top:2px;">${conds}</div>
-        ${card.contact_phone?`<div style="font-size:12px;margin-top:2px;"><span style="font-weight:600;">${esc(card.contact_phone)}</span> <button onclick="navigator.clipboard.writeText('${esc(card.contact_phone)}');Toast.show('복사됨')" style="padding:1px 6px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-light);font-size:10px;cursor:pointer;">복사</button></div>`:''}
+        <div style="font-size:12px;color:var(--text);line-height:1.6;">${esc(p.rawText||'')||conds}</div>
+        ${p.location?`<div style="font-size:11px;color:var(--text-light);margin-top:2px;">${esc(p.location)}</div>`:''}
+        ${card.contact_phone?`<div style="font-size:13px;font-weight:600;margin-top:6px;">${esc(card.contact_phone)} <button onclick="navigator.clipboard.writeText('${esc(card.contact_phone)}');Toast.show('복사됨')" style="padding:1px 6px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-light);font-size:10px;cursor:pointer;">복사</button></div>`:''}
       </div>
-      <button onclick="PanelClient.editClient('${card.id}')" style="padding:4px 12px;border-radius:8px;border:1.5px solid var(--primary);background:transparent;color:var(--primary);font-size:11px;font-weight:700;cursor:pointer;">수정</button>
+      <button onclick="PanelClient.editClient('${card.id}')" style="padding:4px 12px;border-radius:8px;border:1.5px solid var(--primary);background:transparent;color:var(--primary);font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">수정</button>
     </div>`;
 
     // 탭
