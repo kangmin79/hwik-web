@@ -2638,9 +2638,10 @@ const PanelClient = (() => {
       if(!notes.length)h+='<div class="empty">아직 상담 기록이 없어요</div>';
       else{h+='<div class="timeline">';notes.forEach(n=>{const t=n.type||'메모',ds=new Date(n.created_at).toLocaleDateString('ko-KR'),as=n.alert_date?' · 📅 '+new Date(n.alert_date).toLocaleDateString('ko-KR'):'';
         const done=n.alert_date&&n.alert_done;const past=!n.alert_date;
-        h+=`<div class="tl-item" style="${done||past?'opacity:0.5;':''}cursor:pointer;" onclick="var d=document.getElementById('tl-detail-${n.id}');if(d)d.style.display=d.style.display==='none'?'':'none';">
-          <span class="tl-tag ${t}">${t}</span><div class="tl-body" style="flex:1;"><div class="tl-text" style="${done?'text-decoration:line-through;':''}overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px;">${esc(n.content||'')}</div><div class="tl-date">${ds}${as}${done?' ✅ 완료':''}</div>
-          <div id="tl-detail-${n.id}" style="display:none;margin-top:8px;padding:10px;border-radius:8px;background:var(--bg-input);font-size:13px;white-space:pre-wrap;color:var(--text);" onclick="event.stopPropagation();">${esc(n.content||'')}</div>
+        const content=n.content||'';const isLong=content.length>30;
+        h+=`<div class="tl-item" style="${done||past?'opacity:0.5;':''}${isLong?'cursor:pointer;':''}" ${isLong?`onclick="var d=document.getElementById('tl-detail-${n.id}');if(d)d.style.display=d.style.display==='none'?'':'none';"`:''}>
+          <span class="tl-tag ${t}">${t}</span><div class="tl-body" style="flex:1;"><div class="tl-text" style="${done?'text-decoration:line-through;':''}${isLong?'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px;':''}">${esc(content)}</div><div class="tl-date">${ds}${as}${done?' ✅ 완료':''}</div>
+          ${isLong?`<div id="tl-detail-${n.id}" style="display:none;margin-top:8px;padding:10px;border-radius:8px;background:var(--bg-input);font-size:13px;white-space:pre-wrap;color:var(--text);" onclick="event.stopPropagation();">${esc(content)}</div>`:''}
           </div><div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation();">${n.alert_date&&!n.alert_done?`<button class="tl-done-btn" onclick="PanelClient.noteDone('${n.id}','${card.id}')">완료</button>`:''}<button class="tl-delete-btn" onclick="PanelClient.noteDel('${n.id}','${card.id}')">삭제</button></div></div>`;});h+='</div>';}
       el.innerHTML=h;
     }
@@ -2844,12 +2845,13 @@ const PanelClient = (() => {
       if(!ns.length)h+='<div class="empty">아직 상담 기록이 없어요</div>';
       else{h+='<div class="timeline">';ns.forEach(n=>{const t=n.type||'메모',ds=new Date(n.created_at).toLocaleDateString('ko-KR'),as=n.alert_date?' · 📅 '+new Date(n.alert_date).toLocaleDateString('ko-KR'):'';
         const done=n.alert_date&&n.alert_done;const past=!n.alert_date;
-        h+=`<div class="tl-item" style="${done||past?'opacity:0.5;':''}cursor:pointer;" onclick="var d=document.getElementById('tl-detail-${n.id}');if(d)d.style.display=d.style.display==='none'?'':'none';">
+        const content=n.content||'';const isLong=content.length>40;
+        h+=`<div class="tl-item" style="${done||past?'opacity:0.5;':''}${isLong?'cursor:pointer;':''}" ${isLong?`onclick="var d=document.getElementById('tl-detail-${n.id}');if(d)d.style.display=d.style.display==='none'?'':'none';"`:''}>
           <span class="tl-tag ${t}">${t}</span>
           <div class="tl-body" style="flex:1;">
-            <div class="tl-text" style="${done?'text-decoration:line-through;':''}overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:600px;">${esc(n.content||'')}</div>
+            <div class="tl-text" style="${done?'text-decoration:line-through;':''}${isLong?'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:600px;':''}">${esc(content)}</div>
             <div class="tl-date">${ds}${as}${done?' ✅ 완료':''}</div>
-            <div id="tl-detail-${n.id}" style="display:none;margin-top:8px;padding:10px;border-radius:8px;background:var(--bg-input);font-size:13px;white-space:pre-wrap;color:var(--text);" onclick="event.stopPropagation();">${esc(n.content||'')}</div>
+            ${isLong?`<div id="tl-detail-${n.id}" style="display:none;margin-top:8px;padding:10px;border-radius:8px;background:var(--bg-input);font-size:13px;white-space:pre-wrap;color:var(--text);" onclick="event.stopPropagation();">${esc(content)}</div>`:''}
           </div>
           <div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation();">${n.alert_date&&!n.alert_done?`<button class="tl-done-btn" onclick="PanelClient.noteDone('${n.id}','${card.id}')">완료</button>`:''}<button class="tl-delete-btn" onclick="PanelClient.noteDel('${n.id}','${card.id}')">삭제</button></div>
         </div>`;});h+='</div>';}
