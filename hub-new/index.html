@@ -813,11 +813,14 @@ const Data = (() => {
   }
 
   async function loadSharedCards(roomId) {
-    let q = sb().from('card_shares').select('card_id,room_id,cards(id,property,trade_status,agent_id,created_at,photos)').order('created_at',{ascending:false}).limit(100);
+    let q = sb().from('card_shares').select('card_id,room_id,shared_by,cards(id,property,private_note,trade_status,agent_id,agent_comment,created_at,photos),share_rooms(name)').order('created_at',{ascending:false}).limit(100);
     if (roomId) q = q.eq('room_id',roomId);
     const { data } = await q;
-    cache.sharedCards = (data||[]).map(r=>({...r.cards, room_id:r.room_id})).filter(Boolean).filter(c=>c.property?.type!=='손님');
+    cache.sharedCards = (data||[]).map(r=>({...r.cards, room_id:r.room_id, _room_name:r.share_rooms?.name||null, _shared_by:r.shared_by||null})).filter(Boolean).filter(c=>c.property?.type!=='손님');
     cache.sharedCards.sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime());
+    // 중개사 프로필 일괄 조회
+    const agentIds=[...new Set(cache.sharedCards.map(c=>c.agent_id).filter(Boolean))];
+    if(agentIds.length){const {data:profs}=await sb().from('profiles').select('id,business_name,phone').in('id',agentIds);if(profs)profs.forEach(p=>{cache.sharedCards.filter(c=>c.agent_id===p.id).forEach(c=>{c._agent_name=p.business_name;c._agent_phone=p.phone;});});}
     return cache.sharedCards;
   }
 
@@ -3217,9 +3220,27 @@ const PanelShared = (() => {
     let html='';
     Object.entries(groups).forEach(([aid,list])=>{
       const isMine=aid===myId;
-      html+=`<div class="section-label" style="color:${isMine?'var(--primary)':'var(--text-sub)'};">${isMine?'내 매물':'다른 중개사'} (${list.length}건)</div>`;
-      list.forEach(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';
-        html+=`<div class="item">${propertyTypeTag(c)}<div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div>${isMine?`<button class="prop-action-btn delete" onclick="event.stopPropagation();PanelShared.unshare('${c.id}','${c.room_id||''}')">해제</button>`:''}</div>`;
+      const agentLabel=isMine?'내 매물':(list[0]?._agent_name||'다른 중개사');
+      html+=`<div class="section-label" style="color:${isMine?'var(--primary)':'var(--text-sub)'};">${esc(agentLabel)} (${list.length}건)</div>`;
+      list.forEach(c=>{const p=c.property||{};
+        const feats=(p.features||[]).slice(0,3);
+        const toggleFn=`(function(e){e.stopPropagation();var d=document.getElementById('sd-${c.id}');if(d)d.style.display=d.style.display==='none'?'':'none';})`;
+        html+=`<div class="item" style="flex-wrap:wrap;cursor:pointer;" onclick="${toggleFn}(event)">
+          ${propertyTypeTag(c)}
+          <div class="item-body" style="flex:1;min-width:0;">
+            <div class="item-name">${esc(p.complex||p.location||'매물')}</div>
+            <div class="item-sub">${[p.price,p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
+            <div style="display:flex;gap:3px;margin-top:2px;flex-wrap:wrap;">${feats.map(f=>`<span style="padding:1px 5px;border-radius:3px;background:var(--primary-bg);font-size:9px;font-weight:600;color:var(--primary);">${esc(f)}</span>`).join('')}${c._room_name?`<span style="padding:1px 5px;border-radius:3px;background:rgba(99,102,241,0.08);font-size:9px;font-weight:600;color:#6366f1;">${esc(c._room_name)}</span>`:''}${!isMine&&c._agent_name?`<span style="padding:1px 5px;border-radius:3px;background:rgba(249,115,22,0.08);font-size:9px;font-weight:600;color:#f97316;">${esc(c._agent_name)}</span>`:''}</div>
+          </div>
+          ${isMine?`<button class="prop-action-btn delete" onclick="event.stopPropagation();PanelShared.unshare('${c.id}','${c.room_id||''}')">해제</button>`:`<button onclick="${toggleFn}(event)" style="padding:4px 12px;border-radius:6px;border:1.5px solid #60a5fa;background:rgba(96,165,250,0.06);color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">상세</button>`}
+          <div id="sd-${c.id}" style="display:none;width:100%;margin-top:8px;padding:12px;border-radius:10px;background:var(--bg-input);font-size:12px;" onclick="event.stopPropagation();">
+            ${!isMine&&c._agent_name?`<div style="font-weight:700;margin-bottom:6px;">🏢 ${esc(c._agent_name)}${c._agent_phone?' · <a href="tel:'+esc(c._agent_phone)+'" style="color:#60a5fa;">'+esc(c._agent_phone)+'</a>':''}${c._room_name?' · <span style="color:#6366f1;">'+esc(c._room_name)+'</span>':''}</div>`:''}
+            ${c.agent_comment?`<div style="color:var(--primary);margin-bottom:4px;">${esc(c.agent_comment)}</div>`:''}
+            ${c.private_note?.shared_memo?`<div style="color:#f97316;margin-bottom:4px;">🔶 ${esc(c.private_note.shared_memo)}</div>`:''}
+            ${p.rawText?`<div style="color:var(--text-sub);white-space:pre-wrap;">${esc(p.rawText)}</div>`:''}
+            ${c.trade_status?`<div style="margin-top:4px;"><span style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:${c.trade_status==='계약가능'?'rgba(34,197,94,0.1)':'rgba(245,158,11,0.1)'};color:${c.trade_status==='계약가능'?'#22c55e':'#f59e0b'};">${esc(c.trade_status)}</span></div>`:''}
+          </div>
+        </div>`;
       });
     });
     el.innerHTML=html;
