@@ -1,0 +1,1 @@
+SELECT id, property->>'type' as type, property->>'location' as loc, property->>'complex' as complex, tags FROM cards WHERE property->>'type' != '손님' AND tags != '[]'::jsonb ORDER BY created_at DESC LIMIT 3;

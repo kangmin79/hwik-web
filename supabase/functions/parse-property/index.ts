@@ -667,8 +667,7 @@ ${text}`
       wanted_categories: wantedCategories,
       wanted_conditions: wantedConditions,
     });
-    (result as any).tags = tags;
-    console.log(`태그 생성: ${tags.length}개 [${tags.join(', ')}]`);
+    console.log(`태그 생성(1차 키워드): ${tags.length}개 [${tags.join(', ')}]`);
 
     // ★ 로컬 검증: 공개 필드에 남은 민감 키워드를 memo/shared_memo로 이동
     const PRIVATE_KW = ['집주인','세입자','오너','건물주','소유자','임대인','매도인','임차인','관리인','현세입자','전세입자','관리사무소','관리소','이혼','이혼정리','상속','상속정리','이민','하자','곰팡이','누수','누수이력','벌레','바퀴','층간소음','침수','침수이력','여성전용','남성전용','외국인불가','실입주만'];
@@ -702,6 +701,70 @@ ${text}`
       result.shared_memo = [result.shared_memo, ...extraShared].filter(Boolean).join(', ');
       console.log(`거래조건→shared_memo 이동: ${extraShared.join(', ')}`);
     }
+
+    // ★ AI 자가진화 태그: 키워드로 못 잡은 텍스트 → Claude AI 분석 → 태그 추가
+    try {
+      // 기존 태그로 커버된 키워드 제거 → 남은 텍스트 추출
+      const taggedWords = new Set<string>();
+      for (const t of tags) taggedWords.add(t);
+      const allWords = [parsedResult.type, parsedResult.price, parsedResult.location, parsedResult.complex,
+        parsedResult.area, parsedResult.floor, ...(parsedResult.features||[]), parsedResult.memo, parsedResult.shared_memo,
+        parsedResult.contact_name, parsedResult.contact_phone].filter(Boolean).join(' ');
+      // rawText에서 이미 파싱된 정보를 제거한 나머지
+      let remaining = text;
+      for (const w of allWords.split(/\s+/)) { if (w.length >= 2) remaining = remaining.replace(new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), ''); }
+      remaining = remaining.replace(/\d+/g, '').replace(/[,./\-()~\s]+/g, ' ').trim();
+      // 의미 있는 텍스트가 남았으면 AI 분석
+      if (remaining.length >= 4) {
+        // 1. 먼저 ai_tag_mappings에서 기존 학습된 매핑 조회
+        const { data: existingMaps } = await supabase.from('ai_tag_mappings').select('input_text, standard_tag, confidence').gte('confidence', 0.7);
+        const learnedMap: Record<string, string> = {};
+        if (existingMaps) for (const m of existingMaps) learnedMap[m.input_text] = m.standard_tag;
+        // 기존 학습으로 잡히는 태그 추가
+        let aiTagsAdded: string[] = [];
+        for (const [inp, tag] of Object.entries(learnedMap)) {
+          if (remaining.includes(inp) && !tags.includes(tag)) { tags.push(tag); aiTagsAdded.push(`${inp}→${tag}(학습)`); }
+        }
+        // 2. 아직 남은 텍스트 → Claude AI 분석 (비동기, 실패해도 무시)
+        const stillRemaining = remaining;
+        if (stillRemaining.length >= 4) {
+          const FEATURE_LIST = '올수리,풀옵션,신축,리모델링,시스템에어컨,드레스룸,베란다확장,빌트인,부분수리,남향,동향,서향,북향,남동향,남서향,정남향,역세권,초역세권,더블역세권,학군좋음,학원가,대로변,초품아,GTX역세권,주차가능,주차1대,주차2대,주차무료,한강뷰,공원뷰,산뷰,시티뷰,탁트인전망,복층,테라스,루프탑,고층,저층,로얄층,분리형,애견가능,엘리베이터,경비실,보안,무인택배,관리비포함,즉시입주,입주협의,공실,HUG가능,무융자,대출가능,슬세권,런세권,숲세권,채광좋음,조용한동네,통풍좋음,전면넓음,코너자리,유동인구많음,권리금없음,업종제한없음,1층상가';
+          try {
+            const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+              body: JSON.stringify({
+                model: 'claude-haiku-4-5-20251001', max_tokens: 200,
+                messages: [{ role: 'user', content: `부동산 매물 텍스트에서 표준 태그를 추출해주세요.
+표준 태그 목록: ${FEATURE_LIST}
+텍스트: "${stillRemaining}"
+JSON 배열만 반환 (예: [{"input":"살기좋은","tag":"조용한동네","confidence":0.9}])
+매칭되는 것만. 없으면 []` }]
+              })
+            });
+            const aiData = await aiRes.json();
+            const aiText = aiData.content?.[0]?.text || '[]';
+            const jsonMatch = aiText.match(/\[[\s\S]*\]/);
+            if (jsonMatch) {
+              const aiMappings: any[] = JSON.parse(jsonMatch[0]);
+              for (const m of aiMappings) {
+                if (m.tag && m.confidence >= 0.7 && !tags.includes(m.tag)) {
+                  tags.push(m.tag);
+                  aiTagsAdded.push(`${m.input}→${m.tag}(AI:${m.confidence})`);
+                  // ai_tag_mappings에 저장 (upsert)
+                  supabase.from('ai_tag_mappings').upsert({
+                    input_text: m.input, standard_tag: m.tag, confidence: m.confidence, updated_at: new Date().toISOString()
+                  }, { onConflict: 'input_text,standard_tag' }).then(() => {});
+                }
+              }
+            }
+          } catch (aiErr) { console.warn('AI 태그 분석 실패 (무시):', (aiErr as Error).message); }
+        }
+        if (aiTagsAdded.length) console.log(`AI 태그 추가: ${aiTagsAdded.join(', ')}`);
+      }
+    } catch (tagErr) { console.warn('AI 태그 진화 실패 (무시):', (tagErr as Error).message); }
+
+    (result as any).tags = tags;
 
     console.log(`총 소요: ${Date.now() - startTime}ms`);
     console.log('OUTPUT:', { ...result, embedding: embedding ? `[${embedding.length}d]` : null });

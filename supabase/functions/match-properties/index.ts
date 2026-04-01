@@ -17,9 +17,9 @@ Deno.serve(async (req) => {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    const { client_card_id, limit = 10, threshold = 0.15 } = await req.json();
+    const { client_card_id, agent_id: bodyAgentId, limit = 10, threshold = 0.15 } = await req.json();
     if (!client_card_id) throw new Error('client_card_id가 필요합니다');
-    const agent_id = getAuthUserId(req);
+    const agent_id = getAuthUserId(req) || bodyAgentId || null;
     if (!agent_id) throw new Error('인증이 필요합니다');
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -226,12 +226,17 @@ Deno.serve(async (req) => {
     let wantedLocation: string | null = null;
     // cp.location을 먼저 확인
     if (cp.location) {
-      const guFromProp = cp.location.match(/(강남|서초|송파|마포|용산|성동|광진|영등포|강동|동작|관악|종로|중구|강서|양천|구로|노원|서대문|은평|중랑|도봉|동대문|성북|금천|강북)/);
+      const guFromProp = cp.location.match(/(강남구|서초구|송파구|마포구|용산구|성동구|광진구|영등포구|강동구|동작구|관악구|종로구|중구|강서구|양천구|구로구|노원구|서대문구|은평구|중랑구|도봉구|동대문구|성북구|금천구|강북구)/);
       if (guFromProp) wantedLocation = guFromProp[1];
     }
     if (!wantedLocation) {
-      const guMatch = allText.match(/(강남|서초|송파|마포|용산|성동|광진|영등포|강동|동작|관악|종로|중구|강서|양천|구로|노원|서대문|은평|중랑|도봉|동대문|성북|금천|강북)/);
+      const guMatch = allText.match(/(강남구|서초구|송파구|마포구|용산구|성동구|광진구|영등포구|강동구|동작구|관악구|종로구|중구|강서구|양천구|구로구|노원구|서대문구|은평구|중랑구|도봉구|동대문구|성북구|금천구|강북구)/);
       if (guMatch) wantedLocation = guMatch[1];
+    }
+    // "구" 없이 입력된 경우 보정 (마포→마포구)
+    if (!wantedLocation) {
+      const guShort = (cp.location + ' ' + allText).match(/(강남|서초|송파|마포|용산|성동|광진|영등포|강동|동작|관악|종로|강서|양천|구로|노원|서대문|은평|중랑|도봉|동대문|성북|금천|강북)/);
+      if (guShort) wantedLocation = guShort[1] + '구';
     }
 
     // 평수/면적
@@ -294,6 +299,30 @@ Deno.serve(async (req) => {
 
     const effectiveAgentId = agent_id || clientCard.agent_id || '';
 
+    // ★ 공유방 멤버(중개사) 목록 조회 (공유방 매물 = 다른 중개사 매물)
+    let sharedAgentIds: string[] = [];
+    {
+      const { data: myRooms } = await supabase
+        .from('share_room_members')
+        .select('room_id')
+        .eq('member_id', effectiveAgentId)
+        .eq('status', 'accepted');
+      if (myRooms?.length) {
+        const roomIds = myRooms.map((r: any) => r.room_id);
+        // 같은 방 멤버들 = 매물 공유 대상 중개사
+        const { data: members } = await supabase
+          .from('share_room_members')
+          .select('member_id')
+          .in('room_id', roomIds)
+          .eq('status', 'accepted')
+          .neq('member_id', effectiveAgentId);
+        if (members?.length) {
+          sharedAgentIds = [...new Set(members.map((m: any) => m.member_id))];
+        }
+      }
+      console.log(`공유방 중개사: ${sharedAgentIds.length}명`);
+    }
+
     // ★ 태그 기반 매칭 — 필수 태그로 1차 필터 (GIN 인덱스)
     const mustTags: string[] = [];
     if (wantedLocation) mustTags.push(wantedLocation);
@@ -301,66 +330,73 @@ Deno.serve(async (req) => {
     console.log(`태그 매칭: must=[${mustTags}] trades=[${wantedTradeTypes}] cats=[${wantedCats}] price=${minPrice}~${maxPrice}`);
 
     let results: any[] = [];
+    const selectCols = 'id, property, agent_id, agent_comment, price_number, deposit, monthly_rent, trade_status, photos, lat, lng, created_at, search_text, tags';
 
-    // 3. ★ 태그 + 숫자 필터 SQL 검색
-    {
-      let sqlQuery = supabase
-        .from('cards')
-        .select('id, property, agent_id, agent_comment, price_number, deposit, monthly_rent, trade_status, photos, lat, lng, created_at, search_text, tags')
-        .eq('agent_id', effectiveAgentId)
-        .neq('property->>type', '손님')
-        .eq('trade_status', '계약가능');
-
-      // ★ 태그 필수 필터 (GIN 인덱스 — 초고속)
-      if (mustTags.length) {
-        sqlQuery = sqlQuery.contains('tags', mustTags);
+    // 공통 필터 적용 헬퍼
+    function applyFilters(q: any, tagsOnly = false) {
+      q = q.neq('property->>type', '손님').eq('trade_status', '계약가능');
+      // 태그: 지역 + 거래유형을 하나의 배열로 합쳐서 한번에 @>
+      const allMust = [...mustTags];
+      if (wantedTradeTypes.length === 1) allMust.push(wantedTradeTypes[0]);
+      if (allMust.length) q = q.filter('tags', 'cs', JSON.stringify(allMust));
+      if (wantedTradeTypes.length > 1) q = q.in('property->>type', wantedTradeTypes);
+      if (!tagsOnly) {
+        if (wantedCats.length === 1) q = q.eq('property->>category', wantedCats[0]);
+        else if (wantedCats.length > 1) q = q.in('property->>category', wantedCats);
+        if (wantedTradeType === '월세') {
+          const effMaxDep = maxDeposit || (wantedDeposit ? Math.round(wantedDeposit * 1.3) : 0);
+          const effMaxMon = maxMonthly || (wantedMonthly ? Math.round(wantedMonthly * 1.3) : 0);
+          if (effMaxDep > 0) q = q.lte('deposit', effMaxDep);
+          if (effMaxMon > 0) q = q.lte('monthly_rent', effMaxMon);
+        } else {
+          if (maxPrice) q = q.lte('price_number', Math.round(maxPrice * 1.1));
+        }
       }
-      // 거래유형 (태그 OR — SQL IN으로)
-      if (wantedTradeTypes.length === 1) sqlQuery = sqlQuery.contains('tags', wantedTradeTypes);
-      else if (wantedTradeTypes.length > 1) {
-        // 복수 거래유형: property->>type IN 으로 fallback (tags @> 는 AND라서)
-        sqlQuery = sqlQuery.in('property->>type', wantedTradeTypes);
-      }
-      // 카테고리 (OR 지원 위해 property->>category 유지)
-      if (wantedCats.length === 1) sqlQuery = sqlQuery.eq('property->>category', wantedCats[0]);
-      else if (wantedCats.length > 1) sqlQuery = sqlQuery.in('property->>category', wantedCats);
-      // 가격 숫자 직접 비교 (태그 아님)
-      if (wantedTradeType === '월세') {
-        // 월세: 보증금 + 월세금 SQL 필터
-        const effMaxDep = maxDeposit || (wantedDeposit ? Math.round(wantedDeposit * 1.3) : 0);
-        const effMaxMon = maxMonthly || (wantedMonthly ? Math.round(wantedMonthly * 1.3) : 0);
-        if (effMaxDep > 0) sqlQuery = sqlQuery.lte('deposit', effMaxDep);
-        if (effMaxMon > 0) sqlQuery = sqlQuery.lte('monthly_rent', effMaxMon);
-      } else {
-        if (minPrice) sqlQuery = sqlQuery.gte('price_number', minPrice);
-        if (maxPrice) sqlQuery = sqlQuery.lte('price_number', Math.round(maxPrice * 1.1));
-      }
-      sqlQuery = sqlQuery.order('created_at', { ascending: false }).limit(limit * 5);
-
-      const { data: sqlData, error: sqlError } = await sqlQuery;
-      if (!sqlError && sqlData && sqlData.length > 0) {
-        results = sqlData.map((r: any) => ({ ...r, similarity: 0 }));
-        console.log(`SQL 직접 매칭: ${results.length}건 | ${Date.now() - startTime}ms`);
-      }
+      return q.order('created_at', { ascending: false }).limit(limit * 10);
     }
 
-    // SQL 결과 부족하면 — 태그 조건 완화 (지역만으로 재검색)
-    if (results.length < 3 && mustTags.length) {
-      const { data: fallbackData } = await supabase
-        .from('cards')
-        .select('id, property, agent_id, agent_comment, price_number, deposit, monthly_rent, trade_status, photos, lat, lng, created_at, search_text, tags')
-        .eq('agent_id', effectiveAgentId)
-        .neq('property->>type', '손님')
-        .eq('trade_status', '계약가능')
-        .contains('tags', mustTags)
-        .order('created_at', { ascending: false })
-        .limit(limit * 3);
-      if (fallbackData?.length) {
-        const existingIds = new Set(results.map(r => r.id));
-        const newResults = fallbackData.filter((r: any) => !existingIds.has(r.id)).map((r: any) => ({ ...r, similarity: 0 }));
-        results = [...results, ...newResults];
-        console.log(`태그 완화 재검색: +${newResults.length}건`);
+    // 3. ★ 태그 + 숫자 필터 SQL 검색 (내 매물 + 공유방 매물 병렬)
+    {
+      // 내 매물
+      const myQuery = applyFilters(supabase.from('cards').select(selectCols).eq('agent_id', effectiveAgentId));
+      const myPromise = myQuery.then(({ data, error }: any) => { if(error) console.error('myQuery error:', JSON.stringify(error)); return (!error && data) ? data : []; });
+
+      // 공유방 매물 (공유 중개사의 매물)
+      let sharedPromise = Promise.resolve([] as any[]);
+      if (sharedAgentIds.length) {
+        const sq = applyFilters(supabase.from('cards').select(selectCols).in('agent_id', sharedAgentIds));
+        sharedPromise = sq.then(({ data, error }: any) => { if(error) console.error('sharedQuery error:', JSON.stringify(error)); return (!error && data) ? data : []; });
       }
+
+      const [myData, sharedData] = await Promise.all([myPromise, sharedPromise]);
+      const seen = new Set<string>();
+      const merged: any[] = [];
+      // 내 매물 우선
+      for (const r of myData) { if (!seen.has(r.id)) { seen.add(r.id); merged.push({ ...r, _source: 'my', similarity: 0 }); } }
+      for (const r of sharedData) { if (!seen.has(r.id)) { seen.add(r.id); merged.push({ ...r, _source: 'shared', similarity: 0 }); } }
+      results = merged;
+      console.log(`SQL 매칭: 내매물 ${myData.length}건 + 공유 ${sharedData.length}건 = ${results.length}건 | ${Date.now() - startTime}ms`);
+    }
+
+    // SQL 결과 부족하면 — 태그 조건 완화 (지역만으로 재검색, 내매물+공유방)
+    if (results.length < 3 && mustTags.length) {
+      const existingIds = new Set(results.map(r => r.id));
+      // 내 매물
+      const { data: fbMy } = await supabase.from('cards').select(selectCols)
+        .eq('agent_id', effectiveAgentId).neq('property->>type', '손님').eq('trade_status', '계약가능')
+        .filter('tags', 'cs', JSON.stringify(mustTags)).order('created_at', { ascending: false }).limit(limit * 3);
+      // 공유방 매물
+      let fbShared: any[] = [];
+      if (sharedAgentIds.length) {
+        const { data } = await supabase.from('cards').select(selectCols)
+          .in('agent_id', sharedAgentIds).neq('property->>type', '손님').eq('trade_status', '계약가능')
+          .filter('tags', 'cs', JSON.stringify(mustTags)).order('created_at', { ascending: false }).limit(limit * 3);
+        if (data) fbShared = data;
+      }
+      const allFb = [...(fbMy || []), ...fbShared];
+      const newResults = allFb.filter((r: any) => !existingIds.has(r.id)).map((r: any) => ({ ...r, similarity: 0 }));
+      results = [...results, ...newResults];
+      if (newResults.length) console.log(`태그 완화 재검색: +${newResults.length}건`);
     }
 
     // ★ 임베딩 보조 (보험 — 태그로 못 잡는 케이스 보완, 결과 3건 미만일 때만)
@@ -404,7 +440,7 @@ Deno.serve(async (req) => {
     }
 
     if (wantedLocation) {
-      const coordInfo = DISTRICT_COORDS[wantedLocation];
+      const coordInfo = DISTRICT_COORDS[wantedLocation] || DISTRICT_COORDS[wantedLocation.replace(/구$/, '')];
 
       if (coordInfo) {
         // ★ 좌표 기반 점진적 반경 확대 (해당구 → 인근구 → 빈 결과)
@@ -426,24 +462,27 @@ Deno.serve(async (req) => {
 
         if (!locFound) {
           // 좌표 매칭 없으면 DB 직접 검색 (점진적 반경)
-          console.log(`결과 내 위치 매칭 0건 → '${wantedLocation}' DB 재검색 (점진적 반경)`);
+          console.log(`결과 내 위치 매칭 0건 → '${wantedLocation}' DB 재검색 (점진적 반경, 내매물+공유방)`);
           for (const radius of [5, 8]) {
-            let locQuery = supabase
-              .from('cards')
-              .select('id, property, agent_id, agent_comment, price_number, deposit, monthly_rent, trade_status, photos, lat, lng, created_at, search_text, tags')
-              .eq('agent_id', effectiveAgentId)
-              .neq('property->>type', '손님')
-              .eq('trade_status', '계약가능')
-              .order('created_at', { ascending: false })
-              .limit(limit * 5);
-            if (wantedTradeTypes.length === 1) locQuery = locQuery.eq('property->>type', wantedTradeTypes[0]);
-            else if (wantedTradeTypes.length > 1) locQuery = locQuery.in('property->>type', wantedTradeTypes);
-            if (wantedCats.length === 1) locQuery = locQuery.eq('property->>category', wantedCats[0]);
-            else if (wantedCats.length > 1) locQuery = locQuery.in('property->>category', wantedCats);
-            const { data: locData } = await locQuery;
+            // 내 매물 + 공유방 매물 동시 검색
+            const buildLocQ = (base: any) => {
+              let q = base.neq('property->>type', '손님').eq('trade_status', '계약가능')
+                .order('created_at', { ascending: false }).limit(limit * 5);
+              if (wantedTradeTypes.length === 1) q = q.eq('property->>type', wantedTradeTypes[0]);
+              else if (wantedTradeTypes.length > 1) q = q.in('property->>type', wantedTradeTypes);
+              if (wantedCats.length === 1) q = q.eq('property->>category', wantedCats[0]);
+              else if (wantedCats.length > 1) q = q.in('property->>category', wantedCats);
+              return q;
+            };
+            const locMyQ = buildLocQ(supabase.from('cards').select(selectCols).eq('agent_id', effectiveAgentId));
+            let locSharedQ = Promise.resolve({ data: null as any });
+            if (sharedAgentIds.length) {
+              locSharedQ = buildLocQ(supabase.from('cards').select(selectCols).in('agent_id', sharedAgentIds));
+            }
+            const [{ data: locMyData }, { data: locShData }] = await Promise.all([locMyQ, locSharedQ]);
+            const locData = [...(locMyData || []), ...(locShData || [])];
 
-            if (locData && locData.length > 0) {
-              // 좌표 거리로 필터
+            if (locData.length > 0) {
               const nearby = locData.filter((r: any) => {
                 if (!r.lat || !r.lng) return false;
                 return haversineDistance(coordInfo.lat, coordInfo.lng, r.lat, r.lng) <= radius;
@@ -572,8 +611,8 @@ Deno.serve(async (req) => {
         const propLoc = r.property?.location || '';
         if (propLoc.includes(wantedLocation)) {
           score += 20; // 동/구 완전 일치
-        } else if (r.lat && r.lng && DISTRICT_COORDS[wantedLocation]) {
-          const coord = DISTRICT_COORDS[wantedLocation];
+        } else if (r.lat && r.lng && (DISTRICT_COORDS[wantedLocation] || DISTRICT_COORDS[wantedLocation.replace(/구$/, '')])) {
+          const coord = DISTRICT_COORDS[wantedLocation] || DISTRICT_COORDS[wantedLocation.replace(/구$/, '')];
           const dist = haversineDistance(coord.lat, coord.lng, r.lat, r.lng);
           if (dist <= 1) score += 15;
           else if (dist <= 3) score += 10;
@@ -671,21 +710,57 @@ Deno.serve(async (req) => {
     results = results.filter((r: any) => (r._score || 0) >= 0);
 
     // 상위 N개
-    results = results.slice(0, limit).map((r: any) => ({
-      id: r.id,
-      property: r.property,
-      agent_id: r.agent_id || null,
-      agent_comment: r.agent_comment,
-      price_number: r.price_number,
-      trade_status: r.trade_status,
-      photos: r.photos,
-      lat: r.lat,
-      lng: r.lng,
-      created_at: r.created_at,
-      tags: r.tags || [],
-      _score: r._score || null,
-      _recommend: r._recommend || false
-    }));
+    results = results.slice(0, limit);
+
+    // ★ 중개사 프로필 조회 (공유 매물에 중개사 정보 첨부)
+    const otherAgentIds = [...new Set(results.filter((r: any) => r.agent_id && r.agent_id !== effectiveAgentId).map((r: any) => r.agent_id))];
+    let agentProfiles: Record<string, any> = {};
+    if (otherAgentIds.length) {
+      const { data: profiles } = await supabase.from('profiles').select('id, business_name, phone').in('id', otherAgentIds);
+      if (profiles) {
+        for (const p of profiles) agentProfiles[p.id] = p;
+      }
+    }
+    // 공유방 이름 조회 (어떤 공유방에서 온 매물인지)
+    let cardRoomNames: Record<string, string> = {};
+    if (otherAgentIds.length) {
+      const myRoomIds = (await supabase.from('share_room_members').select('room_id').eq('member_id', effectiveAgentId).eq('status', 'accepted')).data?.map((r: any) => r.room_id) || [];
+      if (myRoomIds.length) {
+        const resultIds = results.map((r: any) => r.id);
+        const { data: shares } = await supabase.from('card_shares').select('card_id, room_id').in('card_id', resultIds).in('room_id', myRoomIds);
+        if (shares?.length) {
+          const roomIds = [...new Set(shares.map((s: any) => s.room_id))];
+          const { data: rooms } = await supabase.from('share_rooms').select('id, name').in('id', roomIds);
+          const roomMap: Record<string, string> = {};
+          if (rooms) for (const rm of rooms) roomMap[rm.id] = rm.name;
+          for (const s of shares) {
+            if (!cardRoomNames[s.card_id] && roomMap[s.room_id]) cardRoomNames[s.card_id] = roomMap[s.room_id];
+          }
+        }
+      }
+    }
+
+    results = results.map((r: any) => {
+      const isMine = r.agent_id === effectiveAgentId;
+      const profile = !isMine ? agentProfiles[r.agent_id] : null;
+      return {
+        id: r.id,
+        property: r.property,
+        agent_id: r.agent_id || null,
+        agent_comment: r.agent_comment,
+        price_number: r.price_number,
+        trade_status: r.trade_status,
+        photos: r.photos,
+        lat: r.lat,
+        lng: r.lng,
+        created_at: r.created_at,
+        tags: r.tags || [],
+        _score: r._score || null,
+        _recommend: r._recommend || false,
+        _agent: profile ? { name: profile.business_name, phone: profile.phone } : null,
+        _room: cardRoomNames[r.id] || null
+      };
+    });
 
     console.log(`매칭 완료: ${Date.now() - startTime}ms | ${results.length}건`);
 
@@ -701,6 +776,7 @@ Deno.serve(async (req) => {
       wanted_move_by: wantedMoveBy,
       wanted_deposit: wantedDeposit,
       wanted_monthly: wantedMonthly,
+      // _debug: { sharedAgentIds: sharedAgentIds.length, mustTags, ..._debugSql },
       results,
       count: results.length,
     }), {
