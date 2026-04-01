@@ -1983,7 +1983,7 @@ const Hub = (() => {
       </div>
       <div id="detail-${m.id}" style="display:none;margin-top:8px;padding:12px;border-radius:10px;background:var(--bg-input);">
         ${mp.address?`<div style="font-size:12px;color:var(--text-sub);margin-bottom:4px;">📍 ${esc(mp.address)}</div>`:''}
-        ${m.agent_comment?`<div style="font-size:12px;color:var(--primary);margin-bottom:4px;">💬 ${esc(m.agent_comment)}</div>`:''}
+        ${m.agent_comment?`<div style="font-size:12px;color:var(--primary);margin-bottom:4px;">${esc(m.agent_comment)}</div>`:''}
       </div>
     </div>`;
   }
@@ -2355,7 +2355,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
         </div>
         <div id="detail-${c.id}" style="display:none;margin-top:8px;margin-left:28px;padding:12px;border-radius:10px;background:var(--bg-input);">
           ${p.address?`<div style="font-size:12px;color:var(--text-sub);margin-bottom:4px;">📍 ${esc(p.address)}</div>`:''}
-          ${c.agent_comment?`<div style="font-size:12px;color:var(--primary);margin-bottom:4px;">💬 ${esc(c.agent_comment)}</div>`:''}
+          ${c.agent_comment?`<div style="font-size:12px;color:var(--primary);margin-bottom:4px;">${esc(c.agent_comment)}</div>`:''}
           <div style="display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
             <span style="font-size:11px;color:var(--text-light);">거래상태</span>
             <button onclick="PanelCards.chgStatus('${c.id}','계약가능')" style="padding:3px 10px;border-radius:6px;border:1px solid ${st==='계약가능'?'#22c55e':'var(--border)'};background:${st==='계약가능'?'rgba(34,197,94,0.1)':'transparent'};color:${st==='계약가능'?'#22c55e':'var(--text-light)'};font-size:10px;font-weight:700;cursor:pointer;">계약가능</button>
@@ -2630,7 +2630,7 @@ const PanelClient = (() => {
           <div id="mdet-${m.id}" style="display:none;margin-top:8px;padding:12px;border-radius:10px;background:var(--bg-input);font-size:12px;color:var(--text-sub);">
             ${m._agent?`<div style="margin-bottom:6px;font-weight:700;color:var(--text);">🏢 ${esc(m._agent.name||'')}${m._agent.phone?' · <a href="tel:'+esc(m._agent.phone)+'" style="color:#60a5fa;">'+esc(m._agent.phone)+'</a>':''}${m._room?' · <span style="color:#6366f1;">'+esc(m._room)+'</span>':''}</div>`:''}
             ${mp.rawText?`<div style="margin-bottom:4px;white-space:pre-wrap;">${esc(mp.rawText)}</div>`:''}
-            ${m.agent_comment?`<div style="color:var(--primary);margin-bottom:4px;">💬 ${esc(m.agent_comment)}</div>`:''}
+            ${m.agent_comment?`<div style="color:var(--primary);margin-bottom:4px;">${esc(m.agent_comment)}</div>`:''}
             ${mp.moveIn?`<div>입주: ${esc(mp.moveIn)}</div>`:''}
           </div></div>`;
       }).join('')+`<button class="btn-primary" style="margin-top:12px;" onclick="PanelClient.reMatch('${card.id}')">매칭 다시 찾기</button>`;
