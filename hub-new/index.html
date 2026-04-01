@@ -2366,7 +2366,7 @@ const PanelCards = (() => {
   async function render(el){
     el.innerHTML=`<div class="panel-with-preview"><div class="panel-input"><div class="panel-inner">${Hub.panelHead('내 매물')}
       <div id="tabMine">
-        <div class="search"><input type="text" id="myQ" oninput="PanelCards.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelCards.onQEnter()"></div>
+        <div class="search"><input type="text" id="myQ" onkeydown="if(event.key==='Enter')PanelCards.onQEnter()"></div>
         <div id="searchHint" style="display:none;font-size:11px;color:var(--primary);margin:-12px 0 12px 4px;">💡 Enter로 AI 검색 (더 많은 결과)</div>
         <div id="myList">${hwikLoading()}</div>
         <div id="myMore" style="display:none;text-align:center;padding:12px;"><button class="btn-load-more" onclick="PanelCards.more()">더 보기</button></div>
@@ -2384,7 +2384,8 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
   function setSort(s,btn){cSort=s;document.querySelectorAll('.sort-tag').forEach(b=>b.classList.remove('active'));btn?.classList.add('active');renderList();}
   function onQ(q){cQuery=q;renderList();const hint=document.getElementById('searchHint');if(hint)hint.style.display=q.trim()?'':'none';}
   async function onQEnter(){
-    if(!cQuery.trim())return;
+    cQuery=document.getElementById('myQ')?.value||'';
+    if(!cQuery.trim()){renderList();return;}
     const el=document.getElementById('myList');
     el.innerHTML=hwikLoading('검색 중...');
     // 손님 키워드 감지
@@ -2635,7 +2636,7 @@ const PanelClient = (() => {
         </div>
       </div>
       <div>
-        <div class="search"><input type="text" id="clQ" oninput="PanelClient.onQ(this.value)" onkeydown="if(event.key==='Enter')PanelClient.onQEnter()"></div>
+        <div class="search"><input type="text" id="clQ" onkeydown="if(event.key==='Enter')PanelClient.onQEnter()"></div>
         <div id="clList" style="min-height:200px;">${hwikLoading()}</div>
       </div>
     </div>`;
@@ -2829,9 +2830,10 @@ const PanelClient = (() => {
   }
 
   function setSort(s,btn){cSort=s;document.querySelectorAll('.sort-tag').forEach(b=>b.classList.remove('active'));btn?.classList.add('active');_renderList();}
-  function onQ(q){cQuery=q;_renderList();}
+  function onQ(q){cQuery=q;}
   async function onQEnter(){
-    if(!cQuery.trim())return;
+    cQuery=document.getElementById('clQ')?.value||'';
+    if(!cQuery.trim()){render(document.getElementById('panelArea'));return;}
     const el=document.getElementById('clList');el.innerHTML=hwikLoading('검색 중...');
     // 손님 키워드 없어도 손님 패널에서는 손님 우선 + 내 매물도 표시
     const [clR,myR]=await Promise.all([Search.vector(cQuery,'client'),Search.vector(cQuery,'my')]);
@@ -3198,7 +3200,7 @@ const PanelShared = (() => {
     h+='</div>';
 
     // 검색
-    h+=`<div class="search"><input type="text" id="sharedQ" placeholder="예) ${_agentGu()} 아파트 전세 5억이하" oninput="PanelShared.onSearch(this.value)" onkeydown="if(event.key==='Enter')PanelShared.onSearchEnter()"></div>`;
+    h+=`<div class="search"><input type="text" id="sharedQ" placeholder="예) ${_agentGu()} 아파트 전세 5억이하" onkeydown="if(event.key==='Enter')PanelShared.onSearchEnter()"></div>`;
     // 매물 리스트
     h+='<div id="sharedList">'+hwikLoading()+'</div></div>';
     el.innerHTML=h;
@@ -3331,7 +3333,8 @@ const PanelShared = (() => {
   let _sharedQuery='';
   function onSearch(q){_sharedQuery=q;_renderList();}
   async function onSearchEnter(){
-    if(!_sharedQuery.trim())return;
+    _sharedQuery=document.getElementById('sharedQ')?.value||'';
+    if(!_sharedQuery.trim()){_renderList();return;}
     const el=document.getElementById('sharedList');if(!el)return;el.innerHTML=hwikLoading('검색 중...');
     const clientKw=['손님','찾는분','구하는분','구합니다','구해요','찾습니다','구함'];
     const isClient=clientKw.some(k=>_sharedQuery.includes(k));
