@@ -2482,8 +2482,12 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
     const c=Data.cache.myCards.find(x=>x.id===id);if(!c)return;
     const wasSelected=Preview.getSelected().some(s=>s.id===id);
     Preview.toggle(c);
+    const sel=Preview.getSelected();
     renderList();Preview.renderSlider('previewPanel');
-    if(!wasSelected&&Preview.getSelected().length>0)Preview.goTo(Preview.getSelected().length-1);
+    if(sel.length>0){
+      if(!wasSelected)Preview.goTo(sel.length-1);
+      else Preview.goTo(Math.min(sel.length-1,Math.max(0,sel.length-1)));
+    }
     const pp=document.getElementById('previewPanel');
     const has=Preview.getSelected().length>0;
     if(pp){pp.style.width=has?'340px':'0';pp.style.opacity=has?'1':'0';pp.style.padding=has?'16px':'0';}
