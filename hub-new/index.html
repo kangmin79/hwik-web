@@ -2410,7 +2410,29 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
       }
       if(shR.length){
         html+=`<div style="font-size:13px;font-weight:700;color:#22c55e;margin:16px 0 8px;">공유 매물 (${shR.length}건)</div>`;
-        html+=shR.map(c=>{const p=c.property||{},tc=p.type==='매매'?'sale':p.type==='전세'?'jeonse':'rent';return `<div class="item">${propertyTypeTag(c)}<div class="item-body"><div class="item-name">${esc(p.complex||p.location||'매물')}</div><div class="item-sub">${[p.price,p.area].filter(Boolean).map(v=>esc(v)).join(' · ')}</div></div></div>`;}).join('');
+        html+=shR.map(c=>{const p=c.property||{};const feats=(p.features||[]).slice(0,3);
+          const st=c.trade_status||'계약가능';const stC=st==='계약가능'?'#22c55e':st==='계약중'?'#f59e0b':'#ef4444';
+          const mainText=[p.complex,p.location].filter(Boolean).map(v=>esc(v)).join(' · ');
+          const subText=[p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ');
+          const toggleFn=`(function(e){e.stopPropagation();var d=document.getElementById('sd-${c.id}');if(d)d.style.display=d.style.display==='none'?'':'none';})`;
+          return `<div class="item" style="flex-wrap:wrap;cursor:pointer;${st!=='계약가능'?'opacity:0.6;':''}" onclick="${toggleFn}(event)">
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                ${propertyTypeTag(c)}<span style="font-size:10px;font-weight:700;color:${stC};">${st}</span>
+                <strong style="font-size:14px;">${esc(p.price||'-')}</strong>
+                <span style="font-size:13px;color:var(--text-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${mainText}</span>
+                <span style="font-size:12px;color:var(--text-light);">${subText?'· '+subText:''}</span>
+              </div>
+              <div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;">${feats.map(f=>`${featTag(f)}`).join('')}</div>
+            </div>
+            <div style="flex-shrink:0;" onclick="event.stopPropagation();">
+              <button onclick="${toggleFn}(event)" style="padding:4px 12px;border-radius:6px;border:1.5px solid #60a5fa;background:rgba(96,165,250,0.06);color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer;">상세</button>
+            </div>
+            <div id="sd-${c.id}" style="display:none;width:100%;margin-top:8px;padding:12px;border-radius:10px;background:var(--bg-input);font-size:12px;" onclick="event.stopPropagation();">
+              ${c.agent_comment?`<div style="color:var(--primary);margin-bottom:4px;">${esc(c.agent_comment)}</div>`:''}
+              <div style="color:var(--text-sub);">${[p.type,p.price,p.location,p.complex,p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
+            </div>
+          </div>`;}).join('');
       }
       if(!myR.length&&!shR.length)html='<div class="empty"><div class="empty-icon">🔍</div>검색 결과가 없어요</div>';
       el.innerHTML=html;
