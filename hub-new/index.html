@@ -2122,57 +2122,98 @@ const PanelRegister = (() => {
       // 2. 카드 ID 생성
       const linkId=crypto.randomUUID().slice(0,12);
 
-      // 3. 파싱 결과에서 property 구성 (필요한 필드만)
-      const property={
-        type:r.type||null, price:r.price||null, location:r.location||null, address:r.address||null,
-        complex:r.complex||null, area:r.area||null, floor:r.floor||null, room:r.room||null,
-        features:r.features||[], moveIn:r.moveIn||null, category:r.category||null, rawText:text
-      };
+      // 3. 파싱 결과 임시 저장 → 확인 팝업
+      _pendingParse={r,text,linkId};
+      _showConfirmPopup(r,text);
+    }catch(e){document.getElementById('regResult').innerHTML=`<div class="reg-error">오류: ${esc(e.message)}</div>`;}
+    document.getElementById('leaveBanner').style.display='none';btn.textContent='AI로 카드 만들기';btn.disabled=false;_resetSteps();
+  }
 
-      // 4. 사진 업로드 + 좌표 매칭 동시 실행
+  let _pendingParse=null;
+
+  function _showConfirmPopup(r,text){
+    const p=r;const feats=(p.features||[]).slice(0,8);
+    const m=document.getElementById('editModal');if(!m)return;
+    m.innerHTML=`<div class="modal-content edit-modal" style="max-width:600px;"><div class="modal-header">📋 매물 정보 확인<button class="modal-close" onclick="this.closest('.modal-overlay').classList.remove('show')">✕</button></div><div class="modal-body" style="max-height:70vh;overflow-y:auto;">
+      <div style="font-size:11px;color:var(--text-light);margin-bottom:12px;">AI가 분석한 결과입니다. 수정 후 저장하세요.</div>
+      <div style="font-size:13px;font-weight:800;margin-bottom:8px;">📱 손님에게 보이는 정보</div>
+      <div class="edit-grid">
+        <div class="edit-field"><label>거래유형</label><select id="cfType"><option ${p.type==='매매'?'selected':''}>매매</option><option ${p.type==='전세'?'selected':''}>전세</option><option ${p.type==='월세'?'selected':''}>월세</option></select></div>
+        <div class="edit-field"><label>가격</label><input id="cfPrice" value="${esc(p.price||'')}"></div>
+        <div class="edit-field"><label>단지명</label><input id="cfComplex" value="${esc(p.complex||'')}"></div>
+        <div class="edit-field"><label>위치</label><input id="cfLocation" value="${esc(p.location||'')}"></div>
+        <div class="edit-field"><label>면적</label><input id="cfArea" value="${esc(p.area||'')}"></div>
+        <div class="edit-field"><label>층</label><input id="cfFloor" value="${esc(p.floor||'')}"></div>
+      </div>
+      <div class="edit-field" style="margin-top:8px;"><label>특징</label><div class="edit-tags" id="cfTags">${feats.map(f=>`<span class="edit-chip">${esc(f)} <button onclick="this.parentElement.remove()">✕</button></span>`).join('')}<input class="edit-tag-input" placeholder="태그 추가 (Enter)" onkeydown="if(event.key==='Enter'){event.preventDefault();PanelRegister.addCfTag(this)}"></div></div>
+      <div class="edit-field" style="margin-top:8px;"><label>손님에게 한마디</label><textarea id="cfComment" class="edit-textarea" style="min-height:40px;border:2px solid #4ecdc4;">${esc(document.getElementById('regComment')?.value||p.agent_comment||'')}</textarea></div>
+
+      <div style="font-size:13px;font-weight:800;margin:16px 0 8px;color:#f97316;">🔶 공유방 중개사에게 보이는 정보</div>
+      <div class="edit-field"><textarea id="cfShared" class="edit-textarea" style="min-height:40px;border:2px solid #f97316;" placeholder="네고, 융자, 급매, 거래조건 등">${esc(p.shared_memo||'')}</textarea></div>
+
+      <div style="font-size:13px;font-weight:800;margin:16px 0 8px;color:#6366f1;">🔒 나만 보는 정보</div>
+      <div class="edit-field"><textarea id="cfMemo" class="edit-textarea" style="min-height:40px;border:2px solid #6366f1;" placeholder="집주인 정보, 호수, 하자 등">${esc(p.memo||'')}</textarea></div>
+      ${p.contact_name||p.contact_phone?`<div style="font-size:11px;color:var(--text-light);margin-top:4px;">연락처: ${esc(p.contact_name||'')} ${esc(p.contact_phone||'')}</div>`:''}
+
+      <div class="edit-buttons" style="margin-top:16px;"><button class="btn-cancel" onclick="this.closest('.modal-overlay').classList.remove('show')">취소</button><button class="btn-primary" style="width:auto;padding:10px 24px;" onclick="PanelRegister.confirmSave()">확인 후 저장</button></div>
+    </div></div>`;
+    m.classList.add('show');
+  }
+
+  function addCfTag(inp){const v=inp.value.trim();if(!v)return;inp.insertAdjacentHTML('beforebegin',`<span class="edit-chip">${esc(v)} <button onclick="this.parentElement.remove()">✕</button></span>`);inp.value='';}
+
+  async function confirmSave(){
+    if(!_pendingParse)return;
+    const {r,text,linkId}=_pendingParse;
+    const btn=document.getElementById('regBtn');
+    try{
+      // 팝업에서 수정된 값 반영
+      const property={
+        type:document.getElementById('cfType').value, price:document.getElementById('cfPrice').value,
+        location:document.getElementById('cfLocation').value, address:r.address||null,
+        complex:document.getElementById('cfComplex').value, area:document.getElementById('cfArea').value,
+        floor:document.getElementById('cfFloor').value, room:r.room||null,
+        features:Array.from(document.querySelectorAll('#cfTags .edit-chip')).map(el=>el.textContent.replace('✕','').trim()),
+        moveIn:r.moveIn||null, category:r.category||null, rawText:text
+      };
+      const comment=document.getElementById('cfComment')?.value?.trim();
+      const sharedMemo=document.getElementById('cfShared')?.value?.trim();
+      const privateMemo=document.getElementById('cfMemo')?.value?.trim();
+
+      // 사진 업로드 + 좌표 매칭
       const needCoord=!r.lat&&(property.complex||property.location);
       const [photoUrls,coordResult]=await Promise.all([
         pendingPhotos.length?Data.uploadPhotos(linkId,pendingPhotos.map(p=>p.file)):[],
         needCoord?Data.matchCoords(property):Promise.resolve(null)
       ]);
-
-      // 5. 최종 좌표 (Edge Function 결과 우선 → DB 매칭 → 카카오)
       const finalLat=r.lat||(coordResult?.lat)||null;
       const finalLng=r.lng||(coordResult?.lng)||null;
+      const _pf=Data.parsePriceFields(property.price,property.type);
 
-      // 6. 카드 데이터 구성 + DB 저장
-      const comment=document.getElementById('regComment')?.value?.trim();
       const cardData={
-        id:linkId,
-        agent_id:Auth.user.id,
-        property,
-        private_note:{memo:r.memo||null,rawText:text},
+        id:linkId, agent_id:Auth.user.id, property,
+        private_note:{memo:privateMemo||null,shared_memo:sharedMemo||null,rawText:text},
         agent_comment:comment||r.agent_comment||null,
         lat:finalLat, lng:finalLng,
         embedding:r.embedding||null,
-        search_text:r.search_text||null,
-        search_text_private:r.search_text_private||null,
-        price_number:r.price_number||null,
-        deposit:r.deposit||null,
-        monthly_rent:r.monthly_rent||null,
-        move_in_date:r.move_in_date||null,
-        wanted_trade_type:r.wanted_trade_type||null,
-        contact_name:r.contact_name||null,
-        contact_phone:r.contact_phone||null,
-        photos:photoUrls.length?photoUrls:null,
-        trade_status:'계약가능',
-        tags:r.tags||[]
+        search_text:r.search_text||null, search_text_private:r.search_text_private||null,
+        price_number:_pf.price_number||r.price_number||null,
+        deposit:_pf.deposit||r.deposit||null, monthly_rent:_pf.monthly_rent||r.monthly_rent||null,
+        move_in_date:r.move_in_date||null, wanted_trade_type:r.wanted_trade_type||null,
+        contact_name:r.contact_name||null, contact_phone:r.contact_phone||null,
+        photos:photoUrls.length?photoUrls:null, trade_status:'계약가능', tags:r.tags||[]
       };
 
       const {error:dbErr}=await Auth.sb.from('cards').insert([cardData]);
       if(dbErr)throw new Error('저장 실패: '+dbErr.message);
 
-      // 7. 자동 매칭 (백그라운드)
       if(property.type!=='손님')Data.triggerAutoMatch(linkId);
 
+      document.getElementById('editModal').classList.remove('show');
       document.getElementById('regResult').innerHTML='<div class="reg-success">✅ 매물 카드가 생성되었습니다!</div>';
-      inp.value='';pendingPhotos=[];_renderPhotos();onInput();
+      document.getElementById('regInput').value='';pendingPhotos=[];_renderPhotos();onInput();
       document.getElementById('regComment').value='';
+      _pendingParse=null;
     }catch(e){document.getElementById('regResult').innerHTML=`<div class="reg-error">오류: ${esc(e.message)}</div>`;}
     document.getElementById('leaveBanner').style.display='none';btn.textContent='AI로 카드 만들기';btn.disabled=false;_resetSteps();
   }
@@ -2240,7 +2281,7 @@ const PanelRegister = (() => {
     document.getElementById('leaveBanner').style.display='none';Toast.show(`${saved}건 저장 완료`);btn.textContent='전체 저장';btn.disabled=false;fiParsedCards=[];fiDeletedIds=new Set();document.getElementById('fiResults').style.display='none';document.getElementById('fiDirectInput').value='';
   }
 
-  return { render, onInput, handlePhotos, removePhoto, handleOCR, doRegister, handleFile, setFiFilter, fiEdit, fiBatchSaveEdit, fiDelete, fiSaveAll };
+  return { render, onInput, handlePhotos, removePhoto, handleOCR, doRegister, handleFile, setFiFilter, fiEdit, fiBatchSaveEdit, fiDelete, fiSaveAll, addCfTag, confirmSave };
 })();
 
 /* ═══════════════════════════════════════════════════════════

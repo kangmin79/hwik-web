@@ -430,8 +430,8 @@ area 필드에 ㎡가 있으면 평수도 함께 표기 (예: "84.8㎡(25.7평)"
 - "전세금 안전한", "보증보험 되는" → HUG가능
 - "융자 없는", "깨끗한 등기" → 무융자
 
-■ memo (비공개): 호수, 연락처, 거래조건, 네고가능, 급매, 사람정보, 기타
-
+■ memo (나만 보기 — 절대 공개 금지): 호수, 연락처, 사람이름, 사람정보, 이혼/상속/이민 사유, 하자/누수/곰팡이/층간소음 결함정보
+■ shared_memo (중개사끼리 공유 OK — 손님에게는 비공개): 네고가능, 급매, 융자정보, 호가, 시세, 실투자금, 권리금, 수익률, 계약조건, 잔금일정, 입주협의 상세
 ■ agent_comment:
 - 💬 이모지로 시작하는 줄이 있으면 추출
 - 없으면 null (실거래가 기반으로 서버에서 생성)
@@ -439,18 +439,19 @@ area 필드에 ㎡가 있으면 평수도 함께 표기 (예: "84.8㎡(25.7평)"
 
 {
   "type": "매매/전세/월세/손님 중 하나",
-  "price": "가격",
+  "price": "가격만 (네고/협의 등 제외)",
   "location": "지역 (구+동, 예: 마포구 합정동)",
   "address": "도로명주소 (있으면 추출, 예: 서울시 마포구 양화로 123. 없으면 null)",
   "complex": "단지명 (없으면 null)",
   "area": "면적 (㎡있으면 평수 병기)",
-  "floor": "동+층만",
+  "floor": "동+층만 (호수 제외 — 호수는 memo로)",
   "room": "방 구조",
   "features": ["화이트리스트 특징만"],
   "moveIn": "입주일",
-  "contact_name": "사람 이름 (있으면 추출. 손님이면 손님 이름, 매물이면 매도자/임대인 이름. 없으면 null)",
+  "contact_name": "사람 이름 (있으면 추출. 없으면 null)",
   "contact_phone": "전화번호 (010-XXXX-XXXX 형태. 없으면 null)",
-  "memo": "비공개 정보 (이름/전화번호 제외한 나머지)",
+  "memo": "나만 보는 정보 (호수, 사람정보, 하자, 개인사유 등. 없으면 null)",
+  "shared_memo": "중개사 공유 정보 (네고, 융자, 급매, 거래조건, 시세 등. 없으면 null)",
   "agent_comment": "중개사 코멘트 (없으면 null)",
   "category": "apartment/officetel/room/commercial/office"
 }
@@ -668,6 +669,39 @@ ${text}`
     });
     (result as any).tags = tags;
     console.log(`태그 생성: ${tags.length}개 [${tags.join(', ')}]`);
+
+    // ★ 로컬 검증: 공개 필드에 남은 민감 키워드를 memo/shared_memo로 이동
+    const PRIVATE_KW = ['집주인','세입자','오너','건물주','소유자','임대인','매도인','임차인','관리인','현세입자','전세입자','관리사무소','관리소','이혼','이혼정리','상속','상속정리','이민','하자','곰팡이','누수','누수이력','벌레','바퀴','층간소음','침수','침수이력','여성전용','남성전용','외국인불가','실입주만'];
+    const SHARED_KW = ['네고','협의가능','가격협의','융자','근저당','가압류','대출','대출승계','담보','실투자금','선순위','후순위','호가','시세','KB시세','감정가','공시가','공시지가','월수익','순수익','순이익','월순익','연수익','예상수익','임대수익','급매','급전세','급월세','급처분','투자금회수','계약일','계약만료','잔금','잔금일','만기','만기일','권리금','수익률','월매출','공실','연체'];
+    const publicFields = ['price','location','complex','area','floor','room'];
+    let extraMemo: string[] = [];
+    let extraShared: string[] = [];
+    for (const field of publicFields) {
+      const val = (result as any)[field] || '';
+      if (!val) continue;
+      for (const kw of PRIVATE_KW) {
+        if (val.includes(kw)) { extraMemo.push(`${kw}(${field}에서 이동)`); (result as any)[field] = val.replace(new RegExp(kw + '[^\\s]*', 'g'), '').trim(); }
+      }
+      for (const kw of SHARED_KW) {
+        if (val.includes(kw)) { extraShared.push(`${kw}(${field}에서 이동)`); (result as any)[field] = val.replace(new RegExp(kw + '[^\\s]*', 'g'), '').trim(); }
+      }
+    }
+    // features에서도 체크
+    if (result.features?.length) {
+      result.features = result.features.filter((f: string) => {
+        if (PRIVATE_KW.some(kw => f.includes(kw))) { extraMemo.push(f); return false; }
+        if (SHARED_KW.some(kw => f.includes(kw))) { extraShared.push(f); return false; }
+        return true;
+      });
+    }
+    if (extraMemo.length) {
+      result.memo = [result.memo, ...extraMemo].filter(Boolean).join(', ');
+      console.log(`민감정보→memo 이동: ${extraMemo.join(', ')}`);
+    }
+    if (extraShared.length) {
+      result.shared_memo = [result.shared_memo, ...extraShared].filter(Boolean).join(', ');
+      console.log(`거래조건→shared_memo 이동: ${extraShared.join(', ')}`);
+    }
 
     console.log(`총 소요: ${Date.now() - startTime}ms`);
     console.log('OUTPUT:', { ...result, embedding: embedding ? `[${embedding.length}d]` : null });
