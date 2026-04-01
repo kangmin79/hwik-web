@@ -387,15 +387,22 @@ function render() {
     if (val) tradeItems = [val];
   }
 
-  const tradeListHtml = tradeItems.slice(0,5).map(t => `
+  const tradeListHtml = tradeItems.slice(0,5).map(t => {
+    let priceDisplay;
+    if (currentTab === '월세' && t.monthly) {
+      priceDisplay = `보증금 ${formatPrice(t.price)} / 월 ${t.monthly}만`;
+    } else {
+      priceDisplay = formatPrice(t.price);
+    }
+    return `
     <div class="trade-item">
       <div>
-        <div class="trade-price">${formatPrice(t.price)}</div>
+        <div class="trade-price">${priceDisplay}</div>
         <div class="trade-detail">${pyLabel}${t.floor ? ' · ' + t.floor + '층' : ''}</div>
       </div>
       <div class="trade-date">${esc(t.date || '')}</div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 
   // 휙 매물
   const listingCount = {};
@@ -624,7 +631,7 @@ function render() {
 
     <!-- 최근 실거래 -->
     <div class="section">
-      <div class="section-title">최근 실거래</div>
+      <div class="section-title">${currentTab === '월세' ? '최근 월세 거래' : '최근 실거래'}</div>
       <div class="trade-list">${tradeListHtml || '<div style="font-size:12px;color:var(--sub);padding:8px 0;">거래 내역이 없습니다</div>'}</div>
     </div>
 
