@@ -2959,9 +2959,9 @@ const PanelClient = (() => {
       if(!card)return;
       const tags=[...new Set([...(card.tags||[]),...newTags])];
       const updates={tags};
-      if(isRequired){const rt=[...new Set([...(card.required_tags||[]),...newTags])];(updates as any).required_tags=rt;}
+      if(isRequired){const rt=[...new Set([...(card.required_tags||[]),...newTags])];updates.required_tags=rt;}
       // 좌표 없으면 구 좌표 설정
-      if(!card.lat&&guM&&_guCoords[guM[1]]){(updates as any).lat=_guCoords[guM[1]].lat;(updates as any).lng=_guCoords[guM[1]].lng;}
+      if(!card.lat&&guM&&_guCoords[guM[1]]){updates.lat=_guCoords[guM[1]].lat;updates.lng=_guCoords[guM[1]].lng;}
       await Auth.sb.from('cards').update(updates).eq('id',cardId);
     }catch(_){}
   }
