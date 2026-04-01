@@ -458,6 +458,7 @@ body.dark .phone-screen{background:#0f172a;}
 .cal-day.overdue-day{background:#fef2f2;border-color:#fca5a5;}
 .cal-day .cal-evt.schedule{background:#eef2ff;color:#4f46e5;}
 .cal-day .cal-evt.done{background:#f1f5f9;color:#94a3b8;text-decoration:line-through;}
+.cal-day .cal-evt.log{background:#f0fdf4;color:#16a34a;}
 
 /* ═══════════════════════════════════════════════════════════
    13. 상세 정보
@@ -908,8 +909,14 @@ const Data = (() => {
     const start = `${year}-${String(month).padStart(2,'0')}-01`;
     const em = month===12?1:month+1, ey = month===12?year+1:year;
     const end = `${ey}-${String(em).padStart(2,'0')}-01`;
-    const { data } = await sb().from('client_notes').select('id,client_card_id,content,alert_date,type,alert_done,created_at').eq('agent_id',id).neq('alert_date',null).gte('alert_date',start).lt('alert_date',end).order('alert_date',{ascending:true});
-    return data||[];
+    // alert_date 있는 메모 (일정)
+    const { data: scheduled } = await sb().from('client_notes').select('id,client_card_id,content,alert_date,type,alert_done,created_at').eq('agent_id',id).neq('alert_date',null).gte('alert_date',start).lt('alert_date',end).order('alert_date',{ascending:true});
+    // alert_date 없는 메모 (기록) → created_at 기준
+    const { data: logs } = await sb().from('client_notes').select('id,client_card_id,content,alert_date,type,alert_done,created_at').eq('agent_id',id).is('alert_date',null).gte('created_at',start).lt('created_at',end).order('created_at',{ascending:true});
+    // logs는 alert_date 대신 created_at을 사용
+    const merged = [...(scheduled||[]), ...(logs||[]).map(n=>({...n, alert_date:n.created_at, _isLog:true}))];
+    merged.sort((a,b)=>new Date(a.alert_date).getTime()-new Date(b.alert_date).getTime());
+    return merged;
   }
 
   async function loadMemos() {
@@ -3331,7 +3338,7 @@ const PanelAlert = (() => {
       let evtHtml='';
       evts.slice(0,2).forEach(a=>{
         const past=new Date(a.alert_date)<today&&!a.alert_done;
-        const cls=a.alert_done?'done':past?'overdue':'schedule';
+        const cls=a._isLog?'log':a.alert_done?'done':past?'overdue':'schedule';
         evtHtml+=`<span class="cal-evt ${cls}">${esc((a.content||a.type||'').slice(0,8))}</span>`;
       });
       if(evts.length>2)evtHtml+=`<span style="font-size:8px;color:var(--text-light);">+${evts.length-2}건</span>`;
