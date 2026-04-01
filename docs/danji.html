@@ -223,9 +223,18 @@ async function loadData() {
   document.querySelector('meta[name="description"]').content = desc;
   document.getElementById('canonical').href = `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;
 
-  // 첫 번째 평형 선택
+  // 거래 데이터 있는 첫 번째 면적 선택 (없으면 84㎡에 가장 가까운 것)
   const cats = data.categories || [];
-  if (cats.length > 0) currentPyeong = cats[0];
+  const rt = data.recent_trade || {};
+  const firstWithTrade = cats.find(c => rt[c] && rt[c].price);
+  if (firstWithTrade) {
+    currentPyeong = firstWithTrade;
+  } else if (cats.length > 0) {
+    // 84㎡에 가장 가까운 면적
+    let best = cats[0], bestDiff = 999;
+    cats.forEach(c => { const d = Math.abs(parseInt(c) - 84); if (d < bestDiff) { bestDiff = d; best = c; } });
+    currentPyeong = best;
+  }
 
   render();
 }
