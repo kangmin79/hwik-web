@@ -813,10 +813,11 @@ const Data = (() => {
   }
 
   async function loadSharedCards(roomId) {
-    let q = sb().from('card_shares').select('card_id,room_id,cards(id,property,trade_status,agent_id,created_at,photos)').order('created_at',{ascending:false}).limit(20);
+    let q = sb().from('card_shares').select('card_id,room_id,cards(id,property,trade_status,agent_id,created_at,photos)').order('created_at',{ascending:false}).limit(100);
     if (roomId) q = q.eq('room_id',roomId);
     const { data } = await q;
     cache.sharedCards = (data||[]).map(r=>({...r.cards, room_id:r.room_id})).filter(Boolean).filter(c=>c.property?.type!=='손님');
+    cache.sharedCards.sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime());
     return cache.sharedCards;
   }
 
