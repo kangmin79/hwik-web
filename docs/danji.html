@@ -568,8 +568,8 @@ function render() {
     ${toggleRowHtml}
     <div class="pyeong-row">${pyeongHtml}</div>
 
-    <!-- 지표 1행: 시세 -->
-    <div class="metrics">
+    <!-- 지표 1행: 시세 (월세 탭에서는 숨김) -->
+    ${currentTab !== '월세' ? `<div class="metrics">
       <div class="metric">
         <div class="metric-label">최근 실거래</div>
         <div class="metric-value">${recentPrice ? formatPrice(recentPrice) : '-'}</div>
@@ -584,9 +584,9 @@ function render() {
         <div class="metric-label">전세가율</div>
         <div class="metric-value">${jeonseRate ? jeonseRate + '%' : '-'}</div>
       </div>
-    </div>
-    <!-- 지표 2행: ㎡당 가격 + 주차 + 최고층/세대수 (3개만) -->
-    ${(() => {
+    </div>` : ''}
+    <!-- 지표 2행: ㎡당 가격 + 주차 + 최고층/세대수 (월세 탭에서는 숨김) -->
+    ${currentTab === '월세' ? '' : (() => {
       const cells = [];
       // ㎡당 가격 (전용/공급 토글 반영)
       let sqmArea = currentPyeong ? parseFloat(currentPyeong) : 0;
@@ -612,13 +612,15 @@ function render() {
       }).join('') + '</div>';
     })()}
 
-    <!-- 거래량 + 그래프 -->
+    <!-- 거래량 + 그래프 (월세 탭에서는 숨김) -->
+    ${currentTab !== '월세' ? `
     <div class="chart-section">
       <div class="chart-title">거래량</div>
       <div style="height:40px;position:relative;"><canvas id="volumeChart"></canvas></div>
       <div class="chart-title" style="margin-top:8px;">실거래가</div>
       <div class="chart-wrap"><canvas id="priceChart"></canvas></div>
     </div>
+    ` : ''}
 
     <!-- 최근 실거래 -->
     <div class="section">
