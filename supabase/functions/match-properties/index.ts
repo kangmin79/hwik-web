@@ -276,14 +276,16 @@ Deno.serve(async (req) => {
 
     const effectiveAgentId = agent_id || clientCard.agent_id || '';
 
-    // 구조화 조건 개수 확인
-    const structuredCount = [wantedTradeTypes.length?true:null, wantedCategory, minPrice || maxPrice, wantedLocation].filter(Boolean).length;
-    console.log(`매칭 조건: trade=${wantedTradeTypes.join('+')} cat=${wantedCats.join('+')} loc=${wantedLocation} price=${minPrice}~${maxPrice} (구조화 ${structuredCount}개)`);
+    // ★ 태그 기반 매칭 — 필수 태그로 1차 필터 (GIN 인덱스)
+    const mustTags: string[] = [];
+    if (wantedLocation) mustTags.push(wantedLocation);
+    // 거래유형과 카테고리는 SQL IN으로 처리 (태그 @> 는 AND 연산이라)
+    console.log(`태그 매칭: must=[${mustTags}] trades=[${wantedTradeTypes}] cats=[${wantedCats}] price=${minPrice}~${maxPrice}`);
 
     let results: any[] = [];
 
-    // 3. ★ 구조화 조건 2개 이상이면 SQL 직접 검색 (정확하고 빠름)
-    if (structuredCount >= 2) {
+    // 3. ★ 태그 + 숫자 필터 SQL 검색
+    {
       let sqlQuery = supabase
         .from('cards')
         .select('id, property, agent_id, agent_comment, price_number, deposit, monthly_rent, trade_status, photos, lat, lng, created_at, search_text, tags')
@@ -291,19 +293,23 @@ Deno.serve(async (req) => {
         .neq('property->>type', '손님')
         .eq('trade_status', '계약가능');
 
-      if (wantedTradeTypes.length === 1) sqlQuery = sqlQuery.eq('property->>type', wantedTradeTypes[0]);
-      else if (wantedTradeTypes.length > 1) sqlQuery = sqlQuery.in('property->>type', wantedTradeTypes);
-      // 복수 카테고리 OR 조건
+      // ★ 태그 필수 필터 (GIN 인덱스 — 초고속)
+      if (mustTags.length) {
+        sqlQuery = sqlQuery.contains('tags', mustTags);
+      }
+      // 거래유형 (태그 OR — SQL IN으로)
+      if (wantedTradeTypes.length === 1) sqlQuery = sqlQuery.contains('tags', wantedTradeTypes);
+      else if (wantedTradeTypes.length > 1) {
+        // 복수 거래유형: property->>type IN 으로 fallback (tags @> 는 AND라서)
+        sqlQuery = sqlQuery.in('property->>type', wantedTradeTypes);
+      }
+      // 카테고리 (OR 지원 위해 property->>category 유지)
       if (wantedCats.length === 1) sqlQuery = sqlQuery.eq('property->>category', wantedCats[0]);
       else if (wantedCats.length > 1) sqlQuery = sqlQuery.in('property->>category', wantedCats);
-      // ★ 월세는 price_number가 보증금이라 월세금과 비교 불가 → SQL 가격 필터 스킵
+      // 가격 숫자 직접 비교 (태그 아님)
       if (wantedTradeType !== '월세') {
         if (minPrice) sqlQuery = sqlQuery.gte('price_number', minPrice);
         if (maxPrice) sqlQuery = sqlQuery.lte('price_number', Math.round(maxPrice * 1.1));
-      }
-      // ★ 위치 필터 — property.location 텍스트로 직접 필터 (bounding box 대신)
-      if (wantedLocation) {
-        sqlQuery = sqlQuery.or(`property->>location.ilike.%${wantedLocation}%,search_text.ilike.%${wantedLocation}%`);
       }
       sqlQuery = sqlQuery.order('created_at', { ascending: false }).limit(limit * 5);
 

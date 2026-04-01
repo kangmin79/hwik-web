@@ -645,20 +645,34 @@ Deno.serve(async (req) => {
         .eq('agent_id', agent_id)
         .neq('property->>type', '손님');
 
-      // 구조화 필터 (파서가 추출한 것)
-      if (finalTradeType) sqlQuery = sqlQuery.eq('property->>type', finalTradeType);
-      if (finalPropertyType) sqlQuery = sqlQuery.eq('property->>category', finalPropertyType);
-      if (parsed.filters?.min_price) sqlQuery = sqlQuery.gte('price_number', parsed.filters.min_price);
-      if (parsed.filters?.max_price) sqlQuery = sqlQuery.lte('price_number', Math.round(parsed.filters.max_price * 1.1));
-
-      // ★ 검색어 단어별 텍스트 매칭 (AND)
+      // ★ 태그 기반 1차 필터 (GIN 인덱스)
+      const searchTags: string[] = [];
+      if (finalTradeType) searchTags.push(finalTradeType);
+      // 카테고리 → 태그 변환
+      const catTagMap: Record<string,string> = {apartment:'아파트',officetel:'오피스텔',room:'빌라',commercial:'상가',office:'사무실'};
+      if (finalPropertyType && catTagMap[finalPropertyType]) searchTags.push(catTagMap[finalPropertyType]);
+      // 지역/특징 키워드 → 태그
       for (const word of searchWords) {
-        // 거래유형/카테고리/가격 키워드는 이미 구조화 필터로 처리됨 → 스킵
         if (['매매','전세','월세','아파트','오피스텔','원룸','투룸','빌라','상가','사무실','원투룸'].includes(word)) continue;
         if (/^\d+억|^\d+천|^\d+이하|^\d+이상/.test(word)) continue;
         if (word.length < 2) continue;
-        // 나머지 단어 = 지역명/단지명/특징 → search_text에서 매칭
-        sqlQuery = sqlQuery.ilike('search_text', `%${word}%`);
+        // 동의어 변환
+        const std = SYNONYM_MAP[word] || word;
+        searchTags.push(std);
+      }
+      // 태그 필터 적용 (GIN 인덱스 활용)
+      if (searchTags.length) {
+        sqlQuery = sqlQuery.contains('tags', searchTags);
+      }
+      // 가격은 숫자 직접 비교
+      if (parsed.filters?.min_price) sqlQuery = sqlQuery.gte('price_number', parsed.filters.min_price);
+      if (parsed.filters?.max_price) sqlQuery = sqlQuery.lte('price_number', Math.round(parsed.filters.max_price * 1.1));
+      // ★ fallback: 태그 없는 기존 매물 → search_text ILIKE
+      if (!searchTags.length) {
+        for (const word of searchWords) {
+          if (word.length < 2) continue;
+          sqlQuery = sqlQuery.ilike('search_text', `%${word}%`);
+        }
       }
 
       sqlQuery = sqlQuery.order('created_at', { ascending: false }).limit(limit * multiplier);

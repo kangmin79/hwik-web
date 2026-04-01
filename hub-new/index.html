@@ -1197,6 +1197,12 @@ const Search = (() => {
 
       let score=0;
       if(filterType)score+=10;if(filterCat)score+=7;if(minPrice!==null||maxPrice!==null)score+=5;
+      // ★ 태그 매칭 보너스
+      const cardTags=c.tags||[];
+      if(cardTags.length){
+        for(const w of searchWords){if(cardTags.includes(w))score+=15;}
+        if(filterType&&cardTags.includes(filterType))score+=10;
+      }
       for(const w of searchWords){for(const [fn,fv] of Object.entries(fields)){if(fv.includes(w)){score+=_fieldWeights[fn]||1;if(fv===w||fv.split(' ').includes(w))score+=3;}}}
 
       return {card:c,score,created:c.created_at};
