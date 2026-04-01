@@ -3271,8 +3271,9 @@ const PanelShared = (() => {
             ${photos.length?`<div style="display:flex;gap:6px;margin-bottom:8px;overflow-x:auto;">${photos.map(u=>`<img src="${esc(u)}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0;cursor:pointer;" onclick="window.open('${esc(u)}','_blank')">`).join('')}</div>`:''}
             ${c.agent_comment?`<div style="color:var(--primary);margin-bottom:4px;">${esc(c.agent_comment)}</div>`:''}
             ${c.private_note?.shared_memo?`<div style="color:#f97316;margin-bottom:4px;">🔶 ${esc(c.private_note.shared_memo)}</div>`:''}
-            ${p.rawText?`<div style="color:var(--text-sub);white-space:pre-wrap;">${esc(p.rawText)}</div>`:''}
-            ${c.trade_status?`<div style="margin-top:4px;"><span style="padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;background:${c.trade_status==='계약가능'?'rgba(34,197,94,0.1)':'rgba(245,158,11,0.1)'};color:${c.trade_status==='계약가능'?'#22c55e':'#f59e0b'};">${esc(c.trade_status)}</span></div>`:''}
+            <div style="color:var(--text-sub);margin-bottom:4px;">${[p.type,p.price,p.location,p.complex,p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
+            ${(p.features||[]).length?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:4px;">${p.features.map(f=>`<span style="padding:1px 5px;border-radius:3px;background:var(--primary-bg);font-size:9px;font-weight:600;color:var(--primary);">${esc(f)}</span>`).join('')}</div>`:''}
+            ${p.moveIn?`<div style="color:var(--text-light);font-size:11px;">입주: ${esc(p.moveIn)}</div>`:''}
           </div>
         </div>`;
       });
