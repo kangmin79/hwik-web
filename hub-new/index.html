@@ -1543,9 +1543,8 @@ const Hub = (() => {
     hc.style.cssText='position:static;transform:none;width:auto;height:auto;padding:10px 20px;border-radius:16px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 8px rgba(0,0,0,0.06);';
     hc.innerHTML=`<div style="font-size:22px;">${center.icon}</div><div><div style="font-size:13px;font-weight:800;">${esc(center.name)}</div>${center.sub?`<div style="font-size:10px;color:var(--text-light);">${esc(center.sub)}</div>`:''}</div>`;
 
-    // 노드를 static flex 아이템으로 — 선택된 노드를 맨 위로
-    const sorted=[...nodes].sort((a,b)=>{if(a.key===activePanel)return -1;if(b.key===activePanel)return 1;return 0;});
-    sorted.forEach(n=>{
+    // 노드를 static flex 아이템으로 — 원래 순서 유지
+    nodes.forEach(n=>{
       const active=activePanel===n.key;
       const c=Data.cache.counts;let badge='';
       if(n.key==='alert'&&c.alert)badge=`<span class="hub-node-badge alert">${c.alert}</span>`;
