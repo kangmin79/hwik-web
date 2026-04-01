@@ -416,7 +416,7 @@ function render() {
   const nearbyHtml = nearby.map(n => {
     const prices = n.prices || {};
     // 현재 선택 평형 ±10㎡ 범위에서 가장 가까운 가격 찾기
-    let bestKey = null, bestDiff = 999, bestPrice = null, bestExclu = null, bestSupply = null;
+    let bestKey = null, bestDiff = 999, bestPrice = null, bestExclu = null, bestSupply = null, bestDate = null;
     for (const k of Object.keys(prices)) {
       const diff = Math.abs(parseInt(k) - curArea);
       if (diff <= 10 && diff < bestDiff) {
@@ -425,6 +425,7 @@ function render() {
         bestPrice = prices[k].price;
         bestExclu = prices[k].exclu || parseInt(k);
         bestSupply = prices[k].supply;
+        bestDate = prices[k].date || null;
       }
     }
     // 면적 표시 (전용/공급 토글 반영)
@@ -442,7 +443,7 @@ function render() {
       </div>
       <div style="text-align:right">
         <div class="nearby-price">${bestPrice ? formatPrice(bestPrice) : '-'}</div>
-        ${diffHtml}
+        ${bestDate ? '<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+esc(bestDate)+'</div>' : ''}
       </div>
     </div>`;
   }).join('');

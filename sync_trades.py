@@ -670,6 +670,7 @@ def fill_nearby_complex(danji_list: list, apartments: list):
                             supply = round(other_pm[str(area)].get("supply", 0)) or None
                         prices[k] = {
                             "price": v.get("price"),
+                            "date": v.get("date"),
                             "exclu": area,
                             "supply": supply,
                         }
