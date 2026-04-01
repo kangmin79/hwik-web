@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { generateTags } from '../_shared/tags.ts'
+import { fixTypos } from '../_shared/typo.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://hwik.kr',
@@ -330,7 +331,9 @@ Deno.serve(async (req) => {
     const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY');
     if (!ANTHROPIC_API_KEY) throw new Error('서버 설정 오류입니다.');
 
-    const { text } = await req.json();
+    let { text } = await req.json();
+    // ★ 오타/띄어쓰기 교정 (AI 전달 전)
+    text = fixTypos(text || '');
     if (!text || text.trim().length < 10)
       return new Response(JSON.stringify({ error: '매물 정보가 너무 짧습니다. 최소 10자 이상 입력해주세요.' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
