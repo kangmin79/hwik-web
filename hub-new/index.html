@@ -3253,8 +3253,9 @@ const PanelShared = (() => {
         const toggleFn=`(function(e){e.stopPropagation();var d=document.getElementById('sd-${c.id}');if(d)d.style.display=d.style.display==='none'?'':'none';})`;
         let thumbHtml='';
         if(photos.length){thumbHtml=`<div style="width:44px;height:44px;border-radius:6px;overflow:hidden;flex-shrink:0;position:relative;"><img src="${esc(photos[0])}" style="width:100%;height:100%;object-fit:cover;">${photos.length>1?`<span style="position:absolute;bottom:1px;right:2px;font-size:9px;color:#fff;background:rgba(0,0,0,0.6);padding:1px 4px;border-radius:3px;">${photos.length}</span>`:''}</div>`;}
-        html+=`<div class="item" style="flex-wrap:wrap;cursor:pointer;" onclick="${toggleFn}(event)">
-          ${propertyTypeTag(c)}
+        const st=c.trade_status||'계약가능';const stC=st==='계약가능'?'#22c55e':st==='계약중'?'#f59e0b':'#ef4444';
+        html+=`<div class="item" style="flex-wrap:wrap;cursor:pointer;${st!=='계약가능'?'opacity:0.6;':''}" onclick="${toggleFn}(event)">
+          ${propertyTypeTag(c)}<span style="font-size:10px;font-weight:700;color:${stC};">${st}</span>
           <div class="item-body" style="flex:1;min-width:0;">
             <div class="item-name">${esc(p.complex||p.location||'매물')}</div>
             <div class="item-sub">${[p.price,p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
