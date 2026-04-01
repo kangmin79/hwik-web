@@ -1126,6 +1126,37 @@ function clientWantTag(card){
   return [...new Set(tags)].join(' ');
 }
 
+// ★ 특징 태그 카테고리별 색상
+const _featColors={
+  // 시설 (파랑)
+  '올수리':'#2563eb','풀옵션':'#2563eb','신축':'#2563eb','리모델링':'#2563eb','시스템에어컨':'#2563eb','드레스룸':'#2563eb','베란다확장':'#2563eb','빌트인':'#2563eb','부분수리':'#2563eb',
+  // 방향 (주황)
+  '남향':'#ea580c','동향':'#ea580c','서향':'#ea580c','북향':'#ea580c','남동향':'#ea580c','남서향':'#ea580c','정남향':'#ea580c',
+  // 위치/교통 (초록)
+  '역세권':'#16a34a','초역세권':'#16a34a','더블역세권':'#16a34a','학군좋음':'#16a34a','학원가':'#16a34a','대로변':'#16a34a','초품아':'#16a34a','GTX역세권':'#16a34a',
+  // 뷰/구조 (청록)
+  '한강뷰':'#0891b2','공원뷰':'#0891b2','산뷰':'#0891b2','시티뷰':'#0891b2','탁트인전망':'#0891b2','복층':'#0891b2','테라스':'#0891b2','루프탑':'#0891b2','고층':'#0891b2','저층':'#0891b2','로얄층':'#0891b2','분리형':'#0891b2',
+  // 편의 (보라)
+  '주차가능':'#7c3aed','주차1대':'#7c3aed','주차2대':'#7c3aed','주차무료':'#7c3aed','애견가능':'#7c3aed','엘리베이터':'#7c3aed','경비실':'#7c3aed','보안':'#7c3aed','무인택배':'#7c3aed','관리비포함':'#7c3aed',
+  // 입주 (인디고)
+  '즉시입주':'#4f46e5','입주협의':'#4f46e5','공실':'#4f46e5',
+  // 금융 (빨강)
+  'HUG가능':'#dc2626','무융자':'#dc2626','대출가능':'#dc2626',
+  // 생활 (핑크)
+  '슬세권':'#db2777','런세권':'#db2777','숲세권':'#db2777','채광좋음':'#db2777','조용한동네':'#db2777','통풍좋음':'#db2777',
+  // 상가 (갈색)
+  '전면넓음':'#92400e','코너자리':'#92400e','유동인구많음':'#92400e','권리금없음':'#92400e','업종제한없음':'#92400e','1층상가':'#92400e',
+};
+const _featBg={
+  '#2563eb':'rgba(37,99,235,0.08)','#ea580c':'rgba(234,88,12,0.08)','#16a34a':'rgba(22,163,74,0.08)',
+  '#0891b2':'rgba(8,145,178,0.08)','#7c3aed':'rgba(124,58,237,0.08)','#4f46e5':'rgba(79,70,229,0.08)',
+  '#dc2626':'rgba(220,38,38,0.08)','#db2777':'rgba(219,39,119,0.08)','#92400e':'rgba(146,64,14,0.08)',
+};
+function featTag(f){
+  const c=_featColors[f]||'var(--primary)';const bg=_featBg[c]||'var(--primary-bg)';
+  return `<span style="padding:1px 6px;border-radius:4px;background:${bg};font-size:9px;font-weight:600;color:${c};">${esc(f)}</span>`;
+}
+
 // 중개사 사무실 주소에서 구 이름 추출 (예시용)
 function _agentGu(){
   const addr=Auth.profile?.address||localStorage.getItem('hwik_agent')&&JSON.parse(localStorage.getItem('hwik_agent')||'{}').address||'';
@@ -2012,7 +2043,7 @@ const Hub = (() => {
             <span style="font-size:12px;color:var(--text-light);">${subText?'· '+subText:''}</span>
             ${scoreLabel?`<span style="padding:2px 8px;border-radius:6px;background:var(--primary-bg);color:var(--primary);font-size:10px;font-weight:700;">${scoreLabel}</span>`:''}
           </div>
-          ${feats.length?`<div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;">${feats.map(f=>`<span style="padding:1px 6px;border-radius:4px;background:var(--primary-bg);font-size:9px;font-weight:600;color:var(--primary);">${esc(f)}</span>`).join('')}</div>`:''}
+          ${feats.length?`<div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;">${feats.map(f=>`${featTag(f)}`).join('')}</div>`:''}
         </div>
         ${thumbHtml}
         ${btns}
@@ -2420,7 +2451,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
               <span style="font-size:13px;color:var(--text-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${mainText}</span>
               <span style="font-size:12px;color:var(--text-light);">${subText?'· '+subText:''}</span>
             </div>
-            ${feats.length?`<div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;">${feats.map(f=>`<span style="padding:1px 6px;border-radius:4px;background:var(--primary-bg);font-size:9px;font-weight:600;color:var(--primary);">${esc(f)}</span>`).join('')}</div>`:''}
+            ${feats.length?`<div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;">${feats.map(f=>`${featTag(f)}`).join('')}</div>`:''}
           </div>
           ${thumbHtml}
           <div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation()">
@@ -2704,7 +2735,7 @@ const PanelClient = (() => {
             <div onclick="event.stopPropagation();PanelClient.toggleMatchSel('${m.id}')" style="width:20px;height:20px;border:2px solid ${sel?'var(--primary)':'#ccc'};border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${sel?'var(--primary)':'transparent'};cursor:pointer;">${sel?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}</div>
             <div style="flex:1;min-width:0;">
               <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${propertyTypeTag(m)}<span style="font-size:10px;font-weight:700;color:${stC};">${st}</span><strong style="font-size:14px;">${esc(mp.price||'-')}</strong><span style="font-size:13px;color:var(--text-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${mainText}</span><span style="font-size:12px;color:var(--text-light);">${subText?'· '+subText:''}</span>${scoreLabel?`<span style="padding:2px 8px;border-radius:6px;background:var(--primary-bg);color:var(--primary);font-size:10px;font-weight:700;">${scoreLabel}</span>`:''}</div>
-              <div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;">${feats.map(f=>`<span style="padding:1px 6px;border-radius:4px;background:var(--primary-bg);font-size:9px;font-weight:600;color:var(--primary);">${esc(f)}</span>`).join('')}${agentLabel?`<span style="padding:1px 6px;border-radius:4px;background:rgba(249,115,22,0.08);font-size:9px;font-weight:600;color:#f97316;">${esc(agentLabel)}</span>`:''}${roomLabel?`<span style="padding:1px 6px;border-radius:4px;background:rgba(99,102,241,0.08);font-size:9px;font-weight:600;color:#6366f1;">${esc(roomLabel)}</span>`:''}</div>
+              <div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;">${feats.map(f=>`${featTag(f)}`).join('')}${agentLabel?`<span style="padding:1px 6px;border-radius:4px;background:rgba(249,115,22,0.08);font-size:9px;font-weight:600;color:#f97316;">${esc(agentLabel)}</span>`:''}${roomLabel?`<span style="padding:1px 6px;border-radius:4px;background:rgba(99,102,241,0.08);font-size:9px;font-weight:600;color:#6366f1;">${esc(roomLabel)}</span>`:''}</div>
             </div>${thumbHtml}${btns}
           </div>
           <div id="mdet-${m.id}" style="display:none;margin-top:8px;padding:12px;border-radius:10px;background:var(--bg-input);font-size:12px;color:var(--text-sub);">
@@ -3264,7 +3295,7 @@ const PanelShared = (() => {
               <span style="font-size:13px;color:var(--text-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${mainText}</span>
               <span style="font-size:12px;color:var(--text-light);">${subText?'· '+subText:''}</span>
             </div>
-            <div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;">${feats.map(f=>`<span style="padding:1px 5px;border-radius:3px;background:var(--primary-bg);font-size:9px;font-weight:600;color:var(--primary);">${esc(f)}</span>`).join('')}${c._room_name?`<span style="padding:1px 5px;border-radius:3px;background:rgba(99,102,241,0.08);font-size:9px;font-weight:600;color:#6366f1;">${esc(c._room_name)}</span>`:''}${!isMine&&c._agent_name?`<span style="padding:1px 5px;border-radius:3px;background:rgba(249,115,22,0.08);font-size:9px;font-weight:600;color:#f97316;">${esc(c._agent_name)}</span>`:''}</div>
+            <div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;">${feats.map(f=>`${featTag(f)}`).join('')}${c._room_name?`<span style="padding:1px 5px;border-radius:3px;background:rgba(99,102,241,0.08);font-size:9px;font-weight:600;color:#6366f1;">${esc(c._room_name)}</span>`:''}${!isMine&&c._agent_name?`<span style="padding:1px 5px;border-radius:3px;background:rgba(249,115,22,0.08);font-size:9px;font-weight:600;color:#f97316;">${esc(c._agent_name)}</span>`:''}</div>
           </div>
           ${thumbHtml}
           <div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation();">
@@ -3277,7 +3308,7 @@ const PanelShared = (() => {
             ${c.agent_comment?`<div style="color:var(--primary);margin-bottom:4px;">${esc(c.agent_comment)}</div>`:''}
             ${c.private_note?.shared_memo?`<div style="color:#f97316;margin-bottom:4px;">🔶 ${esc(c.private_note.shared_memo)}</div>`:''}
             <div style="color:var(--text-sub);margin-bottom:4px;">${[p.type,p.price,p.location,p.complex,p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
-            ${(p.features||[]).length?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:4px;">${p.features.map(f=>`<span style="padding:1px 5px;border-radius:3px;background:var(--primary-bg);font-size:9px;font-weight:600;color:var(--primary);">${esc(f)}</span>`).join('')}</div>`:''}
+            ${(p.features||[]).length?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:4px;">${p.features.map(f=>`${featTag(f)}`).join('')}</div>`:''}
             ${p.moveIn?`<div style="color:var(--text-light);font-size:11px;">입주: ${esc(p.moveIn)}</div>`:''}
           </div>
         </div>`;
@@ -3314,7 +3345,7 @@ const PanelShared = (() => {
           <div class="item-body" style="flex:1;min-width:0;">
             <div class="item-name">${esc(p.complex||p.location||'매물')}</div>
             <div class="item-sub">${[p.price,p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
-            <div style="display:flex;gap:3px;margin-top:2px;flex-wrap:wrap;">${feats.map(f=>`<span style="padding:1px 5px;border-radius:3px;background:var(--primary-bg);font-size:9px;font-weight:600;color:var(--primary);">${esc(f)}</span>`).join('')}${roomName?`<span style="padding:1px 5px;border-radius:3px;background:rgba(99,102,241,0.08);font-size:9px;font-weight:600;color:#6366f1;">${esc(roomName)}</span>`:''}${!isMine&&agentName?`<span style="padding:1px 5px;border-radius:3px;background:rgba(249,115,22,0.08);font-size:9px;font-weight:600;color:#f97316;">${esc(agentName)}</span>`:''}</div>
+            <div style="display:flex;gap:3px;margin-top:2px;flex-wrap:wrap;">${feats.map(f=>`${featTag(f)}`).join('')}${roomName?`<span style="padding:1px 5px;border-radius:3px;background:rgba(99,102,241,0.08);font-size:9px;font-weight:600;color:#6366f1;">${esc(roomName)}</span>`:''}${!isMine&&agentName?`<span style="padding:1px 5px;border-radius:3px;background:rgba(249,115,22,0.08);font-size:9px;font-weight:600;color:#f97316;">${esc(agentName)}</span>`:''}</div>
           </div>${thumbHtml}
           <div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation();">
             <button onclick="${toggleFn}(event)" style="padding:4px 12px;border-radius:6px;border:1.5px solid #60a5fa;background:rgba(96,165,250,0.06);color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer;">상세</button>
@@ -3323,7 +3354,7 @@ const PanelShared = (() => {
             ${!isMine&&agentName?`<div style="font-weight:700;margin-bottom:6px;">🏢 ${esc(agentName)}</div>`:''}
             ${c.agent_comment?`<div style="color:var(--primary);margin-bottom:4px;">${esc(c.agent_comment)}</div>`:''}
             <div style="color:var(--text-sub);">${[p.type,p.price,p.location,p.complex,p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
-            ${(p.features||[]).length?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:4px;">${p.features.map(f=>`<span style="padding:1px 5px;border-radius:3px;background:var(--primary-bg);font-size:9px;font-weight:600;color:var(--primary);">${esc(f)}</span>`).join('')}</div>`:''}
+            ${(p.features||[]).length?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:4px;">${p.features.map(f=>`${featTag(f)}`).join('')}</div>`:''}
           </div>
         </div>`;
       };
