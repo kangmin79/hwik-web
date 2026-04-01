@@ -816,7 +816,15 @@ const Data = (() => {
     let q = sb().from('card_shares').select('card_id,room_id,shared_by,cards(id,property,private_note,trade_status,agent_id,agent_comment,created_at,photos),share_rooms(name)').order('created_at',{ascending:false}).limit(100);
     if (roomId) q = q.eq('room_id',roomId);
     const { data } = await q;
-    cache.sharedCards = (data||[]).map(r=>({...r.cards, room_id:r.room_id, _room_name:r.share_rooms?.name||null, _shared_by:r.shared_by||null})).filter(Boolean).filter(c=>c.property?.type!=='손님');
+    const myId=uid();
+    cache.sharedCards = (data||[]).map(r=>{
+      const card={...r.cards, room_id:r.room_id, _room_name:r.share_rooms?.name||null, _shared_by:r.shared_by||null};
+      // ★ 보안: 다른 중개사 매물은 memo(나만보기) 제거, shared_memo만 유지
+      if(card.private_note&&card.agent_id!==myId){
+        card.private_note={shared_memo:card.private_note.shared_memo||null};
+      }
+      return card;
+    }).filter(Boolean).filter(c=>c.property?.type!=='손님');
     cache.sharedCards.sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime());
     // 중개사 프로필 일괄 조회
     const agentIds=[...new Set(cache.sharedCards.map(c=>c.agent_id).filter(Boolean))];
