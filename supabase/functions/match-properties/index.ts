@@ -363,6 +363,25 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ★ 임베딩 보조 (보험 — 태그로 못 잡는 케이스 보완, 결과 3건 미만일 때만)
+    if (results.length < 3 && clientCard.embedding) {
+      try {
+        const { data: embMatches } = await supabase.rpc('match_properties_for_client', {
+          p_client_embedding: clientCard.embedding,
+          p_agent_id: effectiveAgentId,
+          p_trade_type: wantedTradeType,
+          p_threshold: threshold,
+          p_limit: limit * 3
+        });
+        if (embMatches?.length) {
+          const existingIds = new Set(results.map(r => r.id));
+          const newResults = embMatches.filter((r: any) => !existingIds.has(r.id)).map((r: any) => ({ ...r, similarity: r.similarity || 0 }));
+          results = [...results, ...newResults];
+          console.log(`임베딩 보조(보험): +${newResults.length}건`);
+        }
+      } catch(e) { console.warn('임베딩 보조 실패 (무시):', (e as Error).message); }
+    }
+
     // ★ 거래유형 하드필터 (복수 허용)
     if (wantedTradeTypes.length) {
       results = results.filter((r: any) => wantedTradeTypes.includes(r.property?.type));
@@ -643,7 +662,8 @@ Deno.serve(async (req) => {
         }
       }
 
-      // ⑦ (임베딩 제거됨 — 태그 매칭이 대체)
+      // ⑦ 임베딩 보너스 (보험 — 최대 5점, 태그 점수 대비 5% 이하)
+      if (r.similarity) score += Math.min(Math.round(r.similarity * 5), 5);
 
       return { ...r, _score: score };
     });
