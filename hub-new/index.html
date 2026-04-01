@@ -3254,12 +3254,17 @@ const PanelShared = (() => {
         let thumbHtml='';
         if(photos.length){thumbHtml=`<div style="width:44px;height:44px;border-radius:6px;overflow:hidden;flex-shrink:0;position:relative;"><img src="${esc(photos[0])}" style="width:100%;height:100%;object-fit:cover;">${photos.length>1?`<span style="position:absolute;bottom:1px;right:2px;font-size:9px;color:#fff;background:rgba(0,0,0,0.6);padding:1px 4px;border-radius:3px;">${photos.length}</span>`:''}</div>`;}
         const st=c.trade_status||'계약가능';const stC=st==='계약가능'?'#22c55e':st==='계약중'?'#f59e0b':'#ef4444';
+        const mainText=[p.complex,p.location].filter(Boolean).map(v=>esc(v)).join(' · ');
+        const subText=[p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ');
         html+=`<div class="item" style="flex-wrap:wrap;cursor:pointer;${st!=='계약가능'?'opacity:0.6;':''}" onclick="${toggleFn}(event)">
-          ${propertyTypeTag(c)}<span style="font-size:10px;font-weight:700;color:${stC};">${st}</span>
-          <div class="item-body" style="flex:1;min-width:0;">
-            <div class="item-name">${esc(p.complex||p.location||'매물')}</div>
-            <div class="item-sub">${[p.price,p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
-            <div style="display:flex;gap:3px;margin-top:2px;flex-wrap:wrap;">${feats.map(f=>`<span style="padding:1px 5px;border-radius:3px;background:var(--primary-bg);font-size:9px;font-weight:600;color:var(--primary);">${esc(f)}</span>`).join('')}${c._room_name?`<span style="padding:1px 5px;border-radius:3px;background:rgba(99,102,241,0.08);font-size:9px;font-weight:600;color:#6366f1;">${esc(c._room_name)}</span>`:''}${!isMine&&c._agent_name?`<span style="padding:1px 5px;border-radius:3px;background:rgba(249,115,22,0.08);font-size:9px;font-weight:600;color:#f97316;">${esc(c._agent_name)}</span>`:''}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+              ${propertyTypeTag(c)}<span style="font-size:10px;font-weight:700;color:${stC};">${st}</span>
+              <strong style="font-size:14px;">${esc(p.price||'-')}</strong>
+              <span style="font-size:13px;color:var(--text-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${mainText}</span>
+              <span style="font-size:12px;color:var(--text-light);">${subText?'· '+subText:''}</span>
+            </div>
+            <div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;">${feats.map(f=>`<span style="padding:1px 5px;border-radius:3px;background:var(--primary-bg);font-size:9px;font-weight:600;color:var(--primary);">${esc(f)}</span>`).join('')}${c._room_name?`<span style="padding:1px 5px;border-radius:3px;background:rgba(99,102,241,0.08);font-size:9px;font-weight:600;color:#6366f1;">${esc(c._room_name)}</span>`:''}${!isMine&&c._agent_name?`<span style="padding:1px 5px;border-radius:3px;background:rgba(249,115,22,0.08);font-size:9px;font-weight:600;color:#f97316;">${esc(c._agent_name)}</span>`:''}</div>
           </div>
           ${thumbHtml}
           <div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation();">
