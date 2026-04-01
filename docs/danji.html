@@ -408,12 +408,7 @@ function render() {
       if (showSupply && bestSupply) areaLabel = '공급 ' + Math.round(bestSupply) + '㎡';
       else areaLabel = '전용 ' + bestExclu + '㎡';
     }
-    let diffHtml = '';
-    if (bestPrice && recentPrice) {
-      const diff = bestPrice - recentPrice;
-      if (diff > 0) diffHtml = `<div class="nearby-diff pricier">▲ ${formatPrice(diff)}</div>`;
-      else if (diff < 0) diffHtml = `<div class="nearby-diff cheaper">▼ ${formatPrice(Math.abs(diff))}</div>`;
-    }
+    const diffHtml = '';
     return `
     <div class="nearby-item" onclick="location.href='danji.html?id=${esc(n.id)}'">
       <div>
