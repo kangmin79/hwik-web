@@ -66,7 +66,8 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 
 /* 지표 */
 .metrics { padding:0 16px 12px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
-.metric { background:var(--card); border-radius:var(--radius); padding:12px; transition:background .15s; }
+.metric { background:var(--card); border-radius:var(--radius); padding:12px; transition:all .15s; cursor:default; }
+.metric:hover { box-shadow:0 2px 8px rgba(0,0,0,0.08); transform:translateY(-1px); }
 .metric:active { background:#e9eaed; }
 .metric-label { font-size:10px; color:var(--sub); margin-bottom:4px; }
 .metric-value { font-size:15px; font-weight:500; }
@@ -86,6 +87,7 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 .section { padding:16px; }
 .trade-list { display:flex; flex-direction:column; gap:8px; }
 .trade-item { display:flex; justify-content:space-between; padding:12px 14px; background:var(--surface); border-radius:var(--radius); border-left:3px solid var(--yellow); box-shadow:0 1px 4px rgba(0,0,0,0.06); transition:all .15s; }
+.trade-item:hover { box-shadow:0 3px 10px rgba(0,0,0,0.1); transform:translateY(-1px); }
 .trade-item:active { background:#f0f0f2; transform:scale(0.98); }
 .trade-price { font-size:16px; font-weight:700; color:var(--dark); }
 .trade-detail { font-size:11px; color:var(--sub); margin-top:3px; }
@@ -96,7 +98,8 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 
 /* 휙 매물 */
 .listing-badge { font-size:11px; padding:3px 10px; background:var(--yellow-dim); border-radius:20px; color:#ba7517; font-weight:500; }
-.listing-item { display:flex; justify-content:space-between; padding:14px; border:1.5px solid var(--yellow); border-radius:var(--radius); background:var(--yellow-bg); cursor:pointer; box-shadow:0 1px 4px rgba(245,200,66,0.15); transition:transform .15s; }
+.listing-item { display:flex; justify-content:space-between; padding:14px; border:1.5px solid var(--yellow); border-radius:var(--radius); background:var(--yellow-bg); cursor:pointer; box-shadow:0 1px 4px rgba(245,200,66,0.15); transition:all .15s; }
+.listing-item:hover { box-shadow:0 3px 10px rgba(245,200,66,0.25); transform:translateY(-1px); }
 .listing-item:active { transform:scale(0.98); background:rgba(245,200,66,0.12); }
 .listing-link { font-size:11px; color:#ba7517; align-self:center; font-weight:500; }
 .listing-empty { text-align:center; padding:20px 16px; border:1.5px dashed var(--yellow); border-radius:var(--radius); background:var(--yellow-bg); }
@@ -106,7 +109,7 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 /* 주변 단지 */
 .nearby-item { display:flex; justify-content:space-between; align-items:center; padding:14px; background:var(--surface); border-radius:var(--radius); cursor:pointer; transition:all .15s; box-shadow:0 1px 4px rgba(0,0,0,0.05); }
 .nearby-item:active { transform:scale(0.98); background:#f0f0f2; }
-.nearby-item:hover { box-shadow:0 2px 8px rgba(0,0,0,0.08); }
+.nearby-item:hover { box-shadow:0 3px 10px rgba(0,0,0,0.1); transform:translateY(-1px); }
 .nearby-name { font-size:13px; font-weight:600; }
 .nearby-sub { font-size:11px; color:var(--sub); margin-top:2px; }
 .nearby-price { font-size:14px; font-weight:700; text-align:right; }
