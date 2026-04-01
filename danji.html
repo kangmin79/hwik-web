@@ -661,8 +661,10 @@ function render() {
     render();
   }));
   $$('.pyeong-btn').forEach(el => el.addEventListener('click', () => {
-    currentPyeong = el.dataset.cat;
-    render();
+    if (el.dataset.cat) {
+      currentPyeong = el.dataset.cat;
+      render();
+    }
   }));
 
   // 차트
