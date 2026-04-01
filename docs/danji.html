@@ -537,43 +537,26 @@ function render() {
         <div class="metric-value">${jeonseRate ? jeonseRate + '%' : '-'}</div>
       </div>
     </div>
-    <!-- 지표 2행: 동적으로 채움 (데이터 있는 것만, 3열 그리드) -->
+    <!-- 지표 2행: ㎡당 가격 + 주차 + 최고층/세대수 (3개만) -->
     ${(() => {
       const cells = [];
-      // 평당가
-      const py = currentPyeong ? Math.round(parseInt(currentPyeong) / 3.3058) : 0;
-      const ppPrice = (recentPrice && py > 0) ? Math.round(recentPrice / py) : null;
-      if (ppPrice) cells.push({label:'평당가', value:formatPrice(ppPrice), sub:py+'평 기준'});
+      // ㎡당 가격 (전용면적 기준)
+      const areaNum = currentPyeong ? parseFloat(currentPyeong) : 0;
+      const sqmPrice = (recentPrice && areaNum > 0) ? Math.round(recentPrice / areaNum) : null;
+      if (sqmPrice) cells.push({label:'㎡당 가격', value:formatPrice(sqmPrice), sub:'전용면적 기준'});
       // 주차
       const pk = parseInt(d.parking || 0);
       const hh = parseInt(d.total_units || 0);
       if (pk > 0) cells.push({label:'주차', value:pk.toLocaleString()+'대', sub: hh > 0 ? '세대당 '+(pk/hh).toFixed(1)+'대' : ''});
-      // 최고층
+      // 최고층 또는 세대수
       if (d.top_floor) cells.push({label:'최고층', value:d.top_floor+'층'});
-      // 관리비
-      if (d.mgmt_fee) cells.push({label:'월 관리비', value:Math.round(d.mgmt_fee/10000)+'만원', sub:'세대당 평균'});
-      // 난방
-      if (d.heating) cells.push({label:'난방', value:d.heating});
-      // 시공사
-      if (d.builder) cells.push({label:'시공', value:d.builder});
-      // 준공
-      if (d.build_year) cells.push({label:'준공', value:d.build_year+'년'});
-      // 세대수
-      if (d.total_units) cells.push({label:'세대수', value:d.total_units.toLocaleString()+'세대'});
+      else if (d.total_units) cells.push({label:'세대수', value:d.total_units.toLocaleString()+'세대'});
 
       if (cells.length === 0) return '';
-      // 3열씩 묶어서 출력
-      let html = '';
-      for (let i = 0; i < cells.length; i += 3) {
-        const row = cells.slice(i, i + 3);
-        html += '<div class="metrics">';
-        row.forEach(c => {
-          const fontSize = (c.value && c.value.length > 6) ? ' style="font-size:13px"' : '';
-          html += '<div class="metric"><div class="metric-label">'+esc(c.label)+'</div><div class="metric-value"'+fontSize+'>'+esc(c.value)+'</div>'+(c.sub ? '<div class="metric-change neutral">'+esc(c.sub)+'</div>' : '')+'</div>';
-        });
-        html += '</div>';
-      }
-      return html;
+      return '<div class="metrics">' + cells.map(c => {
+        const fontSize = (c.value && c.value.length > 6) ? ' style="font-size:13px"' : '';
+        return '<div class="metric"><div class="metric-label">'+esc(c.label)+'</div><div class="metric-value"'+fontSize+'>'+esc(c.value)+'</div>'+(c.sub ? '<div class="metric-change neutral">'+esc(c.sub)+'</div>' : '')+'</div>';
+      }).join('') + '</div>';
     })()}
 
     <!-- 거래량 + 그래프 -->
