@@ -307,7 +307,13 @@ Deno.serve(async (req) => {
       if (wantedCats.length === 1) sqlQuery = sqlQuery.eq('property->>category', wantedCats[0]);
       else if (wantedCats.length > 1) sqlQuery = sqlQuery.in('property->>category', wantedCats);
       // 가격 숫자 직접 비교 (태그 아님)
-      if (wantedTradeType !== '월세') {
+      if (wantedTradeType === '월세') {
+        // 월세: 보증금 + 월세금 SQL 필터
+        const effMaxDep = maxDeposit || (wantedDeposit ? Math.round(wantedDeposit * 1.3) : 0);
+        const effMaxMon = maxMonthly || (wantedMonthly ? Math.round(wantedMonthly * 1.3) : 0);
+        if (effMaxDep > 0) sqlQuery = sqlQuery.lte('deposit', effMaxDep);
+        if (effMaxMon > 0) sqlQuery = sqlQuery.lte('monthly_rent', effMaxMon);
+      } else {
         if (minPrice) sqlQuery = sqlQuery.gte('price_number', minPrice);
         if (maxPrice) sqlQuery = sqlQuery.lte('price_number', Math.round(maxPrice * 1.1));
       }
