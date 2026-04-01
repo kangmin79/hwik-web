@@ -1491,10 +1491,12 @@ const Hub = (() => {
   const ALERT=[{key:'al_calendar',label:'달력',angle:-90},{key:'al_match',label:'매칭 알림',angle:30},{key:'al_back',label:'← 돌아가기',angle:150}];
 
   function render(nodes,center) {
+    // 인자 없이 호출 시 현재 상태 유지 (손님 상세 등에서 허브 복구 방지)
+    if(!nodes&&!center&&current){nodes=current.nodes||MAIN;center=current.center;}
     nodes=nodes||MAIN;center=center||{icon:'👤',name:Auth.profile?.business_name||'중개사',sub:''};
     const v=document.getElementById('hubVisual'),hc=document.getElementById('hubCenter');if(!v||!hc)return;
     // split 상태면 무조건 세로
-    if(document.getElementById('main').classList.contains('split')){current={nodes,center};_renderVertical();return;}
+    if(document.getElementById('main').classList.contains('split')){current={...current,nodes,center};_renderVertical();return;}
     // 원형 모드 복원
     hc.style.cssText='';v.style.cssText='';
     const cx=VW/2,cy=VH/2;
