@@ -367,7 +367,15 @@ function render() {
   // 최근 거래 목록 (현재 선택 평형 + 탭 기준)
   const tradeKeyFull = currentPyeong + (currentTab === '전세' ? '_jeonse' : (currentTab === '월세' ? '_wolse' : ''));
   const ph = (d.price_history || {})[tradeKeyFull] || [];
-  const pyLabel = currentPyeong ? '전용 ' + currentPyeong + '㎡' : '';
+  let pyLabel = '';
+  if (currentPyeong) {
+    if (showSupply && pm[currentPyeong] && pm[currentPyeong].supply) {
+      const sv = Math.round(pm[currentPyeong].supply);
+      pyLabel = '공급 ' + sv + '㎡(' + Math.round(sv/3.3058) + '평)';
+    } else {
+      pyLabel = '전용 ' + currentPyeong + '㎡';
+    }
+  }
 
   // price_history에 개별 거래가 있으면 그걸 사용
   let tradeItems = [];
@@ -579,10 +587,15 @@ function render() {
     <!-- 지표 2행: ㎡당 가격 + 주차 + 최고층/세대수 (3개만) -->
     ${(() => {
       const cells = [];
-      // ㎡당 가격 (전용면적 기준)
-      const areaNum = currentPyeong ? parseFloat(currentPyeong) : 0;
-      const sqmPrice = (recentPrice && areaNum > 0) ? Math.round(recentPrice / areaNum) : null;
-      if (sqmPrice) cells.push({label:'㎡당 가격', value:formatPrice(sqmPrice), sub:'전용면적 기준'});
+      // ㎡당 가격 (전용/공급 토글 반영)
+      let sqmArea = currentPyeong ? parseFloat(currentPyeong) : 0;
+      let sqmBasis = '전용면적 기준';
+      if (showSupply && pm[currentPyeong] && pm[currentPyeong].supply) {
+        sqmArea = pm[currentPyeong].supply;
+        sqmBasis = '공급면적 기준';
+      }
+      const sqmPrice = (recentPrice && sqmArea > 0) ? Math.round(recentPrice / sqmArea) : null;
+      if (sqmPrice) cells.push({label:'㎡당 가격', value:formatPrice(sqmPrice), sub:sqmBasis});
       // 주차
       const pk = parseInt(d.parking || 0);
       const hh = parseInt(d.total_units || 0);
