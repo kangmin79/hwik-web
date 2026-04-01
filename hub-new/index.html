@@ -1157,6 +1157,12 @@ function featTag(f){
   return `<span style="padding:1px 6px;border-radius:4px;background:${bg};font-size:9px;font-weight:600;color:${c};">${esc(f)}</span>`;
 }
 
+// 전화번호 클릭: PC→복사, 모바일→전화
+function phoneLink(phone){
+  if(!phone)return '';
+  return `<span style="color:#60a5fa;cursor:pointer;text-decoration:underline;" onclick="event.preventDefault();event.stopPropagation();if(/Mobi|Android/i.test(navigator.userAgent)){location.href='tel:${esc(phone)}';}else{navigator.clipboard.writeText('${esc(phone)}');Toast.show('번호 복사됨');}">${esc(phone)}</span>`;
+}
+
 // 중개사 사무실 주소에서 구 이름 추출 (예시용)
 function _agentGu(){
   const addr=Auth.profile?.address||localStorage.getItem('hwik_agent')&&JSON.parse(localStorage.getItem('hwik_agent')||'{}').address||'';
@@ -2743,7 +2749,7 @@ const PanelClient = (() => {
             </div>${thumbHtml}${btns}
           </div>
           <div id="mdet-${m.id}" style="display:none;margin-top:8px;padding:12px;border-radius:10px;background:var(--bg-input);font-size:12px;color:var(--text-sub);">
-            ${m._agent?`<div style="margin-bottom:6px;font-weight:700;color:var(--text);">🏢 ${esc(m._agent.name||'')}${m._agent.phone?' · <a href="tel:'+esc(m._agent.phone)+'" style="color:#60a5fa;">'+esc(m._agent.phone)+'</a>':''}${m._room?' · <span style="color:#6366f1;">'+esc(m._room)+'</span>':''}</div>`:''}
+            ${m._agent?`<div style="margin-bottom:6px;font-weight:700;color:var(--text);">🏢 ${esc(m._agent.name||'')}${m._agent.phone?' · '+phoneLink(m._agent.phone):''}${m._room?' · <span style="color:#6366f1;">'+esc(m._room)+'</span>':''}</div>`:''}
             ${mp.rawText?`<div style="margin-bottom:4px;white-space:pre-wrap;">${esc(mp.rawText)}</div>`:''}
             ${m.agent_comment?`<div style="color:var(--primary);margin-bottom:4px;">${esc(m.agent_comment)}</div>`:''}
             ${mp.moveIn?`<div>입주: ${esc(mp.moveIn)}</div>`:''}
@@ -3307,7 +3313,7 @@ const PanelShared = (() => {
             ${isMine?`<button onclick="PanelCards.share1('${c.id}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #22c55e;background:rgba(34,197,94,0.06);color:#22c55e;font-size:11px;font-weight:700;cursor:pointer;">보내기</button><button onclick="PanelShared.unshare('${c.id}','${c.room_id||''}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #ef4444;background:rgba(239,68,68,0.06);color:#ef4444;font-size:11px;font-weight:700;cursor:pointer;">해제</button>`:''}
           </div>
           <div id="sd-${c.id}" style="display:none;width:100%;margin-top:8px;padding:12px;border-radius:10px;background:var(--bg-input);font-size:12px;" onclick="event.stopPropagation();">
-            ${!isMine&&c._agent_name?`<div style="font-weight:700;margin-bottom:6px;">🏢 ${esc(c._agent_name)}${c._agent_phone?' · <a href="tel:'+esc(c._agent_phone)+'" style="color:#60a5fa;">'+esc(c._agent_phone)+'</a>':''}${c._room_name?' · <span style="color:#6366f1;">'+esc(c._room_name)+'</span>':''}</div>`:''}
+            ${!isMine&&c._agent_name?`<div style="font-weight:700;margin-bottom:6px;">🏢 ${esc(c._agent_name)}${c._agent_phone?' · '+phoneLink(c._agent_phone):''}${c._room_name?' · <span style="color:#6366f1;">'+esc(c._room_name)+'</span>':''}</div>`:''}
             ${photos.length?`<div style="display:flex;gap:6px;margin-bottom:8px;overflow-x:auto;">${photos.map(u=>`<img src="${esc(u)}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0;cursor:pointer;" onclick="window.open('${esc(u)}','_blank')">`).join('')}</div>`:''}
             ${c.agent_comment?`<div style="color:var(--primary);margin-bottom:4px;">${esc(c.agent_comment)}</div>`:''}
             ${c.private_note?.shared_memo?`<div style="color:#f97316;margin-bottom:4px;">🔶 ${esc(c.private_note.shared_memo)}</div>`:''}
