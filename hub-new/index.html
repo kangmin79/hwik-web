@@ -2408,6 +2408,15 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
       // 내 매물 + 공유 매물 병렬 검색
       const [myR,shR]=await Promise.all([Search.vector(cQuery,'my'),Search.vector(cQuery,'shared')]);
       Search.logSearch(cQuery,(myR.length+shR.length));
+      // 공유 매물에 중개사 프로필 + 공유방 정보 붙이기
+      if(shR.length){
+        const myId=Auth.user?.id;
+        const agentIds=[...new Set(shR.filter(c=>c.agent_id&&c.agent_id!==myId).map(c=>c.agent_id))];
+        if(agentIds.length){const {data:profs}=await Auth.sb.from('profiles').select('id,business_name,phone').in('id',agentIds);if(profs)profs.forEach(p=>{shR.filter(c=>c.agent_id===p.id).forEach(c=>{c._agent_name=p.business_name;c._agent_phone=p.phone;});});}
+        // 공유방 정보는 캐시에서
+        const sharedCards=Data.cache.sharedCards||[];
+        shR.forEach(c=>{const sc=sharedCards.find(s=>s.id===c.id);if(sc){c._room_name=sc._room_name;if(!c._agent_name)c._agent_name=sc._agent_name;if(!c._agent_phone)c._agent_phone=sc._agent_phone;}});
+      }
       let html='';
       if(myR.length){
         html+=`<div style="font-size:13px;font-weight:700;color:var(--primary);margin:12px 0 8px;">내 매물 (${myR.length>5?'상위 5건':myR.length+'건'})</div>`;
@@ -2421,6 +2430,10 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
           const mainText=[p.complex,p.location].filter(Boolean).map(v=>esc(v)).join(' · ');
           const subText=[p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ');
           const toggleFn=`(function(e){e.stopPropagation();var d=document.getElementById('sd-${c.id}');if(d)d.style.display=d.style.display==='none'?'':'none';})`;
+          const agentName=c._agent_name||'';const roomName=c._room_name||'';
+          const photos=c.photos||[];
+          let thumbHtml='';
+          if(photos.length){thumbHtml=`<div style="width:44px;height:44px;border-radius:6px;overflow:hidden;flex-shrink:0;position:relative;"><img src="${esc(photos[0])}" style="width:100%;height:100%;object-fit:cover;">${photos.length>1?`<span style="position:absolute;bottom:1px;right:2px;font-size:9px;color:#fff;background:rgba(0,0,0,0.6);padding:1px 4px;border-radius:3px;">${photos.length}</span>`:''}</div>`;}
           return `<div class="item" style="flex-wrap:wrap;cursor:pointer;${st!=='계약가능'?'opacity:0.6;':''}" onclick="${toggleFn}(event)">
             <div style="flex:1;min-width:0;">
               <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
@@ -2429,14 +2442,18 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
                 <span style="font-size:13px;color:var(--text-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${mainText}</span>
                 <span style="font-size:12px;color:var(--text-light);">${subText?'· '+subText:''}</span>
               </div>
-              <div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;">${feats.map(f=>`${featTag(f)}`).join('')}</div>
-            </div>
+              <div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;">${feats.map(f=>`${featTag(f)}`).join('')}${roomName?`<span style="padding:1px 5px;border-radius:3px;background:rgba(99,102,241,0.08);font-size:9px;font-weight:600;color:#6366f1;">${esc(roomName)}</span>`:''}${agentName?`<span style="padding:1px 5px;border-radius:3px;background:rgba(249,115,22,0.08);font-size:9px;font-weight:600;color:#f97316;">${esc(agentName)}</span>`:''}</div>
+            </div>${thumbHtml}
             <div style="flex-shrink:0;" onclick="event.stopPropagation();">
               <button onclick="${toggleFn}(event)" style="padding:4px 12px;border-radius:6px;border:1.5px solid #60a5fa;background:rgba(96,165,250,0.06);color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer;">상세</button>
             </div>
             <div id="sd-${c.id}" style="display:none;width:100%;margin-top:8px;padding:12px;border-radius:10px;background:var(--bg-input);font-size:12px;" onclick="event.stopPropagation();">
+              ${agentName?`<div style="font-weight:700;margin-bottom:6px;">🏢 ${esc(agentName)}${c._agent_phone?' · '+phoneLink(c._agent_phone):''}${roomName?' · <span style="color:#6366f1;">'+esc(roomName)+'</span>':''}</div>`:''}
+              ${photos.length?`<div style="display:flex;gap:6px;margin-bottom:8px;overflow-x:auto;">${photos.map(u=>`<img src="${esc(u)}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0;cursor:pointer;" onclick="window.open('${esc(u)}','_blank')">`).join('')}</div>`:''}
               ${c.agent_comment?`<div style="color:var(--primary);margin-bottom:4px;">${esc(c.agent_comment)}</div>`:''}
               <div style="color:var(--text-sub);">${[p.type,p.price,p.location,p.complex,p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
+              ${(p.features||[]).length?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:4px;">${p.features.map(f=>`${featTag(f)}`).join('')}</div>`:''}
+              ${p.moveIn?`<div style="color:var(--text-light);font-size:11px;margin-top:4px;">입주: ${esc(p.moveIn)}</div>`:''}
             </div>
           </div>`;}).join('');
       }
