@@ -825,7 +825,7 @@ const Data = (() => {
       const {data:myNotes}=await sb().from('cards').select('id,private_note').in('id',myIds);
       if(myNotes)myNotes.forEach(n=>{const c=cache.sharedCards.find(x=>x.id===n.id);if(c)c.private_note=n.private_note;});
     }
-    cache.sharedCards.sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime());
+    cache.sharedCards.sort((a,b)=>{const sa=a.trade_status==='계약가능'?0:1;const sb=b.trade_status==='계약가능'?0:1;if(sa!==sb)return sa-sb;return new Date(b.created_at).getTime()-new Date(a.created_at).getTime();});
     // 중개사 프로필 일괄 조회
     const agentIds=[...new Set(cache.sharedCards.map(c=>c.agent_id).filter(Boolean))];
     if(agentIds.length){const {data:profs}=await sb().from('profiles').select('id,business_name,phone').in('id',agentIds);if(profs)profs.forEach(p=>{cache.sharedCards.filter(c=>c.agent_id===p.id).forEach(c=>{c._agent_name=p.business_name;c._agent_phone=p.phone;});});}
@@ -2417,6 +2417,9 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
         const sharedCards=Data.cache.sharedCards||[];
         shR.forEach(c=>{const sc=sharedCards.find(s=>s.id===c.id);if(sc){c._room_name=sc._room_name;if(!c._agent_name)c._agent_name=sc._agent_name;if(!c._agent_phone)c._agent_phone=sc._agent_phone;}});
       }
+      // 계약중 → 하단으로
+      const _sortStatus=(arr)=>arr.sort((a,b)=>{const sa=a.trade_status==='계약가능'?0:1;const sb=b.trade_status==='계약가능'?0:1;return sa-sb;});
+      _sortStatus(myR);_sortStatus(shR);
       let html='';
       if(myR.length){
         html+=`<div style="font-size:13px;font-weight:700;color:var(--primary);margin:12px 0 8px;">내 매물 (${myR.length>5?'상위 5건':myR.length+'건'})</div>`;
