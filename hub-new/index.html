@@ -3613,9 +3613,16 @@ const PanelAlert = (() => {
     detail.innerHTML=h;
   }
 
-  function goToClient(cardId){
-    const card=(Data.cache.clientCards||[]).find(c=>c.id===cardId);
+  async function goToClient(cardId){
+    if(!cardId)return;
+    let card=(Data.cache.clientCards||[]).find(c=>c.id===cardId);
+    // 캐시에 없으면 DB에서 직접 조회
+    if(!card){
+      const {data}=await Auth.sb.from('cards').select('*').eq('id',cardId).maybeSingle();
+      if(data)card=data;
+    }
     if(card){PanelClient.selectClient(card);setTimeout(()=>PanelClient.detailTab('timeline'),300);}
+    else Toast.show('손님 정보를 찾을 수 없습니다');
   }
 
   async function calNav(dir){calMonth+=dir;if(calMonth>12){calMonth=1;calYear++;}if(calMonth<1){calMonth=12;calYear--;}await _renderCal();}
