@@ -692,13 +692,16 @@ Deno.serve(async (req) => {
       return { ...r, _score: score, _recommend: score >= 80 };
     });
 
+    // 정렬 전 면적/날짜 미리 파싱 (정렬 중 정규식 반복 방지)
+    results.forEach((r: any) => {
+      r._areaNum = parseInt((r.property?.area || '').match(/(\d+)평/)?.[1] || '0');
+      r._createdTime = new Date(r.created_at || 0).getTime();
+    });
     results.sort((a: any, b: any) => {
       const diff = (b._score || 0) - (a._score || 0);
       if (diff !== 0) return diff;
-      const aArea = parseInt((a.property?.area || '').match(/(\d+)평/)?.[1] || '0');
-      const bArea = parseInt((b.property?.area || '').match(/(\d+)평/)?.[1] || '0');
-      if (bArea !== aArea) return bArea - aArea;
-      return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+      if (b._areaNum !== a._areaNum) return b._areaNum - a._areaNum;
+      return b._createdTime - a._createdTime;
     });
 
     // ★ 점수 컷오프 (가격 조건 있을 때만 — 없으면 전부 보여줌)
@@ -726,29 +729,23 @@ Deno.serve(async (req) => {
     // 상위 N개
     results = results.slice(0, limit);
 
-    // ★ 중개사 프로필 조회 (공유 매물에 중개사 정보 첨부)
+    // ★ 중개사 프로필 + 공유방 이름 병렬 조회
     const otherAgentIds = [...new Set(results.filter((r: any) => r.agent_id && r.agent_id !== effectiveAgentId).map((r: any) => r.agent_id))];
     let agentProfiles: Record<string, any> = {};
-    if (otherAgentIds.length) {
-      const { data: profiles } = await supabase.from('profiles').select('id, business_name, phone').in('id', otherAgentIds);
-      if (profiles) {
-        for (const p of profiles) agentProfiles[p.id] = p;
-      }
-    }
-    // 공유방 이름 조회 (어떤 공유방에서 온 매물인지)
     let cardRoomNames: Record<string, string> = {};
     if (otherAgentIds.length) {
-      const myRoomIds = (await supabase.from('share_room_members').select('room_id').eq('member_id', effectiveAgentId).eq('status', 'accepted')).data?.map((r: any) => r.room_id) || [];
+      const resultIds = results.map((r: any) => r.id);
+      const [profilesRes, roomMembersRes] = await Promise.all([
+        supabase.from('profiles').select('id, business_name, phone').in('id', otherAgentIds),
+        supabase.from('share_room_members').select('room_id').eq('member_id', effectiveAgentId).eq('status', 'accepted')
+      ]);
+      if (profilesRes.data) for (const p of profilesRes.data) agentProfiles[p.id] = p;
+      const myRoomIds = roomMembersRes.data?.map((r: any) => r.room_id) || [];
       if (myRoomIds.length) {
-        const resultIds = results.map((r: any) => r.id);
-        const { data: shares } = await supabase.from('card_shares').select('card_id, room_id').in('card_id', resultIds).in('room_id', myRoomIds);
+        const { data: shares } = await supabase.from('card_shares').select('card_id, room_id, share_rooms(name)').in('card_id', resultIds).in('room_id', myRoomIds);
         if (shares?.length) {
-          const roomIds = [...new Set(shares.map((s: any) => s.room_id))];
-          const { data: rooms } = await supabase.from('share_rooms').select('id, name').in('id', roomIds);
-          const roomMap: Record<string, string> = {};
-          if (rooms) for (const rm of rooms) roomMap[rm.id] = rm.name;
-          for (const s of shares) {
-            if (!cardRoomNames[s.card_id] && roomMap[s.room_id]) cardRoomNames[s.card_id] = roomMap[s.room_id];
+          for (const s of shares as any[]) {
+            if (!cardRoomNames[s.card_id] && s.share_rooms?.name) cardRoomNames[s.card_id] = s.share_rooms.name;
           }
         }
       }

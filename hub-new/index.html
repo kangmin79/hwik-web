@@ -842,16 +842,17 @@ const Data = (() => {
     const { data } = await q;
     const myId=uid();
     cache.sharedCards = (data||[]).map(r=>({...r.cards, room_id:r.room_id, _room_name:r.share_rooms?.name||null, _shared_by:r.shared_by||null})).filter(Boolean).filter(c=>c.property?.type!=='손님');
-    // ★ 본인 매물만 private_note 조회 (다른 중개사 memo는 절대 조회 안 함)
+    // ★ 병렬: 본인 private_note + 중개사 프로필 동시 조회
     const myIds=cache.sharedCards.filter(c=>c.agent_id===myId).map(c=>c.id);
-    if(myIds.length){
-      const {data:myNotes}=await sb().from('cards').select('id,private_note').in('id',myIds);
-      if(myNotes)myNotes.forEach(n=>{const c=cache.sharedCards.find(x=>x.id===n.id);if(c)c.private_note=n.private_note;});
-    }
-    cache.sharedCards.sort((a,b)=>{const sa=a.trade_status==='계약가능'?0:1;const sb=b.trade_status==='계약가능'?0:1;if(sa!==sb)return sa-sb;return new Date(b.created_at).getTime()-new Date(a.created_at).getTime();});
-    // 중개사 프로필 일괄 조회
     const agentIds=[...new Set(cache.sharedCards.map(c=>c.agent_id).filter(Boolean))];
-    if(agentIds.length){const {data:profs}=await sb().from('profiles').select('id,business_name,phone').in('id',agentIds);if(profs)profs.forEach(p=>{cache.sharedCards.filter(c=>c.agent_id===p.id).forEach(c=>{c._agent_name=p.business_name;c._agent_phone=p.phone;});});}
+    const [myNotesRes,profsRes]=await Promise.all([
+      myIds.length?sb().from('cards').select('id,private_note').in('id',myIds):Promise.resolve({data:[]}),
+      agentIds.length?sb().from('profiles').select('id,business_name,phone').in('id',agentIds):Promise.resolve({data:[]})
+    ]);
+    if(myNotesRes.data)myNotesRes.data.forEach(n=>{const c=cache.sharedCards.find(x=>x.id===n.id);if(c)c.private_note=n.private_note;});
+    const profMap=new Map();if(profsRes.data)profsRes.data.forEach(p=>profMap.set(p.id,p));
+    cache.sharedCards.forEach(c=>{const p=profMap.get(c.agent_id);if(p){c._agent_name=p.business_name;c._agent_phone=p.phone;}});
+    cache.sharedCards.sort((a,b)=>{const sa=a.trade_status==='계약가능'?0:1;const sb2=b.trade_status==='계약가능'?0:1;if(sa!==sb2)return sa-sb2;return new Date(b.created_at).getTime()-new Date(a.created_at).getTime();});
     return cache.sharedCards;
   }
 
@@ -944,10 +945,11 @@ const Data = (() => {
     const start = `${year}-${String(month).padStart(2,'0')}-01`;
     const em = month===12?1:month+1, ey = month===12?year+1:year;
     const end = `${ey}-${String(em).padStart(2,'0')}-01`;
-    // alert_date 있는 메모 (일정)
-    const { data: scheduled } = await sb().from('client_notes').select('id,client_card_id,content,alert_date,type,alert_done,created_at').eq('agent_id',id).neq('alert_date',null).gte('alert_date',start).lt('alert_date',end).order('alert_date',{ascending:true});
-    // alert_date 없는 메모 (기록) → created_at 기준
-    const { data: logs } = await sb().from('client_notes').select('id,client_card_id,content,alert_date,type,alert_done,created_at').eq('agent_id',id).is('alert_date',null).gte('created_at',start).lt('created_at',end).order('created_at',{ascending:true});
+    // 병렬 조회: 일정 + 기록
+    const [{ data: scheduled }, { data: logs }] = await Promise.all([
+      sb().from('client_notes').select('id,client_card_id,content,alert_date,type,alert_done,created_at').eq('agent_id',id).neq('alert_date',null).gte('alert_date',start).lt('alert_date',end).order('alert_date',{ascending:true}),
+      sb().from('client_notes').select('id,client_card_id,content,alert_date,type,alert_done,created_at').eq('agent_id',id).is('alert_date',null).gte('created_at',start).lt('created_at',end).order('created_at',{ascending:true})
+    ]);
     // logs는 alert_date 대신 created_at을 사용
     const merged = [...(scheduled||[]), ...(logs||[]).map(n=>({...n, alert_date:n.created_at, _isLog:true}))];
     merged.sort((a,b)=>new Date(a.alert_date).getTime()-new Date(b.alert_date).getTime());
@@ -2268,6 +2270,9 @@ const PanelRegister = (() => {
     if(!_pendingParse)return;
     const {r,text,linkId}=_pendingParse;
     const btn=document.getElementById('regBtn');
+    // 저장 중 UI 피드백
+    const saveBtn=document.querySelector('.modal-body .btn-primary');
+    if(saveBtn){saveBtn.textContent='저장 중...';saveBtn.disabled=true;}
     try{
       // 팝업에서 수정된 값 반영
       const property={
