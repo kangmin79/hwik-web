@@ -2533,6 +2533,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
         <div id="detail-${c.id}" style="display:none;margin-top:8px;margin-left:28px;padding:12px;border-radius:10px;background:var(--bg-input);">
           ${p.address?`<div style="font-size:12px;color:var(--text-sub);margin-bottom:4px;">📍 ${esc(p.address)}</div>`:''}
           ${c.agent_comment?`<div style="font-size:12px;color:var(--primary);margin-bottom:4px;">${esc(c.agent_comment)}</div>`:''}
+          ${c.linked_client_id?(()=>{const lc=(Data.cache.clientCards||[]).find(x=>x.id===c.linked_client_id);return lc?`<div style="margin-top:8px;padding:8px 12px;border-radius:8px;border:2px solid #f59e0b;background:rgba(245,158,11,0.04);font-size:12px;"><span style="font-weight:700;color:#f59e0b;">🔒 계약 진행:</span> <span style="font-weight:700;cursor:pointer;color:var(--primary);" onclick="PanelClient.selectClient(JSON.parse(decodeURIComponent('${encodeURIComponent(JSON.stringify(lc))}')))">${esc(lc.contact_name||'손님')}</span> ${esc(lc.property?.price||'')} ${esc(lc.property?.location||'')}</div>`:''})():''}
           <div style="display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
             <span style="font-size:11px;color:var(--text-light);">거래상태</span>
             <button onclick="PanelCards.chgStatus('${c.id}','계약가능')" style="padding:3px 10px;border-radius:6px;border:1px solid ${st==='계약가능'?'#22c55e':'var(--border)'};background:${st==='계약가능'?'rgba(34,197,94,0.1)':'transparent'};color:${st==='계약가능'?'#22c55e':'var(--text-light)'};font-size:10px;font-weight:700;cursor:pointer;">계약가능</button>
@@ -2679,7 +2680,54 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
   }
 
   async function del(id){if(!confirm('매물을 삭제하시겠습니까?'))return;await Data.deleteCard(id);Toast.show('삭제 완료');await Data.loadMyCards(0,true);renderList();}
-  async function chgStatus(id,st){await Data.updateTradeStatus(id,st);Toast.show('상태 변경: '+st);await Data.loadMyCards(0,true);renderList();}
+  async function chgStatus(id,st){
+    if(st==='계약중'||st==='완료'){
+      // 손님 선택 팝업
+      _showClientPicker(id,st);return;
+    }
+    // 계약가능으로 변경 시 연결 해제
+    await Auth.sb.from('cards').update({trade_status:st,linked_client_id:null}).eq('id',id);
+    Toast.show('상태 변경: '+st);await Data.loadMyCards(0,true);renderList();
+  }
+
+  async function _showClientPicker(cardId,newStatus){
+    const card=Data.cache.myCards.find(x=>x.id===cardId);
+    const clients=Data.cache.clientCards||[];
+    // 매칭된 손님 찾기 (같은 거래유형+카테고리)
+    const cp=card?.property||{};
+    const matched=clients.filter(c=>{
+      const wp=c.property||{};
+      if(c.wanted_trade_type&&cp.type&&c.wanted_trade_type!==cp.type)return false;
+      if(wp.category&&cp.category&&wp.category!==cp.category)return false;
+      return true;
+    }).slice(0,10);
+    const recent=clients.filter(c=>!matched.some(m=>m.id===c.id)).slice(0,5);
+
+    const m=document.getElementById('editModal');if(!m)return;
+    m.innerHTML=`<div class="modal-content edit-modal" style="max-width:500px;"><div class="modal-header">어떤 손님과 ${newStatus==='완료'?'계약 완료':'계약 진행'}인가요?<button class="modal-close" onclick="this.closest('.modal-overlay').classList.remove('show')">✕</button></div><div class="modal-body" style="max-height:60vh;overflow-y:auto;">
+      <div style="margin-bottom:8px;"><input type="text" id="cpSearch" placeholder="손님 이름 검색" oninput="PanelCards._filterClientPicker(this.value)" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg-input);color:var(--text);font-size:13px;"></div>
+      <div style="font-size:11px;color:var(--text-light);margin-bottom:8px;">매칭된 손님</div>
+      <div id="cpMatched">${matched.length?matched.map(c=>`<div class="item" style="cursor:pointer;" onclick="PanelCards._pickClient('${cardId}','${newStatus}','${c.id}')">${clientWantTag(c)}<div class="item-body"><div class="item-name">${esc(c.contact_name||'손님')}</div><div class="item-sub">${esc(c.property?.price||'')} ${esc(c.property?.location||'')}</div></div></div>`).join(''):'<div style="font-size:12px;color:var(--text-light);padding:8px;">매칭된 손님이 없어요</div>'}</div>
+      ${recent.length?`<div style="font-size:11px;color:var(--text-light);margin:12px 0 8px;">다른 손님</div><div id="cpOther">${recent.map(c=>`<div class="item" style="cursor:pointer;" onclick="PanelCards._pickClient('${cardId}','${newStatus}','${c.id}')">${clientWantTag(c)}<div class="item-body"><div class="item-name">${esc(c.contact_name||'손님')}</div><div class="item-sub">${esc(c.property?.price||'')} ${esc(c.property?.location||'')}</div></div></div>`).join('')}</div>`:''}
+      <div style="margin-top:12px;text-align:center;"><button class="btn-cancel" onclick="PanelCards._pickClient('${cardId}','${newStatus}','')">손님 연결 없이 변경</button></div>
+    </div></div>`;
+    m.classList.add('show');
+  }
+
+  function _filterClientPicker(q){
+    if(!q.trim())return;
+    const clients=Data.cache.clientCards||[];
+    const filtered=clients.filter(c=>(c.contact_name||'').includes(q)||(c.property?.location||'').includes(q));
+    const el=document.getElementById('cpMatched');if(!el)return;
+    el.innerHTML=filtered.slice(0,10).map(c=>`<div class="item" style="cursor:pointer;" onclick="PanelCards._pickClient('${el.dataset.cardId||''}','${el.dataset.status||''}','${c.id}')">${clientWantTag(c)}<div class="item-body"><div class="item-name">${esc(c.contact_name||'손님')}</div><div class="item-sub">${esc(c.property?.price||'')} ${esc(c.property?.location||'')}</div></div></div>`).join('')||'<div style="font-size:12px;color:var(--text-light);padding:8px;">검색 결과 없음</div>';
+  }
+
+  async function _pickClient(cardId,newStatus,clientId){
+    document.getElementById('editModal')?.classList.remove('show');
+    await Auth.sb.from('cards').update({trade_status:newStatus,linked_client_id:clientId||null}).eq('id',cardId);
+    Toast.show(newStatus+(clientId?' — 손님 연결 완료':''));
+    await Data.loadMyCards(0,true);renderList();
+  }
 
 
   function renderSub(key,el){
@@ -2689,7 +2737,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
       el.innerHTML=`<div class="panel-inner">${Hub.panelHead('거래 상태')}<div style="text-align:center;padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">${icon}</div><div style="font-size:24px;font-weight:800;color:${color};">${st}</div><div style="margin-top:24px;display:flex;gap:8px;justify-content:center;"><button class="filter-btn ${st==='계약가능'?'active':''}" onclick="PanelCards.chgStatus('${c.id}','계약가능')">계약가능</button><button class="filter-btn ${st==='계약중'?'active':''}" onclick="PanelCards.chgStatus('${c.id}','계약중')">계약중</button><button class="filter-btn ${st==='완료'?'active':''}" onclick="PanelCards.chgStatus('${c.id}','완료')">완료</button></div></div></div>`;}
   }
 
-  return { render, setFilter, setCat, setSort, onQ, onQEnter, more, renderList, toggleSel, toggleSharedSel, toggleDetail, share1, shareSelected, doShare, edit, addPhotos, addTag, saveEdit, del, chgStatus, renderSub, get _searchShared(){return _searchShared;}, set _searchShared(v){_searchShared=v;} };
+  return { render, setFilter, setCat, setSort, onQ, onQEnter, more, renderList, toggleSel, toggleSharedSel, toggleDetail, share1, shareSelected, doShare, edit, addPhotos, addTag, saveEdit, del, chgStatus, _pickClient, _filterClientPicker, renderSub, get _searchShared(){return _searchShared;}, set _searchShared(v){_searchShared=v;} };
 })();
 
 /* ═══════════════════════════════════════════════════════════
@@ -2814,8 +2862,22 @@ const PanelClient = (() => {
     const matches=card._matches||[],notes=card._notes||[];
 
     if(tab==='match'){
-      if(!matches.length){el.innerHTML='<div class="empty"><div class="empty-icon">🏠</div>매칭 매물이 없어요</div>';return;}
-      el.innerHTML=matches.map(m=>{
+      // 계약 진행 매물 (이 손님과 연결된 매물) 상단 표시
+      const linkedCards=(Data.cache.myCards||[]).filter(c=>c.linked_client_id===card.id);
+      let linkedHtml='';
+      if(linkedCards.length){
+        linkedHtml=`<div style="margin-bottom:16px;padding:12px;border-radius:10px;border:2px solid #f59e0b;background:rgba(245,158,11,0.04);">
+          <div style="font-size:12px;font-weight:800;color:#f59e0b;margin-bottom:8px;">🔒 계약 진행 중</div>
+          ${linkedCards.map(lc=>{const lp=lc.property||{};return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;">
+            ${propertyTypeTag(lc)}<span style="font-size:10px;font-weight:700;color:#f59e0b;">${lc.trade_status||'계약중'}</span>
+            <strong style="font-size:14px;">${esc(lp.price||'-')}</strong>
+            <span style="font-size:13px;color:var(--text-sub);">${esc(lp.complex||lp.location||'')}</span>
+            <span style="font-size:12px;color:var(--text-light);">· ${[lp.area,lp.floor].filter(Boolean).join(' · ')}</span>
+          </div>`;}).join('')}
+        </div>`;
+      }
+      if(!matches.length&&!linkedCards.length){el.innerHTML='<div class="empty"><div class="empty-icon">🏠</div>매칭 매물이 없어요</div>';return;}
+      el.innerHTML=linkedHtml+matches.map(m=>{
         const mp=m.property||{};
         const st=m.trade_status||'계약가능';
         const stC=st==='완료'?'#ef4444':st==='계약중'?'#f59e0b':'#22c55e';
