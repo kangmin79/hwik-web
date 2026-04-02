@@ -2906,6 +2906,15 @@ const PanelClient = (() => {
       </div>
       <div>
         <div class="search"><input type="text" id="clQ" onkeydown="if(event.key==='Enter')PanelClient.onQEnter()"></div>
+        <div style="display:flex;gap:4px;margin:-8px 0 12px;flex-wrap:wrap;overflow-x:auto;">
+          <button class="filter-btn active" onclick="PanelClient.setFilter('')">전체</button>
+          <button class="filter-btn" onclick="PanelClient.setFilter('매매')">매매</button>
+          <button class="filter-btn" onclick="PanelClient.setFilter('전세')">전세</button>
+          <button class="filter-btn" onclick="PanelClient.setFilter('월세')">월세</button>
+          <button class="filter-btn" onclick="PanelClient.setFilter('apartment')">아파트</button>
+          <button class="filter-btn" onclick="PanelClient.setFilter('officetel')">오피스텔</button>
+          <button class="filter-btn" onclick="PanelClient.setFilter('room')">원투룸</button>
+        </div>
         <div id="clList" style="min-height:200px;">${hwikLoading()}</div>
       </div>
     </div>`;
@@ -3117,6 +3126,16 @@ const PanelClient = (() => {
     btn.textContent='AI로 손님 등록';btn.disabled=false;
   }
 
+  let _clientFilter='';
+  function setFilter(f){
+    _clientFilter=(_clientFilter===f)?'':f;
+    _renderList();
+    document.querySelectorAll('#clList')?.forEach?.(()=>{});
+    const btns=document.querySelectorAll('.filter-btn');
+    btns.forEach(b=>b.classList.remove('active'));
+    if(_clientFilter)event?.target?.classList.add('active');
+    else btns[0]?.classList.add('active');
+  }
   function setSort(s,btn){cSort=s;document.querySelectorAll('.sort-tag').forEach(b=>b.classList.remove('active'));btn?.classList.add('active');_renderList();}
   function onQ(q){cQuery=q;}
   async function onQEnter(){
@@ -3141,6 +3160,15 @@ const PanelClient = (() => {
 
   async function _renderList(){
     let cards=[...Data.cache.clientCards];
+    // 필터 적용
+    if(_clientFilter){
+      const tradeTypes=['매매','전세','월세'];
+      if(tradeTypes.includes(_clientFilter)){
+        cards=cards.filter(c=>c.wanted_trade_type===_clientFilter||(c.property?.type==='손님'&&c.wanted_trade_type===_clientFilter));
+      } else {
+        cards=cards.filter(c=>{const wc=c.wanted_categories||[];const cat=c.property?.category||'';return wc.includes(_clientFilter)||cat===_clientFilter;});
+      }
+    }
     if(cQuery.trim()){cards=Search.local(cQuery,cards);_renderItems(cards);return;}
 
     // 긴급도 정렬: 일정 로드 → 점수 부여
@@ -3486,7 +3514,7 @@ const PanelClient = (() => {
     if(Hub.current?.data?.id===cardId){Hub.current.data.contact_name=name;Hub.current.data.contact_phone=phone;}
   }
 
-  return { render, registerClient, toggleReg, _addRecent, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact, selectClient, closeDetail, detailTab, toggleMatchSel, _hasSelectedClient };
+  return { render, registerClient, toggleReg, _addRecent, setFilter, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact, selectClient, closeDetail, detailTab, toggleMatchSel, _hasSelectedClient };
 })();
 
 /* ═══════════════════════════════════════════════════════════
