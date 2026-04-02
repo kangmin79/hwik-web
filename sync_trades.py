@@ -941,10 +941,9 @@ def generate_sitemap(danji_list: list):
         time.sleep(0.2)
 
     urls = []
-    # 정적 페이지
-    urls.append(f'  <url><loc>{base}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>')
-    urls.append(f'  <url><loc>{base}/mobile-v6.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>')
-    urls.append(f'  <url><loc>{base}/llms.txt</loc><changefreq>weekly</changefreq><priority>0.3</priority></url>')
+    # 정적 페이지 (priority/changefreq 제거 — Google이 무시함)
+    for path in ['/', '/mobile-v6.html', '/gu.html', '/about.html', '/llms.txt']:
+        urls.append(f'  <url><loc>{base}{path}</loc><lastmod>{today}</lastmod></url>')
 
     # 단지 페이지 (거래 데이터 있는 단지만 — Google 신뢰도 향상)
     included = 0
@@ -963,7 +962,7 @@ def generate_sitemap(danji_list: list):
         from urllib.parse import quote as _quote
         safe_id = _quote(did, safe="-")
         lastmod = (d.get("updated_at") or today)[:10]
-        urls.append(f'  <url><loc>{base}/danji.html?id={safe_id}</loc><lastmod>{lastmod}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>')
+        urls.append(f'  <url><loc>{base}/danji.html?id={safe_id}</loc><lastmod>{lastmod}</lastmod></url>')
         included += 1
 
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
