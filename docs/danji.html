@@ -553,7 +553,7 @@ function render() {
   $('#app').innerHTML = `
     <!-- Breadcrumb -->
     <nav class="breadcrumb" aria-label="breadcrumb">
-      <a href="/">휙</a><span>&gt;</span><a href="/danji.html?gu=${encodeURIComponent(gu)}">서울 ${esc(gu)}</a><span>&gt;</span>${esc(d.complex_name)}
+      <a href="/">휙</a><span>&gt;</span><a href="/gu.html?name=${encodeURIComponent(gu)}">서울 ${esc(gu)}</a><span>&gt;</span>${esc(d.complex_name)}
     </nav>
 
     <!-- 헤더 -->
@@ -943,7 +943,7 @@ function injectJsonLd() {
         "@type": "BreadcrumbList",
         "itemListElement": [
           { "@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr" },
-          { "@type": "ListItem", "position": 2, "name": `서울 ${guName}`, "item": `https://hwik.kr/danji.html?gu=${encodeURIComponent(guName)}` },
+          { "@type": "ListItem", "position": 2, "name": `서울 ${guName}`, "item": `https://hwik.kr/gu.html?name=${encodeURIComponent(guName)}` },
           { "@type": "ListItem", "position": 3, "name": d.complex_name, "item": canonUrl },
         ]
       },
