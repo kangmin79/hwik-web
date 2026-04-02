@@ -850,10 +850,10 @@ const Data = (() => {
     const { error } = await sb().from('share_room_members').insert({room_id:roomId,member_id:target.id,invited_phone:phone,status:'pending',role:'pending'});
     return { error:error?.message||null };
   }
-  async function acceptInvite(roomId) { return sb().from('share_room_members').update({role:'member'}).eq('room_id',roomId).eq('member_id',uid()); }
+  async function acceptInvite(roomId) { return sb().from('share_room_members').update({role:'member',status:'accepted',accepted_at:new Date().toISOString()}).eq('room_id',roomId).eq('member_id',uid()); }
   async function rejectInvite(roomId) { return sb().from('share_room_members').delete().eq('room_id',roomId).eq('member_id',uid()); }
   async function loadPendingInvites() {
-    const { data } = await sb().from('share_room_members').select('share_rooms(id,name,owner_id),role').eq('member_id',uid()).eq('role','pending');
+    const { data } = await sb().from('share_room_members').select('room_id,role,share_rooms(id,name,owner_id)').eq('member_id',uid()).eq('status','pending');
     cache.pendingInvites = (data||[]).map(r=>({...r.share_rooms,role:r.role})).filter(Boolean);
     return cache.pendingInvites;
   }
