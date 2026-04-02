@@ -531,14 +531,21 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
     import re as _re
     # 한글+영문+숫자만 유지
     danji_id = _re.sub(r'[^a-z0-9가-힣]', '', danji_id)
-    # kapt_code에서 숫자 부분만 suffix로 사용 (한글 suffix 방지)
+    # suffix: 아파트는 kapt_code 숫자, 오피스텔은 구코드+해시
     kapt_code = apt.get("kapt_code") or ""
-    kapt_nums = _re.sub(r'[^0-9]', '', kapt_code)
-    kapt_suffix = kapt_nums[-4:] if len(kapt_nums) >= 4 else kapt_nums
+    prop_type = apt.get("property_type", "apt")
+    if prop_type == "apt" and kapt_code.startswith("A"):
+        # 아파트: A10021652 → 뒤 4자리 "1652"
+        kapt_suffix = _re.sub(r'[^0-9]', '', kapt_code)[-4:]
+    else:
+        # 오피스텔: 구코드 5자리 + 단지명 해시 3자리로 고유성 보장
+        gu_code = _re.sub(r'[^0-9]', '', kapt_code)[:5]
+        name_hash = str(abs(hash(apt.get("kapt_name", ""))) % 1000).zfill(3)
+        kapt_suffix = f"{gu_code}{name_hash}" if gu_code else name_hash
     if kapt_suffix:
         danji_id = f"{danji_id}-{kapt_suffix}"
     if not danji_id or danji_id == f"-{kapt_suffix}":
-        danji_id = kapt_code.replace("/", "-").replace(" ", "")
+        danji_id = _re.sub(r'[^a-z0-9가-힣]', '', kapt_code.lower()) or "unknown"
 
     top_floor = None
     try:
