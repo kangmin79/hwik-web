@@ -781,6 +781,8 @@ const Data = (() => {
     const filtered=data||[];
     if (reset||off===0) cache.myCards = filtered;
     else cache.myCards = [...cache.myCards, ...filtered];
+    // 계약가능 우선 → 계약중 하단 → 각각 최신순
+    cache.myCards.sort((a,b)=>{const sa=a.trade_status==='계약가능'?0:a.trade_status==='계약중'?1:2;const sb=b.trade_status==='계약가능'?0:b.trade_status==='계약중'?1:2;if(sa!==sb)return sa-sb;return new Date(b.created_at).getTime()-new Date(a.created_at).getTime();});
     return cache.myCards;
   }
 
