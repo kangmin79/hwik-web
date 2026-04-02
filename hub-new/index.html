@@ -1706,7 +1706,7 @@ const Hub = (() => {
     if(key.startsWith('pr_'))PanelCards.renderSub(key,el);
   }
 
-  function _hideHeaderBtns(){const hr=document.getElementById('headerRight');if(hr)hr.style.display='none';}
+  function _hideHeaderBtns(){/* 헤더 버튼 항상 표시 */}
   function _showHeaderBtns(){const hr=document.getElementById('headerRight');if(hr)hr.style.display='';}
 
   function closePanel() {
@@ -1982,7 +1982,7 @@ const Hub = (() => {
     const has=_matchSelected.length>0;
     if(pp){pp.style.width=has?'340px':'0';pp.style.opacity=has?'1':'0';pp.style.padding=has?'16px':'0';}
     const header=document.querySelector('.header'),main=document.getElementById('main');
-    if(has){header.style.transform='translateY(-100%)';main.style.marginTop='0';main.style.height='100vh';}
+    if(has){/* 헤더 유지 */}
     else{header.style.transform='';main.style.marginTop='';main.style.height='';}
   }
 
@@ -2146,7 +2146,7 @@ const PanelRegister = (() => {
       if(slide){slide.style.width='340px';slide.style.padding='16px';slide.style.opacity='1';}
       Preview.renderLive(text,document.getElementById('previewScreen'));
       // 헤더 숨겨서 미리보기 공간 확보
-      if(header){header.style.transform='translateY(-100%)';main.style.marginTop='0';main.style.height='100vh';}
+      if(header){/* 헤더 유지 */}
     }else{
       if(slide){slide.style.width='0';slide.style.padding='0';slide.style.opacity='0';}
       if(header){header.style.transform='';main.style.marginTop='';main.style.height='';}
@@ -2563,7 +2563,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
     // 미리보기 열리면 헤더 숨김 → 공간 확보
     const header=document.querySelector('.header');
     const main=document.getElementById('main');
-    if(has){header.style.transform='translateY(-100%)';main.style.marginTop='0';main.style.height='100vh';}
+    if(has){/* 헤더 유지 */}
     else{header.style.transform='';main.style.marginTop='';main.style.height='';}
     const btn=document.querySelector('.btn-send');if(btn)btn.disabled=!has;
   }
@@ -2593,7 +2593,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
     if(pp){pp.style.width=has?'340px':'0';pp.style.opacity=has?'1':'0';pp.style.padding=has?'16px':'0';}
     const header=document.querySelector('.header');
     const main=document.getElementById('main');
-    if(has){header.style.transform='translateY(-100%)';main.style.marginTop='0';main.style.height='100vh';}
+    if(has){/* 헤더 유지 */}
     else{header.style.transform='';main.style.marginTop='';main.style.height='';}
     const btn=document.querySelector('.btn-send');if(btn)btn.disabled=!has;
   }
