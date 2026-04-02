@@ -3400,10 +3400,24 @@ const PanelClient = (() => {
     _updateClientTags(cardId,inp.value.trim());
     inp.value='';document.getElementById('notePv').style.display='none';
     Data.updateEmbedding(cardId);Data.updateClientLocation(cardId);
-    const d=await Data.loadClientDetail(cardId);if(Hub.current){Hub.current._notes=d.notes;Hub.current._matches=d.matches;}Hub.openSub('cl_timeline');
+    const d=await Data.loadClientDetail(cardId);
+    if(_selectedClient){_selectedClient._notes=d.notes;_selectedClient._matches=d.matches;_renderDetailTab('timeline');}
+    else if(Hub.current){Hub.current._notes=d.notes;Hub.current._matches=d.matches;Hub.openSub('cl_timeline');}
     let msg='메모 저장됨';if(p.alert_date){const d2=new Date(p.alert_date),days=['일','월','화','수','목','금','토'];msg=`저장 · 📅 ${d2.getMonth()+1}/${d2.getDate()}(${days[d2.getDay()]})${p.hasTime?' '+p.timeStr:''} 알림`;}Toast.show(msg);}
-  async function noteDel(nid,cid){if(!confirm('삭제하시겠습니까?'))return;await Data.deleteClientNote(nid);const d=await Data.loadClientDetail(cid);if(Hub.current)Hub.current._notes=d.notes;Hub.openSub('cl_timeline');}
-  async function noteDone(nid,cid){await Data.updateNoteAlertDone(nid,true);const d=await Data.loadClientDetail(cid);if(Hub.current)Hub.current._notes=d.notes;Hub.openSub('cl_timeline');Toast.show('완료 처리됨');}
+  async function noteDel(nid,cid){
+    if(!confirm('삭제하시겠습니까?'))return;
+    await Data.deleteClientNote(nid);
+    const d=await Data.loadClientDetail(cid);
+    if(_selectedClient){_selectedClient._notes=d.notes;_renderDetailTab('timeline');}
+    else if(Hub.current){Hub.current._notes=d.notes;Hub.openSub('cl_timeline');}
+  }
+  async function noteDone(nid,cid){
+    await Data.updateNoteAlertDone(nid,true);
+    const d=await Data.loadClientDetail(cid);
+    if(_selectedClient){_selectedClient._notes=d.notes;_renderDetailTab('timeline');}
+    else if(Hub.current){Hub.current._notes=d.notes;Hub.openSub('cl_timeline');}
+    Toast.show('완료 처리됨');
+  }
   async function reMatch(cid){Toast.show('매칭 중...');const d=await Data.loadClientDetail(cid);if(Hub.current){Hub.current._matches=d.matches;Hub.current._notes=d.notes;}Hub.openSub('cl_match');Toast.show(d.matches.length+'건 매칭 완료');}
 
   // ── 손님 카드 재파싱 (수정) ──
