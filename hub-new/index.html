@@ -2471,6 +2471,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
   function renderList(){
     let cards=[...Data.cache.myCards];
     if(cQuery.trim())cards=Search.local(cQuery,cards);
+    else cards=cards.filter(c=>c.trade_status!=='완료');
     _renderItems(cards,document.getElementById('myList'));
     const ml=document.getElementById('myMore');if(ml)ml.style.display=Data.cache.myCards.length>=cOff+Data.PAGE?'':'none';
   }
