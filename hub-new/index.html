@@ -763,6 +763,7 @@ const Auth = (() => {
     sb.auth.onAuthStateChange((ev, session) => {
       if (session) _token = session.access_token||'';
       if (ev==='SIGNED_IN' && session?.user) { user = session.user; App.init(); }
+      if (ev==='TOKEN_REFRESHED' && session) { _token = session.access_token||''; }
     });
   }
 
