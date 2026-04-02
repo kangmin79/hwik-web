@@ -1828,170 +1828,93 @@ const Hub = (() => {
       return `<div${click}><span style="font-size:12px;color:var(--text-sub);">· ${label?`<b>${esc(label)}</b> `:''}${txt}</span>${dateStr}</div>`;
     }
 
+    const totalAlerts=unreadMatch.length+recentMemos.length;
+    const totalSchedule=overdueNotes.length+todayNotes.length+tomorrowNotes.length;
+
     el.innerHTML=`<div class="panel-inner">${_ph(ag.office||'대시보드')}
 
-      <!-- 프로필 요약 -->
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;">
-        <div style="width:52px;height:52px;border-radius:50%;background:var(--primary-bg);border:2px solid var(--primary);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">👤</div>
+      <!-- 프로필 -->
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <div style="width:48px;height:48px;border-radius:50%;background:var(--primary-bg);border:2px solid var(--primary);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">👤</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-size:16px;font-weight:800;">${esc(ag.office||'부동산')}</div>
-          <div style="font-size:12px;color:var(--text-sub);margin-top:2px;">${esc(ag.name||'')} · ${esc(ag.phone||'')}</div>
+          <div style="font-size:15px;font-weight:800;">${esc(ag.office||'부동산')}</div>
+          <div style="font-size:11px;color:var(--text-sub);margin-top:1px;">${esc(ag.name||'')} · ${esc(ag.phone||'')}</div>
         </div>
-        <button onclick="Hub._openProfileEdit()" style="padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-sub);font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">프로필 수정</button>
+        <button onclick="Hub._openProfileEdit()" style="padding:5px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-sub);font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0;">프로필 수정</button>
+      </div>
+
+      <!-- 현황 4칸 -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:16px;">
+        <div style="padding:12px 4px;border-radius:10px;background:var(--primary-bg);text-align:center;cursor:pointer;" onclick="Hub.openPanel('my')">
+          <div style="font-size:20px;font-weight:900;color:var(--primary);">${myCount}</div>
+          <div style="font-size:10px;color:var(--text-sub);margin-top:2px;">내 매물</div>
+        </div>
+        <div style="padding:12px 4px;border-radius:10px;background:rgba(78,205,196,0.08);text-align:center;cursor:pointer;" onclick="Hub.openPanel('client')">
+          <div style="font-size:20px;font-weight:900;color:#0d9488;">${clCount}</div>
+          <div style="font-size:10px;color:var(--text-sub);margin-top:2px;">손님</div>
+        </div>
+        <div style="padding:12px 4px;border-radius:10px;background:rgba(245,158,11,0.08);text-align:center;cursor:pointer;" onclick="Hub.openPanel('my')">
+          <div style="font-size:20px;font-weight:900;color:#f59e0b;">${contractCards.length}</div>
+          <div style="font-size:10px;color:var(--text-sub);margin-top:2px;">계약중</div>
+        </div>
+        <div style="padding:12px 4px;border-radius:10px;background:rgba(239,68,68,0.06);text-align:center;cursor:pointer;" onclick="Hub.openPanel('alert')">
+          <div style="font-size:20px;font-weight:900;color:#ef4444;">${totalAlerts}</div>
+          <div style="font-size:10px;color:var(--text-sub);margin-top:2px;">새 알림</div>
+        </div>
+      </div>
+
+      <!-- 매물 상세 현황 -->
+      <div style="display:flex;gap:6px;margin-bottom:16px;">
+        <div style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:11px;color:var(--text-sub);display:flex;justify-content:space-between;cursor:pointer;" onclick="Hub.openPanel('my')">
+          <span>계약가능</span><b style="color:#22c55e;">${availCount}</b>
+        </div>
+        <div style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:11px;color:var(--text-sub);display:flex;justify-content:space-between;cursor:pointer;" onclick="Hub.openPanel('my')">
+          <span>계약중</span><b style="color:#f59e0b;">${contractCount}</b>
+        </div>
+        <div style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:11px;color:var(--text-sub);display:flex;justify-content:space-between;cursor:pointer;" onclick="Hub.openPanel('my')">
+          <span>완료</span><b style="color:var(--text-light);">${completedCount}</b>
+        </div>
+        <div style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--border);font-size:11px;color:var(--text-sub);display:flex;justify-content:space-between;cursor:pointer;" onclick="Hub.openPanel('shared')">
+          <span>공유방</span><b style="color:#8b5cf6;">${sharedRooms.length}</b>
+        </div>
       </div>
 
       <!-- 오늘 할 일 -->
-      <div style="margin-bottom:24px;">
-        <div style="font-size:14px;font-weight:800;margin-bottom:10px;">📋 오늘 할 일</div>
-        ${overdueNotes.length?`<div style="padding:10px 14px;border-radius:10px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.15);margin-bottom:8px;">
-          <div style="font-size:12px;font-weight:700;color:#ef4444;margin-bottom:4px;">⚠ 지연된 일정 ${overdueNotes.length}건</div>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:800;margin-bottom:8px;">📋 오늘 할 일 <span style="font-size:11px;font-weight:500;color:var(--text-light);">${totalSchedule}건</span></div>
+        ${overdueNotes.length?`<div style="padding:8px 12px;border-radius:8px;background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.12);margin-bottom:6px;">
+          <div style="font-size:11px;font-weight:700;color:#ef4444;margin-bottom:3px;">⚠ 지연 ${overdueNotes.length}건</div>
           ${overdueNotes.slice(0,3).map(n=>noteItem(n,true)).join('')}
-          ${overdueNotes.length>3?`<div style="font-size:11px;color:#ef4444;margin-top:4px;cursor:pointer;" onclick="Hub.openPanel('alert')">+ ${overdueNotes.length-3}건 더보기</div>`:''}
         </div>`:''}
-        ${todayNotes.length?`<div style="padding:10px 14px;border-radius:10px;background:var(--primary-bg);border:1px solid rgba(99,102,241,0.15);margin-bottom:8px;">
-          <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:4px;">📅 오늘 일정 ${todayNotes.length}건</div>
+        ${todayNotes.length?`<div style="padding:8px 12px;border-radius:8px;background:var(--primary-bg);border:1px solid rgba(99,102,241,0.12);margin-bottom:6px;">
+          <div style="font-size:11px;font-weight:700;color:var(--primary);margin-bottom:3px;">📅 오늘 ${todayNotes.length}건</div>
           ${todayNotes.slice(0,3).map(n=>noteItem(n,false)).join('')}
         </div>`:''}
-        ${tomorrowNotes.length?`<div style="padding:10px 14px;border-radius:10px;background:rgba(156,163,175,0.06);border:1px solid rgba(156,163,175,0.15);margin-bottom:8px;">
-          <div style="font-size:12px;font-weight:700;color:var(--text-sub);margin-bottom:4px;">⏭ 내일 일정 ${tomorrowNotes.length}건</div>
+        ${tomorrowNotes.length?`<div style="padding:8px 12px;border-radius:8px;background:rgba(156,163,175,0.04);border:1px solid rgba(156,163,175,0.12);margin-bottom:6px;">
+          <div style="font-size:11px;font-weight:700;color:var(--text-sub);margin-bottom:3px;">⏭ 내일 ${tomorrowNotes.length}건</div>
           ${tomorrowNotes.slice(0,2).map(n=>noteItem(n,false)).join('')}
         </div>`:''}
-        ${unreadMatch.length?`<div style="padding:10px 14px;border-radius:10px;background:rgba(250,204,21,0.06);border:1px solid rgba(250,204,21,0.15);margin-bottom:8px;cursor:pointer;" onclick="Hub.openPanel('alert')">
-          <div style="font-size:12px;font-weight:700;color:#f59e0b;">🏠 새 매칭 ${unreadMatch.length}건 — 확인하기</div>
+        ${unreadMatch.length?`<div style="padding:8px 12px;border-radius:8px;background:rgba(250,204,21,0.05);border:1px solid rgba(250,204,21,0.12);margin-bottom:6px;cursor:pointer;" onclick="Hub.openPanel('alert')">
+          <div style="font-size:11px;font-weight:700;color:#f59e0b;">🏠 새 매칭 ${unreadMatch.length}건</div>
         </div>`:''}
-        ${!overdueNotes.length&&!todayNotes.length&&!tomorrowNotes.length&&!unreadMatch.length?'<div style="font-size:13px;color:var(--text-light);padding:8px 0;">예정된 일정이 없습니다</div>':''}
+        ${!totalSchedule&&!unreadMatch.length?'<div style="font-size:12px;color:var(--text-light);padding:4px 0;">예정된 일정이 없습니다</div>':''}
       </div>
 
-      <!-- 현황 -->
-      <div style="margin-bottom:24px;">
-        <div style="font-size:14px;font-weight:800;margin-bottom:10px;">📊 현황</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
-          <div style="padding:14px 8px;border-radius:12px;background:var(--primary-bg);text-align:center;cursor:pointer;" onclick="Hub.openPanel('my')">
-            <div style="font-size:22px;font-weight:900;color:var(--primary);">${myCount}</div>
-            <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">내 매물</div>
-            <div style="font-size:10px;color:var(--text-light);margin-top:4px;">${availCount>0?`가능 ${availCount}`:''}${contractCount>0?` · 계약 ${contractCount}`:''}</div>
-          </div>
-          <div style="padding:14px 8px;border-radius:12px;background:rgba(78,205,196,0.08);text-align:center;cursor:pointer;" onclick="Hub.openPanel('client')">
-            <div style="font-size:22px;font-weight:900;color:#0d9488;">${clCount}</div>
-            <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">손님</div>
-            <div style="font-size:10px;color:var(--text-light);margin-top:4px;">${clCount>0?`관리 중`:''}</div>
-          </div>
-          <div style="padding:14px 8px;border-radius:12px;background:rgba(250,204,21,0.08);text-align:center;cursor:pointer;" onclick="Hub.openPanel('alert')">
-            <div style="font-size:22px;font-weight:900;color:#f59e0b;">${unreadMatch.length+recentMemos.filter(m=>!m.is_read).length}</div>
-            <div style="font-size:11px;color:var(--text-sub);margin-top:2px;">새 알림</div>
-            <div style="font-size:10px;color:var(--text-light);margin-top:4px;">${unreadMatch.length?`매칭 ${unreadMatch.length}`:''}${recentMemos.length?`${unreadMatch.length?' · ':''}메모 ${recentMemos.length}`:''}</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 계약 진행 중 -->
-      ${contractCards.length?`<div style="margin-bottom:24px;">
-        <div style="font-size:14px;font-weight:800;margin-bottom:10px;">🔒 계약 진행 중 ${contractCards.length}건</div>
+      <!-- 계약 진행 중 (있을 때만) -->
+      ${contractCards.length?`<div style="margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:800;margin-bottom:8px;">🔒 계약 진행 <span style="font-size:11px;font-weight:500;color:var(--text-light);">${contractCards.length}건</span></div>
         ${contractCards.slice(0,3).map(c=>{
           const p=c.property||{};const name=clientName(c);
-          return `<div style="padding:10px 14px;border-radius:10px;border:1px solid rgba(245,158,11,0.3);background:rgba(245,158,11,0.04);margin-bottom:6px;cursor:pointer;display:flex;align-items:center;gap:10px;" onclick="Hub.enterProperty('${c.id}')">
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(p.type||'')} ${esc(p.price||'')} — ${esc(p.complex||p.location||'')}</div>
-              ${name?`<div style="font-size:11px;color:#f59e0b;margin-top:2px;">↔ ${esc(name)} 손님${c.linked_agent_id?' · 공동중개':''}</div>`:''}
-            </div>
-            <div style="font-size:10px;color:#f59e0b;font-weight:700;flex-shrink:0;">계약중</div>
+          return `<div style="padding:6px 12px;border-radius:8px;border-left:3px solid #f59e0b;background:rgba(245,158,11,0.03);margin-bottom:4px;cursor:pointer;font-size:12px;" onclick="Hub.enterProperty('${c.id}')">
+            <span style="font-weight:700;">${esc(p.type||'')} ${esc(p.price||'')}</span> <span style="color:var(--text-sub);">${esc(p.complex||p.location||'')}</span>${name?` <span style="color:#f59e0b;">↔ ${esc(name)}</span>`:''}
           </div>`;
         }).join('')}
-        ${contractCards.length>3?`<div style="font-size:11px;color:var(--primary);cursor:pointer;padding:4px 0;" onclick="Hub.openPanel('my')">+ ${contractCards.length-3}건 더보기</div>`:''}
-      </div>`:''}
-
-      <!-- 기능 메뉴 -->
-      <div style="margin-bottom:24px;">
-        <div style="font-size:14px;font-weight:800;margin-bottom:10px;">⚡ 매물</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
-          <div style="padding:14px 8px;border-radius:12px;border:1px solid var(--border);text-align:center;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='var(--primary-bg)'" onmouseout="this.style.background='transparent'" onclick="Hub.openPanel('register')">
-            <div style="font-size:22px;margin-bottom:4px;">✦</div>
-            <div style="font-size:12px;font-weight:700;">매물 등록</div>
-            <div style="font-size:10px;color:var(--text-light);margin-top:2px;">AI 자동 분석</div>
-          </div>
-          <div style="padding:14px 8px;border-radius:12px;border:1px solid var(--border);text-align:center;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='var(--primary-bg)'" onmouseout="this.style.background='transparent'" onclick="Hub.openPanel('my')">
-            <div style="font-size:22px;margin-bottom:4px;">📋</div>
-            <div style="font-size:12px;font-weight:700;">내 매물</div>
-            <div style="font-size:10px;color:var(--text-light);margin-top:2px;">관리 · 수정</div>
-          </div>
-          <div style="padding:14px 8px;border-radius:12px;border:1px solid var(--border);text-align:center;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='var(--primary-bg)'" onmouseout="this.style.background='transparent'" onclick="Hub.openPanel('register');setTimeout(()=>{const f=document.querySelector('#fiFileInput');if(f)f.click();},300);">
-            <div style="font-size:22px;margin-bottom:4px;">📂</div>
-            <div style="font-size:12px;font-weight:700;">대량 등록</div>
-            <div style="font-size:10px;color:var(--text-light);margin-top:2px;">엑셀 일괄</div>
-          </div>
-        </div>
-
-        <div style="font-size:14px;font-weight:800;margin-bottom:10px;">👥 손님</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
-          <div style="padding:14px 8px;border-radius:12px;border:1px solid var(--border);text-align:center;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(78,205,196,0.08)'" onmouseout="this.style.background='transparent'" onclick="Hub.openPanel('client')">
-            <div style="font-size:22px;margin-bottom:4px;">🙋</div>
-            <div style="font-size:12px;font-weight:700;">손님 등록</div>
-            <div style="font-size:10px;color:var(--text-light);margin-top:2px;">조건 AI 분석</div>
-          </div>
-          <div style="padding:14px 8px;border-radius:12px;border:1px solid var(--border);text-align:center;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(78,205,196,0.08)'" onmouseout="this.style.background='transparent'" onclick="Hub.openPanel('client')">
-            <div style="font-size:22px;margin-bottom:4px;">🤖</div>
-            <div style="font-size:12px;font-weight:700;">AI 매칭</div>
-            <div style="font-size:10px;color:var(--text-light);margin-top:2px;">자동 추천</div>
-          </div>
-          <div style="padding:14px 8px;border-radius:12px;border:1px solid var(--border);text-align:center;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(78,205,196,0.08)'" onmouseout="this.style.background='transparent'" onclick="Hub.openPanel('client')">
-            <div style="font-size:22px;margin-bottom:4px;">📱</div>
-            <div style="font-size:12px;font-weight:700;">미리보기</div>
-            <div style="font-size:10px;color:var(--text-light);margin-top:2px;">카드 뷰어</div>
-          </div>
-        </div>
-
-        <div style="font-size:14px;font-weight:800;margin-bottom:10px;">🤝 협업</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;">
-          <div style="padding:14px 8px;border-radius:12px;border:1px solid var(--border);text-align:center;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(168,85,247,0.08)'" onmouseout="this.style.background='transparent'" onclick="Hub.openPanel('shared')">
-            <div style="font-size:22px;margin-bottom:4px;">🏠</div>
-            <div style="font-size:12px;font-weight:700;">공유방</div>
-            <div style="font-size:10px;color:var(--text-light);margin-top:2px;">${sharedRooms.length?sharedRooms.length+'개 참여 중':'중개사 협업'}</div>
-          </div>
-          <div style="padding:14px 8px;border-radius:12px;border:1px solid var(--border);text-align:center;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(168,85,247,0.08)'" onmouseout="this.style.background='transparent'" onclick="Hub.openPanel('my')">
-            <div style="font-size:22px;margin-bottom:4px;">📤</div>
-            <div style="font-size:12px;font-weight:700;">공유</div>
-            <div style="font-size:10px;color:var(--text-light);margin-top:2px;">카톡 · 링크 · SMS</div>
-          </div>
-          <div style="padding:14px 8px;border-radius:12px;border:1px solid var(--border);text-align:center;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(168,85,247,0.08)'" onmouseout="this.style.background='transparent'" onclick="Hub.openPanel('my')">
-            <div style="font-size:22px;margin-bottom:4px;">🔒</div>
-            <div style="font-size:12px;font-weight:700;">계약 관리</div>
-            <div style="font-size:10px;color:var(--text-light);margin-top:2px;">공동중개</div>
-          </div>
-        </div>
-
-        <div style="font-size:14px;font-weight:800;margin-bottom:10px;">📅 일정 & 알림</div>
-        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;">
-          <div style="padding:14px 8px;border-radius:12px;border:1px solid var(--border);text-align:center;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(250,204,21,0.08)'" onmouseout="this.style.background='transparent'" onclick="Hub.openPanel('alert')">
-            <div style="font-size:22px;margin-bottom:4px;">🔔</div>
-            <div style="font-size:12px;font-weight:700;">알림</div>
-            <div style="font-size:10px;color:var(--text-light);margin-top:2px;">매칭 · 메모</div>
-          </div>
-          <div style="padding:14px 8px;border-radius:12px;border:1px solid var(--border);text-align:center;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(250,204,21,0.08)'" onmouseout="this.style.background='transparent'" onclick="Hub.openPanel('alert')">
-            <div style="font-size:22px;margin-bottom:4px;">📅</div>
-            <div style="font-size:12px;font-weight:700;">달력</div>
-            <div style="font-size:10px;color:var(--text-light);margin-top:2px;">일정 관리</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 최근 작업 손님 -->
-      ${recentClients.length?`<div style="margin-bottom:24px;">
-        <div style="font-size:14px;font-weight:800;margin-bottom:10px;">🕐 최근 작업</div>
-        ${recentClients.map(c=>{
-          const p=c.property||{};const name=p.contact_name||c.contact_name||'손님';
-          return `<div style="padding:8px 14px;border-radius:10px;border:1px solid var(--border);margin-bottom:6px;cursor:pointer;display:flex;align-items:center;gap:10px;" onclick="Hub.enterClient('${c.id}')">
-            <div style="font-size:16px;">👤</div>
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:13px;font-weight:700;">${esc(name)} 손님</div>
-              <div style="font-size:11px;color:var(--text-light);">${esc(p.wanted_trade_type||p.type||'')} ${esc(p.location||'')}</div>
-            </div>
-          </div>`;
-        }).join('')}
+        ${contractCards.length>3?`<div style="font-size:10px;color:var(--primary);cursor:pointer;padding:2px 0;" onclick="Hub.openPanel('my')">+ ${contractCards.length-3}건 더보기</div>`:''}
       </div>`:''}
 
       <!-- 하단 -->
-      <div style="padding-top:16px;border-top:1px solid var(--border);">
-        <div class="item" onclick="Auth.logout()"><div style="font-size:18px;">🚪</div><div class="item-body"><div class="item-name" style="color:#ef4444;">로그아웃</div></div></div>
+      <div style="padding-top:12px;border-top:1px solid var(--border);">
+        <div class="item" onclick="Auth.logout()"><div style="font-size:16px;">🚪</div><div class="item-body"><div class="item-name" style="color:#ef4444;font-size:12px;">로그아웃</div></div></div>
       </div>
     </div>`;
   }
