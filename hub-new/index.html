@@ -3441,9 +3441,12 @@ const PanelShared = (() => {
   async function reject(id){await Data.rejectInvite(id);Toast.show('거절됨');render(document.getElementById('panelArea'));}
 
   let _sharedCat='';
-  function setCat(cat){_sharedCat=cat;_renderList();
-    document.querySelectorAll('#sharedPanel .filter-btn').forEach(b=>b.classList.remove('active'));
-    event?.target?.classList.add('active');
+  function setCat(cat){
+    _sharedCat=(_sharedCat===cat)?'':cat;
+    _renderList();
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    if(_sharedCat)event?.target?.classList.add('active');
+    else document.querySelector('.filter-btn')?.classList.add('active'); // "전체" 활성화
   }
 
   // 공유 해제 버튼 포함 리스트 렌더링 업데이트
