@@ -1,13 +1,18 @@
 User-agent: *
 Allow: /
-Allow: /property_view.html
-Allow: /danji.html
-Allow: /llms.txt
 
+# 중개사 전용 페이지 (크롤링 불필요)
 Disallow: /my_cards.html
 Disallow: /card_generator_v2_auth.html
 Disallow: /admin.html
-Disallow: /seed_test_data.py
+Disallow: /hub-new/
+
+# 테스트/개발 파일
+Disallow: /search_test.html
+Disallow: /e2e_test.html
+Disallow: /kakaomap-route-test.html
+Disallow: /*.py$
+Disallow: /*.json$
 Disallow: /.env
 
 Sitemap: https://hwik.kr/sitemap.xml
