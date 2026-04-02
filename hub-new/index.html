@@ -3067,16 +3067,22 @@ const PanelClient = (() => {
       return {...c,_urgency:urgency,_daysSince:daysSince};
     });
 
-    // 최근 본 손님 상위 + 긴급도순
+    // 계약중 손님 최상위 → 최근 본 → 나머지 긴급도순
     const recent=_getRecent();
-    const recentCards=[], restCards=[];
-    cards.forEach(c=>{if(recent.includes(c.id))recentCards.push(c);else restCards.push(c);});
+    const contractCards=[], recentCards=[], restCards=[];
+    // 계약중: linked_card_id가 있거나, 매물에서 linked_client_id로 연결된 손님
+    const linkedClientIds=new Set((Data.cache.myCards||[]).filter(m=>m.linked_client_id&&m.trade_status==='계약중').map(m=>m.linked_client_id));
+    cards.forEach(c=>{
+      if(linkedClientIds.has(c.id)||c.linked_card_id)contractCards.push(c);
+      else if(recent.includes(c.id))recentCards.push(c);
+      else restCards.push(c);
+    });
     // 최근 본 순서 유지
     recentCards.sort((a,b)=>recent.indexOf(a.id)-recent.indexOf(b.id));
     // 나머지는 긴급도순
     restCards.sort((a,b)=>{if(b._urgency!==a._urgency)return b._urgency-a._urgency;return new Date(b.created_at)-new Date(a.created_at);});
 
-    _renderItems([...recentCards,...restCards], recentCards.length);
+    _renderItems([...contractCards,...recentCards,...restCards], recentCards.length, contractCards.length);
   }
 
   const _stageMap={
@@ -3087,7 +3093,7 @@ const PanelClient = (() => {
     '계약':{color:'#ef4444',bg:'rgba(248,113,113,0.1)',label:'계약'},
   };
 
-  async function _renderItems(cards, recentCount){const el=document.getElementById('clList');if(!el)return;if(!cards.length){el.innerHTML='<div class="empty"><div class="empty-icon">🙋</div>손님이 없어요</div>';return;}
+  async function _renderItems(cards, recentCount, contractCount=0){const el=document.getElementById('clList');if(!el)return;if(!cards.length){el.innerHTML='<div class="empty"><div class="empty-icon">🙋</div>손님이 없어요</div>';return;}
     // 마지막 메모 로드 (타입+날짜)
     const ids=cards.map(c=>c.id);
     let lastNotes={};
@@ -3098,9 +3104,11 @@ const PanelClient = (() => {
     el.onscroll=()=>{if(_regOpen&&el.scrollTop>50){_regOpen=false;const body=document.getElementById('clientRegBody'),toggle=document.getElementById('clientRegToggle');if(body)body.style.display='none';if(toggle)toggle.style.transform='rotate(-90deg)';}};
 
     let html='';
-    if(recentCount>0)html+=`<div style="font-size:11px;font-weight:700;color:var(--primary);padding:8px 0 4px;">🕐 최근 본 손님</div>`;
+    if(contractCount>0)html+=`<div style="font-size:11px;font-weight:700;color:#f59e0b;padding:8px 0 4px;">🔒 계약 진행 중</div>`;
     cards.forEach((c,idx)=>{
-      if(recentCount>0&&idx===recentCount)html+=`<div style="height:1px;background:var(--border);margin:12px 0;"></div><div style="font-size:11px;font-weight:700;color:var(--text-sub);padding:4px 0 4px;">전체 손님</div>`;
+      if(contractCount>0&&idx===contractCount)html+=`<div style="height:1px;background:var(--border);margin:12px 0;"></div>`;
+      if(idx===contractCount&&recentCount>0)html+=`<div style="font-size:11px;font-weight:700;color:var(--primary);padding:8px 0 4px;">🕐 최근 본 손님</div>`;
+      if(recentCount>0&&idx===contractCount+recentCount)html+=`<div style="height:1px;background:var(--border);margin:12px 0;"></div><div style="font-size:11px;font-weight:700;color:var(--text-sub);padding:4px 0 4px;">전체 손님</div>`;
       const p=c.property||{},name=c.contact_name||p.location||p.complex||'손님',conds=[p.price,p.location,p.complex,p.area].filter(Boolean).map(v=>esc(v)).join(' · ');
       // 상태 색상 (마지막 메모 타입 기반)
       const lastNote=lastNotes[c.id];
