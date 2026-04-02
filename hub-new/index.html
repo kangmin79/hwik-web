@@ -3545,7 +3545,7 @@ const PanelAlert = (() => {
 
   function goToClient(cardId){
     const card=(Data.cache.clientCards||[]).find(c=>c.id===cardId);
-    if(card)PanelClient.selectClient(card);
+    if(card){PanelClient.selectClient(card);setTimeout(()=>PanelClient.detailTab('timeline'),300);}
   }
 
   async function calNav(dir){calMonth+=dir;if(calMonth>12){calMonth=1;calYear++;}if(calMonth<1){calMonth=12;calYear--;}await _renderCal();}
