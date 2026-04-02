@@ -1794,7 +1794,7 @@ const Hub = (() => {
       Auth.sb.from('match_notifications').select('id').eq('agent_id',Auth.user.id).eq('is_read',false).limit(50).then(r=>r.data||[]),
       Auth.sb.from('client_notes').select('id,type,content,alert_date,client_card_id').eq('agent_id',Auth.user.id).gte('alert_date',new Date(Date.now()+86400000).toISOString().split('T')[0]).lt('alert_date',new Date(Date.now()+2*86400000).toISOString().split('T')[0]).limit(10).then(r=>r.data||[]),
       Auth.sb.from('cards').select('id,property,trade_status,linked_client_id,linked_agent_id').eq('agent_id',Auth.user.id).eq('trade_status','계약중').limit(20).then(r=>r.data||[]),
-      Auth.sb.from('memos').select('id,card_id,content,is_read,created_at').eq('receiver_id',Auth.user.id).eq('is_read',false).order('created_at',{ascending:false}).limit(5).then(r=>r.data||[]),
+      Auth.sb.from('memos').select('id,content,is_read,created_at').eq('agent_id',Auth.user.id).eq('is_read',false).order('created_at',{ascending:false}).limit(5).then(r=>r.data||[]),
       Data.cache.rooms||[]
     ]);
 
@@ -1815,7 +1815,7 @@ const Hub = (() => {
     }
 
     // 최근 작업 손님 (localStorage)
-    const recentIds=_getRecent();
+    let recentIds=[];try{recentIds=JSON.parse(localStorage.getItem('hwik_recent_clients'))||[];}catch{}
     const recentClients=recentIds.map(id=>clCards.find(c=>c.id===id)).filter(Boolean).slice(0,3);
 
     // 일정 항목 렌더 (클릭→손님 이동)
