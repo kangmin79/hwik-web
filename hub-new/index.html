@@ -3393,11 +3393,9 @@ const PanelShared = (() => {
         const st=c.trade_status||'계약가능';const stC=st==='계약가능'?'#22c55e':st==='계약중'?'#f59e0b':'#ef4444';
         const mainText=[p.complex,p.location].filter(Boolean).map(v=>esc(v)).join(' · ');
         const subText=[p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ');
-        const sel=Preview.getSelected().some(s=>s.id===c.id);
-        html+=`<div style="border:1px solid ${sel?'var(--primary)':'var(--border)'};border-radius:10px;padding:10px 12px;margin-bottom:4px;background:${sel?'var(--primary-bg)':'transparent'};flex-wrap:wrap;cursor:pointer;${st!=='계약가능'?'opacity:0.6;':''}" id="item-${c.id}">
+        html+=`<div style="border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:4px;flex-wrap:wrap;cursor:pointer;${st!=='계약가능'?'opacity:0.6;':''}" onclick="${toggleFn}(event)">
           <div style="display:flex;align-items:center;gap:8px;">
-            <div onclick="event.stopPropagation();PanelCards.toggleSharedSel('${c.id}')" style="width:20px;height:20px;border:2px solid ${sel?'var(--primary)':'#ccc'};border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${sel?'var(--primary)':'transparent'};cursor:pointer;">${sel?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}</div>
-            <div style="flex:1;min-width:0;cursor:pointer;" onclick="PanelCards.toggleSharedSel('${c.id}')">
+            <div style="flex:1;min-width:0;">
               <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
                 ${propertyTypeTag(c)}<span style="font-size:10px;font-weight:700;color:${stC};">${st}</span>
                 <strong style="font-size:14px;">${esc(p.price||'-')}</strong>
