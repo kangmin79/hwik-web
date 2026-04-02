@@ -2689,7 +2689,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
       el.innerHTML=`<div class="panel-inner">${Hub.panelHead('거래 상태')}<div style="text-align:center;padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">${icon}</div><div style="font-size:24px;font-weight:800;color:${color};">${st}</div><div style="margin-top:24px;display:flex;gap:8px;justify-content:center;"><button class="filter-btn ${st==='계약가능'?'active':''}" onclick="PanelCards.chgStatus('${c.id}','계약가능')">계약가능</button><button class="filter-btn ${st==='계약중'?'active':''}" onclick="PanelCards.chgStatus('${c.id}','계약중')">계약중</button><button class="filter-btn ${st==='완료'?'active':''}" onclick="PanelCards.chgStatus('${c.id}','완료')">완료</button></div></div></div>`;}
   }
 
-  return { render, setFilter, setCat, setSort, onQ, onQEnter, more, renderList, toggleSel, toggleSharedSel, toggleDetail, share1, shareSelected, doShare, edit, addPhotos, addTag, saveEdit, del, chgStatus, renderSub };
+  return { render, setFilter, setCat, setSort, onQ, onQEnter, more, renderList, toggleSel, toggleSharedSel, toggleDetail, share1, shareSelected, doShare, edit, addPhotos, addTag, saveEdit, del, chgStatus, renderSub, get _searchShared(){return _searchShared;}, set _searchShared(v){_searchShared=v;} };
 })();
 
 /* ═══════════════════════════════════════════════════════════
@@ -3372,6 +3372,8 @@ const PanelShared = (() => {
 
   // 공유 해제 버튼 포함 리스트 렌더링 업데이트
   function _renderList(){const el=document.getElementById('sharedList');if(!el)return;let cards=Data.cache.sharedCards.filter(c=>!selRoom||c.room_id===selRoom);
+    // toggleSharedSel에서 찾을 수 있도록
+    if(typeof PanelCards!=='undefined')PanelCards._searchShared=cards;
     if(_sharedQuery.trim())cards=Search.local(_sharedQuery,cards);
     if(!cards.length){el.innerHTML='<div class="empty"><div class="empty-icon">🤝</div>공유 매물이 없어요</div>';return;}
     // 에이전트별 그룹
@@ -3391,20 +3393,24 @@ const PanelShared = (() => {
         const st=c.trade_status||'계약가능';const stC=st==='계약가능'?'#22c55e':st==='계약중'?'#f59e0b':'#ef4444';
         const mainText=[p.complex,p.location].filter(Boolean).map(v=>esc(v)).join(' · ');
         const subText=[p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ');
-        html+=`<div class="item" style="flex-wrap:wrap;cursor:pointer;${st!=='계약가능'?'opacity:0.6;':''}" onclick="${toggleFn}(event)">
-          <div style="flex:1;min-width:0;">
-            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-              ${propertyTypeTag(c)}<span style="font-size:10px;font-weight:700;color:${stC};">${st}</span>
-              <strong style="font-size:14px;">${esc(p.price||'-')}</strong>
-              <span style="font-size:13px;color:var(--text-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${mainText}</span>
-              <span style="font-size:12px;color:var(--text-light);">${subText?'· '+subText:''}</span>
+        const sel=Preview.getSelected().some(s=>s.id===c.id);
+        html+=`<div style="border:1px solid ${sel?'var(--primary)':'var(--border)'};border-radius:10px;padding:10px 12px;margin-bottom:4px;background:${sel?'var(--primary-bg)':'transparent'};flex-wrap:wrap;cursor:pointer;${st!=='계약가능'?'opacity:0.6;':''}" id="item-${c.id}">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div onclick="event.stopPropagation();PanelCards.toggleSharedSel('${c.id}')" style="width:20px;height:20px;border:2px solid ${sel?'var(--primary)':'#ccc'};border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:${sel?'var(--primary)':'transparent'};cursor:pointer;">${sel?'<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>':''}</div>
+            <div style="flex:1;min-width:0;cursor:pointer;" onclick="PanelCards.toggleSharedSel('${c.id}')">
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                ${propertyTypeTag(c)}<span style="font-size:10px;font-weight:700;color:${stC};">${st}</span>
+                <strong style="font-size:14px;">${esc(p.price||'-')}</strong>
+                <span style="font-size:13px;color:var(--text-sub);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${mainText}</span>
+                <span style="font-size:12px;color:var(--text-light);">${subText?'· '+subText:''}</span>
+              </div>
+              <div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;">${feats.map(f=>`${featTag(f)}`).join('')}${c._room_name?`<span style="padding:1px 5px;border-radius:3px;background:rgba(99,102,241,0.08);font-size:9px;font-weight:600;color:#6366f1;">${esc(c._room_name)}</span>`:''}${!isMine&&c._agent_name?`<span style="padding:1px 5px;border-radius:3px;background:rgba(249,115,22,0.08);font-size:9px;font-weight:600;color:#f97316;">${esc(c._agent_name)}</span>`:''}</div>
             </div>
-            <div style="display:flex;gap:3px;margin-top:3px;flex-wrap:wrap;">${feats.map(f=>`${featTag(f)}`).join('')}${c._room_name?`<span style="padding:1px 5px;border-radius:3px;background:rgba(99,102,241,0.08);font-size:9px;font-weight:600;color:#6366f1;">${esc(c._room_name)}</span>`:''}${!isMine&&c._agent_name?`<span style="padding:1px 5px;border-radius:3px;background:rgba(249,115,22,0.08);font-size:9px;font-weight:600;color:#f97316;">${esc(c._agent_name)}</span>`:''}</div>
-          </div>
-          ${thumbHtml}
-          <div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation();">
-            <button onclick="${toggleFn}(event)" style="padding:4px 12px;border-radius:6px;border:1.5px solid #60a5fa;background:rgba(96,165,250,0.06);color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer;">상세</button>
-            ${isMine?`<button onclick="PanelCards.share1('${c.id}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #22c55e;background:rgba(34,197,94,0.06);color:#22c55e;font-size:11px;font-weight:700;cursor:pointer;">보내기</button><button onclick="PanelShared.unshare('${c.id}','${c.room_id||''}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #ef4444;background:rgba(239,68,68,0.06);color:#ef4444;font-size:11px;font-weight:700;cursor:pointer;">해제</button>`:''}
+            ${thumbHtml}
+            <div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation();">
+              <button onclick="${toggleFn}(event)" style="padding:4px 12px;border-radius:6px;border:1.5px solid #60a5fa;background:rgba(96,165,250,0.06);color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer;">상세</button>
+              ${isMine?`<button onclick="PanelShared.unshare('${c.id}','${c.room_id||''}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #ef4444;background:rgba(239,68,68,0.06);color:#ef4444;font-size:11px;font-weight:700;cursor:pointer;">해제</button>`:''}
+            </div>
           </div>
           <div id="sd-${c.id}" style="display:none;width:100%;margin-top:8px;padding:12px;border-radius:10px;background:var(--bg-input);font-size:12px;" onclick="event.stopPropagation();">
             ${!isMine&&c._agent_name?`<div style="font-weight:700;margin-bottom:6px;">🏢 ${esc(c._agent_name)}${c._agent_phone?' · '+phoneLink(c._agent_phone):''}${c._room_name?' · <span style="color:#6366f1;">'+esc(c._room_name)+'</span>':''}</div>`:''}
