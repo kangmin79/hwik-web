@@ -18,18 +18,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="config.js"></script>
-<script>
-// Google 봇 감지 → SSR 페이지로 리다이렉트 (noindex 방지)
-(function(){
-  var id = new URLSearchParams(location.search).get('id');
-  if (!id) return;
-  var ua = navigator.userAgent.toLowerCase();
-  var isBot = /googlebot|bingbot|yandex|baiduspider|duckduckbot|slurp|facebookexternalhit|twitterbot|linkedinbot|embedly|quora|pinterest|redditbot|applebot|semrushbot|ahrefsbot|mj12bot|dotbot/i.test(ua);
-  if (isBot) {
-    location.replace('https://api.hwik.kr/functions/v1/danji-page?id=' + encodeURIComponent(id));
-  }
-})();
-</script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 :root {
@@ -175,13 +163,14 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
     <div class="loading-spinner"></div>
     <div class="loading-text">단지 정보 불러오는 중...</div>
   </div>
-  <noscript>
-    <div style="padding:20px;text-align:center;">
-      <h1>아파트 실거래가 시세 - 휙</h1>
-      <p>이 페이지는 JavaScript가 필요합니다.</p>
-      <p>검색엔진용 전체 콘텐츠: <a href="https://api.hwik.kr/functions/v1/danji-page?id=" id="noscript-link">여기에서 확인</a></p>
-    </div>
-  </noscript>
+  <!-- 봇/JS 실패 시 기본 콘텐츠 (JS 성공하면 덮어씌워짐) -->
+  <div id="fallback-content" style="padding:20px;">
+    <h1>아파트 실거래가 시세 - 휙</h1>
+    <p>서울 6,000개 단지의 매매/전세/월세 실거래가, 시세 차트, 주변 시설 정보를 확인하세요.</p>
+    <p>국토교통부 실거래가 공개시스템 데이터 기반. 매일 업데이트.</p>
+    <p><a href="/gu.html">서울 구별 시세 보기</a> · <a href="/ranking.html">아파트 순위</a></p>
+    <p>운영: 혜민솔루션 · <a href="/about.html">휙 소개</a></p>
+  </div>
 </div>
 
 <script>
