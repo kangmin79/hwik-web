@@ -3449,27 +3449,32 @@ const PanelClient = (() => {
     }catch(_){}
   }
 
-  async function saveNote(cardId){const inp=document.getElementById('noteIn');if(!inp?.value?.trim())return;const p=_parseNote(inp.value.trim());await Data.saveClientNote(cardId,p);
+  async function saveNote(cardId){const inp=document.getElementById('noteIn');if(!inp?.value?.trim())return;const p=_parseNote(inp.value.trim());
+    const {data:saved}=await Auth.sb.from('client_notes').insert({client_card_id:cardId,agent_id:Auth.user?.id,type:p.type||'메모',content:p.content,alert_date:p.alert_date||null,alert_done:false}).select().single();
     // 메모에서 태그 감지
     _updateClientTags(cardId,inp.value.trim());
     inp.value='';document.getElementById('notePv').style.display='none';
+    // 백그라운드 작업 (대기 안 함)
     Data.updateEmbedding(cardId);Data.updateClientLocation(cardId);
-    const d=await Data.loadClientDetail(cardId);
-    if(_selectedClient){_selectedClient._notes=d.notes;_selectedClient._matches=d.matches;_renderDetailTab('timeline');}
-    else if(Hub.current){Hub.current._notes=d.notes;Hub.current._matches=d.matches;Hub.openSub('cl_timeline');}
+    // 로컬 상태에 메모 1건 추가 (전체 재로드 안 함)
+    if(saved){
+      if(_selectedClient){_selectedClient._notes=[saved,...(_selectedClient._notes||[])];_renderDetailTab('timeline');}
+      else if(Hub.current){Hub.current._notes=[saved,...(Hub.current._notes||[])];Hub.openSub('cl_timeline');}
+    }
     let msg='메모 저장됨';if(p.alert_date){const d2=new Date(p.alert_date),days=['일','월','화','수','목','금','토'];msg=`저장 · 📅 ${d2.getMonth()+1}/${d2.getDate()}(${days[d2.getDay()]})${p.hasTime?' '+p.timeStr:''} 알림`;}Toast.show(msg);}
   async function noteDel(nid,cid){
     if(!confirm('삭제하시겠습니까?'))return;
     await Data.deleteClientNote(nid);
-    const d=await Data.loadClientDetail(cid);
-    if(_selectedClient){_selectedClient._notes=d.notes;_renderDetailTab('timeline');}
-    else if(Hub.current){Hub.current._notes=d.notes;Hub.openSub('cl_timeline');}
+    // 로컬에서 제거 (재로드 안 함)
+    if(_selectedClient){_selectedClient._notes=(_selectedClient._notes||[]).filter(n=>n.id!==nid);_renderDetailTab('timeline');}
+    else if(Hub.current){Hub.current._notes=(Hub.current._notes||[]).filter(n=>n.id!==nid);Hub.openSub('cl_timeline');}
   }
   async function noteDone(nid,cid){
     await Data.updateNoteAlertDone(nid,true);
-    const d=await Data.loadClientDetail(cid);
-    if(_selectedClient){_selectedClient._notes=d.notes;_renderDetailTab('timeline');}
-    else if(Hub.current){Hub.current._notes=d.notes;Hub.openSub('cl_timeline');}
+    // 로컬에서 완료 처리 (재로드 안 함)
+    const updateLocal=(notes)=>(notes||[]).map(n=>n.id===nid?{...n,alert_done:true}:n);
+    if(_selectedClient){_selectedClient._notes=updateLocal(_selectedClient._notes);_renderDetailTab('timeline');}
+    else if(Hub.current){Hub.current._notes=updateLocal(Hub.current._notes);Hub.openSub('cl_timeline');}
     Toast.show('완료 처리됨');
   }
   async function reMatch(cid){Toast.show('매칭 중...');const d=await Data.loadClientDetail(cid);if(Hub.current){Hub.current._matches=d.matches;Hub.current._notes=d.notes;}Hub.openSub('cl_match');Toast.show(d.matches.length+'건 매칭 완료');}
