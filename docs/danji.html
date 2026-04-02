@@ -444,7 +444,7 @@ function render() {
     }
     const diffHtml = '';
     return `
-    <div class="nearby-item" onclick="location.href='danji.html?id=${esc(n.id)}'">
+    <div class="nearby-item" onclick="location.href='danji.html?id=${encodeURIComponent(n.id)}'">
       <div>
         <div class="nearby-name">${esc(n.name)}</div>
         <div class="nearby-sub">${esc(n.location)} ${n.distance ? '· '+distText(n.distance) : ''}${areaLabel ? ' · '+areaLabel : ''}</div>

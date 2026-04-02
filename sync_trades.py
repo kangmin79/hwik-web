@@ -522,9 +522,14 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
         pass
 
     slug = apt.get("slug") or apt.get("kapt_name") or ""
+    # 로마자 → 숫자 변환 (Ⅰ→1, Ⅱ→2, Ⅲ→3, Ⅳ→4, Ⅴ→5)
+    _roman_map = {'Ⅰ':'1','Ⅱ':'2','Ⅲ':'3','Ⅳ':'4','Ⅴ':'5','Ⅵ':'6','Ⅶ':'7','Ⅷ':'8','Ⅸ':'9','Ⅹ':'10',
+                  'ⅰ':'1','ⅱ':'2','ⅲ':'3','ⅳ':'4','ⅴ':'5'}
+    for roman, num in _roman_map.items():
+        slug = slug.replace(roman, num)
     danji_id = slug.replace(" ", "").lower()
     import re as _re
-    # 한글+영문+숫자+하이픈만 유지 (로마자Ⅰ~Ⅳ 등 제거)
+    # 한글+영문+숫자만 유지
     danji_id = _re.sub(r'[^a-z0-9가-힣]', '', danji_id)
     # kapt_code에서 숫자 부분만 suffix로 사용 (한글 suffix 방지)
     kapt_code = apt.get("kapt_code") or ""
