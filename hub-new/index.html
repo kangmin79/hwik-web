@@ -3292,7 +3292,15 @@ const PanelShared = (() => {
     h+='</div>';
 
     // 검색
-    h+=`<div class="search"><input type="text" id="sharedQ" placeholder="예) ${_agentGu()} 아파트 전세 5억이하" onkeydown="if(event.key==='Enter')PanelShared.onSearchEnter()"></div>`;
+    h+=`<div class="search"><input type="text" id="sharedQ" placeholder="예) ${_agentGu()} 아파트 전세 5억이하" onkeydown="if(event.key==='Enter')PanelShared.onSearchEnter()"></div>
+    <div style="display:flex;gap:4px;margin:-8px 0 12px;flex-wrap:wrap;">
+      <button class="filter-btn ${!_sharedCat?'active':''}" onclick="PanelShared.setCat('')">전체</button>
+      <button class="filter-btn ${_sharedCat==='apartment'?'active':''}" onclick="PanelShared.setCat('apartment')">아파트</button>
+      <button class="filter-btn ${_sharedCat==='officetel'?'active':''}" onclick="PanelShared.setCat('officetel')">오피스텔</button>
+      <button class="filter-btn ${_sharedCat==='room'?'active':''}" onclick="PanelShared.setCat('room')">원투룸</button>
+      <button class="filter-btn ${_sharedCat==='commercial'?'active':''}" onclick="PanelShared.setCat('commercial')">상가</button>
+      <button class="filter-btn ${_sharedCat==='office'?'active':''}" onclick="PanelShared.setCat('office')">사무실</button>
+    </div>`;
     // 매물 리스트
     h+='<div id="sharedList">'+hwikLoading()+'</div></div>';
     el.innerHTML=h;
@@ -3370,10 +3378,17 @@ const PanelShared = (() => {
   async function accept(id){await Data.acceptInvite(id);Toast.show('수락 완료');render(document.getElementById('panelArea'));}
   async function reject(id){await Data.rejectInvite(id);Toast.show('거절됨');render(document.getElementById('panelArea'));}
 
+  let _sharedCat='';
+  function setCat(cat){_sharedCat=cat;_renderList();
+    document.querySelectorAll('#sharedPanel .filter-btn').forEach(b=>b.classList.remove('active'));
+    event?.target?.classList.add('active');
+  }
+
   // 공유 해제 버튼 포함 리스트 렌더링 업데이트
   function _renderList(){const el=document.getElementById('sharedList');if(!el)return;let cards=Data.cache.sharedCards.filter(c=>!selRoom||c.room_id===selRoom);
     // toggleSharedSel에서 찾을 수 있도록
     if(typeof PanelCards!=='undefined')PanelCards._searchShared=cards;
+    if(_sharedCat)cards=cards.filter(c=>(c.property?.category||'')===_sharedCat);
     if(_sharedQuery.trim())cards=Search.local(_sharedQuery,cards);
     if(!cards.length){el.innerHTML='<div class="empty"><div class="empty-icon">🤝</div>공유 매물이 없어요</div>';return;}
     // 에이전트별 그룹
@@ -3480,7 +3495,7 @@ const PanelShared = (() => {
     }
   }
 
-  return { render, openRoom, manageRoom, openRoomModal, createRoom, accept, reject, renameRoom, deleteRoom, leaveRoom, invite, unshare, onSearch, onSearchEnter };
+  return { render, openRoom, manageRoom, openRoomModal, createRoom, accept, reject, renameRoom, deleteRoom, leaveRoom, invite, unshare, onSearch, onSearchEnter, setCat };
 })();
 
 /* ═══════════════════════════════════════════════════════════
