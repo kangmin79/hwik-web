@@ -809,7 +809,7 @@ const Data = (() => {
 
   async function loadRooms() {
     const id=uid(); if(!id) return [];
-    const { data } = await sb().from('share_room_members').select('role,share_rooms(id,name,owner_id,created_at)').eq('user_id',id);
+    const { data } = await sb().from('share_room_members').select('role,share_rooms(id,name,owner_id,created_at)').eq('member_id',id);
     cache.rooms = (data||[]).map(r=>({...r.share_rooms, role:r.role})).filter(Boolean);
     return cache.rooms;
   }
@@ -837,23 +837,23 @@ const Data = (() => {
   async function createRoom(name) {
     const id=uid();
     const { data, error } = await sb().from('share_rooms').insert({name,owner_id:id}).select().single();
-    if (!error && data) await sb().from('share_room_members').insert({room_id:data.id,user_id:id,role:'owner'});
+    if (!error && data) await sb().from('share_room_members').insert({room_id:data.id,member_id:id,status:'accepted',role:'owner'});
     return { data, error };
   }
   async function deleteRoom(roomId) { return sb().from('share_rooms').delete().eq('id',roomId); }
   async function renameRoom(roomId,name) { return sb().from('share_rooms').update({name}).eq('id',roomId); }
-  async function leaveRoom(roomId) { return sb().from('share_room_members').delete().eq('room_id',roomId).eq('user_id',uid()); }
+  async function leaveRoom(roomId) { return sb().from('share_room_members').delete().eq('room_id',roomId).eq('member_id',uid()); }
 
   async function inviteMember(roomId, phone) {
     const { data:target } = await sb().from('profiles').select('id').eq('phone',phone).maybeSingle();
     if (!target) return { error:'해당 번호의 사용자를 찾을 수 없습니다' };
-    const { error } = await sb().from('share_room_members').insert({room_id:roomId,user_id:target.id,role:'pending'});
+    const { error } = await sb().from('share_room_members').insert({room_id:roomId,member_id:target.id,invited_phone:phone,status:'pending',role:'pending'});
     return { error:error?.message||null };
   }
-  async function acceptInvite(roomId) { return sb().from('share_room_members').update({role:'member'}).eq('room_id',roomId).eq('user_id',uid()); }
-  async function rejectInvite(roomId) { return sb().from('share_room_members').delete().eq('room_id',roomId).eq('user_id',uid()); }
+  async function acceptInvite(roomId) { return sb().from('share_room_members').update({role:'member'}).eq('room_id',roomId).eq('member_id',uid()); }
+  async function rejectInvite(roomId) { return sb().from('share_room_members').delete().eq('room_id',roomId).eq('member_id',uid()); }
   async function loadPendingInvites() {
-    const { data } = await sb().from('share_room_members').select('share_rooms(id,name,owner_id),role').eq('user_id',uid()).eq('role','pending');
+    const { data } = await sb().from('share_room_members').select('share_rooms(id,name,owner_id),role').eq('member_id',uid()).eq('role','pending');
     cache.pendingInvites = (data||[]).map(r=>({...r.share_rooms,role:r.role})).filter(Boolean);
     return cache.pendingInvites;
   }
@@ -3520,7 +3520,7 @@ const PanelShared = (() => {
     if(isOwner)_loadMembers(id);
   }
   async function _loadMembers(roomId){
-    const{data}=await Auth.sb.from('share_room_members').select('user_id,role,profiles(agent_name,phone)').eq('room_id',roomId);
+    const{data}=await Auth.sb.from('share_room_members').select('member_id,role,profiles(agent_name,phone)').eq('room_id',roomId);
     const el=document.getElementById('rmMembers');if(!el)return;
     if(!data?.length){el.innerHTML='<div style="font-size:13px;color:var(--text-light);">멤버 없음</div>';return;}
     el.innerHTML='<label style="font-size:12px;font-weight:700;color:var(--text-sub);">멤버 목록</label>'+data.map(m=>`<div class="item" style="padding:8px 0;"><div class="item-body"><div class="item-name">${esc(m.profiles?.agent_name||'사용자')}</div><div class="item-sub">${esc(m.profiles?.phone||'')} · ${m.role}</div></div></div>`).join('');
