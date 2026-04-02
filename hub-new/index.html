@@ -752,11 +752,13 @@ const Auth = (() => {
   function getAgentInfo() { try { return JSON.parse(localStorage.getItem('hwik_agent'))||{}; } catch { return {}; } }
 
   async function check() {
-    const { data:{ session } } = await sb.auth.getSession();
-    if (!session?.user) return false;
-    user = session.user; _token = session.access_token||'';
-    await loadProfile();
-    return true;
+    try {
+      const { data:{ session } } = await sb.auth.getSession();
+      if (!session?.user) return false;
+      user = session.user; _token = session.access_token||'';
+      await loadProfile();
+      return true;
+    } catch(e) { console.error('Auth.check error:',e); return false; }
   }
 
   function init() {
@@ -3983,7 +3985,7 @@ const App = {
     // 테마
     const theme=localStorage.getItem('hwik_theme')||'dark';toggleTheme(theme);
     // 카운트 로드 + 허브 렌더
-    await Data.loadCounts();
+    try{await Data.loadCounts();}catch(e){console.error('loadCounts failed:',e);}
     Hub.render();
     // 카카오 초기화
     try{if(typeof Kakao!=='undefined'&&!Kakao.isInitialized())Kakao.init(HWIK_CONFIG.KAKAO_JS_KEY);}catch(_){}
@@ -4148,7 +4150,7 @@ let _resizeTimer;window.addEventListener('resize',()=>{clearTimeout(_resizeTimer
 
 // 시작
 Auth.init();
-document.addEventListener('DOMContentLoaded', async()=>{await Auth.check();App.init();});
+document.addEventListener('DOMContentLoaded', async()=>{try{await Auth.check();}catch(e){console.error('Auth check failed:',e);}App.init();});
 </script>
 </body>
 </html>
