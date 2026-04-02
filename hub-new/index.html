@@ -3612,15 +3612,9 @@ const PanelShared = (() => {
     if(_sharedCat)cards=cards.filter(c=>(c.property?.category||'')===_sharedCat);
     if(_sharedQuery.trim())cards=Search.local(_sharedQuery,cards);
     if(!cards.length){el.innerHTML='<div class="empty"><div class="empty-icon">🤝</div>공유 매물이 없어요</div>';return;}
-    // 에이전트별 그룹
-    const groups={};cards.forEach(c=>{const aid=c.agent_id||'unknown';if(!groups[aid])groups[aid]=[];groups[aid].push(c);});
     const myId=Auth.user?.id;
-    let html='';
-    Object.entries(groups).forEach(([aid,list])=>{
-      const isMine=aid===myId;
-      const agentLabel=isMine?'내 매물':(list[0]?._agent_name||'다른 중개사');
-      html+=`<div class="section-label" style="color:${isMine?'var(--primary)':'var(--text-sub)'};">${esc(agentLabel)} (${list.length}건)</div>`;
-      list.forEach(c=>{const p=c.property||{};
+    let html=`<div style="font-size:12px;color:var(--text-sub);margin-bottom:8px;">공유 매물 (${cards.length}건)</div>`;
+    cards.forEach(c=>{const p=c.property||{};const isMine=c.agent_id===myId;
         const feats=(p.features||[]).slice(0,3);
         const photos=c.photos||[];
         const toggleFn=`(function(e){e.stopPropagation();var d=document.getElementById('sd-${c.id}');if(d)d.style.display=d.style.display==='none'?'':'none';})`;
@@ -3656,7 +3650,6 @@ const PanelShared = (() => {
             ${p.moveIn?`<div style="color:var(--text-light);font-size:11px;">입주: ${esc(p.moveIn)}</div>`:''}
           </div>
         </div>`;
-      });
     });
     el.innerHTML=html;
   }
