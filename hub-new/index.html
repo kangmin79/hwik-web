@@ -3223,7 +3223,7 @@ const PanelClient = (() => {
     // 나머지는 긴급도순
     restCards.sort((a,b)=>{if(b._urgency!==a._urgency)return b._urgency-a._urgency;return new Date(b.created_at)-new Date(a.created_at);});
 
-    _renderItems([...contractCards,...recentCards,...restCards], recentCards.length, contractCards.length);
+    _renderItems([...contractCards,...recentCards,...restCards], recentCards.length, contractCount, noteMap);
   }
 
   const _stageMap={
@@ -3234,12 +3234,12 @@ const PanelClient = (() => {
     '계약':{color:'#ef4444',bg:'rgba(248,113,113,0.1)',label:'계약'},
   };
 
-  async function _renderItems(cards, recentCount, contractCount=0){const el=document.getElementById('clList');if(!el)return;if(!cards.length){el.innerHTML='<div class="empty"><div class="empty-icon">🙋</div>손님이 없어요</div>';return;}
-    // 마지막 메모 로드 (타입+날짜)
-    const ids=cards.map(c=>c.id);
+  async function _renderItems(cards, recentCount, contractCount=0, noteMapFromList=null){const el=document.getElementById('clList');if(!el)return;if(!cards.length){el.innerHTML='<div class="empty"><div class="empty-icon">🙋</div>손님이 없어요</div>';return;}
+    // 마지막 메모: _renderList에서 전달받으면 재사용, 아니면 조회
     let lastNotes={};
-    try{const{data}=await Auth.sb.from('client_notes').select('client_card_id,type,created_at').in('client_card_id',ids).order('created_at',{ascending:false});
-      (data||[]).forEach(n=>{if(!lastNotes[n.client_card_id])lastNotes[n.client_card_id]=n;});}catch(_){}
+    if(noteMapFromList){Object.entries(noteMapFromList).forEach(([cid,notes])=>{if(notes[0])lastNotes[cid]=notes[0];});}
+    else{try{const ids=cards.map(c=>c.id);const{data}=await Auth.sb.from('client_notes').select('client_card_id,type,created_at').in('client_card_id',ids).order('created_at',{ascending:false});
+      (data||[]).forEach(n=>{if(!lastNotes[n.client_card_id])lastNotes[n.client_card_id]=n;});}catch(_){}}
 
     // 스크롤 시 등록 영역 접기
     el.onscroll=()=>{if(_regOpen&&el.scrollTop>50){_regOpen=false;const body=document.getElementById('clientRegBody'),toggle=document.getElementById('clientRegToggle');if(body)body.style.display='none';if(toggle)toggle.style.transform='rotate(-90deg)';}};
