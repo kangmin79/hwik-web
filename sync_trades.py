@@ -522,15 +522,18 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
         pass
 
     slug = apt.get("slug") or apt.get("kapt_name") or ""
-    danji_id = slug.replace(" ", "-").lower()
+    danji_id = slug.replace(" ", "").lower()
     import re as _re
-    danji_id = _re.sub(r'[^a-z0-9가-힣\-]', '', danji_id)
-    # kapt_code 뒤 4자리 붙여서 고유성 보장
-    kapt_suffix = (apt.get("kapt_code") or "")[-4:]
+    # 한글+영문+숫자+하이픈만 유지 (로마자Ⅰ~Ⅳ 등 제거)
+    danji_id = _re.sub(r'[^a-z0-9가-힣]', '', danji_id)
+    # kapt_code에서 숫자 부분만 suffix로 사용 (한글 suffix 방지)
+    kapt_code = apt.get("kapt_code") or ""
+    kapt_nums = _re.sub(r'[^0-9]', '', kapt_code)
+    kapt_suffix = kapt_nums[-4:] if len(kapt_nums) >= 4 else kapt_nums
     if kapt_suffix:
         danji_id = f"{danji_id}-{kapt_suffix}"
     if not danji_id or danji_id == f"-{kapt_suffix}":
-        danji_id = apt.get("kapt_code", "unknown")
+        danji_id = kapt_code.replace("/", "-").replace(" ", "")
 
     top_floor = None
     try:
