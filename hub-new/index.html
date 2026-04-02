@@ -3572,12 +3572,12 @@ const PanelAlert = (() => {
       const isToday=d===today.getDate()&&calMonth===today.getMonth()+1&&calYear===today.getFullYear();
       const evts=alertDates[d]||[];
       let evtHtml='';
-      evts.slice(0,2).forEach(a=>{
+      evts.slice(0,3).forEach(a=>{
         const past=new Date(a.alert_date)<today&&!a.alert_done;
         const cls=a._isLog?'log':a.alert_done?'done':past?'overdue':'schedule';
-        evtHtml+=`<span class="cal-evt ${cls}">${esc((a.content||a.type||'').slice(0,8))}</span>`;
+        evtHtml+=`<span class="cal-evt ${cls}">${esc((a.content||a.type||'').slice(0,15))}</span>`;
       });
-      if(evts.length>2)evtHtml+=`<span style="font-size:8px;color:var(--text-light);">+${evts.length-2}건</span>`;
+      if(evts.length>3)evtHtml+=`<span style="font-size:9px;font-weight:600;color:var(--text-light);">+${evts.length-3}건</span>`;
       const hasOverdue=evts.some(a=>new Date(a.alert_date)<today&&!a.alert_done);
       const dayOfWeek=(startDay+d-1)%7;
       const dayClass=dayOfWeek===0?' sun':dayOfWeek===6?' sat':'';
