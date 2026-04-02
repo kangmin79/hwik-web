@@ -538,9 +538,10 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
         # 아파트: A10021652 → 뒤 4자리 "1652"
         kapt_suffix = _re.sub(r'[^0-9]', '', kapt_code)[-4:]
     else:
-        # 오피스텔: 구코드 5자리 + 단지명 해시 3자리로 고유성 보장
+        # 오피스텔: 구코드 5자리 + (단지명+주소) 해시 3자리로 고유성 보장
         gu_code = _re.sub(r'[^0-9]', '', kapt_code)[:5]
-        name_hash = str(abs(hash(apt.get("kapt_name", ""))) % 1000).zfill(3)
+        unique_str = (apt.get("kapt_name", "") + (apt.get("doro_juso") or ""))
+        name_hash = str(abs(hash(unique_str)) % 1000).zfill(3)
         kapt_suffix = f"{gu_code}{name_hash}" if gu_code else name_hash
     if kapt_suffix:
         danji_id = f"{danji_id}-{kapt_suffix}"
