@@ -960,7 +960,8 @@ def generate_sitemap(danji_list: list):
         if not has_trade:
             excluded += 1
             continue
-        safe_id = did.replace("&", "&amp;")
+        from urllib.parse import quote as _quote
+        safe_id = _quote(did, safe="-")
         lastmod = (d.get("updated_at") or today)[:10]
         urls.append(f'  <url><loc>{base}/danji.html?id={safe_id}</loc><lastmod>{lastmod}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>')
         included += 1
