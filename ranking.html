@@ -137,7 +137,7 @@ function render(gu) {
 
   const html = `
     <header class="header"><div class="header-top">
-      <div class="logo" onclick="location.href='/'">휙</div>
+      <a class="logo" href="/" style="text-decoration:none;'">휙</div>
       <div><h1 class="header-name">${esc(areaLabel)} 아파트 순위</h1><div class="header-sub">${typeLabel} TOP 50</div></div>
     </div></header>
 
@@ -158,7 +158,7 @@ function render(gu) {
           if (currentType === 'price') { mainVal = formatPrice(d.price); subVal = d.sqmPrice ? formatPrice(d.sqmPrice)+'/㎡' : ''; }
           else if (currentType === 'sqm') { mainVal = formatPrice(d.sqmPrice)+'/㎡'; subVal = '매매 '+formatPrice(d.price)+' · '+d.area+'㎡'; }
           else { mainVal = (d.jr||0)+'%'; subVal = '매매 '+formatPrice(d.price); }
-          return `<div class="rank-item" onclick="location.href='danji.html?id=${encodeURIComponent(d.id)}'">
+          return `<a class="rank-item" style="text-decoration:none;color:inherit;" href='danji.html?id=${encodeURIComponent(d.id)}'">
             <div class="rank-num${i<3?' top3':''}">${i+1}</div>
             <div class="rank-info"><div class="rank-name">${esc(d.name)}</div><div class="rank-sub">${esc(d.location)}${d.buildYear?' · '+d.buildYear+'년':''}${d.area?' · 전용'+d.area+'㎡':''}</div></div>
             <div class="rank-price"><div class="rank-main">${mainVal}</div><div class="rank-detail">${subVal}</div></div>

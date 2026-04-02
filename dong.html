@@ -158,7 +158,7 @@ async function loadData() {
 
   const html = `
     <header class="header"><div class="header-top">
-      <div class="logo" onclick="location.href='/'">휙</div>
+      <a class="logo" href="/" style="text-decoration:none;'">휙</div>
       <div><h1 class="header-name">${esc(gu)} ${esc(dong)} 아파트 시세</h1><div class="header-sub">${data.length}개 단지 · ㎡당 가격순</div></div>
     </div></header>
 
@@ -177,7 +177,7 @@ async function loadData() {
     <div class="section">
       <div class="section-title">단지별 시세 (㎡당 가격순, 전용면적 기준)</div>
       <div style="display:flex;flex-direction:column;gap:8px;">
-        ${danjiList.map((d,i) => `<div class="danji-item" onclick="location.href='danji.html?id=${encodeURIComponent(d.id)}'"><div><div class="danji-name">${i+1}. ${esc(d.name)}</div><div class="danji-sub">${d.buildYear?d.buildYear+'년':''}${d.units?' · '+d.units+'세대':''}${d.area?' · 전용'+d.area+'㎡':''}</div></div><div><div class="danji-price">${d.price?formatPrice(d.price):'-'}</div><div class="danji-rate">${d.sqmPrice?formatPrice(d.sqmPrice)+'/㎡':''}${d.jr?' · 전세'+d.jr+'%':''}</div></div></div>`).join('')}
+        ${danjiList.map((d,i) => `<a class="danji-item" style="text-decoration:none;color:inherit;" href='danji.html?id=${encodeURIComponent(d.id)}'"><div><div class="danji-name">${i+1}. ${esc(d.name)}</div><div class="danji-sub">${d.buildYear?d.buildYear+'년':''}${d.units?' · '+d.units+'세대':''}${d.area?' · 전용'+d.area+'㎡':''}</div></div><div><div class="danji-price">${d.price?formatPrice(d.price):'-'}</div><div class="danji-rate">${d.sqmPrice?formatPrice(d.sqmPrice)+'/㎡':''}${d.jr?' · 전세'+d.jr+'%':''}</div></div></div>`).join('')}
       </div>
     </div>
 
@@ -190,7 +190,7 @@ async function loadData() {
       ${subways.length > 0 ? `<div class="faq-item"><div class="faq-q">${esc(dong)} 근처 지하철역은?</div><div class="faq-a">${subways.map(s=>s.name+'('+s.line+') 도보 '+walkMin(s.distance)).join(', ')}</div></div>` : ''}
     </div>
 
-    <div class="cta-section"><button class="btn-primary" onclick="location.href='mobile-v6.html'">${esc(dong)} 매물 전체보기</button></div>
+    <div class="cta-section"><a class="btn-primary" style="display:block;text-align:center;text-decoration:none;" href='mobile-v6.html'">${esc(dong)} 매물 전체보기</a></div>
     <div class="seo-section"><div class="seo-text">${esc(gu)} ${esc(dong)} 아파트 ${data.length}개 단지의 실거래가, 전세가, 시세를 확인하세요. ${avgPrice?'평균 매매가 '+formatPrice(avgPrice)+'.':''} ${avgJr?'평균 전세가율 '+avgJr+'%.':''}</div><div class="seo-source">데이터 출처: 국토교통부 실거래가 공개시스템 · 매일 업데이트</div></div>
   `;
   document.getElementById('app').innerHTML = html;

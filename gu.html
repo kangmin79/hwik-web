@@ -126,14 +126,14 @@ function renderGuList() {
 
   const html = `
     <header class="header"><div class="header-top">
-      <div class="logo" onclick="location.href='/'">휙</div>
+      <a class="logo" href="/" style="text-decoration:none;'">휙</div>
       <div><div class="header-name">서울 아파트 시세</div><div class="header-sub">25개 구별 실거래가</div></div>
     </div></header>
     <nav class="breadcrumb"><a href="/">휙</a><span>&gt;</span>서울 구별 시세</nav>
     <div class="section">
       <div class="section-title">서울 25개 구</div>
       <div class="gu-grid">
-        ${GU_LIST.map(g => `<div class="gu-item" onclick="location.href='gu.html?name=${encodeURIComponent(g)}'"><div class="gu-name">${esc(g)}</div><div class="gu-info">아파트 시세 보기 →</div></div>`).join('')}
+        ${GU_LIST.map(g => `<a class="gu-item" style="text-decoration:none;color:inherit;" href='gu.html?name=${encodeURIComponent(g)}'"><div class="gu-name">${esc(g)}</div><div class="gu-info">아파트 시세 보기 →</div></div>`).join('')}
       </div>
     </div>
     <div class="seo-section"><div class="seo-text">서울 25개 구의 아파트 실거래가, 전세가, 시세 추이를 확인하세요. 국토교통부 실거래가 공개시스템 데이터 기반.</div><div class="seo-source">데이터 출처: 국토교통부 실거래가 공개시스템 · 매일 업데이트</div></div>
@@ -219,7 +219,7 @@ function renderGuDetail(guName, data) {
 
   const html = `
     <header class="header"><div class="header-top">
-      <div class="logo" onclick="location.href='/'">휙</div>
+      <a class="logo" href="/" style="text-decoration:none;'">휙</div>
       <div><h1 class="header-name">${esc(guName)} 아파트 시세</h1><div class="header-sub">${data.length}개 단지 · ${totalUnits.toLocaleString()}세대</div></div>
     </div></header>
 
@@ -246,7 +246,7 @@ function renderGuDetail(guName, data) {
       if (jrTop.length > 0) {
         html += '<div class="section"><div class="section-title">전세가율 높은 단지</div><div style="display:flex;flex-direction:column;gap:8px;">';
         jrTop.forEach((d,i) => {
-          html += '<div class="danji-item" onclick="location.href=\\'danji.html?id='+encodeURIComponent(d.id)+'\\'"><div><div class="danji-name">'+(i+1)+'. '+esc(d.complex_name)+'</div><div class="danji-sub">'+esc(d.location)+'</div></div><div><div class="danji-price">'+d.jeonse_rate+'%</div><div class="danji-rate">전세가율</div></div></div>';
+          html += '<a class="danji-item" style="text-decoration:none;color:inherit;" href=\\'danji.html?id='+encodeURIComponent(d.id)+'\\'"><div><div class="danji-name">'+(i+1)+'. '+esc(d.complex_name)+'</div><div class="danji-sub">'+esc(d.location)+'</div></div><div><div class="danji-price">'+d.jeonse_rate+'%</div><div class="danji-rate">전세가율</div></div></div>';
         });
         html += '</div></div>';
       }
@@ -257,7 +257,7 @@ function renderGuDetail(guName, data) {
           const cats = d.categories || [];
           let price = null;
           for (const c of cats) { if (rt[c] && rt[c].price) { price = rt[c].price; break; } }
-          html += '<div class="danji-item" onclick="location.href=\\'danji.html?id='+encodeURIComponent(d.id)+'\\'"><div><div class="danji-name">'+(i+1)+'. '+esc(d.complex_name)+'</div><div class="danji-sub">'+esc(d.location)+'</div></div><div><div class="danji-price">'+(price?formatPrice(price):'-')+'</div></div></div>';
+          html += '<a class="danji-item" style="text-decoration:none;color:inherit;" href=\\'danji.html?id='+encodeURIComponent(d.id)+'\\'"><div><div class="danji-name">'+(i+1)+'. '+esc(d.complex_name)+'</div><div class="danji-sub">'+esc(d.location)+'</div></div><div><div class="danji-price">'+(price?formatPrice(price):'-')+'</div></div></div>';
         });
         html += '</div>';
       }
@@ -271,7 +271,7 @@ function renderGuDetail(guName, data) {
       <div class="dong-grid">
         ${dongList.map(([dong, info]) => {
           const avgP = info.prices.length > 0 ? formatPrice(Math.round(info.prices.reduce((a,b)=>a+b,0)/info.prices.length)) : '';
-          return `<div class="dong-item" onclick="location.href='dong.html?gu=${encodeURIComponent(guName)}&dong=${encodeURIComponent(dong)}'"><div class="dong-name">${esc(dong)}</div><div class="dong-count">${info.count}개 단지${avgP ? ' · 평균 '+avgP : ''}</div></div>`;
+          return `<a class="dong-item" style="text-decoration:none;color:inherit;" href='dong.html?gu=${encodeURIComponent(guName)}&dong=${encodeURIComponent(dong)}'"><div class="dong-name">${esc(dong)}</div><div class="dong-count">${info.count}개 단지${avgP ? ' · 평균 '+avgP : ''}</div></div>`;
         }).join('')}
       </div>
     </div>
@@ -281,7 +281,7 @@ function renderGuDetail(guName, data) {
     <div class="section">
       <div class="section-title">㎡당 가격 TOP 10 <span style="font-size:10px;color:var(--muted);font-weight:400;">(전용면적 기준)</span></div>
       <div style="display:flex;flex-direction:column;gap:8px;">
-        ${sqmList.slice(0, 10).map((d, i) => `<div class="danji-item" onclick="location.href='danji.html?id=${encodeURIComponent(d.id)}'"><div><div class="danji-name">${i+1}. ${esc(d.name)}</div><div class="danji-sub">${esc(d.location)} · 전용${d.area}㎡</div></div><div><div class="danji-price">${formatPrice(d.price)}</div><div class="danji-rate">${formatPrice(d.sqmPrice)}/㎡</div></div></div>`).join('')}
+        ${sqmList.slice(0, 10).map((d, i) => `<a class="danji-item" style="text-decoration:none;color:inherit;" href='danji.html?id=${encodeURIComponent(d.id)}'"><div><div class="danji-name">${i+1}. ${esc(d.name)}</div><div class="danji-sub">${esc(d.location)} · 전용${d.area}㎡</div></div><div><div class="danji-price">${formatPrice(d.price)}</div><div class="danji-rate">${formatPrice(d.sqmPrice)}/㎡</div></div></div>`).join('')}
       </div>
     </div>
 
@@ -290,7 +290,7 @@ function renderGuDetail(guName, data) {
     <div class="section">
       <div class="section-title">최근 거래</div>
       <div style="display:flex;flex-direction:column;gap:8px;">
-        ${trades.slice(0, 10).map(t => `<div class="trade-item" onclick="location.href='danji.html?id=${encodeURIComponent(t.id)}'"><div><div class="trade-price">${formatPrice(t.price)}</div><div class="trade-detail">${esc(t.name)} · ${t.area}㎡${t.floor ? ' · '+t.floor+'층' : ''}</div></div><div class="trade-date">${esc(t.date||'')}</div></div>`).join('')}
+        ${trades.slice(0, 10).map(t => `<a class="trade-item" style="text-decoration:none;color:inherit;" href='danji.html?id=${encodeURIComponent(t.id)}'"><div><div class="trade-price">${formatPrice(t.price)}</div><div class="trade-detail">${esc(t.name)} · ${t.area}㎡${t.floor ? ' · '+t.floor+'층' : ''}</div></div><div class="trade-date">${esc(t.date||'')}</div></div>`).join('')}
       </div>
     </div>
 
@@ -307,7 +307,7 @@ function renderGuDetail(guName, data) {
     <div class="divider"></div>
 
     <div class="cta-section">
-      <button class="btn-primary" onclick="location.href='mobile-v6.html'">${esc(guName)} 매물 전체보기</button>
+      <a class="btn-primary" style="display:block;text-align:center;text-decoration:none;" href='mobile-v6.html'">${esc(guName)} 매물 전체보기</a>
     </div>
 
     <div class="seo-section">

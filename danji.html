@@ -410,13 +410,13 @@ function render() {
   listings.forEach(l => { listingCount[l.type] = (listingCount[l.type]||0) + 1; });
   const listingBadge = Object.entries(listingCount).map(([k,v]) => `${k} ${v}`).join(' · ');
   const listingHtml = listings.slice(0,3).map(l => `
-    <div class="listing-item" onclick="location.href='property_view.html?id=${esc(l.id)}'">
+    <a class="listing-item" href="property_view.html?id=${encodeURIComponent(l.id)}" style="text-decoration:none;color:inherit;">
       <div>
         <div class="trade-price">${esc(l.type)} ${formatPrice(l.price)}</div>
         <div class="trade-detail">${l.floor ? l.floor+'층' : ''} ${l.area ? '· '+l.area+'㎡' : ''} ${l.move_in ? '· '+esc(l.move_in) : ''}</div>
       </div>
       <div class="listing-link">상세보기</div>
-    </div>
+    </a>
   `).join('');
 
   // 주변 단지 (현재 선택 평형 기준으로 비교)
@@ -444,7 +444,7 @@ function render() {
     }
     const diffHtml = '';
     return `
-    <div class="nearby-item" onclick="location.href='danji.html?id=${encodeURIComponent(n.id)}'">
+    <a class="nearby-item" href="danji.html?id=${encodeURIComponent(n.id)}" style="text-decoration:none;color:inherit;">
       <div>
         <div class="nearby-name">${esc(n.name)}</div>
         <div class="nearby-sub">${esc(n.location)} ${n.distance ? '· '+distText(n.distance) : ''}${areaLabel ? ' · '+areaLabel : ''}</div>
@@ -453,7 +453,7 @@ function render() {
         <div class="nearby-price">${bestPrice ? formatPrice(bestPrice) : '-'}</div>
         ${bestDate ? '<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+esc(bestDate)+'</div>' : ''}
       </div>
-    </div>`;
+    </a>`;
   }).join('');
 
   // SEO 텍스트 — DB가 아닌 실제 데이터 기반으로 자동 생성
@@ -649,7 +649,7 @@ function render() {
       </div>
       ${listingHtml
         ? '<div class="trade-list">' + listingHtml + '</div>'
-        : '<div class="listing-empty"><div class="listing-empty-text">이 단지에 등록된 매물이 아직 없습니다</div><div class="listing-empty-cta" onclick="location.href=\'card_generator_v2_auth.html\'">중개사님, 매물을 등록해보세요 →</div></div>'
+        : '<div class="listing-empty"><div class="listing-empty-text">이 단지에 등록된 매물이 아직 없습니다</div><a class="listing-empty-cta" href="card_generator_v2_auth.html" style="text-decoration:none;">중개사님, 매물을 등록해보세요 →</a></div>'
       }
     </div>
 
@@ -690,8 +690,8 @@ function render() {
 
     <!-- CTA -->
     <div class="cta-section">
-      <button class="btn-primary" onclick="location.href='mobile-v6.html'">이 단지 매물 전체보기</button>
-      <button class="btn-secondary" onclick="location.href='card_generator_v2_auth.html'">공인중개사 서비스 · 무료로 시작하기</button>
+      <a class="btn-primary" href="mobile-v6.html" style="display:block;text-align:center;text-decoration:none;">이 단지 매물 전체보기</a>
+      <a class="btn-secondary" href="card_generator_v2_auth.html" style="display:block;text-align:center;text-decoration:none;">공인중개사 서비스 · 무료로 시작하기</a>
     </div>
 
     <!-- SEO -->
@@ -900,7 +900,7 @@ function showError(msg) {
     <div class="error">
       <div class="error-icon">🏠</div>
       <div class="error-msg">${esc(msg)}</div>
-      <button class="btn-secondary" style="margin-top:16px;width:auto;padding:10px 24px;" onclick="location.href='/'">홈으로</button>
+      <a class="btn-secondary" href="/" style="display:inline-block;margin-top:16px;padding:10px 24px;text-decoration:none;">홈으로</a>
     </div>
   `;
 }
