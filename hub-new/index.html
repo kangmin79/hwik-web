@@ -2415,9 +2415,15 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
         const myId=Auth.user?.id;
         const agentIds=[...new Set(shR.filter(c=>c.agent_id&&c.agent_id!==myId).map(c=>c.agent_id))];
         if(agentIds.length){const {data:profs}=await Auth.sb.from('profiles').select('id,business_name,phone').in('id',agentIds);if(profs)profs.forEach(p=>{shR.filter(c=>c.agent_id===p.id).forEach(c=>{c._agent_name=p.business_name;c._agent_phone=p.phone;});});}
-        // 공유방 정보는 캐시에서
+        // 공유방 이름: 캐시 먼저, 없으면 DB 조회
         const sharedCards=Data.cache.sharedCards||[];
         shR.forEach(c=>{const sc=sharedCards.find(s=>s.id===c.id);if(sc){c._room_name=sc._room_name;if(!c._agent_name)c._agent_name=sc._agent_name;if(!c._agent_phone)c._agent_phone=sc._agent_phone;}});
+        // 캐시에서 못 찾은 매물은 DB에서 공유방 이름 직접 조회
+        const noRoom=shR.filter(c=>!c._room_name).map(c=>c.id);
+        if(noRoom.length){
+          const {data:shares}=await Auth.sb.from('card_shares').select('card_id,share_rooms(name)').in('card_id',noRoom);
+          if(shares)shares.forEach(s=>{const c=shR.find(x=>x.id===s.card_id);if(c&&s.share_rooms?.name)c._room_name=s.share_rooms.name;});
+        }
       }
       // 계약중 → 하단으로
       const _sortStatus=(arr)=>arr.sort((a,b)=>{const sa=a.trade_status==='계약가능'?0:1;const sb=b.trade_status==='계약가능'?0:1;return sa-sb;});
