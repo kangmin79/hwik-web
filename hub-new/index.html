@@ -2533,7 +2533,18 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
         <div id="detail-${c.id}" style="display:none;margin-top:8px;margin-left:28px;padding:12px;border-radius:10px;background:var(--bg-input);">
           ${p.address?`<div style="font-size:12px;color:var(--text-sub);margin-bottom:4px;">📍 ${esc(p.address)}</div>`:''}
           ${c.agent_comment?`<div style="font-size:12px;color:var(--primary);margin-bottom:4px;">${esc(c.agent_comment)}</div>`:''}
-          ${c.linked_client_id?(()=>{const lc=(Data.cache.clientCards||[]).find(x=>x.id===c.linked_client_id);return lc?`<div style="margin-top:8px;padding:8px 12px;border-radius:8px;border:2px solid #f59e0b;background:rgba(245,158,11,0.04);font-size:12px;"><span style="font-weight:700;color:#f59e0b;">🔒 계약 진행:</span> <span style="font-weight:700;cursor:pointer;color:var(--primary);" onclick="PanelClient.selectClient(JSON.parse(decodeURIComponent('${encodeURIComponent(JSON.stringify(lc))}')))">${esc(lc.contact_name||'손님')}</span> ${esc(lc.property?.price||'')} ${esc(lc.property?.location||'')}</div>`:''})():''}
+          ${(st==='계약중'||st==='완료')?(()=>{
+            const lc=c.linked_client_id?(Data.cache.clientCards||[]).find(x=>x.id===c.linked_client_id):null;
+            const isOtherAgent=c.linked_agent_id&&c.linked_agent_id!==Auth.user?.id;
+            let contractInfo='';
+            if(lc){
+              contractInfo=`<span style="font-weight:700;cursor:pointer;color:var(--primary);" onclick="PanelClient.selectClient(JSON.parse(decodeURIComponent('${encodeURIComponent(JSON.stringify(lc))}')))">${esc(lc.contact_name||'내 손님')}</span>`;
+            } else if(isOtherAgent){
+              contractInfo=`<span style="color:var(--text);">다른 중개사 손님</span>`;
+            }
+            const agentInfo=isOtherAgent?` · <span id="contractAgent-${c.id}" style="color:#f97316;">중개사 정보 로딩...</span>`:'';
+            return contractInfo||agentInfo?`<div style="margin-top:8px;padding:8px 12px;border-radius:8px;border:2px solid #f59e0b;background:rgba(245,158,11,0.04);font-size:12px;"><span style="font-weight:700;color:#f59e0b;">🔒 ${st}:</span> ${contractInfo}${agentInfo}</div>`:'';
+          })():''}
           <div style="display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
             <span style="font-size:11px;color:var(--text-light);">거래상태</span>
             <button onclick="PanelCards.chgStatus('${c.id}','계약가능')" style="padding:3px 10px;border-radius:6px;border:1px solid ${st==='계약가능'?'#22c55e':'var(--border)'};background:${st==='계약가능'?'rgba(34,197,94,0.1)':'transparent'};color:${st==='계약가능'?'#22c55e':'var(--text-light)'};font-size:10px;font-weight:700;cursor:pointer;">계약가능</button>
@@ -2541,12 +2552,32 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
             <button onclick="PanelCards.chgStatus('${c.id}','완료')" style="padding:3px 10px;border-radius:6px;border:1px solid ${st==='완료'?'#ef4444':'var(--border)'};background:${st==='완료'?'rgba(239,68,68,0.1)':'transparent'};color:${st==='완료'?'#ef4444':'var(--text-light)'};font-size:10px;font-weight:700;cursor:pointer;">완료</button>
           </div>
           ${photos.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">${photos.map(u=>`<div style="width:56px;height:56px;border-radius:6px;overflow:hidden;"><img src="${esc(u)}" style="width:100%;height:100%;object-fit:cover;"></div>`).join('')}</div>`:''}
+          ${(st==='계약중'||st==='완료')&&(c.linked_client_id||c.linked_agent_id)?`<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+            <div style="font-size:12px;font-weight:800;color:#f59e0b;margin-bottom:8px;">🔶 거래 공동 메모</div>
+            <div id="contractNotes-${c.id}" style="max-height:200px;overflow-y:auto;margin-bottom:8px;"><div style="font-size:11px;color:var(--text-light);">로딩...</div></div>
+            <div style="display:flex;gap:6px;"><input type="text" id="cnInput-${c.id}" placeholder="거래 메모 입력 (양쪽 중개사 공유)" style="flex:1;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-input);color:var(--text);font-size:12px;" onkeydown="if(event.key==='Enter')PanelCards.addContractNote('${c.id}')"><button onclick="PanelCards.addContractNote('${c.id}')" style="padding:6px 12px;border-radius:6px;border:none;background:#f59e0b;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">저장</button></div>
+          </div>`:''}
         </div>
       </div>`;
     }).join('');
   }
 
-  function toggleDetail(id){const el=document.getElementById('detail-'+id);if(el)el.style.display=el.style.display==='none'?'':'none';}
+  function toggleDetail(id){
+    const el=document.getElementById('detail-'+id);if(el)el.style.display=el.style.display==='none'?'':'none';
+    // 공동 메모 로드
+    if(el?.style.display!=='none')loadContractNotes(id);
+    // 다른 중개사 정보 로드 (계약중 매물)
+    const card=Data.cache.myCards.find(x=>x.id===id);
+    if(card?.linked_agent_id&&card.linked_agent_id!==Auth.user?.id){
+      const agEl=document.getElementById('contractAgent-'+id);
+      if(agEl&&agEl.textContent.includes('로딩')){
+        Auth.sb.from('profiles').select('business_name,phone').eq('id',card.linked_agent_id).maybeSingle().then(({data})=>{
+          if(data)agEl.innerHTML=`🏢 ${esc(data.business_name||'중개사')} · ${phoneLink(data.phone||'')}`;
+          else agEl.textContent='중개사 정보 없음';
+        });
+      }
+    }
+  }
 
   function toggleSel(id){
     const c=Data.cache.myCards.find(x=>x.id===id);if(!c)return;
@@ -2567,6 +2598,36 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
     if(has){/* 헤더 유지 */}
     else{header.style.transform='';main.style.marginTop='';main.style.height='';}
     const btn=document.querySelector('.btn-send');if(btn)btn.disabled=!has;
+  }
+
+  // 공동 거래 메모
+  async function loadContractNotes(cardId){
+    const el=document.getElementById('contractNotes-'+cardId);if(!el)return;
+    const {data}=await Auth.sb.from('contract_notes').select('id,agent_id,content,created_at').eq('card_id',cardId).order('created_at',{ascending:true});
+    if(!data?.length){el.innerHTML='<div style="font-size:11px;color:var(--text-light);">아직 메모가 없어요</div>';return;}
+    // 중개사 프로필 조회
+    const agentIds=[...new Set(data.map(n=>n.agent_id))];
+    const {data:profs}=await Auth.sb.from('profiles').select('id,business_name').in('id',agentIds);
+    const profMap={};(profs||[]).forEach(p=>{profMap[p.id]=p.business_name;});
+    const myId=Auth.user?.id;
+    el.innerHTML=data.map(n=>{
+      const isMine=n.agent_id===myId;
+      const name=profMap[n.agent_id]||'중개사';
+      const color=isMine?'#6366f1':'#f97316';
+      const bg=isMine?'rgba(99,102,241,0.06)':'rgba(249,115,22,0.06)';
+      const time=new Date(n.created_at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+      return `<div style="padding:6px 10px;border-radius:8px;background:${bg};border-left:3px solid ${color};margin-bottom:4px;">
+        <div style="font-size:10px;font-weight:700;color:${color};">${esc(name)} · ${time}</div>
+        <div style="font-size:12px;color:var(--text);margin-top:2px;">${esc(n.content)}</div>
+      </div>`;
+    }).join('');
+  }
+  async function addContractNote(cardId){
+    const inp=document.getElementById('cnInput-'+cardId);if(!inp)return;
+    const content=inp.value.trim();if(!content)return;
+    await Auth.sb.from('contract_notes').insert({card_id:cardId,agent_id:Auth.user?.id,content});
+    inp.value='';
+    loadContractNotes(cardId);
   }
 
   let _searchShared=[];
@@ -2727,11 +2788,24 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
 
   async function _pickClient(cardId,newStatus,clientId){
     document.getElementById('editModal')?.classList.remove('show');
+    const myId=Auth.user?.id;
+    // 매물이 내 것인지 공유 매물인지 확인
+    const card=Data.cache.myCards.find(x=>x.id===cardId);
+    const isMyCard=!!card;
     // 양방향 연결: 매물→손님, 손님→매물
-    const ops=[Auth.sb.from('cards').update({trade_status:newStatus,linked_client_id:clientId||null}).eq('id',cardId)];
+    const updates={trade_status:newStatus,linked_client_id:clientId||null};
+    if(!isMyCard)updates.linked_agent_id=myId; // 공유 매물이면 내 ID 기록
+    const ops=[Auth.sb.from('cards').update(updates).eq('id',cardId)];
     if(clientId){
-      // 기존 연결 해제 (이전에 다른 매물과 연결되어 있었으면)
       ops.push(Auth.sb.from('cards').update({linked_card_id:cardId}).eq('id',clientId));
+    }
+    // 공유 매물이면 매물 주인에게 알림
+    if(!isMyCard&&clientId){
+      const {data:cardData}=await Auth.sb.from('cards').select('agent_id').eq('id',cardId).maybeSingle();
+      if(cardData?.agent_id){
+        const ag=Auth.getAgentInfo();
+        Auth.sb.from('memos').insert({agent_id:cardData.agent_id,content:`🤝 ${ag.office||ag.name||'중개사'}가 매물 계약${newStatus==='완료'?' 완료':' 진행'} 요청 (${ag.phone||''})`,is_read:false}).then(()=>{});
+      }
     }
     await Promise.all(ops);
     Toast.show(newStatus+(clientId?' — 손님 연결 완료':''));
@@ -2741,11 +2815,24 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
   // 손님 매칭 탭에서 매물 선택 → 계약 진행
   async function linkMatchToClient(cardId,clientId){
     if(!cardId||!clientId)return;
+    const myId=Auth.user?.id;
+    const card=Data.cache.myCards.find(x=>x.id===cardId);
+    const isMyCard=!!card;
+    const updates={trade_status:'계약중',linked_client_id:clientId};
+    if(!isMyCard)updates.linked_agent_id=myId;
     // 양방향 연결
     await Promise.all([
-      Auth.sb.from('cards').update({trade_status:'계약중',linked_client_id:clientId}).eq('id',cardId),
+      Auth.sb.from('cards').update(updates).eq('id',cardId),
       Auth.sb.from('cards').update({linked_card_id:cardId}).eq('id',clientId)
     ]);
+    // 공유 매물이면 매물 주인에게 알림
+    if(!isMyCard){
+      const {data:cardData}=await Auth.sb.from('cards').select('agent_id').eq('id',cardId).maybeSingle();
+      if(cardData?.agent_id){
+        const ag=Auth.getAgentInfo();
+        Auth.sb.from('memos').insert({agent_id:cardData.agent_id,content:`🤝 ${ag.office||ag.name||'중개사'}가 매물 계약 진행 요청 (${ag.phone||''})`,is_read:false}).then(()=>{});
+      }
+    }
     Toast.show('계약 진행 연결 완료');
     await Data.loadMyCards(0,true);
   }
@@ -2758,7 +2845,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
       el.innerHTML=`<div class="panel-inner">${Hub.panelHead('거래 상태')}<div style="text-align:center;padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">${icon}</div><div style="font-size:24px;font-weight:800;color:${color};">${st}</div><div style="margin-top:24px;display:flex;gap:8px;justify-content:center;"><button class="filter-btn ${st==='계약가능'?'active':''}" onclick="PanelCards.chgStatus('${c.id}','계약가능')">계약가능</button><button class="filter-btn ${st==='계약중'?'active':''}" onclick="PanelCards.chgStatus('${c.id}','계약중')">계약중</button><button class="filter-btn ${st==='완료'?'active':''}" onclick="PanelCards.chgStatus('${c.id}','완료')">완료</button></div></div></div>`;}
   }
 
-  return { render, setFilter, setCat, setSort, onQ, onQEnter, more, renderList, toggleSel, toggleSharedSel, toggleDetail, share1, shareSelected, doShare, edit, addPhotos, addTag, saveEdit, del, chgStatus, _pickClient, _filterClientPicker, linkMatchToClient, renderSub, get _searchShared(){return _searchShared;}, set _searchShared(v){_searchShared=v;} };
+  return { render, setFilter, setCat, setSort, onQ, onQEnter, more, renderList, toggleSel, toggleSharedSel, toggleDetail, share1, shareSelected, doShare, edit, addPhotos, addTag, saveEdit, del, chgStatus, _pickClient, _filterClientPicker, linkMatchToClient, loadContractNotes, addContractNote, renderSub, get _searchShared(){return _searchShared;}, set _searchShared(v){_searchShared=v;} };
 })();
 
 /* ═══════════════════════════════════════════════════════════
