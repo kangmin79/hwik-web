@@ -739,7 +739,7 @@ const Auth = (() => {
 
   function getToken() { return _token || ''; }
   function login() { sb.auth.signInWithOAuth({ provider:'kakao', options:{ redirectTo: location.href.split('?')[0].split('#')[0] }}); }
-  function logout() { sb.auth.signOut(); user=null; profile=null; localStorage.removeItem('hwik_agent'); location.reload(); }
+  async function logout() { try{await sb.auth.signOut();}catch(_){} user=null; profile=null; localStorage.removeItem('hwik_agent'); localStorage.removeItem('sb-jqaxejgzkchxbfzgzyzi-auth-token'); location.reload(); }
 
   async function loadProfile(uid) {
     const id = uid || user?.id; if (!id) return null;
