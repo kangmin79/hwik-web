@@ -3482,10 +3482,10 @@ const PanelShared = (() => {
     if(Data.cache.pendingInvites.length) Data.cache.pendingInvites.forEach(inv=>{h+=`<div class="invite-banner"><div class="invite-banner-text">📩 ${esc(inv.name)} 초대가 도착했어요</div><div class="invite-banner-actions"><button class="invite-btn invite-accept" onclick="PanelShared.accept('${inv.id}')">수락</button><button class="invite-btn invite-reject" onclick="PanelShared.reject('${inv.id}')">거절</button></div></div>`;});
 
     // 방 목록
-    h+='<div class="room-grid">';
+    h+='<div style="display:flex;gap:8px;overflow-x:auto;padding:4px 0 12px;-webkit-overflow-scrolling:touch;">';
     const owned=Data.cache.rooms.filter(r=>r.role==='owner'),joined=Data.cache.rooms.filter(r=>r.role!=='owner'&&r.role!=='pending');
-    [...owned,...joined].forEach(r=>{h+=`<div class="room-box" onclick="PanelShared.openRoom('${r.id}')"><div style="display:flex;justify-content:space-between;align-items:center;"><div class="room-box-name">${esc(r.name)}</div><button class="prop-action-btn" onclick="event.stopPropagation();PanelShared.manageRoom('${r.id}')" style="padding:2px 8px;font-size:10px;">설정</button></div><div class="room-box-sub">${r.role==='owner'?'내 방':'참여 중'}</div></div>`;});
-    if(owned.length<3)h+=`<div class="room-box empty" onclick="PanelShared.openRoomModal()">+ 새 공유방</div>`;
+    [...owned,...joined].forEach(r=>{const isSel=selRoom===r.id;h+=`<div onclick="PanelShared.openRoom('${r.id}')" style="flex-shrink:0;padding:8px 14px;border-radius:10px;border:1.5px solid ${isSel?'var(--primary)':'var(--border)'};background:${isSel?'var(--primary-bg)':'transparent'};cursor:pointer;min-width:fit-content;"><div style="font-size:12px;font-weight:700;white-space:nowrap;">${esc(r.name)}</div><div style="font-size:10px;color:var(--text-light);">${r.role==='owner'?'내 방':'참여 중'}</div></div>`;});
+    if(owned.length<3)h+=`<div onclick="PanelShared.openRoomModal()" style="flex-shrink:0;padding:8px 14px;border-radius:10px;border:1.5px dashed var(--border);cursor:pointer;display:flex;align-items:center;color:var(--text-light);font-size:12px;">+ 새 공유방</div>`;
     h+='</div>';
 
     // 검색
