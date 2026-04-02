@@ -837,7 +837,7 @@ const Data = (() => {
 
   async function loadSharedCards(roomId) {
     // ★ 보안: private_note를 select에서 제외 (개발자 도구에서도 안 보이게)
-    let q = sb().from('card_shares').select('card_id,room_id,shared_by,cards(id,property,trade_status,agent_id,agent_comment,created_at,photos),share_rooms(name)').order('created_at',{ascending:false}).limit(100);
+    let q = sb().from('card_shares').select('card_id,room_id,shared_by,cards(id,property,trade_status,agent_id,agent_comment,created_at,photos),share_rooms(name)').order('created_at',{ascending:false}).limit(1000);
     if (roomId) q = q.eq('room_id',roomId);
     const { data } = await q;
     const myId=uid();
