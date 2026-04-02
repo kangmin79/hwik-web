@@ -112,3 +112,42 @@ const CATEGORY_EN = {
     '사무실': 'office',
     '기타': 'room'
 };
+
+/**
+ * SEO: Organization + WebSite 구조화 데이터 (모든 페이지 공통)
+ */
+(function() {
+    const ld = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "Organization",
+                "name": "휙 (Hwik)",
+                "url": "https://hwik.kr",
+                "logo": "https://hwik.kr/og-image.png",
+                "description": "중개사가 손님에게 매물을 '휙' 보내는 부동산 플랫폼. AI 매칭으로 조건에 맞는 매물을 자동 추천합니다.",
+                "foundingDate": "2026",
+                "areaServed": {
+                    "@type": "Country",
+                    "name": "대한민국"
+                },
+                "knowsAbout": ["부동산", "아파트 실거래가", "전세 시세", "부동산 중개"]
+            },
+            {
+                "@type": "WebSite",
+                "name": "휙",
+                "url": "https://hwik.kr",
+                "description": "서울 아파트 실거래가, 전세가, 시세 추이를 한눈에. 6,000개 단지 데이터 매일 업데이트.",
+                "potentialAction": {
+                    "@type": "SearchAction",
+                    "target": "https://hwik.kr/danji.html?id={search_term_string}",
+                    "query-input": "required name=search_term_string"
+                }
+            }
+        ]
+    };
+    const s = document.createElement('script');
+    s.type = 'application/ld+json';
+    s.textContent = JSON.stringify(ld);
+    document.head.appendChild(s);
+})();
