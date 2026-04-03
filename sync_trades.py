@@ -521,32 +521,24 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
     except:
         pass
 
-    slug = apt.get("slug") or apt.get("kapt_name") or ""
-    # 로마자 → 숫자 변환 (Ⅰ→1, Ⅱ→2, Ⅲ→3, Ⅳ→4, Ⅴ→5)
-    _roman_map = {'Ⅰ':'1','Ⅱ':'2','Ⅲ':'3','Ⅳ':'4','Ⅴ':'5','Ⅵ':'6','Ⅶ':'7','Ⅷ':'8','Ⅸ':'9','Ⅹ':'10',
-                  'ⅰ':'1','ⅱ':'2','ⅲ':'3','ⅳ':'4','ⅴ':'5'}
-    for roman, num in _roman_map.items():
-        slug = slug.replace(roman, num)
-    danji_id = slug.replace(" ", "").lower()
+    # ★ ID = kapt_code 기반 (해시 없음, 어디서 실행해도 동일)
     import re as _re
-    # 한글+영문+숫자만 유지
-    danji_id = _re.sub(r'[^a-z0-9가-힣]', '', danji_id)
-    # suffix: 아파트는 kapt_code 숫자, 오피스텔은 구코드+해시
     kapt_code = apt.get("kapt_code") or ""
-    prop_type = apt.get("property_type", "apt")
-    if prop_type == "apt" and kapt_code.startswith("A"):
-        # 아파트: A10021652 → 뒤 4자리 "1652"
-        kapt_suffix = _re.sub(r'[^0-9]', '', kapt_code)[-4:]
+    if kapt_code.startswith("A"):
+        # 아파트: A10021652 → a10021652
+        danji_id = kapt_code.lower()
     else:
-        # 오피스텔: 구코드 5자리 + (단지명+주소) 해시 3자리로 고유성 보장
-        gu_code = _re.sub(r'[^0-9]', '', kapt_code)[:5]
-        unique_str = (apt.get("kapt_name", "") + (apt.get("doro_juso") or ""))
-        name_hash = str(abs(hash(unique_str)) % 1000).zfill(3)
-        kapt_suffix = f"{gu_code}{name_hash}" if gu_code else name_hash
-    if kapt_suffix:
-        danji_id = f"{danji_id}-{kapt_suffix}"
-    if not danji_id or danji_id == f"-{kapt_suffix}":
-        danji_id = _re.sub(r'[^a-z0-9가-힣]', '', kapt_code.lower()) or "unknown"
+        # 오피스텔: offi-11500-킹덤하이너스 → 정리
+        cleaned = kapt_code.replace("/", "").replace(" ", "").lower()
+        # 한글+영문+숫자+하이픈만 유지
+        danji_id = _re.sub(r'[^a-z0-9가-힣\-]', '', cleaned)
+        # 로마자 → 숫자
+        _roman_map = {'ⅰ':'1','ⅱ':'2','ⅲ':'3','ⅳ':'4','ⅴ':'5',
+                      'Ⅰ':'1','Ⅱ':'2','Ⅲ':'3','Ⅳ':'4','Ⅴ':'5'}
+        for roman, num in _roman_map.items():
+            danji_id = danji_id.replace(roman, num)
+    if not danji_id:
+        danji_id = "unknown-" + str(abs(id(apt)) % 10000)
 
     top_floor = None
     try:
@@ -596,7 +588,13 @@ def update_danji_pages(danji_list: list):
     if not danji_list:
         return 0
 
-    batch_size = 20
+    # 같은 ID 중복 제거 (마지막 것 유지)
+    seen = {}
+    for d in danji_list:
+        seen[d["id"]] = d
+    danji_list = list(seen.values())
+
+    batch_size = 50
     total = 0
     for i in range(0, len(danji_list), batch_size):
         batch = danji_list[i:i + batch_size]
@@ -987,6 +985,7 @@ def main():
     parser.add_argument("--skip-aggregate", action="store_true", help="집계 건너뛰기 (수집만)")
     parser.add_argument("--aggregate-only", action="store_true", help="집계만 (수집 건너뛰기)")
     parser.add_argument("--gu", default=None, help="특정 구만 (예: 11440=마포구)")
+    parser.add_argument("--reset-danji", action="store_true", help="danji_pages 전체 삭제 후 재생성")
     args = parser.parse_args()
 
     months = 36 if args.init else args.months
@@ -1022,6 +1021,31 @@ def main():
     if args.skip_aggregate:
         print("⏭️  집계 건너뜀 (--skip-aggregate)")
         return
+
+    # --reset-danji: 기존 danji_pages 전체 삭제
+    if args.reset_danji:
+        print(f"\n🗑️  danji_pages 전체 삭제 중...")
+        del_count = 0
+        while True:
+            resp = sb_session.get(
+                f"{SUPABASE_URL}/rest/v1/danji_pages?select=id&limit=500",
+                headers={**SB_HEADERS, "Prefer": ""},
+                timeout=30,
+            )
+            ids = [r["id"] for r in resp.json()] if resp.status_code == 200 else []
+            if not ids:
+                break
+            for batch_start in range(0, len(ids), 50):
+                batch_ids = ids[batch_start:batch_start + 50]
+                id_filter = ",".join(f'"{i}"' for i in batch_ids)
+                sb_session.delete(
+                    f"{SUPABASE_URL}/rest/v1/danji_pages?id=in.({id_filter})",
+                    headers={**SB_HEADERS, "Prefer": ""},
+                    timeout=30,
+                )
+                del_count += len(batch_ids)
+            print(f"  삭제 {del_count}건...")
+        print(f"✅ danji_pages 전체 삭제 완료: {del_count}건")
 
     print(f"\n{'='*50}")
     print(f"📊 danji_pages 집계 시작")
