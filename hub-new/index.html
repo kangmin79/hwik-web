@@ -2893,6 +2893,7 @@ const PanelClient = (() => {
   function _addRecent(id){const list=_getRecent().filter(x=>x!==id);list.unshift(id);localStorage.setItem(RECENT_KEY,JSON.stringify(list.slice(0,RECENT_MAX)));}
 
   let _selectedClient=null;
+  let _initialTab=null;
 
   async function render(el){
     _selectedClient=null;
@@ -2935,9 +2936,10 @@ const PanelClient = (() => {
   }
 
   let _matchSelected=[];
-  async function selectClient(card){
+  async function selectClient(card, initialTab='match'){
     _selectedClient=card;
     _matchSelected=[];
+    _initialTab=initialTab;
     _addRecent(card.id);
     Hub._enterClientDirect(card);
     document.getElementById('main').classList.add('split');
@@ -2995,9 +2997,11 @@ const PanelClient = (() => {
     </div>`;
     h+=`<div id="clientDetailContent"></div>`;
     el.innerHTML=h;
-    // 기본: 매칭 매물
     _selectedClient._notes=notes;_selectedClient._matches=matches;
-    _renderDetailTab('match');
+    const tab=_initialTab||'match';_initialTab=null;
+    _renderDetailTab(tab);
+    // 탭 활성 표시
+    document.querySelectorAll('#clientDetailView .sub-tab').forEach(b=>{b.classList.remove('active');if(b.textContent.includes(tab==='match'?'매칭':tab==='timeline'?'상담':'희망'))b.classList.add('active');});
   }
 
   function detailTab(tab,btn){
@@ -3897,7 +3901,7 @@ const PanelAlert = (() => {
       const {data}=await Auth.sb.from('cards').select('*').eq('id',cardId).maybeSingle();
       if(data)card=data;
     }
-    if(card){PanelClient.selectClient(card);setTimeout(()=>PanelClient.detailTab('timeline'),300);}
+    if(card){PanelClient.selectClient(card,'timeline');}
     else Toast.show('손님 정보를 찾을 수 없습니다');
   }
 
