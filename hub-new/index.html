@@ -927,7 +927,7 @@ const Data = (() => {
     const id=uid(); if(!id) return {matches:[],overdue:[],memos:[],noContact:[]};
     const [m,o,me] = await Promise.all([
       sb().from('match_notifications').select('id,card_id,client_card_id,similarity,created_at,is_read').eq('agent_id',id).order('created_at',{ascending:false}).limit(20),
-      sb().from('client_notes').select('id,client_card_id,content,alert_date,type,alert_done').eq('agent_id',id).eq('alert_done',false).neq('alert_date',null).lt('alert_date',new Date().toISOString()).order('alert_date',{ascending:true}).limit(20),
+      sb().from('client_notes').select('id,client_card_id,content,alert_date,type,alert_done').eq('agent_id',id).eq('alert_done',false).not('alert_date','is',null).lt('alert_date',new Date().toISOString()).order('alert_date',{ascending:true}).limit(20),
       sb().from('memos').select('id,content,is_read,created_at').eq('agent_id',id).order('created_at',{ascending:false}).limit(20),
     ]);
     // 9. 미연락 손님 (7일+ 연락 없음)
@@ -952,7 +952,7 @@ const Data = (() => {
     const end = `${ey}-${String(em).padStart(2,'0')}-01`;
     // 병렬 조회: 일정 + 기록
     const [{ data: scheduled }, { data: logs }] = await Promise.all([
-      sb().from('client_notes').select('id,client_card_id,content,alert_date,type,alert_done,created_at').eq('agent_id',id).neq('alert_date',null).gte('alert_date',start).lt('alert_date',end).order('alert_date',{ascending:true}),
+      sb().from('client_notes').select('id,client_card_id,content,alert_date,type,alert_done,created_at').eq('agent_id',id).not('alert_date','is',null).gte('alert_date',start).lt('alert_date',end).order('alert_date',{ascending:true}),
       sb().from('client_notes').select('id,client_card_id,content,alert_date,type,alert_done,created_at').eq('agent_id',id).is('alert_date',null).gte('created_at',start).lt('created_at',end).order('created_at',{ascending:true})
     ]);
     // logs는 alert_date 대신 created_at을 사용
@@ -1378,7 +1378,7 @@ const Search = (() => {
 
   // ── 학습 점수 (기존 my_cards 동일) ──
   let _clickScores={},_queryClickScores={};
-  async function loadScores(){try{const{data}=await Auth.sb.from('search_logs').select('query,clicked_card_id').neq('clicked_card_id',null).limit(5000);if(!data)return;_clickScores={};_queryClickScores={};data.forEach(log=>{const cid=log.clicked_card_id,q=(log.query||'').toLowerCase();_clickScores[cid]=(_clickScores[cid]||0)+1;_queryClickScores[`${q}::${cid}`]=(_queryClickScores[`${q}::${cid}`]||0)+1;});}catch(_){}}
+  async function loadScores(){try{const{data}=await Auth.sb.from('search_logs').select('query,clicked_card_id').not('clicked_card_id','is',null).limit(5000);if(!data)return;_clickScores={};_queryClickScores={};data.forEach(log=>{const cid=log.clicked_card_id,q=(log.query||'').toLowerCase();_clickScores[cid]=(_clickScores[cid]||0)+1;_queryClickScores[`${q}::${cid}`]=(_queryClickScores[`${q}::${cid}`]||0)+1;});}catch(_){}}
   function logSearch(query,count){if(!Auth.user)return;Auth.sb.from('search_logs').insert({agent_id:Auth.user.id,query,result_count:count||0,search_mode:'local'}).then(()=>{}).catch(()=>{});}
   function logClick(query,cardId){if(!Auth.user)return;Auth.sb.from('search_logs').insert({agent_id:Auth.user.id,query,clicked_card_id:cardId,search_mode:'click'}).then(()=>{_clickScores[cardId]=(_clickScores[cardId]||0)+1;_queryClickScores[`${query.toLowerCase()}::${cardId}`]=(_queryClickScores[`${query.toLowerCase()}::${cardId}`]||0)+1;}).catch(()=>{});}
 
@@ -3232,7 +3232,7 @@ const PanelClient = (() => {
     // 나머지는 긴급도순
     restCards.sort((a,b)=>{if(b._urgency!==a._urgency)return b._urgency-a._urgency;return new Date(b.created_at)-new Date(a.created_at);});
 
-    _renderItems([...contractCards,...recentCards,...restCards], recentCards.length, contractCount, noteMap);
+    _renderItems([...contractCards,...recentCards,...restCards], recentCards.length, contractCards.length, noteMap);
   }
 
   const _stageMap={
