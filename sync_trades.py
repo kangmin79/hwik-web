@@ -485,6 +485,11 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
     if not recent_trade:
         return None
 
+    # 거래 3건 미만 제외 (thin content — Google SEO)
+    total_trade_count = sum(len(v) for v in price_history.values())
+    if total_trade_count < 3:
+        return None
+
     # 전세가율 계산 (첫 번째 평형 기준)
     jeonse_rate = None
     if categories:
