@@ -2323,7 +2323,7 @@ const PanelRegister = (() => {
       const {error:dbErr}=await Auth.sb.from('cards').insert([cardData]);
       if(dbErr)throw new Error('저장 실패: '+dbErr.message);
 
-      if(property.type!=='손님')Data.triggerAutoMatch(linkId);
+      Data.triggerAutoMatch(linkId);
 
       document.getElementById('editModal').classList.remove('show');
       document.getElementById('regResult').innerHTML='<div class="reg-success">✅ 매물 카드가 생성되었습니다!</div>';
@@ -2392,7 +2392,7 @@ const PanelRegister = (() => {
     for(const c of cards){try{const prop={type:c.type,price:c.price,complex:c.complex,location:c.location,area:c.area,floor:c.floor,room:c.room,features:c.features||[],rawText:c.rawText||''};
       const coords=await Data.matchCoords(prop);if(coords.lat){prop.lat=coords.lat;prop.lng=coords.lng;}
       const {data:sv}=await Auth.sb.from('cards').insert({agent_id:Auth.user.id,property:prop,trade_status:'계약가능'}).select('id').single();
-      if(sv&&prop.type!=='손님')Data.triggerAutoMatch(sv.id);saved++;btn.textContent=`저장 중... (${saved}/${cards.length})`;
+      if(sv)Data.triggerAutoMatch(sv.id);saved++;btn.textContent=`저장 중... (${saved}/${cards.length})`;
     }catch(_){}}
     document.getElementById('leaveBanner').style.display='none';Toast.show(`${saved}건 저장 완료`);btn.textContent='전체 저장';btn.disabled=false;fiParsedCards=[];fiDeletedIds=new Set();document.getElementById('fiResults').style.display='none';document.getElementById('fiDirectInput').value='';
   }
@@ -4015,8 +4015,22 @@ const App = {
     _startAlertPolling();
     // 기존 매물 태그 일괄 생성 (백그라운드, 1회)
     Data.batchGenerateTags().then(r=>{if(r?.updated)console.log(`태그 생성: ${r.updated}건`);});
+    // 기존 손님 매칭 1회 실행 (백그라운드)
+    _batchMatchClients();
   }
 };
+
+async function _batchMatchClients(){
+  const key='hwik_batch_match_done';
+  if(localStorage.getItem(key))return; // 1회만 실행
+  try{
+    const{data:clients}=await Auth.sb.from('cards').select('id').eq('agent_id',Auth.user.id).eq('property->>type','손님').not('embedding','is',null).limit(50);
+    if(!clients?.length)return;
+    for(const c of clients){Data.triggerAutoMatch(c.id);}
+    localStorage.setItem(key,'1');
+    console.log(`배치 매칭: 손님 ${clients.length}명 실행`);
+  }catch(_){}
+}
 
 function _startAlertPolling(){
   let _lastAlertCount=Data.cache.counts.alert||0;
