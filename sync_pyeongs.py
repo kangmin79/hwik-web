@@ -45,6 +45,7 @@ _load_env()
 
 GOV_SERVICE_KEY = os.environ.get("GOV_SERVICE_KEY", "")
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://api.hwik.kr")
+SUPABASE_URL_FALLBACK = "https://jqaxejgzkchxbfzgzyzi.supabase.co"
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 
 BUILDING_API_URL = "https://apis.data.go.kr/1613000/BldRgstHubService/getBrExposPubuseAreaInfo"

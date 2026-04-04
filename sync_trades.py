@@ -54,6 +54,7 @@ _load_env()
 
 GOV_SERVICE_KEY = os.environ.get("GOV_SERVICE_KEY", "")
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://api.hwik.kr")
+SUPABASE_URL_FALLBACK = "https://jqaxejgzkchxbfzgzyzi.supabase.co"
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 
 if not GOV_SERVICE_KEY:
@@ -244,19 +245,27 @@ def load_apartments():
     offset = 0
     limit = 1000
     while True:
-        resp = sb_session.get(
-            f"{SUPABASE_URL}/rest/v1/apartments",
-            headers={"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"},
-            params={
-                "select": "kapt_code,kapt_name,doro_juso,lat,lon,lawd_cd,property_type,households,use_date,sgg,umd_nm,pyeongs,slug,top_floor,parking,heating,builder,mgmt_fee",
-                "limit": str(limit),
-                "offset": str(offset),
-            },
-            timeout=90,
-        )
-        if resp.status_code != 200:
-            break
-        data = resp.json()
+        data = None
+        for attempt in range(3):
+            try:
+                resp = sb_session.get(
+                    f"{SUPABASE_URL}/rest/v1/apartments",
+                    headers={"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"},
+                    params={
+                        "select": "kapt_code,kapt_name,doro_juso,lat,lon,lawd_cd,property_type,households,use_date,sgg,umd_nm,pyeongs,slug,top_floor,parking,heating,builder,mgmt_fee",
+                        "limit": str(limit),
+                        "offset": str(offset),
+                    },
+                    timeout=90,
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    break
+                else:
+                    print(f"  ⚠️ apartments 로드 {resp.status_code} (재시도 {attempt+1}/3)")
+            except Exception as e:
+                print(f"  ⚠️ apartments 로드 실패: {e} (재시도 {attempt+1}/3)")
+            time.sleep(5)
         if not data:
             break
         all_apts.extend(data)
@@ -507,10 +516,12 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
         sorted_items = sorted(items, key=lambda x: x.get("date", ""))
         ph[key] = sorted_items
 
-    # 위치 정보
+    # 위치 정보 (없으면 제외)
     sgg = apt.get("sgg") or ""
     umd = apt.get("umd_nm") or ""
     location = f"{sgg} {umd}".strip() if sgg else ""
+    if not location:
+        return None
 
     build_year = None
     use_date = apt.get("use_date") or ""
@@ -995,6 +1006,25 @@ def main():
 
     months = 36 if args.init else args.months
     now = datetime.now()
+
+    # DB 연결 테스트 + fallback
+    global SUPABASE_URL
+    for url in [SUPABASE_URL, SUPABASE_URL_FALLBACK]:
+        try:
+            r = sb_session.get(
+                f"{url}/rest/v1/apartments?select=kapt_code&limit=1",
+                headers={"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"},
+                timeout=15,
+            )
+            if r.status_code == 200:
+                SUPABASE_URL = url
+                print(f"✅ DB 연결: {url}")
+                break
+        except Exception:
+            pass
+    else:
+        print("❌ DB 연결 실패 (메인 + fallback 모두)")
+        sys.exit(1)
 
     print(f"{'='*50}")
     print(f"🔄 실거래가 동기화")
