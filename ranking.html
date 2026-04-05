@@ -69,6 +69,11 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 <body>
 <div class="wrap" id="app">
   <div class="loading"><div class="loading-spinner"></div><div class="loading-text">순위 불러오는 중...</div></div>
+  <div id="fallback-content" style="padding:20px;">
+    <h1>서울 아파트 순위 - 휙</h1>
+    <p>서울 아파트 매매가, ㎡당 가격, 전세가율 순위 TOP 50. 국토교통부 실거래가 공개시스템 데이터 기반.</p>
+    <p><a href="/gu.html">서울 구별 시세 보기</a> · <a href="/danji.html?id=a10025850">헬리오시티 시세</a></p>
+  </div>
 </div>
 <script>
 const sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_KEY);

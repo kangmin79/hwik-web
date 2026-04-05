@@ -93,6 +93,11 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 <body>
 <div class="wrap" id="app">
   <div class="loading"><div class="loading-spinner"></div><div class="loading-text">불러오는 중...</div></div>
+  <div id="fallback-content" style="padding:20px;">
+    <h1>동별 아파트 실거래가 시세 - 휙</h1>
+    <p>서울 각 동별 아파트 매매/전세/월세 실거래가, 시세 추이를 확인하세요. 국토교통부 실거래가 공개시스템 데이터 기반.</p>
+    <p><a href="/gu.html">서울 구별 시세 보기</a> · <a href="/ranking.html">아파트 순위</a></p>
+  </div>
 </div>
 <script>
 const sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_KEY);

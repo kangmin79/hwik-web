@@ -14,7 +14,6 @@
 <meta property="og:description" id="og-desc" content="서울 아파트 실거래가, 시세 추이를 구별로 확인하세요.">
 <meta property="og:image" content="https://hwik.kr/og-image.png">
 <meta property="og:url" id="og-url" content="https://hwik.kr/gu.html">
-<link rel="canonical" id="canonical" href="https://hwik.kr/gu.html">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" id="tw-title" content="서울 아파트 시세 - 휙">
 <meta name="twitter:description" id="tw-desc" content="서울 아파트 실거래가, 시세 추이를 구별로 확인하세요.">
@@ -25,6 +24,20 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
+<script>
+// Canonical 즉시 주입 (25개 구별 페이지 중복 방지)
+(function() {
+  var name = new URLSearchParams(location.search).get('name');
+  var url = name
+    ? 'https://hwik.kr/gu.html?name=' + encodeURIComponent(name)
+    : 'https://hwik.kr/gu.html';
+  var link = document.createElement('link');
+  link.rel = 'canonical'; link.id = 'canonical'; link.href = url;
+  document.head.appendChild(link);
+  var ogUrl = document.getElementById('og-url');
+  if (ogUrl) ogUrl.content = url;
+})();
+</script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 :root { --dark:#1a1a2e; --yellow:#f5c842; --yellow-dim:rgba(245,200,66,0.15); --yellow-bg:rgba(245,200,66,0.04); --bg:#f8f8fa; --surface:#fff; --card:#f3f4f6; --border:#e5e7eb; --text:#1a1a2e; --sub:#6b7280; --muted:#9ca3af; --red:#e24b4a; --green:#639922; --radius:10px; }
@@ -92,8 +105,6 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 </div>
 <script>
 const sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_KEY);
-function esc(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-function formatPrice(m) { if (!m) return '-'; const u=Math.floor(m/10000),r=m%10000; if(u>0&&r>0){const c=Math.floor(r/1000);return c>0?u+'억 '+c+'천':u+'억 '+r;} if(u>0)return u+'억'; return m.toLocaleString()+'만'; }
 
 const GU_LIST = ['종로구','중구','용산구','성동구','광진구','동대문구','중랑구','성북구','강북구','도봉구','노원구','은평구','서대문구','마포구','양천구','강서구','구로구','금천구','영등포구','동작구','관악구','서초구','강남구','송파구','강동구'];
 
@@ -133,7 +144,7 @@ function renderGuList() {
     <div class="section">
       <div class="section-title">서울 25개 구</div>
       <div class="gu-grid">
-        ${GU_LIST.map(g => `<a class="gu-item" style="text-decoration:none;color:inherit;" href='gu.html?name=${encodeURIComponent(g)}'"><div class="gu-name">${esc(g)}</div><div class="gu-info">아파트 시세 보기 →</div></div>`).join('')}
+        ${GU_LIST.map(g => `<a class="gu-item" style="text-decoration:none;color:inherit;" href="gu.html?name=${encodeURIComponent(g)}"><div class="gu-name">${esc(g)}</div><div class="gu-info">아파트 시세 보기 →</div></a>`).join('')}
       </div>
     </div>
     <div class="seo-section"><div class="seo-text">서울 25개 구의 아파트 실거래가, 전세가, 시세 추이를 확인하세요. 국토교통부 실거래가 공개시스템 데이터 기반.</div><div class="seo-source">데이터 출처: 국토교통부 실거래가 공개시스템 · 매일 업데이트</div></div>
@@ -273,7 +284,7 @@ function renderGuDetail(guName, data) {
       <div class="dong-grid">
         ${dongList.map(([dong, info]) => {
           const avgP = info.prices.length > 0 ? formatPrice(Math.round(info.prices.reduce((a,b)=>a+b,0)/info.prices.length)) : '';
-          return `<a class="dong-item" style="text-decoration:none;color:inherit;" href='dong.html?gu=${encodeURIComponent(guName)}&dong=${encodeURIComponent(dong)}'"><div class="dong-name">${esc(dong)}</div><div class="dong-count">${info.count}개 단지${avgP ? ' · 평균 '+avgP : ''}</div></div>`;
+          return `<a class="dong-item" style="text-decoration:none;color:inherit;" href="dong.html?gu=${encodeURIComponent(guName)}&dong=${encodeURIComponent(dong)}"><div class="dong-name">${esc(dong)}</div><div class="dong-count">${info.count}개 단지${avgP ? ' · 평균 '+avgP : ''}</div></a>`;
         }).join('')}
       </div>
     </div>
@@ -309,7 +320,7 @@ function renderGuDetail(guName, data) {
     <div class="divider"></div>
 
     <div class="cta-section">
-      <a class="btn-primary" style="display:block;text-align:center;text-decoration:none;" href='mobile-v6.html'">${esc(guName)} 매물 전체보기</a>
+      <a class="btn-primary" style="display:block;text-align:center;text-decoration:none;" href="mobile-v6.html">${esc(guName)} 매물 전체보기</a>
     </div>
 
     <div class="seo-section">
