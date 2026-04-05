@@ -10,6 +10,9 @@
 <meta property="og:title" id="og-title" content="단지 시세 - 휙">
 <meta property="og:description" id="og-desc" content="아파트 실거래가, 시세 추이, 전세가율을 한눈에">
 <meta property="og:image" content="https://hwik.kr/og-image.png">
+<meta property="og:url" id="og-url" content="https://hwik.kr/danji.html">
+<meta name="google-site-verification" content="R2ye41AVVTRs8BxEXyEafFSTqMSiHKdb9zgTklrktSI" />
+<meta name="naver-site-verification" content="367bd1e77a8ad48b74e345be3e4a0f8125c2c4e1" />
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" id="tw-title" content="단지 시세 - 휙">
 <meta name="twitter:description" id="tw-desc" content="아파트 실거래가, 시세 추이, 전세가율을 한눈에">
@@ -18,15 +21,18 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="config.js"></script>
 <script>
-// Canonical 태그 즉시 주입 (Googlebot 1차 렌더링 시 중복 콘텐츠 방지)
+// Canonical + og:url 즉시 주입 (Googlebot 1차 렌더링 시 중복 콘텐츠 방지)
 (function() {
   var id = new URLSearchParams(location.search).get('id');
   if (id) {
+    var fullUrl = 'https://hwik.kr/danji.html?id=' + encodeURIComponent(id);
     var link = document.createElement('link');
     link.rel = 'canonical';
     link.id = 'canonical';
-    link.href = 'https://hwik.kr/danji.html?id=' + encodeURIComponent(id);
+    link.href = fullUrl;
     document.head.appendChild(link);
+    var ogUrl = document.getElementById('og-url');
+    if (ogUrl) ogUrl.content = fullUrl;
   }
 })();
 </script>
@@ -223,8 +229,13 @@ function walkMin(m) {
 }
 
 // ── 404 처리 (진짜로 DB에 없는 경우만) ──
-// 404.html 자체가 HTTP 404 + noindex를 반환하므로 리다이렉트만 하면 충분
+// 1) noindex 즉시 주입 (Google 1차 렌더링에서 색인 방지)
+// 2) 404.html로 리다이렉트 (Google 2차 렌더링에서 HTTP 404 확인)
 function markAsNotFound() {
+  var robots = document.querySelector('meta[name="robots"]');
+  if (!robots) { robots = document.createElement('meta'); robots.name = 'robots'; document.head.appendChild(robots); }
+  robots.content = 'noindex,nofollow';
+  document.title = '페이지를 찾을 수 없습니다 - 휙';
   location.replace('/404.html');
 }
 
@@ -261,6 +272,9 @@ async function loadData() {
   document.getElementById('tw-title').content = document.title;
   document.getElementById('tw-desc').content = desc;
   document.querySelector('meta[name="description"]').content = desc;
+  // og:url 업데이트
+  const ogUrl = document.getElementById('og-url');
+  if (ogUrl) ogUrl.content = `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;
   // canonical 재확인 (초기 inline script가 이미 주입했지만, 없으면 추가)
   let canonicalEl = document.getElementById('canonical');
   if (!canonicalEl) {
