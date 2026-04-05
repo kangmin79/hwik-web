@@ -44,7 +44,7 @@ Each apartment complex has a dedicated page at hwik.kr/danji.html?id={id} contai
 - SEO description text with data source attribution
 - Schema.org JSON-LD structured data (Residence type)
 
-Example: hwik.kr/danji.html?id=raemian-mapo-riverwell (래미안 마포리버웰)
+Example: hwik.kr/danji.html?id=a12187501 (래미안마포리버웰)
 
 ## Data Format
 Property pages include Schema.org JSON-LD structured data (RealEstateListing type).
@@ -66,7 +66,7 @@ Complex pages include Schema.org JSON-LD structured data (Residence type).
 - Price history: Up to 3 years of historical data
 
 ## Example Complex Data
-hwik.kr/danji.html?id=헬리오시티아파트-5850 contains:
+hwik.kr/danji.html?id=a10025850 contains:
 - Complex: 헬리오시티아파트, 송파구 가락동, 9,510 units, 2018
 - Unit sizes: 39㎡, 49㎡, 60㎡, 85㎡, 100㎡, 110㎡, 130㎡, 150㎡
 - Recent trade (85㎡): ~30억 (매매), ~10억 (전세)
