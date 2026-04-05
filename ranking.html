@@ -183,14 +183,20 @@ function render(gu) {
   document.getElementById('app').innerHTML = html;
 
   // JSON-LD
+  const faqItems = [
+    top50[0] ? {q: areaLabel+'에서 가장 비싼 아파트는?', a: top50[0].name+' ('+top50[0].location+')이 '+formatPrice(top50[0].price)+'으로 1위입니다. 국토교통부 실거래가 기준.'} : null,
+    top50[0] && currentType==='sqm' ? {q: areaLabel+' ㎡당 가격 1위는?', a: top50[0].name+'이 전용면적 기준 '+formatPrice(top50[0].sqmPrice)+'/㎡으로 1위입니다.'} : null,
+    top50[0] && (currentType==='jeonse'||currentType==='jeonse_low') ? {q: areaLabel+' 전세가율 순위는?', a: '전세가율 '+currentType==='jeonse'?'높은':'낮은'+' 1위는 '+top50[0].name+' ('+(top50[0].jr||0)+'%)입니다.'} : null,
+  ].filter(Boolean);
   const ld = {"@context":"https://schema.org","@graph":[
+    faqItems.length>0 ? {"@type":"FAQPage","mainEntity":faqItems.map(f=>({"@type":"Question","name":f.q,"acceptedAnswer":{"@type":"Answer","text":f.a}}))} : null,
     {"@type":"BreadcrumbList","itemListElement":[
       {"@type":"ListItem","position":1,"name":"휙","item":"https://hwik.kr"},
       {"@type":"ListItem","position":2,"name":"순위","item":"https://hwik.kr/ranking.html"},
     ]},
     {"@type":"ItemList","name":areaLabel+" 아파트 "+typeLabel+" 순위","numberOfItems":top50.length,
      "itemListElement":top50.slice(0,20).map((d,i)=>({"@type":"ListItem","position":i+1,"name":d.name,"url":"https://hwik.kr/danji.html?id="+encodeURIComponent(d.id)}))}
-  ]};
+  ].filter(Boolean)};
   const s = document.createElement('script'); s.type='application/ld+json'; s.textContent=JSON.stringify(ld); document.head.appendChild(s);
 }
 

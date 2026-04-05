@@ -337,6 +337,21 @@ function injectJsonLd(guName, data) {
 
   if (guName && data) {
     ld["@graph"].push({
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": guName + " 아파트 평균 매매가는?",
+          "acceptedAnswer": { "@type": "Answer", "text": guName + " 아파트 실거래가 기반 평균 매매가는 휙(hwik.kr)에서 확인하세요. 국토교통부 실거래가 공개시스템 데이터 매일 업데이트." }
+        },
+        {
+          "@type": "Question",
+          "name": guName + " 아파트 전세가율은?",
+          "acceptedAnswer": { "@type": "Answer", "text": guName + " 아파트 전세가율(전세가/매매가 비율)은 hwik.kr/gu.html?name=" + encodeURIComponent(guName) + " 에서 단지별로 확인할 수 있습니다." }
+        }
+      ]
+    });
+    ld["@graph"].push({
       "@type": "BreadcrumbList",
       "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr" },

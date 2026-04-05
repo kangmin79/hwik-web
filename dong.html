@@ -213,7 +213,13 @@ async function loadData() {
   document.getElementById('app').innerHTML = html;
 
   // JSON-LD
+  const faqItems = [
+    {q: dong+' 아파트 평균 시세는?', a: gu+' '+dong+' '+data.length+'개 단지 평균 매매가는 '+(avgPrice?formatPrice(avgPrice):'정보 확인 중')+'입니다. 국토교통부 실거래가 공개시스템 기준.'},
+    danjiList[0]&&danjiList[0].sqmPrice ? {q: dong+'에서 가장 비싼 아파트는?', a: '전용면적 ㎡당 가격 기준 '+danjiList[0].name+'이(가) '+formatPrice(danjiList[0].sqmPrice)+'/㎡으로 가장 높습니다.'} : null,
+    subways.length>0 ? {q: dong+' 근처 지하철역은?', a: subways.map(s=>s.name+'('+s.line+') 도보 '+walkMin(s.distance)).join(', ')} : null,
+  ].filter(Boolean);
   const ld = {"@context":"https://schema.org","@graph":[
+    {"@type":"FAQPage","mainEntity":faqItems.map(f=>({"@type":"Question","name":f.q,"acceptedAnswer":{"@type":"Answer","text":f.a}}))},
     {"@type":"BreadcrumbList","itemListElement":[
       {"@type":"ListItem","position":1,"name":"휙","item":"https://hwik.kr"},
       {"@type":"ListItem","position":2,"name":"서울","item":"https://hwik.kr/gu.html"},
