@@ -72,8 +72,6 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 </div>
 <script>
 const sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_KEY);
-function esc(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-function formatPrice(m) { if (!m) return '-'; const u=Math.floor(m/10000),r=m%10000; if(u>0&&r>0){const c=Math.floor(r/1000);return c>0?u+'억 '+c+'천':u+'억 '+r;} if(u>0)return u+'억'; return m.toLocaleString()+'만'; }
 
 let ALL_DATA = [];
 let currentType = 'price';

@@ -90,6 +90,17 @@ function _categorizePropertyInner(text, roomField, area, floor) {
 }
 
 /**
+ * 가격 포맷: 만원 단위 숫자 → "X억 Y천" 형태
+ */
+function formatPrice(m) {
+    if (!m) return '-';
+    const u = Math.floor(m / 10000), r = m % 10000;
+    if (u > 0 && r > 0) { const c = Math.floor(r / 1000); return c > 0 ? u + '억 ' + c + '천' : u + '억 ' + r; }
+    if (u > 0) return u + '억';
+    return m.toLocaleString() + '만';
+}
+
+/**
  * 영문 카테고리 → 한글 매핑
  * - card_generator 등에서 서버가 반환한 영문 category를 한글로 변환할 때 사용
  */

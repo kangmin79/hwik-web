@@ -14,7 +14,6 @@
 <meta property="og:description" id="og-desc" content="동별 아파트 실거래가, 시세 추이를 확인하세요.">
 <meta property="og:image" content="https://hwik.kr/og-image.png">
 <meta property="og:url" id="og-url" content="https://hwik.kr/dong.html">
-<link rel="canonical" id="canonical" href="https://hwik.kr/dong.html">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" id="tw-title" content="아파트 시세 - 휙">
 <meta name="twitter:description" id="tw-desc" content="동별 아파트 실거래가, 시세 추이를 확인하세요.">
@@ -25,6 +24,21 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
+<script>
+// Canonical 즉시 주입 (Googlebot 1차 렌더링 시 중복 콘텐츠 방지)
+(function() {
+  var p = new URLSearchParams(location.search);
+  var gu = p.get('gu'), dong = p.get('dong');
+  var url = gu && dong
+    ? 'https://hwik.kr/dong.html?gu=' + encodeURIComponent(gu) + '&dong=' + encodeURIComponent(dong)
+    : 'https://hwik.kr/dong.html';
+  var link = document.createElement('link');
+  link.rel = 'canonical'; link.id = 'canonical'; link.href = url;
+  document.head.appendChild(link);
+  var ogUrl = document.getElementById('og-url');
+  if (ogUrl) ogUrl.content = url;
+})();
+</script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 :root { --dark:#1a1a2e; --yellow:#f5c842; --yellow-dim:rgba(245,200,66,0.15); --bg:#f8f8fa; --surface:#fff; --card:#f3f4f6; --border:#e5e7eb; --text:#1a1a2e; --sub:#6b7280; --muted:#9ca3af; --red:#e24b4a; --green:#639922; --radius:10px; }
@@ -82,8 +96,6 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 </div>
 <script>
 const sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_KEY);
-function esc(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-function formatPrice(m) { if (!m) return '-'; const u=Math.floor(m/10000),r=m%10000; if(u>0&&r>0){const c=Math.floor(r/1000);return c>0?u+'억 '+c+'천':u+'억 '+r;} if(u>0)return u+'억'; return m.toLocaleString()+'만'; }
 function walkMin(m) { return m ? Math.round(m/67)+'분' : ''; }
 
 async function loadData() {
