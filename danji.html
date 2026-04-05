@@ -10,7 +10,6 @@
 <meta property="og:title" id="og-title" content="단지 시세 - 휙">
 <meta property="og:description" id="og-desc" content="아파트 실거래가, 시세 추이, 전세가율을 한눈에">
 <meta property="og:image" content="https://hwik.kr/og-image.png">
-<link rel="canonical" id="canonical" href="https://hwik.kr/danji.html">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" id="tw-title" content="단지 시세 - 휙">
 <meta name="twitter:description" id="tw-desc" content="아파트 실거래가, 시세 추이, 전세가율을 한눈에">
@@ -18,6 +17,19 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="config.js"></script>
+<script>
+// Canonical 태그 즉시 주입 (Googlebot 1차 렌더링 시 중복 콘텐츠 방지)
+(function() {
+  var id = new URLSearchParams(location.search).get('id');
+  if (id) {
+    var link = document.createElement('link');
+    link.rel = 'canonical';
+    link.id = 'canonical';
+    link.href = 'https://hwik.kr/danji.html?id=' + encodeURIComponent(id);
+    document.head.appendChild(link);
+  }
+})();
+</script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 :root {
@@ -210,18 +222,9 @@ function walkMin(m) {
   return Math.round(m / 67) + '분'; // 도보 평균 80m/분 → 67m/분 보수적
 }
 
-// ── 404 처리 (단지 없음 → noindex + 404.html 리다이렉트) ──
+// ── 404 처리 (진짜로 DB에 없는 경우만) ──
+// 404.html 자체가 HTTP 404 + noindex를 반환하므로 리다이렉트만 하면 충분
 function markAsNotFound() {
-  // noindex 메타 동적 추가 (Google이 이미 크롤링했어도 재방문 시 제거)
-  let robots = document.querySelector('meta[name="robots"]');
-  if (!robots) {
-    robots = document.createElement('meta');
-    robots.name = 'robots';
-    document.head.appendChild(robots);
-  }
-  robots.content = 'noindex,nofollow';
-  // 404.html로 리다이렉트 → GitHub Pages가 실제 HTTP 404 반환
-  // replace()로 히스토리에 남기지 않아 뒤로가기 루프 방지
   location.replace('/404.html');
 }
 
@@ -230,8 +233,23 @@ async function loadData() {
   const id = new URLSearchParams(location.search).get('id');
   if (!id) { markAsNotFound(); return; }
 
-  const { data, error } = await sb.from('danji_pages').select('id,complex_name,location,address,build_year,total_units,categories,recent_trade,all_time_high,jeonse_rate,price_history,nearby_subway,nearby_school,nearby_complex,active_listings,lat,lng,top_floor,parking,heating,builder,mgmt_fee,pyeongs_map,seo_text,updated_at').eq('id', id).single();
-  if (error || !data) { markAsNotFound(); return; }
+  let data, error;
+  try {
+    const res = await sb.from('danji_pages').select('id,complex_name,location,address,build_year,total_units,categories,recent_trade,all_time_high,jeonse_rate,price_history,nearby_subway,nearby_school,nearby_complex,active_listings,lat,lng,top_floor,parking,heating,builder,mgmt_fee,pyeongs_map,seo_text,updated_at').eq('id', id).single();
+    data = res.data;
+    error = res.error;
+  } catch (e) {
+    // 네트워크 오류 등 → 멀쩡한 페이지를 noindex하지 않도록 일반 에러 표시
+    showError('일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+    return;
+  }
+
+  // PGRST116 = "no rows returned" (진짜 없음) → 404
+  if (error && error.code === 'PGRST116') { markAsNotFound(); return; }
+  // 그 외 에러(네트워크/권한 등) → 일반 에러 (noindex 안 함)
+  if (error) { showError('단지 정보를 불러올 수 없습니다.'); return; }
+  // data가 빈 경우(이론상 .single()에선 안 나오지만 방어)
+  if (!data) { markAsNotFound(); return; }
 
   DATA = data;
 
@@ -243,7 +261,15 @@ async function loadData() {
   document.getElementById('tw-title').content = document.title;
   document.getElementById('tw-desc').content = desc;
   document.querySelector('meta[name="description"]').content = desc;
-  document.getElementById('canonical').href = `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;
+  // canonical 재확인 (초기 inline script가 이미 주입했지만, 없으면 추가)
+  let canonicalEl = document.getElementById('canonical');
+  if (!canonicalEl) {
+    canonicalEl = document.createElement('link');
+    canonicalEl.rel = 'canonical';
+    canonicalEl.id = 'canonical';
+    document.head.appendChild(canonicalEl);
+  }
+  canonicalEl.href = `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;
 
   // 거래 데이터 있는 첫 번째 면적 선택 (없으면 84㎡에 가장 가까운 것)
   const cats = data.categories || [];
@@ -534,8 +560,7 @@ function render() {
   const dong = locationParts[locationParts.length - 1] || d.location;
 
   // breadcrumb
-  const locationParts2 = (d.location || '').split(' ');
-  const gu = locationParts2[0] || '';
+  const guName = locationParts[0] || '';
 
   // FAQ 데이터
   const faqItems = [];
@@ -568,7 +593,7 @@ function render() {
   $('#app').innerHTML = `
     <!-- Breadcrumb -->
     <nav class="breadcrumb" aria-label="breadcrumb">
-      <a href="/">휙</a><span>&gt;</span><a href="/gu.html?name=${encodeURIComponent(gu)}">서울 ${esc(gu)}</a><span>&gt;</span>${esc(d.complex_name)}
+      <a href="/">휙</a><span>&gt;</span><a href="/gu.html?name=${encodeURIComponent(guName)}">서울 ${esc(guName)}</a><span>&gt;</span>${esc(d.complex_name)}
     </nav>
 
     <!-- 헤더 -->
@@ -689,11 +714,11 @@ function render() {
     <div class="section">
       <div class="section-title">더 알아보기</div>
       <div style="display:flex;flex-direction:column;gap:8px;">
-        <a href="dong.html?gu=${encodeURIComponent(gu)}&dong=${encodeURIComponent(dong)}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
+        <a href="dong.html?gu=${encodeURIComponent(guName)}&dong=${encodeURIComponent(dong)}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
           <span style="font-size:13px;">${esc(dong)} 다른 단지 시세</span><span style="color:var(--sub);font-size:12px;">→</span>
         </a>
-        <a href="gu.html?name=${encodeURIComponent(gu)}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
-          <span style="font-size:13px;">${esc(gu)} 전체 시세</span><span style="color:var(--sub);font-size:12px;">→</span>
+        <a href="gu.html?name=${encodeURIComponent(guName)}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
+          <span style="font-size:13px;">${esc(guName)} 전체 시세</span><span style="color:var(--sub);font-size:12px;">→</span>
         </a>
         <a href="ranking.html" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
           <span style="font-size:13px;">서울 아파트 순위</span><span style="color:var(--sub);font-size:12px;">→</span>
