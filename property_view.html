@@ -240,17 +240,34 @@
         /* ========== 새 카드 공통 (card-full) ========== */
         .card-full {
           width: 100%; max-width: min(430px, 100%);
-          height: calc(100dvh - 120px); max-height: 720px;
-          border-radius: 24px;
+          border-radius: 20px;
           overflow: hidden; position: relative;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+          box-shadow: 0 4px 20px rgba(0,0,0,0.08);
           margin: 0 auto;
+          background: #fff;
         }
-        /* 카드 내부 슬라이더 공통 */
-        .card-inner-slider {
+        /* 사진 영역: 16:10 비율 */
+        .card-photo-section {
+          position: relative; width: 100%; aspect-ratio: 16/10; overflow: hidden;
+        }
+        .card-photo-section .card-inner-slider {
           position: absolute; inset: 0; display: flex;
           transition: transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94);
           z-index: 0; will-change: transform;
+        }
+        /* 정보 영역 */
+        .card-info-section {
+          padding: 16px 18px 14px;
+        }
+        .card-info-price { font-size: 26px; font-weight: 800; color: #1a1a2e; letter-spacing: -0.03em; margin-bottom: 4px; }
+        .card-info-name { font-size: 13px; color: #64748b; margin-bottom: 12px; }
+        .card-info-specs { display: flex; gap: 5px; flex-wrap: wrap; }
+        .card-info-spec { font-size: 11px; padding: 5px 10px; border-radius: 20px; background: #f1f5f9; color: #475569; font-weight: 500; }
+        /* 카드 내부 슬라이더 공통 (fallback for noimg) */
+        .card-inner-slider {
+          display: flex;
+          transition: transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94);
+          will-change: transform;
         }
         /* 사진 슬라이드 */
         .photo-slide {
@@ -293,11 +310,11 @@
         .card-dot { height:4px; border-radius:3px; background:rgba(255,255,255,0.35); transition:all 0.25s; width:4px; }
         .card-dot.active { background:#fff; width:14px; }
 
-        /* 하단 오버레이 */
+        /* 하단 오버레이 (사진 위 - 최소화) */
         .card-bottom {
           position:absolute; bottom:0; left:0; right:0;
-          background:linear-gradient(to top,rgba(0,0,0,0.92) 0%,rgba(0,0,0,0.72) 38%,rgba(0,0,0,0.2) 65%,transparent 100%);
-          padding:50px 18px 18px; z-index:10; transition:opacity 0.3s;
+          background:linear-gradient(to top,rgba(0,0,0,0.5) 0%,transparent 100%);
+          padding:30px 18px 12px; z-index:10; transition:opacity 0.3s;
         }
         .card-bottom.hidden { opacity:0; pointer-events:none; }
         .card-price { font-size:30px; font-weight:800; color:#fff; letter-spacing:-0.03em; margin-bottom:2px; }
@@ -498,6 +515,28 @@
         /* (기존 외부 액션 버튼 삭제됨 — 카드 내부로 이동) */
 
         /* 푸터 */
+        /* 하단 고정 바 */
+        .fixed-bottom-bar {
+          position: fixed; bottom: 0; left: 0; right: 0;
+          background: #fff;
+          border-top: 1px solid #e5e5e0;
+          padding: 10px 16px;
+          padding-bottom: max(10px, env(safe-area-inset-bottom));
+          display: flex; align-items: center; gap: 12px;
+          z-index: 100;
+          max-width: 100%; box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+        .fixed-bottom-bar .agent-name { font-size: 14px; font-weight: 700; color: #1a1a2e; flex: 1; }
+        .fixed-bottom-bar .contact-btn {
+          display: flex; align-items: center; justify-content: center; gap: 5px;
+          padding: 10px 16px; border-radius: 12px; font-size: 13px; font-weight: 600;
+          text-decoration: none; cursor: pointer; border: none;
+          transition: transform 0.1s;
+        }
+        .fixed-bottom-bar .contact-btn:active { transform: scale(0.95); }
+        .fixed-bottom-bar .btn-call { background: #4ecdc4; color: #fff; }
+        .fixed-bottom-bar .btn-kakao { background: #facc15; color: #1a1a2e; }
+
         #interestBtn.interested {
             background: #6366f1; color: #fff; border-color: #6366f1;
         }
@@ -556,12 +595,7 @@
 
     </main>
     
-    <!-- 푸터 -->
-    <footer class="footer" style="padding:16px 20px 24px;">
-        <a href="https://hwik.kr/" style="display:inline-flex;align-items:center;gap:5px;color:#6366f1;text-decoration:none;font-size:12px;font-weight:500;">
-            <span style="font-weight:800;">휙</span>에서 만든 매물카드
-        </a>
-    </footer>
+    <!-- 푸터 (하단 고정 바 사용으로 최소화) -->
     
     <script>
         // ★ 카카오 인앱브라우저 → 외부 브라우저 이동
@@ -943,68 +977,86 @@
             const hasComment = !!agentComment;
             const totalSlides = photos.length + (hasComment ? 1 : 0);
             const specs = [floor, ...features].filter(Boolean);
+            const cardNameStr = [location, name, area].filter(Boolean).join(' · ');
 
             const slidesHtml = photos.map((url, i) =>
                 `<img class="photo-slide" src="${esc(url)}" loading="${i === 0 ? 'eager' : 'lazy'}" fetchpriority="${i === 0 ? 'high' : 'auto'}">`
-            ).join('') + _memoSlideHtml(agentComment, agentName, agentPhone);
+            ).join('') + (hasComment ? `<div class="photo-slide" style="min-width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#0d1117,#151c27);padding:32px;">
+                <div style="text-align:center;">
+                  <div style="font-family:'Noto Serif KR',serif;font-size:72px;color:rgba(255,255,255,0.08);line-height:0.6;margin-bottom:20px;">"</div>
+                  <div style="font-family:'Noto Serif KR',serif;font-size:16px;color:rgba(255,255,255,0.9);line-height:1.9;word-break:keep-all;">${esc(agentComment).replace(/\n/g,'<br>')}</div>
+                </div>
+              </div>` : '');
+
+            const specsHtml = specs.map(s => `<span class="card-info-spec">${s}</span>`).join('');
 
             const cardHtml = `
               <div class="card card-full" id="activeCard" data-template="memo" data-total="${totalSlides}" onclick="_onCardTap(event)">
-                <div class="card-inner-slider" id="cardSlider">${slidesHtml}</div>
-                ${_topInfoHtml(type, totalSlides)}
-                ${_bottomHtml(price, name, location, area, specs, agentPhone)}
-                <button class="card-arrow arr-left" onclick="_moveInternalSlide(-1)">‹</button>
-                <button class="card-arrow arr-right" onclick="_moveInternalSlide(1)">›</button>
-              </div>
-              ${_agentBelowHtml(agentName, agentPhone, agentPhoto)}`;
+                <div class="card-photo-section">
+                  <div class="card-inner-slider" id="cardSlider">${slidesHtml}</div>
+                  ${_topInfoHtml(type, totalSlides)}
+                  <button class="card-arrow arr-left" onclick="_moveInternalSlide(-1)">‹</button>
+                  <button class="card-arrow arr-right" onclick="_moveInternalSlide(1)">›</button>
+                </div>
+                <div class="card-info-section">
+                  <div class="card-info-price">${price}</div>
+                  <div class="card-info-name">${cardNameStr}</div>
+                  ${specsHtml ? `<div class="card-info-specs">${specsHtml}</div>` : ''}
+                </div>
+              </div>`;
+            // 하단 고정 바 렌더
+            _renderFixedBar(agentName, agentPhone, agentPhoto);
             return cardHtml;
         }
 
         // ===== noimg 템플릿 (사진 없는 카드) =====
         function buildNoImgCard(ctx) {
             const { type, price, name, location, area, floor, features, agentName, agentPhone, agentPhoto, agentComment } = ctx;
-            const hasComment = !!agentComment;
-            const totalSlides = 1 + (hasComment ? 1 : 0);
-
-            // 단지명 줄바꿈 처리
-            const nameParts = name.length > 6 ? name.replace(/\s/g, '<br>') : name;
-            const detailStr = [area, floor].filter(Boolean).join(' · ');
-            const tagsHtml = features.length ? `<div style="display:flex;flex-wrap:wrap;gap:5px;justify-content:center;position:relative;z-index:1;margin-top:2px;">${features.map(f => `<span class="card-spec">${f}</span>`).join('')}</div>` : '';
-
-            const slide = `
-              <div class="info-slide bg-dark-1" style="padding:50px 28px 90px;justify-content:flex-start;">
-                <!-- 상단: 단지명 + 주소 -->
-                <div style="position:relative;z-index:1;text-align:center;margin-top:8px;">
-                  <div class="info-complex" style="font-size:30px;margin-bottom:6px;">${nameParts}</div>
-                  <div class="info-location" style="margin-bottom:0;">${location}</div>
-                </div>
-                <!-- 중간: 가격/평수 (세로 중앙) -->
-                <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;z-index:1;width:100%;">
-                  <div class="info-divider"></div>
-                  <div class="info-type-price" style="margin-bottom:12px;">
-                    <span class="info-type">${type}</span>
-                    <span class="info-price" style="font-size:24px;">${price}</span>
-                  </div>
-                  ${detailStr ? `<div style="font-size:14px;font-weight:600;color:rgba(255,255,255,0.7);">${detailStr}</div>` : ''}
-                </div>
-                <!-- 하단: 태그 -->
-                ${tagsHtml ? `<div style="position:relative;z-index:1;width:100%;display:flex;flex-wrap:wrap;gap:5px;justify-content:center;">${features.map(f => '<span class="card-spec">' + f + '</span>').join('')}</div>` : ''}
-                <div class="hwik-watermark">휙</div>
-              </div>`;
+            const cardNameStr = [location, name, area].filter(Boolean).join(' · ');
+            const specs = [floor, ...features].filter(Boolean);
+            const specsHtml = specs.map(s => `<span class="card-info-spec">${s}</span>`).join('');
 
             const cardHtml = `
-              <div class="card card-full" id="activeCard" data-template="noimg" data-total="${totalSlides}">
-                <div class="card-inner-slider" id="cardSlider">
-                  ${slide}${_memoSlideHtml(agentComment, agentName, agentPhone)}
+              <div class="card card-full" id="activeCard" data-template="noimg" data-total="1">
+                <div class="card-info-section" style="padding:28px 20px;">
+                  <div style="text-align:center;margin-bottom:16px;">
+                    <span style="font-size:11px;font-weight:500;padding:4px 12px;border-radius:8px;background:#f1f5f9;color:#475569;">${type}</span>
+                  </div>
+                  <div class="card-info-price" style="text-align:center;font-size:28px;">${price}</div>
+                  <div class="card-info-name" style="text-align:center;font-size:14px;">${cardNameStr}</div>
+                  ${specsHtml ? `<div class="card-info-specs" style="justify-content:center;margin-top:4px;">${specsHtml}</div>` : ''}
+                  ${agentComment ? `<div style="margin-top:16px;padding:14px 16px;background:#f8f7f4;border-radius:12px;border-left:3px solid #6366f1;"><div style="font-size:13px;color:#475569;line-height:1.7;white-space:pre-wrap;">${esc(agentComment).replace(/\n/g,'<br>')}</div></div>` : ''}
                 </div>
-                ${_topInfoHtml(type, totalSlides)}
-                <div class="card-bottom" id="cardBottom">
-                  ${_actionBarHtml(agentPhone)}
-                </div>
-                ${totalSlides > 1 ? `<button class="card-arrow arr-left" onclick="_moveInternalSlide(-1)">‹</button><button class="card-arrow arr-right" onclick="_moveInternalSlide(1)">›</button>` : ''}
-              </div>
-              ${_agentBelowHtml(agentName, agentPhone, agentPhoto)}`;
+              </div>`;
+            _renderFixedBar(agentName, agentPhone, agentPhoto);
             return cardHtml;
+        }
+
+        // ===== 하단 고정 바 =====
+        function _renderFixedBar(agentName, agentPhone, agentPhoto) {
+            let bar = document.getElementById('fixedBottomBar');
+            if (!bar) {
+                bar = document.createElement('div');
+                bar.id = 'fixedBottomBar';
+                bar.className = 'fixed-bottom-bar';
+                document.body.appendChild(bar);
+            }
+            const tel = agentPhone ? agentPhone.replace(/-/g, '') : '';
+            const initial = esc(agentName).charAt(0);
+            const avatarInner = agentPhoto
+                ? `<img src="${esc(agentPhoto)}" style="width:100%;height:100%;object-fit:cover;">`
+                : initial;
+            bar.innerHTML = `
+              <div style="width:36px;height:36px;border-radius:50%;background:rgba(99,102,241,0.1);border:2px solid #6366f1;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#6366f1;flex-shrink:0;overflow:hidden;">${avatarInner}</div>
+              <div class="agent-name">${esc(agentName)}</div>
+              ${tel ? `<a href="tel:${tel}" class="contact-btn btn-call">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                전화</a>` : ''}
+              <button onclick="goBackToKakao()" class="contact-btn btn-kakao">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c5.8 0 10.5 3.66 10.5 8.17 0 4.51-4.7 8.17-10.5 8.17-.87 0-1.72-.08-2.54-.24l-4.14 2.82.93-4.08C3.92 16.13 1.5 13.37 1.5 11.17 1.5 6.66 6.2 3 12 3z"/></svg>
+                카톡</button>`;
+            // 메인 영역 하단 패딩 추가 (고정 바에 가리지 않도록)
+            document.querySelector('.main').style.paddingBottom = '80px';
         }
 
         // ===== 내부 슬라이더 제어 =====
