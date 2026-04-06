@@ -281,13 +281,14 @@
           transition: transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94);
           will-change: transform;
         }
-        /* 사진 슬라이드 — contain으로 원본 비율 유지 (블러 배경이 빈 공간 채움) */
+        /* 사진 슬라이드 — 기본 cover, 작은 이미지만 contain (JS에서 전환) */
         .photo-slide {
-          min-width: 100%; height: 100%; object-fit: contain;
+          min-width: 100%; height: 100%; object-fit: cover;
           position: relative; z-index: 2;
           pointer-events: auto;
           cursor: pointer;
         }
+        .photo-slide.fit-contain { object-fit: contain; }
         /* 메모 슬라이드 (중개사 코멘트) */
         .memo-slide {
           min-width: 100%; height: 100%; position: relative;
@@ -1161,8 +1162,30 @@
             updateNavigation();
             setupSwipe();
             _initInternalSwipe();
+            _autoFitPhotos();
             _preloadAdjacentCards();
             updateInterestButton();
+        }
+
+        // 원본이 작으면 contain, 크면 cover (깨짐 방지)
+        function _autoFitPhotos() {
+            document.querySelectorAll('.photo-slide').forEach(img => {
+                const check = () => {
+                    if (!img.naturalWidth) return;
+                    const section = img.closest('.card-photo-section');
+                    if (!section) return;
+                    const dispW = section.clientWidth;
+                    const dispH = section.clientHeight;
+                    // 원본이 표시 영역보다 작으면 contain (확대하면 깨짐)
+                    if (img.naturalWidth < dispW * 0.8 && img.naturalHeight < dispH * 0.8) {
+                        img.classList.add('fit-contain');
+                    } else {
+                        img.classList.remove('fit-contain');
+                    }
+                };
+                if (img.complete) check();
+                else img.addEventListener('load', check, { once: true });
+            });
         }
 
         // 앞뒤 카드 photos[0] 미리 로드
