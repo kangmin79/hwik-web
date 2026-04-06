@@ -112,7 +112,7 @@ async function loadData() {
     let price = null, area = null, py = 0;
     for (const c of cats) {
       const t = rt[c];
-      if (t && t.price) { price = t.price; area = c; py = Math.round(parseInt(c)/3.3058); break; }
+      if (t && t.price && t.price > (price || 0)) { price = t.price; area = c; py = Math.round(parseInt(c)/3.3058); }
     }
     if (!price) return;
     const areaNum = parseFloat(area) || 0;
