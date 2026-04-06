@@ -118,7 +118,7 @@ def fetch_building_areas(sigunguCd, bjdongCd, bun, ji):
         "bjdongCd": bjdongCd,
         "bun": bun,
         "ji": ji,
-        "numOfRows": "100",
+        "numOfRows": "500",
         "_type": "json",
     }
 
@@ -135,11 +135,9 @@ def fetch_building_areas(sigunguCd, bjdongCd, bun, ji):
             lst = [lst]
         item_list = lst or []
 
-        # 평형 파악 목적 → 최대 10페이지(1000건)
-        total_pages = math.ceil(total / 100)
-        max_pages = min(total_pages, 10)
+        total_pages = math.ceil(total / 500)
 
-        for page in range(2, max_pages + 1):
+        for page in range(2, total_pages + 1):
             r = gov_session.get(BUILDING_API_URL, params={**base_params, "pageNo": str(page)}, timeout=15)
             if r.status_code == 200:
                 body2 = r.json().get("response", {}).get("body", {})
