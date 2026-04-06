@@ -974,7 +974,7 @@
 
         // ===== memo 템플릿 (사진 있는 카드) =====
         function buildMemoCard(ctx) {
-            const { type, price, name, location, area, floor, features, agentName, agentPhone, agentPhoto, photos, agentComment } = ctx;
+            const { type, price, name, location, area, floor, room, features, agentName, agentPhone, agentPhoto, photos, agentComment } = ctx;
             const totalSlides = photos.length;
             const specs = [floor, ...features].filter(Boolean);
             const cardNameStr = [location, name, area].filter(Boolean).join(' · ');
@@ -985,12 +985,29 @@
             const specsHtml = specs.map(s => `<span class="card-info-spec">${s}</span>`).join('');
 
             const commentHtml = agentComment ? `
-              <div style="margin:16px 16px 0;padding:18px 20px;background:#f8f8f6;border-radius:16px;position:relative;">
+              <div style="margin:16px 16px 0;padding:18px 20px;background:#f8f8f6;border-radius:16px;">
                 <div style="font-size:11px;font-weight:600;color:#6366f1;margin-bottom:8px;display:flex;align-items:center;gap:5px;">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                   ${esc(agentName)}
                 </div>
                 <div style="font-size:14px;color:#334155;line-height:1.8;white-space:pre-wrap;word-break:keep-all;">${esc(agentComment).replace(/\n/g,'<br>')}</div>
+              </div>` : '';
+
+            // 매물 상세 테이블
+            const detailRows = [
+              ['거래유형', type],
+              ['면적', area],
+              ['층수', floor],
+              ['방/욕실', room],
+            ].filter(r => r[1]);
+            const detailHtml = detailRows.length ? `
+              <div style="margin:16px 16px 0;background:#f8f8f6;border-radius:16px;overflow:hidden;">
+                <div style="padding:14px 20px 8px;font-size:12px;font-weight:700;color:#1a1a2e;">매물 정보</div>
+                ${detailRows.map(([label, val]) => `
+                  <div style="display:flex;justify-content:space-between;padding:10px 20px;border-top:1px solid #eeede8;">
+                    <span style="font-size:13px;color:#64748b;">${label}</span>
+                    <span style="font-size:13px;font-weight:600;color:#1a1a2e;">${val}</span>
+                  </div>`).join('')}
               </div>` : '';
 
             const cardHtml = `
@@ -1007,7 +1024,8 @@
                   ${specsHtml ? `<div class="card-info-specs">${specsHtml}</div>` : ''}
                 </div>
               </div>
-              ${commentHtml}`;
+              ${commentHtml}
+              ${detailHtml}`;
             // 하단 고정 바 렌더
             _renderFixedBar(agentName, agentPhone, agentPhoto);
             return cardHtml;
