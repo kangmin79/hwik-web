@@ -2451,15 +2451,19 @@ const PanelRegister = (() => {
 
   async function fiSaveAll(){
     const cards=fiParsedCards.filter(c=>!fiDeletedIds.has(c._id));if(!cards.length||!Auth.user)return;
-    document.getElementById('leaveBanner').style.display='';const btn=document.getElementById('fiSaveBtn');btn.textContent='저장 중...';btn.disabled=true;let saved=0;
+    document.getElementById('leaveBanner').style.display='';const btn=document.getElementById('fiSaveBtn');btn.textContent='저장 중...';btn.disabled=true;let saved=0;const savedIds=[];
     for(const c of cards){try{const prop={type:c.type,price:c.price,complex:c.complex,location:c.location,area:c.area,floor:c.floor,room:c.room,features:c.features||[],rawText:c.rawText||''};
       const coords=await Data.matchCoords(prop);if(coords.lat){prop.lat=coords.lat;prop.lng=coords.lng;}
-      const {data:sv}=await Auth.sb.from('cards').insert({agent_id:Auth.user.id,property:prop,trade_status:'계약가능'}).select('id').single();
-      if(sv){Data.locateCard(sv.id).then(()=>Data.triggerAutoMatch(sv.id));}saved++;btn.textContent=`저장 중... (${saved}/${cards.length})`;
+      const _pf=Data.parsePriceFields(c.price,c.type);
+      const {data:sv}=await Auth.sb.from('cards').insert({agent_id:Auth.user.id,property:prop,trade_status:'계약가능',tags:c.tags||[],embedding:c.embedding||null,search_text:c.search_text||null,search_text_private:c.search_text_private||null,price_number:_pf.price_number||c.price_number||null,deposit:_pf.deposit||c.deposit||null,monthly_rent:_pf.monthly_rent||c.monthly_rent||null}).select('id').single();
+      if(sv){savedIds.push(sv.id);Data.locateCard(sv.id).then(()=>Data.triggerAutoMatch(sv.id));}saved++;btn.textContent=`저장 중... (${saved}/${cards.length})`;
     }catch(_){}}
     document.getElementById('leaveBanner').style.display='none';Toast.show(`${saved}건 저장 완료`);btn.textContent='전체 저장';btn.disabled=false;fiParsedCards=[];fiDeletedIds=new Set();document.getElementById('fiResults').style.display='none';document.getElementById('fiDirectInput').value='';
-    // 저장 직후 태그 즉시 생성 (백그라운드)
-    if(saved>0)Data.batchGenerateTags().then(r=>{if(r?.updated)console.log(`태그 생성: ${r.updated}건`);});
+    // 저장 직후 태그 + 임베딩 보완 (백그라운드)
+    if(saved>0){
+      Data.batchGenerateTags().then(r=>{if(r?.updated)console.log(`태그 생성: ${r.updated}건`);});
+      savedIds.slice(0,5).forEach((id,i)=>setTimeout(()=>Data.updateEmbedding(id),i*1500));
+    }
   }
 
   return { render, onInput, handlePhotos, removePhoto, handleOCR, doRegister, handleFile, setFiFilter, fiEdit, fiBatchSaveEdit, fiDelete, fiSaveAll, addCfTag, confirmSave };
@@ -2849,7 +2853,9 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
     const _pf=Data.parsePriceFields(prop.price,prop.type);
     const memoVal=document.getElementById('eMemo')?.value||'';
     const pn={...(c.private_note||{}),memo:memoVal||null};
-    await Auth.sb.from('cards').update({property:prop,photos:[...existPhotos,...newUrls],agent_comment:document.getElementById('eComment').value,private_note:pn,price_number:_pf.price_number,deposit:_pf.deposit,monthly_rent:_pf.monthly_rent}).eq('id',id);
+    const newTags=[...(prop.features||[]),prop.type,prop.category].filter(Boolean);
+    const mergedTags=[...new Set([...(c.tags||[]),...newTags])];
+    await Auth.sb.from('cards').update({property:prop,photos:[...existPhotos,...newUrls],agent_comment:document.getElementById('eComment').value,private_note:pn,price_number:_pf.price_number,deposit:_pf.deposit,monthly_rent:_pf.monthly_rent,tags:mergedTags}).eq('id',id);
     Data.updateEmbedding(id);Data.locateCard(id).then(()=>Data.triggerAutoMatch(id));
     document.getElementById('editModal').classList.remove('show');_editNewPhotos=[];Toast.show('수정 완료');
     await Data.loadMyCards(0,true);renderList();
@@ -3555,8 +3561,8 @@ const PanelClient = (() => {
       // 지역 태그 감지
       const guM=text.match(/([\uAC00-\uD7AF]+구)/);
       if(guM&&_guCoords[guM[1]]){newTags.push(guM[1]);newTags.push('서울');}
-      const dongM=text.match(/([\uAC00-\uD7AF]+동)/);
-      if(dongM)newTags.push(dongM[1]);
+      const dongM=text.match(/([\uAC00-\uD7AF]{2,}[0-9]*동)(?:\s|$|,)/);
+      if(dongM&&!/^(행동|이동|활동|운동|감동|변동|작동|기동|동동|충동|발동)$/.test(dongM[1]))newTags.push(dongM[1]);
       // 제외 태그 감지 ("반지하 빼고", "옥탑 싫어요")
       const excludeMap={'반지하':'반지하','옥탑':'옥탑','1층':'1층','저층':'저층','북향':'북향','복도식':'복도식'};
       const newExcluded=[];
@@ -4140,8 +4146,6 @@ const App = {
     if(editId){Hub.openPanel('my');setTimeout(()=>PanelCards.edit(editId),500);}
     // 검색 학습 점수 로드
     Search.loadScores();
-    // 백그라운드: 손님 매칭 체크
-    // _bgCheckMatches(); // 임시 비활성화 (embed-card 401 방지)
     // 스플래시 숨기기
     const sp=document.getElementById('splash');if(sp){sp.style.opacity='0';setTimeout(()=>sp.remove(),400);}
     // 비활성 자동복귀 + 허브 브리딩 시작
@@ -4278,9 +4282,9 @@ async function _bgCheckMatches(){
   await new Promise(r=>setTimeout(r,3000));
   try{
     if(!Auth.user)return;
-    const {data:cards}=await Auth.sb.from('cards').select('id,property').eq('agent_id',Auth.user.id).limit(50);
+    const {data:cards}=await Auth.sb.from('cards').select('id,property').eq('agent_id',Auth.user.id).eq('property->>type','손님').is('embedding',null).limit(50);
     if(!cards?.length)return;
-    const clientCards=cards.filter(c=>c.property?.type==='손님'&&!c.property?.embedding);
+    const clientCards=cards;
     // 최대 3개만 처리 (과부하 방지)
     const {data:sess}=await Auth.sb.auth.getSession();
     if(!sess?.session?.access_token)return;
