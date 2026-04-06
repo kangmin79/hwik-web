@@ -764,6 +764,12 @@ function render() {
   // 이벤트 바인딩
   $$('.tab').forEach(el => el.addEventListener('click', () => {
     currentTab = el.dataset.tab;
+    // 탭 전환 시 현재 탭 기준 데이터 있는 면적으로 재선택
+    const suffix = currentTab === '전세' ? '_jeonse' : (currentTab === '월세' ? '_wolse' : '');
+    const cats = (DATA && DATA.categories) || [];
+    const rt = (DATA && DATA.recent_trade) || {};
+    const firstWithTrade = cats.find(c => rt[c + suffix] && (rt[c + suffix].price || rt[c + suffix].monthly));
+    if (firstWithTrade) currentPyeong = firstWithTrade;
     render();
   }));
   $$('.pyeong-btn').forEach(el => el.addEventListener('click', () => {
