@@ -485,7 +485,6 @@ function render() {
 
   // 주변 단지 (현재 선택 평형 기준으로 비교)
   const curArea = currentPyeong ? parseInt(currentPyeong) : 84;
-  const curSqmPrice = (saleData && saleData.price && currentPyeong) ? Math.round(saleData.price / parseFloat(currentPyeong)) : 0;
   const nearbyHtml = nearby.map(n => {
     const prices = n.prices || {};
     // 현재 선택 평형에서 가장 가까운 가격 찾기 (±10㎡ 우선, 없으면 가장 가까운 면적)
@@ -507,17 +506,6 @@ function render() {
       if (showSupply && bestSupply) areaLabel = '공급 ' + Math.round(bestSupply) + '㎡';
       else areaLabel = '전용 ' + bestExclu + '㎡';
     }
-    // ㎡당 가격 차이 (매매 기준)
-    let diffHtml = '';
-    const nearbySqmPrice = (bestPrice && bestExclu) ? Math.round(bestPrice / bestExclu) : 0;
-    if (curSqmPrice && nearbySqmPrice) {
-      const diff = nearbySqmPrice - curSqmPrice;
-      const diffPct = Math.round(Math.abs(diff) / curSqmPrice * 100);
-      if (diffPct >= 3) {
-        if (diff < 0) diffHtml = `<div class="nearby-diff cheaper">㎡당 ${formatPrice(Math.abs(diff))} 저렴</div>`;
-        else diffHtml = `<div class="nearby-diff pricier">㎡당 ${formatPrice(diff)} 비싸</div>`;
-      }
-    }
     return `
     <a class="nearby-item" href="danji.html?id=${encodeURIComponent(n.id)}" style="text-decoration:none;color:inherit;">
       <div>
@@ -526,7 +514,6 @@ function render() {
       </div>
       <div style="text-align:right">
         <div class="nearby-price">${bestPrice ? formatPrice(bestPrice) : '-'}</div>
-        ${diffHtml}
         ${bestDate ? '<div style="font-size:10px;color:var(--muted);margin-top:2px;">'+esc(bestDate)+'</div>' : ''}
       </div>
     </a>`;
