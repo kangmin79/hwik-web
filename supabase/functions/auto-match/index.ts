@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
       // 매물 카드 → 기존 손님과 매칭
       const { data, error } = await supabase
         .from('cards')
-        .select('id, property, private_note, embedding, price_number, wanted_trade_type')
+        .select('id, property, private_note, embedding, price_number, wanted_trade_type, lat, lng')
         .eq('agent_id', agent_id)
         .eq('property->>type', '손님')
         .not('embedding', 'is', null)
@@ -207,7 +207,22 @@ Deno.serve(async (req) => {
       const targetCat = target.property?.category;
       const cardCat = p.category || '';
       if (targetCat && cardCat && targetCat === cardCat) bonus += 0.1;
-      const finalScore = similarity + bonus;
+
+      // 거리 점수 (좌표 둘 다 있을 때)
+      let distBonus = 0;
+      const propLat = isClient ? target.lat : card.lat;
+      const propLng = isClient ? target.lng : card.lng;
+      const cliLat = isClient ? card.lat : target.lat;
+      const cliLng = isClient ? card.lng : target.lng;
+      if (propLat && propLng && cliLat && cliLng) {
+        const dist = haversineDistance(propLat, propLng, cliLat, cliLng);
+        if (dist <= 0.5) distBonus = 0.25;
+        else if (dist <= 1.0) distBonus = 0.20;
+        else if (dist <= 2.0) distBonus = 0.12;
+        else if (dist <= 5.0) distBonus = 0.05;
+      }
+
+      const finalScore = similarity + bonus + distBonus;
 
       if (finalScore >= THRESHOLD) {
         if (isClient) {
@@ -244,8 +259,8 @@ Deno.serve(async (req) => {
       success: true,
       matched: matches.length,
       saved: saved,
-      filtered_clients: filteredClients.length,
-      total_clients: clients.length,
+      filtered_targets: filteredTargets.length,
+      total_targets: targets.length,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
