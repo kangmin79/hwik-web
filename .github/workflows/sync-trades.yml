@@ -98,13 +98,13 @@ jobs:
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
           python sync_trades.py --gyeonggi $FLAG
 
-  # ── sitemap 커밋 (3개 job 완료 후) ────────────────────
-  sitemap:
-    name: sitemap 업데이트
+  # ── sitemap + 정적 페이지 빌드 (3개 job 완료 후) ────────
+  build:
+    name: sitemap + 정적 페이지 빌드
     runs-on: ubuntu-latest
     timeout-minutes: 30
     needs: [sync-seoul, sync-incheon, sync-gyeonggi]
-    if: always()   # 일부 job 실패해도 sitemap은 항상 갱신
+    if: always()
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -112,15 +112,17 @@ jobs:
           python-version: '3.11'
       - run: pip install requests python-dateutil
       - name: sitemap 재생성
-        run: python sync_trades.py --aggregate-only  # API 호출 없이 DB 집계만
-      - name: sitemap.xml 커밋 및 푸시
+        run: python sync_trades.py --aggregate-only
+      - name: 단지 정적 페이지 빌드
+        run: python build_danji_pages.py
+      - name: 커밋 및 푸시
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet sitemap.xml; then
-            echo "sitemap.xml 변경 없음"
+          git add sitemap.xml danji/
+          if git diff --cached --quiet; then
+            echo "변경 없음"
           else
-            git add sitemap.xml
-            git commit -m "sitemap.xml 자동 업데이트 ($(date -u +%Y-%m-%d))"
+            git commit -m "자동 빌드: sitemap + 단지 페이지 ($(date -u +%Y-%m-%d))"
             git push
           fi

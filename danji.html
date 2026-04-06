@@ -25,11 +25,11 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="config.js"></script>
 <script>
-// Canonical + og:url 즉시 주입 (Googlebot 1차 렌더링 시 중복 콘텐츠 방지)
+// Canonical → 새 URL (danji/[id].html) 로 지정하여 Google 이전 유도
 (function() {
   var id = new URLSearchParams(location.search).get('id');
   if (id) {
-    var fullUrl = 'https://hwik.kr/danji.html?id=' + encodeURIComponent(id);
+    var fullUrl = 'https://hwik.kr/danji/' + encodeURIComponent(id) + '.html';
     var link = document.createElement('link');
     link.rel = 'canonical';
     link.id = 'canonical';
@@ -279,7 +279,8 @@ async function loadData() {
   document.querySelector('meta[name="description"]').content = desc;
   // og:url 업데이트
   const ogUrl = document.getElementById('og-url');
-  if (ogUrl) ogUrl.content = `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;
+  const newUrl = `https://hwik.kr/danji/${encodeURIComponent(id)}.html`;
+  if (ogUrl) ogUrl.content = newUrl;
   // canonical 재확인 (초기 inline script가 이미 주입했지만, 없으면 추가)
   let canonicalEl = document.getElementById('canonical');
   if (!canonicalEl) {
@@ -288,7 +289,7 @@ async function loadData() {
     canonicalEl.id = 'canonical';
     document.head.appendChild(canonicalEl);
   }
-  canonicalEl.href = `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;
+  canonicalEl.href = newUrl;
 
   // 거래 데이터 있는 면적 중 84㎡에 가장 가까운 것 선택
   const cats = data.categories || [];
@@ -1024,7 +1025,8 @@ function injectJsonLd() {
   const d = DATA;
   const locParts = (d.location || '').split(' ');
   const guName = locParts[0] || '';
-  const canonUrl = `https://hwik.kr/danji.html?id=${new URLSearchParams(location.search).get('id')}`;
+  const _id = new URLSearchParams(location.search).get('id') || (location.pathname.match(/\/danji\/(.+)\.html/) || [])[1];
+  const canonUrl = `https://hwik.kr/danji/${encodeURIComponent(_id)}.html`;
 
   const subway = d.nearby_subway || [];
   const recentFirst = d.categories && d.categories[0] ? (d.recent_trade || {})[d.categories[0]] : null;
