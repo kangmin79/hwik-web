@@ -308,46 +308,105 @@ export function generateTags(card: any): string[] {
   const p = card.property || {};
   const tags: string[] = [];
 
-  // 1. 지역 (계층: 광역시도 > 구/시 > 동)
+  // 1. 지역 (계층: 광역시도 > 구/시 > 구 > 동)
   const type = p.type || '';
   const locSources = [p.location, p.rawText, card.private_note?.memo].filter(Boolean).join(' ');
   const loc = locSources || '';
 
+  // 서울 25개 구
   const SEOUL_GU_RE = /(강남구|서초구|송파구|마포구|용산구|성동구|광진구|영등포구|강동구|동작구|관악구|종로구|중구|강서구|양천구|구로구|노원구|서대문구|은평구|중랑구|도봉구|동대문구|성북구|금천구|강북구)/;
-  const INCHEON_GU_RE = /(중구|동구|미추홀구|연수구|남동구|부평구|계양구|서구|강화군|옹진군)/;
+  // 인천 10개 구/군
+  const INCHEON_GU_RE = /(미추홀구|연수구|남동구|부평구|계양구|강화군|옹진군|동구|서구|중구)/;
+  // 경기 31개 시/군
   const GYEONGGI_SI_RE = /(수원시|성남시|의정부시|안양시|부천시|광명시|평택시|동두천시|안산시|고양시|과천시|구리시|남양주시|오산시|시흥시|군포시|의왕시|하남시|용인시|파주시|이천시|안성시|김포시|화성시|광주시|양주시|포천시|여주시|연천군|가평군|양평군)/;
+  // 경기 주요 시 내 구 (수원/성남/안양/부천/안산/고양/용인 등)
+  const GYEONGGI_GU_RE = /(장안구|권선구|팔달구|영통구|수정구|중원구|분당구|만안구|동안구|소사구|오정구|상록구|단원구|덕양구|일산동구|일산서구|처인구|기흥구|수지구)/;
+  // 부산 16개 구/군
+  const BUSAN_GU_RE = /(영도구|부산진구|동래구|사하구|금정구|연제구|수영구|사상구|기장군|해운대구|남구|북구|동구|서구|중구)/;
+  // 대구 8개 구/군
+  const DAEGU_GU_RE = /(수성구|달서구|달성군|동구|서구|남구|북구|중구)/;
+  // 대전 5개 구
+  const DAEJEON_GU_RE = /(유성구|대덕구|동구|서구|중구)/;
+  // 광주 5개 구
+  const GWANGJU_GU_RE = /(광산구|동구|서구|남구|북구)/;
+  // 울산 5개 구/군
+  const ULSAN_GU_RE = /(울주군|남구|동구|북구|중구)/;
 
-  const seoulGuMatch = loc.match(SEOUL_GU_RE);
-  if (seoulGuMatch) {
-    tags.push('서울');
-    tags.push(seoulGuMatch[1]);
-  } else if (/인천/.test(loc)) {
-    tags.push('인천');
-    const incGu = loc.match(INCHEON_GU_RE);
-    if (incGu) tags.push(incGu[1]);
-  } else if (/경기/.test(loc) || GYEONGGI_SI_RE.test(loc)) {
-    tags.push('경기');
-    const gyeonggiSi = loc.match(GYEONGGI_SI_RE);
-    if (gyeonggiSi) tags.push(gyeonggiSi[1]);
-  } else if (/부산/.test(loc)) { tags.push('부산'); }
-  else if (/대구/.test(loc)) { tags.push('대구'); }
-  else if (/대전/.test(loc)) { tags.push('대전'); }
-  else if (/광주/.test(loc)) { tags.push('광주'); }
-  else if (/울산/.test(loc)) { tags.push('울산'); }
-  else if (/세종/.test(loc)) { tags.push('세종'); }
-  else if (/서울/.test(loc)) {
-    tags.push('서울');
-    // "구" 없이 입력된 경우 보정
-    const guShort = loc.match(/(강남|서초|송파|마포|용산|성동|광진|영등포|강동|동작|관악|종로|강서|양천|구로|노원|서대문|은평|중랑|도봉|동대문|성북|금천|강북)/);
-    if (guShort) tags.push(guShort[1] + '구');
-  } else {
-    // 지역 명시 없으면 서울 기본
-    tags.push('서울');
+  // 도시 명시 없어도 구 이름만으로 도시 판별 (유니크한 구명)
+  const uniqueGuCity: Record<string, string> = {
+    '해운대구':'부산','영도구':'부산','부산진구':'부산','동래구':'부산','사하구':'부산','금정구':'부산','연제구':'부산','수영구':'부산','사상구':'부산','기장군':'부산',
+    '수성구':'대구','달서구':'대구','달성군':'대구',
+    '유성구':'대전','대덕구':'대전',
+    '광산구':'광주',
+    '울주군':'울산',
+    '미추홀구':'인천','남동구':'인천','부평구':'인천','계양구':'인천','강화군':'인천','옹진군':'인천',
+    '분당구':'경기','일산동구':'경기','일산서구':'경기','기흥구':'경기','수지구':'경기',
+    '장안구':'경기','권선구':'경기','팔달구':'경기','영통구':'경기',
+    '수정구':'경기','중원구':'경기','만안구':'경기','동안구':'경기',
+    '소사구':'경기','오정구':'경기','상록구':'경기','단원구':'경기',
+    '덕양구':'경기','처인구':'경기',
+  };
+
+  // 도시 감지 (명시적 도시명 또는 유니크 구명)
+  let city = '';
+  if (/서울/.test(loc) || SEOUL_GU_RE.test(loc)) city = '서울';
+  else if (/인천/.test(loc)) city = '인천';
+  else if (/경기/.test(loc) || GYEONGGI_SI_RE.test(loc) || GYEONGGI_GU_RE.test(loc)) city = '경기';
+  else if (/부산/.test(loc)) city = '부산';
+  else if (/대구/.test(loc)) city = '대구';
+  else if (/대전/.test(loc)) city = '대전';
+  else if (/광주/.test(loc)) city = '광주';
+  else if (/울산/.test(loc)) city = '울산';
+  else if (/세종/.test(loc)) city = '세종';
+  else {
+    // 유니크 구명으로 도시 역추적
+    for (const [gu, c] of Object.entries(uniqueGuCity)) {
+      if (loc.includes(gu)) { city = c; break; }
+    }
+  }
+  if (!city) city = '서울'; // 기본값
+
+  tags.push(city);
+
+  // 구 태그 추가 (도시별)
+  if (city === '서울') {
+    const guM = loc.match(SEOUL_GU_RE);
+    if (guM) { tags.push(guM[1]); }
+    else {
+      const guShort = loc.match(/(강남|서초|송파|마포|용산|성동|광진|영등포|강동|동작|관악|종로|강서|양천|구로|노원|서대문|은평|중랑|도봉|동대문|성북|금천|강북)/);
+      if (guShort) tags.push(guShort[1] + '구');
+    }
+  } else if (city === '인천') {
+    const guM = loc.match(INCHEON_GU_RE);
+    if (guM) tags.push(guM[1]);
+  } else if (city === '경기') {
+    const siM = loc.match(GYEONGGI_SI_RE);
+    if (siM) tags.push(siM[1]);
+    const guM = loc.match(GYEONGGI_GU_RE);
+    if (guM) tags.push(guM[1]);
+  } else if (city === '부산') {
+    const guM = loc.match(BUSAN_GU_RE);
+    if (guM) tags.push(guM[1]);
+  } else if (city === '대구') {
+    const guM = loc.match(DAEGU_GU_RE);
+    if (guM) tags.push(guM[1]);
+  } else if (city === '대전') {
+    const guM = loc.match(DAEJEON_GU_RE);
+    if (guM) tags.push(guM[1]);
+  } else if (city === '광주') {
+    const guM = loc.match(GWANGJU_GU_RE);
+    if (guM) tags.push(guM[1]);
+  } else if (city === '울산') {
+    const guM = loc.match(ULSAN_GU_RE);
+    if (guM) tags.push(guM[1]);
   }
 
   // 동(洞) 태그 (지역 무관 공통)
-  const dongMatch = loc.match(/([\uAC00-\uD7AF]{2,4}동)(?!\uAC00-\uD7AF)/);
-  if (dongMatch && !dongMatch[1].endsWith('구')) tags.push(dongMatch[1]);
+  const allDongMatches = loc.matchAll(/([\uAC00-\uD7AF]{1,4}동)(?=[^가-힣]|$)/g);
+  for (const m of allDongMatches) {
+    const dong = m[1];
+    if (!dong.endsWith('구') && !tags.includes(dong)) tags.push(dong);
+  }
 
   // 1-1. 단지명 태그
   const complex = (p.complex || '').replace(/아파트|오피스텔/g, '').trim();
