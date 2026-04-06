@@ -3073,11 +3073,7 @@ const PanelClient = (() => {
       }).join('')+`<button class="btn-primary" style="margin-top:12px;" onclick="PanelClient.reMatch('${card.id}')">매칭 다시 찾기</button>`;
     }
     else if(tab==='timeline'){
-      // 매칭 매물 목록 (드롭다운용)
-      const matchOpts=(card._matches||[]).map(m=>{const mp=m.property||{};const label=[mp.complex||mp.location,mp.price].filter(Boolean).join(' ');return `<option value="${esc(m.id)}">${esc(label)}</option>`;}).join('');
-      const matchSel=matchOpts?`<select id="noteRelCard" style="font-size:11px;padding:3px 6px;border-radius:6px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-sub);max-width:160px;"><option value="">매물 선택 (선택)</option>${matchOpts}</select>`:'';
       let h=`<div class="note-row" style="margin-bottom:4px;"><input type="text" id="noteIn" placeholder="메모 입력... (예: 내일 2시 방문 예정)" onkeydown="if(event.key==='Enter')PanelClient.saveNote('${card.id}')"><button onclick="PanelClient.saveNote('${card.id}')">저장</button></div>`;
-      if(matchSel)h+=`<div style="margin-bottom:12px;padding-left:2px;">${matchSel}</div>`;
       if(!notes.length)h+='<div class="empty">아직 상담 기록이 없어요</div>';
       else{
         // 관련 매물 정보 맵
@@ -3471,8 +3467,7 @@ const PanelClient = (() => {
   }
 
   async function saveNote(cardId){const inp=document.getElementById('noteIn');if(!inp?.value?.trim())return;const p=_parseNote(inp.value.trim());
-    const relCardId=document.getElementById('noteRelCard')?.value||null;
-    const {data:saved}=await Auth.sb.from('client_notes').insert({client_card_id:cardId,agent_id:Auth.user?.id,type:p.type||'메모',content:p.content,alert_date:p.alert_date||null,alert_done:false,related_card_id:relCardId||null}).select().single();
+    const {data:saved}=await Auth.sb.from('client_notes').insert({client_card_id:cardId,agent_id:Auth.user?.id,type:p.type||'메모',content:p.content,alert_date:p.alert_date||null,alert_done:false,related_card_id:null}).select().single();
     // 메모에서 태그 감지
     _updateClientTags(cardId,inp.value.trim());
     inp.value='';document.getElementById('notePv').style.display='none';
