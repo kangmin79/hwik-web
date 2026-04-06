@@ -991,8 +991,12 @@ def generate_sitemap(danji_list: list):
     for path in ['/', '/gu.html', '/about.html', '/ranking.html', '/ranking.html?region=incheon', '/ranking.html?region=gyeonggi', '/ranking.html?region=all']:
         urls.append(f'  <url><loc>{base}{path}</loc><lastmod>{today}</lastmod></url>')
 
-    # 구/시 목록 페이지 (서울+인천+경기 전체)
+    # 구/시 목록 페이지 (서울+인천+경기 전체, 중복 제거)
+    seen_gu = set()
     for region_name in ALL_REGIONS.values():
+        if region_name in seen_gu:
+            continue
+        seen_gu.add(region_name)
         safe_name = _quote(region_name, safe='')
         urls.append(f'  <url><loc>{base}/gu.html?name={safe_name}</loc><lastmod>{today}</lastmod></url>')
 
