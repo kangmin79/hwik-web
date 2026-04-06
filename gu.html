@@ -283,7 +283,7 @@ function renderGuDetail(guName, data) {
       if (jrTop.length > 0) {
         html += '<div class="section"><div class="section-title">전세가율 높은 단지</div><div style="display:flex;flex-direction:column;gap:8px;">';
         jrTop.forEach((d,i) => {
-          html += '<a class="danji-item" style="text-decoration:none;color:inherit;" href=\\'danji.html?id='+encodeURIComponent(d.id)+'\\"><div><div class="danji-name">'+(i+1)+'. '+esc(d.complex_name)+'</div><div class="danji-sub">'+esc(d.location)+'</div></div><div><div class="danji-price">'+d.jeonse_rate+'%</div><div class="danji-rate">전세가율</div></div></a>';
+          html += '<a class="danji-item" style="text-decoration:none;color:inherit;" href="danji.html?id='+encodeURIComponent(d.id)+'"><div><div class="danji-name">'+(i+1)+'. '+esc(d.complex_name)+'</div><div class="danji-sub">'+esc(d.location)+'</div></div><div><div class="danji-price">'+d.jeonse_rate+'%</div><div class="danji-rate">전세가율</div></div></a>';
         });
         html += '</div></div>';
       }
@@ -294,7 +294,7 @@ function renderGuDetail(guName, data) {
           const cats = d.categories || [];
           let price = null;
           for (const c of cats) { if (rt[c] && rt[c].price) { price = rt[c].price; break; } }
-          html += '<a class="danji-item" style="text-decoration:none;color:inherit;" href=\\'danji.html?id='+encodeURIComponent(d.id)+'\\"><div><div class="danji-name">'+(i+1)+'. '+esc(d.complex_name)+'</div><div class="danji-sub">'+esc(d.location)+'</div></div><div><div class="danji-price">'+(price?formatPrice(price):'-')+'</div></div></a>';
+          html += '<a class="danji-item" style="text-decoration:none;color:inherit;" href="danji.html?id='+encodeURIComponent(d.id)+'"><div><div class="danji-name">'+(i+1)+'. '+esc(d.complex_name)+'</div><div class="danji-sub">'+esc(d.location)+'</div></div><div><div class="danji-price">'+(price?formatPrice(price):'-')+'</div></div></a>';
         });
         html += '</div>';
       }
