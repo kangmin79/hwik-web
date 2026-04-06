@@ -308,19 +308,44 @@ export function generateTags(card: any): string[] {
   const p = card.property || {};
   const tags: string[] = [];
 
-  // 1. 지역 (계층: 서울 > 구 > 동)
-  tags.push('서울'); // 현재 서울만
+  // 1. 지역 (계층: 광역시도 > 구/시 > 동)
   const type = p.type || '';
-  // 손님 카드: property.location + rawText + private_note에서 지역 추출
   const locSources = [p.location, p.rawText, card.private_note?.memo].filter(Boolean).join(' ');
   const loc = locSources || '';
-  const guMatch = loc.match(/(강남구|서초구|송파구|마포구|용산구|성동구|광진구|영등포구|강동구|동작구|관악구|종로구|중구|강서구|양천구|구로구|노원구|서대문구|은평구|중랑구|도봉구|동대문구|성북구|금천구|강북구)/);
-  if (guMatch) tags.push(guMatch[1]);
-  // "구" 없이 입력된 경우 보정
-  if (!guMatch) {
+
+  const SEOUL_GU_RE = /(강남구|서초구|송파구|마포구|용산구|성동구|광진구|영등포구|강동구|동작구|관악구|종로구|중구|강서구|양천구|구로구|노원구|서대문구|은평구|중랑구|도봉구|동대문구|성북구|금천구|강북구)/;
+  const INCHEON_GU_RE = /(중구|동구|미추홀구|연수구|남동구|부평구|계양구|서구|강화군|옹진군)/;
+  const GYEONGGI_SI_RE = /(수원시|성남시|의정부시|안양시|부천시|광명시|평택시|동두천시|안산시|고양시|과천시|구리시|남양주시|오산시|시흥시|군포시|의왕시|하남시|용인시|파주시|이천시|안성시|김포시|화성시|광주시|양주시|포천시|여주시|연천군|가평군|양평군)/;
+
+  const seoulGuMatch = loc.match(SEOUL_GU_RE);
+  if (seoulGuMatch) {
+    tags.push('서울');
+    tags.push(seoulGuMatch[1]);
+  } else if (/인천/.test(loc)) {
+    tags.push('인천');
+    const incGu = loc.match(INCHEON_GU_RE);
+    if (incGu) tags.push(incGu[1]);
+  } else if (/경기/.test(loc) || GYEONGGI_SI_RE.test(loc)) {
+    tags.push('경기');
+    const gyeonggiSi = loc.match(GYEONGGI_SI_RE);
+    if (gyeonggiSi) tags.push(gyeonggiSi[1]);
+  } else if (/부산/.test(loc)) { tags.push('부산'); }
+  else if (/대구/.test(loc)) { tags.push('대구'); }
+  else if (/대전/.test(loc)) { tags.push('대전'); }
+  else if (/광주/.test(loc)) { tags.push('광주'); }
+  else if (/울산/.test(loc)) { tags.push('울산'); }
+  else if (/세종/.test(loc)) { tags.push('세종'); }
+  else if (/서울/.test(loc)) {
+    tags.push('서울');
+    // "구" 없이 입력된 경우 보정
     const guShort = loc.match(/(강남|서초|송파|마포|용산|성동|광진|영등포|강동|동작|관악|종로|강서|양천|구로|노원|서대문|은평|중랑|도봉|동대문|성북|금천|강북)/);
     if (guShort) tags.push(guShort[1] + '구');
+  } else {
+    // 지역 명시 없으면 서울 기본
+    tags.push('서울');
   }
+
+  // 동(洞) 태그 (지역 무관 공통)
   const dongMatch = loc.match(/([\uAC00-\uD7AF]{2,4}동)(?!\uAC00-\uD7AF)/);
   if (dongMatch && !dongMatch[1].endsWith('구')) tags.push(dongMatch[1]);
 

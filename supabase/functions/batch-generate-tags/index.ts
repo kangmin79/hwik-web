@@ -66,13 +66,13 @@ Deno.serve(async (req) => {
     const agent_id = getAuthUserId(req);
     if (!agent_id) throw new Error('인증이 필요합니다');
 
-    // 태그가 없거나 부족한 카드 조회 (tags.length <= 2도 포함)
-    const { data: cards, error } = await supabase
+    // 태그가 없거나 2개 이하인 카드 조회 (PostgREST는 배열 길이 필터 미지원 → JS에서 처리)
+    const { data: allCards, error } = await supabase
       .from('cards')
       .select('id, property, private_note, price_number, deposit, monthly_rent, move_in_date, wanted_trade_type, wanted_categories, wanted_conditions, tags')
       .eq('agent_id', agent_id)
-      .or('tags.is.null,tags.eq.[]')
       .limit(500);
+    const cards = (allCards || []).filter(c => !c.tags || c.tags.length <= 2);
 
     if (error) throw error;
     if (!cards || !cards.length) {

@@ -1085,6 +1085,33 @@ const Data = (() => {
   return { cache, PAGE, loadCounts, loadMyCards, loadClientCards, loadClientDetail, loadRooms, loadSharedCards, loadPendingInvites, createRoom, deleteRoom, renameRoom, leaveRoom, inviteMember, acceptInvite, rejectInvite, shareCardToRoom, unshareCard, deleteCard, updateTradeStatus, uploadPhotos, _resize, loadAlerts, loadCalendarAlerts, loadMemos, deleteMemo, markMemoRead, saveClientNote, deleteClientNote, updateNoteAlertDone, matchCoords, parseSinglePrice, parsePriceFields, updateEmbedding, updateClientLocation, triggerAutoMatch, loadCompletedCards, batchGenerateTags };
 })();
 
+// ★ 특징 태그 카테고리별 색상 (TAG_STYLES 병합을 위해 먼저 정의)
+const _featColors={
+  // 시설 (파랑)
+  '올수리':'#2563eb','풀옵션':'#2563eb','신축':'#2563eb','리모델링':'#2563eb','시스템에어컨':'#2563eb','드레스룸':'#2563eb','베란다확장':'#2563eb','빌트인':'#2563eb','부분수리':'#2563eb',
+  // 방향 (주황)
+  '남향':'#ea580c','동향':'#ea580c','서향':'#ea580c','북향':'#ea580c','남동향':'#ea580c','남서향':'#ea580c','정남향':'#ea580c',
+  // 위치/교통 (초록)
+  '역세권':'#16a34a','초역세권':'#16a34a','더블역세권':'#16a34a','학군좋음':'#16a34a','학원가':'#16a34a','대로변':'#16a34a','초품아':'#16a34a','GTX역세권':'#16a34a',
+  // 뷰/구조 (청록)
+  '한강뷰':'#0891b2','공원뷰':'#0891b2','산뷰':'#0891b2','시티뷰':'#0891b2','탁트인전망':'#0891b2','복층':'#0891b2','테라스':'#0891b2','루프탑':'#0891b2','고층':'#0891b2','저층':'#0891b2','로얄층':'#0891b2','분리형':'#0891b2',
+  // 편의 (보라)
+  '주차가능':'#7c3aed','주차1대':'#7c3aed','주차2대':'#7c3aed','주차무료':'#7c3aed','애견가능':'#7c3aed','엘리베이터':'#7c3aed','경비실':'#7c3aed','보안':'#7c3aed','무인택배':'#7c3aed','관리비포함':'#7c3aed',
+  // 입주 (인디고)
+  '즉시입주':'#4f46e5','입주협의':'#4f46e5','공실':'#4f46e5',
+  // 금융 (빨강)
+  'HUG가능':'#dc2626','무융자':'#dc2626','대출가능':'#dc2626',
+  // 생활 (핑크)
+  '슬세권':'#db2777','런세권':'#db2777','숲세권':'#db2777','채광좋음':'#db2777','조용한동네':'#db2777','통풍좋음':'#db2777',
+  // 상가 (갈색)
+  '전면넓음':'#92400e','코너자리':'#92400e','유동인구많음':'#92400e','권리금없음':'#92400e','업종제한없음':'#92400e','1층상가':'#92400e',
+};
+const _featBg={
+  '#2563eb':'rgba(37,99,235,0.08)','#ea580c':'rgba(234,88,12,0.08)','#16a34a':'rgba(22,163,74,0.08)',
+  '#0891b2':'rgba(8,145,178,0.08)','#7c3aed':'rgba(124,58,237,0.08)','#4f46e5':'rgba(79,70,229,0.08)',
+  '#dc2626':'rgba(220,38,38,0.08)','#db2777':'rgba(219,39,119,0.08)','#92400e':'rgba(146,64,14,0.08)',
+};
+
 // ── 공통 태그 스타일 (어디서든 동일하게) ──
 const TAG_STYLES = {
   // 상담 유형
@@ -1111,6 +1138,10 @@ const TAG_STYLES = {
   '정산':    {bg:'rgba(16,185,129,0.12)',  color:'#047857'},
   '신규':    {bg:'rgba(99,102,241,0.12)',  color:'#4f46e5'},
 };
+// _featColors → TAG_STYLES 자동 병합 (이미 있는 키는 유지)
+Object.entries(_featColors).forEach(([tag,color])=>{
+  if(!TAG_STYLES[tag]){const bg=_featBg[color]||'rgba(148,163,184,0.10)';TAG_STYLES[tag]={bg,color};}
+});
 function renderTag(type, extraStyle=''){
   const s=TAG_STYLES[type]||TAG_STYLES['메모'];
   return `<span class="tl-tag" style="background:${s.bg};color:${s.color};${extraStyle}">${esc(type)}</span>`;
@@ -1184,32 +1215,6 @@ function clientWantTag(card){
   return [...new Set(tags)].join(' ');
 }
 
-// ★ 특징 태그 카테고리별 색상
-const _featColors={
-  // 시설 (파랑)
-  '올수리':'#2563eb','풀옵션':'#2563eb','신축':'#2563eb','리모델링':'#2563eb','시스템에어컨':'#2563eb','드레스룸':'#2563eb','베란다확장':'#2563eb','빌트인':'#2563eb','부분수리':'#2563eb',
-  // 방향 (주황)
-  '남향':'#ea580c','동향':'#ea580c','서향':'#ea580c','북향':'#ea580c','남동향':'#ea580c','남서향':'#ea580c','정남향':'#ea580c',
-  // 위치/교통 (초록)
-  '역세권':'#16a34a','초역세권':'#16a34a','더블역세권':'#16a34a','학군좋음':'#16a34a','학원가':'#16a34a','대로변':'#16a34a','초품아':'#16a34a','GTX역세권':'#16a34a',
-  // 뷰/구조 (청록)
-  '한강뷰':'#0891b2','공원뷰':'#0891b2','산뷰':'#0891b2','시티뷰':'#0891b2','탁트인전망':'#0891b2','복층':'#0891b2','테라스':'#0891b2','루프탑':'#0891b2','고층':'#0891b2','저층':'#0891b2','로얄층':'#0891b2','분리형':'#0891b2',
-  // 편의 (보라)
-  '주차가능':'#7c3aed','주차1대':'#7c3aed','주차2대':'#7c3aed','주차무료':'#7c3aed','애견가능':'#7c3aed','엘리베이터':'#7c3aed','경비실':'#7c3aed','보안':'#7c3aed','무인택배':'#7c3aed','관리비포함':'#7c3aed',
-  // 입주 (인디고)
-  '즉시입주':'#4f46e5','입주협의':'#4f46e5','공실':'#4f46e5',
-  // 금융 (빨강)
-  'HUG가능':'#dc2626','무융자':'#dc2626','대출가능':'#dc2626',
-  // 생활 (핑크)
-  '슬세권':'#db2777','런세권':'#db2777','숲세권':'#db2777','채광좋음':'#db2777','조용한동네':'#db2777','통풍좋음':'#db2777',
-  // 상가 (갈색)
-  '전면넓음':'#92400e','코너자리':'#92400e','유동인구많음':'#92400e','권리금없음':'#92400e','업종제한없음':'#92400e','1층상가':'#92400e',
-};
-const _featBg={
-  '#2563eb':'rgba(37,99,235,0.08)','#ea580c':'rgba(234,88,12,0.08)','#16a34a':'rgba(22,163,74,0.08)',
-  '#0891b2':'rgba(8,145,178,0.08)','#7c3aed':'rgba(124,58,237,0.08)','#4f46e5':'rgba(79,70,229,0.08)',
-  '#dc2626':'rgba(220,38,38,0.08)','#db2777':'rgba(219,39,119,0.08)','#92400e':'rgba(146,64,14,0.08)',
-};
 function featTag(f){
   const c=_featColors[f]||'var(--primary)';const bg=_featBg[c]||'var(--primary-bg)';
   return `<span style="padding:1px 6px;border-radius:4px;background:${bg};font-size:9px;font-weight:600;color:${c};">${esc(f)}</span>`;
@@ -3153,6 +3158,8 @@ const PanelClient = (() => {
       const cardData={id:crypto.randomUUID().slice(0,12),agent_id:Auth.user.id,property,contact_name:r.contact_name||null,contact_phone:r.contact_phone||null,embedding:r.embedding||null,search_text:r.search_text||null,search_text_private:r.search_text_private||null,price_number:r.price_number||null,deposit:r.deposit||null,monthly_rent:r.monthly_rent||null,move_in_date:r.move_in_date||null,wanted_trade_type:r.wanted_trade_type||null,wanted_categories:r.wanted_categories||[],wanted_conditions:r.wanted_conditions||[],tags:r.tags||[],trade_status:'계약가능'};
       const {error:dbErr}=await Auth.sb.from('cards').insert([cardData]);
       if(dbErr)throw new Error(dbErr.message);
+      // rawText에서 추가 태그 보완 (비동기, 실패해도 무시)
+      _updateClientTags(cardData.id, inp.value.trim());
       Toast.show('손님이 등록되었습니다!');
       inp.value='';
       // 등록 영역에 매칭 매물 바로 표시
