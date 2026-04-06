@@ -1093,7 +1093,7 @@ const Data = (() => {
 
   function triggerAutoMatch(cardId) { fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/auto-match`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({card_id:cardId})}).catch(e=>console.warn('auto-match failed:',e)); }
   function locateCard(cardId) { return fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/locate-card`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({card_id:cardId})}).catch(e=>console.warn('locate-card failed:',e)); }
-  async function batchGenerateTags() { try{const{data:{session}}=await Auth.sb.auth.getSession();const tok=session?.access_token||Auth.getToken();if(!tok)return{error:'no token'};const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/batch-generate-tags`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok,'apikey':HWIK_CONFIG.SUPABASE_KEY}});return await res.json();}catch(e){return {error:e.message};} }
+  async function batchGenerateTags(cardId) { try{const{data:{session}}=await Auth.sb.auth.getSession();const tok=session?.access_token||Auth.getToken();if(!tok)return{error:'no token'};const body=cardId?{card_id:cardId}:{};const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/batch-generate-tags`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok,'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify(body)});return await res.json();}catch(e){return {error:e.message};} }
 
   async function updateClientStatus(cardId, status) { return sb().from('cards').update({client_status:status}).eq('id',cardId).eq('agent_id',uid()); }
 
@@ -2853,10 +2853,8 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
     const _pf=Data.parsePriceFields(prop.price,prop.type);
     const memoVal=document.getElementById('eMemo')?.value||'';
     const pn={...(c.private_note||{}),memo:memoVal||null};
-    const newTags=[...(prop.features||[]),prop.type,prop.category].filter(Boolean);
-    const mergedTags=[...new Set([...(c.tags||[]),...newTags])];
-    await Auth.sb.from('cards').update({property:prop,photos:[...existPhotos,...newUrls],agent_comment:document.getElementById('eComment').value,private_note:pn,price_number:_pf.price_number,deposit:_pf.deposit,monthly_rent:_pf.monthly_rent,tags:mergedTags}).eq('id',id);
-    Data.updateEmbedding(id);Data.locateCard(id).then(()=>Data.triggerAutoMatch(id));
+    await Auth.sb.from('cards').update({property:prop,photos:[...existPhotos,...newUrls],agent_comment:document.getElementById('eComment').value,private_note:pn,price_number:_pf.price_number,deposit:_pf.deposit,monthly_rent:_pf.monthly_rent,tags:[]}).eq('id',id);
+    Data.batchGenerateTags(id);Data.updateEmbedding(id);Data.locateCard(id).then(()=>Data.triggerAutoMatch(id));
     document.getElementById('editModal').classList.remove('show');_editNewPhotos=[];Toast.show('수정 완료');
     await Data.loadMyCards(0,true);renderList();
   }
@@ -3635,7 +3633,7 @@ const PanelClient = (() => {
         features:r.features||[],moveIn:r.moveIn||null,category:r.category||null,rawText:text
       };
       await Auth.sb.from('cards').update({
-        property,tags:r.tags||[],
+        property,tags:[],
         price_number:r.price_number||null,deposit:r.deposit||null,monthly_rent:r.monthly_rent||null,
         wanted_trade_type:r.wanted_trade_type||null,wanted_categories:r.wanted_categories||[],wanted_conditions:r.wanted_conditions||[],
         contact_name:r.contact_name||null,contact_phone:r.contact_phone||null,
@@ -3643,7 +3641,7 @@ const PanelClient = (() => {
       }).eq('id',cardId).eq('agent_id',Auth.user.id);
       document.getElementById('editModal').classList.remove('show');
       _updateClientTags(cardId,text);
-      Data.updateEmbedding(cardId);Data.updateClientLocation(cardId);
+      Data.batchGenerateTags(cardId);Data.updateEmbedding(cardId);Data.updateClientLocation(cardId);
       Toast.show('수정 완료');await Data.loadClientCards(0,true);_renderList();
     }catch(e){Toast.show('저장 실패: '+e.message);}
     btn.textContent='AI로 재분석';btn.disabled=false;

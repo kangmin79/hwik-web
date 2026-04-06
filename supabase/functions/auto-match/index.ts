@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
       // 손님 카드 → 기존 매물과 매칭
       const { data, error } = await supabase
         .from('cards')
-        .select('id, property, embedding, price_number, lat, lng')
+        .select('id, property, embedding, price_number, lat, lng, tags')
         .eq('agent_id', agent_id)
         .neq('property->>type', '손님')
         .eq('trade_status', '계약가능')
@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
       // 매물 카드 → 기존 손님과 매칭
       const { data, error } = await supabase
         .from('cards')
-        .select('id, property, private_note, embedding, price_number, wanted_trade_type, lat, lng')
+        .select('id, property, private_note, embedding, price_number, wanted_trade_type, lat, lng, tags, required_tags, excluded_tags')
         .eq('agent_id', agent_id)
         .eq('property->>type', '손님')
         .not('embedding', 'is', null)
@@ -152,6 +152,18 @@ Deno.serve(async (req) => {
           const propGuMatch = (prop.location || '').match(GU_RE);
           if (propGuMatch && propGuMatch[1] !== clientGu) return false;
         }
+      }
+
+      // ★ 제외 태그 체크: 손님이 싫어하는 조건이 매물에 있으면 제외
+      const propTags = property.tags || [];
+      const excludedTags = client.excluded_tags || [];
+      if (excludedTags.length && propTags.length) {
+        if (excludedTags.some((t: string) => propTags.includes(t))) return false;
+      }
+      // ★ 필수 태그 체크: 손님이 꼭 원하는 조건이 매물에 없으면 제외
+      const requiredTags = client.required_tags || [];
+      if (requiredTags.length && propTags.length) {
+        if (!requiredTags.every((t: string) => propTags.includes(t))) return false;
       }
 
       // 가격 체크

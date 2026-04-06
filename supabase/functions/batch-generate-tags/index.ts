@@ -66,16 +66,34 @@ Deno.serve(async (req) => {
     const agent_id = getAuthUserId(req);
     if (!agent_id) throw new Error('인증이 필요합니다');
 
-    // 태그가 없거나 2개 이하인 카드 조회 (PostgREST는 배열 길이 필터 미지원 → JS에서 처리)
-    const { data: allCards, error } = await supabase
-      .from('cards')
-      .select('id, property, private_note, price_number, deposit, monthly_rent, move_in_date, wanted_trade_type, wanted_categories, wanted_conditions, tags')
-      .eq('agent_id', agent_id)
-      .limit(500);
-    const cards = (allCards || []).filter(c => !c.tags || c.tags.length <= 2);
+    // 단일 카드 또는 일괄 처리
+    let body: any = {};
+    try { body = await req.json(); } catch {}
+    const { card_id } = body;
 
-    if (error) throw error;
-    if (!cards || !cards.length) {
+    let cards: any[] = [];
+    if (card_id) {
+      // 단일 카드 태그 재생성 (saveEdit 등에서 호출)
+      const { data, error } = await supabase
+        .from('cards')
+        .select('id, property, private_note, price_number, deposit, monthly_rent, move_in_date, wanted_trade_type, wanted_categories, wanted_conditions, tags')
+        .eq('id', card_id)
+        .eq('agent_id', agent_id)
+        .single();
+      if (error || !data) throw new Error('카드를 찾을 수 없습니다');
+      cards = [data];
+    } else {
+      // 태그가 없거나 2개 이하인 카드 일괄 조회
+      const { data: allCards, error } = await supabase
+        .from('cards')
+        .select('id, property, private_note, price_number, deposit, monthly_rent, move_in_date, wanted_trade_type, wanted_categories, wanted_conditions, tags')
+        .eq('agent_id', agent_id)
+        .limit(500);
+      if (error) throw error;
+      cards = (allCards || []).filter(c => !c.tags || c.tags.length <= 2);
+    }
+
+    if (!cards.length) {
       return new Response(JSON.stringify({ success: true, updated: 0, message: '태그 생성할 카드 없음' }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
