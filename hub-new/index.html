@@ -806,7 +806,7 @@ const Data = (() => {
   async function loadClientCards(off=0, reset=false) {
     const id=uid(); if(!id) return [];
     const { data } = await sb().from('cards')
-      .select('id,property,private_note,contact_name,contact_phone,wanted_trade_type,wanted_categories,wanted_conditions,created_at')
+      .select('id,property,private_note,contact_name,contact_phone,client_status,wanted_trade_type,wanted_categories,wanted_conditions,created_at')
       .eq('agent_id',id)
       .eq('property->>type','손님')
       .order('created_at',{ascending:false}).range(off, off+PAGE-1);
@@ -982,6 +982,10 @@ const Data = (() => {
         }
       }
     }
+    // 역 이름 → stations 테이블 직접 조회
+    const rawAll=(p.rawText||p.location||'')+(p.complex||'');
+    const stM=rawAll.match(/(\S+역)/);
+    if(stM){const nm=stM[1].replace('역','');if(nm.length>=1){const{data:stD}=await sb().from('stations').select('lat,lon').ilike('name','%'+nm+'%').limit(1);if(stD?.[0])return{lat:stD[0].lat,lng:stD[0].lon};}}
     for (const query of [p.address, p.location&&p.complex?`${p.location} ${p.complex}`:null, p.complex, p.location].filter(Boolean)) {
       try {
         const res = await fetch(`https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}&size=1`,{headers:{'Authorization':`KakaoAK ${HWIK_CONFIG.KAKAO_REST_KEY}`}});
@@ -989,12 +993,26 @@ const Data = (() => {
         if (d.documents?.[0]) return {lat:parseFloat(d.documents[0].y), lng:parseFloat(d.documents[0].x)};
       } catch(_){}
     }
-    // 좌표 못 찾으면 구청 좌표 기본값
-    const _guCoords={강남구:{lat:37.497,lng:127.028},서초구:{lat:37.483,lng:127.009},송파구:{lat:37.514,lng:127.106},마포구:{lat:37.554,lng:126.910},용산구:{lat:37.532,lng:126.979},성동구:{lat:37.563,lng:127.037},광진구:{lat:37.538,lng:127.082},영등포구:{lat:37.526,lng:126.896},강동구:{lat:37.530,lng:127.124},동작구:{lat:37.497,lng:126.939},관악구:{lat:37.478,lng:126.951},종로구:{lat:37.573,lng:126.979},중구:{lat:37.563,lng:126.997},강서구:{lat:37.551,lng:126.849},양천구:{lat:37.517,lng:126.866},구로구:{lat:37.495,lng:126.858},노원구:{lat:37.654,lng:127.056},서대문구:{lat:37.579,lng:126.937},은평구:{lat:37.603,lng:126.929},중랑구:{lat:37.607,lng:127.093},도봉구:{lat:37.669,lng:127.032},동대문구:{lat:37.574,lng:127.040},성북구:{lat:37.589,lng:127.017},금천구:{lat:37.457,lng:126.895},강북구:{lat:37.640,lng:127.011}};
+    // 좌표 못 찾으면 전국 구청/시청 좌표 fallback
+    const _guCoords={
+      // 서울
+      강남구:{lat:37.497,lng:127.028},서초구:{lat:37.483,lng:127.009},송파구:{lat:37.514,lng:127.106},마포구:{lat:37.554,lng:126.910},용산구:{lat:37.532,lng:126.979},성동구:{lat:37.563,lng:127.037},광진구:{lat:37.538,lng:127.082},영등포구:{lat:37.526,lng:126.896},강동구:{lat:37.530,lng:127.124},동작구:{lat:37.497,lng:126.939},관악구:{lat:37.478,lng:126.951},종로구:{lat:37.573,lng:126.979},중구:{lat:37.563,lng:126.997},강서구:{lat:37.551,lng:126.849},양천구:{lat:37.517,lng:126.866},구로구:{lat:37.495,lng:126.858},노원구:{lat:37.654,lng:127.056},서대문구:{lat:37.579,lng:126.937},은평구:{lat:37.603,lng:126.929},중랑구:{lat:37.607,lng:127.093},도봉구:{lat:37.669,lng:127.032},동대문구:{lat:37.574,lng:127.040},성북구:{lat:37.589,lng:127.017},금천구:{lat:37.457,lng:126.895},강북구:{lat:37.640,lng:127.011},
+      // 인천
+      중구:{lat:37.474,lng:126.617},동구:{lat:37.478,lng:126.644},미추홀구:{lat:37.456,lng:126.651},연수구:{lat:37.411,lng:126.678},남동구:{lat:37.449,lng:126.730},부평구:{lat:37.510,lng:126.722},계양구:{lat:37.538,lng:126.738},서구:{lat:37.546,lng:126.675},강화군:{lat:37.742,lng:126.487},옹진군:{lat:37.450,lng:126.636},
+      // 경기
+      수원시:{lat:37.263,lng:127.028},성남시:{lat:37.419,lng:127.127},분당구:{lat:37.385,lng:127.123},고양시:{lat:37.658,lng:126.832},일산동구:{lat:37.660,lng:126.797},용인시:{lat:37.241,lng:127.177},기흥구:{lat:37.275,lng:127.115},수지구:{lat:37.321,lng:127.098},처인구:{lat:37.234,lng:127.204},안양시:{lat:37.394,lng:126.952},부천시:{lat:37.503,lng:126.766},화성시:{lat:37.199,lng:126.831},광명시:{lat:37.479,lng:126.864},평택시:{lat:37.000,lng:127.112},시흥시:{lat:37.380,lng:126.803},안산시:{lat:37.321,lng:126.831},남양주시:{lat:37.636,lng:127.216},하남시:{lat:37.539,lng:127.215},의정부시:{lat:37.738,lng:127.034},김포시:{lat:37.615,lng:126.716},광주시:{lat:37.429,lng:127.255},이천시:{lat:37.272,lng:127.435},파주시:{lat:37.760,lng:126.780},구리시:{lat:37.598,lng:127.130},양주시:{lat:37.785,lng:127.046},군포시:{lat:37.361,lng:126.935},오산시:{lat:37.150,lng:127.077},의왕시:{lat:37.344,lng:126.967},양평군:{lat:37.492,lng:127.488},과천시:{lat:37.430,lng:126.987},
+      // 부산
+      해운대구:{lat:35.160,lng:129.164},수영구:{lat:35.145,lng:129.114},남구:{lat:35.136,lng:129.084},동래구:{lat:35.205,lng:129.084},부산진구:{lat:35.163,lng:129.053},연제구:{lat:35.177,lng:129.081},북구:{lat:35.197,lng:128.990},사상구:{lat:35.153,lng:128.991},사하구:{lat:35.100,lng:128.974},강서구:{lat:35.211,lng:128.980},기장군:{lat:35.245,lng:129.222},
+      // 대구
+      수성구:{lat:35.858,lng:128.630},달서구:{lat:35.830,lng:128.532},북구:{lat:35.886,lng:128.582},동구:{lat:35.887,lng:128.635},
+      // 대전
+      서구:{lat:36.355,lng:127.383},유성구:{lat:36.362,lng:127.356},
+      // 광주
+      광산구:{lat:35.140,lng:126.793},
+    };
     const locStr=(p.location||'')+(p.rawText||'');
-    const guM=locStr.match(/(강남구|서초구|송파구|마포구|용산구|성동구|광진구|영등포구|강동구|동작구|관악구|종로구|중구|강서구|양천구|구로구|노원구|서대문구|은평구|중랑구|도봉구|동대문구|성북구|금천구|강북구)/);
-    if(!guM){const gs=locStr.match(/(강남|서초|송파|마포|용산|성동|광진|영등포|강동|동작|관악|종로|강서|양천|구로|노원|서대문|은평|중랑|도봉|동대문|성북|금천|강북)/);if(gs&&_guCoords[gs[1]+'구'])return _guCoords[gs[1]+'구'];}
-    if(guM&&_guCoords[guM[1]])return _guCoords[guM[1]];
+    const guM=locStr.match(/([\uAC00-\uD7AF]+(구|시|군))/g);
+    if(guM){for(const g of guM){if(_guCoords[g])return _guCoords[g];}}
     return {lat:null,lng:null};
   }
 
@@ -1077,13 +1095,15 @@ const Data = (() => {
   function locateCard(cardId) { return fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/locate-card`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({card_id:cardId})}).catch(e=>console.warn('locate-card failed:',e)); }
   async function batchGenerateTags() { try{const{data:{session}}=await Auth.sb.auth.getSession();const tok=session?.access_token||Auth.getToken();if(!tok)return{error:'no token'};const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/batch-generate-tags`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok,'apikey':HWIK_CONFIG.SUPABASE_KEY}});return await res.json();}catch(e){return {error:e.message};} }
 
+  async function updateClientStatus(cardId, status) { return sb().from('cards').update({client_status:status}).eq('id',cardId).eq('agent_id',uid()); }
+
   async function loadCompletedCards() {
     const id=uid(); if(!id) return [];
     const { data } = await sb().from('cards').select('id,property,trade_status,price_number,created_at,updated_at').eq('agent_id',id).eq('trade_status','완료').order('updated_at',{ascending:false});
     return data||[];
   }
 
-  return { cache, PAGE, loadCounts, loadMyCards, loadClientCards, loadClientDetail, loadRooms, loadSharedCards, loadPendingInvites, createRoom, deleteRoom, renameRoom, leaveRoom, inviteMember, acceptInvite, rejectInvite, shareCardToRoom, unshareCard, deleteCard, updateTradeStatus, uploadPhotos, _resize, loadAlerts, loadCalendarAlerts, loadMemos, deleteMemo, markMemoRead, saveClientNote, deleteClientNote, updateNoteAlertDone, matchCoords, parseSinglePrice, parsePriceFields, updateEmbedding, updateClientLocation, triggerAutoMatch, loadCompletedCards, batchGenerateTags };
+  return { cache, PAGE, loadCounts, loadMyCards, loadClientCards, loadClientDetail, loadRooms, loadSharedCards, loadPendingInvites, createRoom, deleteRoom, renameRoom, leaveRoom, inviteMember, acceptInvite, rejectInvite, shareCardToRoom, unshareCard, deleteCard, updateTradeStatus, updateClientStatus, uploadPhotos, _resize, loadAlerts, loadCalendarAlerts, loadMemos, deleteMemo, markMemoRead, saveClientNote, deleteClientNote, updateNoteAlertDone, matchCoords, parseSinglePrice, parsePriceFields, updateEmbedding, updateClientLocation, triggerAutoMatch, loadCompletedCards, batchGenerateTags };
 })();
 
 // ★ 특징 태그 카테고리별 색상 (TAG_STYLES 병합을 위해 먼저 정의)
@@ -2433,7 +2453,7 @@ const PanelRegister = (() => {
    10. PanelCards — 내 매물
    ═══════════════════════════════════════════════════════════ */
 const PanelCards = (() => {
-  let cFilter='전체',cCat='전체',cSort='최근순',cQuery='',cOff=0,_editNewPhotos=[];
+  let cFilter='전체',cCat='전체',cSort='최근순',cQuery='',cOff=0,_editNewPhotos=[],_showCompleted=false;
 
   async function render(el){
     el.innerHTML=`<div class="panel-with-preview"><div class="panel-input"><div class="panel-inner">${Hub.panelHead('내 매물')}
@@ -2442,10 +2462,14 @@ const PanelCards = (() => {
         <div id="searchHint" style="display:none;font-size:11px;color:var(--primary);margin:-12px 0 12px 4px;">💡 Enter로 AI 검색 (더 많은 결과)</div>
         <div id="myList">${hwikLoading()}</div>
         <div id="myMore" style="display:none;text-align:center;padding:12px;"><button class="btn-load-more" onclick="PanelCards.more()">더 보기</button></div>
+        <div id="completedToggleWrap" style="text-align:center;padding:8px 0;display:none;">
+          <button id="completedToggleBtn" onclick="PanelCards.toggleCompleted()" style="padding:4px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-light);font-size:11px;cursor:pointer;"></button>
+        </div>
       </div>
     </div></div>
     <div class="panel-preview-wrap" id="previewPanel" style="width:0;opacity:0;padding:0;"></div>
     </div>`;
+    _showCompleted=false;
     cOff=0;await Data.loadMyCards(0,true);renderList();
     const mq=document.getElementById('myQ');if(mq)mq.placeholder=`예) ${_agentGu()} 아파트 전세 5억이하`;
     Preview.clear();Preview.renderSlider('previewPanel');
@@ -2545,11 +2569,22 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
 
   function renderList(){
     let cards=[...Data.cache.myCards];
-    if(cQuery.trim())cards=Search.local(cQuery,cards);
-    else cards=cards.filter(c=>c.trade_status!=='완료');
+    if(cQuery.trim()){
+      cards=Search.local(cQuery,cards);
+    } else {
+      const completedCards=cards.filter(c=>c.trade_status==='완료');
+      if(!_showCompleted) cards=cards.filter(c=>c.trade_status!=='완료');
+      // 완료 매물 토글 버튼 업데이트
+      const tw=document.getElementById('completedToggleWrap'),tb=document.getElementById('completedToggleBtn');
+      if(tw&&tb){
+        if(completedCards.length>0){tw.style.display='';tb.textContent=_showCompleted?`완료 매물 숨기기`:`완료 매물 ${completedCards.length}건 보기`;}
+        else{tw.style.display='none';}
+      }
+    }
     _renderItems(cards,document.getElementById('myList'));
     const ml=document.getElementById('myMore');if(ml)ml.style.display=Data.cache.myCards.length>=cOff+Data.PAGE?'':'none';
   }
+  function toggleCompleted(){_showCompleted=!_showCompleted;renderList();}
 
   function _renderItems(cards,el){
     if(!el)return;if(!cards.length){el.innerHTML='<div class="empty"><div class="empty-icon">🏠</div>매물이 없어요</div>';return;}
@@ -2909,7 +2944,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
       el.innerHTML=`<div class="panel-inner">${Hub.panelHead('거래 상태')}<div style="text-align:center;padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">${icon}</div><div style="font-size:24px;font-weight:800;color:${color};">${st}</div><div style="margin-top:24px;display:flex;gap:8px;justify-content:center;"><button class="filter-btn ${st==='계약가능'?'active':''}" onclick="PanelCards.chgStatus('${c.id}','계약가능')">계약가능</button><button class="filter-btn ${st==='계약중'?'active':''}" onclick="PanelCards.chgStatus('${c.id}','계약중')">계약중</button><button class="filter-btn ${st==='완료'?'active':''}" onclick="PanelCards.chgStatus('${c.id}','완료')">완료</button></div></div></div>`;}
   }
 
-  return { render, setFilter, setCat, setSort, onQ, onQEnter, more, renderList, toggleSel, toggleSharedSel, toggleDetail, share1, shareSelected, doShare, edit, addPhotos, addTag, saveEdit, del, chgStatus, _pickClient, _filterClientPicker, linkMatchToClient, loadContractNotes, addContractNote, renderSub, get _searchShared(){return _searchShared;}, set _searchShared(v){_searchShared=v;} };
+  return { render, setFilter, setCat, setSort, onQ, onQEnter, more, renderList, toggleCompleted, toggleSel, toggleSharedSel, toggleDetail, share1, shareSelected, doShare, edit, addPhotos, addTag, saveEdit, del, chgStatus, _pickClient, _filterClientPicker, linkMatchToClient, loadContractNotes, addContractNote, renderSub, get _searchShared(){return _searchShared;}, set _searchShared(v){_searchShared=v;} };
 })();
 
 /* ═══════════════════════════════════════════════════════════
@@ -3156,7 +3191,7 @@ const PanelClient = (() => {
       const r=await res.json();if(r.error)throw new Error(r.error);
       // 손님 카드로 강제 설정
       const property={type:'손님',price:r.price||null,location:r.location||null,complex:r.complex||null,area:r.area||null,floor:r.floor||null,room:r.room||null,features:r.features||[],category:r.category||null,rawText:inp.value.trim()};
-      const cardData={id:crypto.randomUUID().slice(0,12),agent_id:Auth.user.id,property,contact_name:r.contact_name||null,contact_phone:r.contact_phone||null,embedding:r.embedding||null,search_text:r.search_text||null,search_text_private:r.search_text_private||null,price_number:r.price_number||null,deposit:r.deposit||null,monthly_rent:r.monthly_rent||null,move_in_date:r.move_in_date||null,wanted_trade_type:r.wanted_trade_type||null,wanted_categories:r.wanted_categories||[],wanted_conditions:r.wanted_conditions||[],tags:r.tags||[],trade_status:'계약가능'};
+      const cardData={id:crypto.randomUUID().slice(0,12),agent_id:Auth.user.id,property,contact_name:r.contact_name||null,contact_phone:r.contact_phone||null,embedding:r.embedding||null,search_text:r.search_text||null,search_text_private:r.search_text_private||null,price_number:r.price_number||null,deposit:r.deposit||null,monthly_rent:r.monthly_rent||null,move_in_date:r.move_in_date||null,wanted_trade_type:r.wanted_trade_type||null,wanted_categories:r.wanted_categories||[],wanted_conditions:r.wanted_conditions||[],tags:r.tags||[],trade_status:'계약가능',client_status:'탐색중'};
       const {error:dbErr}=await Auth.sb.from('cards').insert([cardData]);
       if(dbErr)throw new Error(dbErr.message);
       // rawText에서 추가 태그 보완 + 좌표 설정 (비동기, 실패해도 무시)
@@ -3328,6 +3363,9 @@ const PanelClient = (() => {
       // 상태 색상 (마지막 메모 타입 기반)
       const lastNote=lastNotes[c.id];
       const stage=_stageTag(lastNote?.type);
+      // 손님 상태 배지 (client_status)
+      const cs=c.client_status||'탐색중';
+      const csS=TAG_STYLES[cs]||{bg:'rgba(96,165,250,0.12)',color:'#2563eb'};
       // 마지막 연락 표시
       let lastStr='';
       if(lastNote){const diff=Math.floor((Date.now()-new Date(lastNote.created_at))/(1000*60*60*24));
@@ -3337,7 +3375,7 @@ const PanelClient = (() => {
       }
 
       html+=`<div class="item client-item" data-id="${c.id}" style="border-left:3px solid ${stage.color};${_selectedClient?.id===c.id?'background:var(--primary-bg);':''}" onclick='PanelClient.selectClient(JSON.parse(decodeURIComponent("${encodeURIComponent(JSON.stringify(c))}")))'>
-        <span style="padding:3px 8px;border-radius:6px;font-size:10px;font-weight:800;background:${stage.bg};color:${stage.color};flex-shrink:0;">${stage.label}</span>
+        <span onclick="event.stopPropagation();PanelClient._changeClientStatus('${c.id}',this)" title="클릭해서 상태 변경" style="cursor:pointer;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:800;background:${csS.bg};color:${csS.color};flex-shrink:0;">${esc(cs)}</span>
         ${clientWantTag(c)}
         <div class="item-body">
           <div class="item-name">${esc(name)}${lastStr}</div>
@@ -3596,7 +3634,22 @@ const PanelClient = (() => {
     if(Hub.current?.data?.id===cardId){Hub.current.data.contact_name=name;Hub.current.data.contact_phone=phone;}
   }
 
-  return { render, registerClient, toggleReg, _addRecent, setFilter, setTradeFilter, setCatFilter, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact, selectClient, closeDetail, detailTab, toggleMatchSel, _hasSelectedClient, _stageTag };
+  const _CLIENT_STATUSES = ['탐색중','급해요','협의중','계약완료','연락두절'];
+  async function _changeClientStatus(cardId, el) {
+    const cur = el.textContent.trim();
+    const next = _CLIENT_STATUSES[(_CLIENT_STATUSES.indexOf(cur)+1)%_CLIENT_STATUSES.length];
+    const {error} = await Data.updateClientStatus(cardId, next);
+    if(!error) {
+      const s = TAG_STYLES[next]||{bg:'rgba(96,165,250,0.12)',color:'#2563eb'};
+      el.textContent = next;
+      el.style.background = s.bg;
+      el.style.color = s.color;
+      const card = Data.cache.clientCards.find(c=>c.id===cardId);
+      if(card) card.client_status = next;
+    } else { Toast.show('상태 변경 실패'); }
+  }
+
+  return { render, registerClient, toggleReg, _addRecent, setFilter, setTradeFilter, setCatFilter, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact, selectClient, closeDetail, detailTab, toggleMatchSel, _hasSelectedClient, _stageTag, _changeClientStatus };
 })();
 
 /* ═══════════════════════════════════════════════════════════
