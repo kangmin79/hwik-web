@@ -499,8 +499,29 @@ export function generateTags(card: any): string[] {
     });
   }
 
+  // "제외:" 접두어 태그 제거 (excluded_tags 컬럼에서 별도 관리)
+  const cleanTags = tags.filter(t => !t.startsWith('제외:'));
+
   // 중복 제거 + 빈 문자열 필터
-  return [...new Set(tags)].filter(t => t && t.trim());
+  return [...new Set(cleanTags)].filter(t => t && t.trim());
+}
+
+// ═══════════════════════════════════════════════════════════
+// 필수/제외 태그 추출 — rawText에서 "꼭", "필수", "빼고" 등 감지
+// ═══════════════════════════════════════════════════════════
+export function extractRequiredTags(text: string, tags: string[]): string[] {
+  if (!/꼭|필수|반드시|무조건/.test(text)) return [];
+  const required: string[] = [];
+  // 태그 중에서 "꼭" 앞뒤에 등장하는 키워드 매칭
+  const reqKeywords: Record<string, string> = {
+    '남향':'남향','역세권':'역세권','주차':'주차가능','올수리':'올수리',
+    '풀옵션':'풀옵션','학군':'학군좋음','신축':'신축','엘리베이터':'엘리베이터',
+    '즉시입주':'즉시입주','바로입주':'즉시입주',
+  };
+  for (const [kw, tag] of Object.entries(reqKeywords)) {
+    if (text.includes(kw) && tags.includes(tag)) required.push(tag);
+  }
+  return [...new Set(required)];
 }
 
 // ═══════════════════════════════════════════════════════════

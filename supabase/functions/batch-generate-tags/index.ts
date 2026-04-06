@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-import { generateTags } from '../_shared/tags.ts'
+import { generateTags, extractExcludedTags, extractRequiredTags } from '../_shared/tags.ts'
 import { getAuthUserId } from '../_shared/auth.ts'
 
 const corsHeaders = {
@@ -116,9 +116,19 @@ Deno.serve(async (req) => {
       }
 
       if (tags.length) {
+        const updateData: any = { tags };
+        // 손님 카드: required_tags/excluded_tags도 생성
+        const p = card.property || {};
+        if (p.type === '손님') {
+          const rawText = p.rawText || '';
+          const excluded = extractExcludedTags(rawText);
+          const required = extractRequiredTags(rawText, tags);
+          if (excluded.length) updateData.excluded_tags = excluded;
+          if (required.length) updateData.required_tags = required;
+        }
         const { error: updateErr } = await supabase
           .from('cards')
-          .update({ tags })
+          .update(updateData)
           .eq('id', card.id);
         if (!updateErr) updated++;
       }
