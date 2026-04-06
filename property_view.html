@@ -332,8 +332,12 @@
         .card-bottom.hidden { opacity:0; pointer-events:none; }
         .card-price { font-size:30px; font-weight:800; color:#fff; letter-spacing:-0.03em; margin-bottom:2px; }
         .card-name { font-size:12px; color:rgba(255,255,255,0.55); margin-bottom:10px; }
-        .card-specs { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:14px; }
-        .card-spec { font-size:11px; padding:4px 9px; border-radius:20px; background:rgba(255,255,255,0.1); color:rgba(255,255,255,0.8); border:1px solid rgba(255,255,255,0.12); }
+        .card-specs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; align-items:center; }
+        /* 기본 스펙 (면적/층/방) — 작고 심플 */
+        .card-spec { font-size:11px; padding:4px 9px; border-radius:6px; background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.65); letter-spacing:0.02em; }
+        /* 셀링포인트 (남향/역세권/한강뷰 등) — 강조 */
+        .card-spec.highlight { background:rgba(250,204,21,0.15); color:#facc15; border:1px solid rgba(250,204,21,0.25); border-radius:20px; font-weight:600; }
+        .card-spec.highlight-mint { background:rgba(78,205,196,0.15); color:#4ecdc4; border:1px solid rgba(78,205,196,0.25); border-radius:20px; font-weight:600; }
         .card-divider { height:1px; background:rgba(255,255,255,0.1); margin-bottom:14px; }
         /* 액션 바 */
         .card-action-bar { display:flex; gap:8px; margin-top:16px; }
@@ -964,17 +968,35 @@
               </div>`;
         }
 
+        // 태그 분류: 기본 정보 vs 셀링포인트
+        const HIGHLIGHT_KEYWORDS = ['역세권','남향','동남향','한강','뷰','올수리','리모델링','신축','풀옵션','테라스','복층','주차','펜트하우스','탑층','로열층','고층'];
+        const HIGHLIGHT_MINT_KEYWORDS = ['학군','초품아','숲세권','공세권','역근처','더블역세권','트리플역세권'];
+
+        function _classifySpec(text) {
+            const t = text.toLowerCase();
+            if (HIGHLIGHT_MINT_KEYWORDS.some(k => t.includes(k))) return 'highlight-mint';
+            if (HIGHLIGHT_KEYWORDS.some(k => t.includes(k))) return 'highlight';
+            return '';
+        }
+
+        function _buildSpecsHtml(basicSpecs, featureSpecs) {
+            const all = [...basicSpecs, ...featureSpecs].filter(Boolean);
+            return all.map(s => {
+                const cls = _classifySpec(s);
+                return `<span class="card-spec${cls ? ' ' + cls : ''}">${s}</span>`;
+            }).join('');
+        }
+
         // ===== memo 템플릿 (사진 있는 카드) — 풀스크린 블러 배경 =====
         function buildMemoCard(ctx) {
             const { type, price, name, location, area, floor, room, features, agentName, agentPhone, agentPhoto, photos, agentComment } = ctx;
             const totalSlides = photos.length;
-            const specs = [area, floor, room, ...features].filter(Boolean);
             const cardNameStr = [location, name].filter(Boolean).join(' · ');
             const slidesHtml = photos.map((url, i) =>
                 `<img class="photo-slide" src="${esc(url)}" loading="${i === 0 ? 'eager' : 'lazy'}" fetchpriority="${i === 0 ? 'high' : 'auto'}">`
             ).join('');
 
-            const specsHtml = specs.map(s => `<span class="card-spec">${s}</span>`).join('');
+            const specsHtml = _buildSpecsHtml([area, floor, room], features);
 
             const cardHtml = `
               <div class="card card-full" id="activeCard" data-template="memo" data-total="${totalSlides}" onclick="_onCardTap(event)">
@@ -1000,8 +1022,7 @@
         function buildNoImgCard(ctx) {
             const { type, price, name, location, area, floor, room, features, agentName, agentPhone, agentPhoto, agentComment } = ctx;
             const cardNameStr = [location, name].filter(Boolean).join(' · ');
-            const specs = [area, floor, room, ...features].filter(Boolean);
-            const specsHtml = specs.map(s => `<span class="card-spec">${s}</span>`).join('');
+            const specsHtml = _buildSpecsHtml([area, floor, room], features);
 
             const cardHtml = `
               <div class="card card-full" id="activeCard" data-template="noimg" data-total="1">
