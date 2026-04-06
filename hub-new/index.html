@@ -3635,13 +3635,14 @@ const PanelClient = (() => {
         features:r.features||[],moveIn:r.moveIn||null,category:r.category||null,rawText:text
       };
       await Auth.sb.from('cards').update({
-        property,
+        property,tags:r.tags||[],
         price_number:r.price_number||null,deposit:r.deposit||null,monthly_rent:r.monthly_rent||null,
-        wanted_trade_type:r.wanted_trade_type||null,
+        wanted_trade_type:r.wanted_trade_type||null,wanted_categories:r.wanted_categories||[],wanted_conditions:r.wanted_conditions||[],
         contact_name:r.contact_name||null,contact_phone:r.contact_phone||null,
         embedding:r.embedding||null,search_text:r.search_text||null
       }).eq('id',cardId).eq('agent_id',Auth.user.id);
       document.getElementById('editModal').classList.remove('show');
+      _updateClientTags(cardId,text);
       Data.updateEmbedding(cardId);Data.updateClientLocation(cardId);
       Toast.show('수정 완료');await Data.loadClientCards(0,true);_renderList();
     }catch(e){Toast.show('저장 실패: '+e.message);}
