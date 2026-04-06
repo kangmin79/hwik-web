@@ -1616,7 +1616,7 @@ const Share = (() => {
   }
   async function _getOgUrl(){
     const uid=Auth.user?.id;if(!uid)return null;
-    const ver=Auth.profile?.og_version,path=`agents/${uid}/og.png`;
+    const ver=Auth.profile?.og_version,path=`agents/${uid}.png`;
     if(ver==='v2b'){const{data}=Auth.sb.storage.from('og-images').getPublicUrl(path);return data?.publicUrl||null;}
     const blob=await _genOgBlob(Auth.getAgentInfo());if(!blob)return null;
     await Auth.sb.storage.from('og-images').upload(path,blob,{upsert:true,contentType:'image/png'});
@@ -1636,7 +1636,7 @@ const Share = (() => {
     }catch(_){}
     console.log('[Kakao] ogUrl:',ogUrl);
     // 카카오 공유 호출
-    try{if(typeof Kakao!=='undefined'&&Kakao.isInitialized()){Kakao.Share.sendDefault({objectType:'feed',content:{title,description:ag.office||'휙',imageUrl:ogUrl,link:{mobileWebUrl:url,webUrl:url}},buttons:[{title:'매물 보기',link:{mobileWebUrl:url,webUrl:url}}]});closeSheet();
+    try{if(typeof Kakao!=='undefined'&&Kakao.isInitialized()){const content={title,description:ag.office||'휙',imageUrl:ogUrl,imageWidth:800,imageHeight:420,link:{mobileWebUrl:url,webUrl:url}};Kakao.Share.sendDefault({objectType:'feed',content,buttons:[{title:'매물 보기',link:{mobileWebUrl:url,webUrl:url}}]});closeSheet();
       return;}}catch(e){console.warn('Kakao share:',e);}
     await copyLink(cards);try{window.open('kakaotalk://launch','_self');}catch(_){}
   }
