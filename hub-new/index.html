@@ -4103,8 +4103,11 @@ function toggleTheme(mode) {
    17. App — 초기화
    ═══════════════════════════════════════════════════════════ */
 const App = {
+  _inited: false,
   async init() {
     if(!Auth.user){document.getElementById('loginBg').classList.add('show');const sp=document.getElementById('splash');if(sp){sp.style.opacity='0';setTimeout(()=>sp.remove(),400);}return;}
+    if(this._inited) return;
+    this._inited = true;
     document.getElementById('loginBg').classList.remove('show');
     if(!Auth.profile) await Auth.check();
     // 헤더 표시
