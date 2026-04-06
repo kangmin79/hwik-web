@@ -290,14 +290,16 @@ async function loadData() {
   }
   canonicalEl.href = `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;
 
-  // 거래 데이터 있는 첫 번째 면적 선택 (없으면 84㎡에 가장 가까운 것)
+  // 거래 데이터 있는 면적 중 84㎡에 가장 가까운 것 선택
   const cats = data.categories || [];
   const rt = data.recent_trade || {};
-  const firstWithTrade = cats.find(c => rt[c] && rt[c].price);
-  if (firstWithTrade) {
-    currentPyeong = firstWithTrade;
+  const catsWithTrade = cats.filter(c => rt[c] && rt[c].price);
+  if (catsWithTrade.length > 0) {
+    let best = catsWithTrade[0], bestDiff = 999;
+    catsWithTrade.forEach(c => { const d = Math.abs(parseInt(c) - 84); if (d < bestDiff) { bestDiff = d; best = c; } });
+    currentPyeong = best;
   } else if (cats.length > 0) {
-    // 84㎡에 가장 가까운 면적
+    // 거래 데이터 없으면 전체 중 84㎡에 가장 가까운 것
     let best = cats[0], bestDiff = 999;
     cats.forEach(c => { const d = Math.abs(parseInt(c) - 84); if (d < bestDiff) { bestDiff = d; best = c; } });
     currentPyeong = best;
