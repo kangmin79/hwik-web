@@ -827,7 +827,7 @@ const Data = (() => {
 
   async function loadClientDetail(cardId) {
     const [notesRes, matchRes] = await Promise.all([
-      sb().from('client_notes').select('id,type,content,alert_date,alert_done,created_at').eq('client_card_id',cardId).order('created_at',{ascending:false}),
+      sb().from('client_notes').select('id,type,content,alert_date,alert_done,created_at,related_card_id').eq('client_card_id',cardId).order('created_at',{ascending:false}),
       fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/match-properties`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(Auth.getToken()),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({client_card_id:cardId,limit:10,threshold:0.15})}).then(r=>r.json()).catch(()=>({results:[]}))
     ]);
     return { notes:notesRes.data||[], matches:matchRes.results||[] };
@@ -3073,13 +3073,21 @@ const PanelClient = (() => {
       }).join('')+`<button class="btn-primary" style="margin-top:12px;" onclick="PanelClient.reMatch('${card.id}')">매칭 다시 찾기</button>`;
     }
     else if(tab==='timeline'){
-      let h=`<div class="note-row" style="margin-bottom:12px;"><input type="text" id="noteIn" placeholder="메모 입력... (예: 내일 2시 방문 예정)" onkeydown="if(event.key==='Enter')PanelClient.saveNote('${card.id}')"><button onclick="PanelClient.saveNote('${card.id}')">저장</button></div>`;
+      // 매칭 매물 목록 (드롭다운용)
+      const matchOpts=(card._matches||[]).map(m=>{const mp=m.property||{};const label=[mp.complex||mp.location,mp.price].filter(Boolean).join(' ');return `<option value="${esc(m.id)}">${esc(label)}</option>`;}).join('');
+      const matchSel=matchOpts?`<select id="noteRelCard" style="font-size:11px;padding:3px 6px;border-radius:6px;border:1px solid var(--border);background:var(--bg-input);color:var(--text-sub);max-width:160px;"><option value="">매물 선택 (선택)</option>${matchOpts}</select>`:'';
+      let h=`<div class="note-row" style="margin-bottom:4px;"><input type="text" id="noteIn" placeholder="메모 입력... (예: 내일 2시 방문 예정)" onkeydown="if(event.key==='Enter')PanelClient.saveNote('${card.id}')"><button onclick="PanelClient.saveNote('${card.id}')">저장</button></div>`;
+      if(matchSel)h+=`<div style="margin-bottom:12px;padding-left:2px;">${matchSel}</div>`;
       if(!notes.length)h+='<div class="empty">아직 상담 기록이 없어요</div>';
-      else{h+='<div class="timeline">';notes.forEach(n=>{const t=n.type||'메모',ds=new Date(n.created_at).toLocaleDateString('ko-KR'),as=n.alert_date?' · 📅 '+new Date(n.alert_date).toLocaleDateString('ko-KR'):'';
+      else{
+        // 관련 매물 정보 맵
+        const matchMap={};(card._matches||[]).forEach(m=>{const mp=m.property||{};matchMap[m.id]=[mp.complex||mp.location,mp.price,mp.area].filter(Boolean).join(' · ');});
+        h+='<div class="timeline">';notes.forEach(n=>{const t=n.type||'메모',ds=new Date(n.created_at).toLocaleDateString('ko-KR'),as=n.alert_date?' · 📅 '+new Date(n.alert_date).toLocaleDateString('ko-KR'):'';
         const done=n.alert_date&&n.alert_done;const past=!n.alert_date;
         const content=n.content||'';const isLong=content.length>30;
+        const relCard=n.related_card_id&&matchMap[n.related_card_id]?`<div style="font-size:10px;color:#6366f1;margin-top:2px;padding:2px 6px;border-radius:4px;background:rgba(99,102,241,0.08);display:inline-block;">🏠 ${esc(matchMap[n.related_card_id])}</div>`:'';
         h+=`<div class="tl-item" style="${done||past?'opacity:0.5;':''}${isLong?'cursor:pointer;':''}" ${isLong?`onclick="var d=document.getElementById('tl-detail-${n.id}');if(d)d.style.display=d.style.display==='none'?'':'none';"`:''}>
-          <span class="tl-tag ${t}">${t}</span><div class="tl-body" style="flex:1;"><div class="tl-text" style="${done?'text-decoration:line-through;':''}${isLong?'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px;':''}">${esc(content)}</div><div class="tl-date">${ds}${as}${done?' ✅ 완료':''}</div>
+          <span class="tl-tag ${t}">${t}</span><div class="tl-body" style="flex:1;"><div class="tl-text" style="${done?'text-decoration:line-through;':''}${isLong?'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px;':''}">${esc(content)}</div>${relCard}<div class="tl-date">${ds}${as}${done?' ✅ 완료':''}</div>
           ${isLong?`<div id="tl-detail-${n.id}" style="display:none;margin-top:8px;padding:10px;border-radius:8px;background:var(--bg-input);font-size:13px;white-space:pre-wrap;color:var(--text);" onclick="event.stopPropagation();">${esc(content)}</div>`:''}
           </div><div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation();">${n.alert_date&&!n.alert_done?`<button class="tl-done-btn" onclick="PanelClient.noteDone('${n.id}','${card.id}')">완료</button>`:''}<button class="tl-delete-btn" onclick="PanelClient.noteDel('${n.id}','${card.id}')">삭제</button></div></div>`;});h+='</div>';}
       el.innerHTML=h;
@@ -3463,7 +3471,8 @@ const PanelClient = (() => {
   }
 
   async function saveNote(cardId){const inp=document.getElementById('noteIn');if(!inp?.value?.trim())return;const p=_parseNote(inp.value.trim());
-    const {data:saved}=await Auth.sb.from('client_notes').insert({client_card_id:cardId,agent_id:Auth.user?.id,type:p.type||'메모',content:p.content,alert_date:p.alert_date||null,alert_done:false}).select().single();
+    const relCardId=document.getElementById('noteRelCard')?.value||null;
+    const {data:saved}=await Auth.sb.from('client_notes').insert({client_card_id:cardId,agent_id:Auth.user?.id,type:p.type||'메모',content:p.content,alert_date:p.alert_date||null,alert_done:false,related_card_id:relCardId||null}).select().single();
     // 메모에서 태그 감지
     _updateClientTags(cardId,inp.value.trim());
     inp.value='';document.getElementById('notePv').style.display='none';
