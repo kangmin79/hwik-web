@@ -102,6 +102,36 @@ SEOUL_GU = {
     "11740": "강동구",
 }
 
+# ── 인천 10개 구/군 ──────────────────────────────────────
+INCHEON_GU = {
+    "28110": "중구",   "28140": "동구",     "28177": "미추홀구",
+    "28185": "연수구", "28200": "남동구",   "28237": "부평구",
+    "28245": "계양구", "28260": "서구",     "28710": "강화군",
+    "28720": "옹진군",
+}
+
+# ── 경기 39개 시/구 ──────────────────────────────────────
+GYEONGGI_SI = {
+    "41111": "수원시 장안구", "41113": "수원시 권선구",
+    "41115": "수원시 팔달구", "41117": "수원시 영통구",
+    "41131": "성남시 수정구", "41133": "성남시 중원구", "41135": "성남시 분당구",
+    "41150": "의정부시",      "41170": "안양시 만안구", "41171": "안양시 동안구",
+    "41190": "부천시",        "41210": "평택시",
+    "41250": "안산시 상록구", "41271": "안산시 단원구",
+    "41273": "고양시 덕양구", "41281": "고양시 일산동구", "41285": "고양시 일산서구",
+    "41290": "과천시",        "41310": "구리시",          "41360": "남양주시",
+    "41370": "오산시",        "41390": "시흥시",          "41410": "군포시",
+    "41430": "의왕시",        "41450": "하남시",
+    "41461": "용인시 처인구", "41463": "용인시 기흥구",  "41465": "용인시 수지구",
+    "41480": "파주시",        "41500": "이천시",          "41550": "안성시",
+    "41570": "김포시",        "41590": "화성시",          "41610": "광주시",
+    "41630": "양주시",        "41650": "포천시",          "41670": "여주시",
+    "41800": "연천군",        "41820": "가평군",          "41830": "양평군",
+}
+
+# ── 수도권 전체 ───────────────────────────────────────────
+ALL_REGIONS = {**SEOUL_GU, **INCHEON_GU, **GYEONGGI_SI}
+
 # ── API URL ─────────────────────────────────────────────
 APT_TRADE_URL = "http://apis.data.go.kr/1613000/RTMSDataSvcAptTradeDev/getRTMSDataSvcAptTradeDev"
 APT_RENT_URL  = "http://apis.data.go.kr/1613000/RTMSDataSvcAptRent/getRTMSDataSvcAptRent"
@@ -157,7 +187,7 @@ def fetch_all_for_month(year_month: str, lawd_codes: list = None) -> dict:
     특정 월의 서울 전체 실거래 수집
     반환: { "11110_매매_apt": [...], "11110_전세_apt": [...], ... }
     """
-    codes = lawd_codes or list(SEOUL_GU.keys())
+    codes = lawd_codes or list(ALL_REGIONS.keys())
     apis = [
         (APT_TRADE_URL,  "매매", "apt"),
         (APT_RENT_URL,   "전세", "apt"),
@@ -757,7 +787,7 @@ def fill_nearby_facilities(danji_list: list):
             break
     print(f"  → {len(stations)}개 역 로드")
 
-    # 학교 전체 로드 (13656개) — 서울만 필터 (lat 37.4~37.7)
+    # 학교 전체 로드 — 수도권 범위 (경기 남단 평택 36.99 ~ 경기 북단 연천 38.1)
     print("  학교 로드 중...")
     schools = []
     offset = 0
@@ -765,7 +795,7 @@ def fill_nearby_facilities(danji_list: list):
         resp = requests.get(
             f"{SUPABASE_URL}/rest/v1/schools",
             headers={**SB_HEADERS, "Prefer": ""},
-            params={"select": "name,type,lat,lon", "lat": "gte.37.4", "offset": offset, "limit": 1000}
+            params={"select": "name,type,lat,lon", "lat": "gte.36.9", "offset": offset, "limit": 1000}
         )
         data = resp.json() if resp.status_code == 200 else []
         if not data:
@@ -774,9 +804,9 @@ def fill_nearby_facilities(danji_list: list):
         offset += 1000
         if len(data) < 1000:
             break
-    # 서울 범위만
-    schools = [s for s in schools if s.get("lat") and 37.4 < s["lat"] < 37.7 and 126.8 < s.get("lon", 0) < 127.2]
-    print(f"  → {len(schools)}개 학교 로드 (서울)")
+    # 수도권 범위 필터 (평택~연천, 인천 서해안 포함)
+    schools = [s for s in schools if s.get("lat") and 36.9 < s["lat"] < 38.3 and 126.3 < s.get("lon", 0) < 127.9]
+    print(f"  → {len(schools)}개 학교 로드 (수도권)")
 
     filled = 0
     for d in danji_list:
@@ -954,10 +984,17 @@ def generate_sitemap(danji_list: list):
             break
         time.sleep(0.2)
 
+    from urllib.parse import quote as _quote
+
     urls = []
     # 정적 페이지 (priority/changefreq 제거 — Google이 무시함)
-    for path in ['/', '/mobile-v6.html', '/gu.html', '/about.html', '/llms.txt']:
+    for path in ['/', '/gu.html', '/about.html', '/ranking.html']:
         urls.append(f'  <url><loc>{base}{path}</loc><lastmod>{today}</lastmod></url>')
+
+    # 구/시 목록 페이지 (서울+인천+경기 전체)
+    for region_name in ALL_REGIONS.values():
+        safe_name = _quote(region_name, safe='')
+        urls.append(f'  <url><loc>{base}/gu.html?name={safe_name}</loc><lastmod>{today}</lastmod></url>')
 
     # 단지 페이지 (거래 데이터 있는 단지만 — Google 신뢰도 향상)
     included = 0
@@ -973,7 +1010,6 @@ def generate_sitemap(danji_list: list):
         if not has_trade:
             excluded += 1
             continue
-        from urllib.parse import quote as _quote
         safe_id = _quote(did, safe="-")
         lastmod = (d.get("updated_at") or today)[:10]
         urls.append(f'  <url><loc>{base}/danji.html?id={safe_id}</loc><lastmod>{lastmod}</lastmod></url>')
@@ -1000,7 +1036,10 @@ def main():
     parser.add_argument("--months", type=int, default=2, help="수집할 월 수 (기본: 2 = 당월+전월)")
     parser.add_argument("--skip-aggregate", action="store_true", help="집계 건너뛰기 (수집만)")
     parser.add_argument("--aggregate-only", action="store_true", help="집계만 (수집 건너뛰기)")
-    parser.add_argument("--gu", default=None, help="특정 구만 (예: 11440=마포구)")
+    parser.add_argument("--gu", default=None, help="특정 구/시만 (예: 11440=마포구, 28185=연수구, 41135=분당구)")
+    parser.add_argument("--seoul", action="store_true", help="서울 전체만 처리")
+    parser.add_argument("--gyeonggi", action="store_true", help="경기도 전체만 처리")
+    parser.add_argument("--incheon", action="store_true", help="인천 전체만 처리")
     parser.add_argument("--reset-danji", action="store_true", help="danji_pages 전체 삭제 후 재생성")
     args = parser.parse_args()
 
@@ -1032,7 +1071,16 @@ def main():
     print(f"   시각: {now.strftime('%Y-%m-%d %H:%M')}")
     print(f"{'='*50}\n")
 
-    lawd_codes = [args.gu] if args.gu else list(SEOUL_GU.keys())
+    if args.gu:
+        lawd_codes = [args.gu]
+    elif args.seoul:
+        lawd_codes = list(SEOUL_GU.keys())
+    elif args.gyeonggi:
+        lawd_codes = list(GYEONGGI_SI.keys())
+    elif args.incheon:
+        lawd_codes = list(INCHEON_GU.keys())
+    else:
+        lawd_codes = list(ALL_REGIONS.keys())
 
     # 1단계: 수집 + 저장 (--aggregate-only면 건너뜀)
     total_trades = 0
@@ -1091,18 +1139,18 @@ def main():
         print("❌ apartments 테이블 비어있음")
         return
 
-    # 구별로 처리
+    # 구별로 처리 (서울+인천+경기)
     gu_apts = defaultdict(list)
     for apt in apartments:
         code = apt.get("lawd_cd") or ""
-        if code in SEOUL_GU:
+        if code in ALL_REGIONS:
             gu_apts[code].append(apt)
 
     danji_list = []
     for code in lawd_codes:
         if code not in gu_apts:
             continue
-        gu_name = SEOUL_GU.get(code, code)
+        gu_name = ALL_REGIONS.get(code, code)
         apts = gu_apts[code]
         print(f"\n  {gu_name}: {len(apts)}개 단지")
 
@@ -1120,7 +1168,8 @@ def main():
             if danji:
                 danji_list.append(danji)
 
-        print(f"    → {sum(1 for d in danji_list if d.get('location','').startswith(gu_name) or True)}개 집계")
+        gu_count = sum(1 for d in danji_list if d.get('location','').startswith(gu_name))
+        print(f"    → {gu_count}개 집계")
 
     # 주변 단지 매칭 (같은 property_type끼리)
     print(f"\n🏘️  주변 단지 매칭 중...")

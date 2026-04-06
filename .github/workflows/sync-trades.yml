@@ -14,40 +14,105 @@ on:
         options:
           - daily
           - init
+      region:
+        description: '지역 (비우면 전체 병렬 실행)'
+        required: false
+        default: ''
+        type: choice
+        options:
+          - ''
+          - seoul
+          - incheon
+          - gyeonggi
 
 permissions:
   contents: write
 
-jobs:
-  sync:
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
+# ── 공통 환경변수 ──────────────────────────────────────
+env:
+  GOV_SERVICE_KEY: ${{ secrets.GOV_SERVICE_KEY }}
+  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+  SMTP_USER: ${{ secrets.SMTP_USER }}
+  SMTP_PASS: ${{ secrets.SMTP_PASS }}
+  REPORT_EMAIL: bgtrfvcdewsx77@gmail.com
 
+jobs:
+  # ── 서울 ──────────────────────────────────────────────
+  sync-seoul:
+    name: 수집 (서울)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'seoul'
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-
-      - name: 의존성 설치
-        run: pip install requests python-dateutil
-
-      - name: 실거래가 동기화
-        env:
-          GOV_SERVICE_KEY: ${{ secrets.GOV_SERVICE_KEY }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          SMTP_USER: ${{ secrets.SMTP_USER }}
-          SMTP_PASS: ${{ secrets.SMTP_PASS }}
-          REPORT_EMAIL: bgtrfvcdewsx77@gmail.com
+      - run: pip install requests python-dateutil
+      - name: 서울 동기화
         run: |
-          if [ "${{ github.event.inputs.mode }}" = "init" ]; then
-            python sync_trades.py --init
-          else
-            python sync_trades.py
-          fi
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          python sync_trades.py --seoul $FLAG
 
+  # ── 인천 ──────────────────────────────────────────────
+  sync-incheon:
+    name: 수집 (인천)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'incheon'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil
+      - name: 인천 동기화
+        run: |
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          python sync_trades.py --incheon $FLAG
+
+  # ── 경기 ──────────────────────────────────────────────
+  sync-gyeonggi:
+    name: 수집 (경기)
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'gyeonggi'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil
+      - name: 경기 동기화
+        run: |
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          python sync_trades.py --gyeonggi $FLAG
+
+  # ── sitemap 커밋 (3개 job 완료 후) ────────────────────
+  sitemap:
+    name: sitemap 업데이트
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [sync-seoul, sync-incheon, sync-gyeonggi]
+    if: always()   # 일부 job 실패해도 sitemap은 항상 갱신
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil
+      - name: sitemap 재생성
+        run: python sync_trades.py --aggregate-only  # API 호출 없이 DB 집계만
       - name: sitemap.xml 커밋 및 푸시
         run: |
           git config user.name "github-actions[bot]"
