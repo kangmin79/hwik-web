@@ -9,6 +9,7 @@
 - 클릭/필터 최소화 → 검색창 하나로 AI가 처리
 - 직방/다방처럼 목록→상세→뒤로가기 반복 NO
 - "마찰을 가장 많이 제거한 제품이 승자" (에이전틱 SaaS 방향)
+- 중개사가 "말하듯이 적으면" AI가 카드로 만들어주는 게 핵심 가치
 
 ## 사용자 프로필
 - 비전공자 (개발 경험 없음)
@@ -62,6 +63,7 @@
 - id (text PK), agent_id (text FK→profiles)
 - property (jsonb: type, price, location, complex, area, floor, room, features, category, rawText 등)
 - trade_status (text: 계약가능/계약중/완료)
+- client_status (text: 탐색중/급해요/협의중/계약완료/연락두절) — 손님 카드 전용
 - photos (jsonb array), agent_comment (text)
 - private_note (jsonb: memo, rawText)
 - lat, lng (float8), coord_type (text)
@@ -78,7 +80,7 @@
 - profile_photo_url (text), design_version (text), is_admin (bool)
 - naver_map_url, office_lat, office_lon
 
-### apartments (아파트 단지 마스터 — 6,369개)
+### apartments (아파트 단지 마스터 — 13,418개: 서울+인천+경기)
 - kapt_code, kapt_name, doro_juso, umd_nm, sgg, lat, lon, slug, pyeongs
 
 ### trades (실거래 내역)
@@ -102,6 +104,7 @@
 ### auto-match
 - POST `{card_id, agent_id}` → 손님 카드와 자동 매칭
 - auth 체크 없음 (agent_id로 검증)
+- 거리 점수 포함 (0.5km→+0.25, 1km→+0.20, 2km→+0.12, 5km→+0.05)
 
 ### match-properties
 - POST `{client_card_id, agent_id, limit, threshold}` → 매칭 매물 반환
@@ -109,6 +112,13 @@
 ### search-property
 - POST `{query, agent_id, limit, search_mode}` → 벡터 검색 결과
 - search_mode: 'my' | 'shared' | 'client'
+
+### locate-card
+- POST `{card_id}` → 좌표 자동 탐지 후 cards 테이블 업데이트
+- 우선순위: 역 이름(stations) → 학교(schools) → 카카오 API → DISTRICT_COORDS fallback
+
+### room-share-match
+- 공유방 매물 → 멤버 손님 자동 매칭
 
 ### batch-parse (별도 배포)
 - POST `{text, agent_id, skip_save:true}` → 여러 매물 일괄 파싱
@@ -135,13 +145,14 @@
   - 기존 card_generator + my_cards의 모든 기능을 허브 UI로 통합
   - 라이트/다크 테마, 반응형 (4단계 브레이크포인트)
 
+### SEO 페이지
+- `danji.html` — 단지 상세 (실거래가, 차트, 주변단지, 랭킹배지)
+- `dong.html` — 동 단위 단지 목록
+- `gu.html` — 구/시 단위 (서울·인천·경기 탭)
+- `ranking.html` — 매매가 순위 (서울·인천·경기·전체 탭)
+
 ### 네이버 블로그 (별도 폴더)
 - `Desktop/네이버/` — 블로그 원고 생성 시스템
-  - test.py: 단지 조회 + 원고 생성
-  - blog_web.py: Flask 웹 인터페이스
-  - naver_blog_post.py: 네이버 자동 포스팅
-  - build_apt_db.py: 단지 DB 구축
-  - generate_banner.py: 배너 이미지 생성
 
 ## 디자인 결정사항
 
@@ -189,45 +200,6 @@
 - 공유방 생성: prompt() 금지 → 모달 내 인라인 입력
 - 내 정보: 보기 화면 아닌 **바로 수정 가능한 폼**
 
-## 현재 작업 상태 (2026-03-30)
-
-### ✅ hub-new 완료
-- Auth (카카오 로그인, 프로필, OTP)
-- 매물 등록 (단건+대량 통합, OCR, 사진, agent_comment, private_note)
-- 내 매물 (통합검색, 체크박스+공유/상세/수정/삭제, 미리보기 연동, 실적)
-- 손님 (등록 기능 추가, CRM 타임라인, 자연어 파싱, 매칭, 일정, 연락처 인라인 수정)
-- 공유방 (관리 모달, 생성/삭제/탈퇴/멤버초대/공유해제, 에이전트별 그룹, 피커 모달)
-- 알림 (지연/매칭/메모 + 달력)
-- 메모 (읽음 자동 처리)
-- 공유 (카카오+링크+SMS, OG 이미지, 방 선택 피커 + shared_by)
-- 내 정보 (바로 수정 폼 + 연락처 읽기전용)
-- 반응형 (4단계 + 세로 스택), 테마, PWA, 에러 수집
-- 로딩 스플래시 (휙 로고), 유휴 시 순차 호버 애니메이션
-
-### 🐛 수정된 버그들
-- parse-property는 DB 저장 안 함 → 클라이언트에서 직접 insert
-- link_id 컬럼 DB에 없음 → 모든 참조 제거
-- og_design_version → og_version (DB 컬럼명 불일치)
-- Supabase JS SDK에서 property->>type JSON 필터 → .neq() 사용
-- 최신 카드가 전부 손님 → 서버 필터 필수
-- 패널 열릴 때 원형 복구 문제 → render()에서 split 체크
-- panel-area overflow:hidden → overflow-y:auto (스크롤 복원)
-- 공유 시 shared_by 필드 누락 → 추가
-- triggerAutoMatch 인증 헤더 → Auth.getToken()
-- 손님 카드에 auto-match 호출 제거 (낭비)
-- SQL 매칭 0% → _score 우선 표시
-- 매칭 로드 race condition → promise 체인
-
-### Edge Function 수정/신규 (2026-03-31)
-- auto-match: CORS * + wanted_trade_type + 임베딩 memo 포함
-- room-share-match: 신규 — 공유방 매물 → 멤버 손님 자동 매칭
-
-### 📋 남은 작업
-- 테스트 데이터 정리 (22,870건 중 대부분 테스트)
-- MVP 전 모듈화 (현재 단일 파일 유지)
-- 모바일 최적화
-- 다크 테마 UI 점검
-
 ## 코드 규칙
 
 ### 파일 구조
@@ -255,7 +227,7 @@
 - git push origin main → GitHub Pages 자동 배포
 - 승인 묻지 말고 바로 배포
 - Edge Function: supabase functions deploy [name]
-- 실거래가: GitHub Actions 매일 새벽 1시(KST) 자동 동기화
+- 실거래가: GitHub Actions 매일 새벽 1시(KST) 자동 동기화 (서울·인천·경기 병렬)
 
 ## 컨텍스트 자동 저장 규칙
 - 대화 컨텍스트가 70%를 넘으면 **즉시** `docs/YYYY-MM-DD.md` 파일에 아래 내용을 저장한다
@@ -265,8 +237,3 @@
 - 파일명: `docs/2026-04-06.md` 형식 (오늘 날짜)
 - 저장 후 사용자에게 "컨텍스트 70% 도달 — docs/YYYY-MM-DD.md 저장 완료" 라고 알린다
 - 이 규칙은 사용자가 요청하지 않아도 자동으로 실행한다
-
-## 참고
-- 에이전틱 SaaS 방향: 버튼/필터 UI 대신 AI가 처리하는 구조
-- 부동산 검색은 AI 검색창 하나가 필터 UI보다 효과적
-- 중개사가 "말하듯이 적으면" AI가 카드로 만들어주는 게 핵심 가치
