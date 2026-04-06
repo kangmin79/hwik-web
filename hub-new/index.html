@@ -2416,6 +2416,8 @@ const PanelRegister = (() => {
       if(sv)Data.triggerAutoMatch(sv.id);saved++;btn.textContent=`저장 중... (${saved}/${cards.length})`;
     }catch(_){}}
     document.getElementById('leaveBanner').style.display='none';Toast.show(`${saved}건 저장 완료`);btn.textContent='전체 저장';btn.disabled=false;fiParsedCards=[];fiDeletedIds=new Set();document.getElementById('fiResults').style.display='none';document.getElementById('fiDirectInput').value='';
+    // 저장 직후 태그 즉시 생성 (백그라운드)
+    if(saved>0)Data.batchGenerateTags().then(r=>{if(r?.updated)console.log(`태그 생성: ${r.updated}건`);});
   }
 
   return { render, onInput, handlePhotos, removePhoto, handleOCR, doRegister, handleFile, setFiFilter, fiEdit, fiBatchSaveEdit, fiDelete, fiSaveAll, addCfTag, confirmSave };
@@ -3478,7 +3480,7 @@ const PanelClient = (() => {
     // 금융
     'HUG':'HUG가능','허그':'HUG가능','안심전세':'HUG가능','보증보험':'HUG가능',
     '무융자':'무융자','융자없음':'무융자',
-    '대출가능':'대출가능','디딤돌':'대출가능','버팀목':'대출가능','신생아특례':'대출가능',
+    '대출가능':'대출가능','디딤돌':'대출가능','버팀목':'대출가능','신생아특례':'대출가능','신생아대출':'대출가능','신생아특례':'대출가능',
     // 신조어
     '초품아':'초품아','슬세권':'슬세권','런세권':'런세권',
   };
