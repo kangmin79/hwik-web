@@ -1075,7 +1075,7 @@ const Data = (() => {
 
   function triggerAutoMatch(cardId) { fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/auto-match`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({card_id:cardId})}).catch(e=>console.warn('auto-match failed:',e)); }
   function locateCard(cardId) { return fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/locate-card`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({card_id:cardId})}).catch(e=>console.warn('locate-card failed:',e)); }
-  async function batchGenerateTags() { try{const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/batch-generate-tags`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY}});return await res.json();}catch(e){return {error:e.message};} }
+  async function batchGenerateTags() { try{const{data:{session}}=await Auth.sb.auth.getSession();const tok=session?.access_token||Auth.getToken();if(!tok)return{error:'no token'};const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/batch-generate-tags`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok,'apikey':HWIK_CONFIG.SUPABASE_KEY}});return await res.json();}catch(e){return {error:e.message};} }
 
   async function loadCompletedCards() {
     const id=uid(); if(!id) return [];
