@@ -114,13 +114,13 @@ def extract_css_js():
     js = js.replace(
         "canonicalEl.href = `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;",
         "canonicalEl.href = location.pathname.includes('/danji/')"
-        " ? `https://hwik.kr/danji/${encodeURIComponent(id)}.html`"
+        " ? `https://hwik.kr/danji/${encodeURIComponent(id)}`"
         " : `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;",
     )
     js = js.replace(
         "if (ogUrl) ogUrl.content = `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;",
         "if (ogUrl) ogUrl.content = location.pathname.includes('/danji/')"
-        " ? `https://hwik.kr/danji/${encodeURIComponent(id)}.html`"
+        " ? `https://hwik.kr/danji/${encodeURIComponent(id)}`"
         " : `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;",
     )
 
@@ -128,7 +128,7 @@ def extract_css_js():
     js = js.replace(
         "var fullUrl = 'https://hwik.kr/danji.html?id=' + encodeURIComponent(id);",
         "var fullUrl = location.pathname.includes('/danji/')"
-        " ? 'https://hwik.kr/danji/' + encodeURIComponent(id) + '.html'"
+        " ? 'https://hwik.kr/danji/' + encodeURIComponent(id)"
         " : 'https://hwik.kr/danji.html?id=' + encodeURIComponent(id);",
     )
 
@@ -245,7 +245,7 @@ def build_fallback_html(d):
             nname = esc(n.get("name", ""))
             nloc = esc(n.get("location", ""))
             lines.append(
-                f'<li><a href="/danji/{nid}.html" style="display:flex;justify-content:space-between;'
+                f'<li><a href="/danji/{nid}" style="display:flex;justify-content:space-between;'
                 f'padding:10px 12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">'
                 f'<span>{nname} <span style="color:#9ca3af;font-size:11px;">{nloc}</span></span>'
                 f'<span style="font-weight:600;">{p}</span></a></li>'
@@ -325,7 +325,7 @@ def build_jsonld(d):
             "itemListElement": [
                 {"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"},
                 {"@type": "ListItem", "position": 2, "name": f"{gu}", "item": f"https://hwik.kr/gu.html?name={gu}"},
-                {"@type": "ListItem", "position": 3, "name": name, "item": f"https://hwik.kr/danji/{did}.html"},
+                {"@type": "ListItem", "position": 3, "name": name, "item": f"https://hwik.kr/danji/{did}"},
             ],
         },
     ]
@@ -377,7 +377,7 @@ def generate_page(d):
     desc_parts.append("아파트 실거래가, 전세가, 시세 추이")
     desc = " ".join(desc_parts)
 
-    canonical = f"https://hwik.kr/danji/{did}.html"
+    canonical = f"https://hwik.kr/danji/{did}"
     jsonld = build_jsonld(d)
     fallback = build_fallback_html(d)
 
