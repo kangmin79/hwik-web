@@ -81,7 +81,7 @@ async function loadData() {
   document.querySelector('meta[name="description"]').content = desc;
   // og:url 업데이트
   const ogUrl = document.getElementById('og-url');
-  if (ogUrl) ogUrl.content = location.pathname.includes('/danji/') ? `https://hwik.kr/danji/${encodeURIComponent(id)}.html` : `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;
+  if (ogUrl) ogUrl.content = location.pathname.includes('/danji/') ? `https://hwik.kr/danji/${encodeURIComponent(id)}` : `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;
   // canonical 재확인 (초기 inline script가 이미 주입했지만, 없으면 추가)
   let canonicalEl = document.getElementById('canonical');
   if (!canonicalEl) {
@@ -90,7 +90,7 @@ async function loadData() {
     canonicalEl.id = 'canonical';
     document.head.appendChild(canonicalEl);
   }
-  canonicalEl.href = location.pathname.includes('/danji/') ? `https://hwik.kr/danji/${encodeURIComponent(id)}.html` : `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;
+  canonicalEl.href = location.pathname.includes('/danji/') ? `https://hwik.kr/danji/${encodeURIComponent(id)}` : `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;
 
   // 거래 데이터 있는 면적 중 84㎡에 가장 가까운 것 선택
   const cats = data.categories || [];
