@@ -1627,17 +1627,16 @@ const Share = (() => {
   async function kakao(cards) {
     cards=cards||Preview.getSelected();if(!cards.length)return;const url=_link(cards),ag=Auth.getAgentInfo();
     const p=cards[0].property||{},title=cards.length===1?`${p.type||''} ${p.price||''} · ${p.complex||p.location||'매물'}`:`매물 ${cards.length}건`;
-    // OG URL을 async 없이 즉시 확인 (getPublicUrl은 동기)
+    // OG 이미지 확보 (없으면 즉시 생성)
     const uid=Auth.user?.id;
     let ogUrl='https://hwik.kr/icon-512.png';
-    if(uid&&Auth.profile?.og_version==='v2b'){
-      const{data}=Auth.sb.storage.from('og-images').getPublicUrl(`agents/${uid}/og.png`);
-      if(data?.publicUrl)ogUrl=data.publicUrl;
-    }
-    // 클릭 직후 즉시 호출 (팝업 허용 컨텍스트 유지)
+    try{
+      const got=await _getOgUrl();
+      if(got)ogUrl=got;
+    }catch(_){}
+    console.log('[Kakao] ogUrl:',ogUrl);
+    // 카카오 공유 호출
     try{if(typeof Kakao!=='undefined'&&Kakao.isInitialized()){Kakao.Share.sendDefault({objectType:'feed',content:{title,description:ag.office||'휙',imageUrl:ogUrl,link:{mobileWebUrl:url,webUrl:url}},buttons:[{title:'매물 보기',link:{mobileWebUrl:url,webUrl:url}}]});closeSheet();
-      // OG 이미지 미생성 시 백그라운드 생성 (다음 공유부터 사용됨)
-      if(uid&&Auth.profile?.og_version!=='v2b')_getOgUrl().catch(()=>{});
       return;}}catch(e){console.warn('Kakao share:',e);}
     await copyLink(cards);try{window.open('kakaotalk://launch','_self');}catch(_){}
   }
