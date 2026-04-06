@@ -481,6 +481,7 @@ function render() {
 
   // 주변 단지 (현재 선택 평형 기준으로 비교)
   const curArea = currentPyeong ? parseInt(currentPyeong) : 84;
+  const curSqmPrice = (saleData && saleData.price && currentPyeong) ? Math.round(saleData.price / parseFloat(currentPyeong)) : 0;
   const nearbyHtml = nearby.map(n => {
     const prices = n.prices || {};
     // 현재 선택 평형에서 가장 가까운 가격 찾기 (±10㎡ 우선, 없으면 가장 가까운 면적)
@@ -504,7 +505,6 @@ function render() {
     }
     // ㎡당 가격 차이 (매매 기준)
     let diffHtml = '';
-    const curSqmPrice = (saleData && saleData.price && currentPyeong) ? Math.round(saleData.price / parseFloat(currentPyeong)) : 0;
     const nearbySqmPrice = (bestPrice && bestExclu) ? Math.round(bestPrice / bestExclu) : 0;
     if (curSqmPrice && nearbySqmPrice) {
       const diff = nearbySqmPrice - curSqmPrice;
@@ -795,6 +795,8 @@ function render() {
 
   // 차트
   drawChart();
+  // render() 재호출 시에도 배지 복원
+  renderRankBadge();
 }
 
 // ── 차트 (scatter — 점 하나 = 실거래 1건) ──
