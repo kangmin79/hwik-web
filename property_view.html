@@ -574,6 +574,14 @@
     </footer>
     
     <script>
+        // ★ 카카오 인앱브라우저 → 외부 브라우저 강제 이동
+        (function() {
+            var ua = navigator.userAgent.toLowerCase();
+            if (ua.indexOf('kakaotalk') > -1) {
+                location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href);
+            }
+        })();
+
         // Supabase 초기화
         const SUPABASE_URL = HWIK_CONFIG.SUPABASE_URL;
         const SUPABASE_KEY = HWIK_CONFIG.SUPABASE_KEY;
