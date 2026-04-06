@@ -1074,6 +1074,7 @@ const Data = (() => {
   }
 
   function triggerAutoMatch(cardId) { fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/auto-match`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({card_id:cardId})}).catch(e=>console.warn('auto-match failed:',e)); }
+  function locateCard(cardId) { fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/locate-card`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({card_id:cardId})}).catch(e=>console.warn('locate-card failed:',e)); }
   async function batchGenerateTags() { try{const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/batch-generate-tags`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY}});return await res.json();}catch(e){return {error:e.message};} }
 
   async function loadCompletedCards() {
@@ -2350,6 +2351,7 @@ const PanelRegister = (() => {
       if(dbErr)throw new Error('저장 실패: '+dbErr.message);
 
       Data.triggerAutoMatch(linkId);
+      Data.locateCard(linkId);
 
       document.getElementById('editModal').classList.remove('show');
       document.getElementById('regResult').innerHTML='<div class="reg-success">✅ 매물 카드가 생성되었습니다!</div>';
@@ -2418,7 +2420,7 @@ const PanelRegister = (() => {
     for(const c of cards){try{const prop={type:c.type,price:c.price,complex:c.complex,location:c.location,area:c.area,floor:c.floor,room:c.room,features:c.features||[],rawText:c.rawText||''};
       const coords=await Data.matchCoords(prop);if(coords.lat){prop.lat=coords.lat;prop.lng=coords.lng;}
       const {data:sv}=await Auth.sb.from('cards').insert({agent_id:Auth.user.id,property:prop,trade_status:'계약가능'}).select('id').single();
-      if(sv)Data.triggerAutoMatch(sv.id);saved++;btn.textContent=`저장 중... (${saved}/${cards.length})`;
+      if(sv){Data.triggerAutoMatch(sv.id);Data.locateCard(sv.id);}saved++;btn.textContent=`저장 중... (${saved}/${cards.length})`;
     }catch(_){}}
     document.getElementById('leaveBanner').style.display='none';Toast.show(`${saved}건 저장 완료`);btn.textContent='전체 저장';btn.disabled=false;fiParsedCards=[];fiDeletedIds=new Set();document.getElementById('fiResults').style.display='none';document.getElementById('fiDirectInput').value='';
     // 저장 직후 태그 즉시 생성 (백그라운드)
@@ -2798,7 +2800,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
     const memoVal=document.getElementById('eMemo')?.value||'';
     const pn={...(c.private_note||{}),memo:memoVal||null};
     await Auth.sb.from('cards').update({property:prop,photos:[...existPhotos,...newUrls],agent_comment:document.getElementById('eComment').value,private_note:pn,price_number:_pf.price_number,deposit:_pf.deposit,monthly_rent:_pf.monthly_rent}).eq('id',id);
-    Data.updateEmbedding(id);Data.triggerAutoMatch(id);
+    Data.updateEmbedding(id);Data.triggerAutoMatch(id);Data.locateCard(id);
     document.getElementById('editModal').classList.remove('show');_editNewPhotos=[];Toast.show('수정 완료');
     await Data.loadMyCards(0,true);renderList();
   }
@@ -3158,8 +3160,9 @@ const PanelClient = (() => {
       const cardData={id:crypto.randomUUID().slice(0,12),agent_id:Auth.user.id,property,contact_name:r.contact_name||null,contact_phone:r.contact_phone||null,embedding:r.embedding||null,search_text:r.search_text||null,search_text_private:r.search_text_private||null,price_number:r.price_number||null,deposit:r.deposit||null,monthly_rent:r.monthly_rent||null,move_in_date:r.move_in_date||null,wanted_trade_type:r.wanted_trade_type||null,wanted_categories:r.wanted_categories||[],wanted_conditions:r.wanted_conditions||[],tags:r.tags||[],trade_status:'계약가능'};
       const {error:dbErr}=await Auth.sb.from('cards').insert([cardData]);
       if(dbErr)throw new Error(dbErr.message);
-      // rawText에서 추가 태그 보완 (비동기, 실패해도 무시)
+      // rawText에서 추가 태그 보완 + 좌표 설정 (비동기, 실패해도 무시)
       _updateClientTags(cardData.id, inp.value.trim());
+      Data.locateCard(cardData.id);
       Toast.show('손님이 등록되었습니다!');
       inp.value='';
       // 등록 영역에 매칭 매물 바로 표시
