@@ -86,7 +86,20 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 .pyeong-row::-webkit-scrollbar { display:none; }
 .pyeong-btn.active { background:var(--yellow); border-color:var(--yellow); color:var(--dark); font-weight:500; }
 
-/* 지표 */
+/* 지표 — 핵심 시세 (리치고 참고) */
+.price-cards { padding:12px 16px; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.price-card { border-radius:12px; padding:16px; transition:all .15s; cursor:default; }
+.price-card.primary { background:#f0f7ff; border:1.5px solid #4a90d9; }
+.price-card.secondary { background:var(--card); border:1.5px solid var(--border); }
+.price-card-label { font-size:11px; color:var(--sub); margin-bottom:6px; font-weight:500; }
+.price-card-value { font-size:22px; font-weight:700; color:var(--dark); line-height:1.2; }
+.price-card-sub { font-size:11px; color:var(--muted); margin-top:4px; }
+.price-card-change { font-size:11px; margin-top:4px; font-weight:500; }
+.price-card-change.down { color:var(--red); }
+.price-card-change.up { color:var(--green); }
+.price-card-change.neutral { color:var(--sub); }
+
+/* 지표 — 보조 (전세가율, ㎡당 등) */
 .metrics { padding:0 16px 12px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
 .metric { background:var(--card); border-radius:var(--radius); padding:12px; transition:all .15s; cursor:default; }
 .metric:hover { box-shadow:0 2px 8px rgba(0,0,0,0.08); transform:translateY(-1px); }
@@ -420,13 +433,14 @@ function render() {
     jeonseRate = Math.round(jeonseData.price / saleData.price * 1000) / 10;
   }
 
-  // 지표 변화량 (역대최고 대비)
+  // 지표 변화량 (역대최고 대비 금액 + %)
   let changeHtml = '';
   if (recentPrice && highPrice) {
     const diff = recentPrice - highPrice;
-    if (diff < 0) changeHtml = `<div class="metric-change down">▼ ${formatPrice(Math.abs(diff))}</div>`;
-    else if (diff > 0) changeHtml = `<div class="metric-change up">▲ ${formatPrice(diff)}</div>`;
-    else changeHtml = `<div class="metric-change neutral">보합</div>`;
+    const pct = Math.round(Math.abs(diff) / highPrice * 1000) / 10;
+    if (diff < 0) changeHtml = `<div class="price-card-change down">최고 대비 -${formatPrice(Math.abs(diff))}(${pct}%)</div>`;
+    else if (diff > 0) changeHtml = `<div class="price-card-change up">최고가 경신</div>`;
+    else changeHtml = `<div class="price-card-change neutral">최고가 동일</div>`;
   }
 
   // 최근 거래 목록 (현재 선택 평형 + 탭 기준)
@@ -642,23 +656,24 @@ function render() {
     ${toggleRowHtml}
     <div class="pyeong-row">${pyeongHtml}</div>
 
-    <!-- 지표 1행: 시세 (월세 탭에서는 숨김) -->
-    ${currentTab !== '월세' ? `<div class="metrics">
-      <div class="metric">
-        <div class="metric-label">최근 실거래</div>
-        <div class="metric-value">${recentPrice ? formatPrice(recentPrice) : '-'}</div>
+    <!-- 핵심 시세 카드 (월세 탭에서는 숨김) -->
+    ${currentTab !== '월세' ? `<div class="price-cards">
+      <div class="price-card primary">
+        <div class="price-card-label">최근 실거래가</div>
+        <div class="price-card-value">${recentPrice ? formatPrice(recentPrice) : '-'}</div>
+        <div class="price-card-sub">${recentData && recentData.floor ? recentData.floor + '층' : ''}${recentData && recentData.date ? ' · ' + recentData.date : ''}</div>
         ${changeHtml}
       </div>
-      <div class="metric">
-        <div class="metric-label">역대 최고가</div>
-        <div class="metric-value">${highPrice ? formatPrice(highPrice) : '-'}</div>
-        <div class="metric-change neutral">${highData && highData.date ? highData.date : ''}</div>
+      <div class="price-card secondary">
+        <div class="price-card-label">역대 최고가</div>
+        <div class="price-card-value">${highPrice ? formatPrice(highPrice) : '-'}</div>
+        <div class="price-card-sub">${highData && highData.floor ? highData.floor + '층' : ''}${highData && highData.date ? ' · ' + highData.date : ''}</div>
       </div>
-      <div class="metric">
-        <div class="metric-label">전세가율</div>
-        <div class="metric-value">${jeonseRate ? jeonseRate + '%' : '-'}</div>
-      </div>
-    </div>` : ''}
+    </div>
+    ${jeonseRate ? `<div class="metrics"><div class="metric" style="grid-column:span 3;text-align:center;">
+      <div class="metric-label">전세가율</div>
+      <div class="metric-value" style="font-size:18px;font-weight:600;">${jeonseRate}%</div>
+    </div></div>` : ''}` : ''}
     <!-- 지표 2행: ㎡당 가격 + 주차 + 최고층/세대수 (월세 탭에서는 숨김) -->
     ${currentTab === '월세' ? '' : (() => {
       const cells = [];
