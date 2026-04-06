@@ -4119,7 +4119,11 @@ const App = {
     try{await Data.loadCounts();}catch(e){console.error('loadCounts failed:',e);}
     Hub.render();
     // 카카오 초기화
-    try{if(typeof Kakao!=='undefined'&&!Kakao.isInitialized())Kakao.init(HWIK_CONFIG.KAKAO_JS_KEY);}catch(_){}
+    try{
+      if(typeof Kakao==='undefined'){console.warn('[Kakao] SDK 로드 안됨');}
+      else if(!Kakao.isInitialized()){Kakao.init(HWIK_CONFIG.KAKAO_JS_KEY);console.log('[Kakao] init 완료, key:',HWIK_CONFIG.KAKAO_JS_KEY);}
+      else{console.log('[Kakao] 이미 초기화됨');}
+    }catch(e){console.error('[Kakao] init 오류:',e);}
     // 최초 사용자 프로필 설정 자동 트리거
     if(Auth.profile&&!Auth.profile.business_name) Hub._openMyInfo();
     // ?edit=id 파라미터 처리
