@@ -1588,8 +1588,9 @@ const Share = (() => {
 
   function _link(cards) {
     cards=cards||Preview.getSelected();if(!cards.length)return '';
-    if(cards.length===1){const lid=cards[0].id;return `https://hwik.kr/property_view.html?id=${lid}`;}
-    return `https://hwik.kr/property_view.html?id=${cards.map(c=>c.id).join(',')}&agent=${Auth.user?.id||''}`;
+    const agentParam=Auth.user?'&agent='+Auth.user.id:'';
+    if(cards.length===1) return `https://hwik.kr/property_view.html?id=${cards[0].id}${agentParam}`;
+    return `https://hwik.kr/property_view.html?ids=${cards.map(c=>c.id).join(',')}${agentParam}`;
   }
 
   async function copyLink(cards) {
@@ -1625,18 +1626,24 @@ const Share = (() => {
   }
 
   async function kakao(cards) {
-    cards=cards||Preview.getSelected();if(!cards.length)return;const url=_link(cards),ag=Auth.getAgentInfo();
-    const p=cards[0].property||{},title=cards.length===1?`${p.type||''} ${p.price||''} · ${p.complex||p.location||'매물'}`:`매물 ${cards.length}건`;
+    cards=cards||Preview.getSelected();if(!cards.length)return;
+    const url=_link(cards),ag=Auth.getAgentInfo();
+    const p=cards[0].property||{};
+    const firstComplex=p.complex||p.location||'매물';
+    const title=cards.length===1?`${firstComplex} 매물 1개`:`${firstComplex} 외 매물 ${cards.length}개`;
+    const desc=cards.length===1
+      ?[p.type,p.price,p.area,p.floor].filter(Boolean).join(' · ')
+      :cards.map(c=>`${c.property?.type||''} ${c.property?.price||''} ${c.property?.complex||c.property?.location||''}`).join('\n');
+    // 시트 먼저 닫기 (사용자 제스처 컨텍스트 유지)
+    closeSheet();
     // OG 이미지 확보 (없으면 즉시 생성)
-    const uid=Auth.user?.id;
-    let ogUrl='https://hwik.kr/icon-512.png';
-    try{
-      const got=await _getOgUrl();
-      if(got)ogUrl=got;
-    }catch(_){}
-    console.log('[Kakao] ogUrl:',ogUrl);
+    const imageUrl=await _getOgUrl().catch(()=>null);
+    console.log('[Kakao] ogUrl:',imageUrl,'link:',url);
     // 카카오 공유 호출
-    try{if(typeof Kakao!=='undefined'&&Kakao.isInitialized()){const content={title,description:ag.office||'휙',imageUrl:ogUrl,imageWidth:800,imageHeight:420,link:{mobileWebUrl:url,webUrl:url}};Kakao.Share.sendDefault({objectType:'feed',content,buttons:[{title:'매물 보기',link:{mobileWebUrl:url,webUrl:url}}]});closeSheet();
+    try{if(typeof Kakao!=='undefined'&&Kakao.isInitialized()){
+      const content={title,description:desc,link:{mobileWebUrl:url,webUrl:url}};
+      if(imageUrl){content.imageUrl=imageUrl;content.imageWidth=800;content.imageHeight=420;}
+      Kakao.Share.sendDefault({objectType:'feed',content,buttons:[{title:'카드로 보기',link:{mobileWebUrl:url,webUrl:url}}]});
       return;}}catch(e){console.warn('Kakao share:',e);}
     await copyLink(cards);try{window.open('kakaotalk://launch','_self');}catch(_){}
   }
