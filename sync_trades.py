@@ -988,7 +988,7 @@ def generate_sitemap(danji_list: list):
 
     urls = []
     # 정적 페이지 (priority/changefreq 제거 — Google이 무시함)
-    for path in ['/', '/gu.html', '/about.html', '/ranking.html']:
+    for path in ['/', '/gu.html', '/about.html', '/ranking.html', '/ranking.html?region=incheon', '/ranking.html?region=gyeonggi', '/ranking.html?region=all']:
         urls.append(f'  <url><loc>{base}{path}</loc><lastmod>{today}</lastmod></url>')
 
     # 구/시 목록 페이지 (서울+인천+경기 전체)
