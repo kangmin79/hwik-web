@@ -408,15 +408,6 @@ body.dark .phone-screen{background:#0f172a;}
 .timeline{padding:8px 0;}
 .tl-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:10px;margin-bottom:6px;}
 .tl-tag{padding:3px 10px;border-radius:8px;font-size:10px;font-weight:700;flex-shrink:0;margin-top:2px;}
-.tl-tag.상담{background:rgba(96,165,250,0.1);color:#60a5fa;}
-.tl-tag.방문{background:rgba(74,222,128,0.1);color:#4ade80;}
-.tl-tag.매물소개{background:rgba(251,146,60,0.1);color:#fb923c;}
-.tl-tag.계약{background:rgba(248,113,113,0.1);color:#f87171;}
-.tl-tag.서류{background:rgba(139,92,246,0.1);color:#8b5cf6;}
-.tl-tag.대출{background:rgba(14,165,233,0.1);color:#0ea5e9;}
-.tl-tag.세금{background:rgba(234,179,8,0.1);color:#ca8a04;}
-.tl-tag.정산{background:rgba(16,185,129,0.1);color:#10b981;}
-.tl-tag.메모{background:rgba(148,163,184,0.06);color:#94a3b8;}
 .tl-body{flex:1;}
 .tl-text{font-size:13px;font-weight:500;}
 .tl-date{font-size:11px;color:var(--text-light);margin-top:1px;}
@@ -1093,6 +1084,36 @@ const Data = (() => {
 
   return { cache, PAGE, loadCounts, loadMyCards, loadClientCards, loadClientDetail, loadRooms, loadSharedCards, loadPendingInvites, createRoom, deleteRoom, renameRoom, leaveRoom, inviteMember, acceptInvite, rejectInvite, shareCardToRoom, unshareCard, deleteCard, updateTradeStatus, uploadPhotos, _resize, loadAlerts, loadCalendarAlerts, loadMemos, deleteMemo, markMemoRead, saveClientNote, deleteClientNote, updateNoteAlertDone, matchCoords, parseSinglePrice, parsePriceFields, updateEmbedding, updateClientLocation, triggerAutoMatch, loadCompletedCards, batchGenerateTags };
 })();
+
+// ── 공통 태그 스타일 (어디서든 동일하게) ──
+const TAG_STYLES = {
+  // 상담 유형
+  '전화':    {bg:'rgba(96,165,250,0.12)',  color:'#2563eb'},
+  '카톡':    {bg:'rgba(34,197,94,0.12)',   color:'#15803d'},
+  '방문':    {bg:'rgba(167,139,250,0.12)', color:'#6d28d9'},
+  '매물소개': {bg:'rgba(251,146,60,0.12)',  color:'#c2410c'},
+  '가계약':  {bg:'rgba(245,158,11,0.12)',  color:'#b45309'},
+  '계약':    {bg:'rgba(239,68,68,0.12)',   color:'#dc2626'},
+  '잔금':    {bg:'rgba(234,179,8,0.12)',   color:'#a16207'},
+  '메모':    {bg:'rgba(148,163,184,0.10)', color:'#64748b'},
+  // 손님 상태
+  '탐색중':  {bg:'rgba(96,165,250,0.12)',  color:'#2563eb'},
+  '급해요':  {bg:'rgba(239,68,68,0.12)',   color:'#dc2626'},
+  '협의중':  {bg:'rgba(245,158,11,0.12)',  color:'#b45309'},
+  '계약완료': {bg:'rgba(34,197,94,0.12)',   color:'#15803d'},
+  '연락두절': {bg:'rgba(148,163,184,0.10)', color:'#64748b'},
+  // 하위 호환 (구 태그명)
+  '상담':    {bg:'rgba(96,165,250,0.12)',  color:'#2563eb'},
+  '서류':    {bg:'rgba(139,92,246,0.12)',  color:'#7c3aed'},
+  '대출':    {bg:'rgba(14,165,233,0.12)',  color:'#0284c7'},
+  '세금':    {bg:'rgba(234,179,8,0.12)',   color:'#a16207'},
+  '정산':    {bg:'rgba(16,185,129,0.12)',  color:'#047857'},
+  '신규':    {bg:'rgba(99,102,241,0.12)',  color:'#4f46e5'},
+};
+function renderTag(type, extraStyle=''){
+  const s=TAG_STYLES[type]||TAG_STYLES['메모'];
+  return `<span class="tl-tag" style="background:${s.bg};color:${s.color};${extraStyle}">${esc(type)}</span>`;
+}
 
 // 손님이 찾는 매물 유형 라벨 (예: "상가 월세", "아파트 전세")
 const _catKo={'apartment':'아파트','officetel':'오피스텔','room':'원투룸','commercial':'상가','office':'사무실'};
@@ -1957,10 +1978,9 @@ const Hub = (() => {
     const conds=[wantLbl!=='손님'?wantLbl:null,p.price,p.location,p.area].filter(Boolean).map(v=>esc(v)).join(' · ');
 
     // 마지막 메모에서 상태 판별
-    const stageMap={'메모':{color:'#6366f1',label:'신규'},'상담':{color:'#60a5fa',label:'상담'},'방문':{color:'#f59e0b',label:'방문'},'매물소개':{color:'#a78bfa',label:'소개'},'계약':{color:'#ef4444',label:'계약'}};
     const notes=current._notes||[];
     const lastNote=notes[0];
-    const stage=lastNote?(stageMap[lastNote.type]||stageMap['메모']):stageMap['메모'];
+    const stage=PanelClient._stageTag(lastNote?.type);
     const dateStr=card.created_at?new Date(card.created_at).toLocaleDateString('ko-KR'):'';
 
     activePanel='cl_card';
@@ -3088,7 +3108,7 @@ const PanelClient = (() => {
         const content=n.content||'';const isLong=content.length>30;
         const relCard=n.related_card_id&&matchMap[n.related_card_id]?`<div style="font-size:10px;color:#6366f1;margin-top:2px;padding:2px 6px;border-radius:4px;background:rgba(99,102,241,0.08);display:inline-block;">🏠 ${esc(matchMap[n.related_card_id])}</div>`:'';
         h+=`<div class="tl-item" style="${done||past?'opacity:0.5;':''}${isLong?'cursor:pointer;':''}" ${isLong?`onclick="var d=document.getElementById('tl-detail-${n.id}');if(d)d.style.display=d.style.display==='none'?'':'none';"`:''}>
-          <span class="tl-tag ${t}">${t}</span><div class="tl-body" style="flex:1;"><div class="tl-text" style="${done?'text-decoration:line-through;':''}${isLong?'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px;':''}">${esc(content)}</div>${relCard}<div class="tl-date">${ds}${as}${done?' ✅ 완료':''}</div>
+          ${renderTag(t)}<div class="tl-body" style="flex:1;"><div class="tl-text" style="${done?'text-decoration:line-through;':''}${isLong?'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px;':''}">${esc(content)}</div>${relCard}<div class="tl-date">${ds}${as}${done?' ✅ 완료':''}</div>
           ${isLong?`<div id="tl-detail-${n.id}" style="display:none;margin-top:8px;padding:10px;border-radius:8px;background:var(--bg-input);font-size:13px;white-space:pre-wrap;color:var(--text);" onclick="event.stopPropagation();">${esc(content)}</div>`:''}
           </div><div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation();">${n.alert_date&&!n.alert_done?`<button class="tl-done-btn" onclick="PanelClient.noteDone('${n.id}','${card.id}')">완료</button>`:''}<button class="tl-delete-btn" onclick="PanelClient.noteDel('${n.id}','${card.id}')">삭제</button></div></div>`;});h+='</div>';}
       el.innerHTML=h;
@@ -3270,13 +3290,11 @@ const PanelClient = (() => {
     _renderItems([...contractCards,...recentCards,...restCards], recentCards.length, contractCards.length, noteMap);
   }
 
-  const _stageMap={
-    '메모':{color:'#6366f1',bg:'rgba(99,102,241,0.1)',label:'신규'},
-    '상담':{color:'#60a5fa',bg:'rgba(96,165,250,0.1)',label:'상담'},
-    '방문':{color:'#f59e0b',bg:'rgba(245,158,11,0.1)',label:'방문'},
-    '매물소개':{color:'#a78bfa',bg:'rgba(167,139,250,0.1)',label:'소개'},
-    '계약':{color:'#ef4444',bg:'rgba(248,113,113,0.1)',label:'계약'},
-  };
+  function _stageTag(lastNoteType){
+    const t=lastNoteType||'메모';
+    const s=TAG_STYLES[t]||TAG_STYLES['메모'];
+    return {color:s.color, bg:s.bg, label:t==='메모'?'신규':t};
+  }
 
   async function _renderItems(cards, recentCount, contractCount=0, noteMapFromList=null){const el=document.getElementById('clList');if(!el)return;if(!cards.length){el.innerHTML='<div class="empty"><div class="empty-icon">🙋</div>손님이 없어요</div>';return;}
     // 마지막 메모: _renderList에서 전달받으면 재사용, 아니면 조회
@@ -3297,7 +3315,7 @@ const PanelClient = (() => {
       const p=c.property||{},name=c.contact_name||p.location||p.complex||'손님',conds=[p.price,p.location,p.complex,p.area].filter(Boolean).map(v=>esc(v)).join(' · ');
       // 상태 색상 (마지막 메모 타입 기반)
       const lastNote=lastNotes[c.id];
-      const stage=lastNote?(_stageMap[lastNote.type]||_stageMap['메모']):_stageMap['메모'];
+      const stage=_stageTag(lastNote?.type);
       // 마지막 연락 표시
       let lastStr='';
       if(lastNote){const diff=Math.floor((Date.now()-new Date(lastNote.created_at))/(1000*60*60*24));
@@ -3345,7 +3363,7 @@ const PanelClient = (() => {
         const done=n.alert_date&&n.alert_done;const past=!n.alert_date;
         const content=n.content||'';const isLong=content.length>40;
         h+=`<div class="tl-item" style="${done||past?'opacity:0.5;':''}${isLong?'cursor:pointer;':''}" ${isLong?`onclick="var d=document.getElementById('tl-detail-${n.id}');if(d)d.style.display=d.style.display==='none'?'':'none';"`:''}>
-          <span class="tl-tag ${t}">${t}</span>
+          ${renderTag(t)}
           <div class="tl-body" style="flex:1;">
             <div class="tl-text" style="${done?'text-decoration:line-through;':''}${isLong?'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:600px;':''}">${esc(content)}</div>
             <div class="tl-date">${ds}${as}${done?' ✅ 완료':''}</div>
@@ -3370,15 +3388,14 @@ const PanelClient = (() => {
   function _parseNote(text){
     const r={type:'메모',content:text,alert_date:null,hasTime:false,timeStr:'',urgent:false};if(!text)return r;
     const t=text;
-    // 타입 판별 (우선순위: 계약 > 서류 > 대출 > 방문 > 상담 > 매물소개)
-    if(/계약|사인|도장|잔금|입금|중도금|계약금|특약|날인|가계약|배액|계약서/.test(t))r.type='계약';
-    else if(/등기|등기부|인감증명|건축물대장|확정일자|전입신고|HUG|전세보증보험|전세권|소유권이전|말소|등기필증|권리증|자금조달|자금계획서|자금출처|거래신고|실거래신고/.test(t))r.type='서류';
-    else if(/대출|은행|디딤돌|버팀목|신생아특례|LTV|대출실행|대출승인|대출상담|담보대출|신용대출|사업자대출|주담대|전세대출|중도상환|상환/.test(t))r.type='대출';
-    else if(/법무사|취득세|양도세|실거래신고|인지세|종부세|세금|증여세|상속세|재산세|부가세/.test(t))r.type='세금';
-    else if(/관리비정산|공과금|복비|중개수수료|열쇠인수|열쇠|정산|잔금정산/.test(t))r.type='정산';
-    else if(/방문|현장|보러|봤|투어|임장|이사|입주|퇴거|명도|인도/.test(t))r.type='방문';
-    else if(/상담|전화|통화|연락|문의|콜백|콜|부재|재연락|답장|회신|문자|전달/.test(t))r.type='상담';
-    else if(/보내|전송|카톡|소개|공유|휙/.test(t))r.type='매물소개';
+    // 타입 판별 (우선순위: 잔금 > 계약 > 가계약 > 방문 > 매물소개 > 카톡 > 전화 > 메모)
+    if(/잔금|이사|입주|잔금정산|열쇠인수|명도|인도|퇴거/.test(t))r.type='잔금';
+    else if(/계약서|사인|도장|계약금|중도금|특약|날인|배액|서류|등기|인감|확정일자|전입신고|HUG|전세보증|거래신고|실거래신고|법무사|취득세|양도세|권리증|자금조달/.test(t))r.type='계약';
+    else if(/가계약|구두계약|예약금|선입금/.test(t))r.type='가계약';
+    else if(/방문|현장|보러|봤|투어|임장/.test(t))r.type='방문';
+    else if(/보내|전송|소개|공유|휙|링크|카드/.test(t))r.type='매물소개';
+    else if(/카톡|문자|톡|메시지|답장|회신/.test(t))r.type='카톡';
+    else if(/전화|통화|연락|콜백|콜|부재|재연락|문의/.test(t))r.type='전화';
     // 긴급
     if(/급|빨리|긴급|ASAP|당장|즉시|최대한\s*빨리/.test(t))r.urgent=true;
     // 시간 파싱
@@ -3440,8 +3457,7 @@ const PanelClient = (() => {
   function pvNote(text){const el=document.getElementById('notePv');if(!el)return;if(!text.trim()){el.style.display='none';return;}
     const p=_parseNote(text),parts=[];
     if(p.urgent)parts.push('<span style="color:#ef4444;">🔴 긴급</span>');
-    const tc={'방문':'#4ecdc4','상담':'#60a5fa','계약':'#f59e0b','매물소개':'#a78bfa','서류':'#8b5cf6','대출':'#0ea5e9','세금':'#ca8a04','정산':'#10b981','메모':'#64748b'};
-    parts.push(`<span style="color:${tc[p.type]}">${p.type}</span>`);
+    parts.push(renderTag(p.type));
     if(p.alert_date){const d=new Date(p.alert_date),days=['일','월','화','수','목','금','토'];parts.push(`<span style="color:#facc15;">📅 ${d.getMonth()+1}/${d.getDate()}(${days[d.getDay()]})${p.hasTime?' '+p.timeStr:''}</span>`);}
     el.innerHTML=parts.join(' · ');el.style.display='';}
 
@@ -3568,7 +3584,7 @@ const PanelClient = (() => {
     if(Hub.current?.data?.id===cardId){Hub.current.data.contact_name=name;Hub.current.data.contact_phone=phone;}
   }
 
-  return { render, registerClient, toggleReg, _addRecent, setFilter, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact, selectClient, closeDetail, detailTab, toggleMatchSel, _hasSelectedClient };
+  return { render, registerClient, toggleReg, _addRecent, setFilter, setTradeFilter, setCatFilter, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact, selectClient, closeDetail, detailTab, toggleMatchSel, _hasSelectedClient, _stageTag };
 })();
 
 /* ═══════════════════════════════════════════════════════════
@@ -3913,7 +3929,7 @@ const PanelAlert = (() => {
       const done=a.alert_done;
       const clientName=clientMap[a.client_card_id]||'';
       h+=`<div class="tl-item" style="${done?'opacity:0.5;':''}cursor:pointer;" onclick="PanelAlert.goToClient('${a.client_card_id}')">
-        <span class="tl-tag ${a.type||'메모'}">${a.type||'메모'}</span>
+        ${renderTag(a.type||'메모')}
         <div style="flex:1;">
           ${clientName?`<div style="font-size:11px;font-weight:700;color:var(--primary);margin-bottom:2px;">🙋 ${esc(clientName)}</div>`:''}
           <div class="tl-text" style="${done?'text-decoration:line-through;':''}">${esc(a.content||'')}</div>
