@@ -1043,7 +1043,7 @@ const Data = (() => {
       const embedText=[p.type,p.price,p.location,p.complex,p.area,...(p.features||[]),memo,...noteTexts].filter(Boolean).join(' ');
       const {data:sess}=await sb().auth.getSession();if(!sess?.session?.access_token)return;
       await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/embed-card`,{method:'POST',headers:{'Authorization':'Bearer '+sess.session.access_token,'Content-Type':'application/json','apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({card_id:cardId,text:embedText})});
-    }catch(_){}
+    }catch(e){console.warn('updateEmbedding:',e)}
   }
 
   // ── 손님 위치 자동 감지 ──
@@ -3578,7 +3578,7 @@ const PanelClient = (() => {
       // 좌표 없으면 구 좌표 설정
       if(!card.lat&&guM&&_guCoords[guM[1]]){updates.lat=_guCoords[guM[1]].lat;updates.lng=_guCoords[guM[1]].lng;}
       await Auth.sb.from('cards').update(updates).eq('id',cardId);
-    }catch(_){}
+    }catch(e){console.warn('updateClientTags:',e)}
   }
 
   async function saveNote(cardId){const inp=document.getElementById('noteIn');if(!inp?.value?.trim())return;const p=_parseNote(inp.value.trim());
@@ -4173,7 +4173,7 @@ async function _batchMatchClients(){
     for(const c of clients){Data.triggerAutoMatch(c.id);}
     localStorage.setItem(key,'1');
     console.log(`배치 매칭: 손님 ${clients.length}명 실행`);
-  }catch(_){}
+  }catch(e){console.warn('batchMatch:',e)}
 }
 
 function _startAlertPolling(){
@@ -4293,7 +4293,7 @@ async function _bgCheckMatches(){
       Data.updateEmbedding(c.id);
       await new Promise(r=>setTimeout(r,2000));
     }
-  }catch(_){}
+  }catch(e){console.warn('bgEmbed:',e)}
 }
 
 // ── PWA 설치 ──
