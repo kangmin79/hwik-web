@@ -975,21 +975,23 @@
         // ===== memo 템플릿 (사진 있는 카드) =====
         function buildMemoCard(ctx) {
             const { type, price, name, location, area, floor, features, agentName, agentPhone, agentPhoto, photos, agentComment } = ctx;
-            const hasComment = !!agentComment;
-            const totalSlides = photos.length + (hasComment ? 1 : 0);
+            const totalSlides = photos.length;
             const specs = [floor, ...features].filter(Boolean);
             const cardNameStr = [location, name, area].filter(Boolean).join(' · ');
-
             const slidesHtml = photos.map((url, i) =>
                 `<img class="photo-slide" src="${esc(url)}" loading="${i === 0 ? 'eager' : 'lazy'}" fetchpriority="${i === 0 ? 'high' : 'auto'}">`
-            ).join('') + (hasComment ? `<div class="photo-slide" style="min-width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#0d1117,#151c27);padding:32px;">
-                <div style="text-align:center;">
-                  <div style="font-family:'Noto Serif KR',serif;font-size:72px;color:rgba(255,255,255,0.08);line-height:0.6;margin-bottom:20px;">"</div>
-                  <div style="font-family:'Noto Serif KR',serif;font-size:16px;color:rgba(255,255,255,0.9);line-height:1.9;word-break:keep-all;">${esc(agentComment).replace(/\n/g,'<br>')}</div>
-                </div>
-              </div>` : '');
+            ).join('');
 
             const specsHtml = specs.map(s => `<span class="card-info-spec">${s}</span>`).join('');
+
+            const commentHtml = agentComment ? `
+              <div style="margin:16px 16px 0;padding:18px 20px;background:#f8f8f6;border-radius:16px;position:relative;">
+                <div style="font-size:11px;font-weight:600;color:#6366f1;margin-bottom:8px;display:flex;align-items:center;gap:5px;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                  ${esc(agentName)}
+                </div>
+                <div style="font-size:14px;color:#334155;line-height:1.8;white-space:pre-wrap;word-break:keep-all;">${esc(agentComment).replace(/\n/g,'<br>')}</div>
+              </div>` : '';
 
             const cardHtml = `
               <div class="card card-full" id="activeCard" data-template="memo" data-total="${totalSlides}" onclick="_onCardTap(event)">
@@ -1004,7 +1006,8 @@
                   <div class="card-info-name">${cardNameStr}</div>
                   ${specsHtml ? `<div class="card-info-specs">${specsHtml}</div>` : ''}
                 </div>
-              </div>`;
+              </div>
+              ${commentHtml}`;
             // 하단 고정 바 렌더
             _renderFixedBar(agentName, agentPhone, agentPhoto);
             return cardHtml;
