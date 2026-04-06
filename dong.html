@@ -113,6 +113,7 @@ async function loadData() {
   const { data, error } = await sb.from('danji_pages')
     .select('id,complex_name,location,categories,recent_trade,all_time_high,jeonse_rate,total_units,build_year,nearby_subway,nearby_school')
     .ilike('location', loc + '%')
+    .not('id', 'like', 'offi-%')
     .order('complex_name');
 
   if (error || !data || data.length === 0) {
