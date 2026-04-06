@@ -90,7 +90,7 @@ async function loadData() {
     .select('id,complex_name,location,categories,recent_trade,jeonse_rate,total_units,build_year');
 
   if (gu) query = query.ilike('location', gu + '%');
-  query = query.order('complex_name').limit(2000);
+  query = query.not('id', 'like', 'offi-%').order('complex_name').limit(2000);
 
   const { data, error } = await query;
   if (error || !data) { document.getElementById('app').innerHTML = '<div class="loading"><div>데이터 로드 실패</div></div>'; return; }
