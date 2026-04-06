@@ -1,0 +1,31 @@
+name: 주간 미매칭 키워드 리포트
+
+on:
+  schedule:
+    # 매주 일요일 새벽 3시 (KST) = 토요일 UTC 18:00
+    - cron: '0 18 * * 6'
+  workflow_dispatch:
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 미매칭 키워드 리포트 조회
+        run: |
+          RESPONSE=$(curl -s -X POST \
+            "https://jqaxejgzkchxbfzgzyzi.supabase.co/functions/v1/weekly-keyword-report" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Content-Type: application/json")
+
+          echo "=== 주간 미매칭 키워드 리포트 ==="
+          echo "$RESPONSE" | jq '.'
+
+          # 키워드가 있으면 요약 출력
+          COUNT=$(echo "$RESPONSE" | jq '.unique_keywords // 0')
+          TOTAL=$(echo "$RESPONSE" | jq '.total_unmatched // 0')
+          echo ""
+          echo "📊 고유 키워드: ${COUNT}개 / 총 발생: ${TOTAL}건"
+          echo ""
+          echo "🔝 상위 키워드:"
+          echo "$RESPONSE" | jq -r '.top_keywords[:20][] | "  \(.count)회 — \(.keyword)"'

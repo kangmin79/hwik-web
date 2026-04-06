@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from 'jsr:@supabase/supabase-js@2'
-import { generateTags, extractExcludedTags, extractRequiredTags } from '../_shared/tags.ts'
+import { generateTags, extractExcludedTags, extractRequiredTags, extractUnmatchedKeywords } from '../_shared/tags.ts'
 import { getAuthUserId } from '../_shared/auth.ts'
 
 const corsHeaders = {
@@ -131,6 +131,18 @@ Deno.serve(async (req) => {
           .update(updateData)
           .eq('id', card.id);
         if (!updateErr) updated++;
+
+        // 미매칭 키워드 로깅
+        const unmatched = extractUnmatchedKeywords(card, tags);
+        if (unmatched.length) {
+          const rows = unmatched.map(kw => ({
+            keyword: kw,
+            source: 'feature',
+            agent_id,
+            card_id: card.id,
+          }));
+          await supabase.from('unmatched_keywords').insert(rows);
+        }
       }
     }
 

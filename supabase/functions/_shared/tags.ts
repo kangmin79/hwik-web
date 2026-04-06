@@ -86,6 +86,15 @@ export const SYNONYM_MAP: Record<string, string> = {
   '의원':'병원근처','약국근처':'병원근처',
   '반려동물':'애견가능','펫':'애견가능','고양이':'애견가능','캣프렌들리':'애견가능',
   '협의가능':'입주협의',
+  // 특수조건
+  '여자전용':'여성전용','여성만':'여성전용','여자만':'여성전용',
+  '세탁기':'세탁기포함','세탁':'세탁기포함','드럼세탁기':'세탁기포함',
+  '건조기':'건조기포함',
+  '파티룸':'파티룸','공용라운지':'공용시설','커뮤니티':'공용시설','피트니스':'공용시설','헬스장':'공용시설',
+  '쿡세권':'쿡세권','맛집많은':'쿡세권','먹자골목':'쿡세권',
+  '테라스':'테라스','발코니':'테라스',
+  '다락':'다락방','다락방':'다락방',
+  '방음':'방음좋음','층간소음':'방음좋음',
   // 상가
   '전면':'전면넓음','전면광고':'전면넓음',
   '코너상가':'코너자리','모퉁이':'코너자리',
@@ -295,6 +304,16 @@ function extractFromText(text: string): string[] {
   if (/맥세권|맥도날드/.test(t)) tags.push('맥세권');
   if (/스세권|별세권|스타벅스/.test(t)) tags.push('스세권');
   if (/몰세권|쇼핑몰|대형마트/.test(t)) tags.push('몰세권');
+  // 특수조건
+  if (/여성\s*전용|여자\s*전용|여성만|여자만/.test(t)) tags.push('여성전용');
+  if (/세탁기|드럼세탁/.test(t)) tags.push('세탁기포함');
+  if (/건조기/.test(t)) tags.push('건조기포함');
+  if (/파티룸/.test(t)) tags.push('파티룸');
+  if (/피트니스|헬스장|커뮤니티|공용\s*라운지/.test(t)) tags.push('공용시설');
+  if (/쿡세권|맛집\s*많|먹자골목/.test(t)) tags.push('쿡세권');
+  if (/테라스|발코니/.test(t)) tags.push('테라스');
+  if (/다락/.test(t)) tags.push('다락방');
+  if (/방음|층간\s*소음/.test(t)) tags.push('방음좋음');
   // 가격
   if (/네고|가격\s*조절|협의\s*가능/.test(t)) tags.push('가격협의');
   return tags;
@@ -529,20 +548,59 @@ export function extractRequiredTags(text: string, tags: string[]): string[] {
 // ═══════════════════════════════════════════════════════════
 export function extractExcludedTags(text: string): string[] {
   const excluded: string[] = [];
-  const patterns = [
-    /반지하\s*(?:빼고|싫|안돼|제외|말고|NO)/i,
-    /옥탑\s*(?:빼고|싫|안돼|제외|말고|NO)/i,
-    /1층\s*(?:빼고|싫|안돼|제외|말고|NO)/i,
-    /저층\s*(?:빼고|싫|안돼|제외|말고|NO)/i,
-    /북향\s*(?:빼고|싫|안돼|제외|말고|NO)/i,
-    /복도식\s*(?:빼고|싫|안돼|제외|말고|NO)/i,
-  ];
   const tagMap: Record<string, string> = {
-    '반지하':'반지하','옥탑':'옥탑','1층':'1층','저층':'저층','북향':'북향','복도식':'복도식'
+    '반지하':'반지하','옥탑':'옥탑','1층':'1층','저층':'저층',
+    '북향':'북향','복도식':'복도식','고시원':'고시원','지하':'반지하',
+    '탑층':'옥탑','고층':'고층','구축':'구축',
   };
+  const negWords = '빼고|싫|안돼|안됨|제외|말고|NO|안되|빼|빼주|금지|불가|싫어|싫고|안되고|절대';
   for (const [keyword, tag] of Object.entries(tagMap)) {
-    const re = new RegExp(`${keyword}\\s*(?:빼고|싫|안돼|안됨|제외|말고|NO|안되|빼|빼주)`, 'i');
-    if (re.test(text)) excluded.push(tag);
+    // 패턴1: "고시원은 싫고", "반지하 빼고" (keyword + 부정어)
+    const re1 = new RegExp(`${keyword}[은는도]?\\s*(?:${negWords})`, 'i');
+    // 패턴2: "싫어요 고시원", "제외 반지하" (부정어 + keyword) — 드물지만 커버
+    const re2 = new RegExp(`(?:${negWords})\\s*${keyword}`, 'i');
+    if (re1.test(text) || re2.test(text)) {
+      if (!excluded.includes(tag)) excluded.push(tag);
+    }
   }
   return excluded;
+}
+
+// ═══════════════════════════════════════════════════════════
+// 미매칭 키워드 추출 — SYNONYM_MAP/표준태그에 없는 features 감지
+// ═══════════════════════════════════════════════════════════
+const STANDARD_TAGS = new Set([
+  ...Object.values(SYNONYM_MAP),
+  ...Object.keys(SYNONYM_MAP),
+  '매매','전세','월세','반전세','손님',
+  '아파트','오피스텔','원투룸','상가','사무실','빌라','원룸','투룸','쓰리룸',
+  '남향','동향','서향','북향','남동향','남서향','북동향','북서향',
+  '신축','깨끗한','올수리','부분수리','리모델링','풀옵션',
+  '즉시입주','입주협의','주차가능','엘리베이터',
+]);
+
+// 무시할 짧은/일반 단어
+const IGNORE_WORDS = new Set([
+  '있음','없음','가능','불가','좋음','나쁨','보통','확인','필요','포함',
+  '이상','이하','이내','정도','약간','매우','조금','많이','근처','부근',
+]);
+
+export function extractUnmatchedKeywords(card: any, tags: string[]): string[] {
+  const unmatched: string[] = [];
+  const p = card.property || {};
+  const features = p.features || [];
+  const tagSet = new Set(tags);
+
+  for (const f of features) {
+    const trimmed = f.trim();
+    if (!trimmed || trimmed.length < 2) continue;
+    if (trimmed.startsWith('제외:')) continue;
+    if (STANDARD_TAGS.has(trimmed)) continue;
+    if (tagSet.has(trimmed)) continue;
+    if (IGNORE_WORDS.has(trimmed)) continue;
+    // SYNONYM_MAP value에 있으면 이미 매칭된 것
+    if (Object.values(SYNONYM_MAP).includes(trimmed)) continue;
+    unmatched.push(trimmed);
+  }
+  return [...new Set(unmatched)];
 }
