@@ -2921,14 +2921,19 @@ const PanelClient = (() => {
       </div>
       <div>
         <div class="search"><input type="text" id="clQ" onkeydown="if(event.key==='Enter')PanelClient.onQEnter()"></div>
-        <div style="display:flex;gap:4px;margin:-8px 0 12px;flex-wrap:wrap;overflow-x:auto;">
-          <button class="filter-btn active" onclick="PanelClient.setFilter('')">전체</button>
-          <button class="filter-btn" onclick="PanelClient.setFilter('매매')">매매</button>
-          <button class="filter-btn" onclick="PanelClient.setFilter('전세')">전세</button>
-          <button class="filter-btn" onclick="PanelClient.setFilter('월세')">월세</button>
-          <button class="filter-btn" onclick="PanelClient.setFilter('apartment')">아파트</button>
-          <button class="filter-btn" onclick="PanelClient.setFilter('officetel')">오피스텔</button>
-          <button class="filter-btn" onclick="PanelClient.setFilter('room')">원투룸</button>
+        <div style="display:flex;gap:4px;margin:-8px 0 4px;flex-wrap:wrap;overflow-x:auto;" id="clTradeFilters">
+          <button class="filter-btn active" onclick="PanelClient.setTradeFilter('')">전체</button>
+          <button class="filter-btn" onclick="PanelClient.setTradeFilter('매매')">매매</button>
+          <button class="filter-btn" onclick="PanelClient.setTradeFilter('전세')">전세</button>
+          <button class="filter-btn" onclick="PanelClient.setTradeFilter('월세')">월세</button>
+        </div>
+        <div style="display:flex;gap:4px;margin:0 0 12px;flex-wrap:wrap;overflow-x:auto;" id="clCatFilters">
+          <button class="filter-btn" onclick="PanelClient.setCatFilter('apartment')">아파트</button>
+          <button class="filter-btn" onclick="PanelClient.setCatFilter('officetel')">오피스텔</button>
+          <button class="filter-btn" onclick="PanelClient.setCatFilter('room')">원투룸</button>
+          <button class="filter-btn" onclick="PanelClient.setCatFilter('villa')">빌라</button>
+          <button class="filter-btn" onclick="PanelClient.setCatFilter('office')">사무실</button>
+          <button class="filter-btn" onclick="PanelClient.setCatFilter('commercial')">상가</button>
         </div>
         <div id="clList" style="min-height:200px;">${hwikLoading()}</div>
       </div>
@@ -3148,15 +3153,32 @@ const PanelClient = (() => {
     btn.textContent='AI로 손님 등록';btn.disabled=false;
   }
 
-  let _clientFilter='';
-  function setFilter(f){
-    _clientFilter=(_clientFilter===f)?'':f;
+  let _tradeFilter='';
+  let _catFilter='';
+  function setTradeFilter(f){
+    _tradeFilter=(_tradeFilter===f)?'':f;
+    document.querySelectorAll('#clTradeFilters .filter-btn').forEach(b=>b.classList.remove('active'));
+    if(_tradeFilter){
+      [...document.querySelectorAll('#clTradeFilters .filter-btn')].find(b=>b.textContent===_tradeFilter)?.classList.add('active');
+    } else {
+      document.querySelector('#clTradeFilters .filter-btn')?.classList.add('active');
+    }
     _renderList();
-    document.querySelectorAll('#clList')?.forEach?.(()=>{});
-    const btns=document.querySelectorAll('.filter-btn');
-    btns.forEach(b=>b.classList.remove('active'));
-    if(_clientFilter)event?.target?.classList.add('active');
-    else btns[0]?.classList.add('active');
+  }
+  function setCatFilter(f){
+    _catFilter=(_catFilter===f)?'':f;
+    document.querySelectorAll('#clCatFilters .filter-btn').forEach(b=>b.classList.remove('active'));
+    if(_catFilter){
+      const labelMap={apartment:'아파트',officetel:'오피스텔',room:'원투룸',villa:'빌라',office:'사무실',commercial:'상가'};
+      [...document.querySelectorAll('#clCatFilters .filter-btn')].find(b=>b.textContent===labelMap[_catFilter])?.classList.add('active');
+    }
+    _renderList();
+  }
+  // 기존 setFilter 호환용 (검색 등 내부 호출)
+  function setFilter(f){
+    const tradeTypes=['매매','전세','월세'];
+    if(tradeTypes.includes(f))setTradeFilter(f);
+    else setCatFilter(f);
   }
   function setSort(s,btn){cSort=s;document.querySelectorAll('.sort-tag').forEach(b=>b.classList.remove('active'));btn?.classList.add('active');_renderList();}
   function onQ(q){cQuery=q;}
@@ -3182,14 +3204,19 @@ const PanelClient = (() => {
 
   async function _renderList(){
     let cards=[...Data.cache.clientCards];
-    // 필터 적용
-    if(_clientFilter){
-      const tradeTypes=['매매','전세','월세'];
-      if(tradeTypes.includes(_clientFilter)){
-        cards=cards.filter(c=>c.wanted_trade_type===_clientFilter||(c.property?.type==='손님'&&c.wanted_trade_type===_clientFilter));
-      } else {
-        cards=cards.filter(c=>{const wc=c.wanted_categories||[];const cat=c.property?.category||'';return wc.includes(_clientFilter)||cat===_clientFilter;});
-      }
+    // 거래유형 필터
+    if(_tradeFilter){
+      cards=cards.filter(c=>c.wanted_trade_type===_tradeFilter);
+    }
+    // 종류 필터
+    if(_catFilter){
+      const catAliases={villa:['villa','room','빌라','다세대','연립']};
+      cards=cards.filter(c=>{
+        const wc=c.wanted_categories||[];
+        const cat=c.property?.category||'';
+        if(_catFilter==='villa') return wc.some(v=>catAliases.villa.includes(v))||catAliases.villa.includes(cat);
+        return wc.includes(_catFilter)||cat===_catFilter;
+      });
     }
     if(cQuery.trim()){cards=Search.local(cQuery,cards);_renderItems(cards);return;}
 
