@@ -371,11 +371,10 @@ function render() {
 
   // 전용/공급 토글 + 면적 버튼
   const pm = d.pyeongs_map || {};
-  const hasSupply = Object.keys(pm).length > 0 && Object.values(pm).some(v => v && v.supply);
-  const toggleRowHtml = hasSupply ? `<div style="display:flex;align-items:center;padding:8px 16px 0;gap:8px;">
+  const toggleRowHtml = `<div style="display:flex;align-items:center;padding:8px 16px 0;gap:8px;">
     <div onclick="showSupply=false;render();" style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:5px 12px;border-radius:16px;font-size:12px;font-weight:500;${!showSupply?'background:var(--dark);color:#fff;':'background:var(--card);color:var(--sub);'}">${!showSupply?'●':'○'} 전용</div>
     <div onclick="showSupply=true;render();" style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:5px 12px;border-radius:16px;font-size:12px;font-weight:500;${showSupply?'background:#3b82f6;color:#fff;':'background:var(--card);color:var(--sub);'}">${showSupply?'●':'○'} 공급</div>
-  </div>` : '';
+  </div>`;
   const pyeongHtml = cats.map(c => {
     const active = c === currentPyeong ? ' active' : '';
     let label = c + '㎡';
