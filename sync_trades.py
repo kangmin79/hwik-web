@@ -1012,7 +1012,7 @@ def generate_sitemap(danji_list: list):
             continue
         safe_id = _quote(did, safe="-")
         lastmod = (d.get("updated_at") or today)[:10]
-        urls.append(f'  <url><loc>{base}/danji/{safe_id}.html</loc><lastmod>{lastmod}</lastmod></url>')
+        urls.append(f'  <url><loc>{base}/danji.html?id={safe_id}</loc><lastmod>{lastmod}</lastmod></url>')
         included += 1
 
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
