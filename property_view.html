@@ -329,13 +329,36 @@
         .info-card-wrap {
           width: 100%; height: calc(100dvh - var(--bar-h, 110px));
           position: relative; display: flex; flex-direction: column;
-          align-items: center; justify-content: center;
           background: linear-gradient(160deg, #0d1b2a 0%, #1b2838 30%, #162032 60%, #0a1628 100%);
           overflow: hidden;
         }
+        /* 상단 사진 영역 (20%) */
+        .info-photo-top {
+          width: 100%; height: 20%; position: relative; overflow: hidden;
+          flex-shrink: 0; background: #000;
+        }
+        .info-photo-top img {
+          width: 100%; height: 100%; object-fit: cover;
+        }
+        .info-photo-top .photo-counter {
+          position: absolute; bottom: 8px; right: 12px;
+          font-size: 11px; color: rgba(255,255,255,0.8); background: rgba(0,0,0,0.5);
+          padding: 3px 10px; border-radius: 10px; font-weight: 600;
+        }
+        .info-photo-top .photo-nav {
+          position: absolute; top: 0; bottom: 0; width: 30%; cursor: pointer; z-index: 5;
+        }
+        .info-photo-top .photo-nav-left { left: 0; }
+        .info-photo-top .photo-nav-right { right: 0; }
         .info-card-orb { position: absolute; border-radius: 50%; }
         .info-card-orb-1 { width:350px; height:350px; top:-80px; right:-100px; background:radial-gradient(circle,rgba(99,102,241,0.1) 0%,transparent 70%); }
         .info-card-orb-2 { width:250px; height:250px; bottom:-60px; left:-80px; background:radial-gradient(circle,rgba(250,204,21,0.08) 0%,transparent 70%); }
+        /* 정보 영역 (나머지 80%) */
+        .info-card-body {
+          flex: 1; display: flex; flex-direction: column;
+          align-items: center; justify-content: center;
+          position: relative; overflow: hidden;
+        }
         .info-card-content {
           position: relative; z-index: 1; text-align: center;
           padding: 0 28px; width: 100%; max-width: 420px;
@@ -1054,55 +1077,73 @@
             const cardHtml = `
               <div class="card card-full" id="activeCard" data-template="info" data-total="1">
                 <div class="info-card-wrap">
-                  <!-- 배경 장식 -->
-                  <div class="info-card-orb info-card-orb-1"></div>
-                  <div class="info-card-orb info-card-orb-2"></div>
 
-                  <div class="info-card-content">
-                    <!-- 거래유형 배지 -->
-                    <div class="info-badge" style="border-color:${dotColor}33;background:${dotColor}1a;">
-                      <span class="info-badge-dot" style="background:${dotColor}"></span>
-                      ${type}
+                  <!-- 상단 사진 영역 (20%) — 사진 있을 때만 -->
+                  ${hasPhotos ? `
+                  <div class="info-photo-top" id="infoPhotoTop">
+                    <img src="${esc(photos[0])}" id="infoPhotoImg">
+                    ${photos.length > 1 ? `<div class="photo-counter" id="infoPhotoCounter">1 / ${photos.length}</div>` : ''}
+                    ${photos.length > 1 ? `
+                    <div class="photo-nav photo-nav-left" onclick="_infoPhotoNav(-1)"></div>
+                    <div class="photo-nav photo-nav-right" onclick="_infoPhotoNav(1)"></div>` : ''}
+                  </div>` : ''}
+
+                  <!-- 정보 영역 -->
+                  <div class="info-card-body">
+                    <div class="info-card-orb info-card-orb-1"></div>
+                    <div class="info-card-orb info-card-orb-2"></div>
+
+                    <div class="info-card-content">
+                      <!-- 거래유형 배지 -->
+                      <div class="info-badge" style="border-color:${dotColor}33;background:${dotColor}1a;">
+                        <span class="info-badge-dot" style="background:${dotColor}"></span>
+                        ${type}
+                      </div>
+
+                      <!-- 가격 -->
+                      <div class="info-price">${price}</div>
+
+                      <!-- 위치·단지 -->
+                      <div class="info-location">${cardNameStr}</div>
+
+                      <!-- 구분선 -->
+                      <div class="info-divider"></div>
+
+                      <!-- 기본 스펙 + 태그 -->
+                      ${specsHtml ? `<div class="info-specs">${specsHtml}</div>` : ''}
+
+                      <!-- 중개사 코멘트 -->
+                      ${agentComment ? `
+                      <div class="info-comment">
+                        <div class="info-comment-label">💬 중개사 한마디</div>
+                        <div class="info-comment-text">${esc(agentComment).replace(/\n/g,'<br>')}</div>
+                      </div>` : ''}
                     </div>
 
-                    <!-- 가격 -->
-                    <div class="info-price">${price}</div>
-
-                    <!-- 위치·단지 -->
-                    <div class="info-location">${cardNameStr}</div>
-
-                    <!-- 구분선 -->
-                    <div class="info-divider"></div>
-
-                    <!-- 기본 스펙 + 태그 -->
-                    ${specsHtml ? `<div class="info-specs">${specsHtml}</div>` : ''}
-
-                    <!-- 중개사 코멘트 -->
-                    ${agentComment ? `
-                    <div class="info-comment">
-                      <div class="info-comment-label">💬 중개사 한마디</div>
-                      <div class="info-comment-text">${esc(agentComment).replace(/\n/g,'<br>')}</div>
-                    </div>` : ''}
-
-                    <!-- 사진 보기 버튼 (사진 있을 때만) -->
-                    ${hasPhotos ? `
-                    <button class="info-photo-btn" onclick="_openGallery()">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
-                      사진 ${photos.length}장 보기
-                    </button>` : ''}
+                    <!-- 휙 워터마크 -->
+                    <div class="info-watermark">휙</div>
                   </div>
-
-                  <!-- 휙 워터마크 -->
-                  <div class="info-watermark">휙</div>
                 </div>
               </div>`;
 
-            // 사진 데이터 저장 (갤러리용)
+            // 사진 데이터 저장
             if (hasPhotos) {
                 window._currentPhotos = photos;
+                window._infoPhotoIdx = 0;
             }
             _renderFixedBar(agentName, agentPhone, agentPhoto);
             return cardHtml;
+        }
+
+        // 상단 사진 네비게이션
+        function _infoPhotoNav(dir) {
+            const photos = window._currentPhotos;
+            if (!photos || photos.length <= 1) return;
+            window._infoPhotoIdx = (window._infoPhotoIdx + dir + photos.length) % photos.length;
+            const img = document.getElementById('infoPhotoImg');
+            const counter = document.getElementById('infoPhotoCounter');
+            if (img) img.src = photos[window._infoPhotoIdx];
+            if (counter) counter.textContent = `${window._infoPhotoIdx + 1} / ${photos.length}`;
         }
 
         // 사진 갤러리 열기
