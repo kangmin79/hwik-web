@@ -295,9 +295,23 @@ async function loadData() {
   document.getElementById('tw-title').content = document.title;
   document.getElementById('tw-desc').content = desc;
   document.querySelector('meta[name="description"]').content = desc;
+  // slug 생성 (build_danji_pages.py의 make_slug와 동일 로직)
+  function makeSlug(name, location, did) {
+    const locParts = (location || '').split(' ');
+    const gu = locParts[0] || '';
+    if (did && (did.startsWith('offi-') || did.startsWith('apt-'))) {
+      const slugGu = gu.replace(/[^\w가-힣]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+      return slugGu ? slugGu + '-' + did : did;
+    }
+    const slugName = (name || '').replace(/[^\w가-힣]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    const slugGu = gu.replace(/[^\w가-힣]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    return [slugName, slugGu, did].filter(Boolean).join('-');
+  }
+  const danjiSlug = makeSlug(data.complex_name, data.location, id);
+  const danjiCanonical = `https://hwik.kr/danji/${encodeURIComponent(danjiSlug)}`;
   // og:url 업데이트
   const ogUrl = document.getElementById('og-url');
-  if (ogUrl) ogUrl.content = `https://hwik.kr/danji/${encodeURIComponent(id)}`;
+  if (ogUrl) ogUrl.content = danjiCanonical;
   // canonical 재확인 (초기 inline script가 이미 주입했지만, 없으면 추가)
   let canonicalEl = document.getElementById('canonical');
   if (!canonicalEl) {
@@ -306,7 +320,7 @@ async function loadData() {
     canonicalEl.id = 'canonical';
     document.head.appendChild(canonicalEl);
   }
-  canonicalEl.href = `https://hwik.kr/danji/${encodeURIComponent(id)}`;
+  canonicalEl.href = danjiCanonical;
 
   // 거래 데이터 있는 면적 중 84㎡에 가장 가까운 것 선택
   const cats = data.categories || [];
