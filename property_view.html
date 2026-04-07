@@ -327,14 +327,16 @@
 
         /* ========== 오버랩 카드 레이아웃 ========== */
         .info-card-wrap {
-          width: 100%; height: calc(100dvh - var(--bar-h, 110px));
+          width: 100%;
+          height: calc(100vh - var(--bar-h, 110px));
+          height: calc(100dvh - var(--bar-h, 110px));
           position: relative; display: flex; flex-direction: column;
           overflow-y: auto; overflow-x: hidden;
           background: #0d1b2a;
         }
-        /* 사진 영역 (35%) */
+        /* 사진 영역 (35%, 최소 180px) */
         .info-photo-top {
-          width: 100%; min-height: 35%; position: relative; overflow: hidden;
+          width: 100%; min-height: max(35%, 180px); position: relative; overflow: hidden;
           flex-shrink: 0; background: #000;
         }
         .info-photo-top img {
