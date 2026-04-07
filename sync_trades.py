@@ -1002,7 +1002,7 @@ def generate_sitemap(danji_list: list):
     }
     _METRO = {"서울","인천","부산","대구","광주","대전","울산"}
     def _clean(s):
-        s = _re.sub(r'[^\w가-힣]', '-', s or "")
+        s = _re.sub(r'[^A-Za-z0-9_\uAC00-\uD7A3]', '-', s or "")
         return _re.sub(r'-+', '-', s).strip('-')
     def _make_slug(name, location, did, address=""):
         addr_parts = (address or "").split()
@@ -1112,7 +1112,7 @@ def generate_sitemap(danji_list: list):
         for d_part in dong.split(" "):
             slug_parts.append(d_part)
         dong_slug = "-".join(slug_parts)
-        dong_slug = _re.sub(r'[^\w가-힣]', '-', dong_slug)
+        dong_slug = _re.sub(r'[^A-Za-z0-9_\uAC00-\uD7A3]', '-', dong_slug)
         dong_slug = _re.sub(r'-+', '-', dong_slug).strip('-')
         safe_dong_slug = _quote(dong_slug, safe="-")
         urls.append(f'  <url><loc>{base}/dong/{safe_dong_slug}</loc><lastmod>{today}</lastmod></url>')

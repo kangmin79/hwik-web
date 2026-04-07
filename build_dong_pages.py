@@ -99,7 +99,7 @@ def make_dong_slug(gu, dong, address=""):
     for d in dong.split(" "):
         parts.append(d)
     slug = "-".join(parts)
-    slug = re.sub(r'[^\w가-힣]', '-', slug)
+    slug = re.sub(r'[^A-Za-z0-9_\uAC00-\uD7A3]', '-', slug)
     slug = re.sub(r'-+', '-', slug).strip('-')
     return slug
 
@@ -120,7 +120,8 @@ REGION_MAP = {
 METRO_CITIES = {"서울", "인천", "부산", "대구", "광주", "대전", "울산"}
 
 def _clean(s):
-    s = re.sub(r'[^\w가-힣]', '-', s or "")
+    # JS \w는 ASCII만 → JS makeSlug와 동기화
+    s = re.sub(r'[^A-Za-z0-9_\uAC00-\uD7A3]', '-', s or "")
     return re.sub(r'-+', '-', s).strip('-')
 
 def make_danji_slug(name, location, did, address=""):

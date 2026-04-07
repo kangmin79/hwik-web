@@ -68,7 +68,8 @@ def detect_region(address):
     return ""
 
 def _clean(s):
-    s = re.sub(r'[^\w가-힣]', '-', s or "")
+    # JS \w는 ASCII만 ([A-Za-z0-9_]) → JS makeSlug와 100% 동기화
+    s = re.sub(r'[^A-Za-z0-9_\uAC00-\uD7A3]', '-', s or "")
     return re.sub(r'-+', '-', s).strip('-')
 
 def make_slug(name, location, did, address=""):
@@ -393,7 +394,7 @@ def build_fallback_html(d):
     dong_name = loc_parts_raw[1] if len(loc_parts_raw) >= 2 else ""
     if dong_name:
         dong_slug_str = f"{loc_parts_raw[0]}-{dong_name}"
-        dong_slug_str = re.sub(r'[^\w가-힣]', '-', dong_slug_str)
+        dong_slug_str = re.sub(r'[^A-Za-z0-9_\uAC00-\uD7A3]', '-', dong_slug_str)
         dong_slug_str = re.sub(r'-+', '-', dong_slug_str).strip('-')
     lines.append('<div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">')
     if dong_name:
