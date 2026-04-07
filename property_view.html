@@ -273,17 +273,19 @@
         }
         .card-info-price { font-size: 26px; font-weight: 800; color: #1a1a2e; letter-spacing: -0.03em; margin-bottom: 4px; }
         .card-info-name { font-size: 13px; color: #64748b; margin-bottom: 12px; }
-        .card-info-specs { display: flex; gap: 5px; flex-wrap: wrap; }
-        .card-info-spec { font-size: 11px; padding: 5px 10px; border-radius: 20px; background: #f1f5f9; color: #475569; font-weight: 500; }
+        .card-info-specs { display: flex; gap: 6px; flex-wrap: wrap; }
+        .card-info-spec { font-size: 12px; padding: 6px 12px; border-radius: 20px; background: #f1f5f9; color: #334155; font-weight: 600; }
+        .card-info-spec.hl { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; font-weight: 700; }
+        .card-info-spec.hl-mint { background: #ccfbf1; color: #115e59; border: 1px solid #5eead4; font-weight: 700; }
         /* 카드 내부 슬라이더 공통 (fallback for noimg) */
         .card-inner-slider {
           display: flex;
           transition: transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94);
           will-change: transform;
         }
-        /* 사진 슬라이드 — 항상 contain (원본 비율 유지, 깨짐 방지) */
+        /* 사진 슬라이드 — 항상 contain (원본 비율 유지, 깨짐 방지), 위쪽 정렬 */
         .photo-slide {
-          min-width: 100%; height: 100%; object-fit: contain;
+          min-width: 100%; height: 100%; object-fit: contain; object-position: center top;
           position: relative; z-index: 2;
           pointer-events: auto;
           cursor: pointer;
@@ -333,10 +335,11 @@
         .card-name { font-size:12px; color:rgba(255,255,255,0.55); margin-bottom:10px; }
         .card-specs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px; align-items:center; }
         /* 기본 스펙 (면적/층/방) — 작고 심플 */
-        .card-spec { font-size:11px; padding:4px 9px; border-radius:6px; background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.65); letter-spacing:0.02em; }
-        /* 셀링포인트 (남향/역세권/한강뷰 등) — 강조 */
-        .card-spec.highlight { background:rgba(250,204,21,0.15); color:#facc15; border:1px solid rgba(250,204,21,0.25); border-radius:20px; font-weight:600; }
-        .card-spec.highlight-mint { background:rgba(78,205,196,0.15); color:#4ecdc4; border:1px solid rgba(78,205,196,0.25); border-radius:20px; font-weight:600; }
+        .card-spec { font-size:12px; padding:6px 12px; border-radius:20px; background:rgba(255,255,255,0.12); color:rgba(255,255,255,0.8); font-weight:500; letter-spacing:0.02em; border:1px solid rgba(255,255,255,0.15); }
+        /* 셀링포인트 (남향/역세권/한강뷰 등) — 노란 강조 */
+        .card-spec.highlight { background:rgba(250,204,21,0.2); color:#facc15; border:1px solid rgba(250,204,21,0.4); font-weight:700; }
+        /* 학군/환경 — 민트 강조 */
+        .card-spec.highlight-mint { background:rgba(78,205,196,0.2); color:#4ecdc4; border:1px solid rgba(78,205,196,0.4); font-weight:700; }
         .card-divider { height:1px; background:rgba(255,255,255,0.1); margin-bottom:14px; }
         /* 액션 바 */
         .card-action-bar { display:flex; gap:8px; margin-top:16px; }
