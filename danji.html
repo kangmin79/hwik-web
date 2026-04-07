@@ -259,7 +259,10 @@ function markAsNotFound() {
 
 // ── 데이터 로드 ──
 async function loadData() {
-  const id = new URLSearchParams(location.search).get('id');
+  const id = new URLSearchParams(location.search).get('id')
+    || (location.pathname.match(/-(a\d+)(?:\.html)?$/) || [])[1]
+    || (location.pathname.match(/((?:offi|apt)-[^/]+?)(?:\.html)?$/) || [])[1]
+    || null;
   if (!id) { markAsNotFound(); return; }
 
   let data, error;

@@ -12,6 +12,20 @@ Usage:
 import os, json, re, time, html as html_mod
 import requests
 
+def _load_env():
+    for fname in (".env", "env"):
+        env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), fname)
+        if os.path.exists(env_path):
+            with open(env_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#") or "=" not in line:
+                        continue
+                    k, v = line.split("=", 1)
+                    os.environ.setdefault(k.strip(), v.strip())
+
+_load_env()
+
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://jqaxejgzkchxbfzgzyzi.supabase.co")
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 SB_HEADERS = {
@@ -26,6 +40,25 @@ DANJI_DIR = os.path.join(BASE_DIR, "danji")
 # ── 유틸 ──────────────────────────────────────────────────
 def esc(s):
     return html_mod.escape(str(s)) if s else ""
+
+def make_slug(name, location, did):
+    """단지명+구+ID → URL slug (예: 래미안도곡카운티-강남구-a10023825)"""
+    loc_parts = (location or "").split(" ")
+    gu = loc_parts[0] if loc_parts else ""
+
+    # offi-/apt- 형태는 ID에 이미 단지명 포함 → 구만 추가
+    if did and (did.startswith("offi-") or did.startswith("apt-")):
+        slug_gu = re.sub(r'[^\w가-힣]', '-', gu)
+        slug_gu = re.sub(r'-+', '-', slug_gu).strip('-')
+        return f"{slug_gu}-{did}" if slug_gu else did
+
+    # 일반 (a숫자) → 단지명+구+ID
+    slug_name = re.sub(r'[^\w가-힣]', '-', name or "")
+    slug_name = re.sub(r'-+', '-', slug_name).strip('-')
+    slug_gu = re.sub(r'[^\w가-힣]', '-', gu)
+    slug_gu = re.sub(r'-+', '-', slug_gu).strip('-')
+    parts = [p for p in [slug_name, slug_gu, did] if p]
+    return "-".join(parts)
 
 def format_price(manwon):
     if not manwon:
@@ -102,11 +135,13 @@ def extract_css_js():
         blocks = re.findall(r"<script>(.*?)</script>", content, re.DOTALL)
         js = max(blocks, key=len) if blocks else ""
 
-    # ── JS 수정: URL 경로에서도 ID 추출 ──
+    # ── JS 수정: URL 경로에서도 ID 추출 (slug에서 맨 뒤 ID) ──
     js = js.replace(
         "const id = new URLSearchParams(location.search).get('id');",
         "const id = new URLSearchParams(location.search).get('id')"
-        " || (location.pathname.match(/\\/danji\\/(.+)\\.html/) || [])[1] || null;",
+        " || (location.pathname.match(/-(a\\d+)(?:\\.html)?$/) || [])[1]"
+        " || (location.pathname.match(/((?:offi|apt)-[^/]+?)(?:\\.html)?$/) || [])[1]"
+        " || null;",
         1,
     )
 
@@ -241,11 +276,14 @@ def build_fallback_html(d):
                     ndiff = diff
                     nbest = v
             p = format_price(nbest.get("price")) if nbest and nbest.get("price") else "-"
-            nid = esc(n.get("id", ""))
-            nname = esc(n.get("name", ""))
-            nloc = esc(n.get("location", ""))
+            nid = n.get("id", "")
+            nname_raw = n.get("name", "")
+            nloc_raw = n.get("location", "")
+            nslug = make_slug(nname_raw, nloc_raw, nid)
+            nname = esc(nname_raw)
+            nloc = esc(nloc_raw)
             lines.append(
-                f'<li><a href="/danji/{nid}" style="display:flex;justify-content:space-between;'
+                f'<li><a href="/danji/{nslug}" style="display:flex;justify-content:space-between;'
                 f'padding:10px 12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">'
                 f'<span>{nname} <span style="color:#9ca3af;font-size:11px;">{nloc}</span></span>'
                 f'<span style="font-weight:600;">{p}</span></a></li>'
@@ -308,6 +346,7 @@ def build_jsonld(d):
     name = d.get("complex_name", "")
     loc_parts = (d.get("location") or "").split(" ")
     gu = loc_parts[0] if loc_parts else ""
+    slug = make_slug(name, d.get("location", ""), did)
 
     graph = [
         {
@@ -325,7 +364,7 @@ def build_jsonld(d):
             "itemListElement": [
                 {"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"},
                 {"@type": "ListItem", "position": 2, "name": f"{gu}", "item": f"https://hwik.kr/gu.html?name={gu}"},
-                {"@type": "ListItem", "position": 3, "name": name, "item": f"https://hwik.kr/danji/{did}"},
+                {"@type": "ListItem", "position": 3, "name": name, "item": f"https://hwik.kr/danji/{slug}"},
             ],
         },
     ]
@@ -362,9 +401,12 @@ def build_jsonld(d):
 # ── 페이지 생성 ───────────────────────────────────────────
 def generate_page(d):
     did = d.get("id", "")
-    name = esc(d.get("complex_name", ""))
-    loc = esc(d.get("location", ""))
-    loc_parts = (d.get("location") or "").split(" ")
+    raw_name = d.get("complex_name", "")
+    raw_loc = d.get("location", "")
+    slug = make_slug(raw_name, raw_loc, did)
+    name = esc(raw_name)
+    loc = esc(raw_loc)
+    loc_parts = raw_loc.split(" ")
     gu = esc(loc_parts[0]) if loc_parts else ""
     units = d.get("total_units", "")
     year = d.get("build_year", "")
@@ -377,7 +419,7 @@ def generate_page(d):
     desc_parts.append("아파트 실거래가, 전세가, 시세 추이")
     desc = " ".join(desc_parts)
 
-    canonical = f"https://hwik.kr/danji/{did}"
+    canonical = f"https://hwik.kr/danji/{slug}"
     jsonld = build_jsonld(d)
     fallback = build_fallback_html(d)
 
@@ -434,13 +476,17 @@ def generate_page(d):
 
 # ── 메인 ──────────────────────────────────────────────────
 def main():
+    import sys
+    if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+        sys.stdout = open(sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1)
+
     os.makedirs(DANJI_DIR, exist_ok=True)
 
-    print("📥 danji_pages 조회 중...")
+    print("danji_pages 조회 중...")
     all_danji = fetch_all_danji()
-    print(f"📊 {len(all_danji)}개 단지 로드")
+    print(f"{len(all_danji)}개 단지 로드")
 
-    print("🔧 CSS/JS 추출 중...")
+    print("CSS/JS 추출 중...")
     css, js = extract_css_js()
 
     with open(os.path.join(DANJI_DIR, "style.css"), "w", encoding="utf-8") as f:
@@ -464,16 +510,17 @@ def main():
             skipped += 1
             continue
 
+        slug = make_slug(d.get("complex_name", ""), d.get("location", ""), did)
         page = generate_page(d)
-        path = os.path.join(DANJI_DIR, f"{did}.html")
+        path = os.path.join(DANJI_DIR, f"{slug}.html")
         with open(path, "w", encoding="utf-8") as f:
             f.write(page)
         count += 1
         if count % 1000 == 0:
             print(f"  {count}개 생성...")
 
-    print(f"\n✅ {count}개 페이지 생성, {skipped}개 스킵 (거래 없음)")
-    print(f"📁 출력: {DANJI_DIR}/")
+    print(f"\n{count}개 페이지 생성, {skipped}개 스킵 (거래 없음)")
+    print(f"출력: {DANJI_DIR}/")
 
 
 if __name__ == "__main__":

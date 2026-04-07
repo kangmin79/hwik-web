@@ -972,7 +972,7 @@ def generate_sitemap(danji_list: list):
         resp = sb_session.get(
             f"{SUPABASE_URL}/rest/v1/danji_pages",
             headers={**SB_HEADERS, "Prefer": ""},
-            params={"select": "id,updated_at,categories,recent_trade", "order": "id", "offset": offset, "limit": 500},
+            params={"select": "id,complex_name,location,updated_at,categories,recent_trade", "order": "id", "offset": offset, "limit": 500},
             timeout=30,
         )
         data = resp.json() if resp.status_code == 200 else []
@@ -984,7 +984,22 @@ def generate_sitemap(danji_list: list):
             break
         time.sleep(0.2)
 
+    import re as _re
     from urllib.parse import quote as _quote
+
+    def _make_slug(name, location, did):
+        loc_parts = (location or "").split(" ")
+        gu = loc_parts[0] if loc_parts else ""
+        if did and (did.startswith("offi-") or did.startswith("apt-")):
+            slug_gu = _re.sub(r'[^\w가-힣]', '-', gu)
+            slug_gu = _re.sub(r'-+', '-', slug_gu).strip('-')
+            return f"{slug_gu}-{did}" if slug_gu else did
+        slug_name = _re.sub(r'[^\w가-힣]', '-', name or "")
+        slug_name = _re.sub(r'-+', '-', slug_name).strip('-')
+        slug_gu = _re.sub(r'[^\w가-힣]', '-', gu)
+        slug_gu = _re.sub(r'-+', '-', slug_gu).strip('-')
+        parts = [p for p in [slug_name, slug_gu, did] if p]
+        return "-".join(parts)
 
     urls = []
     # 정적 페이지 (priority/changefreq 제거 — Google이 무시함)
@@ -1014,9 +1029,10 @@ def generate_sitemap(danji_list: list):
         if not has_trade:
             excluded += 1
             continue
-        safe_id = _quote(did, safe="-")
+        slug = _make_slug(d.get("complex_name", ""), d.get("location", ""), did)
+        safe_slug = _quote(slug, safe="-")
         lastmod = (d.get("updated_at") or today)[:10]
-        urls.append(f'  <url><loc>{base}/danji/{safe_id}</loc><lastmod>{lastmod}</lastmod></url>')
+        urls.append(f'  <url><loc>{base}/danji/{safe_slug}</loc><lastmod>{lastmod}</lastmod></url>')
         included += 1
 
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
