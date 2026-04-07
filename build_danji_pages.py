@@ -11,6 +11,7 @@ Usage:
 
 import os, json, re, time, html as html_mod
 import requests
+from slug_utils import REGION_MAP, METRO_CITIES, clean as _clean, detect_region, make_danji_slug as make_slug
 
 def _load_env():
     for fname in (".env", "env"):
@@ -41,82 +42,8 @@ DANJI_DIR = os.path.join(BASE_DIR, "danji")
 def esc(s):
     return html_mod.escape(str(s)) if s else ""
 
-REGION_MAP = {
-    # 정식 명칭
-    "서울특별시": "서울", "인천광역시": "인천", "부산광역시": "부산",
-    "대구광역시": "대구", "광주광역시": "광주", "대전광역시": "대전",
-    "울산광역시": "울산", "세종특별자치시": "세종", "경기도": "경기",
-    "강원특별자치도": "강원", "충청북도": "충북", "충청남도": "충남",
-    "전북특별자치도": "전북", "전라남도": "전남", "경상북도": "경북",
-    "경상남도": "경남", "제주특별자치도": "제주",
-    # 약칭 (DB에 혼재)
-    "서울": "서울", "인천": "인천", "부산": "부산", "대구": "대구",
-    "광주": "광주", "대전": "대전", "울산": "울산", "세종": "세종",
-    "경기": "경기", "강원": "강원", "충북": "충북", "충남": "충남",
-    "전북": "전북", "전남": "전남", "경북": "경북", "경남": "경남",
-    "제주": "제주",
-}
-METRO_CITIES = {"서울", "인천", "부산", "대구", "광주", "대전", "울산"}
 
-def detect_region(address):
-    """도로명주소에서 지역 약칭 반환"""
-    if not address:
-        return ""
-    for full, short in REGION_MAP.items():
-        if address.strip().startswith(full):
-            return short
-    return ""
-
-def _clean(s):
-    # JS \w는 ASCII만 ([A-Za-z0-9_]) → JS makeSlug와 100% 동기화
-    s = re.sub(r'[^A-Za-z0-9_\uAC00-\uD7A3]', '-', s or "")
-    return re.sub(r'-+', '-', s).strip('-')
-
-def make_slug(name, location, did, address=""):
-    """address 기반 전국 slug 생성 (동 포함)
-    광역시: 서울-강남구-도곡동-래미안도곡카운티-a13585404
-    도:     경기-성남-분당구-정자동-아파트명-id
-    """
-    addr_parts = (address or "").split()
-    region = ""
-    if addr_parts:
-        region = REGION_MAP.get(addr_parts[0], "")
-
-    slug_parts = []
-
-    if region:
-        slug_parts.append(region)
-
-        if region in METRO_CITIES:
-            if len(addr_parts) > 1 and (addr_parts[1].endswith("구") or addr_parts[1].endswith("군")):
-                slug_parts.append(re.sub(r'군$', '', addr_parts[1]) if addr_parts[1].endswith("군") else addr_parts[1])
-        elif region == "세종":
-            pass
-        else:
-            if len(addr_parts) > 1:
-                slug_parts.append(re.sub(r'(시|군)$', '', addr_parts[1]))
-            if len(addr_parts) > 2 and addr_parts[2].endswith("구"):
-                slug_parts.append(addr_parts[2])
-    else:
-        loc_parts = (location or "").split(" ")
-        if loc_parts and loc_parts[0]:
-            slug_parts.append(_clean(loc_parts[0]))
-
-    # 동 추가 (location에서 구/시 제외한 나머지)
-    loc_parts = (location or "").split(" ", 1)
-    if len(loc_parts) >= 2:
-        dong = loc_parts[1]  # "도곡동" or "가평읍 대곡리"
-        for d in dong.split(" "):
-            slug_parts.append(_clean(d))
-
-    # offi-/apt- 형태는 ID에 이미 단지명 포함
-    if did and (did.startswith("offi-") or did.startswith("apt-")):
-        slug_parts.append(did)
-    else:
-        slug_parts.append(_clean(name))
-        slug_parts.append(did or "")
-
-    return "-".join([_clean(p) for p in slug_parts if p])
+# REGION_MAP, METRO_CITIES, _clean, detect_region, make_slug → slug_utils.py에서 import
 
 def format_price(manwon):
     if not manwon:
@@ -547,6 +474,15 @@ def main():
         sys.stdout = open(sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1)
 
     os.makedirs(DANJI_DIR, exist_ok=True)
+
+    # 옛 HTML 파일 삭제 (고아 파일 방지, style.css/app.js는 유지)
+    old_count = 0
+    for f in os.listdir(DANJI_DIR):
+        if f.endswith(".html"):
+            os.remove(os.path.join(DANJI_DIR, f))
+            old_count += 1
+    if old_count:
+        print(f"기존 {old_count}개 HTML 삭제")
 
     print("danji_pages 조회 중...")
     all_danji = fetch_all_danji()

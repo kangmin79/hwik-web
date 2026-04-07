@@ -973,7 +973,7 @@ def generate_sitemap(danji_list: list):
         resp = sb_session.get(
             f"{SUPABASE_URL}/rest/v1/danji_pages",
             headers={**SB_HEADERS, "Prefer": ""},
-            params={"select": "id,complex_name,location,updated_at,categories,recent_trade", "order": "id", "offset": offset, "limit": 500},
+            params={"select": "id,complex_name,location,address,updated_at,categories,recent_trade", "order": "id", "offset": offset, "limit": 500},
             timeout=30,
         )
         data = resp.json() if resp.status_code == 200 else []
@@ -985,54 +985,8 @@ def generate_sitemap(danji_list: list):
             break
         time.sleep(0.2)
 
-    import re as _re
     from urllib.parse import quote as _quote
-
-    _REGION_MAP = {
-        "서울특별시":"서울","인천광역시":"인천","부산광역시":"부산",
-        "대구광역시":"대구","광주광역시":"광주","대전광역시":"대전",
-        "울산광역시":"울산","세종특별자치시":"세종","경기도":"경기",
-        "강원특별자치도":"강원","충청북도":"충북","충청남도":"충남",
-        "전북특별자치도":"전북","전라남도":"전남","경상북도":"경북",
-        "경상남도":"경남","제주특별자치도":"제주",
-        "서울":"서울","인천":"인천","부산":"부산","대구":"대구",
-        "광주":"광주","대전":"대전","울산":"울산","세종":"세종",
-        "경기":"경기","강원":"강원","충북":"충북","충남":"충남",
-        "전북":"전북","전남":"전남","경북":"경북","경남":"경남","제주":"제주",
-    }
-    _METRO = {"서울","인천","부산","대구","광주","대전","울산"}
-    def _clean(s):
-        s = _re.sub(r'[^A-Za-z0-9_\uAC00-\uD7A3]', '-', s or "")
-        return _re.sub(r'-+', '-', s).strip('-')
-    def _make_slug(name, location, did, address=""):
-        addr_parts = (address or "").split()
-        region = _REGION_MAP.get(addr_parts[0], "") if addr_parts else ""
-        parts = []
-        if region:
-            parts.append(region)
-            if region in _METRO:
-                if len(addr_parts) > 1 and (addr_parts[1].endswith("구") or addr_parts[1].endswith("군")):
-                    parts.append(_re.sub(r'군$', '', addr_parts[1]) if addr_parts[1].endswith("군") else addr_parts[1])
-            elif region != "세종":
-                if len(addr_parts) > 1:
-                    parts.append(_re.sub(r'(시|군)$', '', addr_parts[1]))
-                if len(addr_parts) > 2 and addr_parts[2].endswith("구"):
-                    parts.append(addr_parts[2])
-        else:
-            loc_parts = (location or "").split(" ")
-            if loc_parts and loc_parts[0]:
-                parts.append(_clean(loc_parts[0]))
-        # 동 추가 (location에서 구/시 제외한 나머지)
-        loc_parts = (location or "").split(" ", 1)
-        if len(loc_parts) >= 2:
-            for d in loc_parts[1].split(" "):
-                parts.append(_clean(d))
-        if did and (did.startswith("offi-") or did.startswith("apt-")):
-            parts.append(did)
-        else:
-            parts.append(_clean(name))
-            parts.append(did or "")
-        return "-".join([_clean(p) for p in parts if p])
+    from slug_utils import make_danji_slug as _make_slug, make_dong_slug as _make_dong_slug
 
     urls = []
     # 정적 페이지 (priority/changefreq 제거 — Google이 무시함)
@@ -1090,30 +1044,8 @@ def generate_sitemap(danji_list: list):
     for (gu, dong), cnt in sorted(dong_trade_count.items()):
         if cnt < 3:
             continue
-        # 동 slug에 지역 prefix 추가
         addr = dong_addr_cache.get((gu, dong), "")
-        addr_parts = (addr or "").split()
-        region = _REGION_MAP.get(addr_parts[0], "") if addr_parts else ""
-        slug_parts = []
-        if region:
-            slug_parts.append(region)
-            if region not in _METRO:
-                if len(addr_parts) > 1:
-                    slug_parts.append(_re.sub(r'(시|군)$', '', addr_parts[1]))
-                if len(addr_parts) > 2 and addr_parts[2].endswith("구"):
-                    slug_parts.append(addr_parts[2])
-            else:
-                if gu.endswith("군"):
-                    slug_parts.append(_re.sub(r'군$', '', gu))
-                else:
-                    slug_parts.append(gu)
-        else:
-            slug_parts.append(gu)
-        for d_part in dong.split(" "):
-            slug_parts.append(d_part)
-        dong_slug = "-".join(slug_parts)
-        dong_slug = _re.sub(r'[^A-Za-z0-9_\uAC00-\uD7A3]', '-', dong_slug)
-        dong_slug = _re.sub(r'-+', '-', dong_slug).strip('-')
+        dong_slug = _make_dong_slug(gu, dong, addr)
         safe_dong_slug = _quote(dong_slug, safe="-")
         urls.append(f'  <url><loc>{base}/dong/{safe_dong_slug}</loc><lastmod>{today}</lastmod></url>')
         dong_count += 1

@@ -13,6 +13,10 @@ import os, sys, json, re, time, html as html_mod
 import requests
 from collections import defaultdict
 from urllib.parse import quote as url_quote
+from slug_utils import (
+    REGION_MAP, METRO_CITIES, clean as _clean,
+    detect_region, make_danji_slug, make_dong_slug,
+)
 
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout = open(sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1)
@@ -70,104 +74,9 @@ def walk_min(m):
     return f"{round(m / 67)}분"
 
 
-def make_dong_slug(gu, dong, address=""):
-    """지역+구+동 → 서울-강남구-도곡동"""
-    # address에서 지역 추출
-    addr_parts = (address or "").split()
-    region = ""
-    if addr_parts:
-        # REGION_MAP은 아래에 정의 — 함수 호출 시점에는 존재
-        region = REGION_MAP.get(addr_parts[0], "") if 'REGION_MAP' in dir() or True else ""
-    parts = []
-    if region:
-        parts.append(region)
-        if region not in ("서울", "인천", "부산", "대구", "광주", "대전", "울산", "세종"):
-            # 도: 시/군 추가
-            if len(addr_parts) > 1:
-                parts.append(re.sub(r'(시|군)$', '', addr_parts[1]))
-            if len(addr_parts) > 2 and addr_parts[2].endswith("구"):
-                parts.append(addr_parts[2])
-        else:
-            # 광역시: 구/군 추가 (gu 파라미터 사용)
-            if gu.endswith("군"):
-                parts.append(re.sub(r'군$', '', gu))
-            else:
-                parts.append(gu)
-    else:
-        parts.append(gu)
-    # 동 추가
-    for d in dong.split(" "):
-        parts.append(d)
-    slug = "-".join(parts)
-    slug = re.sub(r'[^A-Za-z0-9_\uAC00-\uD7A3]', '-', slug)
-    slug = re.sub(r'-+', '-', slug).strip('-')
-    return slug
 
+# REGION_MAP, METRO_CITIES, _clean, detect_region, make_danji_slug, make_dong_slug → slug_utils.py에서 import
 
-REGION_MAP = {
-    "서울특별시": "서울", "인천광역시": "인천", "부산광역시": "부산",
-    "대구광역시": "대구", "광주광역시": "광주", "대전광역시": "대전",
-    "울산광역시": "울산", "세종특별자치시": "세종", "경기도": "경기",
-    "강원특별자치도": "강원", "충청북도": "충북", "충청남도": "충남",
-    "전북특별자치도": "전북", "전라남도": "전남", "경상북도": "경북",
-    "경상남도": "경남", "제주특별자치도": "제주",
-    "서울": "서울", "인천": "인천", "부산": "부산", "대구": "대구",
-    "광주": "광주", "대전": "대전", "울산": "울산", "세종": "세종",
-    "경기": "경기", "강원": "강원", "충북": "충북", "충남": "충남",
-    "전북": "전북", "전남": "전남", "경북": "경북", "경남": "경남",
-    "제주": "제주",
-}
-METRO_CITIES = {"서울", "인천", "부산", "대구", "광주", "대전", "울산"}
-
-def _clean(s):
-    # JS \w는 ASCII만 → JS makeSlug와 동기화
-    s = re.sub(r'[^A-Za-z0-9_\uAC00-\uD7A3]', '-', s or "")
-    return re.sub(r'-+', '-', s).strip('-')
-
-def make_danji_slug(name, location, did, address=""):
-    """build_danji_pages.py의 make_slug와 동일"""
-    addr_parts = (address or "").split()
-    region = REGION_MAP.get(addr_parts[0], "") if addr_parts else ""
-    parts = []
-    if region:
-        parts.append(region)
-        if region in METRO_CITIES:
-            if len(addr_parts) > 1 and (addr_parts[1].endswith("구") or addr_parts[1].endswith("군")):
-                parts.append(re.sub(r'군$', '', addr_parts[1]) if addr_parts[1].endswith("군") else addr_parts[1])
-        elif region != "세종":
-            if len(addr_parts) > 1:
-                parts.append(re.sub(r'(시|군)$', '', addr_parts[1]))
-            if len(addr_parts) > 2 and addr_parts[2].endswith("구"):
-                parts.append(addr_parts[2])
-    else:
-        loc_parts = (location or "").split(" ")
-        if loc_parts and loc_parts[0]:
-            parts.append(_clean(loc_parts[0]))
-    # 동 추가 (location에서 구/시 제외한 나머지)
-    loc_parts = (location or "").split(" ", 1)
-    if len(loc_parts) >= 2:
-        for d in loc_parts[1].split(" "):
-            parts.append(_clean(d))
-    if did and (did.startswith("offi-") or did.startswith("apt-")):
-        parts.append(did)
-    else:
-        parts.append(_clean(name))
-        parts.append(did or "")
-    return "-".join([_clean(p) for p in parts if p])
-
-
-def detect_region(address):
-    """도로명주소에서 지역 판별 (서울/인천/경기)"""
-    if not address:
-        return ""
-    addr = address.strip()
-    if addr.startswith("서울"):
-        return "서울"
-    if addr.startswith("인천"):
-        return "인천"
-    if addr.startswith("경기"):
-        return "경기"
-    return ""
 
 
 # ── Supabase 조회 ─────────────────────────────────────────
@@ -502,6 +411,15 @@ html,body{{height:100%;font-family:'Noto Sans KR',-apple-system,sans-serif;backg
 # ── 메인 ──────────────────────────────────────────────────
 def main():
     os.makedirs(DONG_DIR, exist_ok=True)
+
+    # 옛 HTML 파일 삭제 (고아 파일 방지)
+    old_count = 0
+    for f in os.listdir(DONG_DIR):
+        if f.endswith(".html"):
+            os.remove(os.path.join(DONG_DIR, f))
+            old_count += 1
+    if old_count:
+        print(f"기존 {old_count}개 HTML 삭제")
 
     print("danji_pages 조회 중...")
     all_danji = fetch_all_danji()
