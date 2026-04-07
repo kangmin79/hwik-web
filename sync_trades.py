@@ -988,19 +988,46 @@ def generate_sitemap(danji_list: list):
     import re as _re
     from urllib.parse import quote as _quote
 
-    def _make_slug(name, location, did):
-        loc_parts = (location or "").split(" ")
-        gu = loc_parts[0] if loc_parts else ""
+    _REGION_MAP = {
+        "서울특별시":"서울","인천광역시":"인천","부산광역시":"부산",
+        "대구광역시":"대구","광주광역시":"광주","대전광역시":"대전",
+        "울산광역시":"울산","세종특별자치시":"세종","경기도":"경기",
+        "강원특별자치도":"강원","충청북도":"충북","충청남도":"충남",
+        "전북특별자치도":"전북","전라남도":"전남","경상북도":"경북",
+        "경상남도":"경남","제주특별자치도":"제주",
+        "서울":"서울","인천":"인천","부산":"부산","대구":"대구",
+        "광주":"광주","대전":"대전","울산":"울산","세종":"세종",
+        "경기":"경기","강원":"강원","충북":"충북","충남":"충남",
+        "전북":"전북","전남":"전남","경북":"경북","경남":"경남","제주":"제주",
+    }
+    _METRO = {"서울","인천","부산","대구","광주","대전","울산"}
+    def _clean(s):
+        s = _re.sub(r'[^\w가-힣]', '-', s or "")
+        return _re.sub(r'-+', '-', s).strip('-')
+    def _make_slug(name, location, did, address=""):
+        addr_parts = (address or "").split()
+        region = _REGION_MAP.get(addr_parts[0], "") if addr_parts else ""
+        parts = []
+        if region:
+            parts.append(region)
+            if region in _METRO:
+                if len(addr_parts) > 1 and addr_parts[1].endswith("구"):
+                    parts.append(addr_parts[1])
+            elif region != "세종":
+                if len(addr_parts) > 1:
+                    parts.append(_re.sub(r'(시|군)$', '', addr_parts[1]))
+                if len(addr_parts) > 2 and addr_parts[2].endswith("구"):
+                    parts.append(addr_parts[2])
+        else:
+            loc_parts = (location or "").split(" ")
+            if loc_parts and loc_parts[0]:
+                parts.append(_clean(loc_parts[0]))
         if did and (did.startswith("offi-") or did.startswith("apt-")):
-            slug_gu = _re.sub(r'[^\w가-힣]', '-', gu)
-            slug_gu = _re.sub(r'-+', '-', slug_gu).strip('-')
-            return f"{slug_gu}-{did}" if slug_gu else did
-        slug_name = _re.sub(r'[^\w가-힣]', '-', name or "")
-        slug_name = _re.sub(r'-+', '-', slug_name).strip('-')
-        slug_gu = _re.sub(r'[^\w가-힣]', '-', gu)
-        slug_gu = _re.sub(r'-+', '-', slug_gu).strip('-')
-        parts = [p for p in [slug_name, slug_gu, did] if p]
-        return "-".join(parts)
+            parts.append(did)
+        else:
+            parts.append(_clean(name))
+            parts.append(did or "")
+        return "-".join([_clean(p) for p in parts if p])
 
     urls = []
     # 정적 페이지 (priority/changefreq 제거 — Google이 무시함)
@@ -1030,7 +1057,7 @@ def generate_sitemap(danji_list: list):
         if not has_trade:
             excluded += 1
             continue
-        slug = _make_slug(d.get("complex_name", ""), d.get("location", ""), did)
+        slug = _make_slug(d.get("complex_name", ""), d.get("location", ""), did, d.get("address", ""))
         safe_slug = _quote(slug, safe="-")
         lastmod = (d.get("updated_at") or today)[:10]
         urls.append(f'  <url><loc>{base}/danji/{safe_slug}</loc><lastmod>{lastmod}</lastmod></url>')

@@ -41,24 +41,78 @@ DANJI_DIR = os.path.join(BASE_DIR, "danji")
 def esc(s):
     return html_mod.escape(str(s)) if s else ""
 
-def make_slug(name, location, did):
-    """단지명+구+ID → URL slug (예: 래미안도곡카운티-강남구-a10023825)"""
-    loc_parts = (location or "").split(" ")
-    gu = loc_parts[0] if loc_parts else ""
+REGION_MAP = {
+    # 정식 명칭
+    "서울특별시": "서울", "인천광역시": "인천", "부산광역시": "부산",
+    "대구광역시": "대구", "광주광역시": "광주", "대전광역시": "대전",
+    "울산광역시": "울산", "세종특별자치시": "세종", "경기도": "경기",
+    "강원특별자치도": "강원", "충청북도": "충북", "충청남도": "충남",
+    "전북특별자치도": "전북", "전라남도": "전남", "경상북도": "경북",
+    "경상남도": "경남", "제주특별자치도": "제주",
+    # 약칭 (DB에 혼재)
+    "서울": "서울", "인천": "인천", "부산": "부산", "대구": "대구",
+    "광주": "광주", "대전": "대전", "울산": "울산", "세종": "세종",
+    "경기": "경기", "강원": "강원", "충북": "충북", "충남": "충남",
+    "전북": "전북", "전남": "전남", "경북": "경북", "경남": "경남",
+    "제주": "제주",
+}
+METRO_CITIES = {"서울", "인천", "부산", "대구", "광주", "대전", "울산"}
 
-    # offi-/apt- 형태는 ID에 이미 단지명 포함 → 구만 추가
+def detect_region(address):
+    """도로명주소에서 지역 약칭 반환"""
+    if not address:
+        return ""
+    for full, short in REGION_MAP.items():
+        if address.strip().startswith(full):
+            return short
+    return ""
+
+def _clean(s):
+    s = re.sub(r'[^\w가-힣]', '-', s or "")
+    return re.sub(r'-+', '-', s).strip('-')
+
+def make_slug(name, location, did, address=""):
+    """address 기반 전국 slug 생성
+    광역시: 서울-강동구-둔촌현대4차-a13481802
+    도:     경기-성남-분당구-아파트명-id
+    """
+    addr_parts = (address or "").split()
+    region = ""
+    if addr_parts:
+        region = REGION_MAP.get(addr_parts[0], "")
+
+    slug_parts = []
+
+    if region:
+        slug_parts.append(region)
+
+        if region in METRO_CITIES:
+            # 광역시: 바로 구 (addr_parts[1] = "강동구")
+            if len(addr_parts) > 1 and addr_parts[1].endswith("구"):
+                slug_parts.append(addr_parts[1])
+        elif region == "세종":
+            pass  # 구 없음
+        else:
+            # 도: 시/군 + 구(있으면)
+            if len(addr_parts) > 1:
+                city = re.sub(r'(시|군)$', '', addr_parts[1])
+                slug_parts.append(city)
+            if len(addr_parts) > 2 and addr_parts[2].endswith("구"):
+                slug_parts.append(addr_parts[2])
+    else:
+        # address 없으면 location fallback (구만)
+        loc_parts = (location or "").split(" ")
+        if loc_parts and loc_parts[0]:
+            slug_parts.append(_clean(loc_parts[0]))
+
+    # offi-/apt- 형태는 ID에 이미 단지명 포함
     if did and (did.startswith("offi-") or did.startswith("apt-")):
-        slug_gu = re.sub(r'[^\w가-힣]', '-', gu)
-        slug_gu = re.sub(r'-+', '-', slug_gu).strip('-')
-        return f"{slug_gu}-{did}" if slug_gu else did
+        slug_parts.append(did)
+    else:
+        slug_parts.append(_clean(name))
+        slug_parts.append(did or "")
 
-    # 일반 (a숫자) → 단지명+구+ID
-    slug_name = re.sub(r'[^\w가-힣]', '-', name or "")
-    slug_name = re.sub(r'-+', '-', slug_name).strip('-')
-    slug_gu = re.sub(r'[^\w가-힣]', '-', gu)
-    slug_gu = re.sub(r'-+', '-', slug_gu).strip('-')
-    parts = [p for p in [slug_name, slug_gu, did] if p]
-    return "-".join(parts)
+    return "-".join([_clean(p) for p in slug_parts if p])
 
 def format_price(manwon):
     if not manwon:
@@ -279,7 +333,7 @@ def build_fallback_html(d):
             nid = n.get("id", "")
             nname_raw = n.get("name", "")
             nloc_raw = n.get("location", "")
-            nslug = make_slug(nname_raw, nloc_raw, nid)
+            nslug = make_slug(nname_raw, nloc_raw, nid, d.get("address", ""))
             nname = esc(nname_raw)
             nloc = esc(nloc_raw)
             lines.append(
@@ -354,7 +408,7 @@ def build_jsonld(d):
     name = d.get("complex_name", "")
     loc_parts = (d.get("location") or "").split(" ")
     gu = loc_parts[0] if loc_parts else ""
-    slug = make_slug(name, d.get("location", ""), did)
+    slug = make_slug(name, d.get("location", ""), did, d.get("address", ""))
 
     graph = [
         {
@@ -411,7 +465,7 @@ def generate_page(d):
     did = d.get("id", "")
     raw_name = d.get("complex_name", "")
     raw_loc = d.get("location", "")
-    slug = make_slug(raw_name, raw_loc, did)
+    slug = make_slug(raw_name, raw_loc, did, d.get("address", ""))
     name = esc(raw_name)
     loc = esc(raw_loc)
     loc_parts = raw_loc.split(" ")
@@ -518,7 +572,7 @@ def main():
             skipped += 1
             continue
 
-        slug = make_slug(d.get("complex_name", ""), d.get("location", ""), did)
+        slug = make_slug(d.get("complex_name", ""), d.get("location", ""), did, d.get("address", ""))
         page = generate_page(d)
         path = os.path.join(DANJI_DIR, f"{slug}.html")
         with open(path, "w", encoding="utf-8") as f:
