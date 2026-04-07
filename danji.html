@@ -604,7 +604,8 @@ function render() {
 
   // 조합
   const locationParts = (d.location || '').split(' ');
-  const dong = locationParts[locationParts.length - 1] || d.location;
+  const dong = locationParts.length >= 2 ? locationParts.slice(1).join(' ') : d.location;
+  const dongDisplay = locationParts[locationParts.length - 1] || d.location;
 
   // breadcrumb
   const guName = locationParts[0] || '';
@@ -746,7 +747,7 @@ function render() {
 
     <!-- 주변 단지 -->
     <div class="section">
-      <div class="section-title">${esc(dong)} 주변 단지</div>
+      <div class="section-title">${esc(dongDisplay)} 주변 단지</div>
       <div style="font-size:11px;color:var(--sub);margin-bottom:12px;margin-top:-6px;">${currentTab === '월세' ? '매매가 기준 · ' : ''}${showSupply && pm[currentPyeong] && pm[currentPyeong].supply && Math.abs((pm[currentPyeong].exclu||0)-parseFloat(currentPyeong))<=5 ? '공급 '+Math.round(pm[currentPyeong].supply)+'㎡' : '전용 '+(currentPyeong||'84')+'㎡'} ±10㎡ 기준</div>
       <div style="display:flex;flex-direction:column;gap:8px;">${nearbyHtml || '<div style="font-size:12px;color:var(--sub);">주변 단지 정보가 없습니다</div>'}</div>
     </div>
@@ -763,8 +764,8 @@ function render() {
     <div class="section">
       <div class="section-title">더 알아보기</div>
       <div style="display:flex;flex-direction:column;gap:8px;">
-        <a href="/dong/${encodeURIComponent((guName+'-'+dong).replace(/[^\w가-힣]/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,''))}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
-          <span style="font-size:13px;">${esc(dong)} 다른 단지 시세</span><span style="color:var(--sub);font-size:12px;">→</span>
+        <a href="/dong/${encodeURIComponent(makeDongSlug(guName, dong, d.address||''))}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
+          <span style="font-size:13px;">${esc(dongDisplay)} 다른 단지 시세</span><span style="color:var(--sub);font-size:12px;">→</span>
         </a>
         <a href="/gu.html?name=${encodeURIComponent(guName)}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
           <span style="font-size:13px;">${esc(guName)} 전체 시세</span><span style="color:var(--sub);font-size:12px;">→</span>

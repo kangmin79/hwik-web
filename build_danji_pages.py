@@ -11,7 +11,7 @@ Usage:
 
 import os, json, re, time, html as html_mod
 import requests
-from slug_utils import REGION_MAP, METRO_CITIES, clean as _clean, detect_region, make_danji_slug as make_slug
+from slug_utils import REGION_MAP, METRO_CITIES, clean as _clean, detect_region, make_danji_slug as make_slug, make_dong_slug
 
 def _load_env():
     for fname in (".env", "env"):
@@ -36,6 +36,10 @@ SB_HEADERS = {
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DANJI_DIR = os.path.join(BASE_DIR, "danji")
+DONG_DIR = os.path.join(BASE_DIR, "dong")
+
+# 동 페이지 slug 목록 (빌드 시 로드 — 동 파일 없는 곳은 링크 생략)
+DONG_SLUGS = set()
 
 
 # ── 유틸 ──────────────────────────────────────────────────
@@ -411,12 +415,12 @@ def build_fallback_html(d):
     # 내부 링크
     loc_parts_raw = (d.get("location") or "").split(" ", 1)
     dong_name = loc_parts_raw[1] if len(loc_parts_raw) >= 2 else ""
+    gu_for_link = loc_parts_raw[0] if loc_parts_raw else ""
+    dong_slug_str = ""
     if dong_name:
-        dong_slug_str = f"{loc_parts_raw[0]}-{dong_name}"
-        dong_slug_str = re.sub(r'[^A-Za-z0-9_\uAC00-\uD7A3]', '-', dong_slug_str)
-        dong_slug_str = re.sub(r'-+', '-', dong_slug_str).strip('-')
+        dong_slug_str = make_dong_slug(gu_for_link, dong_name, d.get("address", ""))
     lines.append('<div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">')
-    if dong_name:
+    if dong_name and dong_slug_str and dong_slug_str in DONG_SLUGS:
         lines.append(f'<a href="/dong/{dong_slug_str}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{esc(dong_name)} 다른 단지 시세 →</a>')
     lines.append(f'<a href="/gu.html?name={gu}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{gu} 전체 시세 →</a>')
     lines.append('<a href="/ranking.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">아파트 순위 →</a>')
@@ -614,6 +618,12 @@ def main():
         sys.stdout = open(sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1)
 
     os.makedirs(DANJI_DIR, exist_ok=True)
+
+    # 동 페이지 slug 목록 로드 (동 파일 없으면 링크 생략)
+    global DONG_SLUGS
+    if os.path.isdir(DONG_DIR):
+        DONG_SLUGS = {os.path.splitext(f)[0] for f in os.listdir(DONG_DIR) if f.endswith(".html")}
+    print(f"동 페이지 {len(DONG_SLUGS)}개 인식")
 
     # 옛 HTML 파일 삭제 (고아 파일 방지, style.css/app.js는 유지)
     old_count = 0
