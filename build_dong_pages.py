@@ -105,8 +105,8 @@ def make_danji_slug(name, location, did, address=""):
     if region:
         parts.append(region)
         if region in METRO_CITIES:
-            if len(addr_parts) > 1 and addr_parts[1].endswith("구"):
-                parts.append(addr_parts[1])
+            if len(addr_parts) > 1 and (addr_parts[1].endswith("구") or addr_parts[1].endswith("군")):
+                parts.append(re.sub(r'군$', '', addr_parts[1]) if addr_parts[1].endswith("군") else addr_parts[1])
         elif region != "세종":
             if len(addr_parts) > 1:
                 parts.append(re.sub(r'(시|군)$', '', addr_parts[1]))

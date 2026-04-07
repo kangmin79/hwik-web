@@ -87,9 +87,9 @@ def make_slug(name, location, did, address=""):
         slug_parts.append(region)
 
         if region in METRO_CITIES:
-            # 광역시: 바로 구 (addr_parts[1] = "강동구")
-            if len(addr_parts) > 1 and addr_parts[1].endswith("구"):
-                slug_parts.append(addr_parts[1])
+            # 광역시: 구 또는 군 (인천 강화군/옹진군 등)
+            if len(addr_parts) > 1 and (addr_parts[1].endswith("구") or addr_parts[1].endswith("군")):
+                slug_parts.append(re.sub(r'군$', '', addr_parts[1]) if addr_parts[1].endswith("군") else addr_parts[1])
         elif region == "세종":
             pass  # 구 없음
         else:

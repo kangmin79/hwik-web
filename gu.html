@@ -107,6 +107,10 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 </div>
 <script>
 const sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_KEY);
+const _RM={'서울특별시':'서울','인천광역시':'인천','부산광역시':'부산','대구광역시':'대구','광주광역시':'광주','대전광역시':'대전','울산광역시':'울산','세종특별자치시':'세종','경기도':'경기','강원특별자치도':'강원','충청북도':'충북','충청남도':'충남','전북특별자치도':'전북','전라남도':'전남','경상북도':'경북','경상남도':'경남','제주특별자치도':'제주','서울':'서울','인천':'인천','부산':'부산','대구':'대구','광주':'광주','대전':'대전','울산':'울산','세종':'세종','경기':'경기','강원':'강원','충북':'충북','충남':'충남','전북':'전북','전남':'전남','경북':'경북','경남':'경남','제주':'제주'};
+const _MC=new Set(['서울','인천','부산','대구','광주','대전','울산']);
+function _cl(s){return(s||'').replace(/[^\w가-힣]/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,'');}
+function makeSlug(name,loc,did,addr){var a=(addr||'').split(/\s+/),r=a[0]?(_RM[a[0]]||''):'',p=[];if(r){p.push(r);if(_MC.has(r)){if(a[1]&&(a[1].endsWith('구')||a[1].endsWith('군')))p.push(a[1].endsWith('군')?a[1].replace(/군$/,''):a[1]);}else if(r!=='세종'){if(a[1])p.push(a[1].replace(/(시|군)$/,''));if(a[2]&&a[2].endsWith('구'))p.push(a[2]);}}else{var l=(loc||'').split(' ');if(l[0])p.push(_cl(l[0]));}if(did&&(did.startsWith('offi-')||did.startsWith('apt-'))){p.push(did);}else{p.push(_cl(name));if(did)p.push(did);}return p.filter(Boolean).map(function(x){return _cl(x);}).join('-');}
 
 const REGIONS = {
   seoul:    { label: '서울', sub: '25개 구', list: ['종로구','중구','용산구','성동구','광진구','동대문구','중랑구','성북구','강북구','도봉구','노원구','은평구','서대문구','마포구','양천구','강서구','구로구','금천구','영등포구','동작구','관악구','서초구','강남구','송파구','강동구'] },
@@ -133,7 +137,7 @@ async function loadData() {
 
   // 구별 상세 페이지
   const { data, error } = await sb.from('danji_pages')
-    .select('id,complex_name,location,categories,recent_trade,all_time_high,jeonse_rate,total_units,build_year,nearby_subway')
+    .select('id,complex_name,location,address,categories,recent_trade,all_time_high,jeonse_rate,total_units,build_year,nearby_subway')
     .ilike('location', guName + '%')
     .not('id', 'like', 'offi-%')
     .order('complex_name');
@@ -216,7 +220,7 @@ function renderGuDetail(guName, data) {
       if (t && t.price) {
         priceSum += t.price;
         priceCount++;
-        trades.push({ name: d.complex_name, location: d.location, id: d.id, price: t.price, date: t.date, floor: t.floor, area: c });
+        trades.push({ name: d.complex_name, location: d.location, address: d.address, id: d.id, price: t.price, date: t.date, floor: t.floor, area: c });
         if (dong && dongMap[dong]) dongMap[dong].prices.push(t.price);
         break;
       }
@@ -244,7 +248,7 @@ function renderGuDetail(guName, data) {
       const t = rt[c];
       const areaNum = parseFloat(c);
       if (t && t.price && areaNum > 0) {
-        sqmList.push({ name: d.complex_name, id: d.id, location: d.location, price: t.price, area: c, sqmPrice: Math.round(t.price / areaNum) });
+        sqmList.push({ name: d.complex_name, id: d.id, location: d.location, address: d.address, price: t.price, area: c, sqmPrice: Math.round(t.price / areaNum) });
         break;
       }
     }
@@ -290,14 +294,14 @@ function renderGuDetail(guName, data) {
       if (priceTop.length > 0) {
         html += '<div class="section"><div class="section-title">매매가 높은 단지</div><div style="display:flex;flex-direction:column;gap:8px;">';
         priceTop.forEach(({d, maxPrice}, i) => {
-          html += '<a class="danji-item" style="text-decoration:none;color:inherit;" href="danji.html?id='+encodeURIComponent(d.id)+'"><div><div class="danji-name">'+(i+1)+'. '+esc(d.complex_name)+'</div><div class="danji-sub">'+esc(d.location)+'</div></div><div><div class="danji-price">'+formatPrice(maxPrice)+'</div><div class="danji-rate">최고가 기준</div></div></a>';
+          html += '<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/'+encodeURIComponent(makeSlug(d.complex_name,d.location,d.id,d.address))+'"><div><div class="danji-name">'+(i+1)+'. '+esc(d.complex_name)+'</div><div class="danji-sub">'+esc(d.location)+'</div></div><div><div class="danji-price">'+formatPrice(maxPrice)+'</div><div class="danji-rate">최고가 기준</div></div></a>';
         });
         html += '</div></div><div class="divider"></div>';
       }
       if (jrTop.length > 0) {
         html += '<div class="section"><div class="section-title">전세가율 높은 단지</div><div style="display:flex;flex-direction:column;gap:8px;">';
         jrTop.forEach((d,i) => {
-          html += '<a class="danji-item" style="text-decoration:none;color:inherit;" href="danji.html?id='+encodeURIComponent(d.id)+'"><div><div class="danji-name">'+(i+1)+'. '+esc(d.complex_name)+'</div><div class="danji-sub">'+esc(d.location)+'</div></div><div><div class="danji-price">'+d.jeonse_rate+'%</div><div class="danji-rate">전세가율</div></div></a>';
+          html += '<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/'+encodeURIComponent(makeSlug(d.complex_name,d.location,d.id,d.address))+'"><div><div class="danji-name">'+(i+1)+'. '+esc(d.complex_name)+'</div><div class="danji-sub">'+esc(d.location)+'</div></div><div><div class="danji-price">'+d.jeonse_rate+'%</div><div class="danji-rate">전세가율</div></div></a>';
         });
         html += '</div></div>';
       }
@@ -321,7 +325,7 @@ function renderGuDetail(guName, data) {
     <div class="section">
       <div class="section-title">㎡당 가격 TOP 10 <span style="font-size:10px;color:var(--muted);font-weight:400;">(전용면적 기준)</span></div>
       <div style="display:flex;flex-direction:column;gap:8px;">
-        ${sqmList.slice(0, 10).map((d, i) => `<a class="danji-item" style="text-decoration:none;color:inherit;" href="danji.html?id=${encodeURIComponent(d.id)}"><div><div class="danji-name">${i+1}. ${esc(d.name)}</div><div class="danji-sub">${esc(d.location)} · 전용${d.area}㎡</div></div><div><div class="danji-price">${formatPrice(d.price)}</div><div class="danji-rate">${formatPrice(d.sqmPrice)}/㎡</div></div></a>`).join('')}
+        ${sqmList.slice(0, 10).map((d, i) => `<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/${encodeURIComponent(makeSlug(d.name,d.location,d.id,d.address))}"><div><div class="danji-name">${i+1}. ${esc(d.name)}</div><div class="danji-sub">${esc(d.location)} · 전용${d.area}㎡</div></div><div><div class="danji-price">${formatPrice(d.price)}</div><div class="danji-rate">${formatPrice(d.sqmPrice)}/㎡</div></div></a>`).join('')}
       </div>
     </div>
 
@@ -330,7 +334,7 @@ function renderGuDetail(guName, data) {
     <div class="section">
       <div class="section-title">최근 거래</div>
       <div style="display:flex;flex-direction:column;gap:8px;">
-        ${trades.slice(0, 10).map(t => `<a class="trade-item" style="text-decoration:none;color:inherit;" href="danji.html?id=${encodeURIComponent(t.id)}"><div><div class="trade-price">${formatPrice(t.price)}</div><div class="trade-detail">${esc(t.name)} · ${t.area}㎡${t.floor ? ' · '+t.floor+'층' : ''}</div></div><div class="trade-date">${esc(t.date||'')}</div></a>`).join('')}
+        ${trades.slice(0, 10).map(t => `<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/${encodeURIComponent(makeSlug(t.name,'',t.id,t.address))}"><div><div class="trade-price">${formatPrice(t.price)}</div><div class="trade-detail">${esc(t.name)} · ${t.area}㎡${t.floor ? ' · '+t.floor+'층' : ''}</div></div><div class="trade-date">${esc(t.date||'')}</div></a>`).join('')}
       </div>
     </div>
 
@@ -396,7 +400,7 @@ function injectJsonLd(guName, data) {
         "@type": "ListItem",
         "position": i + 1,
         "name": d.complex_name,
-        "url": "https://hwik.kr/danji.html?id=" + encodeURIComponent(d.id),
+        "url": "https://hwik.kr/danji/" + encodeURIComponent(makeSlug(d.complex_name, d.location, d.id, d.address)),
       }))
     });
   } else {

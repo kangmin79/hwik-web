@@ -29,7 +29,7 @@ function makeSlug(name, location, did, address) {
   if (region) {
     parts.push(region);
     if (METRO_CITIES.has(region)) {
-      if (addrParts[1] && addrParts[1].endsWith('구')) parts.push(addrParts[1]);
+      if (addrParts[1] && (addrParts[1].endsWith('구') || addrParts[1].endsWith('군'))) parts.push(addrParts[1].endsWith('군') ? addrParts[1].replace(/군$/,'') : addrParts[1]);
     } else if (region !== '세종') {
       if (addrParts[1]) parts.push(addrParts[1].replace(/(시|군)$/,''));
       if (addrParts[2] && addrParts[2].endsWith('구')) parts.push(addrParts[2]);
