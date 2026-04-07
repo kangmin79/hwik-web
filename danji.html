@@ -82,8 +82,10 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 .tab.active { color:var(--text); font-weight:500; border-bottom-color:var(--yellow); }
 
 /* 평형 */
-.pyeong-row { padding:12px 16px; display:flex; gap:8px; overflow-x:auto; }
+.pyeong-row { padding:12px 16px; display:flex; gap:8px; overflow-x:auto; -ms-overflow-style:none; scrollbar-width:none; position:relative; }
 .pyeong-row::-webkit-scrollbar { display:none; }
+.pyeong-wrap { position:relative; }
+.pyeong-wrap::after { content:''; position:absolute; right:0; top:0; bottom:0; width:32px; background:linear-gradient(to right, transparent, var(--surface)); pointer-events:none; z-index:1; }
 .pyeong-btn.active { background:var(--yellow); border-color:var(--yellow); color:var(--dark); font-weight:500; }
 
 /* 지표 — 핵심 시세 (리치고 참고) */
@@ -657,7 +659,7 @@ function render() {
 
     <!-- 평형 -->
     ${toggleRowHtml}
-    <div class="pyeong-row">${pyeongHtml}</div>
+    <div class="pyeong-wrap"><div class="pyeong-row">${pyeongHtml}</div></div>
 
     <!-- 핵심 시세 카드 (월세 탭에서는 숨김) -->
     ${currentTab !== '월세' ? `<div class="price-cards">
