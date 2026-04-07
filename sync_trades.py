@@ -419,13 +419,14 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
             pass
     categories = sorted(areas, key=lambda x: float(x))
 
-    # pyeongs_map에서 매칭 안 되는 카테고리는 가장 가까운 것으로 매핑
+    # pyeongs_map에서 매칭 안 되는 카테고리는 가장 가까운 것으로 매핑 (±10㎡ 이내만)
     if pyeongs_map:
         pm_keys = [float(k) for k in pyeongs_map.keys()]
         for cat in categories:
             if cat not in pyeongs_map and pm_keys:
                 closest = min(pm_keys, key=lambda k: abs(k - float(cat)))
-                pyeongs_map[cat] = pyeongs_map[str(round(closest))]
+                if abs(closest - float(cat)) <= 10:
+                    pyeongs_map[cat] = pyeongs_map[str(round(closest))]
 
     # 거래를 평형별로 분류
     def get_cat(trade_item):
