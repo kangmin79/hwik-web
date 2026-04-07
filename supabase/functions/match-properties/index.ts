@@ -565,7 +565,7 @@ Deno.serve(async (req) => {
       : extractExcludedTags(allText);
 
     // ═══════════════════════════════════════════════════════════
-    // ★ 125점 만점 매칭 점수 (중개사 14년 실전 기반)
+    // ★ 135점 만점 매칭 점수 (거래유형 35 + 가격 40 + 위치 20 + 매물유형 15 + 태그 20 + 입주 15 + 임베딩 5 → cap 125)
     // ═══════════════════════════════════════════════════════════
     results = results.map((r: any) => {
       let score = 0;
@@ -580,15 +580,15 @@ Deno.serve(async (req) => {
         if (clientExcluded.some((t: string) => propTags.includes(t))) { r._score = -50; return r; }
       }
 
-      // ① 거래유형 (40점) — 불일치 시 0점 즉시 리턴
+      // ① 거래유형 (35점) — 불일치 시 0점 즉시 리턴
       const propType = r.property?.type || '';
       if (wantedTradeTypes.length && wantedTradeTypes.includes(propType)) {
-        score += 40;
+        score += 35;
       } else if (wantedTradeTypes.length) {
         r._score = 0; return r; // Hard Filter — 전세 찾는데 월세 추천 금지
       }
 
-      // ② 가격 적합도 (30점) — 적정 범위: ±15%, 너무 싸거나 비싸면 감점
+      // ② 가격 적합도 (40점) — 적정 범위: ±15%, 너무 싸거나 비싸면 감점
       if (wantedTradeType === '월세' && (wantedDeposit || wantedMonthly)) {
         let propDep = r.deposit || 0, propMon = r.monthly_rent || 0;
         if (!propDep && !propMon) {
@@ -600,32 +600,32 @@ Deno.serve(async (req) => {
         const effMinDep = wantedDeposit ? wantedDeposit * 0.8 : 0;
         const effMaxMon = maxMonthly || (wantedMonthly ? wantedMonthly * 1.3 : 999999);
         const effMinMon = wantedMonthly ? wantedMonthly * 0.8 : 0;
-        let priceScore = 30;
+        let priceScore = 40;
         // 보증금 초과 감점
-        if (propDep > effMaxDep) { const over = (propDep - effMaxDep) / effMaxDep; priceScore -= Math.min(Math.round(over * 60), 30); }
+        if (propDep > effMaxDep) { const over = (propDep - effMaxDep) / effMaxDep; priceScore -= Math.min(Math.round(over * 80), 40); }
         // 보증금 너무 낮으면 감점
-        if (effMinDep > 0 && propDep < effMinDep) { const under = (effMinDep - propDep) / effMinDep; priceScore -= Math.min(Math.round(under * 40), 20); }
+        if (effMinDep > 0 && propDep < effMinDep) { const under = (effMinDep - propDep) / effMinDep; priceScore -= Math.min(Math.round(under * 50), 25); }
         // 월세 초과 감점
-        if (propMon > effMaxMon) { const over = (propMon - effMaxMon) / effMaxMon; priceScore -= Math.min(Math.round(over * 60), 30); }
+        if (propMon > effMaxMon) { const over = (propMon - effMaxMon) / effMaxMon; priceScore -= Math.min(Math.round(over * 80), 40); }
         // 월세 너무 낮으면 감점
-        if (effMinMon > 0 && propMon < effMinMon) { const under = (effMinMon - propMon) / effMinMon; priceScore -= Math.min(Math.round(under * 40), 20); }
+        if (effMinMon > 0 && propMon < effMinMon) { const under = (effMinMon - propMon) / effMinMon; priceScore -= Math.min(Math.round(under * 50), 25); }
         score += Math.max(priceScore, 0);
       } else if ((maxPrice || minPrice) && pn > 0) {
         // 매매/전세: 적정 범위 = 희망가 × 0.85 ~ 1.15
         const targetPrice = maxPrice || minPrice;
         const lowerBound = targetPrice * 0.85;
         const upperBound = maxPrice ? maxPrice * 1.15 : (minPrice ? minPrice * 1.3 : targetPrice * 1.15);
-        let priceScore = 30;
+        let priceScore = 40;
         if (pn >= lowerBound && pn <= upperBound) {
-          priceScore = 30; // 적정 범위 → 만점
+          priceScore = 40; // 적정 범위 → 만점
         } else if (pn > upperBound) {
-          // 비싸면 감점 (1% 초과당 1점)
+          // 비싸면 감점 (1% 초과당 1.5점)
           const overPct = ((pn - upperBound) / targetPrice) * 100;
-          priceScore = Math.max(30 - Math.round(overPct), 0);
+          priceScore = Math.max(40 - Math.round(overPct * 1.5), 0);
         } else if (pn < lowerBound) {
-          // 싸면 감점 (50% 미만이면 0점 — 20억 찾는데 3억은 의미 없음)
+          // 싸면 감점 — 예산의 50% 미만이면 0점
           const underPct = ((lowerBound - pn) / targetPrice) * 100;
-          priceScore = Math.max(30 - Math.round(underPct), 0);
+          priceScore = Math.max(40 - Math.round(underPct * 1.5), 0);
         }
         score += priceScore;
       }
