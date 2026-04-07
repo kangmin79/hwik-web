@@ -325,78 +325,91 @@
         .card-dot { height:4px; border-radius:3px; background:rgba(255,255,255,0.35); transition:all 0.25s; width:4px; }
         .card-dot.active { background:#fff; width:14px; }
 
-        /* ========== 정보 카드 (통합) ========== */
+        /* ========== 오버랩 카드 레이아웃 ========== */
         .info-card-wrap {
           width: 100%; height: calc(100dvh - var(--bar-h, 110px));
           position: relative; display: flex; flex-direction: column;
-          background: linear-gradient(160deg, #0d1b2a 0%, #1b2838 30%, #162032 60%, #0a1628 100%);
-          overflow: hidden;
+          overflow-y: auto; overflow-x: hidden;
+          background: #0d1b2a;
         }
-        /* 상단 사진 영역 (20%) */
+        /* 사진 영역 (35%) */
         .info-photo-top {
-          width: 100%; height: 20%; position: relative; overflow: hidden;
+          width: 100%; min-height: 35%; position: relative; overflow: hidden;
           flex-shrink: 0; background: #000;
         }
         .info-photo-top img {
           width: 100%; height: 100%; object-fit: cover;
         }
         .info-photo-top .photo-counter {
-          position: absolute; bottom: 8px; right: 12px;
-          font-size: 11px; color: rgba(255,255,255,0.8); background: rgba(0,0,0,0.5);
-          padding: 3px 10px; border-radius: 10px; font-weight: 600;
+          position: absolute; bottom: 28px; right: 16px;
+          font-size: 12px; color: #fff; background: rgba(0,0,0,0.55);
+          padding: 4px 12px; border-radius: 12px; font-weight: 600;
+          backdrop-filter: blur(4px);
         }
         .info-photo-top .photo-nav {
-          position: absolute; top: 0; bottom: 0; width: 30%; cursor: pointer; z-index: 5;
+          position: absolute; top: 0; bottom: 0; width: 35%; cursor: pointer; z-index: 5;
         }
         .info-photo-top .photo-nav-left { left: 0; }
         .info-photo-top .photo-nav-right { right: 0; }
-        .info-card-orb { position: absolute; border-radius: 50%; }
-        .info-card-orb-1 { width:350px; height:350px; top:-80px; right:-100px; background:radial-gradient(circle,rgba(99,102,241,0.1) 0%,transparent 70%); }
-        .info-card-orb-2 { width:250px; height:250px; bottom:-60px; left:-80px; background:radial-gradient(circle,rgba(250,204,21,0.08) 0%,transparent 70%); }
-        /* 정보 영역 (나머지 80%) */
+        /* 사진 없을 때 대체 헤더 */
+        .info-no-photo {
+          width: 100%; height: 80px; flex-shrink: 0;
+          background: linear-gradient(160deg, #0d1b2a 0%, #1b2838 100%);
+        }
+        /* 정보 카드 (오버랩: 사진 위로 -20px) */
         .info-card-body {
-          flex: 1; display: flex; flex-direction: column;
-          align-items: center; justify-content: center;
-          position: relative; overflow: hidden;
+          position: relative; z-index: 2;
+          margin-top: -24px;
+          border-radius: 24px 24px 0 0;
+          background: linear-gradient(180deg, #1a1a2e 0%, #151525 100%);
+          padding: 28px 24px 24px;
+          flex: 1; min-height: 0;
         }
         .info-card-content {
-          position: relative; z-index: 1; text-align: center;
-          padding: 0 28px; width: 100%; max-width: 420px;
+          text-align: center; width: 100%; max-width: 420px; margin: 0 auto;
         }
+        /* 거래유형 배지 */
         .info-badge {
-          font-size:12px; font-weight:600; padding:6px 16px; border-radius:20px;
+          font-size:12px; font-weight:700; padding:6px 18px; border-radius:20px;
           display:inline-flex; align-items:center; gap:8px;
-          color:rgba(255,255,255,0.85); border:1px solid; margin-bottom:20px;
+          color:#fff; border:1px solid; margin-bottom:18px;
         }
         .info-badge-dot { width:7px; height:7px; border-radius:50%; }
+        /* 가격 */
         .info-price {
-          font-size:38px; font-weight:800; color:#fff;
-          letter-spacing:-0.03em; margin-bottom:8px; line-height:1.1;
+          font-size:34px; font-weight:800; color:#fff;
+          letter-spacing:-0.03em; margin-bottom:6px; line-height:1.15;
         }
-        .info-location { font-size:15px; color:rgba(255,255,255,0.5); margin-bottom:20px; }
-        .info-divider { width:40px; height:1px; background:rgba(255,255,255,0.15); margin:0 auto 20px; }
+        /* 위치 */
+        .info-location {
+          font-size:14px; color:rgba(255,255,255,0.5); margin-bottom:20px;
+        }
+        /* 구분선 */
+        .info-divider {
+          width:36px; height:2px; background:rgba(255,255,255,0.12);
+          margin:0 auto 18px; border-radius:1px;
+        }
+        /* 스펙 태그 */
         .info-specs {
-          display:flex; gap:7px; flex-wrap:wrap; justify-content:center; margin-bottom:20px;
+          display:flex; gap:7px; flex-wrap:wrap; justify-content:center; margin-bottom:16px;
         }
+        /* 중개사 코멘트 */
         .info-comment {
-          margin-top:8px; padding:16px 20px; text-align:left;
-          background:rgba(255,255,255,0.06); border-radius:14px;
-          border:1px solid rgba(255,255,255,0.08); margin-bottom:16px;
+          margin-top:4px; padding:14px 18px; text-align:left;
+          background:rgba(255,255,255,0.05); border-radius:14px;
+          border:1px solid rgba(255,255,255,0.08);
         }
-        .info-comment-label { font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:8px; font-weight:600; }
-        .info-comment-text { font-size:14px; color:rgba(255,255,255,0.7); line-height:1.8; white-space:pre-wrap; word-break:keep-all; }
-        .info-photo-btn {
-          display:inline-flex; align-items:center; gap:8px;
-          padding:12px 24px; border-radius:12px; cursor:pointer;
-          background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15);
-          color:rgba(255,255,255,0.8); font-size:14px; font-weight:600;
-          transition:background 0.2s;
+        .info-comment-label {
+          font-size:11px; color:rgba(255,255,255,0.35); margin-bottom:6px; font-weight:600;
         }
-        .info-photo-btn:active { background:rgba(255,255,255,0.15); }
-        .info-photo-btn svg { stroke:rgba(255,255,255,0.7); }
+        .info-comment-text {
+          font-size:14px; color:rgba(255,255,255,0.65); line-height:1.7;
+          white-space:pre-wrap; word-break:keep-all;
+        }
+        /* 워터마크 */
         .info-watermark {
-          position:absolute; bottom:14px; right:16px;
-          font-size:11px; font-weight:800; color:rgba(250,204,21,0.15); letter-spacing:-0.5px;
+          position:absolute; bottom:10px; right:16px;
+          font-size:11px; font-weight:800; color:rgba(250,204,21,0.12); letter-spacing:-0.5px;
         }
 
         /* 레거시 호환 */
@@ -1078,24 +1091,21 @@
               <div class="card card-full" id="activeCard" data-template="info" data-total="1">
                 <div class="info-card-wrap">
 
-                  <!-- 상단 사진 영역 (20%) — 사진 있을 때만 -->
+                  <!-- 상단 사진 (35%) — 사진 있을 때 / 없으면 미니 헤더 -->
                   ${hasPhotos ? `
-                  <div class="info-photo-top" id="infoPhotoTop">
+                  <div class="info-photo-top" id="infoPhotoTop" onclick="_openGallery()">
                     <img src="${esc(photos[0])}" id="infoPhotoImg">
                     ${photos.length > 1 ? `<div class="photo-counter" id="infoPhotoCounter">1 / ${photos.length}</div>` : ''}
                     ${photos.length > 1 ? `
-                    <div class="photo-nav photo-nav-left" onclick="_infoPhotoNav(-1)"></div>
-                    <div class="photo-nav photo-nav-right" onclick="_infoPhotoNav(1)"></div>` : ''}
-                  </div>` : ''}
+                    <div class="photo-nav photo-nav-left" onclick="event.stopPropagation();_infoPhotoNav(-1)"></div>
+                    <div class="photo-nav photo-nav-right" onclick="event.stopPropagation();_infoPhotoNav(1)"></div>` : ''}
+                  </div>` : `<div class="info-no-photo"></div>`}
 
-                  <!-- 정보 영역 -->
+                  <!-- 정보 카드 (오버랩) -->
                   <div class="info-card-body">
-                    <div class="info-card-orb info-card-orb-1"></div>
-                    <div class="info-card-orb info-card-orb-2"></div>
-
                     <div class="info-card-content">
                       <!-- 거래유형 배지 -->
-                      <div class="info-badge" style="border-color:${dotColor}33;background:${dotColor}1a;">
+                      <div class="info-badge" style="border-color:${dotColor}44;background:${dotColor}22;">
                         <span class="info-badge-dot" style="background:${dotColor}"></span>
                         ${type}
                       </div>
@@ -1120,7 +1130,6 @@
                       </div>` : ''}
                     </div>
 
-                    <!-- 휙 워터마크 -->
                     <div class="info-watermark">휙</div>
                   </div>
                 </div>
