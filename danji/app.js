@@ -6,6 +6,19 @@ let DATA = null;
 let currentTab = '매매';
 let currentPyeong = null;
 let showSupply = false; // 전용/공급 토글
+
+// slug 생성 (build_danji_pages.py의 make_slug와 동일 로직)
+function makeSlug(name, location, did) {
+  const locParts = (location || '').split(' ');
+  const gu = locParts[0] || '';
+  if (did && (did.startsWith('offi-') || did.startsWith('apt-'))) {
+    const slugGu = gu.replace(/[^\w가-힣]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    return slugGu ? slugGu + '-' + did : did;
+  }
+  const slugName = (name || '').replace(/[^\w가-힣]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  const slugGu = gu.replace(/[^\w가-힣]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  return [slugName, slugGu, did].filter(Boolean).join('-');
+}
 let chart = null;
 let volumeChart = null;
 let RANK_INFO = null;
@@ -82,18 +95,7 @@ async function loadData() {
   document.getElementById('tw-title').content = document.title;
   document.getElementById('tw-desc').content = desc;
   document.querySelector('meta[name="description"]').content = desc;
-  // slug 생성 (build_danji_pages.py의 make_slug와 동일 로직)
-  function makeSlug(name, location, did) {
-    const locParts = (location || '').split(' ');
-    const gu = locParts[0] || '';
-    if (did && (did.startsWith('offi-') || did.startsWith('apt-'))) {
-      const slugGu = gu.replace(/[^\w가-힣]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-      return slugGu ? slugGu + '-' + did : did;
-    }
-    const slugName = (name || '').replace(/[^\w가-힣]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-    const slugGu = gu.replace(/[^\w가-힣]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-    return [slugName, slugGu, did].filter(Boolean).join('-');
-  }
+  // slug 생성은 전역 makeSlug() 사용
   const danjiSlug = makeSlug(data.complex_name, data.location, id);
   const danjiCanonical = `https://hwik.kr/danji/${encodeURIComponent(danjiSlug)}`;
   // og:url 업데이트
@@ -327,7 +329,7 @@ function render() {
       else areaLabel = '전용 ' + bestExclu + '㎡';
     }
     return `
-    <a class="nearby-item" href="/danji.html?id=${encodeURIComponent(n.id)}" style="text-decoration:none;color:inherit;">
+    <a class="nearby-item" href="/danji/${encodeURIComponent(makeSlug(n.name, n.location, n.id))}" style="text-decoration:none;color:inherit;">
       <div>
         <div class="nearby-name">${esc(n.name)}</div>
         <div class="nearby-sub">${esc(n.location)} ${n.distance ? '· '+distText(n.distance) : ''}${areaLabel ? ' · '+areaLabel : ''}</div>
