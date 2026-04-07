@@ -393,6 +393,7 @@
         /* 스펙 태그 */
         .info-specs {
           display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:18px;
+          max-height:72px; overflow:hidden;
         }
         /* 중개사 코멘트 */
         .info-comment {
@@ -405,7 +406,9 @@
         }
         .info-comment-text {
           font-size:15px; color:rgba(255,255,255,0.85); line-height:1.8;
-          white-space:pre-wrap; word-break:keep-all; font-weight:500;
+          word-break:keep-all; font-weight:500;
+          display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;
+          overflow:hidden;
         }
         /* 인라인 지도 */
         .info-map {
