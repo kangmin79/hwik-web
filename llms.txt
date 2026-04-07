@@ -27,11 +27,11 @@ Each property listing on Hwik contains:
 ## URLs
 - Property viewer: hwik.kr/property_view.html?id={card_id}
 - Multiple properties: hwik.kr/property_view.html?ids={id1},{id2},{id3}
-- Complex/danji pages: hwik.kr/danji/{지역}-{구}-{단지명}-{id}
+- Complex/danji pages: hwik.kr/danji/{지역}-{구/시}-{동}-{단지명}-{id}
 - Main site: hwik.kr
 
 ## Complex (Danji) Pages
-Each apartment complex has a dedicated page at hwik.kr/danji/{지역}-{구}-{단지명}-{id} containing:
+Each apartment complex has a dedicated page at hwik.kr/danji/{지역}-{구/시}-{동}-{단지명}-{id} containing:
 - Complex info: name, location, total units, build year
 - Recent actual transaction prices (매매/전세/월세) by unit size
 - All-time high prices with dates
@@ -44,7 +44,7 @@ Each apartment complex has a dedicated page at hwik.kr/danji/{지역}-{구}-{단
 - SEO description text with data source attribution
 - Schema.org JSON-LD structured data (Residence type)
 
-Example: hwik.kr/danji/서울-마포구-래미안마포리버웰-a12187501
+Example: hwik.kr/danji/서울-마포구-용강동-래미안마포리버웰-a12187501
 
 ## Data Format
 Property pages include Schema.org JSON-LD structured data (RealEstateListing type).
