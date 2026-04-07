@@ -1137,7 +1137,7 @@
                     ${photos.length > 1 ? `
                     <div class="photo-nav photo-nav-left" onclick="event.stopPropagation();_infoPhotoNav(-1)"></div>
                     <div class="photo-nav photo-nav-right" onclick="event.stopPropagation();_infoPhotoNav(1)"></div>` : ''}
-                  </div>` : `<div class="info-no-photo"></div>`}
+                  </div>` : `<div class="info-photo-top" id="noImgMapArea" style="background:#1a1a2e;"></div>`}
 
                   <!-- 정보 카드 (오버랩) -->
                   <div class="info-card-body">
@@ -1590,11 +1590,13 @@
         let _lastMinimapKey = null; // ★ 미니맵 캐시 키 (lat,lng)
         
         function initMinimap(property, savedLat, savedLng) {
-            const mapContainer = document.getElementById('infoMapContainer') || document.getElementById('minimap');
+            // 사진 없으면 상단 영역에 지도 렌더링
+            const noImgMap = document.getElementById('noImgMapArea');
+            const mapContainer = noImgMap || document.getElementById('minimap');
             if (!mapContainer) return;
 
             if (!savedLat || !savedLng) {
-                mapContainer.style.display = 'none';
+                if (noImgMap) noImgMap.style.display = 'none';
                 return;
             }
             mapContainer.style.display = '';
