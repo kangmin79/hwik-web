@@ -2482,8 +2482,8 @@ const PanelCards = (() => {
         <div id="searchHint" style="display:none;font-size:11px;color:var(--primary);margin:-12px 0 12px 4px;">💡 Enter로 AI 검색 (더 많은 결과)</div>
         <div id="myList">${hwikLoading()}</div>
         <div id="myMore" style="display:none;text-align:center;padding:12px;"><button class="btn-load-more" onclick="PanelCards.more()">더 보기</button></div>
-        <div id="completedToggleWrap" style="text-align:center;padding:8px 0;display:none;">
-          <button id="completedToggleBtn" onclick="PanelCards.toggleCompleted()" style="padding:4px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-light);font-size:11px;cursor:pointer;"></button>
+        <div id="completedToggleWrap" style="display:none;">
+          <button id="completedToggleBtn" style="display:none;"></button>
         </div>
       </div>
     </div></div>
