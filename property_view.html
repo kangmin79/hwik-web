@@ -248,18 +248,22 @@
           margin: 0 auto;
           background: #000;
         }
-        /* 사진 영역: 화면 꽉 채움 (하단바 제외) */
+        /* 사진 영역: 하단바(110px) 제외한 전체 */
         .card-photo-section {
           position: relative; width: 100%;
           height: calc(100dvh - 110px);
           overflow: hidden;
+          display: flex; flex-direction: column;
         }
-        .card-photo-section .card-inner-slider {
+        .card-photo-area {
+          position: relative; width: 100%; flex: 1; overflow: hidden;
+        }
+        .card-photo-area .card-inner-slider {
           position: absolute; inset: 0; display: flex;
           transition: transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94);
           z-index: 2; will-change: transform;
         }
-        /* 블러 배경 레이어 */
+        /* 블러 배경 레이어 (photo-area 안) */
         .card-blur-bg {
           position: absolute; inset: -20px; z-index: 0;
           background-size: cover; background-position: center;
@@ -283,9 +287,9 @@
           transition: transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94);
           will-change: transform;
         }
-        /* 사진 슬라이드 — 항상 contain (원본 비율 유지, 깨짐 방지), 위쪽 정렬 */
+        /* 사진 슬라이드 — 항상 contain (원본 비율 유지, 깨짐 방지) */
         .photo-slide {
-          min-width: 100%; height: 100%; object-fit: contain; object-position: center top;
+          min-width: 100%; height: 100%; object-fit: contain;
           position: relative; z-index: 2;
           pointer-events: auto;
           cursor: pointer;
@@ -324,11 +328,11 @@
         .card-dot { height:4px; border-radius:3px; background:rgba(255,255,255,0.35); transition:all 0.25s; width:4px; }
         .card-dot.active { background:#fff; width:14px; }
 
-        /* 하단 오버레이 (사진 위 정보) */
+        /* 정보 영역 (사진 아래, 다크 배경) */
         .card-bottom {
-          position:absolute; bottom:0; left:0; right:0;
-          background:linear-gradient(to top,rgba(0,0,0,0.7) 0%,rgba(0,0,0,0.4) 50%,transparent 100%);
-          padding:40px 20px 16px; z-index:10; transition:opacity 0.3s;
+          background: #1a1a2e;
+          padding: 16px 20px 12px; z-index: 10;
+          flex-shrink: 0;
         }
         .card-bottom.hidden { opacity:0; pointer-events:none; }
         .card-price { font-size:30px; font-weight:800; color:#fff; letter-spacing:-0.03em; margin-bottom:2px; }
@@ -1003,16 +1007,18 @@
             const cardHtml = `
               <div class="card card-full" id="activeCard" data-template="memo" data-total="${totalSlides}" onclick="_onCardTap(event)">
                 <div class="card-photo-section">
-                  <div class="card-blur-bg" id="cardBlurBg" style="background-image:url('${esc(photos[0])}')"></div>
-                  <div class="card-inner-slider" id="cardSlider">${slidesHtml}</div>
-                  ${_topInfoHtml(type, totalSlides)}
+                  <div class="card-photo-area">
+                    <div class="card-blur-bg" id="cardBlurBg" style="background-image:url('${esc(photos[0])}')"></div>
+                    <div class="card-inner-slider" id="cardSlider">${slidesHtml}</div>
+                    ${_topInfoHtml(type, totalSlides)}
+                    <button class="card-arrow arr-left" onclick="_moveInternalSlide(-1)">‹</button>
+                    <button class="card-arrow arr-right" onclick="_moveInternalSlide(1)">›</button>
+                  </div>
                   <div class="card-bottom" id="cardBottom">
                     <div class="card-price">${price}</div>
                     <div class="card-name">${cardNameStr}</div>
                     ${specsHtml ? `<div class="card-specs">${specsHtml}</div>` : ''}
                   </div>
-                  <button class="card-arrow arr-left" onclick="_moveInternalSlide(-1)">‹</button>
-                  <button class="card-arrow arr-right" onclick="_moveInternalSlide(1)">›</button>
                 </div>
               </div>`;
             // 하단 고정 바 렌더
