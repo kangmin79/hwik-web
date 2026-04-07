@@ -332,7 +332,15 @@ def build_fallback_html(d):
     lines.append('<p style="font-size:10px;color:#9ca3af;margin-top:8px;">실거래가 출처: 국토교통부 실거래가 공개시스템 · 매일 업데이트</p>')
 
     # 내부 링크
+    loc_parts_raw = (d.get("location") or "").split(" ", 1)
+    dong_name = loc_parts_raw[1] if len(loc_parts_raw) >= 2 else ""
+    if dong_name:
+        dong_slug_str = f"{loc_parts_raw[0]}-{dong_name}"
+        dong_slug_str = re.sub(r'[^\w가-힣]', '-', dong_slug_str)
+        dong_slug_str = re.sub(r'-+', '-', dong_slug_str).strip('-')
     lines.append('<div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">')
+    if dong_name:
+        lines.append(f'<a href="/dong/{dong_slug_str}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{esc(dong_name)} 다른 단지 시세 →</a>')
     lines.append(f'<a href="/gu.html?name={gu}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{gu} 전체 시세 →</a>')
     lines.append('<a href="/ranking.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">아파트 순위 →</a>')
     lines.append("</div>")
