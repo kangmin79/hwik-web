@@ -25,12 +25,26 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <script>
-// Canonical 즉시 주입 (Googlebot 1차 렌더링 시 중복 콘텐츠 방지)
+// 정적 동 페이지로 리다이렉트 (있는 경우)
 (function() {
   var p = new URLSearchParams(location.search);
   var gu = p.get('gu'), dong = p.get('dong');
+  if (gu && dong) {
+    var slug = (gu + '-' + dong).replace(/[^\w가-힣]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    var staticUrl = '/dong/' + encodeURIComponent(slug);
+    // 정적 페이지 존재 여부 확인 후 리다이렉트
+    var xhr = new XMLHttpRequest();
+    xhr.open('HEAD', staticUrl, true);
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        location.replace(staticUrl);
+      }
+    };
+    xhr.send();
+  }
+  // canonical (리다이렉트 안 되는 경우 대비)
   var url = gu && dong
-    ? 'https://hwik.kr/dong.html?gu=' + encodeURIComponent(gu) + '&dong=' + encodeURIComponent(dong)
+    ? 'https://hwik.kr/dong/' + encodeURIComponent((gu+'-'+dong).replace(/[^\w가-힣]/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,''))
     : 'https://hwik.kr/dong.html';
   var link = document.createElement('link');
   link.rel = 'canonical'; link.id = 'canonical'; link.href = url;
