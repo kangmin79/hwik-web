@@ -1022,6 +1022,11 @@ def generate_sitemap(danji_list: list):
             loc_parts = (location or "").split(" ")
             if loc_parts and loc_parts[0]:
                 parts.append(_clean(loc_parts[0]))
+        # 동 추가 (location에서 구/시 제외한 나머지)
+        loc_parts = (location or "").split(" ", 1)
+        if len(loc_parts) >= 2:
+            for d in loc_parts[1].split(" "):
+                parts.append(_clean(d))
         if did and (did.startswith("offi-") or did.startswith("apt-")):
             parts.append(did)
         else:
@@ -1066,6 +1071,7 @@ def generate_sitemap(danji_list: list):
     # 동 페이지 (거래 있는 단지 3개 이상인 동만)
     from collections import defaultdict as _defaultdict
     dong_trade_count = _defaultdict(int)  # (gu, dong) → 거래 있는 단지 수
+    dong_addr_cache = {}  # (gu, dong) → 첫 번째 단지의 address
     for d in all_danji:
         loc = d.get("location", "")
         if not loc:
@@ -1077,12 +1083,35 @@ def generate_sitemap(danji_list: list):
         cats = d.get("categories") or []
         if any(rt.get(c) for c in cats):
             dong_trade_count[(parts[0], parts[1])] += 1
+            if (parts[0], parts[1]) not in dong_addr_cache:
+                dong_addr_cache[(parts[0], parts[1])] = d.get("address", "")
 
     dong_count = 0
     for (gu, dong), cnt in sorted(dong_trade_count.items()):
         if cnt < 3:
             continue
-        dong_slug = f"{gu}-{dong}"
+        # 동 slug에 지역 prefix 추가
+        addr = dong_addr_cache.get((gu, dong), "")
+        addr_parts = (addr or "").split()
+        region = _REGION_MAP.get(addr_parts[0], "") if addr_parts else ""
+        slug_parts = []
+        if region:
+            slug_parts.append(region)
+            if region not in _METRO:
+                if len(addr_parts) > 1:
+                    slug_parts.append(_re.sub(r'(시|군)$', '', addr_parts[1]))
+                if len(addr_parts) > 2 and addr_parts[2].endswith("구"):
+                    slug_parts.append(addr_parts[2])
+            else:
+                if gu.endswith("군"):
+                    slug_parts.append(_re.sub(r'군$', '', gu))
+                else:
+                    slug_parts.append(gu)
+        else:
+            slug_parts.append(gu)
+        for d_part in dong.split(" "):
+            slug_parts.append(d_part)
+        dong_slug = "-".join(slug_parts)
         dong_slug = _re.sub(r'[^\w가-힣]', '-', dong_slug)
         dong_slug = _re.sub(r'-+', '-', dong_slug).strip('-')
         safe_dong_slug = _quote(dong_slug, safe="-")

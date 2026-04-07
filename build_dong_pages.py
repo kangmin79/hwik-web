@@ -70,9 +70,35 @@ def walk_min(m):
     return f"{round(m / 67)}분"
 
 
-def make_dong_slug(gu, dong):
-    """강남구 + 도곡동 → 강남구-도곡동"""
-    slug = f"{gu}-{dong}"
+def make_dong_slug(gu, dong, address=""):
+    """지역+구+동 → 서울-강남구-도곡동"""
+    # address에서 지역 추출
+    addr_parts = (address or "").split()
+    region = ""
+    if addr_parts:
+        # REGION_MAP은 아래에 정의 — 함수 호출 시점에는 존재
+        region = REGION_MAP.get(addr_parts[0], "") if 'REGION_MAP' in dir() or True else ""
+    parts = []
+    if region:
+        parts.append(region)
+        if region not in ("서울", "인천", "부산", "대구", "광주", "대전", "울산", "세종"):
+            # 도: 시/군 추가
+            if len(addr_parts) > 1:
+                parts.append(re.sub(r'(시|군)$', '', addr_parts[1]))
+            if len(addr_parts) > 2 and addr_parts[2].endswith("구"):
+                parts.append(addr_parts[2])
+        else:
+            # 광역시: 구/군 추가 (gu 파라미터 사용)
+            if gu.endswith("군"):
+                parts.append(re.sub(r'군$', '', gu))
+            else:
+                parts.append(gu)
+    else:
+        parts.append(gu)
+    # 동 추가
+    for d in dong.split(" "):
+        parts.append(d)
+    slug = "-".join(parts)
     slug = re.sub(r'[^\w가-힣]', '-', slug)
     slug = re.sub(r'-+', '-', slug).strip('-')
     return slug
@@ -116,6 +142,11 @@ def make_danji_slug(name, location, did, address=""):
         loc_parts = (location or "").split(" ")
         if loc_parts and loc_parts[0]:
             parts.append(_clean(loc_parts[0]))
+    # 동 추가 (location에서 구/시 제외한 나머지)
+    loc_parts = (location or "").split(" ", 1)
+    if len(loc_parts) >= 2:
+        for d in loc_parts[1].split(" "):
+            parts.append(_clean(d))
     if did and (did.startswith("offi-") or did.startswith("apt-")):
         parts.append(did)
     else:
@@ -194,7 +225,8 @@ def has_trade_data(d):
 # ── 동별 HTML 생성 ────────────────────────────────────────
 def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
     """동 페이지 정적 HTML 생성"""
-    slug = make_dong_slug(gu, dong)
+    first_addr = danji_list[0].get("address", "") if danji_list else ""
+    slug = make_dong_slug(gu, dong, first_addr)
     canonical = f"https://hwik.kr/dong/{slug}"
 
     # 거래 있는 단지만 필터 + 가격순 정렬
@@ -352,7 +384,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
         lines.append(f'<h2 style="font-size:14px;font-weight:600;margin-bottom:8px;">{esc(gu)} 다른 동</h2>')
         lines.append('<div style="display:flex;flex-wrap:wrap;gap:6px;">')
         for od in other_dongs:
-            od_slug = make_dong_slug(gu, od)
+            od_slug = make_dong_slug(gu, od, first_addr)
             lines.append(
                 f'<a href="/dong/{od_slug}" style="padding:8px 12px;background:#f3f4f6;border-radius:8px;'
                 f'text-decoration:none;color:#1a1a2e;font-size:12px;">{esc(od)}</a>'
@@ -517,7 +549,8 @@ def main():
             skipped += 1
             continue
 
-        slug = make_dong_slug(gu, dong)
+        first_addr = danji_list[0].get("address", "") if danji_list else ""
+        slug = make_dong_slug(gu, dong, first_addr)
         path = os.path.join(DONG_DIR, f"{slug}.html")
         with open(path, "w", encoding="utf-8") as f:
             f.write(page)

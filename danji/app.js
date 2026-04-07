@@ -38,6 +38,9 @@ function makeSlug(name, location, did, address) {
     const locParts = (location||'').split(' ');
     if (locParts[0]) parts.push(_clean(locParts[0]));
   }
+  // 동 추가 (location에서 구/시 제외한 나머지)
+  const locSplit = (location||'').split(' ');
+  if (locSplit.length >= 2) locSplit.slice(1).forEach(d => parts.push(_clean(d)));
   if (did && (did.startsWith('offi-') || did.startsWith('apt-'))) {
     parts.push(did);
   } else {

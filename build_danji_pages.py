@@ -72,9 +72,9 @@ def _clean(s):
     return re.sub(r'-+', '-', s).strip('-')
 
 def make_slug(name, location, did, address=""):
-    """address 기반 전국 slug 생성
-    광역시: 서울-강동구-둔촌현대4차-a13481802
-    도:     경기-성남-분당구-아파트명-id
+    """address 기반 전국 slug 생성 (동 포함)
+    광역시: 서울-강남구-도곡동-래미안도곡카운티-a13585404
+    도:     경기-성남-분당구-정자동-아파트명-id
     """
     addr_parts = (address or "").split()
     region = ""
@@ -87,23 +87,26 @@ def make_slug(name, location, did, address=""):
         slug_parts.append(region)
 
         if region in METRO_CITIES:
-            # 광역시: 구 또는 군 (인천 강화군/옹진군 등)
             if len(addr_parts) > 1 and (addr_parts[1].endswith("구") or addr_parts[1].endswith("군")):
                 slug_parts.append(re.sub(r'군$', '', addr_parts[1]) if addr_parts[1].endswith("군") else addr_parts[1])
         elif region == "세종":
-            pass  # 구 없음
+            pass
         else:
-            # 도: 시/군 + 구(있으면)
             if len(addr_parts) > 1:
-                city = re.sub(r'(시|군)$', '', addr_parts[1])
-                slug_parts.append(city)
+                slug_parts.append(re.sub(r'(시|군)$', '', addr_parts[1]))
             if len(addr_parts) > 2 and addr_parts[2].endswith("구"):
                 slug_parts.append(addr_parts[2])
     else:
-        # address 없으면 location fallback (구만)
         loc_parts = (location or "").split(" ")
         if loc_parts and loc_parts[0]:
             slug_parts.append(_clean(loc_parts[0]))
+
+    # 동 추가 (location에서 구/시 제외한 나머지)
+    loc_parts = (location or "").split(" ", 1)
+    if len(loc_parts) >= 2:
+        dong = loc_parts[1]  # "도곡동" or "가평읍 대곡리"
+        for d in dong.split(" "):
+            slug_parts.append(_clean(d))
 
     # offi-/apt- 형태는 ID에 이미 단지명 포함
     if did and (did.startswith("offi-") or did.startswith("apt-")):
