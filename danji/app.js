@@ -280,7 +280,7 @@ function render() {
   listings.forEach(l => { listingCount[l.type] = (listingCount[l.type]||0) + 1; });
   const listingBadge = Object.entries(listingCount).map(([k,v]) => `${k} ${v}`).join(' · ');
   const listingHtml = listings.slice(0,3).map(l => `
-    <a class="listing-item" href="property_view.html?id=${encodeURIComponent(l.id)}" style="text-decoration:none;color:inherit;">
+    <a class="listing-item" href="/property_view.html?id=${encodeURIComponent(l.id)}" style="text-decoration:none;color:inherit;">
       <div>
         <div class="trade-price">${esc(l.type)} ${formatPrice(l.price)}</div>
         <div class="trade-detail">${l.floor ? l.floor+'층' : ''} ${l.area ? '· '+l.area+'㎡' : ''} ${l.move_in ? '· '+esc(l.move_in) : ''}</div>
@@ -313,7 +313,7 @@ function render() {
       else areaLabel = '전용 ' + bestExclu + '㎡';
     }
     return `
-    <a class="nearby-item" href="danji.html?id=${encodeURIComponent(n.id)}" style="text-decoration:none;color:inherit;">
+    <a class="nearby-item" href="/danji.html?id=${encodeURIComponent(n.id)}" style="text-decoration:none;color:inherit;">
       <div>
         <div class="nearby-name">${esc(n.name)}</div>
         <div class="nearby-sub">${esc(n.location)} ${n.distance ? '· '+distText(n.distance) : ''}${areaLabel ? ' · '+areaLabel : ''}</div>
@@ -519,7 +519,7 @@ function render() {
       </div>
       ${listingHtml
         ? '<div class="trade-list">' + listingHtml + '</div>'
-        : '<div class="listing-empty"><div class="listing-empty-text">이 단지에 등록된 매물이 아직 없습니다</div><a class="listing-empty-cta" href="card_generator_v2_auth.html" style="text-decoration:none;">중개사님, 매물을 등록해보세요 →</a></div>'
+        : '<div class="listing-empty"><div class="listing-empty-text">이 단지에 등록된 매물이 아직 없습니다</div><a class="listing-empty-cta" href="/card_generator_v2_auth.html" style="text-decoration:none;">중개사님, 매물을 등록해보세요 →</a></div>'
       }
     </div>
 
@@ -544,13 +544,13 @@ function render() {
     <div class="section">
       <div class="section-title">더 알아보기</div>
       <div style="display:flex;flex-direction:column;gap:8px;">
-        <a href="dong.html?gu=${encodeURIComponent(guName)}&dong=${encodeURIComponent(dong)}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
+        <a href="/dong.html?gu=${encodeURIComponent(guName)}&dong=${encodeURIComponent(dong)}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
           <span style="font-size:13px;">${esc(dong)} 다른 단지 시세</span><span style="color:var(--sub);font-size:12px;">→</span>
         </a>
-        <a href="gu.html?name=${encodeURIComponent(guName)}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
+        <a href="/gu.html?name=${encodeURIComponent(guName)}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
           <span style="font-size:13px;">${esc(guName)} 전체 시세</span><span style="color:var(--sub);font-size:12px;">→</span>
         </a>
-        <a href="ranking.html" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
+        <a href="/ranking.html" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
           <span style="font-size:13px;">서울 아파트 순위</span><span style="color:var(--sub);font-size:12px;">→</span>
         </a>
       </div>
@@ -560,8 +560,8 @@ function render() {
 
     <!-- CTA -->
     <div class="cta-section">
-      <a class="btn-primary" href="mobile-v6.html" style="display:block;text-align:center;text-decoration:none;">이 단지 매물 전체보기</a>
-      <a class="btn-secondary" href="card_generator_v2_auth.html" style="display:block;text-align:center;text-decoration:none;">공인중개사 서비스 · 무료로 시작하기</a>
+      <a class="btn-primary" href="/mobile-v6.html" style="display:block;text-align:center;text-decoration:none;">이 단지 매물 전체보기</a>
+      <a class="btn-secondary" href="/card_generator_v2_auth.html" style="display:block;text-align:center;text-decoration:none;">공인중개사 서비스 · 무료로 시작하기</a>
     </div>
 
     <!-- SEO -->

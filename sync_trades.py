@@ -1035,6 +1035,32 @@ def generate_sitemap(danji_list: list):
         urls.append(f'  <url><loc>{base}/danji/{safe_slug}</loc><lastmod>{lastmod}</lastmod></url>')
         included += 1
 
+    # 동 페이지 (거래 있는 단지 3개 이상인 동만)
+    from collections import defaultdict as _defaultdict
+    dong_trade_count = _defaultdict(int)  # (gu, dong) → 거래 있는 단지 수
+    for d in all_danji:
+        loc = d.get("location", "")
+        if not loc:
+            continue
+        parts = loc.split(" ", 1)
+        if len(parts) < 2:
+            continue
+        rt = d.get("recent_trade") or {}
+        cats = d.get("categories") or []
+        if any(rt.get(c) for c in cats):
+            dong_trade_count[(parts[0], parts[1])] += 1
+
+    dong_count = 0
+    for (gu, dong), cnt in sorted(dong_trade_count.items()):
+        if cnt < 3:
+            continue
+        dong_slug = f"{gu}-{dong}"
+        dong_slug = _re.sub(r'[^\w가-힣]', '-', dong_slug)
+        dong_slug = _re.sub(r'-+', '-', dong_slug).strip('-')
+        safe_dong_slug = _quote(dong_slug, safe="-")
+        urls.append(f'  <url><loc>{base}/dong/{safe_dong_slug}</loc><lastmod>{today}</lastmod></url>')
+        dong_count += 1
+
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
     xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     xml += '\n'.join(urls)
@@ -1044,7 +1070,7 @@ def generate_sitemap(danji_list: list):
     sitemap_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sitemap.xml")
     with open(sitemap_path, "w", encoding="utf-8") as f:
         f.write(xml)
-    print(f"\n🗺️  sitemap.xml 생성: {included}개 포함, {excluded}개 제외 (거래 없음)")
+    print(f"\n🗺️  sitemap.xml 생성: 단지 {included}개 + 동 {dong_count}개 포함, {excluded}개 제외 (거래 없음)")
 
 
 # ========================================================
