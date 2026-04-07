@@ -391,7 +391,7 @@
         }
         /* 스펙 태그 */
         .info-specs {
-          display:flex; gap:7px; flex-wrap:wrap; justify-content:center; margin-bottom:16px;
+          display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:18px;
         }
         /* 중개사 코멘트 */
         .info-comment {
@@ -417,12 +417,28 @@
         .card-price { font-size:30px; font-weight:800; color:#fff; letter-spacing:-0.03em; margin-bottom:2px; }
         .card-name { font-size:12px; color:rgba(255,255,255,0.55); margin-bottom:10px; }
         .card-specs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:0; align-items:center; }
-        /* 기본 스펙 (면적/층/방) — 작고 심플 */
-        .card-spec { font-size:12px; padding:6px 12px; border-radius:20px; background:rgba(255,255,255,0.12); color:rgba(255,255,255,0.8); font-weight:500; letter-spacing:0.02em; border:1px solid rgba(255,255,255,0.15); }
-        /* 셀링포인트 (남향/역세권/한강뷰 등) — 노란 강조 */
-        .card-spec.highlight { background:rgba(250,204,21,0.2); color:#facc15; border:1px solid rgba(250,204,21,0.4); font-weight:700; }
-        /* 학군/환경 — 민트 강조 */
-        .card-spec.highlight-mint { background:rgba(78,205,196,0.2); color:#4ecdc4; border:1px solid rgba(78,205,196,0.4); font-weight:700; }
+        /* 기본 스펙 (면적/층/방) — 글래스모피즘 */
+        .card-spec {
+          font-size:12px; padding:7px 14px; border-radius:10px;
+          background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.75);
+          font-weight:500; letter-spacing:0.01em;
+          border:1px solid rgba(255,255,255,0.1);
+          backdrop-filter:blur(8px);
+        }
+        /* 셀링포인트 (남향/역세권/한강뷰 등) — 골드 글로우 */
+        .card-spec.highlight {
+          background:linear-gradient(135deg, rgba(250,204,21,0.15) 0%, rgba(250,180,0,0.08) 100%);
+          color:#fcd34d; font-weight:700;
+          border:1px solid rgba(250,204,21,0.3);
+          box-shadow:0 0 12px rgba(250,204,21,0.08);
+        }
+        /* 학군/환경 — 민트 글로우 */
+        .card-spec.highlight-mint {
+          background:linear-gradient(135deg, rgba(78,205,196,0.15) 0%, rgba(52,211,153,0.08) 100%);
+          color:#6ee7b7; font-weight:700;
+          border:1px solid rgba(78,205,196,0.3);
+          box-shadow:0 0 12px rgba(78,205,196,0.08);
+        }
         .card-divider { height:1px; background:rgba(255,255,255,0.1); margin-bottom:14px; }
         /* 액션 바 */
         .card-action-bar { display:flex; gap:8px; margin-top:16px; }
