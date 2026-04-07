@@ -364,7 +364,7 @@
           position: relative; z-index: 2;
           margin-top: -24px;
           border-radius: 24px 24px 0 0;
-          background: #fff;
+          background: linear-gradient(180deg, #1a1a2e 0%, #151525 100%);
           padding: 28px 24px 24px;
           flex: 1; min-height: 0;
         }
@@ -380,16 +380,16 @@
         .info-badge-dot { width:7px; height:7px; border-radius:50%; }
         /* 가격 */
         .info-price {
-          font-size:34px; font-weight:800; color:#1a1a2e;
+          font-size:34px; font-weight:800; color:#fff;
           letter-spacing:-0.03em; margin-bottom:6px; line-height:1.15;
         }
         /* 위치 */
         .info-location {
-          font-size:14px; color:#64748b; margin-bottom:20px;
+          font-size:14px; color:rgba(255,255,255,0.5); margin-bottom:20px;
         }
         /* 구분선 */
         .info-divider {
-          width:36px; height:2px; background:#e2e8f0;
+          width:36px; height:2px; background:rgba(255,255,255,0.15);
           margin:0 auto 18px; border-radius:1px;
         }
         /* 스펙 태그 */
@@ -400,14 +400,14 @@
         /* 중개사 코멘트 */
         .info-comment {
           margin-top:4px; padding:16px 18px; text-align:left;
-          background:#f8fafc; border-radius:14px;
-          border:1px solid #e2e8f0;
+          background:rgba(255,255,255,0.06); border-radius:14px;
+          border:1.5px solid rgba(255,255,255,0.25);
         }
         .info-comment-label {
-          font-size:11px; color:#94a3b8; margin-bottom:8px; font-weight:600;
+          font-size:11px; color:rgba(255,255,255,0.45); margin-bottom:8px; font-weight:600;
         }
         .info-comment-text {
-          font-size:15px; color:#334155; line-height:1.8;
+          font-size:15px; color:rgba(255,255,255,0.85); line-height:1.8;
           word-break:keep-all; font-weight:500;
           display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;
           overflow:hidden;
@@ -427,7 +427,7 @@
         /* 워터마크 */
         .info-watermark {
           position:absolute; bottom:10px; right:16px;
-          font-size:11px; font-weight:800; color:rgba(99,102,241,0.15); letter-spacing:-0.5px;
+          font-size:11px; font-weight:800; color:rgba(250,204,21,0.12); letter-spacing:-0.5px;
         }
 
         /* 레거시 호환 */
@@ -435,22 +435,22 @@
         .card-price { font-size:30px; font-weight:800; color:#fff; letter-spacing:-0.03em; margin-bottom:2px; }
         .card-name { font-size:12px; color:rgba(255,255,255,0.55); margin-bottom:10px; }
         .card-specs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:0; align-items:center; }
-        /* 기본 스펙 (면적/층/방) */
+        /* 기본 스펙 (면적/층/방) — 밝은 테두리 */
         .card-spec {
           font-size:12px; padding:7px 14px; border-radius:10px;
-          background:#f1f5f9; color:#475569;
+          background:transparent; color:rgba(255,255,255,0.85);
           font-weight:600; letter-spacing:0.01em;
-          border:1px solid #e2e8f0;
+          border:1.5px solid rgba(255,255,255,0.35);
         }
-        /* 셀링포인트 (남향/역세권/한강뷰 등) — 주황 강조 */
+        /* 셀링포인트 (남향/역세권/한강뷰 등) — 골드 */
         .card-spec.highlight {
-          background:#fef3c7; color:#92400e; font-weight:700;
-          border:1px solid #fcd34d;
+          background:rgba(250,204,21,0.12); color:#fcd34d; font-weight:700;
+          border:1.5px solid rgba(250,204,21,0.5);
         }
-        /* 학군/환경 — 민트 강조 */
+        /* 학군/환경 — 민트 */
         .card-spec.highlight-mint {
-          background:#ccfbf1; color:#115e59; font-weight:700;
-          border:1px solid #5eead4;
+          background:rgba(78,205,196,0.12); color:#6ee7b7; font-weight:700;
+          border:1.5px solid rgba(78,205,196,0.5);
         }
         .card-divider { height:1px; background:rgba(255,255,255,0.1); margin-bottom:14px; }
         /* 액션 바 */
