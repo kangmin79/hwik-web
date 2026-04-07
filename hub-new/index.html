@@ -2536,6 +2536,8 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
       // 계약중 → 하단으로
       const _sortStatus=(arr)=>arr.sort((a,b)=>{const sa=a.trade_status==='계약가능'?0:1;const sb=b.trade_status==='계약가능'?0:1;return sa-sb;});
       _sortStatus(myR);_sortStatus(shR);
+      // 검색 결과를 캐시에 병합 (수정/상세/삭제 작동하도록)
+      myR.forEach(c=>{if(!Data.cache.myCards.find(x=>x.id===c.id))Data.cache.myCards.push(c);});
       let html='';
       if(myR.length){
         html+=`<div style="font-size:13px;font-weight:700;color:var(--primary);margin:12px 0 8px;">내 매물 (${myR.length>5?'상위 5건':myR.length+'건'})</div>`;
