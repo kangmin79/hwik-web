@@ -2699,11 +2699,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
             <button onclick="PanelCards.chgStatus('${c.id}','완료')" style="padding:3px 10px;border-radius:6px;border:1px solid ${st==='완료'?'#ef4444':'var(--border)'};background:${st==='완료'?'rgba(239,68,68,0.1)':'transparent'};color:${st==='완료'?'#ef4444':'var(--text-light)'};font-size:10px;font-weight:700;cursor:pointer;">완료</button>
           </div>
           ${photos.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">${photos.map(u=>`<div style="width:56px;height:56px;border-radius:6px;overflow:hidden;"><img src="${esc(u)}" style="width:100%;height:100%;object-fit:cover;"></div>`).join('')}</div>`:''}
-          ${(st==='계약중'||st==='완료')&&(c.linked_client_id||c.linked_agent_id)?`<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
-            <div style="font-size:12px;font-weight:800;color:#f59e0b;margin-bottom:8px;">🔶 거래 공동 메모</div>
-            <div id="contractNotes-${c.id}" style="max-height:200px;overflow-y:auto;margin-bottom:8px;"><div style="font-size:11px;color:var(--text-light);">로딩...</div></div>
-            <div style="display:flex;gap:6px;"><input type="text" id="cnInput-${c.id}" placeholder="거래 메모 입력 (양쪽 중개사 공유)" style="flex:1;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-input);color:var(--text);font-size:12px;" onkeydown="if(event.key==='Enter')PanelCards.addContractNote('${c.id}')"><button onclick="PanelCards.addContractNote('${c.id}')" style="padding:6px 12px;border-radius:6px;border:none;background:#f59e0b;color:#fff;font-size:11px;font-weight:700;cursor:pointer;">저장</button></div>
-          </div>`:''}
+          ${''}<!-- 공동 메모 삭제됨 -->
         </div>
       </div>`;
     }).join('');
@@ -2711,8 +2707,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
 
   function toggleDetail(id){
     const el=document.getElementById('detail-'+id);if(el)el.style.display=el.style.display==='none'?'':'none';
-    // 공동 메모 로드
-    if(el?.style.display!=='none')loadContractNotes(id);
+    // (공동 메모 삭제됨)
     // 다른 중개사 정보 로드 (계약중 매물)
     const card=Data.cache.myCards.find(x=>x.id===id);
     if(card?.linked_agent_id&&card.linked_agent_id!==Auth.user?.id){
@@ -2747,35 +2742,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
     const btn=document.querySelector('.btn-send');if(btn)btn.disabled=!has;
   }
 
-  // 공동 거래 메모
-  async function loadContractNotes(cardId){
-    const el=document.getElementById('contractNotes-'+cardId);if(!el)return;
-    const {data}=await Auth.sb.from('contract_notes').select('id,agent_id,content,created_at').eq('card_id',cardId).order('created_at',{ascending:true});
-    if(!data?.length){el.innerHTML='<div style="font-size:11px;color:var(--text-light);">아직 메모가 없어요</div>';return;}
-    // 중개사 프로필 조회
-    const agentIds=[...new Set(data.map(n=>n.agent_id))];
-    const {data:profs}=await Auth.sb.from('profiles').select('id,business_name').in('id',agentIds);
-    const profMap={};(profs||[]).forEach(p=>{profMap[p.id]=p.business_name;});
-    const myId=Auth.user?.id;
-    el.innerHTML=data.map(n=>{
-      const isMine=n.agent_id===myId;
-      const name=profMap[n.agent_id]||'중개사';
-      const color=isMine?'#6366f1':'#f97316';
-      const bg=isMine?'rgba(99,102,241,0.06)':'rgba(249,115,22,0.06)';
-      const time=new Date(n.created_at).toLocaleString('ko-KR',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
-      return `<div style="padding:6px 10px;border-radius:8px;background:${bg};border-left:3px solid ${color};margin-bottom:4px;">
-        <div style="font-size:10px;font-weight:700;color:${color};">${esc(name)} · ${time}</div>
-        <div style="font-size:12px;color:var(--text);margin-top:2px;">${esc(n.content)}</div>
-      </div>`;
-    }).join('');
-  }
-  async function addContractNote(cardId){
-    const inp=document.getElementById('cnInput-'+cardId);if(!inp)return;
-    const content=inp.value.trim();if(!content)return;
-    await Auth.sb.from('contract_notes').insert({card_id:cardId,agent_id:Auth.user?.id,content});
-    inp.value='';
-    loadContractNotes(cardId);
-  }
+  // (공동 거래 메모 삭제됨 — 공유방은 매물 공유만, 메모는 각자 관리)
 
   let _searchShared=[];
   function toggleSharedSel(id){
@@ -2993,7 +2960,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
       el.innerHTML=`<div class="panel-inner">${Hub.panelHead('거래 상태')}<div style="text-align:center;padding:40px 0;"><div style="font-size:48px;margin-bottom:12px;">${icon}</div><div style="font-size:24px;font-weight:800;color:${color};">${st}</div><div style="margin-top:24px;display:flex;gap:8px;justify-content:center;"><button class="filter-btn ${st==='계약가능'?'active':''}" onclick="PanelCards.chgStatus('${c.id}','계약가능')">계약가능</button><button class="filter-btn ${st==='계약중'?'active':''}" onclick="PanelCards.chgStatus('${c.id}','계약중')">계약중</button><button class="filter-btn ${st==='완료'?'active':''}" onclick="PanelCards.chgStatus('${c.id}','완료')">완료</button></div></div></div>`;}
   }
 
-  return { render, setFilter, setCat, setSort, onQ, onQEnter, more, renderList, toggleCompleted, toggleSel, toggleSharedSel, toggleDetail, share1, shareSelected, doShare, edit, addPhotos, addTag, saveEdit, del, chgStatus, _pickClient, _filterClientPicker, linkMatchToClient, loadContractNotes, addContractNote, renderSub, get _searchShared(){return _searchShared;}, set _searchShared(v){_searchShared=v;} };
+  return { render, setFilter, setCat, setSort, onQ, onQEnter, more, renderList, toggleCompleted, toggleSel, toggleSharedSel, toggleDetail, share1, shareSelected, doShare, edit, addPhotos, addTag, saveEdit, del, chgStatus, _pickClient, _filterClientPicker, linkMatchToClient, renderSub, get _searchShared(){return _searchShared;}, set _searchShared(v){_searchShared=v;} };
 })();
 
 /* ═══════════════════════════════════════════════════════════
