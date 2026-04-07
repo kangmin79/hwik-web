@@ -178,24 +178,46 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
     if len(tradeable) < MIN_DANJI_WITH_TRADE:
         return None
 
-    # 지하철/학교 중복 제거
-    seen_subway = set()
-    subways = []
-    for d in danji_list:
-        for s in (d.get("nearby_subway") or []):
-            key = s.get("name", "")
-            if key and key not in seen_subway:
-                seen_subway.add(key)
-                subways.append(s)
+    # 지하철/학교: 단지 3개+ 등장 & 도보 10분(800m) 이내만
+    from collections import Counter
+    MAX_WALK_M = 800
+    MIN_DANJI_COUNT = 3
 
-    seen_school = set()
-    schools = []
+    subway_count = Counter()
+    subway_best = {}
     for d in danji_list:
+        seen_in_danji = set()
+        for s in (d.get("nearby_subway") or []):
+            name = s.get("name", "")
+            dist = s.get("distance") or 9999
+            if not name or dist > MAX_WALK_M or name in seen_in_danji:
+                continue
+            seen_in_danji.add(name)
+            subway_count[name] += 1
+            if name not in subway_best or dist < subway_best[name].get("distance", 9999):
+                subway_best[name] = s
+    subways = sorted(
+        [subway_best[n] for n, c in subway_count.items() if c >= MIN_DANJI_COUNT],
+        key=lambda s: s.get("distance", 9999)
+    )
+
+    school_count = Counter()
+    school_best = {}
+    for d in danji_list:
+        seen_in_danji = set()
         for s in (d.get("nearby_school") or []):
-            key = s.get("name", "")
-            if key and key not in seen_school:
-                seen_school.add(key)
-                schools.append(s)
+            name = s.get("name", "")
+            dist = s.get("distance") or 9999
+            if not name or dist > MAX_WALK_M or name in seen_in_danji:
+                continue
+            seen_in_danji.add(name)
+            school_count[name] += 1
+            if name not in school_best or dist < school_best[name].get("distance", 9999):
+                school_best[name] = s
+    schools = sorted(
+        [school_best[n] for n, c in school_count.items() if c >= MIN_DANJI_COUNT],
+        key=lambda s: s.get("distance", 9999)
+    )
 
     # 가장 최근 거래 단지 (FAQ용)
     most_recent = max(tradeable, key=lambda x: x["_best_trade"].get("date", ""), default=None)
