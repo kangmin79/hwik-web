@@ -75,6 +75,7 @@ def fetch_all_danji():
             params={
                 "select": "id,complex_name,location,address,build_year,total_units,"
                           "categories,recent_trade,all_time_high,jeonse_rate,"
+                          "price_history,"
                           "nearby_subway,nearby_school,nearby_complex,"
                           "lat,lng,top_floor,parking,heating,builder,updated_at",
                 "order": "id",
@@ -170,6 +171,37 @@ def best_price_cat(d):
     return best
 
 
+def find_year_ago_trade(d, cat):
+    """price_history에서 1년 전 ±2개월 범위의 거래를 찾아 반환"""
+    ph = d.get("price_history") or {}
+    trades = ph.get(cat) or []
+    if not trades:
+        return None
+    rt = (d.get("recent_trade") or {}).get(cat) or {}
+    recent_date = rt.get("date", "")
+    if not recent_date or len(recent_date) < 10:
+        return None
+    try:
+        ry, rm = int(recent_date[:4]), int(recent_date[5:7])
+        target_y = ry - 1
+        # 1년 전 ±2개월 범위
+        best = None
+        best_diff = 999
+        for t in trades:
+            td = t.get("date", "")
+            if not td or len(td) < 7:
+                continue
+            ty, tm = int(td[:4]), int(td[5:7])
+            if ty == target_y:
+                diff = abs(tm - rm)
+                if diff <= 2 and diff < best_diff:
+                    best_diff = diff
+                    best = t
+        return best
+    except (ValueError, IndexError):
+        return None
+
+
 def build_fallback_html(d):
     """Googlebot이 읽는 정적 SEO 콘텐츠"""
     name = esc(d.get("complex_name", ""))
@@ -214,6 +246,24 @@ def build_fallback_html(d):
         lines.append(f'<p style="font-size:13px;color:#6b7280;margin-bottom:6px;">{txt}</p>')
     if jr:
         lines.append(f'<p style="font-size:13px;color:#6b7280;margin-bottom:6px;">전세가율: {jr}%</p>')
+
+    # 시계열 비교 (1년 전 거래와 비교)
+    year_ago = find_year_ago_trade(d, bc) if bc else None
+    if year_ago and bc and rt.get(bc):
+        cur_price = rt[bc].get("price", 0)
+        old_price = year_ago.get("price", 0)
+        if cur_price and old_price and cur_price != old_price:
+            diff = cur_price - old_price
+            direction = "상승" if diff > 0 else "하락"
+            lines.append(
+                f'<div style="margin:12px 0;padding:12px;background:#f0f9ff;border-radius:8px;font-size:13px;line-height:1.7;">'
+                f'<strong>1년 전 비교</strong><br>'
+                f'전용 {bc}㎡ 1년 전 거래가: {format_price(old_price)} ({year_ago.get("date","")})<br>'
+                f'현재 거래가: {format_price(cur_price)} ({rt[bc].get("date","")})<br>'
+                f'<span style="color:{"#dc2626" if diff > 0 else "#2563eb"};font-weight:600;">'
+                f'{format_price(abs(diff))} {direction}</span>'
+                f'</div>'
+            )
 
     # 면적 목록
     if cats:
@@ -294,6 +344,25 @@ def build_fallback_html(d):
     if subway:
         a = ", ".join(f"{esc(s.get('name',''))}({esc(s.get('line',''))}) 도보 {walk_min(s.get('distance'))}" for s in subway[:3])
         faq.append((f"{name} 근처 지하철역은?", a))
+    # 확장 FAQ
+    if year_ago and bc and rt.get(bc):
+        cur_p = rt[bc].get("price", 0)
+        old_p = year_ago.get("price", 0)
+        if cur_p and old_p and cur_p != old_p:
+            diff = cur_p - old_p
+            direction = "상승" if diff > 0 else "하락"
+            faq.append((f"{name} 1년 전 가격은?",
+                f"전용 {bc}㎡ 기준 1년 전 거래가는 {format_price(old_p)}({year_ago.get('date','')})이었으며, "
+                f"현재 {format_price(cur_p)}으로 {format_price(abs(diff))} {direction}했습니다."))
+    if school:
+        items = ", ".join(f"{esc(s.get('name',''))} 도보 {walk_min(s.get('distance'))}" for s in school[:3])
+        faq.append((f"{name} 주변 학교는?", items))
+    if units and year:
+        u = f"{units:,}" if isinstance(units, int) else str(units)
+        a = f"{name}은(는) {year}년 준공, 총 {u}세대 규모입니다."
+        if builder:
+            a += f" 시공사는 {builder}입니다."
+        faq.append((f"{name} 몇 세대인가요?", a))
     if faq:
         lines.append('<h2 style="font-size:14px;font-weight:600;margin:16px 0 8px;">자주 묻는 질문</h2>')
         for q, a in faq:
@@ -302,14 +371,37 @@ def build_fallback_html(d):
             lines.append(f'<div style="font-size:12px;color:#6b7280;line-height:1.6;">{a}</div>')
             lines.append("</div>")
 
-    # SEO 서술형 텍스트
+    # SEO 서술형 텍스트 (풍부한 고유 콘텐츠)
     seo = []
-    seo.append(f"{name}은(는) {addr}에 위치한 {year}년 준공 아파트입니다." if addr and year else "")
+    if addr and year:
+        seo.append(f"{name}은(는) {addr}에 위치한 {year}년 준공 아파트입니다.")
     if units:
         u = f"{units:,}" if isinstance(units, int) else str(units)
         seo.append(f"총 {u}세대 규모입니다.")
+    if builder:
+        seo.append(f"시공사는 {builder}입니다.")
     if bc and rt.get(bc):
-        seo.append(f"최근 매매 실거래가는 {format_price(rt[bc].get('price'))}입니다.")
+        r = rt[bc]
+        seo.append(f"전용 {bc}㎡ 최근 매매 실거래가는 {format_price(r.get('price'))}({r.get('date','')})입니다.")
+    if bc and high.get(bc):
+        h = high[bc]
+        seo.append(f"전용 {bc}㎡ 역대 최고가는 {format_price(h.get('price'))}({h.get('date','')})입니다.")
+    if jr:
+        seo.append(f"전세가율은 {jr}%입니다.")
+    if year_ago and bc and rt.get(bc):
+        cur_p = rt[bc].get("price", 0)
+        old_p = year_ago.get("price", 0)
+        if cur_p and old_p and cur_p != old_p:
+            diff = cur_p - old_p
+            direction = "상승" if diff > 0 else "하락"
+            seo.append(f"1년 전 같은 면적 거래가 대비 {format_price(abs(diff))} {direction}했습니다.")
+    if subway:
+        names = ", ".join(f"{s.get('name','')}({s.get('line','')})" for s in subway[:2])
+        seo.append(f"인근 지하철역은 {names}입니다.")
+    if school:
+        names = ", ".join(s.get("name", "") for s in school[:2])
+        seo.append(f"인근 학교로 {names}이(가) 있습니다.")
+    seo.append("모든 데이터는 국토교통부 실거래가 공개시스템 기반이며 매일 갱신됩니다.")
     seo_text = " ".join(s for s in seo if s)
     if seo_text:
         lines.append(f'<p style="font-size:11px;color:#9ca3af;line-height:1.7;margin-top:16px;">{esc(seo_text)}</p>')
@@ -384,6 +476,54 @@ def build_jsonld(d):
             "@type": "Question",
             "name": f"{name} 전세가율은?",
             "acceptedAnswer": {"@type": "Answer", "text": f"{name}의 전세가율은 {jr}%입니다."},
+        })
+    # 확장 FAQ (JSON-LD)
+    high = d.get("all_time_high") or {}
+    if bc and high.get(bc):
+        h = high[bc]
+        faq_items.append({
+            "@type": "Question",
+            "name": f"{name} 역대 최고가는?",
+            "acceptedAnswer": {"@type": "Answer", "text": f"전용 {bc}㎡ 역대 최고가는 {format_price(h.get('price'))}({h.get('date','')})입니다."},
+        })
+    year_ago_jl = find_year_ago_trade(d, bc) if bc else None
+    if year_ago_jl and bc and rt.get(bc):
+        cur_p = rt[bc].get("price", 0)
+        old_p = year_ago_jl.get("price", 0)
+        if cur_p and old_p and cur_p != old_p:
+            diff = cur_p - old_p
+            direction = "상승" if diff > 0 else "하락"
+            faq_items.append({
+                "@type": "Question",
+                "name": f"{name} 1년 전 가격은?",
+                "acceptedAnswer": {"@type": "Answer", "text": f"전용 {bc}㎡ 1년 전 거래가는 {format_price(old_p)}이었으며, 현재 {format_price(cur_p)}으로 {format_price(abs(diff))} {direction}했습니다."},
+            })
+    subway = d.get("nearby_subway") or []
+    if subway:
+        a = ", ".join(f"{s.get('name','')}({s.get('line','')}) 도보 {walk_min(s.get('distance'))}" for s in subway[:3])
+        faq_items.append({
+            "@type": "Question",
+            "name": f"{name} 근처 지하철역은?",
+            "acceptedAnswer": {"@type": "Answer", "text": a},
+        })
+    school = d.get("nearby_school") or []
+    if school:
+        a = ", ".join(f"{s.get('name','')} 도보 {walk_min(s.get('distance'))}" for s in school[:3])
+        faq_items.append({
+            "@type": "Question",
+            "name": f"{name} 주변 학교는?",
+            "acceptedAnswer": {"@type": "Answer", "text": a},
+        })
+    if d.get("total_units") and d.get("build_year"):
+        u = d["total_units"]
+        u_str = f"{u:,}" if isinstance(u, int) else str(u)
+        txt = f"{name}은(는) {d['build_year']}년 준공, 총 {u_str}세대입니다."
+        if d.get("builder"):
+            txt += f" 시공사는 {d['builder']}입니다."
+        faq_items.append({
+            "@type": "Question",
+            "name": f"{name} 몇 세대인가요?",
+            "acceptedAnswer": {"@type": "Answer", "text": txt},
         })
     if faq_items:
         graph.append({"@type": "FAQPage", "mainEntity": faq_items})

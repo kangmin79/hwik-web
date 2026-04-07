@@ -221,6 +221,53 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
     if tags:
         lines.append(f'<div style="margin-bottom:16px;">{"".join(tags)}</div>')
 
+    # 동네 리포트
+    most_expensive = tradeable[0] if tradeable else None  # 이미 가격순 정렬됨
+    cheapest = tradeable[-1] if len(tradeable) > 1 else None
+    most_units = max(tradeable, key=lambda x: (x.get("total_units") or 0), default=None)
+    newest = max(tradeable, key=lambda x: (x.get("build_year") or 0), default=None)
+    oldest = min(tradeable, key=lambda x: (x.get("build_year") or 9999), default=None)
+
+    lines.append('<div style="margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;">')
+    lines.append(f'<h2 style="font-size:14px;font-weight:700;margin-bottom:10px;">{esc(gu)} {esc(dong)} 부동산 요약</h2>')
+    lines.append(f'<div style="font-size:12px;line-height:2;color:#374151;">')
+    lines.append(f'아파트 단지: <strong>{len(tradeable)}개</strong><br>')
+    if most_expensive:
+        me_price = format_price(most_expensive["_best_trade"].get("price"))
+        lines.append(f'최고 거래가: <strong>{esc(most_expensive.get("complex_name",""))}</strong> 전용 {most_expensive["_best_area"]}㎡ {me_price}<br>')
+    if cheapest and cheapest != most_expensive:
+        ch_price = format_price(cheapest["_best_trade"].get("price"))
+        lines.append(f'최저 거래가: <strong>{esc(cheapest.get("complex_name",""))}</strong> 전용 {cheapest["_best_area"]}㎡ {ch_price}<br>')
+    if most_units and (most_units.get("total_units") or 0) > 0:
+        mu = most_units.get("total_units")
+        mu_str = f"{mu:,}" if isinstance(mu, int) else str(mu)
+        lines.append(f'최다 세대: <strong>{esc(most_units.get("complex_name",""))}</strong> {mu_str}세대<br>')
+    if oldest and newest and oldest.get("build_year") and newest.get("build_year"):
+        lines.append(f'준공년도 범위: {oldest.get("build_year")}년 ~ {newest.get("build_year")}년<br>')
+    if subways:
+        sw_names = ", ".join(f"{s.get('name','')}({s.get('line','')})" for s in subways[:3])
+        lines.append(f'인근 지하철: {esc(sw_names)}<br>')
+    if schools:
+        sc_names = ", ".join(s.get("name", "") for s in schools[:3])
+        lines.append(f'인근 학교: {esc(sc_names)}<br>')
+    lines.append(f'데이터 기준: 국토교통부 실거래가 공개시스템, 매일 갱신')
+    lines.append(f'</div></div>')
+
+    # 단지 간 비교 문장
+    if most_expensive and cheapest and most_expensive != cheapest:
+        me_p = most_expensive["_best_trade"].get("price", 0)
+        ch_p = cheapest["_best_trade"].get("price", 0)
+        if me_p and ch_p:
+            diff = me_p - ch_p
+            lines.append(
+                f'<p style="font-size:12px;color:#6b7280;line-height:1.7;margin-bottom:16px;">'
+                f'{esc(dong)}에서 가장 높은 거래가는 {esc(most_expensive.get("complex_name",""))} '
+                f'전용 {most_expensive["_best_area"]}㎡ {format_price(me_p)}이고, '
+                f'가장 낮은 거래가는 {esc(cheapest.get("complex_name",""))} '
+                f'전용 {cheapest["_best_area"]}㎡ {format_price(ch_p)}입니다. '
+                f'{format_price(diff)}의 차이가 있습니다.</p>'
+            )
+
     # 단지 목록
     lines.append('<div style="display:flex;flex-direction:column;gap:8px;">')
     for i, d in enumerate(tradeable):
@@ -277,6 +324,30 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
             for s in subways[:3]
         )
         faq.append((f"{dong} 근처 지하철역은?", subway_text))
+    # 확장 FAQ
+    if most_expensive:
+        me_price = format_price(most_expensive["_best_trade"].get("price"))
+        faq.append((
+            f"{dong}에서 가장 비싼 아파트는?",
+            f"{most_expensive.get('complex_name','')} 전용 {most_expensive['_best_area']}㎡, "
+            f"최근 거래가 {me_price}입니다."
+        ))
+    if cheapest and cheapest != most_expensive:
+        ch_price = format_price(cheapest["_best_trade"].get("price"))
+        faq.append((
+            f"{dong}에서 가장 저렴한 아파트는?",
+            f"{cheapest.get('complex_name','')} 전용 {cheapest['_best_area']}㎡, "
+            f"최근 거래가 {ch_price}입니다."
+        ))
+    if oldest and newest and oldest.get("build_year") and newest.get("build_year"):
+        faq.append((
+            f"{dong} 아파트 준공년도는?",
+            f"가장 오래된 단지는 {oldest.get('complex_name','')}({oldest.get('build_year')}년), "
+            f"가장 최신 단지는 {newest.get('complex_name','')}({newest.get('build_year')}년)입니다."
+        ))
+    if schools:
+        sc_text = ", ".join(f"{s.get('name','')} 도보 {walk_min(s.get('distance'))}" for s in schools[:3])
+        faq.append((f"{dong} 근처 학교는?", sc_text))
 
     lines.append('<div style="margin-top:24px;">')
     lines.append('<h2 style="font-size:14px;font-weight:600;margin-bottom:12px;">자주 묻는 질문</h2>')
@@ -307,8 +378,22 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
     lines.append('<a href="/ranking.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">아파트 순위 &rarr;</a>')
     lines.append('</div>')
 
-    # SEO 서술
-    lines.append(f'<p style="font-size:11px;color:#9ca3af;line-height:1.7;margin-top:16px;">{esc(gu)} {esc(dong)}에는 {len(tradeable)}개 아파트 단지가 있습니다. 국토교통부 실거래가 공개시스템 데이터 기반.</p>')
+    # SEO 서술 (풍부한 고유 콘텐츠)
+    seo_parts = []
+    seo_parts.append(f"{gu} {dong}에는 {len(tradeable)}개 아파트 단지가 있습니다.")
+    if most_expensive:
+        me_price = format_price(most_expensive["_best_trade"].get("price"))
+        seo_parts.append(f"최근 거래가가 가장 높은 단지는 {most_expensive.get('complex_name','')}(전용 {most_expensive['_best_area']}㎡, {me_price})입니다.")
+    if cheapest and cheapest != most_expensive:
+        ch_price = format_price(cheapest["_best_trade"].get("price"))
+        seo_parts.append(f"가장 저렴한 단지는 {cheapest.get('complex_name','')}(전용 {cheapest['_best_area']}㎡, {ch_price})입니다.")
+    if oldest and newest and oldest.get("build_year") and newest.get("build_year"):
+        seo_parts.append(f"준공년도는 {oldest.get('build_year')}년부터 {newest.get('build_year')}년까지 분포합니다.")
+    if subways:
+        sw_names = ", ".join(f"{s.get('name','')}({s.get('line','')})" for s in subways[:2])
+        seo_parts.append(f"인근 지하철역은 {sw_names}입니다.")
+    seo_parts.append("모든 데이터는 국토교통부 실거래가 공개시스템 기반이며 매일 갱신됩니다.")
+    lines.append(f'<p style="font-size:11px;color:#9ca3af;line-height:1.7;margin-top:16px;">{esc(" ".join(seo_parts))}</p>')
     lines.append('<p style="font-size:10px;color:#9ca3af;margin-top:8px;">실거래가 출처: 국토교통부 실거래가 공개시스템 &middot; 매일 업데이트</p>')
 
     fallback = "\n    ".join(lines)

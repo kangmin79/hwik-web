@@ -7,48 +7,7 @@ let currentTab = '매매';
 let currentPyeong = null;
 let showSupply = false; // 전용/공급 토글
 
-// slug 생성 (build_danji_pages.py의 make_slug와 동일 로직)
-const REGION_MAP = {
-  '서울특별시':'서울','인천광역시':'인천','부산광역시':'부산',
-  '대구광역시':'대구','광주광역시':'광주','대전광역시':'대전',
-  '울산광역시':'울산','세종특별자치시':'세종','경기도':'경기',
-  '강원특별자치도':'강원','충청북도':'충북','충청남도':'충남',
-  '전북특별자치도':'전북','전라남도':'전남','경상북도':'경북',
-  '경상남도':'경남','제주특별자치도':'제주',
-  '서울':'서울','인천':'인천','부산':'부산','대구':'대구',
-  '광주':'광주','대전':'대전','울산':'울산','세종':'세종',
-  '경기':'경기','강원':'강원','충북':'충북','충남':'충남',
-  '전북':'전북','전남':'전남','경북':'경북','경남':'경남','제주':'제주'
-};
-const METRO_CITIES = new Set(['서울','인천','부산','대구','광주','대전','울산']);
-function _clean(s) { return (s||'').replace(/[^\w가-힣]/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,''); }
-function makeSlug(name, location, did, address) {
-  const addrParts = (address||'').split(/\s+/);
-  const region = addrParts[0] ? (REGION_MAP[addrParts[0]]||'') : '';
-  const parts = [];
-  if (region) {
-    parts.push(region);
-    if (METRO_CITIES.has(region)) {
-      if (addrParts[1] && (addrParts[1].endsWith('구') || addrParts[1].endsWith('군'))) parts.push(addrParts[1].endsWith('군') ? addrParts[1].replace(/군$/,'') : addrParts[1]);
-    } else if (region !== '세종') {
-      if (addrParts[1]) parts.push(addrParts[1].replace(/(시|군)$/,''));
-      if (addrParts[2] && addrParts[2].endsWith('구')) parts.push(addrParts[2]);
-    }
-  } else {
-    const locParts = (location||'').split(' ');
-    if (locParts[0]) parts.push(_clean(locParts[0]));
-  }
-  // 동 추가 (location에서 구/시 제외한 나머지)
-  const locSplit = (location||'').split(' ');
-  if (locSplit.length >= 2) locSplit.slice(1).forEach(d => parts.push(_clean(d)));
-  if (did && (did.startsWith('offi-') || did.startsWith('apt-'))) {
-    parts.push(did);
-  } else {
-    parts.push(_clean(name));
-    if (did) parts.push(did);
-  }
-  return parts.filter(Boolean).map(p => _clean(p)).join('-');
-}
+// makeSlug → /makeSlug.js (외부 파일)
 let chart = null;
 let volumeChart = null;
 let RANK_INFO = null;
