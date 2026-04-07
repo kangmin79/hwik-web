@@ -700,6 +700,8 @@ function drawChart() {
           displayColors: false,
           callbacks: {
             title: ctx => {
+              const now = Date.now();
+              if (navigator.vibrate && now - (window._lastVib||0) > 300) { navigator.vibrate(10); window._lastVib = now; }
               const i = ctx[0].dataIndex;
               return points[i].date;
             },
