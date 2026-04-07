@@ -1198,7 +1198,7 @@
                     const dispW = section.clientWidth;
                     const dispH = section.clientHeight;
                     // 원본이 표시 영역보다 작으면 contain (확대하면 깨짐)
-                    if (img.naturalWidth < dispW * 0.8 && img.naturalHeight < dispH * 0.8) {
+                    if (img.naturalWidth < dispW * 0.8 || img.naturalHeight < dispH * 0.8) {
                         img.classList.add('fit-contain');
                     } else {
                         img.classList.remove('fit-contain');
