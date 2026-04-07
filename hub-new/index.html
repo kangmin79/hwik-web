@@ -819,7 +819,7 @@ const Data = (() => {
   async function loadClientDetail(cardId) {
     const [notesRes, matchRes] = await Promise.all([
       sb().from('client_notes').select('id,type,content,alert_date,alert_done,created_at,related_card_id').eq('client_card_id',cardId).order('created_at',{ascending:false}),
-      fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/match-properties`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(Auth.getToken()),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({client_card_id:cardId,limit:10,threshold:0.15})}).then(r=>r.json()).catch(()=>({results:[]}))
+      fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/match-properties`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(Auth.getToken()),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({client_card_id:cardId,limit:10,threshold:0.15})}).then(r=>{if(!r.ok)throw new Error('매칭 서버 에러');return r.json();}).catch(e=>{Toast.show(e.message||'매칭 조회 실패','error');return {results:[]};})
     ]);
     return { notes:notesRes.data||[], matches:matchRes.results||[] };
   }
@@ -855,7 +855,10 @@ const Data = (() => {
   async function createRoom(name) {
     const id=uid();
     const { data, error } = await sb().from('share_rooms').insert({name,owner_id:id}).select().single();
-    if (!error && data) await sb().from('share_room_members').insert({room_id:data.id,member_id:id,status:'accepted',role:'owner'});
+    if (!error && data) {
+      const {error:memErr} = await sb().from('share_room_members').insert({room_id:data.id,member_id:id,status:'accepted',role:'owner'});
+      if (memErr) { await sb().from('share_rooms').delete().eq('id',data.id); return {data:null, error:memErr}; }
+    }
     return { data, error };
   }
   async function deleteRoom(roomId) { return sb().from('share_rooms').delete().eq('id',roomId); }
@@ -866,6 +869,7 @@ const Data = (() => {
     const { data:target } = await sb().from('profiles').select('id').eq('phone',phone).maybeSingle();
     if (!target) return { error:'해당 번호의 사용자를 찾을 수 없습니다' };
     const { error } = await sb().from('share_room_members').insert({room_id:roomId,member_id:target.id,invited_phone:phone,status:'pending',role:'pending'});
+    if (error?.code === '23505') return { error:'이미 초대된 멤버입니다' };
     return { error:error?.message||null };
   }
   async function acceptInvite(roomId) { return sb().from('share_room_members').update({role:'member',status:'accepted',accepted_at:new Date().toISOString()}).eq('room_id',roomId).eq('member_id',uid()); }
@@ -889,17 +893,28 @@ const Data = (() => {
   }
   async function unshareCard(cardId,roomId) { let q=sb().from('card_shares').delete().eq('card_id',cardId); if(roomId) q=q.eq('room_id',roomId); return q; }
 
-  async function deleteCard(cardId) { return sb().from('cards').delete().eq('id',cardId).eq('agent_id',uid()); }
+  async function deleteCard(cardId) {
+    // 관련 데이터 정리 (에러 무시 — 본체 삭제가 우선)
+    await Promise.allSettled([
+      sb().from('card_shares').delete().eq('card_id',cardId),
+      sb().from('match_notifications').delete().eq('card_id',cardId),
+      sb().from('client_notes').delete().eq('card_id',cardId),
+      sb().storage.from('cards').list(cardId).then(({data})=>{if(data?.length)sb().storage.from('cards').remove(data.map(f=>`${cardId}/${f.name}`));})
+    ]);
+    return sb().from('cards').delete().eq('id',cardId).eq('agent_id',uid());
+  }
   async function updateTradeStatus(cardId,st) { const {error}=await sb().from('cards').update({trade_status:st}).eq('id',cardId); if(!error&&st==='완료') await sb().from('card_shares').delete().eq('card_id',cardId); return {error}; }
 
   async function uploadPhotos(cardId, files) {
-    const results = [];
+    const results = []; let failCount = 0;
     await Promise.all(files.map(async (file,i) => {
       const resized = await _resize(file,1200);
       const path = `cards/${cardId}/${Date.now()}_${i}.jpg`;
       const { error } = await sb().storage.from('photos').upload(path,resized,{contentType:'image/jpeg'});
       if (!error) { const { data } = sb().storage.from('photos').getPublicUrl(path); results.push(data?.publicUrl); }
+      else { failCount++; }
     }));
+    if (failCount > 0) Toast.show(`사진 ${failCount}장 업로드 실패`, 'error');
     return results;
   }
   function _resize(file,max) {
@@ -1825,7 +1840,8 @@ const Hub = (() => {
     return {icon:'🙋',name:_cname,sub:_csub,tag:_wtag};
   }
 
-  function enterClient(card) {
+  function enterClient(cardOrId) {
+    const card = typeof cardOrId === 'string' ? (Data.cache.clientCards||[]).find(c=>c.id===cardOrId) || {id:cardOrId} : cardOrId;
     stack.push({nodes:current?.nodes||MAIN,center:current?.center});
     current={type:'client',data:card,nodes:CLIENT,center:_buildClientCenter(card),_notes:[],_matches:[]};
     closePanel();render(CLIENT,current.center);
@@ -1843,7 +1859,8 @@ const Hub = (() => {
   }
   function _renderVerticalDirect(){_renderVertical();_hideHeaderBtns();}
 
-  function enterProperty(card) {
+  function enterProperty(cardOrId) {
+    const card = typeof cardOrId === 'string' ? (Data.cache.myCards||[]).find(c=>c.id===cardOrId) || (Data.cache.sharedCards||[]).find(c=>c.id===cardOrId) || {id:cardOrId,property:{}} : cardOrId;
     const p=card.property||{};
     stack.push({nodes:current?.nodes||MAIN,center:current?.center});
     current={type:'property',data:card,nodes:PROPERTY,center:{icon:'🏠',name:p.complex||p.location||'매물',sub:[p.type,p.price].filter(Boolean).join(' · ')}};
@@ -2284,7 +2301,7 @@ const PanelRegister = (() => {
     try{
       // 1. AI 파싱 (DB 저장 안 함 — 파싱만)
       const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/parse-property`,{
-        method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken()},
+        method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},
         body:JSON.stringify({text})
       });
       const r=await res.json();
@@ -2856,8 +2873,8 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
     const _pf=Data.parsePriceFields(prop.price,prop.type);
     const memoVal=document.getElementById('eMemo')?.value||'';
     const pn={...(c.private_note||{}),memo:memoVal||null};
-    await Auth.sb.from('cards').update({property:prop,photos:[...existPhotos,...newUrls],agent_comment:document.getElementById('eComment').value,private_note:pn,price_number:_pf.price_number,deposit:_pf.deposit,monthly_rent:_pf.monthly_rent,tags:[]}).eq('id',id);
-    Data.batchGenerateTags(id);Data.updateEmbedding(id);Data.locateCard(id).then(()=>Data.triggerAutoMatch(id));
+    await Auth.sb.from('cards').update({property:prop,photos:[...existPhotos,...newUrls],agent_comment:document.getElementById('eComment').value,private_note:pn,price_number:_pf.price_number,deposit:_pf.deposit,monthly_rent:_pf.monthly_rent}).eq('id',id);
+    Data.batchGenerateTags(id).catch(()=>{});Data.updateEmbedding(id);Data.locateCard(id).then(()=>Data.triggerAutoMatch(id));
     document.getElementById('editModal').classList.remove('show');_editNewPhotos=[];Toast.show('수정 완료');
     await Data.loadMyCards(0,true);renderList();
   }
@@ -3210,7 +3227,7 @@ const PanelClient = (() => {
     if(!Auth.user){Toast.show('로그인이 필요합니다');return;}
     btn.textContent='분석 중...';btn.disabled=true;
     try{
-      const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/parse-property`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken()},body:JSON.stringify({text:inp.value.trim()})});
+      const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/parse-property`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({text:inp.value.trim()})});
       const r=await res.json();if(r.error)throw new Error(r.error);
       // 손님 카드로 강제 설정
       const property={type:'손님',price:r.price||null,location:r.location||null,complex:r.complex||null,area:r.area||null,floor:r.floor||null,room:r.room||null,features:r.features||[],category:r.category||null,rawText:inp.value.trim()};
@@ -3624,7 +3641,7 @@ const PanelClient = (() => {
     const text=document.getElementById('clientEditText')?.value?.trim();if(!text)return;
     const btn=document.getElementById('clientEditBtn');btn.textContent='분석 중...';btn.disabled=true;
     try{
-      const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/parse-property`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken()},body:JSON.stringify({text})});
+      const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/parse-property`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({text})});
       const r=await res.json();if(r.error)throw new Error(r.error);
       // 필요한 필드만 property에 저장 (embedding/search_text 등 제외)
       const property={
@@ -3633,7 +3650,7 @@ const PanelClient = (() => {
         features:r.features||[],moveIn:r.moveIn||null,category:r.category||null,rawText:text
       };
       await Auth.sb.from('cards').update({
-        property,tags:[],
+        property,
         price_number:r.price_number||null,deposit:r.deposit||null,monthly_rent:r.monthly_rent||null,
         wanted_trade_type:r.wanted_trade_type||null,wanted_categories:r.wanted_categories||[],wanted_conditions:r.wanted_conditions||[],
         contact_name:r.contact_name||null,contact_phone:r.contact_phone||null,
