@@ -325,16 +325,62 @@
         .card-dot { height:4px; border-radius:3px; background:rgba(255,255,255,0.35); transition:all 0.25s; width:4px; }
         .card-dot.active { background:#fff; width:14px; }
 
-        /* 정보 영역 (사진 아래, 다크 배경) */
-        .card-bottom {
-          background: #1a1a2e;
-          padding: 14px 18px 16px; z-index: 10;
-          flex-shrink: 0;
+        /* ========== 정보 카드 (통합) ========== */
+        .info-card-wrap {
+          width: 100%; height: calc(100dvh - var(--bar-h, 110px));
+          position: relative; display: flex; flex-direction: column;
+          align-items: center; justify-content: center;
+          background: linear-gradient(160deg, #0d1b2a 0%, #1b2838 30%, #162032 60%, #0a1628 100%);
+          overflow: hidden;
         }
-        .card-bottom.hidden { opacity:0; pointer-events:none; }
+        .info-card-orb { position: absolute; border-radius: 50%; }
+        .info-card-orb-1 { width:350px; height:350px; top:-80px; right:-100px; background:radial-gradient(circle,rgba(99,102,241,0.1) 0%,transparent 70%); }
+        .info-card-orb-2 { width:250px; height:250px; bottom:-60px; left:-80px; background:radial-gradient(circle,rgba(250,204,21,0.08) 0%,transparent 70%); }
+        .info-card-content {
+          position: relative; z-index: 1; text-align: center;
+          padding: 0 28px; width: 100%; max-width: 420px;
+        }
+        .info-badge {
+          font-size:12px; font-weight:600; padding:6px 16px; border-radius:20px;
+          display:inline-flex; align-items:center; gap:8px;
+          color:rgba(255,255,255,0.85); border:1px solid; margin-bottom:20px;
+        }
+        .info-badge-dot { width:7px; height:7px; border-radius:50%; }
+        .info-price {
+          font-size:38px; font-weight:800; color:#fff;
+          letter-spacing:-0.03em; margin-bottom:8px; line-height:1.1;
+        }
+        .info-location { font-size:15px; color:rgba(255,255,255,0.5); margin-bottom:20px; }
+        .info-divider { width:40px; height:1px; background:rgba(255,255,255,0.15); margin:0 auto 20px; }
+        .info-specs {
+          display:flex; gap:7px; flex-wrap:wrap; justify-content:center; margin-bottom:20px;
+        }
+        .info-comment {
+          margin-top:8px; padding:16px 20px; text-align:left;
+          background:rgba(255,255,255,0.06); border-radius:14px;
+          border:1px solid rgba(255,255,255,0.08); margin-bottom:16px;
+        }
+        .info-comment-label { font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:8px; font-weight:600; }
+        .info-comment-text { font-size:14px; color:rgba(255,255,255,0.7); line-height:1.8; white-space:pre-wrap; word-break:keep-all; }
+        .info-photo-btn {
+          display:inline-flex; align-items:center; gap:8px;
+          padding:12px 24px; border-radius:12px; cursor:pointer;
+          background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15);
+          color:rgba(255,255,255,0.8); font-size:14px; font-weight:600;
+          transition:background 0.2s;
+        }
+        .info-photo-btn:active { background:rgba(255,255,255,0.15); }
+        .info-photo-btn svg { stroke:rgba(255,255,255,0.7); }
+        .info-watermark {
+          position:absolute; bottom:14px; right:16px;
+          font-size:11px; font-weight:800; color:rgba(250,204,21,0.15); letter-spacing:-0.5px;
+        }
+
+        /* 레거시 호환 */
+        .card-bottom { display:none; }
         .card-price { font-size:30px; font-weight:800; color:#fff; letter-spacing:-0.03em; margin-bottom:2px; }
         .card-name { font-size:12px; color:rgba(255,255,255,0.55); margin-bottom:10px; }
-        .card-specs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:0; align-items:center; max-height:58px; overflow:hidden; }
+        .card-specs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:0; align-items:center; }
         /* 기본 스펙 (면적/층/방) — 작고 심플 */
         .card-spec { font-size:12px; padding:6px 12px; border-radius:20px; background:rgba(255,255,255,0.12); color:rgba(255,255,255,0.8); font-weight:500; letter-spacing:0.02em; border:1px solid rgba(255,255,255,0.15); }
         /* 셀링포인트 (남향/역세권/한강뷰 등) — 노란 강조 */
@@ -990,63 +1036,102 @@
             }).join('');
         }
 
-        // ===== memo 템플릿 (사진 있는 카드) — 풀스크린 블러 배경 =====
+        // ===== 통합 정보 카드 (사진 유무 관계없이 동일한 정보 카드) =====
         function buildMemoCard(ctx) {
-            const { type, price, name, location, area, floor, room, features, agentName, agentPhone, agentPhoto, photos, agentComment } = ctx;
-            const totalSlides = photos.length;
-            const cardNameStr = [location, name].filter(Boolean).join(' · ');
-            const slidesHtml = photos.map((url, i) =>
-                `<img class="photo-slide" src="${esc(url)}" loading="${i === 0 ? 'eager' : 'lazy'}" fetchpriority="${i === 0 ? 'high' : 'auto'}">`
-            ).join('');
+            return _buildInfoCard(ctx);
+        }
+        function buildNoImgCard(ctx) {
+            return _buildInfoCard(ctx);
+        }
 
+        function _buildInfoCard(ctx) {
+            const { type, price, name, location, area, floor, room, features, agentName, agentPhone, agentPhoto, photos, agentComment } = ctx;
+            const cardNameStr = [location, name].filter(Boolean).join(' · ');
             const specsHtml = _buildSpecsHtml([area, floor, room], features);
+            const hasPhotos = photos && photos.length > 0;
+            const dotColor = type === '매매' ? '#ea580c' : type === '전세' ? '#4f46e5' : '#7c3aed';
 
             const cardHtml = `
-              <div class="card card-full" id="activeCard" data-template="memo" data-total="${totalSlides}" onclick="_onCardTap(event)">
-                <div class="card-photo-section">
-                  <div class="card-photo-area">
-                    <div class="card-blur-bg" id="cardBlurBg" style="background-image:url('${esc(photos[0])}')"></div>
-                    <div class="card-inner-slider" id="cardSlider">${slidesHtml}</div>
-                    ${_topInfoHtml(type, totalSlides)}
-                    <button class="card-arrow arr-left" onclick="_moveInternalSlide(-1)">‹</button>
-                    <button class="card-arrow arr-right" onclick="_moveInternalSlide(1)">›</button>
+              <div class="card card-full" id="activeCard" data-template="info" data-total="1">
+                <div class="info-card-wrap">
+                  <!-- 배경 장식 -->
+                  <div class="info-card-orb info-card-orb-1"></div>
+                  <div class="info-card-orb info-card-orb-2"></div>
+
+                  <div class="info-card-content">
+                    <!-- 거래유형 배지 -->
+                    <div class="info-badge" style="border-color:${dotColor}33;background:${dotColor}1a;">
+                      <span class="info-badge-dot" style="background:${dotColor}"></span>
+                      ${type}
+                    </div>
+
+                    <!-- 가격 -->
+                    <div class="info-price">${price}</div>
+
+                    <!-- 위치·단지 -->
+                    <div class="info-location">${cardNameStr}</div>
+
+                    <!-- 구분선 -->
+                    <div class="info-divider"></div>
+
+                    <!-- 기본 스펙 + 태그 -->
+                    ${specsHtml ? `<div class="info-specs">${specsHtml}</div>` : ''}
+
+                    <!-- 중개사 코멘트 -->
+                    ${agentComment ? `
+                    <div class="info-comment">
+                      <div class="info-comment-label">💬 중개사 한마디</div>
+                      <div class="info-comment-text">${esc(agentComment).replace(/\n/g,'<br>')}</div>
+                    </div>` : ''}
+
+                    <!-- 사진 보기 버튼 (사진 있을 때만) -->
+                    ${hasPhotos ? `
+                    <button class="info-photo-btn" onclick="_openGallery()">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                      사진 ${photos.length}장 보기
+                    </button>` : ''}
                   </div>
-                  <div class="card-bottom" id="cardBottom">
-                    <div class="card-price">${price}</div>
-                    <div class="card-name">${cardNameStr}</div>
-                    ${specsHtml ? `<div class="card-specs">${specsHtml}</div>` : ''}
-                  </div>
+
+                  <!-- 휙 워터마크 -->
+                  <div class="info-watermark">휙</div>
                 </div>
               </div>`;
-            // 하단 고정 바 렌더
+
+            // 사진 데이터 저장 (갤러리용)
+            if (hasPhotos) {
+                window._currentPhotos = photos;
+            }
             _renderFixedBar(agentName, agentPhone, agentPhoto);
             return cardHtml;
         }
 
-        // ===== noimg 템플릿 (사진 없는 카드) — 풀스크린 다크 =====
-        function buildNoImgCard(ctx) {
-            const { type, price, name, location, area, floor, room, features, agentName, agentPhone, agentPhoto, agentComment } = ctx;
-            const cardNameStr = [location, name].filter(Boolean).join(' · ');
-            const specsHtml = _buildSpecsHtml([area, floor, room], features);
-
-            const cardHtml = `
-              <div class="card card-full" id="activeCard" data-template="noimg" data-total="1">
-                <div style="width:100%;height:calc(100dvh - 64px);position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
-                  background:linear-gradient(160deg,#0d1b2a 0%,#1b2838 30%,#162032 60%,#0a1628 100%);overflow:hidden;">
-                  <div style="position:absolute;width:350px;height:350px;border-radius:50%;background:radial-gradient(circle,rgba(99,102,241,0.1) 0%,transparent 70%);top:-80px;right:-100px;"></div>
-                  <div style="position:absolute;width:250px;height:250px;border-radius:50%;background:radial-gradient(circle,rgba(250,204,21,0.08) 0%,transparent 70%);bottom:-60px;left:-80px;"></div>
-                  <div style="position:relative;z-index:1;text-align:center;padding:0 28px;">
-                    <div style="font-size:11px;font-weight:500;padding:5px 14px;border-radius:8px;background:rgba(99,102,241,0.15);color:rgba(99,102,241,0.9);display:inline-block;margin-bottom:16px;border:1px solid rgba(99,102,241,0.2);">${type}</div>
-                    <div style="font-size:36px;font-weight:800;color:#fff;letter-spacing:-0.03em;margin-bottom:8px;">${price}</div>
-                    <div style="font-size:15px;color:rgba(255,255,255,0.5);margin-bottom:20px;">${cardNameStr}</div>
-                    ${specsHtml ? `<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">${specsHtml}</div>` : ''}
-                    ${agentComment ? `<div style="margin-top:28px;padding:16px 20px;background:rgba(255,255,255,0.06);border-radius:14px;border:1px solid rgba(255,255,255,0.08);"><div style="font-size:14px;color:rgba(255,255,255,0.7);line-height:1.8;white-space:pre-wrap;word-break:keep-all;">${esc(agentComment).replace(/\n/g,'<br>')}</div></div>` : ''}
+        // 사진 갤러리 열기
+        function _openGallery() {
+            const photos = window._currentPhotos;
+            if (!photos || !photos.length) return;
+            let idx = 0;
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;';
+            const render = () => {
+                overlay.innerHTML = `
+                  <div style="position:absolute;top:16px;left:16px;right:16px;display:flex;justify-content:space-between;align-items:center;z-index:10;">
+                    <span style="color:rgba(255,255,255,0.7);font-size:14px;font-weight:600;">${idx+1} / ${photos.length}</span>
+                    <button onclick="this.closest('div').parentElement.remove()" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:20px;cursor:pointer;">✕</button>
                   </div>
-                  <div style="position:absolute;bottom:14px;right:16px;font-size:11px;font-weight:800;color:rgba(250,204,21,0.15);letter-spacing:-0.5px;">휙</div>
-                </div>
-              </div>`;
-            _renderFixedBar(agentName, agentPhone, agentPhoto);
-            return cardHtml;
+                  <img src="${esc(photos[idx])}" style="max-width:100%;max-height:80vh;object-fit:contain;">
+                  ${photos.length > 1 ? `
+                  <div style="display:flex;gap:12px;margin-top:16px;">
+                    <button onclick="window._galleryNav(-1)" style="padding:10px 24px;border-radius:10px;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:16px;cursor:pointer;">‹ 이전</button>
+                    <button onclick="window._galleryNav(1)" style="padding:10px 24px;border-radius:10px;background:rgba(255,255,255,0.15);border:none;color:#fff;font-size:16px;cursor:pointer;">다음 ›</button>
+                  </div>` : ''}`;
+            };
+            window._galleryNav = (dir) => {
+                idx = (idx + dir + photos.length) % photos.length;
+                render();
+            };
+            render();
+            overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.remove(); });
+            document.body.appendChild(overlay);
         }
 
         // ===== 하단 고정 바 (텔레그램 스타일) =====
