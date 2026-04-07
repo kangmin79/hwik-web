@@ -673,6 +673,7 @@
         .fixed-bottom-bar .contact-btn:active { opacity: 0.75; }
         .fixed-bottom-bar .btn-call { background: #4ecdc4; color: #fff; }
         .fixed-bottom-bar .btn-kakao { background: #fee500; color: #191919; }
+        .fixed-bottom-bar .btn-map { background: rgba(99,102,241,0.12); color: #6366f1; border: 1px solid rgba(99,102,241,0.25); }
 
         #interestBtn.interested {
             background: #6366f1; color: #fff; border-color: #6366f1;
@@ -1160,13 +1161,6 @@
                         <div class="info-comment-text">${esc(agentComment).replace(/\n/g,'<br>')}</div>
                       </div>` : ''}
 
-                      <!-- 지도 -->
-                      <div class="info-map" id="infoMapContainer" onclick="openKakaoMap()">
-                        <div class="info-map-label">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                          ${esc(cardNameStr)} · 탭하여 크게 보기
-                        </div>
-                      </div>
                     </div>
 
                     <div class="info-watermark">휙</div>
@@ -1258,10 +1252,13 @@
               <div class="bar-btn-row">
                 ${tel ? `<a href="tel:${tel}" class="contact-btn btn-call">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                  전화하기</a>` : ''}
+                  전화</a>` : ''}
                 <button onclick="goBackToKakao()" class="contact-btn btn-kakao">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c5.8 0 10.5 3.66 10.5 8.17 0 4.51-4.7 8.17-10.5 8.17-.87 0-1.72-.08-2.54-.24l-4.14 2.82.93-4.08C3.92 16.13 1.5 13.37 1.5 11.17 1.5 6.66 6.2 3 12 3z"/></svg>
-                  카톡으로 문의</button>
+                  카톡</button>
+                <button onclick="openKakaoMap()" class="contact-btn btn-map">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  지도</button>
               </div>`;
         }
 
