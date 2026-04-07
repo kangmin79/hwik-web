@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
     // 2. ★ 손님 조건 상세 분석 (모든 텍스트에서 추출)
     const cp = clientCard.property || {};
     const memo = clientCard.private_note?.memo || '';
-    let allText = [cp.price, cp.location, cp.complex, cp.area, memo, ...(cp.features || [])].filter(Boolean).join(' ');
+    let allText = [cp.rawText, cp.price, cp.location, cp.complex, cp.area, memo, ...(cp.features || [])].filter(Boolean).join(' ');
 
     // ★ 오타/한글숫자 교정
     allText = fixTypos(allText);
@@ -157,16 +157,26 @@ Deno.serve(async (req) => {
     let maxDeposit: number | null = null;
     let maxMonthly: number | null = null;
     if (wantedTradeType === '월세') {
+      // "보800/월50" "보증금800/월세50" 약어 패턴 (가장 흔한 표기)
+      const boWolMatch = allText.match(/보(?:증금)?\s*(\d[\d,]*)\s*\/\s*월(?:세)?\s*(\d[\d,]*)/);
+      if (boWolMatch) {
+        wantedDeposit = parseInt(boWolMatch[1].replace(/,/g, ''));
+        wantedMonthly = parseInt(boWolMatch[2].replace(/,/g, ''));
+      }
       // "보증금 1000~2000" 범위
-      const depRange = allText.match(/보증금\s*(\d+)\s*[~에서]\s*(\d+)/);
-      if (depRange) { wantedDeposit = parseInt(depRange[1]); maxDeposit = parseInt(depRange[2]); }
-      // "월세 30~50" 범위
-      const monRange = allText.match(/월(?:세)?\s*(\d+)\s*[~에서]\s*(\d+)/);
-      if (monRange) { wantedMonthly = parseInt(monRange[1]); maxMonthly = parseInt(monRange[2]); }
-      // 단일 보증금
       if (!wantedDeposit) {
-        const depMatch = allText.match(/보증금\s*(\d+)/);
-        if (depMatch) wantedDeposit = parseInt(depMatch[1]);
+        const depRange = allText.match(/보(?:증금)?\s*(\d+)\s*[~에서]\s*(\d+)/);
+        if (depRange) { wantedDeposit = parseInt(depRange[1]); maxDeposit = parseInt(depRange[2]); }
+      }
+      // "월세 30~50" 범위
+      if (!wantedMonthly) {
+        const monRange = allText.match(/월(?:세)?\s*(\d+)\s*[~에서]\s*(\d+)/);
+        if (monRange) { wantedMonthly = parseInt(monRange[1]); maxMonthly = parseInt(monRange[2]); }
+      }
+      // 단일 보증금 ("보증금800" 또는 "보800")
+      if (!wantedDeposit) {
+        const depMatch = allText.match(/보(?:증금)?\s*(\d[\d,]*)/);
+        if (depMatch) wantedDeposit = parseInt(depMatch[1].replace(/,/g, ''));
       }
       // 단일 월세
       if (!wantedMonthly) {
