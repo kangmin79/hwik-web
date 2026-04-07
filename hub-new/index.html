@@ -2833,7 +2833,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
   }
 
   function edit(id){
-    const c=Data.cache.myCards.find(x=>x.id===id);if(!c)return;const p=c.property||{},m=document.getElementById('editModal');if(!m)return;_editNewPhotos=[];
+    const c=Data.cache.myCards.find(x=>x.id===id)||(Data.cache.sharedCards||[]).find(x=>x.id===id&&x.agent_id===Auth.user?.id);if(!c)return;const p=c.property||{},m=document.getElementById('editModal');if(!m)return;_editNewPhotos=[];
     m.innerHTML=`<div class="modal-content edit-modal"><div class="modal-header">매물 수정<button class="modal-close" onclick="this.closest('.modal-overlay').classList.remove('show')">✕</button></div><div class="modal-body">
       <div class="edit-grid"><div class="edit-field"><label>거래유형</label><select id="eType"><option ${p.type==='매매'?'selected':''}>매매</option><option ${p.type==='전세'?'selected':''}>전세</option><option ${p.type==='월세'?'selected':''}>월세</option></select></div><div class="edit-field"><label>가격</label><input id="ePrice" value="${esc(p.price||'')}"></div><div class="edit-field"><label>단지명</label><input id="eComplex" value="${esc(p.complex||'')}"></div><div class="edit-field"><label>위치</label><input id="eLocation" value="${esc(p.location||'')}"></div><div class="edit-field"><label>면적</label><input id="eArea" value="${esc(p.area||'')}"></div><div class="edit-field"><label>층</label><input id="eFloor" value="${esc(p.floor||'')}"></div></div>
       <div class="edit-field" style="margin-top:12px;"><label>특징 태그</label><div class="edit-tags" id="eTags">${(p.features||[]).map(f=>`<span class="edit-chip">${esc(f)} <button onclick="this.parentElement.remove()">✕</button></span>`).join('')}<input class="edit-tag-input" placeholder="태그 추가 (Enter)" onkeydown="if(event.key==='Enter'){event.preventDefault();PanelCards.addTag(this)}"></div></div>
@@ -2847,7 +2847,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
   function addTag(inp){const v=inp.value.trim();if(!v)return;inp.insertAdjacentHTML('beforebegin',`<span class="edit-chip">${esc(v)} <button onclick="this.parentElement.remove()">✕</button></span>`);inp.value='';}
 
   async function saveEdit(id){
-    const c=Data.cache.myCards.find(x=>x.id===id);if(!c)return;const prop={...(c.property||{})};
+    const c=Data.cache.myCards.find(x=>x.id===id)||(Data.cache.sharedCards||[]).find(x=>x.id===id&&x.agent_id===Auth.user?.id);if(!c)return;const prop={...(c.property||{})};
     prop.type=document.getElementById('eType').value;prop.price=document.getElementById('ePrice').value;prop.complex=document.getElementById('eComplex').value;prop.location=document.getElementById('eLocation').value;prop.area=document.getElementById('eArea').value;prop.floor=document.getElementById('eFloor').value;
     prop.features=Array.from(document.querySelectorAll('#eTags .edit-chip')).map(el=>el.textContent.replace('✕','').trim());
     const existPhotos=Array.from(document.querySelectorAll('#ePhotos .edit-photo-thumb:not(.new) img')).map(i=>i.src);
@@ -3824,7 +3824,9 @@ const PanelShared = (() => {
             ${thumbHtml}
             <div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation();">
               <button onclick="${toggleFn}(event)" style="padding:4px 12px;border-radius:6px;border:1.5px solid #60a5fa;background:rgba(96,165,250,0.06);color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer;">상세</button>
-              ${isMine?`<button onclick="PanelShared.unshare('${c.id}','${c.room_id||''}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #ef4444;background:rgba(239,68,68,0.06);color:#ef4444;font-size:11px;font-weight:700;cursor:pointer;">해제</button>`:''}
+              ${isMine?`
+              <button onclick="PanelCards.edit('${c.id}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #f59e0b;background:rgba(245,158,11,0.06);color:#f59e0b;font-size:11px;font-weight:700;cursor:pointer;">수정</button>
+              <button onclick="PanelShared.unshare('${c.id}','${c.room_id||''}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #ef4444;background:rgba(239,68,68,0.06);color:#ef4444;font-size:11px;font-weight:700;cursor:pointer;">해제</button>`:''}
             </div>
           </div>
           <div id="sd-${c.id}" style="display:none;width:100%;margin-top:8px;padding:12px;border-radius:10px;background:var(--bg-input);font-size:12px;" onclick="event.stopPropagation();">
