@@ -407,6 +407,18 @@
           font-size:14px; color:rgba(255,255,255,0.65); line-height:1.7;
           white-space:pre-wrap; word-break:keep-all;
         }
+        /* 인라인 지도 */
+        .info-map {
+          margin-top:14px; border-radius:14px; overflow:hidden;
+          height:140px; position:relative; cursor:pointer;
+          border:1px solid rgba(255,255,255,0.1);
+        }
+        .info-map-label {
+          position:absolute; bottom:0; left:0; right:0; z-index:5;
+          padding:8px 14px; font-size:11px; font-weight:600;
+          color:rgba(255,255,255,0.8); background:linear-gradient(transparent, rgba(0,0,0,0.6));
+          display:flex; align-items:center; gap:6px; pointer-events:none;
+        }
         /* 워터마크 */
         .info-watermark {
           position:absolute; bottom:10px; right:16px;
@@ -1153,6 +1165,14 @@
                         <div class="info-comment-label">💬 중개사 한마디</div>
                         <div class="info-comment-text">${esc(agentComment).replace(/\n/g,'<br>')}</div>
                       </div>` : ''}
+
+                      <!-- 지도 -->
+                      <div class="info-map" id="infoMapContainer" onclick="openKakaoMap()">
+                        <div class="info-map-label">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                          ${esc(cardNameStr)} · 탭하여 크게 보기
+                        </div>
+                      </div>
                     </div>
 
                     <div class="info-watermark">휙</div>
@@ -1579,18 +1599,18 @@
         let _lastMinimapKey = null; // ★ 미니맵 캐시 키 (lat,lng)
         
         function initMinimap(property, savedLat, savedLng) {
-            const mapContainer = document.getElementById('minimap');
+            const mapContainer = document.getElementById('infoMapContainer') || document.getElementById('minimap');
             if (!mapContainer) return;
 
             if (!savedLat || !savedLng) {
                 mapContainer.style.display = 'none';
                 return;
             }
+            mapContainer.style.display = '';
 
             // ★ 좌표가 이전 카드와 같으면 미니맵 재초기화 스킵 (가장 무거운 작업)
             const minimapKey = `${savedLat},${savedLng}`;
             if (minimapKey === _lastMinimapKey && minimapInstance) {
-                mapContainer.style.display = '';
                 return;
             }
             _lastMinimapKey = minimapKey;
