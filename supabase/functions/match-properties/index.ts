@@ -623,9 +623,9 @@ Deno.serve(async (req) => {
           const overPct = ((pn - upperBound) / targetPrice) * 100;
           priceScore = Math.max(30 - Math.round(overPct), 0);
         } else if (pn < lowerBound) {
-          // 싸면 감점 (너무 싸면 조건에 안 맞는 매물일 가능성)
+          // 싸면 감점 (50% 미만이면 0점 — 20억 찾는데 3억은 의미 없음)
           const underPct = ((lowerBound - pn) / targetPrice) * 100;
-          priceScore = Math.max(30 - Math.round(underPct * 0.8), 5); // 최소 5점 (싼 건 봐줄만)
+          priceScore = Math.max(30 - Math.round(underPct), 0);
         }
         score += priceScore;
       }
