@@ -2790,7 +2790,8 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
     if(!cards.length){Toast.show('매물을 먼저 선택해주세요');return;}
     _openSharePicker(cards);
   }
-  function _openSharePicker(cards, singleId){
+  async function _openSharePicker(cards, singleId){
+    if(!Data.cache.rooms.length) await Data.loadRooms();
     const rooms=Data.cache.rooms;
     if(!rooms.length){Toast.show('공유방을 먼저 만들어주세요');Hub.openPanel('shared');return;}
     const m=document.getElementById('shareToRoomModal');if(!m)return;
