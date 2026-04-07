@@ -1082,7 +1082,15 @@
 
         function _buildSpecsHtml(basicSpecs, featureSpecs) {
             const all = [...basicSpecs, ...featureSpecs].filter(Boolean);
-            return all.map(s => {
+            // 골드(셀링포인트) → 민트(학군/환경) → 기본 스펙 순
+            const gold = [], mint = [], basic = [];
+            all.forEach(s => {
+                const cls = _classifySpec(s);
+                if (cls === 'highlight') gold.push(s);
+                else if (cls === 'highlight-mint') mint.push(s);
+                else basic.push(s);
+            });
+            return [...gold, ...mint, ...basic].map(s => {
                 const cls = _classifySpec(s);
                 return `<span class="card-spec${cls ? ' ' + cls : ''}">${s}</span>`;
             }).join('');
