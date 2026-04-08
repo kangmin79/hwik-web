@@ -1441,7 +1441,7 @@ window.addEventListener('popstate', (e) => {
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('/hwik-web/sw.js');
+      const reg = await navigator.serviceWorker.register('/sw.js');
       reg.addEventListener('updatefound', () => {
         const newWorker = reg.installing;
         newWorker.addEventListener('statechange', () => {
