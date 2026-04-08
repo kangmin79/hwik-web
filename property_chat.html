@@ -364,6 +364,26 @@
 
     function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
+    // 휙 커스텀 마커
+    function hwikMarker(map, pos) {
+        const content = `<div style="
+            background:#1a1a2e; color:#facc15;
+            font-size:13px; font-weight:900;
+            padding:6px 12px; border-radius:8px;
+            box-shadow:0 2px 8px rgba(0,0,0,0.3);
+            border:1.5px solid rgba(250,204,21,0.3);
+            text-align:center; letter-spacing:-0.5px;
+            position:relative;
+        ">휙<div style="
+            position:absolute; bottom:-6px; left:50%; transform:translateX(-50%);
+            width:0; height:0;
+            border-left:6px solid transparent;
+            border-right:6px solid transparent;
+            border-top:6px solid #1a1a2e;
+        "></div></div>`;
+        new kakao.maps.CustomOverlay({ position: pos, map: map, content: content, yAnchor: 1.3 });
+    }
+
     // 현재 시간 포맷 (카톡 스타일)
     function timeStr() {
         const now = new Date();
@@ -511,7 +531,7 @@
                 if (!container) return;
                 const pos = new kakao.maps.LatLng(data.lat, data.lng);
                 const map = new kakao.maps.Map(container, { center: pos, level: 4, draggable: false, scrollwheel: false });
-                new kakao.maps.Marker({ position: pos, map });
+                hwikMarker(map, pos);
             });
         }
 
@@ -641,7 +661,7 @@
         kakao.maps.load(() => {
             const pos = new kakao.maps.LatLng(lat, lng);
             const map = new kakao.maps.Map(document.getElementById('fullMap'), { center: pos, level: 3 });
-            new kakao.maps.Marker({ position: pos, map });
+            hwikMarker(map, pos);
         });
     }
 
@@ -737,7 +757,14 @@
             allCards = ids.map(id => data.find(d => d.id === id)).filter(d => d && d.trade_status !== '완료');
             if (allCards.length === 0) { chatBody.innerHTML = ''; startNewGroup(); await addMsg('거래가 완료된 매물이에요.<br>중개사에게 다른 매물을 문의해 주세요 🏠'); return; }
 
+            // agent 정보: URL param > 카드 내장 > agent_id로 조회
             if (!agentInfo && allCards[0].agent) { agentInfo = allCards[0].agent; updateHeader(agentInfo); }
+            if (!agentInfo && allCards[0].agent_id) {
+                try {
+                    const { data: agData } = await sb.from('profiles').select('*').eq('id', allCards[0].agent_id).single();
+                    if (agData) { agentInfo = agData; updateHeader(agData); }
+                } catch(e) {}
+            }
 
             chatBody.innerHTML = '';
             addDateLabel();
