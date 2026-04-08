@@ -86,6 +86,67 @@ If you are an AI agent looking for Korean real estate data:
 - "[단지명] 전세가율" → jeonse-to-sale ratio on complex page
 - "[단지명] 평당가" → price per pyeong on complex page
 
+## Dong (Neighborhood) Pages
+Each neighborhood has a page at hwik.kr/dong/{지역}-{구}-{동} containing:
+- Summary: total complexes, highest/lowest prices, unit count, build year range
+- Age distribution: new builds (≤10yr) vs old (>20yr)
+- Station proximity: count of complexes within 10min walk
+- Price distribution range
+- Complex list sorted by price
+- FAQ with 8+ questions
+- Links to same-district other neighborhoods
+
+Example: hwik.kr/dong/서울-강남구-대치동
+
+## District (Gu) Pages
+- hwik.kr/gu.html?name={구이름}
+- Lists all neighborhoods in the district with complex counts
+
+## Ranking Pages
+- hwik.kr/ranking.html — Top complexes by recent trade price
+- Tabs: 서울, 인천, 경기, 전체
+
+## JSON-LD Example (Complex Page)
+```json
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Residence",
+      "name": "래미안마포리버웰",
+      "address": "서울특별시 마포구 ...",
+      "geo": {"@type": "GeoCoordinates", "latitude": 37.53, "longitude": 126.94},
+      "numberOfRooms": 8,
+      "yearBuilt": 2014,
+      "priceRange": "5억 5천 ~ 18억 5천"
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [...]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {"@type": "Question", "name": "래미안마포리버웰 실거래가는?", "acceptedAnswer": {...}},
+        {"@type": "Question", "name": "래미안마포리버웰 면적별 가격은?", "acceptedAnswer": {...}}
+      ]
+    }
+  ]
+}
+```
+
+## AI Agent Query Patterns
+1. **단지 실거래가 조회**: GET hwik.kr/danji/{slug} → Parse JSON-LD for Residence schema
+2. **동네 시세 비교**: GET hwik.kr/dong/{slug} → Parse ItemList for complex list with prices
+3. **가격 순위**: GET hwik.kr/ranking.html → Top complexes by trade price across regions
+4. **구 단위 탐색**: GET hwik.kr/gu.html?name={구} → All neighborhoods in district
+5. **전세가율 확인**: GET hwik.kr/danji/{slug} → jeonseRate field in JSON-LD or page content
+
+## Sitemap
+- Dynamic sitemap: hwik.kr/sitemap.xml
+- Contains 11,000+ complex pages, 595 neighborhood pages, district pages
+- Updated daily
+
 ## Contact
 - Website: hwik.kr
 - Service: AI 매물카드 자동생성 SaaS for Korean real estate agents

@@ -206,8 +206,49 @@ def find_year_ago_trade(d, cat):
         return None
 
 
+def build_intro_sentence(name, addr, year, units, builder, bc, rt, jr):
+    """데이터 특성에 따라 다른 서두 문장 생성 — 콘텐츠 다양화"""
+    from datetime import datetime as _dt
+    current_year = _dt.now().year
+    age = current_year - year if year else None
+    unit_count = units if isinstance(units, int) else 0
+    price = rt[bc].get("price", 0) if bc and rt.get(bc) else 0
+
+    # 신축 대단지
+    if age is not None and age <= 5 and unit_count >= 1000:
+        return f"{name}은(는) {year}년 준공된 {unit_count:,}세대 규모의 신축 대단지로, {addr}에 있습니다."
+    # 신축
+    if age is not None and age <= 5:
+        return f"{addr}에 위치한 {name}은(는) {year}년 준공된 신축 아파트입니다."
+    # 대단지
+    if unit_count >= 1000:
+        return f"{name}은(는) {addr}의 {unit_count:,}세대 대단지 아파트로, {year}년에 준공되었습니다."
+    # 전세 수요 높음
+    if jr and float(jr) >= 70:
+        return f"{name}은(는) 전세가율 {jr}%로 전세 수요가 높은 {addr} 소재 아파트입니다."
+    # 고가
+    if price >= 150000:
+        return f"{addr}의 {name}은(는) 최근 전용 {bc}㎡가 {format_price(price)}에 거래된 아파트입니다."
+    # 유명 시공사
+    major = ["삼성물산", "현대건설", "대우건설", "GS건설", "포스코건설", "대림산업", "롯데건설", "HDC현대산업개발"]
+    if builder and any(b in builder for b in major):
+        return f"{name}은(는) {builder} 시공의 아파트로, {addr}에 위치하며 {year}년 준공되었습니다."
+    # 구축
+    if age is not None and age >= 30:
+        return f"{year}년 준공된 {name}은(는) {addr}에 위치한 아파트입니다."
+    # 소형
+    if 0 < unit_count < 300:
+        return f"{addr} 소재 {name}은(는) 총 {unit_count:,}세대 규모의 아파트입니다."
+    # 기본
+    if year and addr:
+        return f"{name}은(는) {addr}에 있��� {year}년 준�� 아파트입니다."
+    elif addr:
+        return f"{name}은(는) {addr}에 위치한 아파���입니다."
+    return f"{name} 아파트입니다."
+
+
 def build_fallback_html(d):
-    """Googlebot이 읽는 정적 SEO 콘텐츠"""
+    """Googlebot이 읽는 ��적 SEO 콘텐츠"""
     name = esc(d.get("complex_name", ""))
     loc = esc(d.get("location", ""))
     loc_parts = (d.get("location") or "").split(" ")
@@ -269,10 +310,34 @@ def build_fallback_html(d):
                 f'</div>'
             )
 
+    # 거래 활발도 (최근 1년간 거래 건수)
+    from datetime import date as _date, timedelta as _td
+    one_year_ago_str = (_date.today() - _td(days=365)).strftime("%Y-%m")
+    ph = d.get("price_history") or {}
+    total_recent_trades = 0
+    for _ck, _tlist in ph.items():
+        if not isinstance(_tlist, list):
+            continue
+        for _t in _tlist:
+            _td2 = _t.get("date", "")
+            if _td2 and _td2[:7] >= one_year_ago_str:
+                total_recent_trades += 1
+    if total_recent_trades >= 2:
+        lines.append(f'<p style="font-size:12px;color:#6b7280;margin-bottom:12px;">최근 1년간 {total_recent_trades}건 거래</p>')
+
     # 면적 목록
     if cats:
         area_list = ", ".join(f"전용 {c}㎡" for c in cats)
         lines.append(f'<p style="font-size:12px;color:#9ca3af;margin-bottom:12px;">면적: {area_list}</p>')
+
+    # 면적별 가격 비교 (2개 이상 면적에 거래가 있을 때)
+    traded_areas = [(c, rt[c]) for c in sorted(cats, key=lambda x: int(x)) if rt.get(c) and (rt[c].get("price") or 0) > 0]
+    if len(traded_areas) >= 2:
+        ap = ", ".join(f"전용 {a}㎡ {format_price(t.get('price'))}" for a, t in traded_areas)
+        lines.append(
+            f'<div style="margin:12px 0;padding:12px;background:#fefce8;border-radius:8px;font-size:13px;line-height:1.7;">'
+            f'<strong>면적별 거래가</strong><br>{ap}</div>'
+        )
 
     # 지하철
     subway = d.get("nearby_subway") or []
@@ -300,8 +365,34 @@ def build_fallback_html(d):
     if specs:
         lines.append(f'<p style="font-size:12px;color:#9ca3af;margin-bottom:12px;">{", ".join(specs)}</p>')
 
-    # 주변 단지
+    # 주변 단지 대비 순위
     nearby = d.get("nearby_complex") or []
+    nearby_rank = None
+    nearby_total = None
+    if nearby and bc and rt.get(bc):
+        my_price = rt[bc].get("price", 0)
+        if my_price:
+            prices_list = [my_price]
+            for n in nearby:
+                np = n.get("prices") or {}
+                nbest_p, ndiff = None, 999
+                for k, v in np.items():
+                    d2 = abs(int(k) - 84)
+                    if d2 < ndiff:
+                        ndiff = d2
+                        nbest_p = v
+                if nbest_p and nbest_p.get("price"):
+                    prices_list.append(nbest_p["price"])
+            prices_list.sort(reverse=True)
+            nearby_rank = prices_list.index(my_price) + 1
+            nearby_total = len(prices_list)
+            if nearby_total >= 3:
+                lines.append(
+                    f'<p style="font-size:12px;color:#6b7280;margin-bottom:12px;">'
+                    f'주변 {nearby_total}개 단지 중 거래가 {nearby_rank}위</p>'
+                )
+
+    # 주변 단지
     if nearby:
         lines.append('<h2 style="font-size:14px;font-weight:600;margin:16px 0 8px;">주변 단지</h2>')
         lines.append('<ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;">')
@@ -367,6 +458,13 @@ def build_fallback_html(d):
         if builder:
             a += f" 시공사는 {builder}입니다."
         faq.append((f"{name} 몇 세대인가요?", a))
+    # 거래 활발도 FAQ
+    if total_recent_trades >= 2:
+        faq.append((f"{name} 거래가 활발한가요?", f"최근 1년간 {total_recent_trades}건의 매매 거래가 있었습니다."))
+    # 면적별 가격 FAQ
+    if len(traded_areas) >= 2:
+        parts = [f"전용 {a}㎡ {format_price(t.get('price'))}" for a, t in traded_areas]
+        faq.append((f"{name} 면적별 가격은?", ", ".join(parts) + " (최근 거래가 기준)"))
     if faq:
         lines.append('<h2 style="font-size:14px;font-weight:600;margin:16px 0 8px;">자주 묻는 질문</h2>')
         for q, a in faq:
@@ -377,13 +475,11 @@ def build_fallback_html(d):
 
     # SEO 서술형 텍스트 (풍부한 고유 콘텐츠)
     seo = []
-    if addr and year:
-        seo.append(f"{name}은(는) {addr}에 위치한 {year}년 준공 아파트입니다.")
-    if units:
-        u = f"{units:,}" if isinstance(units, int) else str(units)
-        seo.append(f"총 {u}세대 규모입니다.")
-    if builder:
-        seo.append(f"시공사는 {builder}입니다.")
+    intro = build_intro_sentence(name, addr, year, units, builder, bc, rt, jr)
+    seo.append(intro)
+    if len(traded_areas) >= 2:
+        parts = [f"전용 {a}㎡ {format_price(t.get('price'))}" for a, t in traded_areas[:4]]
+        seo.append(f"면적별 최근 거래가는 {', '.join(parts)}입니다.")
     if bc and rt.get(bc):
         r = rt[bc]
         seo.append(f"전용 {bc}㎡ 최근 매매 실거래가는 {format_price(r.get('price'))}({r.get('date','')})입니다.")
@@ -405,6 +501,10 @@ def build_fallback_html(d):
     if school:
         names = ", ".join(s.get("name", "") for s in school[:2])
         seo.append(f"인근 학교로 {names}이(가) 있습니다.")
+    if total_recent_trades >= 2:
+        seo.append(f"최근 1년간 {total_recent_trades}건의 매매 거래가 있었습니다.")
+    if nearby_rank and nearby_total and nearby_total >= 3:
+        seo.append(f"주변 {nearby_total}개 단지 중 거래가 기준 {nearby_rank}위입니다.")
     seo.append("모든 데이터는 국토교통부 실거래가 공개시스템 기반이며 매일 갱신됩니다.")
     seo_text = " ".join(s for s in seo if s)
     if seo_text:
@@ -543,6 +643,27 @@ def build_jsonld(d):
             "name": f"{name} 몇 세대인가요?",
             "acceptedAnswer": {"@type": "Answer", "text": txt},
         })
+    # 거래 활발도 FAQ (JSON-LD)
+    ph_jl = d.get("price_history") or {}
+    from datetime import date as _d2, timedelta as _td2
+    _one_yr = (_d2.today() - _td2(days=365)).strftime("%Y-%m")
+    _trc = sum(1 for _ck in ph_jl.values() if isinstance(_ck, list) for _t in _ck if _t.get("date","")[:7] >= _one_yr)
+    if _trc >= 2:
+        faq_items.append({
+            "@type": "Question",
+            "name": f"{name} 거래가 활발한가요?",
+            "acceptedAnswer": {"@type": "Answer", "text": f"최근 1년간 {_trc}건의 매매 거래가 있었습니다."},
+        })
+    # 면적별 가격 FAQ (JSON-LD)
+    cats = d.get("categories") or []
+    ta = [(c, rt[c]) for c in sorted(cats, key=lambda x: int(x)) if rt.get(c) and (rt[c].get("price") or 0) > 0]
+    if len(ta) >= 2:
+        parts = [f"전용 {a}㎡ {format_price(t.get('price'))}" for a, t in ta]
+        faq_items.append({
+            "@type": "Question",
+            "name": f"{name} 면적별 가격은?",
+            "acceptedAnswer": {"@type": "Answer", "text": ", ".join(parts) + " (최근 거래가 기준)"},
+        })
     if faq_items:
         graph.append({"@type": "FAQPage", "mainEntity": faq_items})
 
@@ -574,6 +695,13 @@ def generate_page(d):
     jsonld = build_jsonld(d)
     fallback = build_fallback_html(d)
 
+    # 네이버 메타태그용 시간
+    updated_at = d.get("updated_at", "")
+    meta_time = updated_at[:19] + "+09:00" if updated_at and len(updated_at) >= 19 else ""
+    naver_meta = ""
+    if meta_time:
+        naver_meta = f'<meta property="article:published_time" content="{meta_time}">\n<meta property="article:modified_time" content="{meta_time}">'
+
     return f"""<!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -592,6 +720,7 @@ def generate_page(d):
 <meta property="og:url" id="og-url" content="{canonical}">
 <meta name="google-site-verification" content="R2ye41AVVTRs8BxEXyEafFSTqMSiHKdb9zgTklrktSI" />
 <meta name="naver-site-verification" content="367bd1e77a8ad48b74e345be3e4a0f8125c2c4e1" />
+{naver_meta}
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){{dataLayer.push(arguments);}}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
 <meta name="twitter:card" content="summary">

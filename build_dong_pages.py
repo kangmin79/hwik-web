@@ -90,7 +90,7 @@ def fetch_all_danji():
             params={
                 "select": "id,complex_name,location,address,build_year,total_units,"
                           "categories,recent_trade,all_time_high,jeonse_rate,"
-                          "nearby_subway,nearby_school,lat,lng",
+                          "nearby_subway,nearby_school,lat,lng,price_history,updated_at,builder",
                 "order": "id",
                 "offset": offset,
                 "limit": 500,
@@ -250,7 +250,31 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
     if schools:
         sc_names = ", ".join(s.get("name", "") for s in schools[:3])
         lines.append(f'인근 학교: {esc(sc_names)}<br>')
-    lines.append(f'데이터 기준: 국토교통부 실거래가 공개시스템, 매일 갱신')
+    lines.append(f'데이터 기준: 국토교통부 실거래가 공개시스템, 매일 갱신<br>')
+    # 준공년도 분류
+    from datetime import datetime as _dt
+    _cy = _dt.now().year
+    new_count = sum(1 for x in tradeable if x.get("build_year") and (_cy - x["build_year"]) <= 10)
+    old_count = sum(1 for x in tradeable if x.get("build_year") and (_cy - x["build_year"]) > 20)
+    if new_count or old_count:
+        age_parts = []
+        if new_count:
+            age_parts.append(f"10년 이내 신축 {new_count}개")
+        if old_count:
+            age_parts.append(f"20년 초과 {old_count}개")
+        lines.append(f'준공년도: {", ".join(age_parts)}<br>')
+    # 역세권 비율
+    station_count = sum(1 for x in tradeable if any(
+        (s.get("distance") or 9999) <= 800 for s in (x.get("nearby_subway") or [])
+    ))
+    if station_count:
+        lines.append(f'역세권(도보 10분 이내): 전체 {len(tradeable)}개 중 <strong>{station_count}개</strong><br>')
+    # 가격 분포
+    all_prices = [x["_best_trade"].get("price", 0) for x in tradeable if x.get("_best_trade")]
+    valid_prices = [p for p in all_prices if p > 0]
+    if len(valid_prices) >= 2:
+        from build_danji_pages import format_price
+        lines.append(f'가격 분포: {format_price(min(valid_prices))} ~ {format_price(max(valid_prices))}')
     lines.append(f'</div></div>')
 
     # 단지 간 비교 문장
@@ -348,6 +372,28 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
     if schools:
         sc_text = ", ".join(f"{s.get('name','')} 도보 {walk_min(s.get('distance'))}" for s in schools[:3])
         faq.append((f"{dong} 근처 학교는?", sc_text))
+    # 추가 FAQ 3개
+    if len(valid_prices) >= 2:
+        faq.append((
+            f"{dong} 아파트 가격 범위는?",
+            f"최저 {format_price(min(valid_prices))}에서 최고 {format_price(max(valid_prices))} 사이에 분포합니다."
+        ))
+    station_danji = [x.get("complex_name","") for x in tradeable if any(
+        (s.get("distance") or 9999) <= 800 for s in (x.get("nearby_subway") or [])
+    )]
+    if station_danji:
+        faq.append((
+            f"{dong}에서 역세권 아파트는?",
+            f"도보 10분 이내 단지: {', '.join(station_danji[:5])}{' 등' if len(station_danji) > 5 else ''} ({len(station_danji)}개)"
+        ))
+    biggest = max(tradeable, key=lambda x: (x.get("total_units") or 0), default=None)
+    if biggest and (biggest.get("total_units") or 0) > 0:
+        bu = biggest.get("total_units")
+        bu_str = f"{bu:,}" if isinstance(bu, int) else str(bu)
+        faq.append((
+            f"{dong}에서 가장 큰 단지는?",
+            f"{biggest.get('complex_name','')} ({bu_str}세대)"
+        ))
 
     lines.append('<div style="margin-top:24px;">')
     lines.append('<h2 style="font-size:14px;font-weight:600;margin-bottom:12px;">자주 묻는 질문</h2>')
@@ -378,9 +424,16 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
     lines.append('<a href="/ranking.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">아파트 순위 &rarr;</a>')
     lines.append('</div>')
 
-    # SEO 서술 (풍부한 고유 콘텐츠)
+    # SEO 서술 (풍부한 고유 콘텐츠) — 서두 다양화
     seo_parts = []
-    seo_parts.append(f"{gu} {dong}에는 {len(tradeable)}개 아파트 단지가 있습니다.")
+    if len(tradeable) >= 10 and station_count >= 5:
+        seo_parts.append(f"{gu} {dong}은(는) {station_count}개 단지가 역세권에 있는 주거 밀집 지역입니다.")
+    elif new_count and new_count >= len(tradeable) // 2:
+        seo_parts.append(f"{gu} {dong}은(는) 10년 이내 신축이 {new_count}개로 새 아파트가 많은 지역입니다.")
+    elif len(tradeable) >= 15:
+        seo_parts.append(f"{gu} {dong}에는 {len(tradeable)}개 아파트 단지가 밀집해 있는 대규모 주거지역입니다.")
+    else:
+        seo_parts.append(f"{gu} {dong}에는 {len(tradeable)}개 아파트 단지가 있습니다.")
     if most_expensive:
         me_price = format_price(most_expensive["_best_trade"].get("price"))
         seo_parts.append(f"최근 거래가가 가장 높은 단지는 {most_expensive.get('complex_name','')}(전용 {most_expensive['_best_area']}㎡, {me_price})입니다.")
@@ -436,6 +489,17 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
         },
     ]}, ensure_ascii=False)
 
+    # 네이버 메타태그용 시간
+    all_updated = [x.get("updated_at","") for x in tradeable if x.get("updated_at")]
+    dong_meta_time = ""
+    if all_updated:
+        latest = max(all_updated)
+        if len(latest) >= 19:
+            dong_meta_time = latest[:19] + "+09:00"
+    dong_naver_meta = ""
+    if dong_meta_time:
+        dong_naver_meta = f'<meta property="article:published_time" content="{dong_meta_time}">\n<meta property="article:modified_time" content="{dong_meta_time}">'
+
     # ── 최종 HTML ──
     return f"""<!DOCTYPE html>
 <html lang="ko">
@@ -455,6 +519,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
 <meta property="og:url" content="{canonical}">
 <meta name="google-site-verification" content="R2ye41AVVTRs8BxEXyEafFSTqMSiHKdb9zgTklrktSI" />
 <meta name="naver-site-verification" content="367bd1e77a8ad48b74e345be3e4a0f8125c2c4e1" />
+{dong_naver_meta}
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){{dataLayer.push(arguments);}}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
 <meta name="twitter:card" content="summary">
