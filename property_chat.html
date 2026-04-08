@@ -796,55 +796,24 @@
         // 7. 주변정보 — 역/학교 분리, 노선색
         const nearby = await nearbyPromise;
 
-        // 7a. 지하철
+        // 7. 주변정보 — 가장 가까운 역 1개 + 학교 1개, 한 줄로
         const validStations = nearby.stations.filter(s => walkMin(s.dist) <= 15);
+        const validSchools = nearby.schools.filter(s => walkMin(s.dist) <= 15);
+        const nearbyParts = [];
         if (validStations.length > 0) {
+            const st = validStations[0];
+            const stName = st.name.endsWith('역') ? st.name : st.name + '역';
+            const coloredLines = st.lines.map(l => `<span style="color:${lineColor(l)};font-weight:700;">${l}</span>`).join(' ');
+            nearbyParts.push(`${esc(stName)}(${coloredLines}) ${walkMin(st.dist)}분`);
+        }
+        if (validSchools.length > 0) {
+            const sch = validSchools[0];
+            nearbyParts.push(`${esc(sch.name)} ${walkMin(sch.dist)}분`);
+        }
+        if (nearbyParts.length > 0) {
             await wait(d);
             showTyping(); await wait(d); hideTyping();
-
-            const walkVariants = [
-                min => `걸어서 ${min}분 정도이고요`,
-                min => `걸어서 ${min}분 정도예요`,
-                min => `걸어서 ${min}분 정도입니다`,
-                min => `도보 ${min}분 거리에요`,
-            ];
-            const farVariants = [
-                min => `${min}분 정도 걸리긴 하는데 도보 가능해요`,
-                min => `${min}분 좀 걸리지만 걸어갈 수 있어요`,
-            ];
-            const stLines = validStations.map((st, i) => {
-                const min = walkMin(st.dist);
-                const coloredLines = st.lines.map(l => `<span style="color:${lineColor(l)};font-weight:700;">${l}</span>`).join(' ');
-                let walkText;
-                if (min <= 3) walkText = '바로 앞이에요';
-                else if (min <= 8) walkText = walkVariants[i % walkVariants.length](min);
-                else walkText = farVariants[i % farVariants.length](min);
-                const stName = st.name.endsWith('역') ? st.name : st.name + '역';
-                return `<strong>${esc(stName)}</strong> ${coloredLines} ${walkText}`;
-            });
-            await addMsg(stLines.join('<br>'));
-        }
-
-        // 7b. 학교
-        const validSchools = nearby.schools.filter(s => walkMin(s.dist) <= 15);
-        if (validSchools.length > 0) {
-            await wait(d - 100);
-            showTyping(); await wait(d - 100); hideTyping();
-
-            const schWalkVariants = [
-                min => `걸어서 ${min}분 정도예요`,
-                min => `걸어서 ${min}분이면 가요`,
-                min => `도보 ${min}분 거리입니다`,
-            ];
-            const schLines = validSchools.map((sch, i) => {
-                const min = walkMin(sch.dist);
-                let walkText;
-                if (min <= 3) walkText = `걸어서 ${min}분이면 바로예요`;
-                else if (min <= 10) walkText = schWalkVariants[i % schWalkVariants.length](min);
-                else walkText = `${min}분 정도 거리에 있어요`;
-                return `<strong>${esc(sch.name)}</strong> ${walkText}`;
-            });
-            await addMsg(schLines.join('<br>'));
+            await addMsg(nearbyParts.join(' · '));
         }
 
         // 8. 중개사 코멘트 — 자연스럽게
