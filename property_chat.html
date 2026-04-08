@@ -813,7 +813,7 @@
         if (nearbyParts.length > 0) {
             await wait(d);
             showTyping(); await wait(d); hideTyping();
-            await addMsg(nearbyParts.join(' · '));
+            await addMsg(nearbyParts.join('<br>'));
         }
 
         // 8. 중개사 코멘트 — 자연스럽게
