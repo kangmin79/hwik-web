@@ -436,13 +436,11 @@
 
   /* 손님등록/내정보는 세로 가운데 */
   .panel.panel-center {
-    display: none;
     flex-direction: column;
     justify-content: center;
     min-height: calc(100vh - 100px);
     padding-bottom: 80px;
   }
-  .panel.panel-center.visible { display: flex; }
 
   .panel-title {
     font-size: 22px;
@@ -859,10 +857,7 @@ function switchTab(tab) {
   currentTab = tab;
 
   // 모든 패널 숨기기
-  document.querySelectorAll('.panel').forEach(p => {
-    p.style.display = 'none';
-    p.classList.remove('visible');
-  });
+  document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
 
   // 탭 active 처리
   const isAgent = !!currentUser;
@@ -1154,7 +1149,7 @@ function showRecent() {
 // ── 손님 등록 (중개사 전용) ──
 function showClientRegister() {
   const panel = document.getElementById('clientPanel');
-  panel.classList.add('visible');
+  panel.style.display = 'flex';
   panel.innerHTML = `
     <div class="panel-title">손님 등록</div>
     <div class="client-register-box">
@@ -1365,7 +1360,7 @@ async function updateAlertBadge() {
 // ── 내정보 (중개사 전용) ──
 async function showProfile() {
   const panel = document.getElementById('profilePanel');
-  panel.classList.add('visible');
+  panel.style.display = 'flex';
   if (!currentUser) return;
 
   panel.innerHTML = '<div class="panel-title">내 정보</div><div style="text-align:center;padding:20px;color:#94a3b8;">로딩 중...</div>';
