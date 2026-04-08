@@ -190,23 +190,6 @@ function render() {
     <div onclick="showSupply=false;render();" style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:5px 12px;border-radius:16px;font-size:12px;font-weight:500;${!showSupply?'background:var(--dark);color:#fff;':'background:var(--card);color:var(--sub);'}">${!showSupply?'●':'○'} 전용</div>
     <div onclick="showSupply=true;render();" style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:5px 12px;border-radius:16px;font-size:12px;font-weight:500;${showSupply?'background:#3b82f6;color:#fff;':'background:var(--card);color:var(--sub);'}">${showSupply?'●':'○'} 공급</div>
   </div>` : '';
-  // 공급면적 모드: 같은 supply 값이면 A/B/C 타입 접미사 추가
-  const supplyTypeMap = {};
-  if (showSupply) {
-    const supplyGroups = {};
-    cats.forEach(c => {
-      if (pm[c] && pm[c].supply && Math.abs((pm[c].exclu || 0) - parseFloat(c)) <= 10) {
-        const key = Math.round(pm[c].supply);
-        if (!supplyGroups[key]) supplyGroups[key] = [];
-        supplyGroups[key].push(c);
-      }
-    });
-    Object.values(supplyGroups).forEach(group => {
-      if (group.length > 1) {
-        group.forEach((c, i) => { supplyTypeMap[c] = String.fromCharCode(65 + i); });
-      }
-    });
-  }
   const pyeongHtml = cats.map(c => {
     const active = c === currentPyeong ? ' active' : '';
     let label = c + '㎡';
@@ -214,8 +197,7 @@ function render() {
     if (showSupply && pm[c] && pm[c].supply && Math.abs((pm[c].exclu || 0) - parseFloat(c)) <= 10) {
       const supplyVal = Math.round(pm[c].supply);
       const pyeong = Math.round(supplyVal / 3.3058);
-      const typeSuffix = supplyTypeMap[c] || '';
-      label = pyeong + typeSuffix + '평(' + supplyVal + '㎡)';
+      label = pyeong + '평(' + supplyVal + '㎡)';
     }
     return `<div class="pyeong-btn${active}" data-cat="${esc(c)}">${esc(label)}</div>`;
   }).join('');
