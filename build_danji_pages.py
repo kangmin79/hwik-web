@@ -161,6 +161,13 @@ def extract_css_js():
 
 
 # ── 단지별 SEO 콘텐츠 생성 ────────────────────────────────
+def safe_int(s, default=999):
+    try:
+        return int(s)
+    except (ValueError, TypeError):
+        return default
+
+
 def best_price_cat(d):
     """84㎡에 가장 가까운 거래 있는 면적 반환"""
     cats = d.get("categories") or []
@@ -168,7 +175,7 @@ def best_price_cat(d):
     best, best_diff = None, 999
     for c in cats:
         if rt.get(c) and (rt[c].get("price") or 0) > 0:
-            diff = abs(int(c) - 84)
+            diff = abs(safe_int(c) - 84)
             if diff < best_diff:
                 best_diff = diff
                 best = c
@@ -363,7 +370,7 @@ def build_fallback_html(d):
     specs = []
     if d.get("top_floor"):
         specs.append(f"최고 {d['top_floor']}층")
-    pk = int(d.get("parking") or 0)
+    pk = safe_int(d.get("parking"), 0)
     if pk > 0:
         specs.append(f"주차 {pk:,}대")
         if units and isinstance(units, int) and units > 0:
@@ -383,7 +390,7 @@ def build_fallback_html(d):
             nbest = None
             ndiff = 999
             for k, v in prices.items():
-                diff = abs(int(k) - 84)
+                diff = abs(safe_int(k) - 84)
                 if diff < ndiff:
                     ndiff = diff
                     nbest = v

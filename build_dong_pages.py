@@ -109,6 +109,13 @@ def fetch_all_danji():
 
 
 # ── 단지의 대표 거래 추출 ─────────────────────────────────
+def safe_int(s, default=999):
+    try:
+        return int(s)
+    except (ValueError, TypeError):
+        return default
+
+
 def best_trade(d):
     """84㎡에 가장 가까운 거래 있는 면적의 최근 거래 반환"""
     cats = d.get("categories") or []
@@ -116,7 +123,7 @@ def best_trade(d):
     best, best_diff = None, 999
     for c in cats:
         if rt.get(c) and (rt[c].get("price") or 0) > 0:
-            diff = abs(int(c) - 84)
+            diff = abs(safe_int(c) - 84)
             if diff < best_diff:
                 best_diff = diff
                 best = c
