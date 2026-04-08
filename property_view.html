@@ -397,20 +397,29 @@
           display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:18px;
           max-height:82px; overflow:hidden;
         }
-        /* 중개사 코멘트 */
+        /* 중개사 코멘트 — 프리미엄 스타일 */
         .info-comment {
-          margin-top:4px; padding:16px 18px; text-align:left;
-          background:rgba(255,255,255,0.06); border-radius:14px;
-          border:1.5px solid rgba(255,255,255,0.25);
+          margin-top:8px; padding:20px 22px; text-align:left;
+          background:linear-gradient(135deg,rgba(99,102,241,0.08) 0%,rgba(139,92,246,0.06) 100%);
+          border-radius:16px;
+          border:1px solid rgba(255,255,255,0.1);
+          position:relative; overflow:hidden;
+          flex:1;
+        }
+        .info-comment::before {
+          content:'"'; position:absolute; top:12px; left:16px;
+          font-family:'Noto Serif KR',serif; font-size:48px; line-height:1;
+          color:rgba(99,102,241,0.15); font-weight:700;
         }
         .info-comment-label {
-          font-size:11px; color:rgba(255,255,255,0.45); margin-bottom:8px; font-weight:600;
+          font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:10px; font-weight:600;
+          letter-spacing:0.05em; padding-left:28px;
         }
         .info-comment-text {
-          font-size:15px; color:rgba(255,255,255,0.85); line-height:1.8;
+          font-size:15px; color:rgba(255,255,255,0.9); line-height:1.9;
           word-break:keep-all; font-weight:500;
-          display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical;
-          overflow:hidden;
+          padding-left:28px;
+          font-style:italic;
         }
         /* 인라인 지도 */
         .info-map {
@@ -1315,12 +1324,11 @@
                       <!-- 기본 스펙 + 태그 -->
                       ${specsHtml ? `<div class="info-specs">${specsHtml}</div>` : ''}
 
-                      <!-- 중개사 코멘트 -->
-                      ${agentComment ? `
+                      <!-- 중개사 코멘트 (항상 표시) -->
                       <div class="info-comment">
-                        <div class="info-comment-label">💬 중개사 한마디</div>
-                        <div class="info-comment-text">${esc(agentComment).replace(/\n/g,'<br>')}</div>
-                      </div>` : ''}
+                        <div class="info-comment-label">${agentName || '중개사'}</div>
+                        <div class="info-comment-text">${agentComment ? esc(agentComment).replace(/\n/g,'<br>') : '이 매물에 관심 있으시면 편하게 연락주세요.'}</div>
+                      </div>
 
                     </div>
 
