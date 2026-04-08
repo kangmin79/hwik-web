@@ -1925,13 +1925,34 @@ const Hub = (() => {
 
   function _openProfileEdit(){
     const pr=Auth.profile||{};const m=document.getElementById('editModal');if(!m)return;
+    const photoUrl=pr.profile_photo||'';
     m.innerHTML=`<div class="modal-content"><div class="modal-header">프로필 수정<button class="modal-close" onclick="this.closest('.modal-overlay').classList.remove('show')">✕</button></div><div class="modal-body">
+      <div style="text-align:center;margin-bottom:16px;">
+        <div id="sPhotoPreview" style="width:80px;height:80px;border-radius:50%;margin:0 auto 8px;overflow:hidden;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="document.getElementById('sPhotoInput').click()">
+          ${photoUrl?`<img src="${esc(photoUrl)}" style="width:100%;height:100%;object-fit:cover;">`:`<span style="color:#fff;font-size:24px;font-weight:900;">휙</span>`}
+        </div>
+        <input type="file" id="sPhotoInput" accept="image/*" style="display:none;" onchange="Hub._previewPhoto(this)">
+        <div style="font-size:11px;color:var(--text-light);cursor:pointer;" onclick="document.getElementById('sPhotoInput').click()">사진 변경</div>
+      </div>
       <div class="edit-field"><label>부동산명</label><input id="sOffice" value="${esc(pr.business_name||'')}"></div>
       <div class="edit-field" style="margin-top:12px;"><label>담당자 이름</label><input id="sName" value="${esc(pr.agent_name||'')}"></div>
-      <div class="edit-field" style="margin-top:12px;"><label>연락처</label><input value="${esc(pr.phone||'')}" readonly style="background:var(--bg);color:var(--text-light);"><div style="font-size:11px;color:var(--text-light);margin-top:4px;">📞 연락처 변경은 고객센터에 문의</div></div>
+      <div class="edit-field" style="margin-top:12px;"><label>연락처</label><input value="${esc(pr.phone||'')}" readonly style="background:var(--bg);color:var(--text-light);"><div style="font-size:11px;color:var(--text-light);margin-top:4px;">연락처 변경은 고객센터에 문의</div></div>
       <div class="edit-field" style="margin-top:12px;"><label>주소 (선택)</label><input id="sAddr" value="${esc(pr.address||'')}"></div>
       <div class="edit-buttons"><button class="btn-cancel" onclick="this.closest('.modal-overlay').classList.remove('show')">취소</button><button class="btn-primary" style="width:auto;padding:10px 24px;" onclick="Hub._saveSettings()">저장하기</button></div>
     </div></div>`;m.classList.add('show');
+  }
+
+  let _pendingPhoto=null;
+
+  function _previewPhoto(input){
+    const file=input.files[0];if(!file)return;
+    _pendingPhoto=file;
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const preview=document.getElementById('sPhotoPreview');
+      if(preview) preview.innerHTML=`<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
+    };
+    reader.readAsDataURL(file);
   }
 
   async function _saveSettings(){
@@ -1939,7 +1960,22 @@ const Hub = (() => {
     const name=document.getElementById('sName')?.value?.trim();
     const addr=document.getElementById('sAddr')?.value?.trim();
     if(!office){Toast.show('부동산 이름을 입력하세요');return;}
-    await Auth.sb.from('profiles').upsert({id:Auth.user.id,business_name:office,agent_name:name||'',address:addr||''});
+
+    let photoUrl=Auth.profile?.profile_photo||'';
+
+    // 사진 업로드
+    if(_pendingPhoto){
+      const ext=_pendingPhoto.name.split('.').pop()||'jpg';
+      const path=`profiles/${Auth.user.id}/photo.${ext}`;
+      const {error:upErr}=await Auth.sb.storage.from('photos').upload(path,_pendingPhoto,{upsert:true});
+      if(!upErr){
+        const {data:urlData}=Auth.sb.storage.from('photos').getPublicUrl(path);
+        photoUrl=urlData.publicUrl+'?t='+Date.now();
+      } else { Toast.show('사진 업로드 실패'); }
+      _pendingPhoto=null;
+    }
+
+    await Auth.sb.from('profiles').upsert({id:Auth.user.id,business_name:office,agent_name:name||'',address:addr||'',profile_photo:photoUrl});
     await Auth.loadProfile();
     Toast.show('저장 완료');
     const nav=document.getElementById('navAgent');if(nav)nav.textContent=office;
