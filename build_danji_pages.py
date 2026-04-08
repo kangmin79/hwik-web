@@ -365,33 +365,7 @@ def build_fallback_html(d):
     if specs:
         lines.append(f'<p style="font-size:12px;color:#9ca3af;margin-bottom:12px;">{", ".join(specs)}</p>')
 
-    # 주변 단지 대비 순위
     nearby = d.get("nearby_complex") or []
-    nearby_rank = None
-    nearby_total = None
-    if nearby and bc and rt.get(bc):
-        my_price = rt[bc].get("price", 0)
-        if my_price:
-            prices_list = [my_price]
-            for n in nearby:
-                np = n.get("prices") or {}
-                nbest_p, ndiff = None, 999
-                for k, v in np.items():
-                    d2 = abs(int(k) - 84)
-                    if d2 < ndiff:
-                        ndiff = d2
-                        nbest_p = v
-                if nbest_p and nbest_p.get("price"):
-                    prices_list.append(nbest_p["price"])
-            prices_list.sort(reverse=True)
-            nearby_rank = prices_list.index(my_price) + 1
-            nearby_total = len(prices_list)
-            if nearby_total >= 3:
-                lines.append(
-                    f'<p style="font-size:12px;color:#6b7280;margin-bottom:12px;">'
-                    f'주변 {nearby_total}개 단지 중 거래가 {nearby_rank}위</p>'
-                )
-
     # 주변 단지
     if nearby:
         lines.append('<h2 style="font-size:14px;font-weight:600;margin:16px 0 8px;">주변 단지</h2>')
@@ -503,8 +477,6 @@ def build_fallback_html(d):
         seo.append(f"인근 학교로 {names}이(가) 있습니다.")
     if total_recent_trades >= 2:
         seo.append(f"최근 1년간 {total_recent_trades}건의 매매 거래가 있었습니다.")
-    if nearby_rank and nearby_total and nearby_total >= 3:
-        seo.append(f"주변 {nearby_total}개 단지 중 거래가 기준 {nearby_rank}위입니다.")
     seo.append("모든 데이터는 국토교통부 실거래가 공개시스템 기반이며 매일 갱신됩니다.")
     seo_text = " ".join(s for s in seo if s)
     if seo_text:
