@@ -703,7 +703,7 @@
 </div>
 
 <!-- 하단 탭바: 비로그인 -->
-<div class="bottom-tab-bar visible" id="bottomTabBar">
+<div class="bottom-tab-bar" id="bottomTabBar">
   <!-- 홈 -->
   <button class="tab-btn active" id="tabHome" onclick="switchTab('home')">
     <div class="tab-icon">
@@ -813,6 +813,7 @@ window.addEventListener('load', function() {
 // ── 인증 ──
 supabaseClient.auth.getSession().then(({ data: { session } }) => {
   if (session?.user) { currentUser = session.user; onLoggedIn(); }
+  else { document.getElementById('bottomTabBar').classList.add('visible'); }
 });
 supabaseClient.auth.onAuthStateChange((event, session) => {
   if (session?.user) { currentUser = session.user; onLoggedIn(); }
