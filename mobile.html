@@ -21,6 +21,8 @@
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
@@ -718,7 +720,7 @@
 </div>
 
 <!-- 하단 탭바: 비로그인 -->
-<div class="bottom-tab-bar" id="bottomTabBar">
+<div class="bottom-tab-bar visible" id="bottomTabBar">
   <!-- 홈 -->
   <button class="tab-btn active" id="tabHome" onclick="switchTab('home')">
     <div class="tab-icon">
@@ -826,9 +828,6 @@ window.addEventListener('load', function() {
 });
 
 // ── 인증 ──
-// 탭바 즉시 표시 (세션 확인 전에도 비로그인 탭바 보이기)
-document.getElementById('bottomTabBar').classList.add('visible');
-
 supabaseClient.auth.getSession().then(({ data: { session } }) => {
   if (session?.user) { currentUser = session.user; onLoggedIn(); }
 });
