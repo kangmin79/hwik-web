@@ -610,16 +610,34 @@
         presentProperty(allCards[currentIdx], false);
     }
 
+    // ====== 오버레이 뒤로가기 처리 ======
+    function openOverlay(id) {
+        history.pushState({ overlay: id }, '');
+    }
+    function closeOverlay(id) {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+    }
+    window.addEventListener('popstate', (e) => {
+        // 뒤로가기 시 열린 오버레이 닫기
+        const map = document.getElementById('mapOverlay');
+        const gallery = document.getElementById('galleryOverlay');
+        if (map) { map.remove(); return; }
+        if (gallery) { gallery.remove(); return; }
+    });
+
     // ====== 풀스크린 지도 ======
     function openFullMap(lat, lng, name) {
         if (!lat || !lng) return;
         const overlay = document.createElement('div');
         overlay.className = 'fullscreen-overlay';
+        overlay.id = 'mapOverlay';
         overlay.innerHTML = `
-            <button class="close-btn" onclick="this.parentElement.remove()">✕</button>
+            <button class="close-btn" onclick="closeOverlay('mapOverlay');history.back()">✕</button>
             <div class="fullscreen-map" id="fullMap"></div>
         `;
         document.body.appendChild(overlay);
+        openOverlay('mapOverlay');
         kakao.maps.load(() => {
             const pos = new kakao.maps.LatLng(lat, lng);
             const map = new kakao.maps.Map(document.getElementById('fullMap'), { center: pos, level: 3 });
@@ -633,12 +651,13 @@
         galleryPhotos = photos; galleryIdx = idx || 0;
         renderGallery();
         initGallerySwipe();
+        openOverlay('galleryOverlay');
     }
     function renderGallery() {
         let ov = document.getElementById('galleryOverlay');
         if (!ov) { ov = document.createElement('div'); ov.className = 'fullscreen-overlay'; ov.id = 'galleryOverlay'; document.body.appendChild(ov); }
         ov.innerHTML = `
-            <button class="close-btn" onclick="document.getElementById('galleryOverlay').remove()">✕</button>
+            <button class="close-btn" onclick="closeOverlay('galleryOverlay');history.back()">✕</button>
             <img src="${galleryPhotos[galleryIdx]}" alt="사진" id="galleryImg" style="transition:transform 0.2s ease;">
             ${galleryPhotos.length > 1 ? `
                 <button class="nav-btn nav-prev" onclick="galleryNav(-1)">‹</button>
