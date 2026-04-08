@@ -52,7 +52,12 @@ def esc(s):
 def format_price(manwon):
     if not manwon:
         return "-"
-    manwon = int(manwon)
+    try:
+        manwon = int(manwon)
+    except (ValueError, TypeError):
+        return "-"
+    if manwon <= 0:
+        return "-"
     uk = manwon // 10000
     rest = manwon % 10000
     if uk > 0 and rest > 0:
@@ -65,7 +70,10 @@ def format_price(manwon):
 def walk_min(m):
     if not m:
         return ""
-    return f"{round(m / 67)}분"
+    try:
+        return f"{round(float(m) / 67)}분"
+    except (ValueError, TypeError):
+        return ""
 
 
 # ── Supabase 조회 ─────────────────────────────────────────
@@ -219,7 +227,7 @@ def build_intro_sentence(name, addr, year, units, builder, bc, rt, jr):
     current_year = _dt.now().year
     age = current_year - year if year else None
     unit_count = units if isinstance(units, int) else 0
-    price = rt[bc].get("price", 0) if bc and rt.get(bc) else 0
+    price = safe_int(rt[bc].get("price"), 0) if bc and rt.get(bc) else 0
 
     # 신축 대단지
     if age is not None and age <= 5 and unit_count >= 1000:
@@ -238,7 +246,7 @@ def build_intro_sentence(name, addr, year, units, builder, bc, rt, jr):
     except (ValueError, TypeError):
         jr_float = 0
     if jr_float >= 70:
-        return f"{name}은(는) 전세가율 {jr}%로 전세 수요가 높은 {addr} 소재 아파트입니다."
+        return f"{name}은(는) 전세가율 {jr}%로 전세가율이 높은 {addr} 소재 아파트입니다."
     # 고가
     if price >= 150000:
         return f"{addr}의 {name}은(는) 최근 전용 {bc}㎡가 {format_price(price)}에 거래된 아파트입니다."
@@ -346,7 +354,7 @@ def build_fallback_html(d):
         lines.append(f'<p style="font-size:12px;color:#9ca3af;margin-bottom:12px;">면적: {area_list}</p>')
 
     # 면적별 가격 비교 (2개 이상 면적에 거래가 있을 때)
-    traded_areas = [(c, rt[c]) for c in sorted(cats, key=lambda x: int(x) if x.isdigit() else 999) if rt.get(c) and (rt[c].get("price") or 0) > 0]
+    traded_areas = [(c, rt[c]) for c in sorted(cats, key=lambda x: int(x) if isinstance(x, str) and x.isdigit() else 999) if rt.get(c) and (rt[c].get("price") or 0) > 0]
     if len(traded_areas) >= 2:
         ap = ", ".join(f"전용 {a}㎡ {format_price(t.get('price'))}" for a, t in traded_areas)
         lines.append(
@@ -373,8 +381,6 @@ def build_fallback_html(d):
     pk = safe_int(d.get("parking"), 0)
     if pk > 0:
         specs.append(f"주차 {pk:,}대")
-        if units and isinstance(units, int) and units > 0:
-            specs.append(f"(세대당 {pk/units:.1f}대)")
     if d.get("heating"):
         specs.append(esc(d["heating"]))
     if specs:
@@ -458,7 +464,7 @@ def build_fallback_html(d):
         lines.append('<h2 style="font-size:14px;font-weight:600;margin:16px 0 8px;">자주 묻는 질문</h2>')
         for q, a in faq:
             lines.append(f'<div style="border-bottom:1px solid #e5e7eb;padding:10px 0;">')
-            lines.append(f'<div style="font-size:13px;font-weight:500;margin-bottom:4px;">{esc(q)}</div>')
+            lines.append(f'<div style="font-size:13px;font-weight:500;margin-bottom:4px;">{q}</div>')
             lines.append(f'<div style="font-size:12px;color:#6b7280;line-height:1.6;">{a}</div>')
             lines.append("</div>")
 
@@ -475,10 +481,12 @@ def build_fallback_html(d):
         seo.append(f"면적별 최근 거래가는 {', '.join(parts)}입니다.")
     if bc and rt.get(bc):
         r = rt[bc]
-        seo.append(f"전용 {bc}㎡ 최근 매매 실거래가는 {format_price(r.get('price'))}({r.get('date','')})입니다.")
+        date_str = f" ({r['date']})" if r.get("date") else ""
+        seo.append(f"전용 {bc}㎡ 최근 매매 실거래가는 {format_price(r.get('price'))}{date_str}입니다.")
     if bc and high.get(bc):
         h = high[bc]
-        seo.append(f"전용 {bc}㎡ 역대 최고가는 {format_price(h.get('price'))}({h.get('date','')})입니다.")
+        h_date = f" ({h['date']})" if h.get("date") else ""
+        seo.append(f"전용 {bc}㎡ 역대 최고가는 {format_price(h.get('price'))}{h_date}입니다.")
     if jr:
         seo.append(f"전세가율은 {jr}%입니다.")
     if year_ago and bc and rt.get(bc):
@@ -647,7 +655,7 @@ def build_jsonld(d):
         })
     # 면적별 가격 FAQ (JSON-LD)
     cats = d.get("categories") or []
-    ta = [(c, rt[c]) for c in sorted(cats, key=lambda x: int(x) if x.isdigit() else 999) if rt.get(c) and (rt[c].get("price") or 0) > 0]
+    ta = [(c, rt[c]) for c in sorted(cats, key=lambda x: int(x) if isinstance(x, str) and x.isdigit() else 999) if rt.get(c) and (rt[c].get("price") or 0) > 0]
     if len(ta) >= 2:
         parts = [f"전용 {a}㎡ {format_price(t.get('price'))}" for a, t in ta]
         faq_items.append({
@@ -674,7 +682,7 @@ def generate_page(d):
     units = d.get("total_units", "")
     year = d.get("build_year", "")
 
-    desc_parts = [name, loc]
+    desc_parts = [raw_name, raw_loc]
     if units:
         desc_parts.append(f"{units}세대")
     if year:
@@ -688,7 +696,7 @@ def generate_page(d):
 
     # 네이버 메타태그용 시간
     updated_at = d.get("updated_at", "")
-    meta_time = updated_at[:19] + "+09:00" if updated_at and len(updated_at) >= 19 else ""
+    meta_time = updated_at[:19] + "+00:00" if updated_at and len(updated_at) >= 19 else ""
     naver_meta = ""
     if meta_time:
         naver_meta = f'<meta property="article:published_time" content="{meta_time}">\n<meta property="article:modified_time" content="{meta_time}">'

@@ -57,7 +57,12 @@ def esc(s):
 def format_price(manwon):
     if not manwon:
         return "-"
-    manwon = int(manwon)
+    try:
+        manwon = int(manwon)
+    except (ValueError, TypeError):
+        return "-"
+    if manwon <= 0:
+        return "-"
     uk = manwon // 10000
     rest = manwon % 10000
     if uk > 0 and rest > 0:
@@ -71,7 +76,10 @@ def format_price(manwon):
 def walk_min(m):
     if not m:
         return ""
-    return f"{round(m / 67)}분"
+    try:
+        return f"{round(float(m) / 67)}분"
+    except (ValueError, TypeError):
+        return ""
 
 
 
@@ -275,7 +283,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
         (s.get("distance") or 9999) <= 800 for s in (x.get("nearby_subway") or [])
     ))
     if station_count:
-        lines.append(f'역세권(도보 10분 이내): 전체 {len(tradeable)}개 중 <strong>{station_count}개</strong><br>')
+        lines.append(f'역세권(지하철 도보권): 전체 {len(tradeable)}개 중 <strong>{station_count}개</strong><br>')
     # 가격 분포
     all_prices = [x["_best_trade"].get("price", 0) for x in tradeable if x.get("_best_trade")]
     valid_prices = [p for p in all_prices if p > 0]
@@ -390,7 +398,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
     if station_danji:
         faq.append((
             f"{dong}에서 역세권 아파트는?",
-            f"도보 10분 이내 단지: {', '.join(station_danji[:5])}{' 등' if len(station_danji) > 5 else ''} ({len(station_danji)}개)"
+            f"지하철 도보권 단지: {', '.join(station_danji[:5])}{' 등' if len(station_danji) > 5 else ''} ({len(station_danji)}개)"
         ))
     biggest = max(tradeable, key=lambda x: (x.get("total_units") or 0), default=None)
     if biggest and (biggest.get("total_units") or 0) > 0:
@@ -437,7 +445,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
     elif new_count and new_count >= len(tradeable) // 2:
         seo_parts.append(f"{gu} {dong}은(는) 10년 이내 신축이 {new_count}개로 새 아파트가 많은 지역입니다.")
     elif len(tradeable) >= 15:
-        seo_parts.append(f"{gu} {dong}에는 {len(tradeable)}개 아파트 단지가 밀집해 있는 대규모 주거지역입니다.")
+        seo_parts.append(f"{gu} {dong}은(는) {len(tradeable)}개 아파트 단지가 밀집한 대규모 주거지역입니다.")
     else:
         seo_parts.append(f"{gu} {dong}에는 {len(tradeable)}개 아파트 단지가 있습니다.")
     if most_expensive:
@@ -501,7 +509,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
     if all_updated:
         latest = max(all_updated)
         if len(latest) >= 19:
-            dong_meta_time = latest[:19] + "+09:00"
+            dong_meta_time = latest[:19] + "+00:00"
     dong_naver_meta = ""
     if dong_meta_time:
         dong_naver_meta = f'<meta property="article:published_time" content="{dong_meta_time}">\n<meta property="article:modified_time" content="{dong_meta_time}">'
