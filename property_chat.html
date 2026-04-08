@@ -472,7 +472,9 @@
             // 같은 역 이름은 호선만 합치기
             const seen = {};
             for (const s of stations) {
-                const key = s.name.replace(/\(.*\)/, '').trim();
+                // 이모지 제거 + 괄호 제거 + 공백 정리
+                const clean = s.name.replace(/[\u{1F600}-\u{1F9FF}\u{2600}-\u{2B55}\u{1F680}-\u{1F6FF}\u{1F900}-\u{1F9FF}]/gu, '').replace(/\(.*\)/, '').trim();
+                const key = clean;
                 if (!seen[key]) { seen[key] = { name: key, lines: [s.line], dist: s.dist }; }
                 else { seen[key].lines.push(s.line); }
             }
@@ -753,7 +755,8 @@
                 else if (min <= 5) walkText = `걸어서 ${min}분이에요`;
                 else if (min <= 8) walkText = `걸어서 ${min}분 정도예요`;
                 else walkText = `${min}분 정도 걸리긴 하는데 도보 가능해요`;
-                return `<strong>${esc(st.name)}역</strong> ${coloredLines} ${walkText}`;
+                const stName = st.name.endsWith('역') ? st.name : st.name + '역';
+                return `<strong>${esc(stName)}</strong> ${coloredLines} ${walkText}`;
             });
             await addMsg(stLines.join('<br>'));
         }
