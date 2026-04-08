@@ -753,7 +753,7 @@
                 else if (min <= 5) walkText = `걸어서 ${min}분이에요`;
                 else if (min <= 8) walkText = `걸어서 ${min}분 정도예요`;
                 else walkText = `${min}분 정도 걸리긴 하는데 도보 가능해요`;
-                return `🚇 <strong>${esc(st.name)}역</strong> ${coloredLines} ${walkText}`;
+                return `<strong>${esc(st.name)}역</strong> ${coloredLines} ${walkText}`;
             });
             await addMsg(stLines.join('<br>'));
         }
@@ -770,7 +770,7 @@
                 if (min <= 3) walkText = `걸어서 ${min}분이면 바로예요`;
                 else if (min <= 7) walkText = `걸어서 ${min}분 정도예요`;
                 else walkText = `${min}분 정도 거리에 있어요`;
-                return `🏫 <strong>${esc(sch.name)}</strong> ${walkText}`;
+                return `<strong>${esc(sch.name)}</strong> ${walkText}`;
             });
             await addMsg(schLines.join('<br>'));
         }
