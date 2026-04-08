@@ -1018,7 +1018,6 @@
         try {
             await navigator.clipboard.writeText(text);
         } catch {
-            // fallback
             const ta = document.createElement('textarea');
             ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
             document.body.appendChild(ta); ta.select(); document.execCommand('copy');
@@ -1026,11 +1025,15 @@
         }
         btn.textContent = '복사완료! 대화창에 붙여넣기 해주세요';
         btn.style.background = '#4ecdc4';
-        const toast = document.createElement('div');
-        toast.className = 'inquiry-toast';
-        toast.textContent = '매물 정보가 복사되었어요';
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 2200);
+        // 카톡 인앱이면 자동으로 대화창으로 돌아가기
+        setTimeout(() => {
+            const ua = navigator.userAgent.toLowerCase();
+            if (ua.includes('kakaotalk')) {
+                location.href = 'kakaotalk://inappbrowser/close';
+            } else {
+                history.back();
+            }
+        }, 800);
     }
 
     function goBackToKakao() {
