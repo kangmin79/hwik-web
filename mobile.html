@@ -720,7 +720,7 @@
 </div>
 
 <!-- 하단 탭바: 비로그인 -->
-<div class="bottom-tab-bar visible" id="bottomTabBar">
+<div class="bottom-tab-bar" id="bottomTabBar">
   <!-- 홈 -->
   <button class="tab-btn active" id="tabHome" onclick="switchTab('home')">
     <div class="tab-icon">
@@ -828,8 +828,27 @@ window.addEventListener('load', function() {
 });
 
 // ── 인증 ──
+// 빠른 탭바 표시: localStorage에서 세션 유무 먼저 확인
+(function quickTabCheck() {
+  try {
+    const key = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
+    if (key && JSON.parse(localStorage.getItem(key))?.user) {
+      document.getElementById('agentTabBar').classList.add('visible');
+    } else {
+      document.getElementById('bottomTabBar').classList.add('visible');
+    }
+  } catch(_) {
+    document.getElementById('bottomTabBar').classList.add('visible');
+  }
+})();
+
 supabaseClient.auth.getSession().then(({ data: { session } }) => {
   if (session?.user) { currentUser = session.user; onLoggedIn(); }
+  else {
+    // 혹시 빠른 체크가 잘못됐으면 교정
+    document.getElementById('agentTabBar').classList.remove('visible');
+    document.getElementById('bottomTabBar').classList.add('visible');
+  }
 });
 supabaseClient.auth.onAuthStateChange((event, session) => {
   if (session?.user) { currentUser = session.user; onLoggedIn(); }
