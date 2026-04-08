@@ -244,6 +244,22 @@
         }
         .next-property-btn:active { transform: scale(0.96); background: #f5f3ff; }
 
+        /* 매물 바로가기 */
+        .msg .bubble.jump-bubble {
+            background: transparent; padding: 0; box-shadow: none;
+            display: flex; flex-direction: column; gap: 6px; max-width: 100%;
+        }
+        .msg:has(.jump-bubble) .bubble-wrap { max-width: calc(100% - 50px); }
+        .jump-btn {
+            display: flex; align-items: center;
+            padding: 10px 16px; border-radius: 12px;
+            background: #fff; border: 1px solid #e0e0e0;
+            font-size: 13px; font-weight: 600; color: #333;
+            cursor: pointer; text-align: left;
+            transition: background 0.15s;
+        }
+        .jump-btn:active { background: #f5f5f5; }
+
         /* 타이핑 인디케이터 */
         .typing {
             display: flex; gap: 4px; padding: 10px 14px;
@@ -548,6 +564,11 @@
         // 주변정보 미리 조회 (비동기 병렬)
         const nearbyPromise = (data.lat && data.lng) ? getNearby(data.lat, data.lng) : Promise.resolve({ stations:[], schools:[] });
 
+        // 매물 시작 앵커
+        const anchor = document.createElement('div');
+        anchor.id = `property_${currentIdx}`;
+        chatBody.appendChild(anchor);
+
         // 새 그룹 시작
         startNewGroup();
 
@@ -755,6 +776,17 @@
             startNewGroup();
             showTyping(); await wait(400); hideTyping();
             await addMsg(`${allCards.length}개 매물 다 보여드렸어요~ 궁금한 거 있으시면 편하게 연락주세요 😊`);
+
+            // 매물 바로가기 버튼
+            await wait(300);
+            const ordinals = ['첫 번째', '두 번째', '세 번째', '네 번째', '다섯 번째'];
+            const btnsHtml = allCards.map((c, i) => {
+                const cp = c.property || {};
+                const label = i < ordinals.length ? ordinals[i] : `${i+1}번째`;
+                const info = `${cp.type || ''} ${cp.price || ''}`.trim();
+                return `<button class="jump-btn" onclick="document.getElementById('property_${i}').scrollIntoView({behavior:'smooth',block:'start'})">${label}<span style="color:#888;font-size:11px;margin-left:4px;">${esc(info)}</span></button>`;
+            }).join('');
+            await addMsg(btnsHtml, 'jump-bubble');
         }
     }
 
