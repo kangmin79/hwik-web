@@ -408,6 +408,25 @@ def build_fallback_html(d):
         lines.append(f'<p style="font-size:12px;color:#9ca3af;margin-bottom:12px;">{", ".join(specs)}</p>')
 
     nearby = d.get("nearby_complex") or []
+    # 주변 단지 대비 순위
+    if nearby and len(nearby) >= 3 and bc and rt.get(bc):
+        my_price = rt[bc].get("price", 0)
+        if my_price > 0:
+            all_prices = [my_price]
+            for n in nearby:
+                np = n.get("prices") or {}
+                for k, v in np.items():
+                    if abs(safe_int(k) - safe_int(bc)) <= 10 and v.get("price"):
+                        all_prices.append(v["price"])
+                        break
+            all_prices_sorted = sorted(set(all_prices), reverse=True)
+            rank = all_prices_sorted.index(my_price) + 1 if my_price in all_prices_sorted else 0
+            total = len(all_prices_sorted)
+            if rank > 0 and total >= 3:
+                lines.append(
+                    f'<p style="font-size:12px;color:#6b7280;margin-bottom:8px;">'
+                    f'주변 {total}개 단지 중 거래가 <strong>{rank}위</strong></p>'
+                )
     # 주변 단지
     if nearby:
         lines.append('<h2 style="font-size:14px;font-weight:600;margin:16px 0 8px;">주변 단지</h2>')
@@ -757,6 +776,8 @@ def generate_page(d):
 <meta name="twitter:title" id="tw-title" content="{name} 실거래가 시세{title_loc} - 휙">
 <meta name="twitter:description" id="tw-desc" content="{esc(desc)}">
 <script type="application/ld+json">{jsonld}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
@@ -777,11 +798,11 @@ def generate_page(d):
     {fallback}
   </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script src="/config.js"></script>
-<script src="/makeSlug.js"></script>
-<script src="app.js?v={int(time.time())}"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script defer src="/config.js"></script>
+<script defer src="/makeSlug.js"></script>
+<script defer src="app.js?v={int(time.time())}"></script>
 </body>
 </html>"""
 
