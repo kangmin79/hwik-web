@@ -484,8 +484,8 @@
     background: #fff;
     color: var(--text);
     resize: none;
-    min-height: 48px;
-    max-height: 120px;
+    height: 48px;
+    overflow: hidden;
     transition: border-color 0.2s;
     line-height: 1.4;
   }
@@ -1173,7 +1173,7 @@ function showClientRegister() {
       <div class="client-input-row">
         <textarea class="client-input" id="clientInput" placeholder="강남 2룸 전세 3억 이하" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
         <button class="client-send" id="clientSubmitBtn" onclick="submitClient()">
-          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </button>
       </div>
       <div class="client-tip">AI가 자동으로 매칭 매물을 찾아드려요</div>
