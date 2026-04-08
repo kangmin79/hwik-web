@@ -423,7 +423,7 @@
   /* ── 패널 (알림/손님등록/내정보) ── */
   .panel {
     display: none;
-    padding: 0 16px 100px;
+    padding: 0 24px 100px;
     max-width: 540px;
     margin: 0 auto;
     width: 100%;
@@ -434,12 +434,22 @@
   .panel::-webkit-scrollbar { display: none; }
   .panel { scrollbar-width: none; }
 
+  /* 손님등록/내정보는 세로 가운데 */
+  .panel.panel-center {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    min-height: calc(100vh - 100px);
+    padding-bottom: 80px;
+  }
+  .panel.panel-center.visible { display: flex; }
+
   .panel-title {
     font-size: 22px;
     font-weight: 900;
     color: var(--hwik-dark);
     letter-spacing: -0.5px;
-    padding: 8px 0 16px;
+    padding: 0 0 16px;
   }
 
   /* ── 손님 등록 ── */
@@ -680,7 +690,7 @@
   <div class="panel" id="alertPanel"></div>
 
   <!-- 손님 등록 패널 -->
-  <div class="panel" id="clientPanel"></div>
+  <div class="panel panel-center" id="clientPanel"></div>
 
   <!-- 내주변 패널 -->
   <div class="panel" id="nearbyPanel"></div>
@@ -689,7 +699,7 @@
   <div class="panel" id="recentPanel"></div>
 
   <!-- 내정보 패널 -->
-  <div class="panel" id="profilePanel"></div>
+  <div class="panel panel-center" id="profilePanel"></div>
 
   <div class="footer">AI가 찾아주는 매물 · <span>휙</span></div>
 </div>
@@ -849,7 +859,10 @@ function switchTab(tab) {
   currentTab = tab;
 
   // 모든 패널 숨기기
-  document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.panel').forEach(p => {
+    p.style.display = 'none';
+    p.classList.remove('visible');
+  });
 
   // 탭 active 처리
   const isAgent = !!currentUser;
@@ -1141,7 +1154,7 @@ function showRecent() {
 // ── 손님 등록 (중개사 전용) ──
 function showClientRegister() {
   const panel = document.getElementById('clientPanel');
-  panel.style.display = 'block';
+  panel.classList.add('visible');
   panel.innerHTML = `
     <div class="panel-title">손님 등록</div>
     <div class="client-register-box">
@@ -1352,7 +1365,7 @@ async function updateAlertBadge() {
 // ── 내정보 (중개사 전용) ──
 async function showProfile() {
   const panel = document.getElementById('profilePanel');
-  panel.style.display = 'block';
+  panel.classList.add('visible');
   if (!currentUser) return;
 
   panel.innerHTML = '<div class="panel-title">내 정보</div><div style="text-align:center;padding:20px;color:#94a3b8;">로딩 중...</div>';
