@@ -11,6 +11,18 @@ Disallow: /hub-new/
 Disallow: /search_test.html
 Disallow: /e2e_test.html
 Disallow: /kakaomap-route-test.html
+Disallow: /test_suite.html
+Disallow: /theme-preview.html
+Disallow: /select_template.html
+Disallow: /card-memo-v2.html
+Disallow: /card-memo-v2%20(1).html
+Disallow: /card-noimg-preview.html
+
+# 손님용 동적 페이지 (SEO 가치 없음)
+Disallow: /property_view.html
+Disallow: /property_chat.html
+Disallow: /mobile-v6.html
+Disallow: /hub.html
 Disallow: /*.py$
 Disallow: /*.json$
 Disallow: /.env

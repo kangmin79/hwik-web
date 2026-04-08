@@ -709,6 +709,9 @@ def generate_page(d):
     dong_nav = f'<a href="/dong/{dong_slug_nav}" style="color:#6b7280;text-decoration:none;">{esc(dong_raw)}</a> &gt;\n      ' if dong_raw and dong_slug_nav and dong_slug_nav in DONG_SLUGS else ""
     units = d.get("total_units", "")
     year = d.get("build_year", "")
+    # title용 위치 (중복 타이틀 방지 — 구+동)
+    dong_short = dong_raw.split(" ")[0] if dong_raw else ""
+    title_loc = f" ({gu} {esc(dong_short)})" if gu and dong_short else (f" ({gu})" if gu else "")
 
     desc_parts = [raw_name, raw_loc]
     if units:
@@ -734,14 +737,14 @@ def generate_page(d):
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{name} 실거래가 시세 - 휙</title>
+<title>{name} 실거래가 시세{title_loc} - 휙</title>
 <meta name="description" content="{esc(desc)}">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
 <link rel="canonical" id="canonical" href="{canonical}">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="휙">
 <meta property="og:locale" content="ko_KR">
-<meta property="og:title" id="og-title" content="{name} 실거래가 시세 - 휙">
+<meta property="og:title" id="og-title" content="{name} 실거래가 시세{title_loc} - 휙">
 <meta property="og:description" id="og-desc" content="{esc(desc)}">
 <meta property="og:image" content="https://hwik.kr/og-image.png">
 <meta property="og:url" id="og-url" content="{canonical}">
@@ -751,7 +754,7 @@ def generate_page(d):
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){{dataLayer.push(arguments);}}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" id="tw-title" content="{name} 실거래가 시세 - 휙">
+<meta name="twitter:title" id="tw-title" content="{name} 실거래가 시세{title_loc} - 휙">
 <meta name="twitter:description" id="tw-desc" content="{esc(desc)}">
 <script type="application/ld+json">{jsonld}</script>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
