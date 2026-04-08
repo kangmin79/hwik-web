@@ -647,56 +647,35 @@
         // 새 그룹 시작
         startNewGroup();
 
-        // 1. 인사 — 사람처럼
+        // 1. 가격 먼저! (첫 마디)
+        const locName = complex ? `${esc(complex)}` : esc(location);
+        const locDistrict = complex ? esc(location) : '';
+
         if (isFirst) {
-            showTyping(); await wait(600); hideTyping();
-            const greetings = [
-                `안녕하세요~ ${esc(agentName)}입니다`,
-                `안녕하세요~ ${esc(agentName)}에서 연락드려요`,
-                `안녕하세요 😊 ${esc(agentName)}입니다`,
-            ];
-            await addMsg(greetings[Math.floor(Math.random() * greetings.length)]);
+            showTyping(); await wait(500); hideTyping();
+            await addMsg(`<strong style="font-size:16px;">${esc(type)} ${esc(price)}</strong> 매물이에요`);
             await wait(d);
             showTyping(); await wait(d); hideTyping();
-            await addMsg(`말씀하신 조건에 맞는 매물 보내드릴게요`);
-            await wait(d);
+            const locIntro = locDistrict ? `${locDistrict} ${locName}이에요` : `${locName}이에요`;
+            await addMsg(`${locIntro}<br><span style="color:#888;font-size:12px;">${esc(agentName)}</span>`);
         } else {
             showTyping(); await wait(400); hideTyping();
             const ordinal = ['', '', '두 번째', '세 번째', '네 번째', '다섯 번째'];
             const num = currentIdx + 1;
             const isLast = currentIdx === allCards.length - 1;
-            if (isLast) {
-                await addMsg(`마지막 매물이에요`);
-            } else if (num < ordinal.length) {
-                await addMsg(`${ordinal[num]} 매물이에요`);
-            } else {
-                await addMsg(`${num}번째 매물이에요`);
-            }
+            const label = isLast ? '마지막' : (num < ordinal.length ? ordinal[num] : `${num}번째`);
+            await addMsg(`${label} 매물이에요`);
             await wait(d);
+            showTyping(); await wait(d); hideTyping();
+            await addMsg(`<strong style="font-size:16px;">${esc(type)} ${esc(price)}</strong>`);
+            await wait(d - 100);
+            const locIntro = locDistrict ? `${locDistrict} ${locName}이에요` : `${locName}이에요`;
+            await addMsg(locIntro);
         }
 
-        // 2. 가격 + 위치 — 자연스럽게
-        showTyping(); await wait(d + 100); hideTyping();
-        const locName = complex ? `${esc(complex)}` : esc(location);
-        const locDistrict = complex ? esc(location) : '';
-
-        // 거래유형별 자연스러운 가격 멘트
-        let priceMsg = '';
-        if (type.includes('월세')) {
-            priceMsg = `<strong>${esc(type)} ${esc(price)}</strong>이고요`;
-        } else if (type.includes('전세')) {
-            priceMsg = `<strong>${esc(type)} ${esc(price)}</strong>이에요`;
-        } else {
-            priceMsg = `<strong>${esc(type)} ${esc(price)}</strong>입니다`;
-        }
-        await addMsg(priceMsg);
-
-        // 3. 위치 멘트 + 미니맵
+        // 2. 미니맵
         await wait(d);
         showTyping(); await wait(d); hideTyping();
-
-        const locLine = locDistrict ? `${locDistrict} ${locName}이에요` : `${locName}이에요`;
-        await addMsg(locLine);
 
         // 미니맵
         if (data.lat && data.lng) {
