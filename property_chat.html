@@ -653,11 +653,17 @@
             if (nearby.stations.length > 0) {
                 const st = nearby.stations[0];
                 const min = walkMin(st.dist);
-                nearbyParts.push(`<strong>${esc(st.name)}역</strong> ${st.lines.join('·')} 걸어서 ${min}분이고요`);
+                if (min <= 3) nearbyParts.push(`<strong>${esc(st.name)}역</strong> ${st.lines.join('·')} 바로 앞이에요`);
+                else if (min <= 5) nearbyParts.push(`<strong>${esc(st.name)}역</strong> ${st.lines.join('·')} 걸어서 ${min}분이에요`);
+                else if (min <= 8) nearbyParts.push(`<strong>${esc(st.name)}역</strong> ${st.lines.join('·')} 걸어서 ${min}분 정도예요`);
+                else if (min <= 15) nearbyParts.push(`<strong>${esc(st.name)}역</strong> ${st.lines.join('·')} ${min}분 좀 걸리긴 하는데 도보 가능해요`);
             }
             if (nearby.schools.length > 0) {
                 const sch = nearby.schools[0];
-                nearbyParts.push(`<strong>${esc(sch.name)}</strong>도 ${formatDist(sch.dist)}로 가까워요`);
+                const schDist = Math.round(sch.dist);
+                if (schDist <= 200) nearbyParts.push(`<strong>${esc(sch.name)}</strong>도 ${formatDist(sch.dist)}로 바로 근처에 있어요`);
+                else if (schDist <= 500) nearbyParts.push(`<strong>${esc(sch.name)}</strong>도 ${formatDist(sch.dist)}로 가까워요`);
+                else nearbyParts.push(`<strong>${esc(sch.name)}</strong>도 ${formatDist(sch.dist)} 거리에 있어요`);
             }
             await addMsg(nearbyParts.join('<br>'));
 
