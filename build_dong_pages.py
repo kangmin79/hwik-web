@@ -537,7 +537,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
 <meta name="description" content="{esc(desc)}">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
 <link rel="canonical" href="{canonical}">
-<meta property="og:type" content="website">
+<meta property="og:type" content="article">
 <meta property="og:site_name" content="휙">
 <meta property="og:locale" content="ko_KR">
 <meta property="og:title" content="{esc(title)}">

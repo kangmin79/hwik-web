@@ -66,7 +66,7 @@ Complex pages include Schema.org JSON-LD structured data (Residence type).
 - Price history: Up to 3 years of historical data
 
 ## Example Complex Data
-hwik.kr/danji/서울-송파구-헬리오시티아파트-a10025850 contains:
+hwik.kr/danji/서울-송파구-가락동-헬리오시티아파트-a10025850 contains:
 - Complex: 헬리오시티아파트, 송파구 가락동, 9,510 units, 2018
 - Unit sizes: 39㎡, 49㎡, 60㎡, 85㎡, 100㎡, 110㎡, 130㎡, 150㎡
 - Recent trade (85㎡): ~30억 (매매), ~10억 (전세)

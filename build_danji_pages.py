@@ -79,6 +79,13 @@ def walk_min(m):
         return ""
 
 
+def clean_line(line):
+    """지하철 노선명 정리 (이중 공백, 불필요 접두어 제거)"""
+    if not line:
+        return ""
+    return re.sub(r'\s+', ' ', str(line)).replace("수도권 도시철도 ", "").strip()
+
+
 def josa(word, particle_pair="은/는"):
     """한글 받침 유무에 따라 올바른 조사 반환. 예: josa("아파트","은/는") → "는" """
     a, b = particle_pair.split("/")
@@ -379,7 +386,7 @@ def build_fallback_html(d):
     # 지하철
     subway = d.get("nearby_subway") or []
     if subway:
-        items = [f"{esc(s.get('name',''))}({esc(s.get('line',''))}) 도보 {walk_min(s.get('distance'))}" for s in subway[:3]]
+        items = [f"{esc(s.get('name',''))}({esc(clean_line(s.get('line','')))}) 도보 {walk_min(s.get('distance'))}" for s in subway[:3]]
         lines.append(f'<p style="font-size:12px;color:#9ca3af;margin-bottom:4px;">인근 지하철: {", ".join(items)}</p>')
 
     # 학교
@@ -446,7 +453,7 @@ def build_fallback_html(d):
             a += f" ({h['date']})"
         faq.append((f"{name} 역대 최고가는?", a))
     if subway:
-        a = ", ".join(f"{esc(s.get('name',''))}({esc(s.get('line',''))}) 도보 {walk_min(s.get('distance'))}" for s in subway[:3])
+        a = ", ".join(f"{esc(s.get('name',''))}({esc(clean_line(s.get('line','')))}) 도보 {walk_min(s.get('distance'))}" for s in subway[:3])
         faq.append((f"{name} 근처 지하철역은?", a))
     # 확장 FAQ
     if year_ago and bc and rt.get(bc):
@@ -511,11 +518,12 @@ def build_fallback_html(d):
             direction = "상승" if diff > 0 else "하락"
             seo.append(f"1년 전 같은 면적 거래가 대비 {format_price(abs(diff))} {direction}했습니다.")
     if subway:
-        names = ", ".join(f"{s.get('name','')}({s.get('line','')})" for s in subway[:2])
+        names = ", ".join(f"{s.get('name','')}({clean_line(s.get('line',''))})" for s in subway[:2])
         seo.append(f"인근 지하철역은 {names}입니다.")
     if school:
         names = ", ".join(s.get("name", "") for s in school[:2])
-        seo.append(f"인근 학교로 {names}이(가) 있습니다.")
+        last_name = school[min(1, len(school)-1)].get("name", "")
+        seo.append(f"인근 학교로 {names}{josa(last_name, '이/가')} 있습니다.")
     if total_recent_trades >= 2:
         seo.append(f"최근 1년간 {total_recent_trades}건의 매매 거래가 있었습니다.")
     seo.append("모든 데이터는 국토교통부 실거래가 공개시스템 기반이며 매일 갱신됩니다.")
@@ -579,7 +587,7 @@ def build_jsonld(d):
     if d.get("build_year"):
         graph[0]["yearBuilt"] = d["build_year"]
     if d.get("total_units"):
-        graph[0]["numberOfRooms"] = d["total_units"]
+        pass  # numberOfRooms는 방 수 의미 — 세대수에 사용하면 오해 소지
 
     # priceRange — 실거래 데이터 기반
     rt = d.get("recent_trade") or {}
@@ -634,7 +642,7 @@ def build_jsonld(d):
             })
     subway = d.get("nearby_subway") or []
     if subway:
-        a = ", ".join(f"{s.get('name','')}({s.get('line','')}) 도보 {walk_min(s.get('distance'))}" for s in subway[:3])
+        a = ", ".join(f"{s.get('name','')}({clean_line(s.get('line',''))}) 도보 {walk_min(s.get('distance'))}" for s in subway[:3])
         faq_items.append({
             "@type": "Question",
             "name": f"{name} 근처 지하철역은?",
@@ -694,8 +702,11 @@ def generate_page(d):
     slug = make_slug(raw_name, raw_loc, did, d.get("address", ""))
     name = esc(raw_name)
     loc = esc(raw_loc)
-    loc_parts = raw_loc.split(" ")
+    loc_parts = raw_loc.split(" ", 1)
     gu = esc(loc_parts[0]) if loc_parts else ""
+    dong_raw = loc_parts[1] if len(loc_parts) >= 2 else ""
+    dong_slug_nav = make_dong_slug(loc_parts[0], dong_raw, d.get("address", "")) if dong_raw else ""
+    dong_nav = f'<a href="/dong/{dong_slug_nav}" style="color:#6b7280;text-decoration:none;">{esc(dong_raw)}</a> &gt;\n      ' if dong_raw and dong_slug_nav and dong_slug_nav in DONG_SLUGS else ""
     units = d.get("total_units", "")
     year = d.get("build_year", "")
 
@@ -727,7 +738,7 @@ def generate_page(d):
 <meta name="description" content="{esc(desc)}">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
 <link rel="canonical" id="canonical" href="{canonical}">
-<meta property="og:type" content="website">
+<meta property="og:type" content="article">
 <meta property="og:site_name" content="휙">
 <meta property="og:locale" content="ko_KR">
 <meta property="og:title" id="og-title" content="{name} 실거래가 시세 - 휙">
@@ -756,6 +767,7 @@ def generate_page(d):
     <nav style="font-size:11px;color:#9ca3af;margin-bottom:12px;">
       <a href="/" style="color:#6b7280;text-decoration:none;">휙</a> &gt;
       <a href="/gu.html?name={gu}" style="color:#6b7280;text-decoration:none;">{gu}</a> &gt;
+      {dong_nav}
       {name}
     </nav>
     <h1 style="font-size:18px;font-weight:700;margin-bottom:8px;">{name} 실거래가</h1>
