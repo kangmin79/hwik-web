@@ -543,14 +543,10 @@
             const div = document.createElement('div');
             div.className = 'msg' + (isFirstBubbleInGroup ? ' first-in-group' : '');
 
-            const avatarEl = isFirstBubbleInGroup
-                ? `<div class="avatar" id="msgAvatar">${agentAvatarHtml}</div>`
-                : `<div class="avatar-spacer"></div>`;
+            const avatarEl = `<div class="avatar" id="msgAvatar">${agentAvatarHtml}</div>`;
 
             const agent = agentInfo || {};
-            const senderName = isFirstBubbleInGroup
-                ? `<div class="sender-name">${esc(agent.business_name || agent.name || '휙')}</div>`
-                : '';
+            const senderName = `<div class="sender-name">${esc(agent.business_name || agent.name || '휙')}</div>`;
 
             const timeEl = showTime ? `<div class="time">${timeStr()}</div>` : '';
 
