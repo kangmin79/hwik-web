@@ -760,14 +760,23 @@
             await wait(d);
             showTyping(); await wait(d); hideTyping();
 
-            const stLines = validStations.map(st => {
+            const walkVariants = [
+                min => `걸어서 ${min}분 정도이고요`,
+                min => `걸어서 ${min}분 정도예요`,
+                min => `걸어서 ${min}분 정도입니다`,
+                min => `도보 ${min}분 거리에요`,
+            ];
+            const farVariants = [
+                min => `${min}분 정도 걸리긴 하는데 도보 가능해요`,
+                min => `${min}분 좀 걸리지만 걸어갈 수 있어요`,
+            ];
+            const stLines = validStations.map((st, i) => {
                 const min = walkMin(st.dist);
                 const coloredLines = st.lines.map(l => `<span style="color:${lineColor(l)};font-weight:700;">${l}</span>`).join(' ');
                 let walkText;
                 if (min <= 3) walkText = '바로 앞이에요';
-                else if (min <= 5) walkText = `걸어서 ${min}분이에요`;
-                else if (min <= 8) walkText = `걸어서 ${min}분 정도예요`;
-                else walkText = `${min}분 정도 걸리긴 하는데 도보 가능해요`;
+                else if (min <= 8) walkText = walkVariants[i % walkVariants.length](min);
+                else walkText = farVariants[i % farVariants.length](min);
                 const stName = st.name.endsWith('역') ? st.name : st.name + '역';
                 return `<strong>${esc(stName)}</strong> ${coloredLines} ${walkText}`;
             });
@@ -780,11 +789,16 @@
             await wait(d - 100);
             showTyping(); await wait(d - 100); hideTyping();
 
-            const schLines = validSchools.map(sch => {
+            const schWalkVariants = [
+                min => `걸어서 ${min}분 정도예요`,
+                min => `걸어서 ${min}분이면 가요`,
+                min => `도보 ${min}분 거리입니다`,
+            ];
+            const schLines = validSchools.map((sch, i) => {
                 const min = walkMin(sch.dist);
                 let walkText;
                 if (min <= 3) walkText = `걸어서 ${min}분이면 바로예요`;
-                else if (min <= 7) walkText = `걸어서 ${min}분 정도예요`;
+                else if (min <= 10) walkText = schWalkVariants[i % schWalkVariants.length](min);
                 else walkText = `${min}분 정도 거리에 있어요`;
                 return `<strong>${esc(sch.name)}</strong> ${walkText}`;
             });
