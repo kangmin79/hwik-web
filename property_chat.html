@@ -364,6 +364,67 @@
 
     function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
+    // ====== 주변정보 조회 ======
+    function distanceM(lat1, lon1, lat2, lon2) {
+        const R = 6371000;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    async function getNearby(lat, lng) {
+        const result = { stations: [], schools: [] };
+        if (!lat || !lng) return result;
+
+        // 위도 1도 ≈ 111km, 경도 1도 ≈ 88km (서울 기준)
+        const latRange = 0.009; // ~1km
+        const lonRange = 0.011;
+
+        const [stRes, schRes] = await Promise.all([
+            sb.from('stations').select('name, line, lat, lon')
+                .gte('lat', lat - latRange).lte('lat', lat + latRange)
+                .gte('lon', lng - lonRange).lte('lon', lng + lonRange)
+                .limit(20),
+            sb.from('schools').select('name, type, lat, lon')
+                .gte('lat', lat - latRange).lte('lat', lat + latRange)
+                .gte('lon', lng - lonRange).lte('lon', lng + lonRange)
+                .limit(20),
+        ]);
+
+        if (stRes.data) {
+            const stations = stRes.data.map(s => ({
+                ...s, dist: distanceM(lat, lng, s.lat, s.lon)
+            })).sort((a,b) => a.dist - b.dist);
+            // 같은 역 이름은 호선만 합치기
+            const seen = {};
+            for (const s of stations) {
+                const key = s.name.replace(/\(.*\)/, '').trim();
+                if (!seen[key]) { seen[key] = { name: key, lines: [s.line], dist: s.dist }; }
+                else { seen[key].lines.push(s.line); }
+            }
+            result.stations = Object.values(seen).slice(0, 3);
+        }
+
+        if (schRes.data) {
+            result.schools = schRes.data.map(s => ({
+                ...s, dist: distanceM(lat, lng, s.lat, s.lon)
+            })).sort((a,b) => a.dist - b.dist).slice(0, 3);
+        }
+
+        return result;
+    }
+
+    function formatDist(m) {
+        if (m < 100) return `${Math.round(m)}m`;
+        if (m < 1000) return `${Math.round(m/10)*10}m`;
+        return `${(m/1000).toFixed(1)}km`;
+    }
+
+    function walkMin(m) {
+        return Math.max(1, Math.round(m / 67)); // 도보 분속 67m
+    }
+
     // 휙 커스텀 마커
     function hwikMarker(map, pos) {
         const content = `<div style="
@@ -563,6 +624,24 @@
                 return `<span class="tag-chip ${cat ? 'tag-' + cat : ''}">${esc(f)}</span>`;
             }).join('');
             await addMsg(tagsHtml, 'tags-bubble');
+        }
+
+        // 6.5. 주변정보 (지하철 + 학교)
+        if (data.lat && data.lng) {
+            const nearby = await getNearby(data.lat, data.lng);
+            const lines = [];
+            nearby.stations.forEach(s => {
+                const min = walkMin(s.dist);
+                lines.push(`🚇 <strong>${esc(s.name)}</strong> <span style="color:#6366f1">${s.lines.join('·')}</span> — 도보 ${min}분`);
+            });
+            nearby.schools.forEach(s => {
+                lines.push(`🏫 <strong>${esc(s.name)}</strong> <span style="color:#888">${esc(s.type)}</span> — ${formatDist(s.dist)}`);
+            });
+            if (lines.length > 0) {
+                await wait(d);
+                showTyping(); await wait(d); hideTyping();
+                await addMsg(`<div style="font-size:12px;color:#888;margin-bottom:6px;">주변 정보</div>${lines.join('<br>')}`);
+            }
         }
 
         // 7. 중개사 코멘트
