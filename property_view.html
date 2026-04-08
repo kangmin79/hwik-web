@@ -1237,8 +1237,35 @@
             return '';
         }
 
-        function _buildSpecsHtml(basicSpecs, featureSpecs) {
+        function _buildSpecsHtml(basicSpecs, featureSpecs, extra={}) {
             const all = [...basicSpecs, ...featureSpecs].filter(Boolean);
+
+            // 태그 6개 미만이면 자동 보충
+            const MIN_TAGS = 6;
+            if (all.length < MIN_TAGS) {
+                const existing = all.join(' ').toLowerCase();
+                const candidates = [];
+                // 거래유형
+                if (extra.type && !existing.includes(extra.type)) candidates.push(extra.type);
+                // 지역에서 구 추출
+                if (extra.location) {
+                    const guMatch = extra.location.match(/([\uAC00-\uD7A3]+[구시군])/);
+                    if (guMatch && !existing.includes(guMatch[1])) candidates.push(guMatch[1]);
+                    // 동 추출
+                    const dongMatch = extra.location.match(/([\uAC00-\uD7A3]+[동읍면리])/);
+                    if (dongMatch && !existing.includes(dongMatch[1])) candidates.push(dongMatch[1]);
+                }
+                // 단지명 (아파트/오피스텔일 때)
+                if (extra.name && extra.name !== extra.location && !existing.includes(extra.name)) {
+                    candidates.push(extra.name);
+                }
+                // 부족한 만큼만 추가
+                for (const c of candidates) {
+                    if (all.length >= MIN_TAGS) break;
+                    all.push(c);
+                }
+            }
+
             // 카테고리 있는 태그 먼저, 기본 스펙 나중에
             const categorized = [], basic = [];
             all.forEach(s => {
@@ -1264,7 +1291,7 @@
         function _buildInfoCard(ctx) {
             const { type, price, name, location, area, floor, room, features, agentName, agentPhone, agentPhoto, photos, agentComment } = ctx;
             const cardNameStr = [location, name].filter(Boolean).join(' · ');
-            const specsHtml = _buildSpecsHtml([area, floor, room], features);
+            const specsHtml = _buildSpecsHtml([area, floor, room], features, {type, location, name});
             const hasPhotos = photos && photos.length > 0;
             const dotColor = type === '매매' ? '#ea580c' : type === '전세' ? '#4f46e5' : '#7c3aed';
 
