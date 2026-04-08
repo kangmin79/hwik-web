@@ -10,8 +10,11 @@ Usage:
 """
 
 import os, json, re, time, html as html_mod
+from datetime import datetime, timezone
 import requests
 from slug_utils import REGION_MAP, METRO_CITIES, clean as _clean, detect_region, make_danji_slug as make_slug, make_dong_slug
+
+BUILD_TIME = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S+00:00")
 
 def _load_env():
     for fname in (".env", "env"):
@@ -74,6 +77,17 @@ def walk_min(m):
         return f"{round(float(m) / 67)}분"
     except (ValueError, TypeError):
         return ""
+
+
+def josa(word, particle_pair="은/는"):
+    """한글 받침 유무에 따라 올바른 조사 반환. 예: josa("아파트","은/는") → "는" """
+    a, b = particle_pair.split("/")
+    if not word:
+        return b
+    last = word.rstrip()[-1]
+    if '가' <= last <= '힣':
+        return a if (ord(last) - 0xAC00) % 28 != 0 else b
+    return b  # 숫자·영문 등은 받침 없음 취급
 
 
 # ── Supabase 조회 ─────────────────────────────────────────
@@ -231,42 +245,42 @@ def build_intro_sentence(name, addr, year, units, builder, bc, rt, jr):
 
     # 신축 대단지
     if age is not None and age <= 5 and unit_count >= 1000:
-        return f"{name}은(는) {year}년 준공된 {unit_count:,}세대 규모의 신축 대단지로, {addr}에 있습니다."
+        return f"{name}{josa(name,'은/는')} {year}년 준공된 {unit_count:,}세대 규모의 신축 대단지로, {addr}에 있습니다."
     # 신축
     if age is not None and age <= 5:
-        return f"{addr}에 위치한 {name}은(는) {year}년 준공된 신축 아파트입니다."
+        return f"{addr}에 위치한 {name}{josa(name,'은/는')} {year}년 준공된 신축 아파트입니다."
     # 대단지
     if unit_count >= 1000 and year:
-        return f"{name}은(는) {addr}의 {unit_count:,}세대 대단지 아파트로, {year}년에 준공되었습니다."
+        return f"{name}{josa(name,'은/는')} {addr}의 {unit_count:,}세대 대단지 아파트로, {year}년에 준공되었습니다."
     if unit_count >= 1000:
-        return f"{name}은(는) {addr}의 {unit_count:,}세대 대단지 아파트입니다."
+        return f"{name}{josa(name,'은/는')} {addr}의 {unit_count:,}세대 대단지 아파트입니다."
     # 전세 수요 높음
     try:
         jr_float = float(jr) if jr else 0
     except (ValueError, TypeError):
         jr_float = 0
     if jr_float >= 70:
-        return f"{name}은(는) 전세가율 {jr}%로 전세가율이 높은 {addr} 소재 아파트입니다."
+        return f"{name}{josa(name,'은/는')} 전세가율 {jr}%로 전세가율이 높은 {addr} 소재 아파트입니다."
     # 고가
     if price >= 150000:
-        return f"{addr}의 {name}은(는) 최근 전용 {bc}㎡가 {format_price(price)}에 거래된 아파트입니다."
+        return f"{addr}의 {name}{josa(name,'은/는')} 최근 전용 {bc}㎡가 {format_price(price)}에 거래된 아파트입니다."
     # 유명 시공사
     major = ["삼성물산", "현대건설", "대우건설", "GS건설", "포스코건설", "대림산업", "롯데건설", "HDC현대산업개발"]
     if builder and any(b in builder for b in major):
         if year:
-            return f"{name}은(는) {builder} 시공의 아파트로, {addr}에 위치하며 {year}년 준공되었습니다."
-        return f"{name}은(는) {builder} 시공의 아파트로, {addr}에 위치합니다."
+            return f"{name}{josa(name,'은/는')} {builder} 시공의 아파트로, {addr}에 위치하며 {year}년 준공되었습니다."
+        return f"{name}{josa(name,'은/는')} {builder} 시공의 아파트로, {addr}에 위치합니다."
     # 구축
     if age is not None and age >= 30:
-        return f"{year}년 준공된 {name}은(는) {addr}에 위치한 아파트입니다."
+        return f"{year}년 준공된 {name}{josa(name,'은/는')} {addr}에 위치한 아파트입니다."
     # 소형
     if 0 < unit_count < 300:
-        return f"{addr} 소재 {name}은(는) 총 {unit_count:,}세대 규모의 아파트입니다."
+        return f"{addr} 소재 {name}{josa(name,'은/는')} 총 {unit_count:,}세대 규모의 아파트입니다."
     # 기본
     if year and addr:
-        return f"{name}은(는) {addr}에 있는 {year}년 준공 아파트입니다."
+        return f"{name}{josa(name,'은/는')} {addr}에 있는 {year}년 준공 아파트입니다."
     elif addr:
-        return f"{name}은(는) {addr}에 위치한 아파트입니다."
+        return f"{name}{josa(name,'은/는')} {addr}에 위치한 아파트입니다."
     return f"{name} 아파트입니다."
 
 
@@ -449,7 +463,7 @@ def build_fallback_html(d):
         faq.append((f"{name} 주변 학교는?", items))
     if units and year:
         u = f"{units:,}" if isinstance(units, int) else str(units)
-        a = f"{name}은(는) {year}년 준공, 총 {u}세대 규모입니다."
+        a = f"{name}{josa(name,'은/는')} {year}년 준공, 총 {u}세대 규모입니다."
         if builder:
             a += f" 시공사는 {builder}입니다."
         faq.append((f"{name} 몇 세대인가요?", a))
@@ -532,8 +546,10 @@ def build_jsonld(d):
     """JSON-LD 구조화 데이터"""
     did = d.get("id", "")
     name = d.get("complex_name", "")
-    loc_parts = (d.get("location") or "").split(" ")
+    loc_parts = (d.get("location") or "").split(" ", 1)
     gu = loc_parts[0] if loc_parts else ""
+    dong_name = loc_parts[1] if len(loc_parts) >= 2 else ""
+    dong_slug_str = make_dong_slug(gu, dong_name, d.get("address", "")) if dong_name else ""
     slug = make_slug(name, d.get("location", ""), did, d.get("address", ""))
 
     graph = [
@@ -552,7 +568,8 @@ def build_jsonld(d):
             "itemListElement": [
                 {"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"},
                 {"@type": "ListItem", "position": 2, "name": f"{gu}", "item": f"https://hwik.kr/gu.html?name={gu}"},
-                {"@type": "ListItem", "position": 3, "name": name, "item": f"https://hwik.kr/danji/{slug}"},
+            ] + ([{"@type": "ListItem", "position": 3, "name": dong_name, "item": f"https://hwik.kr/dong/{dong_slug_str}"}] if dong_name and dong_slug_str and dong_slug_str in DONG_SLUGS else []) + [
+                {"@type": "ListItem", "position": 4 if (dong_name and dong_slug_str and dong_slug_str in DONG_SLUGS) else 3, "name": name, "item": f"https://hwik.kr/danji/{slug}"},
             ],
         },
     ]
@@ -634,7 +651,7 @@ def build_jsonld(d):
     if d.get("total_units") and d.get("build_year"):
         u = d["total_units"]
         u_str = f"{u:,}" if isinstance(u, int) else str(u)
-        txt = f"{name}은(는) {d['build_year']}년 준공, 총 {u_str}세대입니다."
+        txt = f"{name}{josa(name,'은/는')} {d['build_year']}년 준공, 총 {u_str}세대입니다."
         if d.get("builder"):
             txt += f" 시공사는 {d['builder']}입니다."
         faq_items.append({
@@ -694,12 +711,12 @@ def generate_page(d):
     jsonld = build_jsonld(d)
     fallback = build_fallback_html(d)
 
-    # 네이버 메타태그용 시간
+    # 네이버 메타태그용 시간 — published_time은 데이터 시간, modified_time은 빌드 시점
     updated_at = d.get("updated_at", "")
-    meta_time = updated_at[:19] + "+00:00" if updated_at and len(updated_at) >= 19 else ""
+    published_time = updated_at[:19] + "+00:00" if updated_at and len(updated_at) >= 19 else ""
     naver_meta = ""
-    if meta_time:
-        naver_meta = f'<meta property="article:published_time" content="{meta_time}">\n<meta property="article:modified_time" content="{meta_time}">'
+    if published_time:
+        naver_meta = f'<meta property="article:published_time" content="{published_time}">\n<meta property="article:modified_time" content="{BUILD_TIME}">'
 
     return f"""<!DOCTYPE html>
 <html lang="ko">

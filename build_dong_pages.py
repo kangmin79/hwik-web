@@ -10,6 +10,7 @@ Usage:
 """
 
 import os, sys, json, re, time, html as html_mod
+from datetime import datetime, timezone
 import requests
 from collections import defaultdict
 from urllib.parse import quote as url_quote
@@ -48,6 +49,8 @@ DONG_DIR = os.path.join(BASE_DIR, "dong")
 
 MIN_DANJI_WITH_TRADE = 3  # thin content 방지
 
+BUILD_TIME = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S+00:00")
+
 
 # ── 유틸 ──────────────────────────────────────────────────
 def esc(s):
@@ -81,6 +84,16 @@ def walk_min(m):
     except (ValueError, TypeError):
         return ""
 
+
+def josa(word, particle_pair="은/는"):
+    """한글 받침 유무에 따라 올바른 조사 반환."""
+    a, b = particle_pair.split("/")
+    if not word:
+        return b
+    last = word.rstrip()[-1]
+    if '가' <= last <= '힣':
+        return a if (ord(last) - 0xAC00) % 28 != 0 else b
+    return b
 
 
 # REGION_MAP, METRO_CITIES, _clean, detect_region, make_danji_slug, make_dong_slug → slug_utils.py에서 import
@@ -441,11 +454,11 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
     # SEO 서술 (풍부한 고유 콘텐츠) — 서두 다양화
     seo_parts = []
     if len(tradeable) >= 10 and station_count >= 5:
-        seo_parts.append(f"{gu} {dong}은(는) {station_count}개 단지가 역세권에 있는 주거 밀집 지역입니다.")
+        seo_parts.append(f"{gu} {dong}{josa(dong,'은/는')} {station_count}개 단지가 역세권에 있는 주거 밀집 지역입니다.")
     elif new_count and new_count >= len(tradeable) // 2:
-        seo_parts.append(f"{gu} {dong}은(는) 10년 이내 신축이 {new_count}개로 새 아파트가 많은 지역입니다.")
+        seo_parts.append(f"{gu} {dong}{josa(dong,'은/는')} 10년 이내 신축이 {new_count}개로 새 아파트가 많은 지역입니다.")
     elif len(tradeable) >= 15:
-        seo_parts.append(f"{gu} {dong}은(는) {len(tradeable)}개 아파트 단지가 밀집한 대규모 주거지역입니다.")
+        seo_parts.append(f"{gu} {dong}{josa(dong,'은/는')} {len(tradeable)}개 아파트 단지가 밀집한 대규모 주거지역입니다.")
     else:
         seo_parts.append(f"{gu} {dong}에는 {len(tradeable)}개 아파트 단지가 있습니다.")
     if most_expensive:
@@ -503,16 +516,16 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
         },
     ]}, ensure_ascii=False)
 
-    # 네이버 메타태그용 시간
+    # 네이버 메타태그용 시간 — published_time은 데이터 시간, modified_time은 빌드 시점
     all_updated = [x.get("updated_at","") for x in tradeable if x.get("updated_at")]
-    dong_meta_time = ""
+    dong_published_time = ""
     if all_updated:
         latest = max(all_updated)
         if len(latest) >= 19:
-            dong_meta_time = latest[:19] + "+00:00"
+            dong_published_time = latest[:19] + "+00:00"
     dong_naver_meta = ""
-    if dong_meta_time:
-        dong_naver_meta = f'<meta property="article:published_time" content="{dong_meta_time}">\n<meta property="article:modified_time" content="{dong_meta_time}">'
+    if dong_published_time:
+        dong_naver_meta = f'<meta property="article:published_time" content="{dong_published_time}">\n<meta property="article:modified_time" content="{BUILD_TIME}">'
 
     # ── 최종 HTML ──
     return f"""<!DOCTYPE html>

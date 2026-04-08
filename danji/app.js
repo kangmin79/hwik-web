@@ -333,7 +333,10 @@ function render() {
   // SEO 텍스트 — DB가 아닌 실제 데이터 기반으로 자동 생성
   const seoParts = [];
   // 기본 정보 (확실한 것만)
-  const seoBasic = [esc(d.complex_name), '은(는)'];
+  const nm = d.complex_name || '';
+  const lastCh = nm.charAt(nm.length - 1);
+  const hasJong = lastCh >= '가' && lastCh <= '힣' && (lastCh.charCodeAt(0) - 0xAC00) % 28 !== 0;
+  const seoBasic = [esc(d.complex_name), hasJong ? '은' : '는'];
   if (d.address) seoBasic.push(esc(d.address) + '에 위치한');
   if (d.build_year) seoBasic.push(d.build_year + '년 준공');
   seoBasic.push('아파트입니다.');
