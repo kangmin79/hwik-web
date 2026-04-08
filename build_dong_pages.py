@@ -273,7 +273,6 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
     all_prices = [x["_best_trade"].get("price", 0) for x in tradeable if x.get("_best_trade")]
     valid_prices = [p for p in all_prices if p > 0]
     if len(valid_prices) >= 2:
-        from build_danji_pages import format_price
         lines.append(f'가격 분포: {format_price(min(valid_prices))} ~ {format_price(max(valid_prices))}')
     lines.append(f'</div></div>')
 

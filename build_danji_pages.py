@@ -241,14 +241,14 @@ def build_intro_sentence(name, addr, year, units, builder, bc, rt, jr):
         return f"{addr} 소재 {name}은(는) 총 {unit_count:,}세대 규모의 아파트입니다."
     # 기본
     if year and addr:
-        return f"{name}은(는) {addr}에 있��� {year}년 준�� 아파트입니다."
+        return f"{name}은(는) {addr}에 있는 {year}년 준공 아파트입니다."
     elif addr:
-        return f"{name}은(는) {addr}에 위치한 아파���입니다."
+        return f"{name}은(는) {addr}에 위치한 아파트입니다."
     return f"{name} 아파트입니다."
 
 
 def build_fallback_html(d):
-    """Googlebot이 읽는 ��적 SEO 콘텐츠"""
+    """Googlebot이 읽는 정적 SEO 콘텐츠"""
     name = esc(d.get("complex_name", ""))
     loc = esc(d.get("location", ""))
     loc_parts = (d.get("location") or "").split(" ")
