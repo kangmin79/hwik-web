@@ -454,6 +454,7 @@
     }
 
     function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    function escUrl(u) { if (!u) return ''; try { return encodeURI(decodeURI(u)); } catch { return ''; } }
 
     // 한글 종성 판별 → "이에요" vs "예요"
     function ieyo(str) {
@@ -754,16 +755,16 @@
             await addMsg(photos.length > 1 ? `사진도 보내드릴게요` : `사진이에요`);
             await wait(200);
 
-            let photoHtml = `<img class="photo-main" src="${photos[0]}" alt="매물 사진" onerror="this.style.display='none'">`;
+            let photoHtml = `<img class="photo-main" src="${escUrl(photos[0])}" alt="매물 사진" onerror="this.style.display='none'">`;
 
             if (photos.length > 1) {
-                const thumbs = photos.slice(1, 4); // 최대 3개 썸네일
-                const remaining = photos.length - 4; // 4장 이상이면 +N
+                const thumbs = photos.slice(1, 4);
+                const remaining = photos.length - 4;
                 photoHtml += `<div class="photo-thumbs">`;
                 thumbs.forEach((url, i) => {
                     const isLast = (i === thumbs.length - 1) && remaining > 0;
                     photoHtml += `<div class="photo-thumb-wrap">
-                        <img src="${url}" alt="">
+                        <img src="${escUrl(url)}" alt="">
                         ${isLast ? `<div class="photo-more">+${remaining}</div>` : ''}
                     </div>`;
                 });
@@ -946,6 +947,7 @@
     let galleryPhotos = [], galleryIdx = 0;
     function openGallery(photos, idx) {
         galleryPhotos = photos; galleryIdx = idx || 0;
+        gallerySwipeReady = false; // DOM이 새로 만들어지니 리셋
         renderGallery();
         initGallerySwipe();
         openOverlay('galleryOverlay');
@@ -955,7 +957,7 @@
         if (!ov) { ov = document.createElement('div'); ov.className = 'fullscreen-overlay'; ov.id = 'galleryOverlay'; document.body.appendChild(ov); }
         ov.innerHTML = `
             <button class="close-btn" onclick="closeGallery()">✕</button>
-            <img src="${galleryPhotos[galleryIdx]}" alt="사진" id="galleryImg">
+            <img src="${escUrl(galleryPhotos[galleryIdx])}" alt="사진" id="galleryImg">
             ${galleryPhotos.length > 1 ? `
                 <div class="gallery-counter">${galleryIdx + 1} / ${galleryPhotos.length}</div>
             ` : ''}
@@ -1108,7 +1110,7 @@
         const name = agent.business_name || agent.name || '매물 소개';
         document.getElementById('agentNameEl').textContent = name;
         if (agent.profile_photo) {
-            agentAvatarHtml = `<img src="${agent.profile_photo}" alt="">`;
+            agentAvatarHtml = `<img src="${escUrl(agent.profile_photo)}" alt="">`;
         } else {
             agentAvatarHtml = '휙';
         }
@@ -1125,12 +1127,12 @@
 
         try {
             let ids = [];
-            if (cardIds) ids = cardIds.split(',').map(s => s.trim()).filter(Boolean);
+            if (cardIds) ids = cardIds.split(',').map(s => s.trim()).filter(Boolean).slice(0, 10);
             else if (cardId) ids = [cardId];
             else { chatBody.innerHTML = ''; startNewGroup(); await addMsg('매물 정보가 없어요 😅'); return; }
 
             if (agentId) {
-                const { data: agData } = await sb.from('profiles').select('*').eq('id', agentId).single();
+                const { data: agData } = await sb.from('profiles').select('business_name,agent_name,phone,profile_photo').eq('id', agentId).single();
                 if (agData) { agentInfo = agData; updateHeader(agData); }
             }
 
@@ -1152,7 +1154,7 @@
             }
             if (!agentInfo && allCards[0].agent_id) {
                 try {
-                    const { data: agData } = await sb.from('profiles').select('*').eq('id', allCards[0].agent_id).single();
+                    const { data: agData } = await sb.from('profiles').select('business_name,agent_name,phone,profile_photo').eq('id', allCards[0].agent_id).single();
                     if (agData) { agentInfo = agData; updateHeader(agData); }
                 } catch(e) {}
             }
