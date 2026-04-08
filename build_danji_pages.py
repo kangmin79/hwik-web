@@ -226,7 +226,11 @@ def build_intro_sentence(name, addr, year, units, builder, bc, rt, jr):
     if unit_count >= 1000:
         return f"{name}은(는) {addr}의 {unit_count:,}세대 대단지 아파트입니다."
     # 전세 수요 높음
-    if jr and float(jr) >= 70:
+    try:
+        jr_float = float(jr) if jr else 0
+    except (ValueError, TypeError):
+        jr_float = 0
+    if jr_float >= 70:
         return f"{name}은(는) 전세가율 {jr}%로 전세 수요가 높은 {addr} 소재 아파트입니다."
     # 고가
     if price >= 150000:
@@ -335,7 +339,7 @@ def build_fallback_html(d):
         lines.append(f'<p style="font-size:12px;color:#9ca3af;margin-bottom:12px;">면적: {area_list}</p>')
 
     # 면적별 가격 비교 (2개 이상 면적에 거래가 있을 때)
-    traded_areas = [(c, rt[c]) for c in sorted(cats, key=lambda x: int(x)) if rt.get(c) and (rt[c].get("price") or 0) > 0]
+    traded_areas = [(c, rt[c]) for c in sorted(cats, key=lambda x: int(x) if x.isdigit() else 999) if rt.get(c) and (rt[c].get("price") or 0) > 0]
     if len(traded_areas) >= 2:
         ap = ", ".join(f"전용 {a}㎡ {format_price(t.get('price'))}" for a, t in traded_areas)
         lines.append(
@@ -636,7 +640,7 @@ def build_jsonld(d):
         })
     # 면적별 가격 FAQ (JSON-LD)
     cats = d.get("categories") or []
-    ta = [(c, rt[c]) for c in sorted(cats, key=lambda x: int(x)) if rt.get(c) and (rt[c].get("price") or 0) > 0]
+    ta = [(c, rt[c]) for c in sorted(cats, key=lambda x: int(x) if x.isdigit() else 999) if rt.get(c) and (rt[c].get("price") or 0) > 0]
     if len(ta) >= 2:
         parts = [f"전용 {a}㎡ {format_price(t.get('price'))}" for a, t in ta]
         faq_items.append({
