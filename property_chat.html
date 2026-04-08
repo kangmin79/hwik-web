@@ -418,6 +418,9 @@
     </div>
 
     <script>
+    const isKakao = navigator.userAgent.toLowerCase().includes('kakaotalk');
+    const channelName = isKakao ? '카톡' : '문자';
+
     const SUPABASE_URL = HWIK_CONFIG.SUPABASE_URL;
     const SUPABASE_KEY = HWIK_CONFIG.SUPABASE_KEY;
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -1021,15 +1024,19 @@
             document.body.appendChild(ta); ta.select(); document.execCommand('copy');
             document.body.removeChild(ta);
         }
-        btn.textContent = '복사완료! 카톡에 붙여넣으면 바로 상담 시작됩니다';
+        btn.textContent = `복사완료! ${channelName}에 붙여넣으면 바로 상담 시작됩니다`;
         btn.style.background = '#4ecdc4';
-        // 카톡 인앱이면 자동으로 대화창으로 돌아가기
         setTimeout(() => {
-            const ua = navigator.userAgent.toLowerCase();
-            if (ua.includes('kakaotalk')) {
+            if (isKakao) {
                 location.href = 'kakaotalk://inappbrowser/close';
             } else {
-                history.back();
+                // 문자앱 열기 (전화번호 있으면)
+                const phone = agentInfo && agentInfo.phone ? agentInfo.phone.replace(/-/g, '') : '';
+                if (phone) {
+                    location.href = `sms:${phone}`;
+                } else {
+                    history.back();
+                }
             }
         }, 800);
     }
@@ -1083,18 +1090,17 @@
         const card = allCards[currentIdx] || allCards[0];
         const cp = card ? (card.property || {}) : {};
         const copyText = `[휙] 매물 문의\n${cp.type || ''} ${cp.price || ''}\n${cp.location || ''} ${cp.complex || ''}\nQ: ${question}`;
-        const btnMsg = await addMsg(`<button class="inquiry-btn" style="background:#fee500;">카톡으로 질문 보내기</button>`);
+        const btnMsg = await addMsg(`<button class="inquiry-btn" style="background:#fee500;">${channelName}으로 질문 보내기</button>`);
         btnMsg.querySelector('.inquiry-btn').addEventListener('click', function() { copyInquiry(this, copyText); });
 
-        input.placeholder = '카톡에서 대화를 이어가세요';
+        input.placeholder = `${channelName}에서 대화를 이어가세요`;
         input.disabled = true;
         document.getElementById('sendBtn').style.display = 'none';
     }
 
-    function goBackToKakao() {
-        const ua = navigator.userAgent.toLowerCase();
-        if (ua.indexOf('kakaotalk') > -1) { location.href = 'kakaotalk://inappbrowser/close'; }
-        else { window.close(); alert('카카오톡 대화창으로 돌아가주세요 😊'); }
+    function goBack() {
+        if (isKakao) { location.href = 'kakaotalk://inappbrowser/close'; }
+        else { history.back(); }
     }
 
     // ====== 헤더 업데이트 ======
