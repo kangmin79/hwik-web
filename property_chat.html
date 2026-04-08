@@ -627,15 +627,19 @@
         });
     }
 
-    // ====== 갤러리 ======
+    // ====== 갤러리 (풀스크린 + 스와이프) ======
     let galleryPhotos = [], galleryIdx = 0;
-    function openGallery(photos, idx) { galleryPhotos = photos; galleryIdx = idx || 0; renderGallery(); }
+    function openGallery(photos, idx) {
+        galleryPhotos = photos; galleryIdx = idx || 0;
+        renderGallery();
+        initGallerySwipe();
+    }
     function renderGallery() {
         let ov = document.getElementById('galleryOverlay');
         if (!ov) { ov = document.createElement('div'); ov.className = 'fullscreen-overlay'; ov.id = 'galleryOverlay'; document.body.appendChild(ov); }
         ov.innerHTML = `
             <button class="close-btn" onclick="document.getElementById('galleryOverlay').remove()">✕</button>
-            <img src="${galleryPhotos[galleryIdx]}" alt="사진">
+            <img src="${galleryPhotos[galleryIdx]}" alt="사진" id="galleryImg" style="transition:transform 0.2s ease;">
             ${galleryPhotos.length > 1 ? `
                 <button class="nav-btn nav-prev" onclick="galleryNav(-1)">‹</button>
                 <button class="nav-btn nav-next" onclick="galleryNav(1)">›</button>
@@ -644,6 +648,27 @@
         `;
     }
     function galleryNav(dir) { galleryIdx = (galleryIdx + dir + galleryPhotos.length) % galleryPhotos.length; renderGallery(); }
+    function initGallerySwipe() {
+        const ov = document.getElementById('galleryOverlay');
+        if (!ov || galleryPhotos.length <= 1) return;
+        let sx = 0, dx = 0, dragging = false;
+        ov.addEventListener('touchstart', e => {
+            if (e.target.closest('.close-btn, .nav-btn')) return;
+            sx = e.touches[0].clientX; dx = 0; dragging = true;
+        }, { passive: true });
+        ov.addEventListener('touchmove', e => {
+            if (!dragging) return;
+            dx = e.touches[0].clientX - sx;
+            const img = document.getElementById('galleryImg');
+            if (img) img.style.transform = `translateX(${dx * 0.5}px)`;
+        }, { passive: true });
+        ov.addEventListener('touchend', () => {
+            if (!dragging) return;
+            dragging = false;
+            if (Math.abs(dx) > 50) galleryNav(dx < 0 ? 1 : -1);
+            else { const img = document.getElementById('galleryImg'); if (img) img.style.transform = ''; }
+        });
+    }
 
     function goBackToKakao() {
         const ua = navigator.userAgent.toLowerCase();
