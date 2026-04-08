@@ -215,22 +215,25 @@
             font-size: 10px; color: rgba(0,0,0,0.35);
         }
 
-        /* CTA 버블 */
-        .msg:has(.cta-bubble) .bubble-wrap { max-width: calc(100% - 50px); }
-        .msg .bubble.cta-bubble {
-            background: transparent; padding: 0; box-shadow: none;
-            display: flex; gap: 6px; max-width: 100%;
+        /* 하단 고정 바 (카톡 입력창 위치) */
+        .chat-bottom {
+            flex-shrink: 0;
+            display: flex; gap: 8px;
+            padding: 10px 14px;
+            padding-bottom: max(10px, env(safe-area-inset-bottom));
+            background: #fff;
+            border-top: 1px solid #e0e0e0;
         }
-        .cta-btn {
+        .chat-bottom .cta-btn {
             flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px;
-            padding: 12px 0; border-radius: 10px;
-            font-size: 13px; font-weight: 700;
+            padding: 13px 0; border-radius: 10px;
+            font-size: 14px; font-weight: 700;
             text-decoration: none; cursor: pointer;
             transition: opacity 0.15s;
         }
-        .cta-btn:active { opacity: 0.7; }
-        .cta-btn.btn-call { background: #4ecdc4; color: #fff; }
-        .cta-btn.btn-kakao { background: #FEE500; color: #191919; }
+        .chat-bottom .cta-btn:active { opacity: 0.7; }
+        .chat-bottom .btn-call { background: #4ecdc4; color: #fff; }
+        .chat-bottom .btn-kakao { background: #FEE500; color: #191919; }
 
         /* 다음 매물 버튼 */
         .next-property-btn {
@@ -346,6 +349,12 @@
 
     <!-- 채팅 바디 -->
     <div class="chat-body" id="chatBody"></div>
+
+    <!-- 하단 고정 바 -->
+    <div class="chat-bottom" id="chatBottom" style="display:none;">
+        <a class="cta-btn btn-call" id="btnCall" href="#">📞 전화하기</a>
+        <a class="cta-btn btn-kakao" href="#" onclick="goBackToKakao();return false;">💬 카톡문의</a>
+    </div>
 
     <script>
     const SUPABASE_URL = HWIK_CONFIG.SUPABASE_URL;
@@ -730,13 +739,11 @@
             await addMsg(defaults[Math.floor(Math.random() * defaults.length)]);
         }
 
-        // 9. CTA
-        await wait(d);
+        // 9. 하단바 표시
         const tel = agentPhone.replace(/-/g, '');
-        await addMsg(`
-            <a class="cta-btn btn-call" href="${tel ? 'tel:' + tel : '#'}">📞 전화하기</a>
-            <a class="cta-btn btn-kakao" href="#" onclick="goBackToKakao();return false;">💬 카톡문의</a>
-        `, 'cta-bubble', true);
+        const btnCall = document.getElementById('btnCall');
+        if (tel) btnCall.href = 'tel:' + tel;
+        document.getElementById('chatBottom').style.display = '';
 
         // 10. 다음 매물
         if (currentIdx < allCards.length - 1) {
