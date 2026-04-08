@@ -745,10 +745,20 @@
             await addMsg(specParts.join(', ') + '이에요');
         }
 
-        // 6. 주변정보 — 역/학교 분리, 노선색
+        // 6. 특징 — 태그로 (있으면)
+        if (features.length > 0) {
+            await wait(d - 100);
+            const tagsHtml = features.map(f => {
+                const cat = classifyTag(f);
+                return `<span class="tag-chip ${cat ? 'tag-' + cat : ''}">${esc(f)}</span>`;
+            }).join('');
+            await addMsg(tagsHtml, 'tags-bubble');
+        }
+
+        // 7. 주변정보 — 역/학교 분리, 노선색
         const nearby = await nearbyPromise;
 
-        // 6a. 지하철
+        // 7a. 지하철
         const validStations = nearby.stations.filter(s => walkMin(s.dist) <= 15);
         if (validStations.length > 0) {
             await wait(d);
@@ -768,7 +778,7 @@
             await addMsg(stLines.join('<br>'));
         }
 
-        // 6b. 학교
+        // 7b. 학교
         const validSchools = nearby.schools.filter(s => walkMin(s.dist) <= 15);
         if (validSchools.length > 0) {
             await wait(d - 100);
@@ -783,16 +793,6 @@
                 return `<strong>${esc(sch.name)}</strong> ${walkText}`;
             });
             await addMsg(schLines.join('<br>'));
-        }
-
-        // 7. 특징 — 태그로 (있으면)
-        if (features.length > 0) {
-            await wait(d - 100);
-            const tagsHtml = features.map(f => {
-                const cat = classifyTag(f);
-                return `<span class="tag-chip ${cat ? 'tag-' + cat : ''}">${esc(f)}</span>`;
-            }).join('');
-            await addMsg(tagsHtml, 'tags-bubble');
         }
 
         // 8. 중개사 코멘트 — 자연스럽게
