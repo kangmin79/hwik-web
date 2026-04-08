@@ -924,7 +924,7 @@
 
             const { data, error } = await sb
                 .from('cards')
-                .select('id, property, agent, agent_comment, photos, lat, lng, trade_status, created_at, agent_id')
+                .select('id, property, agent, agent_comment, photos, lat, lng, trade_status, created_at, agent_id, contact_name, contact_phone')
                 .in('id', ids);
 
             if (error) throw error;
@@ -933,13 +933,33 @@
             allCards = ids.map(id => data.find(d => d.id === id)).filter(d => d && d.trade_status !== '완료');
             if (allCards.length === 0) { chatBody.innerHTML = ''; startNewGroup(); await addMsg('거래가 완료된 매물이에요.<br>중개사에게 다른 매물을 문의해 주세요 🏠'); return; }
 
-            // agent 정보: URL param > 카드 내장 > agent_id로 조회
-            if (!agentInfo && allCards[0].agent) { agentInfo = allCards[0].agent; updateHeader(agentInfo); }
+            // agent 정보: URL param > 카드 내장 agent jsonb > agent_id로 profiles 조회 > contact_phone
+            if (!agentInfo && allCards[0].agent) {
+                agentInfo = allCards[0].agent;
+                updateHeader(agentInfo);
+            }
             if (!agentInfo && allCards[0].agent_id) {
                 try {
                     const { data: agData } = await sb.from('profiles').select('*').eq('id', allCards[0].agent_id).single();
                     if (agData) { agentInfo = agData; updateHeader(agData); }
                 } catch(e) {}
+            }
+            // 최소한 전화번호라도 확보
+            if (!agentInfo) {
+                const c = allCards[0];
+                agentInfo = {
+                    phone: c.contact_phone || '',
+                    name: c.contact_name || '',
+                    business_name: c.contact_name || ''
+                };
+                if (agentInfo.name) updateHeader(agentInfo);
+            }
+            // 하단바 전화번호 즉시 설정
+            const agPhone = (agentInfo && agentInfo.phone) ? agentInfo.phone.replace(/-/g, '') : '';
+            if (agPhone) {
+                document.getElementById('btnCall').href = 'tel:' + agPhone;
+            } else {
+                document.getElementById('btnCall').style.display = 'none';
             }
 
             chatBody.innerHTML = '';
