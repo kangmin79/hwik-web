@@ -339,15 +339,12 @@
         }
         .fullscreen-overlay img {
             max-width: 95%; max-height: 80vh; object-fit: contain;
+            transition: transform 0.2s ease, opacity 0.2s ease;
         }
-        .fullscreen-overlay .nav-btn {
-            position: absolute; top: 50%; transform: translateY(-50%);
-            width: 44px; height: 44px; border-radius: 50%;
-            background: rgba(255,255,255,0.1); border: none;
-            color: #fff; font-size: 22px; cursor: pointer;
+        .fullscreen-overlay .gallery-counter {
+            position: absolute; bottom: 24px;
+            color: rgba(255,255,255,0.5); font-size: 13px;
         }
-        .fullscreen-overlay .nav-prev { left: 12px; }
-        .fullscreen-overlay .nav-next { right: 12px; }
         .fullscreen-map { width: 100%; height: 100%; }
 
         /* 구분선 */
@@ -926,35 +923,59 @@
         let ov = document.getElementById('galleryOverlay');
         if (!ov) { ov = document.createElement('div'); ov.className = 'fullscreen-overlay'; ov.id = 'galleryOverlay'; document.body.appendChild(ov); }
         ov.innerHTML = `
-            <button class="close-btn" onclick="closeOverlay('galleryOverlay');history.back()">✕</button>
-            <img src="${galleryPhotos[galleryIdx]}" alt="사진" id="galleryImg" style="transition:transform 0.2s ease;">
+            <button class="close-btn" onclick="closeGallery()">✕</button>
+            <img src="${galleryPhotos[galleryIdx]}" alt="사진" id="galleryImg">
             ${galleryPhotos.length > 1 ? `
-                <button class="nav-btn nav-prev" onclick="galleryNav(-1)">‹</button>
-                <button class="nav-btn nav-next" onclick="galleryNav(1)">›</button>
-                <div style="position:absolute;bottom:24px;color:rgba(255,255,255,0.5);font-size:13px;">${galleryIdx + 1} / ${galleryPhotos.length}</div>
+                <div class="gallery-counter">${galleryIdx + 1} / ${galleryPhotos.length}</div>
             ` : ''}
         `;
     }
-    function galleryNav(dir) { galleryIdx = (galleryIdx + dir + galleryPhotos.length) % galleryPhotos.length; renderGallery(); }
+    function closeGallery() { closeOverlay('galleryOverlay'); history.back(); }
+    function galleryNav(dir) { galleryIdx = (galleryIdx + dir + galleryPhotos.length) % galleryPhotos.length; renderGallery(); initGallerySwipe(); }
     function initGallerySwipe() {
         const ov = document.getElementById('galleryOverlay');
-        if (!ov || galleryPhotos.length <= 1) return;
-        let sx = 0, dx = 0, dragging = false;
+        if (!ov) return;
+        let sx = 0, sy = 0, dx = 0, dy = 0, dragging = false, direction = null;
         ov.addEventListener('touchstart', e => {
-            if (e.target.closest('.close-btn, .nav-btn')) return;
-            sx = e.touches[0].clientX; dx = 0; dragging = true;
+            if (e.target.closest('.close-btn')) return;
+            sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+            dx = 0; dy = 0; dragging = true; direction = null;
         }, { passive: true });
         ov.addEventListener('touchmove', e => {
             if (!dragging) return;
             dx = e.touches[0].clientX - sx;
+            dy = e.touches[0].clientY - sy;
             const img = document.getElementById('galleryImg');
-            if (img) img.style.transform = `translateX(${dx * 0.5}px)`;
+            if (!img) return;
+            // 방향 결정 (최초 한 번)
+            if (!direction && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+                direction = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+            }
+            if (direction === 'x') {
+                img.style.transform = `translateX(${dx * 0.5}px)`;
+                img.style.opacity = '';
+            } else if (direction === 'y' && dy > 0) {
+                // 아래로 끌기 — 이미지 따라오면서 투명해짐
+                img.style.transform = `translateY(${dy * 0.6}px) scale(${Math.max(0.85, 1 - dy / 800)})`;
+                img.style.opacity = Math.max(0.3, 1 - dy / 400);
+                ov.style.background = `rgba(0,0,0,${Math.max(0.3, 0.95 - dy / 400)})`;
+            }
         }, { passive: true });
         ov.addEventListener('touchend', () => {
             if (!dragging) return;
             dragging = false;
-            if (Math.abs(dx) > 50) galleryNav(dx < 0 ? 1 : -1);
-            else { const img = document.getElementById('galleryImg'); if (img) img.style.transform = ''; }
+            const img = document.getElementById('galleryImg');
+            if (direction === 'x' && Math.abs(dx) > 50 && galleryPhotos.length > 1) {
+                galleryNav(dx < 0 ? 1 : -1);
+            } else if (direction === 'y' && dy > 120) {
+                // 충분히 끌었으면 닫기
+                closeGallery();
+            } else {
+                // 원위치
+                if (img) { img.style.transform = ''; img.style.opacity = ''; }
+                ov.style.background = '';
+            }
+            direction = null;
         });
     }
 
