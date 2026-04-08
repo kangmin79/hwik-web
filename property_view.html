@@ -1213,81 +1213,8 @@
             return _buildInfoCard(ctx);
         }
         function buildNoImgCard(ctx) {
-            const { type, price, name, location, area, floor, room, features, agentName, agentPhone, agentPhoto, agentComment } = ctx;
-            const dotColor = type === '매매' ? '#ea580c' : type === '전세' ? '#4f46e5' : '#7c3aed';
-            const typeBg = type === '매매' ? 'rgba(234,88,12,0.12)' : type === '전세' ? 'rgba(79,70,229,0.12)' : 'rgba(124,58,237,0.12)';
-            const typeColor = type === '매매' ? '#fb923c' : type === '전세' ? '#818cf8' : '#a78bfa';
-            const cardNameStr = name || '';
-            const locationStr = location || '';
-
-            // 스펙 그리드 (면적, 층수, 방) — 있는 것만
-            const specItems = [];
-            if (area) specItems.push({label:'면적', value:area});
-            if (floor) specItems.push({label:'층수', value:floor});
-            if (room) specItems.push({label:'구조', value:room});
-            // 3개 미만이면 빈 칸 채우기
-            while(specItems.length < 3 && specItems.length > 0) specItems.push({label:'', value:''});
-
-            // 태그 분류
-            const goldTags = [], mintTags = [], basicTags = [];
-            features.forEach(f => {
-                const cls = _classifySpec(f);
-                if (cls === 'highlight') goldTags.push(f);
-                else if (cls === 'highlight-mint') mintTags.push(f);
-                else basicTags.push(f);
-            });
-            const allTags = [...goldTags, ...mintTags, ...basicTags];
-
-            const cardHtml = `
-              <div class="card card-full" id="activeCard" data-template="noimg" data-total="1">
-                <div class="noimg-wrap">
-                  <!-- 1. 지도 (맨 위) -->
-                  <div class="noimg-map" id="noImgMapArea" onclick="openFullscreenMap()">
-                    <div class="noimg-map-label">📍 위치 보기</div>
-                  </div>
-
-                  <!-- 2. 가격 + 정보 -->
-                  <div class="noimg-hero">
-                    <div class="noimg-type" style="background:${typeBg};color:${typeColor};border:1px solid ${typeColor}30;">
-                      <span class="noimg-type-dot" style="background:${dotColor}"></span>${type}
-                    </div>
-                    <div class="noimg-price">${price}</div>
-                    ${cardNameStr ? `<div class="noimg-name">${cardNameStr}</div>` : ''}
-                    ${locationStr ? `<div class="noimg-location">${locationStr}</div>` : ''}
-                  </div>
-
-                  <div class="noimg-divider"></div>
-
-                  <!-- 3. 스펙 + 태그 -->
-                  <div class="noimg-body">
-                    ${specItems.length ? `<div class="noimg-specs">
-                      ${specItems.map(s => `<div class="noimg-spec-item">
-                        <div class="noimg-spec-label">${s.label}</div>
-                        <div class="noimg-spec-value">${s.value || '-'}</div>
-                      </div>`).join('')}
-                    </div>` : ''}
-
-                    ${allTags.length ? `<div class="noimg-tags">
-                      ${allTags.map(t => {
-                        const cls = _classifySpec(t);
-                        const tagCls = cls === 'highlight' ? ' gold' : cls === 'highlight-mint' ? ' mint' : '';
-                        return `<span class="noimg-tag${tagCls}">${t}</span>`;
-                      }).join('')}
-                    </div>` : ''}
-
-                    <!-- 4. 중개사 코멘트 (맨 아래) -->
-                    ${agentComment ? `<div class="noimg-comment">
-                      <div class="noimg-comment-label">💬 중개사 한마디</div>
-                      <div class="noimg-comment-text">${esc(agentComment).replace(/\n/g,'<br>')}</div>
-                    </div>` : ''}
-
-                    <div class="noimg-watermark">H W I K</div>
-                  </div>
-                </div>
-              </div>`;
-
-            _renderFixedBar(agentName, agentPhone, agentPhoto);
-            return cardHtml;
+            // 사진 있는 카드와 동일한 레이아웃, 사진 자리에 지도
+            return _buildInfoCard(ctx);
         }
 
         function _buildInfoCard(ctx) {
@@ -1309,7 +1236,7 @@
                     ${photos.length > 1 ? `
                     <div class="photo-nav photo-nav-left" onclick="event.stopPropagation();_infoPhotoNav(-1)"></div>
                     <div class="photo-nav photo-nav-right" onclick="event.stopPropagation();_infoPhotoNav(1)"></div>` : ''}
-                  </div>` : `<div class="info-photo-top" id="noImgMapArea" style="background:#1a1a2e;"><div style="position:absolute;inset:0;background:rgba(13,27,42,0.4);z-index:2;pointer-events:none;"></div></div>`}
+                  </div>` : `<div class="info-photo-top" id="noImgMapArea" style="background:#1a1a2e;" onclick="openFullscreenMap()"></div>`}
 
                   <!-- 정보 카드 (오버랩) -->
                   <div class="info-card-body">
