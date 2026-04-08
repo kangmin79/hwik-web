@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>매물 소개 - 휙</title>
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="휙">
+    <meta property="og:title" content="매물 소개 - 휙">
+    <meta property="og:description" content="중개사가 직접 보내는 매물 카드예요 🏠">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=124cd68b3419bde24e03efa4f1ca2830&libraries=services&autoload=false"></script>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: 'Noto Sans KR', -apple-system, sans-serif;
+            background: #0b0d12;
+            color: #e4e4e7;
+            height: 100vh; height: 100dvh;
+            display: flex; flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ====== 헤더 ====== */
+        .chat-header {
+            flex-shrink: 0;
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 16px;
+            background: #12141a;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .chat-header .avatar {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 800; color: #fff;
+            flex-shrink: 0;
+        }
+        .chat-header .avatar img {
+            width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+        }
+        .chat-header .info { flex: 1; }
+        .chat-header .name { font-size: 14px; font-weight: 700; color: #fff; }
+        .chat-header .sub { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 1px; }
+        .chat-header .badge {
+            font-size: 10px; padding: 3px 8px; border-radius: 10px;
+            background: rgba(99,102,241,0.15); color: #818cf8;
+            font-weight: 600;
+        }
+
+        /* ====== 채팅 영역 ====== */
+        .chat-body {
+            flex: 1; overflow-y: auto; overflow-x: hidden;
+            padding: 16px 14px 24px;
+            scroll-behavior: smooth;
+        }
+        .chat-body::-webkit-scrollbar { display: none; }
+
+        /* ====== 메시지 ====== */
+        .msg {
+            display: flex; gap: 8px; margin-bottom: 10px;
+            align-items: flex-end;
+            opacity: 0; transform: translateY(12px);
+            animation: msgIn 0.35s ease forwards;
+        }
+        @keyframes msgIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .msg .bubble {
+            max-width: 80%;
+            padding: 11px 15px;
+            border-radius: 18px 18px 18px 4px;
+            background: #1e2030;
+            font-size: 14px; line-height: 1.55;
+            color: #d4d4d8;
+            word-break: keep-all;
+        }
+        .msg .bubble strong { color: #fff; font-weight: 700; }
+
+        /* 가격 버블 — 강조 */
+        .msg .bubble.price-bubble {
+            background: linear-gradient(135deg, #1a1a3e 0%, #1e2045 100%);
+            border: 1px solid rgba(250,204,21,0.2);
+        }
+        .msg .bubble.price-bubble .price-type {
+            font-size: 11px; color: rgba(255,255,255,0.4);
+            margin-bottom: 4px;
+        }
+        .msg .bubble.price-bubble .price-value {
+            font-size: 22px; font-weight: 800; color: #facc15;
+            letter-spacing: -0.5px;
+        }
+
+        /* 미니맵 버블 */
+        .msg .bubble.map-bubble {
+            padding: 0; overflow: hidden; border-radius: 18px 18px 18px 4px;
+            max-width: 75%; cursor: pointer;
+        }
+        .map-bubble .map-preview {
+            width: 100%; height: 150px; background: #1a1e2a;
+        }
+        .map-bubble .map-label {
+            padding: 10px 14px;
+            font-size: 13px; color: rgba(255,255,255,0.6);
+            background: #1e2030;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .map-bubble .map-label svg {
+            width: 14px; height: 14px; fill: none; stroke: #818cf8;
+            stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+        }
+
+        /* 사진 버블 */
+        .msg .bubble.photo-bubble {
+            padding: 0; overflow: hidden; border-radius: 18px 18px 18px 4px;
+            max-width: 75%; cursor: pointer;
+        }
+        .photo-bubble img {
+            width: 100%; max-height: 220px; object-fit: cover; display: block;
+        }
+        .photo-bubble .photo-count {
+            padding: 8px 14px;
+            font-size: 12px; color: rgba(255,255,255,0.4);
+            background: #1e2030;
+        }
+
+        /* 태그 버블 */
+        .msg .bubble.tags-bubble {
+            display: flex; flex-wrap: wrap; gap: 6px;
+            padding: 10px 14px;
+            background: transparent;
+        }
+        .tag-chip {
+            font-size: 12px; font-weight: 500;
+            padding: 5px 12px; border-radius: 20px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* 중개사 코멘트 버블 */
+        .msg .bubble.comment-bubble {
+            background: rgba(99,102,241,0.08);
+            border: 1px solid rgba(99,102,241,0.15);
+            font-style: italic;
+            color: rgba(255,255,255,0.75);
+        }
+        .comment-bubble .comment-from {
+            margin-top: 8px;
+            font-size: 11px; font-style: normal;
+            color: rgba(255,255,255,0.3);
+        }
+
+        /* CTA 버블 */
+        .msg .bubble.cta-bubble {
+            background: transparent; padding: 0;
+            display: flex; gap: 8px; width: 100%; max-width: 100%;
+        }
+        .cta-btn {
+            flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+            padding: 14px 0; border-radius: 14px;
+            font-size: 14px; font-weight: 700;
+            text-decoration: none; cursor: pointer;
+            transition: opacity 0.15s;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: rgba(255,255,255,0.8);
+        }
+        .cta-btn:active { opacity: 0.7; }
+        .cta-btn.btn-call { background: rgba(78,205,196,0.12); color: #4ecdc4; border-color: rgba(78,205,196,0.25); }
+        .cta-btn.btn-kakao { background: rgba(254,229,0,0.12); color: #facc15; border-color: rgba(254,229,0,0.25); }
+
+        /* 다음 매물 버튼 */
+        .next-property-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 12px 24px; border-radius: 24px;
+            background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.15));
+            border: 1px solid rgba(99,102,241,0.3);
+            color: #a5b4fc; font-size: 14px; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .next-property-btn:active { transform: scale(0.96); }
+
+        /* 타이핑 인디케이터 */
+        .typing {
+            display: flex; gap: 4px; padding: 14px 18px;
+        }
+        .typing span {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: rgba(255,255,255,0.25);
+            animation: blink 1.2s infinite;
+        }
+        .typing span:nth-child(2) { animation-delay: 0.2s; }
+        .typing span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink {
+            0%, 60% { opacity: 0.3; }
+            30% { opacity: 1; }
+        }
+
+        /* 로딩 */
+        .loading-screen {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+        }
+        .loading-screen .logo {
+            font-size: 36px; font-weight: 900; color: #facc15;
+            animation: pulse 0.6s ease-in-out infinite alternate;
+        }
+        @keyframes pulse { from { transform: scale(0.85); opacity: 0.5; } to { transform: scale(1.15); opacity: 1; } }
+
+        /* 풀스크린 오버레이 (사진/지도) */
+        .fullscreen-overlay {
+            position: fixed; inset: 0; z-index: 200;
+            background: rgba(0,0,0,0.95);
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+        }
+        .fullscreen-overlay .close-btn {
+            position: absolute; top: 16px; right: 16px;
+            width: 36px; height: 36px; border-radius: 50%;
+            background: rgba(255,255,255,0.1); border: none;
+            color: #fff; font-size: 20px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .fullscreen-overlay img {
+            max-width: 95%; max-height: 80vh; object-fit: contain;
+        }
+        .fullscreen-overlay .nav-btn {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            width: 44px; height: 44px; border-radius: 50%;
+            background: rgba(255,255,255,0.1); border: none;
+            color: #fff; font-size: 22px; cursor: pointer;
+        }
+        .fullscreen-overlay .nav-prev { left: 12px; }
+        .fullscreen-overlay .nav-next { right: 12px; }
+        .fullscreen-map { width: 100%; height: 100%; }
+
+        /* 구분선 */
+        .divider {
+            text-align: center; margin: 20px 0;
+            font-size: 11px; color: rgba(255,255,255,0.15);
+        }
+        .divider::before, .divider::after {
+            content: ''; display: inline-block;
+            width: 40px; height: 1px;
+            background: rgba(255,255,255,0.08);
+            vertical-align: middle; margin: 0 10px;
+        }
+
+        /* 태그 카테고리 색상 */
+        .tag-transport { background:rgba(99,102,241,0.12); color:#818cf8; border-color:rgba(99,102,241,0.25); }
+        .tag-direction { background:rgba(251,191,36,0.12); color:#fbbf24; border-color:rgba(251,191,36,0.25); }
+        .tag-view { background:rgba(56,189,248,0.12); color:#38bdf8; border-color:rgba(56,189,248,0.25); }
+        .tag-school { background:rgba(52,211,153,0.12); color:#34d399; border-color:rgba(52,211,153,0.25); }
+        .tag-facility { background:rgba(244,114,182,0.12); color:#f472b6; border-color:rgba(244,114,182,0.25); }
+        .tag-parking { background:rgba(251,146,60,0.12); color:#fb923c; border-color:rgba(251,146,60,0.25); }
+        .tag-pet { background:rgba(192,132,252,0.12); color:#c084fc; border-color:rgba(192,132,252,0.25); }
+        .tag-finance { background:rgba(74,222,128,0.12); color:#4ade80; border-color:rgba(74,222,128,0.25); }
+        .tag-structure { background:rgba(248,113,113,0.12); color:#f87171; border-color:rgba(248,113,113,0.25); }
+    </style>
+</head>
+<body>
+
+    <!-- 헤더 -->
+    <div class="chat-header" id="chatHeader">
+        <div class="avatar" id="agentAvatar">휙</div>
+        <div class="info">
+            <div class="name" id="agentNameEl">매물 소개</div>
+            <div class="sub" id="agentSubEl">로딩중...</div>
+        </div>
+        <div class="badge">AI 매물소개</div>
+    </div>
+
+    <!-- 채팅 바디 -->
+    <div class="chat-body" id="chatBody"></div>
+
+    <script>
+    const SUPABASE_URL = HWIK_CONFIG.SUPABASE_URL;
+    const SUPABASE_KEY = HWIK_CONFIG.SUPABASE_KEY;
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const chatBody = document.getElementById('chatBody');
+
+    let allCards = [];
+    let currentIdx = 0;
+    let agentInfo = null;
+
+    // ====== 태그 분류 ======
+    const TAG_CATS = {
+        transport: ['역세권','더블역세권','트리플역세권','역근처','역세','지하철','버스'],
+        direction: ['남향','동향','서향','북향','남동향','남서향','동남향','북서향','판상형','타워형'],
+        view: ['한강','뷰','조망','탑층','고층','로열층','펜트하우스','오션뷰','공원뷰','리버뷰','시티뷰'],
+        school: ['학군','초품아','숲세권','공세권','학교','유치원','어린이집'],
+        facility: ['풀옵션','올수리','리모델링','신축','엘리베이터','인덕션','에어컨','빌트인','시스템에어컨','드레스룸','현관보안'],
+        parking: ['주차','주차가능','주차2대','주차편리','자주식'],
+        pet: ['반려동물','반려동물가능','펫','애완'],
+        finance: ['대출','대출가능','전세대출','대출불가','융자'],
+        structure: ['복층','테라스','다락','루프탑','발코니확장','확장형'],
+    };
+    function classifyTag(t) {
+        const s = t.replace(/\s/g,'');
+        for (const [cat, words] of Object.entries(TAG_CATS)) {
+            if (words.some(w => s.includes(w))) return cat;
+        }
+        return '';
+    }
+
+    // ====== XSS 방지 ======
+    function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    // ====== 메시지 추가 ======
+    function addMsg(html, extraClass = '', delay = 0) {
+        return new Promise(resolve => {
+            setTimeout(() => {
+                const div = document.createElement('div');
+                div.className = 'msg';
+                div.innerHTML = `<div class="bubble ${extraClass}">${html}</div>`;
+                chatBody.appendChild(div);
+                chatBody.scrollTop = chatBody.scrollHeight;
+                resolve(div);
+            }, delay);
+        });
+    }
+
+    // 타이핑 인디케이터
+    function showTyping() {
+        const div = document.createElement('div');
+        div.className = 'msg';
+        div.id = 'typingMsg';
+        div.innerHTML = `<div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
+        chatBody.appendChild(div);
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }
+    function hideTyping() {
+        const el = document.getElementById('typingMsg');
+        if (el) el.remove();
+    }
+
+    // 딜레이
+    function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    // ====== 매물 1개 대화로 보여주기 ======
+    async function presentProperty(data, isFirst = true) {
+        const p = data.property || {};
+        const agent = agentInfo || data.agent || {};
+        const photos = data.photos || [];
+        const type = p.type || '매물';
+        const price = p.price || '';
+        const location = p.location || '';
+        const complex = p.complex || '';
+        const area = p.area || '';
+        const floor = p.floor || '';
+        const room = p.room || '';
+        const features = p.features || p.tags || [];
+        const comment = data.agent_comment || '';
+        const agentName = agent.business_name || agent.name || '부동산';
+        const agentPhone = agent.phone || '';
+
+        const BASE_DELAY = 400;
+        const d = isFirst ? BASE_DELAY : 200; // 첫 매물만 천천히
+
+        // 1. 인사 또는 전환
+        if (isFirst) {
+            showTyping();
+            await wait(600);
+            hideTyping();
+            await addMsg(`안녕하세요! <strong>${esc(agentName)}</strong>에서 보내드리는 매물이에요 😊`);
+            await wait(d);
+        }
+
+        // 2. 거래 유형 + 가격
+        showTyping();
+        await wait(d + 100);
+        hideTyping();
+        await addMsg(`
+            <div class="price-type">${esc(type)}</div>
+            <div class="price-value">${esc(price)}</div>
+        `, 'price-bubble');
+
+        // 3. 위치 + 미니맵
+        await wait(d);
+        showTyping();
+        await wait(d);
+        hideTyping();
+
+        const locText = complex ? `${esc(location)} ${esc(complex)}` : esc(location);
+        const mapId = `map_${currentIdx}_${Date.now()}`;
+
+        const mapHtml = (data.lat && data.lng) ?
+            `<div class="map-preview" id="${mapId}"></div>
+             <div class="map-label">
+                <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                ${locText}
+             </div>` :
+            `<div class="map-label">
+                <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                ${locText}
+             </div>`;
+
+        const mapMsg = await addMsg(mapHtml, 'map-bubble');
+        mapMsg.querySelector('.bubble').onclick = () => openFullMap(data.lat, data.lng, locText);
+
+        // 미니맵 렌더
+        if (data.lat && data.lng) {
+            kakao.maps.load(() => {
+                const container = document.getElementById(mapId);
+                if (!container) return;
+                const pos = new kakao.maps.LatLng(data.lat, data.lng);
+                const map = new kakao.maps.Map(container, { center: pos, level: 4, draggable: false, scrollwheel: false });
+                new kakao.maps.Marker({ position: pos, map: map });
+            });
+        }
+
+        // 4. 사진 (있으면)
+        if (photos.length > 0) {
+            await wait(d);
+            showTyping();
+            await wait(d);
+            hideTyping();
+
+            const photoHtml = `
+                <img src="${photos[0]}" alt="매물 사진" onerror="this.style.display='none'">
+                ${photos.length > 1 ? `<div class="photo-count">사진 ${photos.length}장</div>` : ''}
+            `;
+            const photoMsg = await addMsg(photoHtml, 'photo-bubble');
+            photoMsg.querySelector('.bubble').onclick = () => openGallery(photos, 0);
+        }
+
+        // 5. 스펙 (면적, 층, 방)
+        const specs = [area, floor, room].filter(Boolean);
+        if (specs.length > 0) {
+            await wait(d);
+            showTyping();
+            await wait(d - 100);
+            hideTyping();
+            await addMsg(specs.map(s => `<strong>${esc(s)}</strong>`).join(' · '));
+        }
+
+        // 6. 태그
+        if (features.length > 0) {
+            await wait(d - 100);
+            const tagsHtml = features.map(f => {
+                const cat = classifyTag(f);
+                return `<span class="tag-chip ${cat ? 'tag-' + cat : ''}">${esc(f)}</span>`;
+            }).join('');
+            await addMsg(tagsHtml, 'tags-bubble');
+        }
+
+        // 7. 중개사 코멘트
+        if (comment) {
+            await wait(d);
+            showTyping();
+            await wait(d + 200);
+            hideTyping();
+            await addMsg(`
+                "${esc(comment)}"
+                <div class="comment-from">— ${esc(agentName)}</div>
+            `, 'comment-bubble');
+        }
+
+        // 8. CTA 버튼
+        await wait(d);
+        const tel = agentPhone.replace(/-/g, '');
+        await addMsg(`
+            <a class="cta-btn btn-call" href="${tel ? 'tel:' + tel : '#'}">📞 전화하기</a>
+            <a class="cta-btn btn-kakao" href="#" onclick="goBackToKakao();return false;">💬 카톡문의</a>
+        `, 'cta-bubble');
+
+        // 9. 다음 매물 버튼 (있으면)
+        if (currentIdx < allCards.length - 1) {
+            await wait(d + 200);
+
+            // 구분선
+            const divider = document.createElement('div');
+            divider.className = 'divider';
+            divider.textContent = `${currentIdx + 1} / ${allCards.length}`;
+            chatBody.appendChild(divider);
+
+            showTyping();
+            await wait(500);
+            hideTyping();
+
+            const nextCard = allCards[currentIdx + 1];
+            const nextP = nextCard.property || {};
+            const nextType = nextP.type || '매물';
+            const nextPrice = nextP.price || '';
+
+            await addMsg(`다음 매물도 보시겠어요?<br><span style="color:rgba(255,255,255,0.4);font-size:12px;">${esc(nextType)} ${esc(nextPrice)}</span>`);
+
+            await wait(200);
+            const btnDiv = document.createElement('div');
+            btnDiv.className = 'msg';
+            btnDiv.innerHTML = `<div class="bubble" style="background:transparent;padding:0;">
+                <button class="next-property-btn" onclick="showNextProperty()">네, 보여주세요 👀</button>
+            </div>`;
+            chatBody.appendChild(btnDiv);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        } else if (allCards.length > 1) {
+            await wait(d);
+            const divider = document.createElement('div');
+            divider.className = 'divider';
+            divider.textContent = `${allCards.length}개 매물 모두 확인 완료`;
+            chatBody.appendChild(divider);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+    }
+
+    // ====== 다음 매물 ======
+    function showNextProperty() {
+        currentIdx++;
+        if (currentIdx >= allCards.length) return;
+        presentProperty(allCards[currentIdx], false);
+    }
+
+    // ====== 풀스크린 지도 ======
+    function openFullMap(lat, lng, name) {
+        if (!lat || !lng) return;
+        const overlay = document.createElement('div');
+        overlay.className = 'fullscreen-overlay';
+        overlay.innerHTML = `
+            <button class="close-btn" onclick="this.parentElement.remove()">✕</button>
+            <div class="fullscreen-map" id="fullMap"></div>
+        `;
+        document.body.appendChild(overlay);
+        kakao.maps.load(() => {
+            const pos = new kakao.maps.LatLng(lat, lng);
+            const map = new kakao.maps.Map(document.getElementById('fullMap'), { center: pos, level: 3 });
+            new kakao.maps.Marker({ position: pos, map });
+        });
+    }
+
+    // ====== 풀스크린 갤러리 ======
+    let galleryPhotos = [];
+    let galleryIdx = 0;
+
+    function openGallery(photos, idx) {
+        galleryPhotos = photos;
+        galleryIdx = idx || 0;
+        renderGallery();
+    }
+    function renderGallery() {
+        let overlay = document.getElementById('galleryOverlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.className = 'fullscreen-overlay';
+            overlay.id = 'galleryOverlay';
+            document.body.appendChild(overlay);
+        }
+        overlay.innerHTML = `
+            <button class="close-btn" onclick="document.getElementById('galleryOverlay').remove()">✕</button>
+            <img src="${galleryPhotos[galleryIdx]}" alt="사진 ${galleryIdx + 1}">
+            ${galleryPhotos.length > 1 ? `
+                <button class="nav-btn nav-prev" onclick="galleryNav(-1)">‹</button>
+                <button class="nav-btn nav-next" onclick="galleryNav(1)">›</button>
+                <div style="position:absolute;bottom:24px;color:rgba(255,255,255,0.5);font-size:13px;">${galleryIdx + 1} / ${galleryPhotos.length}</div>
+            ` : ''}
+        `;
+    }
+    function galleryNav(dir) {
+        galleryIdx = (galleryIdx + dir + galleryPhotos.length) % galleryPhotos.length;
+        renderGallery();
+    }
+
+    // ====== 카톡으로 돌아가기 ======
+    function goBackToKakao() {
+        const ua = navigator.userAgent.toLowerCase();
+        if (ua.indexOf('kakaotalk') > -1) {
+            location.href = 'kakaotalk://inappbrowser/close';
+        } else {
+            window.close();
+            alert('카카오톡 대화창으로 돌아가주세요 😊');
+        }
+    }
+
+    // ====== 헤더 업데이트 ======
+    function updateHeader(agent) {
+        const name = agent.business_name || agent.name || '매물 소개';
+        document.getElementById('agentNameEl').textContent = name;
+        document.getElementById('agentSubEl').textContent = agent.name ? `${agent.name} · 중개사` : '휙 매물카드';
+        if (agent.profile_photo) {
+            document.getElementById('agentAvatar').innerHTML = `<img src="${agent.profile_photo}" alt="">`;
+        }
+    }
+
+    // ====== 초기화 ======
+    async function init() {
+        chatBody.innerHTML = `<div class="loading-screen"><div class="logo">휙</div><div style="margin-top:16px;font-size:13px;color:rgba(255,255,255,0.3);">매물 정보를 불러오는 중...</div></div>`;
+
+        const params = new URLSearchParams(location.search);
+        const cardId = params.get('id');
+        const cardIds = params.get('ids');
+        const agentId = params.get('agent');
+
+        try {
+            let ids = [];
+            if (cardIds) ids = cardIds.split(',').map(s => s.trim()).filter(Boolean);
+            else if (cardId) ids = [cardId];
+            else { chatBody.innerHTML = ''; await addMsg('매물 정보가 없어요 😅'); return; }
+
+            // 중개사 정보 먼저
+            if (agentId) {
+                const { data: agData } = await sb.from('profiles').select('*').eq('id', agentId).single();
+                if (agData) { agentInfo = agData; updateHeader(agData); }
+            }
+
+            // 카드 로드
+            const { data, error } = await sb
+                .from('cards')
+                .select('id, property, agent, agent_comment, photos, lat, lng, trade_status, created_at, agent_id')
+                .in('id', ids);
+
+            if (error) throw error;
+            if (!data || data.length === 0) { chatBody.innerHTML = ''; await addMsg('매물을 찾을 수 없어요 😅'); return; }
+
+            // 순서 유지 + 완료 필터
+            allCards = ids.map(id => data.find(d => d.id === id)).filter(d => d && d.trade_status !== '완료');
+            if (allCards.length === 0) { chatBody.innerHTML = ''; await addMsg('거래가 완료된 매물이에요.<br>중개사에게 다른 매물을 문의해 주세요 🏠'); return; }
+
+            // 에이전트 정보 없으면 첫 카드에서
+            if (!agentInfo && allCards[0].agent) {
+                agentInfo = allCards[0].agent;
+                updateHeader(agentInfo);
+            }
+
+            chatBody.innerHTML = '';
+            currentIdx = 0;
+            await presentProperty(allCards[0], true);
+
+        } catch (e) {
+            console.error('로딩 오류:', e);
+            chatBody.innerHTML = '';
+            await addMsg('매물 정보를 불러올 수 없어요 😢');
+        }
+    }
+
+    init();
+    </script>
+</body>
+</html>
