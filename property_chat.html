@@ -575,7 +575,31 @@
         if (el) el.remove();
     }
 
-    function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+    // 터치로 일시정지
+    let paused = false;
+    chatBody.addEventListener('touchstart', () => { paused = true; }, { passive: true });
+    chatBody.addEventListener('touchend', () => { paused = false; }, { passive: true });
+
+    function wait(ms) {
+        return new Promise(resolve => {
+            const start = Date.now();
+            let remaining = ms;
+            function check() {
+                if (paused) { requestAnimationFrame(check); return; }
+                const elapsed = Date.now() - start;
+                if (elapsed >= ms) { resolve(); return; }
+                remaining = ms - elapsed;
+                setTimeout(() => {
+                    if (paused) { requestAnimationFrame(check); return; }
+                    resolve();
+                }, remaining);
+            }
+            setTimeout(() => {
+                if (paused) { requestAnimationFrame(check); return; }
+                resolve();
+            }, ms);
+        });
+    }
 
     // ====== 날짜 라벨 ======
     function addDateLabel() {
