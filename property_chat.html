@@ -229,6 +229,22 @@
             font-size: 10px; color: rgba(0,0,0,0.35);
         }
 
+        /* 매물 문의 버튼 */
+        .inquiry-btn {
+            display: block; width: 100%; padding: 12px;
+            background: #fee500; color: #3c1e1e; border: none; border-radius: 10px;
+            font-size: 14px; font-weight: 700; cursor: pointer;
+            transition: background 0.15s;
+        }
+        .inquiry-btn:active { background: #e6cf00; }
+        .inquiry-toast {
+            position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); color: #fff; padding: 10px 20px;
+            border-radius: 20px; font-size: 13px; z-index: 300;
+            animation: toastFade 2s forwards;
+        }
+        @keyframes toastFade { 0%,70%{opacity:1} 100%{opacity:0} }
+
         /* 하단 고정 바 (카톡 입력창 스타일) */
         .chat-bottom {
             flex-shrink: 0;
@@ -819,7 +835,14 @@
             await addMsg(defaults[Math.floor(Math.random() * defaults.length)]);
         }
 
-        // 9. 하단바 표시
+        // 9. 매물 문의하기 버튼
+        await wait(d - 200);
+        const cardData = allCards[currentIdx];
+        const cp = cardData.property || {};
+        const inquiryText = `[휙] 매물 문의\n${cp.type || ''} ${cp.price || ''}\n${cp.location || ''} ${cp.complex || ''}\n${cp.area ? cp.area : ''}${cp.floor ? ' ' + cp.floor : ''}`.trim();
+        await addMsg(`<button class="inquiry-btn" onclick="copyInquiry(this, \`${inquiryText.replace(/`/g,'\\`')}\`)">이 매물 문의하기</button>`, 'inquiry-bubble');
+
+        // 10. 하단바 표시
         const tel = agentPhone.replace(/-/g, '');
         const btnCall = document.getElementById('btnCall');
         if (tel) btnCall.href = 'tel:' + tel;
@@ -989,6 +1012,25 @@
             }
             direction = null;
         });
+    }
+
+    async function copyInquiry(btn, text) {
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch {
+            // fallback
+            const ta = document.createElement('textarea');
+            ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+            document.body.removeChild(ta);
+        }
+        btn.textContent = '복사완료! 대화창에 붙여넣기 해주세요';
+        btn.style.background = '#4ecdc4';
+        const toast = document.createElement('div');
+        toast.className = 'inquiry-toast';
+        toast.textContent = '매물 정보가 복사되었어요';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2200);
     }
 
     function goBackToKakao() {
