@@ -860,7 +860,8 @@ function onLoggedIn() {
   // 탭바 전환: 비로그인 → 중개사
   document.getElementById('bottomTabBar').classList.remove('visible');
   document.getElementById('agentTabBar').classList.add('visible');
-  switchTab('home');
+  // 현재 보고 있는 탭 다시 로드 (데이터 연결)
+  if (currentTab !== 'home') switchTab(currentTab);
   updateAlertBadge();
 }
 
@@ -1262,8 +1263,10 @@ async function submitClient() {
 async function showAlerts() {
   const panel = document.getElementById('alertPanel');
   panel.style.display = 'block';
-  if (!currentUser) return;
-  panel.innerHTML = '<div style="text-align:center;padding:40px 0;color:#94a3b8;">알림 로딩 중...</div>';
+  if (!currentUser) {
+    panel.innerHTML = '<div class="panel-title">알림</div><div style="text-align:center;padding:40px 0;"><div class="dot-pulse" style="margin-bottom:12px;"><span></span><span></span><span></span></div><div style="color:#94a3b8;font-size:13px;">연결 중...</div></div>';
+    return;
+  }
 
   try {
     const [matchRes, interestRes, overdueRes, upcomingRes] = await Promise.all([
@@ -1398,9 +1401,10 @@ async function updateAlertBadge() {
 async function showProfile() {
   const panel = document.getElementById('profilePanel');
   panel.style.display = 'flex';
-  if (!currentUser) return;
-
-  panel.innerHTML = '<div class="panel-title">내 정보</div><div style="text-align:center;padding:20px;color:#94a3b8;">로딩 중...</div>';
+  if (!currentUser) {
+    panel.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;text-align:center;"><div class="dot-pulse" style="margin-bottom:12px;"><span></span><span></span><span></span></div><div style="color:#94a3b8;font-size:13px;">연결 중...</div></div>';
+    return;
+  }
 
   try {
     const { data: profile } = await supabaseClient.from('profiles')
