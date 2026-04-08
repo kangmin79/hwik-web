@@ -1263,10 +1263,12 @@ async function submitClient() {
 async function showAlerts() {
   const panel = document.getElementById('alertPanel');
   panel.style.display = 'block';
-  if (!currentUser) {
-    panel.innerHTML = '<div class="panel-title">알림</div><div style="text-align:center;padding:40px 0;"><div class="dot-pulse" style="margin-bottom:12px;"><span></span><span></span><span></span></div><div style="color:#94a3b8;font-size:13px;">연결 중...</div></div>';
-    return;
-  }
+
+  // 캐시된 알림 즉시 표시
+  const cachedAlert = localStorage.getItem('hwik_alerts_html');
+  if (cachedAlert) panel.innerHTML = cachedAlert;
+
+  if (!currentUser) return;
 
   try {
     const [matchRes, interestRes, overdueRes, upcomingRes] = await Promise.all([
@@ -1375,8 +1377,9 @@ async function showAlerts() {
     }
 
     panel.innerHTML = html;
+    localStorage.setItem('hwik_alerts_html', html);
   } catch(e) {
-    panel.innerHTML = '<div style="text-align:center;padding:40px 0;color:#f87171;">알림 로딩 실패</div>';
+    if (!cachedAlert) panel.innerHTML = '<div class="panel-title">알림</div><div style="text-align:center;padding:40px 0;color:#f87171;">연결 실패</div>';
   }
 }
 
@@ -1398,14 +1401,38 @@ async function updateAlertBadge() {
 }
 
 // ── 내정보 (중개사 전용) ──
+function renderProfileHTML(name, phone, photoUrl) {
+  const initial = name.charAt(0);
+  return `
+    <div style="display:flex;flex-direction:column;align-items:center;text-align:center;">
+      <div style="width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,#1a1a2e,#2d2b55);display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 8px 32px rgba(26,26,46,0.3);${photoUrl ? `background-image:url('${esc(photoUrl)}');background-size:cover;background-position:center;` : ''}">
+        ${photoUrl ? '' : `<span style="font-size:32px;font-weight:900;color:var(--hwik-yellow);">${esc(initial)}</span>`}
+      </div>
+      <div style="font-size:24px;font-weight:900;color:var(--hwik-dark);letter-spacing:-1px;margin-bottom:6px;">${esc(name)}</div>
+      ${phone ? `<div style="font-size:14px;color:#94a3b8;font-weight:400;letter-spacing:0.5px;">${esc(phone)}</div>` : ''}
+      <div style="width:40px;height:2px;background:var(--hwik-yellow);border-radius:1px;margin:24px 0;"></div>
+      <div style="font-size:13px;color:#c0c0c0;">매물 관리는 PC에서 해주세요</div>
+      <button onclick="doLogout()" style="margin-top:32px;padding:12px 40px;border-radius:12px;border:1px solid #e2e8f0;background:none;color:#94a3b8;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;">로그아웃</button>
+    </div>
+  `;
+}
+
 async function showProfile() {
   const panel = document.getElementById('profilePanel');
   panel.style.display = 'flex';
-  if (!currentUser) {
-    panel.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;text-align:center;"><div class="dot-pulse" style="margin-bottom:12px;"><span></span><span></span><span></span></div><div style="color:#94a3b8;font-size:13px;">연결 중...</div></div>';
-    return;
+
+  // 1. 캐시된 프로필 즉시 표시
+  const cached = localStorage.getItem('hwik_profile');
+  if (cached) {
+    try {
+      const c = JSON.parse(cached);
+      panel.innerHTML = renderProfileHTML(c.name, c.phone, c.photo);
+    } catch(_) {}
   }
 
+  if (!currentUser) return;
+
+  // 2. 백그라운드에서 최신 데이터 가져와서 교체
   try {
     const { data: profile } = await supabaseClient.from('profiles')
       .select('business_name, agent_name, phone, profile_photo')
@@ -1413,31 +1440,22 @@ async function showProfile() {
 
     const name = profile?.business_name || profile?.agent_name || '중개사';
     const phone = profile?.phone || '';
-
-    const initial = name.charAt(0);
     const photoUrl = profile?.profile_photo || '';
 
-    panel.innerHTML = `
-      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;">
-        <!-- 프로필 원형 -->
-        <div style="width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,#1a1a2e,#2d2b55);display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 8px 32px rgba(26,26,46,0.3);${photoUrl ? `background-image:url('${esc(photoUrl)}');background-size:cover;background-position:center;` : ''}">
-          ${photoUrl ? '' : `<span style="font-size:32px;font-weight:900;color:var(--hwik-yellow);">${esc(initial)}</span>`}
-        </div>
-        <div style="font-size:24px;font-weight:900;color:var(--hwik-dark);letter-spacing:-1px;margin-bottom:6px;">${esc(name)}</div>
-        ${phone ? `<div style="font-size:14px;color:#94a3b8;font-weight:400;letter-spacing:0.5px;">${esc(phone)}</div>` : ''}
-        <div style="width:40px;height:2px;background:var(--hwik-yellow);border-radius:1px;margin:24px 0;"></div>
-        <div style="font-size:13px;color:#c0c0c0;">매물 관리는 PC에서 해주세요</div>
-        <button onclick="doLogout()" style="margin-top:32px;padding:12px 40px;border-radius:12px;border:1px solid #e2e8f0;background:none;color:#94a3b8;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;">로그아웃</button>
-      </div>
-    `;
+    // 캐시 저장
+    localStorage.setItem('hwik_profile', JSON.stringify({ name, phone, photo: photoUrl }));
+
+    panel.innerHTML = renderProfileHTML(name, phone, photoUrl);
   } catch(e) {
-    panel.innerHTML = '<div class="panel-title">내 정보</div><div style="text-align:center;padding:20px;color:#f87171;">로딩 실패</div>';
+    if (!cached) panel.innerHTML = '<div style="text-align:center;padding:20px;color:#f87171;">연결 실패</div>';
   }
 }
 
 async function doLogout() {
   await supabaseClient.auth.signOut();
   currentUser = null;
+  localStorage.removeItem('hwik_profile');
+  localStorage.removeItem('hwik_alerts_html');
   onLoggedOut();
   showToast('로그아웃 되었어요');
 }
