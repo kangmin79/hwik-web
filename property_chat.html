@@ -482,9 +482,16 @@
         }
 
         if (schRes.data) {
-            result.schools = schRes.data.map(s => ({
+            const schools = schRes.data.map(s => ({
                 ...s, dist: distanceM(lat, lng, s.lat, s.lon)
-            })).sort((a,b) => a.dist - b.dist).slice(0, 3);
+            })).sort((a,b) => a.dist - b.dist);
+            // 초·중·고 각 가장 가까운 1개씩
+            const picked = [];
+            for (const t of ['초등학교','중학교','고등학교']) {
+                const found = schools.find(s => s.type === t || s.name.includes(t));
+                if (found) picked.push(found);
+            }
+            result.schools = picked;
         }
 
         return result;
