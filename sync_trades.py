@@ -358,6 +358,8 @@ def match_trades_to_complex(apt: dict, trade_rows: list) -> list:
     name_clean = re.sub(r'\d+차|\d+단지|\d+블록', '', kapt_name)
     num_match = re.search(r'(\d+차|\d+단지|\d+블록)', kapt_name)
     num_tag = num_match.group(1) if num_match else ""
+    # 짧은 이름(3글자 이하)은 완전 일치만 — "용인","하남","남양" 등 오매칭 방지
+    short_name = len(kapt_name) <= 3
 
     # kapt_code가 'A'로 시작하면 아파트 → offi 거래 제외
     is_apt = (apt.get("kapt_code") or "").upper().startswith("A")
@@ -379,14 +381,22 @@ def match_trades_to_complex(apt: dict, trade_rows: list) -> list:
             if not apt_nm:
                 continue
 
-            # 매칭: 단지명 포함 관계
+            # 매칭 로직
             hit = False
-            if kapt_name in apt_nm or apt_nm in kapt_name:
-                hit = True
-            elif name_clean and (name_clean in apt_nm or apt_nm in name_clean):
-                hit = True
-            elif slug and (slug in apt_nm or apt_nm in slug):
-                hit = True
+            if short_name:
+                # 3글자 이하: 완전 일치만 (예: "용인" ≠ "용인드마크데시앙")
+                if kapt_name == apt_nm:
+                    hit = True
+            else:
+                # 4글자 이상: 포함 관계 허용하되 짧은 쪽이 4글자 이상이어야 함
+                if kapt_name == apt_nm:
+                    hit = True
+                elif kapt_name in apt_nm and len(kapt_name) >= 4:
+                    hit = True
+                elif apt_nm in kapt_name and len(apt_nm) >= 4:
+                    hit = True
+                elif name_clean and len(name_clean) >= 4 and (name_clean in apt_nm or apt_nm in name_clean):
+                    hit = True
 
             # 숫자 태그 확인 (2차, 3차 구분)
             if hit and num_tag:
@@ -565,11 +575,17 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
             if sp > 0:
                 jeonse_rate = round(jp / sp * 100, 1)
 
-    # price_history: 개별 거래를 날짜순 정렬
+    # price_history: 중복 제거 + 날짜순 정렬
     ph = {}
     for key, items in price_history.items():
-        sorted_items = sorted(items, key=lambda x: x.get("date", ""))
-        ph[key] = sorted_items
+        seen = set()
+        deduped = []
+        for it in items:
+            sig = (it.get("date",""), it.get("price",0), it.get("floor",0), it.get("monthly",0))
+            if sig not in seen:
+                seen.add(sig)
+                deduped.append(it)
+        ph[key] = sorted(deduped, key=lambda x: x.get("date", ""))
 
     # 위치 정보 (없으면 제외)
     sgg = apt.get("sgg") or ""
