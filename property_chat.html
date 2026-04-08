@@ -385,7 +385,7 @@
             <span id="agentNameEl">매물 소개</span>
             <span class="member-count" id="memberCount"></span>
         </div>
-        <div class="right-icons">
+        <div class="right-icons" id="headerCallBtn">
             <button onclick="if(agentInfo&&agentInfo.phone){location.href='tel:'+agentInfo.phone.replace(/-/g,'')}">
                 <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
             </button>
@@ -440,6 +440,18 @@
     }
 
     function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    // 한글 종성 판별 → "이에요" vs "예요"
+    function ieyo(str) {
+        if (!str) return '이에요';
+        const last = str.charCodeAt(str.length - 1);
+        // 한글 유니코드 범위 내이고 받침이 있으면 "이에요"
+        if (last >= 0xAC00 && last <= 0xD7A3) {
+            return (last - 0xAC00) % 28 > 0 ? '이에요' : '예요';
+        }
+        // 숫자나 영문 등은 "이에요"
+        return '이에요';
+    }
 
     // 지하철 노선 색상
     const LINE_COLORS = {
@@ -674,10 +686,11 @@
 
         if (isFirst) {
             showTyping(); await wait(500); hideTyping();
-            await addMsg(`<strong style="font-size:16px;">${esc(type)} ${esc(price)}</strong> 매물이에요`);
+            await addMsg(`<strong style="font-size:16px;">${esc(type)} ${esc(price)}</strong> 매물${ieyo('물')}`);
             await wait(d);
             showTyping(); await wait(d); hideTyping();
-            const locIntro = locDistrict ? `${locDistrict} ${locName}이에요` : `${locName}이에요`;
+            const rawLoc = complex || location;
+            const locIntro = locDistrict ? `${locDistrict} ${locName}${ieyo(rawLoc)}` : `${locName}${ieyo(rawLoc)}`;
             await addMsg(`${locIntro}<br><span style="color:#888;font-size:12px;">${esc(agentName)}</span>`);
         } else {
             showTyping(); await wait(400); hideTyping();
@@ -685,12 +698,13 @@
             const num = currentIdx + 1;
             const isLast = currentIdx === allCards.length - 1;
             const label = isLast ? '마지막' : (num < ordinal.length ? ordinal[num] : `${num}번째`);
-            await addMsg(`${label} 매물이에요`);
+            await addMsg(`${label} 매물${ieyo('물')}`);
             await wait(d);
             showTyping(); await wait(d); hideTyping();
             await addMsg(`<strong style="font-size:16px;">${esc(type)} ${esc(price)}</strong>`);
             await wait(d - 100);
-            const locIntro = locDistrict ? `${locDistrict} ${locName}이에요` : `${locName}이에요`;
+            const rawLoc2 = complex || location;
+            const locIntro = locDistrict ? `${locDistrict} ${locName}${ieyo(rawLoc2)}` : `${locName}${ieyo(rawLoc2)}`;
             await addMsg(locIntro);
         }
 
@@ -754,7 +768,8 @@
         if (floor) specParts.push(`${esc(floor)}`);
         if (room) specParts.push(`${esc(room)}`);
         if (specParts.length > 0) {
-            await addMsg(specParts.join(', ') + '이에요');
+            const lastSpec = specParts[specParts.length - 1] || '';
+            await addMsg(specParts.join(', ') + ieyo(lastSpec));
         }
 
         // 6. 특징 — 태그로 (있으면)
@@ -839,8 +854,9 @@
         await wait(d - 200);
         const cardData = allCards[currentIdx];
         const cp = cardData.property || {};
-        const inquiryText = `[휙] 매물 문의\n${cp.type || ''} ${cp.price || ''}\n${cp.location || ''} ${cp.complex || ''}\n${cp.area ? cp.area : ''}${cp.floor ? ' ' + cp.floor : ''}`.trim();
-        await addMsg(`<button class="inquiry-btn" onclick="copyInquiry(this, \`${inquiryText.replace(/`/g,'\\`')}\`)">이 매물 문의하기</button>`, 'inquiry-bubble');
+        const inquiryText = [`[휙] 매물 문의`, `${cp.type || ''} ${cp.price || ''}`, `${cp.location || ''} ${cp.complex || ''}`, `${cp.area || ''}${cp.floor ? ' ' + cp.floor : ''}`].filter(Boolean).join('\n').trim();
+        const inquiryMsg = await addMsg(`<button class="inquiry-btn">이 매물 문의하기</button>`, 'inquiry-bubble');
+        inquiryMsg.querySelector('.inquiry-btn').addEventListener('click', function() { copyInquiry(this, inquiryText); });
 
         // 10. 하단바 표시
         const tel = agentPhone.replace(/-/g, '');
@@ -963,9 +979,12 @@
             ` : ''}
         `;
     }
-    function closeGallery() { closeOverlay('galleryOverlay'); history.back(); }
-    function galleryNav(dir) { galleryIdx = (galleryIdx + dir + galleryPhotos.length) % galleryPhotos.length; renderGallery(); initGallerySwipe(); }
+    function closeGallery() { gallerySwipeReady = false; closeOverlay('galleryOverlay'); history.back(); }
+    function galleryNav(dir) { galleryIdx = (galleryIdx + dir + galleryPhotos.length) % galleryPhotos.length; renderGallery(); }
+    let gallerySwipeReady = false;
     function initGallerySwipe() {
+        if (gallerySwipeReady) return; // 중복 방지
+        gallerySwipeReady = true;
         const ov = document.getElementById('galleryOverlay');
         if (!ov) return;
         let sx = 0, sy = 0, dx = 0, dy = 0, dragging = false, direction = null;
@@ -1111,6 +1130,7 @@
                 document.getElementById('btnCall').href = 'tel:' + agPhone;
             } else {
                 document.getElementById('btnCall').style.display = 'none';
+                document.getElementById('headerCallBtn').style.display = 'none';
             }
 
             chatBody.innerHTML = '';
