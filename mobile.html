@@ -451,54 +451,69 @@
   }
 
   /* ── 손님 등록 ── */
-  .client-register-box {
-    background: var(--white);
-    border-radius: 20px;
-    padding: 24px 20px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
-    border: 2px solid #4ecdc4;
+  .client-area {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .client-desc {
+    font-size: 15px;
+    color: #94a3b8;
+    margin-bottom: 28px;
+    line-height: 1.6;
+  }
+
+  .client-input-row {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
   }
 
   .client-input {
-    width: 100%;
-    padding: 16px;
+    flex: 1;
+    padding: 14px 18px;
     font-size: 16px;
     font-family: 'Noto Sans KR', sans-serif;
     border: 1.5px solid #e2e8f0;
-    border-radius: 14px;
+    border-radius: 22px;
     outline: none;
-    background: var(--bg);
+    background: #fff;
     color: var(--text);
     resize: none;
-    min-height: 100px;
+    min-height: 48px;
+    max-height: 120px;
     transition: border-color 0.2s;
+    line-height: 1.4;
   }
-  .client-input:focus { border-color: #4ecdc4; }
-  .client-input::placeholder { color: #94a3b8; }
+  .client-input:focus { border-color: var(--hwik-dark); box-shadow: 0 0 0 3px rgba(26,26,46,0.08); }
+  .client-input::placeholder { color: #c0c0c0; }
 
-  .client-submit {
-    width: 100%;
-    margin-top: 14px;
-    padding: 16px;
+  .client-send {
+    width: 48px;
+    height: 48px;
     border: none;
-    border-radius: 14px;
+    border-radius: 50%;
     background: var(--hwik-dark);
     color: var(--hwik-yellow);
-    font-size: 16px;
-    font-weight: 700;
-    font-family: 'Noto Sans KR', sans-serif;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
     transition: all 0.2s;
   }
-  .client-submit:active { transform: scale(0.97); }
-  .client-submit:disabled { opacity: 0.5; }
+  .client-send:active { transform: scale(0.9); }
+  .client-send:disabled { opacity: 0.4; }
+  .client-send svg { width: 22px; height: 22px; fill: none; stroke: var(--hwik-yellow); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 
   .client-tip {
     font-size: 12px;
-    color: var(--gray-400);
-    margin-top: 12px;
-    line-height: 1.6;
-    padding: 0 4px;
+    color: #c0c0c0;
+    margin-top: 16px;
   }
 
   /* ── 내정보 ── */
@@ -1152,15 +1167,16 @@ function showClientRegister() {
   const panel = document.getElementById('clientPanel');
   panel.style.display = 'flex';
   panel.innerHTML = `
-    <div class="panel-title">손님 등록</div>
-    <div class="client-register-box">
-      <textarea class="client-input" id="clientInput" placeholder="손님이 찾는 조건을 적어주세요
-
-예) 강남 2룸 전세 3억 이하
-예) 마포 신축 월세 50/80
-예) 서초 매매 15억 30평대"></textarea>
-      <button class="client-submit" id="clientSubmitBtn" onclick="submitClient()">등록하기</button>
-      <div class="client-tip">등록하면 AI가 자동으로 매칭 매물을 찾아 알림으로 보내드려요</div>
+    <div class="client-area">
+      <div class="panel-title">손님 등록</div>
+      <div class="client-desc">손님이 찾는 조건을<br>말하듯이 적어주세요</div>
+      <div class="client-input-row">
+        <textarea class="client-input" id="clientInput" placeholder="강남 2룸 전세 3억 이하" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+        <button class="client-send" id="clientSubmitBtn" onclick="submitClient()">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+      <div class="client-tip">AI가 자동으로 매칭 매물을 찾아드려요</div>
     </div>
   `;
   setTimeout(() => document.getElementById('clientInput')?.focus(), 300);
