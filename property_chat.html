@@ -542,51 +542,73 @@
         const agentName = agent.business_name || agent.name || '부동산';
         const agentPhone = agent.phone || '';
 
-        const d = isFirst ? 400 : 200;
+        const d = isFirst ? 400 : 250;
+
+        // 주변정보 미리 조회 (비동기 병렬)
+        const nearbyPromise = (data.lat && data.lng) ? getNearby(data.lat, data.lng) : Promise.resolve({ stations:[], schools:[] });
 
         // 새 그룹 시작
         startNewGroup();
 
-        // 1. 인사
+        // 1. 인사 — 사람처럼
         if (isFirst) {
             showTyping(); await wait(600); hideTyping();
-            await addMsg(`안녕하세요! <strong>${esc(agentName)}</strong>에서 보내드리는 매물이에요 😊`);
+            const greetings = [
+                `안녕하세요~ ${esc(agentName)}입니다`,
+                `안녕하세요~ ${esc(agentName)}에서 연락드려요`,
+                `안녕하세요 😊 ${esc(agentName)}입니다`,
+            ];
+            await addMsg(greetings[Math.floor(Math.random() * greetings.length)]);
+            await wait(d);
+            showTyping(); await wait(d); hideTyping();
+            await addMsg(`말씀하신 조건에 맞는 매물 보내드릴게요`);
             await wait(d);
         } else {
             showTyping(); await wait(400); hideTyping();
-            await addMsg(`다음 매물 소개해드릴게요!`);
+            const transitions = [
+                `이것도 한번 보세요`,
+                `다른 매물도 있어요`,
+                `이건 어떠세요?`,
+            ];
+            await addMsg(transitions[Math.floor(Math.random() * transitions.length)]);
             await wait(d);
         }
 
-        // 2. 가격
+        // 2. 가격 + 위치 — 자연스럽게
         showTyping(); await wait(d + 100); hideTyping();
-        await addMsg(`
-            <div class="price-type">${esc(type)}</div>
-            <div class="price-value">${esc(price)}</div>
-        `, 'price-bubble');
+        const locName = complex ? `${esc(complex)}` : esc(location);
+        const locDistrict = complex ? esc(location) : '';
 
-        // 3. 위치 + 미니맵
+        // 거래유형별 자연스러운 가격 멘트
+        let priceMsg = '';
+        if (type.includes('월세')) {
+            priceMsg = `<strong>${esc(type)} ${esc(price)}</strong>이고요`;
+        } else if (type.includes('전세')) {
+            priceMsg = `<strong>${esc(type)} ${esc(price)}</strong>이에요`;
+        } else {
+            priceMsg = `<strong>${esc(type)} ${esc(price)}</strong>입니다`;
+        }
+        await addMsg(priceMsg);
+
+        // 3. 위치 멘트 + 미니맵
         await wait(d);
         showTyping(); await wait(d); hideTyping();
 
-        const locText = complex ? `${esc(location)} ${esc(complex)}` : esc(location);
-        const mapId = `map_${currentIdx}_${Date.now()}`;
+        const locLine = locDistrict ? `${locDistrict} ${locName}이에요` : `${locName}이에요`;
+        await addMsg(locLine);
 
-        const mapHtml = (data.lat && data.lng) ?
-            `<div class="map-preview" id="${mapId}"></div>
-             <div class="map-label">
-                <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                ${locText}
-             </div>` :
-            `<div class="map-label">
-                <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                ${locText}
-             </div>`;
-
-        const mapMsg = await addMsg(mapHtml, 'map-bubble');
-        mapMsg.querySelector('.bubble').onclick = () => openFullMap(data.lat, data.lng, locText);
-
+        // 미니맵
         if (data.lat && data.lng) {
+            await wait(d - 100);
+            const mapId = `map_${currentIdx}_${Date.now()}`;
+            const mapHtml = `<div class="map-preview" id="${mapId}"></div>
+                <div class="map-label">
+                    <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    위치 보기
+                </div>`;
+            const mapMsg = await addMsg(mapHtml, 'map-bubble');
+            mapMsg.querySelector('.bubble').onclick = () => openFullMap(data.lat, data.lng, locName);
+
             kakao.maps.load(() => {
                 const container = document.getElementById(mapId);
                 if (!container) return;
@@ -596,27 +618,60 @@
             });
         }
 
-        // 4. 사진
+        // 4. 사진 — 자연스럽게
         if (photos.length > 0) {
             await wait(d);
             showTyping(); await wait(d); hideTyping();
+            await addMsg(photos.length > 1 ? `사진도 보내드릴게요` : `사진이에요`);
+            await wait(200);
             const photoHtml = `
                 <img src="${photos[0]}" alt="매물 사진" onerror="this.style.display='none'">
-                ${photos.length > 1 ? `<div class="photo-count">사진 ${photos.length}장</div>` : ''}
+                ${photos.length > 1 ? `<div class="photo-count">+${photos.length - 1}장 더보기</div>` : ''}
             `;
             const photoMsg = await addMsg(photoHtml, 'photo-bubble');
             photoMsg.querySelector('.bubble').onclick = () => openGallery(photos, 0);
         }
 
-        // 5. 스펙
-        const specs = [area, floor, room].filter(Boolean);
-        if (specs.length > 0) {
-            await wait(d);
-            showTyping(); await wait(d - 100); hideTyping();
-            await addMsg(specs.map(s => `<strong>${esc(s)}</strong>`).join(' · '));
+        // 5. 스펙 — 문장으로
+        await wait(d);
+        showTyping(); await wait(d - 100); hideTyping();
+        const specParts = [];
+        if (area) specParts.push(`${esc(area)}`);
+        if (floor) specParts.push(`${esc(floor)}`);
+        if (room) specParts.push(`${esc(room)}`);
+        if (specParts.length > 0) {
+            await addMsg(specParts.join(', ') + '이에요');
         }
 
-        // 6. 태그
+        // 6. 주변정보 — 대화체로
+        const nearby = await nearbyPromise;
+        if (nearby.stations.length > 0 || nearby.schools.length > 0) {
+            await wait(d);
+            showTyping(); await wait(d); hideTyping();
+
+            const nearbyParts = [];
+            if (nearby.stations.length > 0) {
+                const st = nearby.stations[0];
+                const min = walkMin(st.dist);
+                nearbyParts.push(`<strong>${esc(st.name)}역</strong> ${st.lines.join('·')} 걸어서 ${min}분이고요`);
+            }
+            if (nearby.schools.length > 0) {
+                const sch = nearby.schools[0];
+                nearbyParts.push(`<strong>${esc(sch.name)}</strong>도 ${formatDist(sch.dist)}로 가까워요`);
+            }
+            await addMsg(nearbyParts.join('<br>'));
+
+            // 나머지 역/학교 한줄로
+            const extras = [];
+            nearby.stations.slice(1).forEach(s => extras.push(`${esc(s.name)}역 ${s.lines.join('·')}`));
+            nearby.schools.slice(1).forEach(s => extras.push(`${esc(s.name)}`));
+            if (extras.length > 0) {
+                await wait(200);
+                await addMsg(`근처에 ${extras.join(', ')}도 있어요`);
+            }
+        }
+
+        // 7. 특징 — 태그로 (있으면)
         if (features.length > 0) {
             await wait(d - 100);
             const tagsHtml = features.map(f => {
@@ -626,35 +681,21 @@
             await addMsg(tagsHtml, 'tags-bubble');
         }
 
-        // 6.5. 주변정보 (지하철 + 학교)
-        if (data.lat && data.lng) {
-            const nearby = await getNearby(data.lat, data.lng);
-            const lines = [];
-            nearby.stations.forEach(s => {
-                const min = walkMin(s.dist);
-                lines.push(`🚇 <strong>${esc(s.name)}</strong> <span style="color:#6366f1">${s.lines.join('·')}</span> — 도보 ${min}분`);
-            });
-            nearby.schools.forEach(s => {
-                lines.push(`🏫 <strong>${esc(s.name)}</strong> <span style="color:#888">${esc(s.type)}</span> — ${formatDist(s.dist)}`);
-            });
-            if (lines.length > 0) {
-                await wait(d);
-                showTyping(); await wait(d); hideTyping();
-                await addMsg(`<div style="font-size:12px;color:#888;margin-bottom:6px;">주변 정보</div>${lines.join('<br>')}`);
-            }
-        }
-
-        // 7. 중개사 코멘트
+        // 8. 중개사 코멘트 — 자연스럽게
+        await wait(d);
+        showTyping(); await wait(d + 100); hideTyping();
         if (comment) {
-            await wait(d);
-            showTyping(); await wait(d + 200); hideTyping();
-            await addMsg(`
-                <div class="comment-text">"${esc(comment)}"</div>
-                <div class="comment-from">— ${esc(agentName)}</div>
-            `, 'comment-bubble');
+            await addMsg(esc(comment));
+        } else {
+            const defaults = [
+                `관심 있으시면 편하게 연락주세요~`,
+                `궁금한 거 있으시면 연락주세요 😊`,
+                `보시고 괜찮으시면 말씀해주세요~`,
+            ];
+            await addMsg(defaults[Math.floor(Math.random() * defaults.length)]);
         }
 
-        // 8. CTA
+        // 9. CTA
         await wait(d);
         const tel = agentPhone.replace(/-/g, '');
         await addMsg(`
@@ -662,7 +703,7 @@
             <a class="cta-btn btn-kakao" href="#" onclick="goBackToKakao();return false;">💬 카톡문의</a>
         `, 'cta-bubble', true);
 
-        // 9. 다음 매물
+        // 10. 다음 매물
         if (currentIdx < allCards.length - 1) {
             await wait(d + 300);
 
@@ -676,7 +717,7 @@
 
             const nextCard = allCards[currentIdx + 1];
             const nextP = nextCard.property || {};
-            await addMsg(`다음 매물도 보시겠어요?<br><span style="color:#888;font-size:12px;">${esc(nextP.type || '매물')} ${esc(nextP.price || '')}</span>`);
+            await addMsg(`다음 매물도 보시겠어요?<br><span style="color:#888;font-size:12px;">${esc(nextP.type || '')} ${esc(nextP.price || '')}</span>`);
 
             await wait(200);
             const btnDiv = document.createElement('div');
@@ -686,7 +727,7 @@
                 <div class="bubble-wrap">
                     <div class="msg-row">
                         <div class="bubble" style="background:transparent;padding:0;box-shadow:none;">
-                            <button class="next-property-btn" onclick="showNextProperty()">네, 보여주세요 👀</button>
+                            <button class="next-property-btn" onclick="showNextProperty()">네, 보여주세요</button>
                         </div>
                     </div>
                 </div>
@@ -697,7 +738,7 @@
             await wait(d);
             const divider = document.createElement('div');
             divider.className = 'divider';
-            divider.innerHTML = `<span>${allCards.length}개 매물 모두 확인 완료</span>`;
+            divider.innerHTML = `<span>매물 ${allCards.length}개 모두 보여드렸어요</span>`;
             chatBody.appendChild(divider);
             chatBody.scrollTop = chatBody.scrollHeight;
         }
