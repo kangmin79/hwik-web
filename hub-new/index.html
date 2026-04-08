@@ -1615,8 +1615,8 @@ const Share = (() => {
   function _link(cards) {
     cards=cards||Preview.getSelected();if(!cards.length)return '';
     const agentParam=Auth.user?'&agent='+Auth.user.id:'';
-    if(cards.length===1) return `https://hwik.kr/property_view.html?id=${cards[0].id}${agentParam}`;
-    return `https://hwik.kr/property_view.html?ids=${cards.map(c=>c.id).join(',')}${agentParam}`;
+    if(cards.length===1) return `https://hwik.kr/property_chat.html?id=${cards[0].id}${agentParam}`;
+    return `https://hwik.kr/property_chat.html?ids=${cards.map(c=>c.id).join(',')}${agentParam}`;
   }
 
   async function copyLink(cards) {
