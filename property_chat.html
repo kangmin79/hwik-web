@@ -167,14 +167,25 @@
         .msg .bubble.photo-bubble {
             padding: 0; overflow: hidden; cursor: pointer;
             border-radius: 4px 16px 16px 16px;
-        }
-        .photo-bubble img {
-            width: 240px; max-height: 200px; object-fit: cover; display: block;
-        }
-        .photo-bubble .photo-count {
-            padding: 6px 12px;
-            font-size: 11px; color: #888;
             background: #fff;
+        }
+        .photo-bubble .photo-main {
+            width: 240px; height: 180px; object-fit: cover; display: block;
+        }
+        .photo-bubble .photo-thumbs {
+            display: flex; gap: 2px; padding: 2px 0 0;
+        }
+        .photo-bubble .photo-thumb-wrap {
+            flex: 1; height: 70px; overflow: hidden; position: relative;
+        }
+        .photo-bubble .photo-thumb-wrap img {
+            width: 100%; height: 100%; object-fit: cover; display: block;
+        }
+        .photo-bubble .photo-more {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 14px; font-weight: 700;
         }
 
         /* 태그 버블 */
@@ -656,16 +667,29 @@
             });
         }
 
-        // 4. 사진 — 자연스럽게
+        // 4. 사진 — 카톡 묶음 스타일
         if (photos.length > 0) {
             await wait(d);
             showTyping(); await wait(d); hideTyping();
             await addMsg(photos.length > 1 ? `사진도 보내드릴게요` : `사진이에요`);
             await wait(200);
-            const photoHtml = `
-                <img src="${photos[0]}" alt="매물 사진" onerror="this.style.display='none'">
-                ${photos.length > 1 ? `<div class="photo-count">+${photos.length - 1}장 더보기</div>` : ''}
-            `;
+
+            let photoHtml = `<img class="photo-main" src="${photos[0]}" alt="매물 사진" onerror="this.style.display='none'">`;
+
+            if (photos.length > 1) {
+                const thumbs = photos.slice(1, 4); // 최대 3개 썸네일
+                const remaining = photos.length - 4; // 4장 이상이면 +N
+                photoHtml += `<div class="photo-thumbs">`;
+                thumbs.forEach((url, i) => {
+                    const isLast = (i === thumbs.length - 1) && remaining > 0;
+                    photoHtml += `<div class="photo-thumb-wrap">
+                        <img src="${url}" alt="">
+                        ${isLast ? `<div class="photo-more">+${remaining}</div>` : ''}
+                    </div>`;
+                });
+                photoHtml += `</div>`;
+            }
+
             const photoMsg = await addMsg(photoHtml, 'photo-bubble');
             photoMsg.querySelector('.bubble').onclick = () => openGallery(photos, 0);
         }
