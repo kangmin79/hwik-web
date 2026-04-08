@@ -919,12 +919,11 @@
 
             // 매물 바로가기 버튼
             await wait(300);
-            const ordinals = ['첫 번째', '두 번째', '세 번째', '네 번째', '다섯 번째'];
             const btnsHtml = allCards.map((c, i) => {
                 const cp = c.property || {};
-                const label = i < ordinals.length ? ordinals[i] : `${i+1}번째`;
-                const info = `${cp.type || ''} ${cp.price || ''}`.trim();
-                return `<button class="jump-btn" onclick="document.getElementById('property_${i}').scrollIntoView({behavior:'smooth',block:'start'})">${label}<span style="color:#888;font-size:11px;margin-left:4px;">${esc(info)}</span></button>`;
+                const loc = cp.complex || cp.location || '';
+                const info = `${cp.type || ''} ${cp.price || ''}`;
+                return `<button class="jump-btn" onclick="document.getElementById('property_${i}').scrollIntoView({behavior:'smooth',block:'start'})"><strong>${esc(info)}</strong><br><span style="color:#888;font-size:11px;">${esc(loc)}</span></button>`;
             }).join('');
             await addMsg(btnsHtml, 'jump-bubble');
         }
