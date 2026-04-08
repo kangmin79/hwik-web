@@ -442,15 +442,50 @@
           font-weight:600; letter-spacing:0.01em;
           border:1.5px solid rgba(255,255,255,0.35);
         }
-        /* 셀링포인트 (남향/역세권/한강뷰 등) — 골드 */
-        .card-spec.highlight {
-          background:rgba(250,204,21,0.12); color:#fcd34d; font-weight:700;
-          border:1.5px solid rgba(250,204,21,0.5);
+        /* 교통 — 파랑 */
+        .card-spec.transport {
+          background:rgba(59,130,246,0.15); color:#60a5fa; font-weight:700;
+          border:1.5px solid rgba(59,130,246,0.4);
         }
-        /* 학군/환경 — 민트 */
-        .card-spec.highlight-mint {
-          background:rgba(78,205,196,0.12); color:#6ee7b7; font-weight:700;
-          border:1.5px solid rgba(78,205,196,0.5);
+        /* 방향 — 골드 */
+        .card-spec.direction {
+          background:rgba(250,204,21,0.12); color:#fcd34d; font-weight:700;
+          border:1.5px solid rgba(250,204,21,0.4);
+        }
+        /* 뷰/층 — 보라 */
+        .card-spec.view {
+          background:rgba(139,92,246,0.15); color:#a78bfa; font-weight:700;
+          border:1.5px solid rgba(139,92,246,0.4);
+        }
+        /* 학군/환경 — 초록 */
+        .card-spec.school {
+          background:rgba(34,197,94,0.12); color:#4ade80; font-weight:700;
+          border:1.5px solid rgba(34,197,94,0.4);
+        }
+        /* 시설/옵션 — 주황 */
+        .card-spec.facility {
+          background:rgba(249,115,22,0.12); color:#fb923c; font-weight:700;
+          border:1.5px solid rgba(249,115,22,0.4);
+        }
+        /* 주차 — 시안 */
+        .card-spec.parking {
+          background:rgba(6,182,212,0.12); color:#22d3ee; font-weight:700;
+          border:1.5px solid rgba(6,182,212,0.4);
+        }
+        /* 반려동물 — 핑크 */
+        .card-spec.pet {
+          background:rgba(236,72,153,0.12); color:#f472b6; font-weight:700;
+          border:1.5px solid rgba(236,72,153,0.4);
+        }
+        /* 금융/대출 — 민트 */
+        .card-spec.finance {
+          background:rgba(20,184,166,0.12); color:#2dd4bf; font-weight:700;
+          border:1.5px solid rgba(20,184,166,0.4);
+        }
+        /* 구조 — 인디고 */
+        .card-spec.structure {
+          background:rgba(99,102,241,0.12); color:#818cf8; font-weight:700;
+          border:1.5px solid rgba(99,102,241,0.4);
         }
         .card-divider { height:1px; background:rgba(255,255,255,0.1); margin-bottom:14px; }
         /* 액션 바 */
@@ -1181,30 +1216,39 @@
               </div>`;
         }
 
-        // 태그 분류: 기본 정보 vs 셀링포인트
-        const HIGHLIGHT_KEYWORDS = ['역세권','남향','동남향','한강','뷰','올수리','리모델링','신축','풀옵션','테라스','복층','주차','펜트하우스','탑층','로열층','고층'];
-        const HIGHLIGHT_MINT_KEYWORDS = ['학군','초품아','숲세권','공세권','역근처','더블역세권','트리플역세권'];
+        // 태그 카테고리별 색상 분류
+        const TAG_CATEGORIES = {
+          transport: ['역세권','더블역세권','트리플역세권','역근처','역세','지하철','버스'],
+          direction: ['남향','동향','서향','북향','남동향','남서향','동남향','북서향','판상형','타워형'],
+          view:      ['한강','뷰','조망','탑층','고층','로열층','펜트하우스','오션뷰','공원뷰','리버뷰','시티뷰'],
+          school:    ['학군','초품아','숲세권','공세권','학교','유치원','어린이집'],
+          facility:  ['풀옵션','올수리','리모델링','신축','엘리베이터','인덕션','에어컨','빌트인','시스템에어컨','드레스룸','현관보안'],
+          parking:   ['주차','주차가능','주차2대','주차편리','자주식'],
+          pet:       ['반려동물','반려동물가능','펫','애완'],
+          finance:   ['대출','대출가능','전세대출','대출불가','융자'],
+          structure: ['복층','테라스','다락','루프탑','발코니확장','확장형'],
+        };
 
         function _classifySpec(text) {
-            const t = text.toLowerCase();
-            if (HIGHLIGHT_MINT_KEYWORDS.some(k => t.includes(k))) return 'highlight-mint';
-            if (HIGHLIGHT_KEYWORDS.some(k => t.includes(k))) return 'highlight';
+            const t = text.toLowerCase ? text.toLowerCase() : text;
+            for (const [cat, keywords] of Object.entries(TAG_CATEGORIES)) {
+                if (keywords.some(k => t.includes(k))) return cat;
+            }
             return '';
         }
 
         function _buildSpecsHtml(basicSpecs, featureSpecs) {
             const all = [...basicSpecs, ...featureSpecs].filter(Boolean);
-            // 골드(셀링포인트) → 민트(학군/환경) → 기본 스펙 순
-            const gold = [], mint = [], basic = [];
+            // 카테고리 있는 태그 먼저, 기본 스펙 나중에
+            const categorized = [], basic = [];
             all.forEach(s => {
-                const cls = _classifySpec(s);
-                if (cls === 'highlight') gold.push(s);
-                else if (cls === 'highlight-mint') mint.push(s);
+                const cat = _classifySpec(s);
+                if (cat) categorized.push(s);
                 else basic.push(s);
             });
-            return [...gold, ...mint, ...basic].map(s => {
-                const cls = _classifySpec(s);
-                return `<span class="card-spec${cls ? ' ' + cls : ''}">${s}</span>`;
+            return [...categorized, ...basic].map(s => {
+                const cat = _classifySpec(s);
+                return `<span class="card-spec${cat ? ' ' + cat : ''}">${s}</span>`;
             }).join('');
         }
 
