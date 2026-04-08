@@ -989,9 +989,18 @@ def generate_sitemap(danji_list: list):
     from slug_utils import make_danji_slug as _make_slug, make_dong_slug as _make_dong_slug
 
     urls = []
-    # 정적 페이지 (priority/changefreq 제거 — Google이 무시함)
-    for path in ['/', '/gu.html', '/about.html', '/ranking.html', '/ranking.html?region=incheon', '/ranking.html?region=gyeonggi', '/ranking.html?region=all']:
-        urls.append(f'  <url><loc>{base}{path}</loc><lastmod>{today}</lastmod></url>')
+    # 정적 페이지
+    static_pages = [
+        ('/', 'daily', '1.0'),
+        ('/gu.html', 'weekly', '0.8'),
+        ('/about.html', 'monthly', '0.3'),
+        ('/ranking.html', 'daily', '0.8'),
+        ('/ranking.html?region=incheon', 'daily', '0.7'),
+        ('/ranking.html?region=gyeonggi', 'daily', '0.7'),
+        ('/ranking.html?region=all', 'daily', '0.7'),
+    ]
+    for path, freq, pri in static_pages:
+        urls.append(f'  <url><loc>{base}{path}</loc><lastmod>{today}</lastmod><changefreq>{freq}</changefreq><priority>{pri}</priority></url>')
 
     # 구/시 목록 페이지 (서울+인천+경기 전체, 중복 제거)
     seen_gu = set()
@@ -1000,7 +1009,7 @@ def generate_sitemap(danji_list: list):
             continue
         seen_gu.add(region_name)
         safe_name = _quote(region_name, safe='')
-        urls.append(f'  <url><loc>{base}/gu.html?name={safe_name}</loc><lastmod>{today}</lastmod></url>')
+        urls.append(f'  <url><loc>{base}/gu.html?name={safe_name}</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>')
 
     # 단지 페이지 (거래 데이터 있는 단지만 — Google 신뢰도 향상)
     included = 0
@@ -1019,7 +1028,7 @@ def generate_sitemap(danji_list: list):
         slug = _make_slug(d.get("complex_name", ""), d.get("location", ""), did, d.get("address", ""))
         safe_slug = _quote(slug, safe="-")
         lastmod = (d.get("updated_at") or today)[:10]
-        urls.append(f'  <url><loc>{base}/danji/{safe_slug}</loc><lastmod>{lastmod}</lastmod></url>')
+        urls.append(f'  <url><loc>{base}/danji/{safe_slug}</loc><lastmod>{lastmod}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>')
         included += 1
 
     # 동 페이지 (거래 있는 단지 3개 이상인 동만)
@@ -1047,7 +1056,7 @@ def generate_sitemap(danji_list: list):
         addr = dong_addr_cache.get((gu, dong), "")
         dong_slug = _make_dong_slug(gu, dong, addr)
         safe_dong_slug = _quote(dong_slug, safe="-")
-        urls.append(f'  <url><loc>{base}/dong/{safe_dong_slug}</loc><lastmod>{today}</lastmod></url>')
+        urls.append(f'  <url><loc>{base}/dong/{safe_dong_slug}</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>')
         dong_count += 1
 
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n'

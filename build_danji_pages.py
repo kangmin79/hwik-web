@@ -457,12 +457,26 @@ def build_jsonld(d):
             ],
         },
     ]
+    graph[0]["url"] = f"https://hwik.kr/danji/{slug}"
     if d.get("lat") and d.get("lng"):
         graph[0]["geo"] = {"@type": "GeoCoordinates", "latitude": d["lat"], "longitude": d["lng"]}
     if d.get("build_year"):
         graph[0]["yearBuilt"] = d["build_year"]
     if d.get("total_units"):
         graph[0]["numberOfRooms"] = d["total_units"]
+
+    # priceRange — 실거래 데이터 기반
+    rt = d.get("recent_trade") or {}
+    cats = d.get("categories") or []
+    prices = [rt[c].get("price", 0) for c in cats if rt.get(c) and rt[c].get("price")]
+    if prices:
+        min_p = min(prices)
+        max_p = max(prices)
+        graph[0]["pricingCurrency"] = "KRW"
+        if min_p == max_p:
+            graph[0]["priceRange"] = format_price(min_p)
+        else:
+            graph[0]["priceRange"] = f"{format_price(min_p)} ~ {format_price(max_p)}"
 
     # FAQ
     bc = best_price_cat(d)
@@ -564,7 +578,7 @@ def generate_page(d):
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{name} 실거래가 시세 - 휙</title>
 <meta name="description" content="{esc(desc)}">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
