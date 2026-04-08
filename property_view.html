@@ -792,31 +792,34 @@
         /* 하단 고정 바 (텔레그램 스타일) */
         .fixed-bottom-bar {
           position: fixed; bottom: 0; left: 0; right: 0;
-          background: #fff;
-          border-top: 1px solid #e8e8e8;
-          padding: 8px 12px;
-          padding-bottom: max(8px, env(safe-area-inset-bottom));
-          display: flex; flex-direction: column; gap: 6px;
+          background: #0d1117;
+          border-top: 1px solid rgba(255,255,255,0.08);
+          padding: 10px 14px;
+          padding-bottom: max(10px, env(safe-area-inset-bottom));
+          display: flex; flex-direction: column; gap: 8px;
           z-index: 100;
         }
         .fixed-bottom-bar .bar-agent-row {
           display: flex; align-items: center; gap: 8px; padding: 0 4px;
         }
-        .fixed-bottom-bar .agent-name { font-size: 13px; font-weight: 600; color: #222; flex: 1; }
-        .fixed-bottom-bar .agent-sub { font-size: 11px; color: #999; }
+        .fixed-bottom-bar .agent-name { font-size: 13px; font-weight: 600; color:rgba(255,255,255,0.85); flex: 1; }
+        .fixed-bottom-bar .agent-sub { font-size: 11px; color:rgba(255,255,255,0.4); }
         .fixed-bottom-bar .bar-btn-row {
           display: flex; gap: 8px;
         }
         .fixed-bottom-bar .contact-btn {
           flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
-          padding: 13px 0; border-radius: 10px; font-size: 15px; font-weight: 600;
-          text-decoration: none; cursor: pointer; border: none;
+          padding: 14px 0; border-radius: 12px; font-size: 14px; font-weight: 700;
+          text-decoration: none; cursor: pointer;
           transition: opacity 0.15s;
+          background:rgba(255,255,255,0.06);
+          border:1px solid rgba(255,255,255,0.12);
+          color:rgba(255,255,255,0.8);
         }
         .fixed-bottom-bar .contact-btn:active { opacity: 0.75; }
-        .fixed-bottom-bar .btn-call { background: #4ecdc4; color: #fff; }
-        .fixed-bottom-bar .btn-kakao { background: #fee500; color: #191919; }
-        .fixed-bottom-bar .btn-map { background: rgba(99,102,241,0.12); color: #6366f1; border: 1px solid rgba(99,102,241,0.25); }
+        .fixed-bottom-bar .btn-call { background:rgba(78,205,196,0.12); color:#4ecdc4; border-color:rgba(78,205,196,0.25); }
+        .fixed-bottom-bar .btn-kakao { background:rgba(254,229,0,0.12); color:#facc15; border-color:rgba(254,229,0,0.25); }
+        .fixed-bottom-bar .btn-map { background:rgba(99,102,241,0.12); color:#818cf8; border-color:rgba(99,102,241,0.25); }
 
         #interestBtn.interested {
             background: #6366f1; color: #fff; border-color: #6366f1;
