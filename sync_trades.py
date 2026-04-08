@@ -383,6 +383,7 @@ def match_trades_to_complex(apt: dict, trade_rows: list) -> list:
 
             # 매칭 로직
             hit = False
+            matched_via_clean = False  # name_clean 경유 매칭 여부
             if short_name:
                 # 3글자 이하: 완전 일치만 (예: "용인" ≠ "용인드마크데시앙")
                 if kapt_name == apt_nm:
@@ -397,9 +398,12 @@ def match_trades_to_complex(apt: dict, trade_rows: list) -> list:
                     hit = True
                 elif name_clean and len(name_clean) >= 4 and (name_clean in apt_nm or apt_nm in name_clean):
                     hit = True
+                    matched_via_clean = True
 
             # 숫자 태그 확인 (2차, 3차 구분)
-            if hit and num_tag:
+            # name_clean 경유 매칭은 이미 숫자를 제거한 상태이므로 건너뜀
+            # (예: "대치1차현대아파트" → name_clean "대치현대아파트" → API "대치현대" 매칭)
+            if hit and num_tag and not matched_via_clean:
                 if num_tag not in apt_nm and apt_nm not in kapt_name:
                     hit = False
 
