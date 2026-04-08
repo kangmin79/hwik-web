@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="google-site-verification" content="R2ye41AVVTRs8BxEXyEafFSTqMSiHKdb9zgTklrktSI" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>휙</title>
+<meta name="description" content="AI가 찾아주는 내 조건에 딱 맞는 매물">
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#facc15">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="휙">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icon-152.png">
+<link rel="apple-touch-icon" sizes="120x120" href="icon-120.png">
+<!-- GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  :root {
+    --hwik-dark: #1a1a2e;
+    --hwik-dark-light: #242442;
+    --hwik-yellow: #FFD43B;
+    --hwik-yellow-hover: #FFC800;
+    --bg: #f8f8fa;
+    --white: #ffffff;
+    --gray-100: #f0f0f3;
+    --gray-200: #e2e2e8;
+    --gray-400: #8e8e9a;
+    --gray-600: #5a5a6e;
+    --text: #1a1a2e;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: 'Noto Sans KR', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+  }
+
+  /* ── 레이아웃 ── */
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 0 24px;
+    padding-bottom: 18%;
+    transition: justify-content 0.4s ease;
+  }
+
+  .container.active {
+    justify-content: flex-start;
+    padding-top: 40px;
+    padding-bottom: 0;
+  }
+
+  /* ── 로고 ── */
+  .logo {
+    margin-bottom: 48px;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .logo-text {
+    font-size: 68px;
+    font-weight: 900;
+    letter-spacing: -3px;
+    color: var(--hwik-dark);
+    transition: all 0.3s ease;
+  }
+
+  .logo-dot {
+    width: 12px;
+    height: 12px;
+    background: var(--hwik-yellow);
+    border-radius: 50%;
+    margin-top: 28px;
+    transition: all 0.3s ease;
+  }
+
+  .logo:hover .logo-text { color: var(--hwik-dark-light); }
+  .logo:hover .logo-dot { transform: scale(1.3); background: var(--hwik-yellow-hover); }
+
+  .container.active .logo { margin-bottom: 20px; }
+  .container.active .logo-text { font-size: 32px; }
+  .container.active .logo-dot { width: 8px; height: 8px; margin-top: 14px; }
+
+  .tagline {
+    font-size: 14px;
+    font-weight: 400;
+    color: #94a3b8;
+    margin-top: -36px;
+    margin-bottom: 40px;
+    letter-spacing: 0.5px;
+    transition: all 0.4s ease;
+  }
+
+  .container.active .tagline { display: none; }
+
+  /* ── 검색 영역 ── */
+  .search-wrap {
+    width: 100%;
+    max-width: 540px;
+    position: relative;
+  }
+
+  .search-box {
+    position: relative;
+    width: 100%;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 18px 56px 18px 22px;
+    font-size: 17px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-weight: 400;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 28px;
+    outline: none;
+    background: #ffffff;
+    color: var(--text);
+    transition: all 0.25s ease;
+    -webkit-appearance: none;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.02);
+  }
+
+  .search-input::placeholder { color: #94a3b8; font-weight: 300; }
+  .search-input:focus {
+    border-color: #0ea5e9;
+    box-shadow: 0 4px 20px rgba(14,165,233,0.12), 0 0 0 3px rgba(14,165,233,0.08);
+  }
+
+  .search-input.dropdown-open {
+    border-radius: 28px 28px 0 0;
+    border-bottom-color: var(--gray-100);
+  }
+
+  .btn-right {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .icon-btn {
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .icon-btn:active { transform: scale(0.9); }
+  .icon-btn svg { width: 20px; height: 20px; stroke-width: 2.5; fill: none; }
+
+  .btn-search { background: var(--hwik-yellow); }
+  .btn-search:hover { background: var(--hwik-yellow-hover); }
+  .btn-search svg { stroke: var(--hwik-dark); }
+
+  /* ── 추천 드롭다운 ── */
+  .suggest-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0; right: 0;
+    background: var(--white);
+    border: 2px solid var(--hwik-dark);
+    border-top: 1px solid var(--gray-100);
+    border-radius: 0 0 20px 20px;
+    padding: 4px 0 8px;
+    z-index: 50;
+    box-shadow: 0 8px 24px rgba(26,26,46,0.1);
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+  .suggest-dropdown.show { display: block; }
+
+  .suggest-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    cursor: pointer;
+    transition: background 0.1s ease;
+    font-size: 15px;
+    color: var(--text);
+    font-weight: 400;
+  }
+  .suggest-item:hover { background: var(--gray-100); }
+  .suggest-item:active { background: var(--gray-200); }
+
+  .suggest-icon {
+    width: 20px; height: 20px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .suggest-icon svg { width: 16px; height: 16px; stroke: var(--gray-400); stroke-width: 2; fill: none; }
+
+  .suggest-label {
+    font-size: 11px;
+    color: var(--gray-400);
+    font-weight: 300;
+    padding: 10px 20px 4px;
+  }
+
+  .recent-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px 4px;
+  }
+  .recent-title { font-size: 12px; font-weight: 600; color: var(--gray-600); }
+  .recent-clear { background: none; border: none; font-size: 11px; color: var(--gray-400); cursor: pointer; font-family: inherit; }
+  .recent-item-del { background: none; border: none; font-size: 18px; color: var(--gray-400); cursor: pointer; padding: 0 4px; line-height: 1; }
+
+  /* ── 결과 ── */
+  .results {
+    display: none;
+    width: 100%;
+    max-width: 540px;
+    margin-top: 16px;
+    overflow-y: auto;
+    max-height: calc(100vh - 240px);
+    padding-bottom: 90px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .container.active .results { display: block; }
+  .results::-webkit-scrollbar { display: none; }
+  .results { scrollbar-width: none; }
+
+  .results-status {
+    font-size: 14px;
+    color: var(--gray-400);
+    font-weight: 300;
+    margin-bottom: 16px;
+    padding-left: 4px;
+  }
+  .results-status strong { color: var(--hwik-dark); font-weight: 700; }
+
+  /* ── 결과 아이템 ── */
+  .li {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: 2px solid transparent;
+  }
+  .li:active { transform: scale(0.98); }
+
+  .li-row1 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .li-type {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    flex-shrink: 0;
+  }
+  .type-sale { background: rgba(234,88,12,0.1); color: #ea580c; }
+  .type-jeonse { background: rgba(79,70,229,0.1); color: #4f46e5; }
+  .type-rent { background: rgba(124,58,237,0.1); color: #7c3aed; }
+
+  .li-price {
+    font-size: 17px;
+    font-weight: 800;
+    color: var(--hwik-dark);
+    letter-spacing: -0.5px;
+  }
+
+  .li-trade {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+  .trade-available { background: #dcfce7; color: #16a34a; }
+  .trade-ongoing { background: #fef3c7; color: #d97706; }
+  .trade-done { background: #f3f4f6; color: #6b7280; }
+
+  .li-row2 { padding-left: 2px; }
+  .li-name { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .li-detail { font-size: 12px; color: var(--gray-400); }
+
+  .li-btn-detail {
+    padding: 5px 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: var(--white);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray-600);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  /* ── 검색 중 ── */
+  .searching {
+    text-align: center;
+    padding: 40px 0;
+    color: var(--gray-400);
+    font-size: 14px;
+  }
+  .dot-pulse {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .dot-pulse span {
+    width: 8px; height: 8px;
+    background: var(--hwik-yellow);
+    border-radius: 50%;
+    animation: pulse 1.2s ease infinite;
+  }
+  .dot-pulse span:nth-child(2) { animation-delay: 0.2s; }
+  .dot-pulse span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes pulse { 0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1.1); } }
+
+  /* ── 하단 탭바 ── */
+  .bottom-tab-bar {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 60px;
+    background: #ffffff;
+    border-top: 1px solid #e5e7eb;
+    box-shadow: 0 -1px 8px rgba(0,0,0,0.06);
+    z-index: 200;
+    justify-content: space-around;
+    align-items: center;
+    padding: 0 4px;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .bottom-tab-bar.visible { display: flex; }
+
+  .tab-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 6px 4px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tab-btn:active { transform: scale(0.88); }
+
+  .tab-icon {
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .tab-icon svg {
+    width: 26px; height: 26px;
+    stroke: #9ca3af;
+    stroke-width: 2;
+    fill: none;
+    transition: all 0.2s ease;
+  }
+  .tab-btn.active .tab-icon svg { stroke: #0ea5e9; stroke-width: 2.2; }
+
+  .tab-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: #9ca3af;
+    transition: color 0.2s ease;
+    letter-spacing: -0.2px;
+  }
+  .tab-btn.active .tab-label { color: #0ea5e9; font-weight: 700; }
+
+  .tab-badge {
+    display: none;
+    position: absolute;
+    top: -2px; right: -6px;
+    min-width: 16px; height: 16px;
+    background: #ef4444;
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 0 4px;
+    line-height: 16px;
+    text-align: center;
+  }
+  .tab-badge.show { display: block; }
+
+  /* ── 패널 (알림/손님등록/내정보) ── */
+  .panel {
+    display: none;
+    padding: 0 16px 100px;
+    max-width: 540px;
+    margin: 0 auto;
+    width: 100%;
+    overflow-y: auto;
+    max-height: calc(100vh - 100px);
+    -webkit-overflow-scrolling: touch;
+  }
+  .panel::-webkit-scrollbar { display: none; }
+  .panel { scrollbar-width: none; }
+
+  .panel-title {
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--hwik-dark);
+    letter-spacing: -0.5px;
+    padding: 8px 0 16px;
+  }
+
+  /* ── 손님 등록 ── */
+  .client-register-box {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 24px 20px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    border: 2px solid #4ecdc4;
+  }
+
+  .client-input {
+    width: 100%;
+    padding: 16px;
+    font-size: 16px;
+    font-family: 'Noto Sans KR', sans-serif;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 14px;
+    outline: none;
+    background: var(--bg);
+    color: var(--text);
+    resize: none;
+    min-height: 100px;
+    transition: border-color 0.2s;
+  }
+  .client-input:focus { border-color: #4ecdc4; }
+  .client-input::placeholder { color: #94a3b8; }
+
+  .client-submit {
+    width: 100%;
+    margin-top: 14px;
+    padding: 16px;
+    border: none;
+    border-radius: 14px;
+    background: var(--hwik-dark);
+    color: var(--hwik-yellow);
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Noto Sans KR', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .client-submit:active { transform: scale(0.97); }
+  .client-submit:disabled { opacity: 0.5; }
+
+  .client-tip {
+    font-size: 12px;
+    color: var(--gray-400);
+    margin-top: 12px;
+    line-height: 1.6;
+    padding: 0 4px;
+  }
+
+  /* ── 내정보 ── */
+  .profile-card {
+    background: linear-gradient(135deg, #1a1a2e, #242442);
+    border-radius: 20px;
+    padding: 24px 20px;
+    color: #fff;
+  }
+  .profile-name {
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 4px;
+  }
+  .profile-sub {
+    font-size: 13px;
+    color: rgba(255,255,255,0.5);
+  }
+  .profile-logout {
+    margin-top: 20px;
+    padding: 12px;
+    width: 100%;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    background: none;
+    color: rgba(255,255,255,0.6);
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Noto Sans KR', sans-serif;
+    cursor: pointer;
+  }
+  .profile-logout:active { background: rgba(255,255,255,0.05); }
+
+  /* ── 로그인 시트 ── */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 300;
+    backdrop-filter: blur(4px);
+  }
+  .overlay.show { display: block; }
+
+  .login-sheet {
+    position: fixed;
+    bottom: -300px;
+    left: 0; right: 0;
+    background: var(--white);
+    border-radius: 24px 24px 0 0;
+    padding: 32px 24px 48px;
+    z-index: 301;
+    transition: bottom 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.15);
+  }
+  .login-sheet.show { bottom: 0; }
+
+  .login-sheet-bar {
+    width: 36px; height: 4px;
+    background: #d1d5db;
+    border-radius: 2px;
+    margin: 0 auto 24px;
+  }
+
+  .kakao-btn {
+    width: 100%;
+    padding: 16px;
+    border-radius: 14px;
+    border: none;
+    background: #FEE500;
+    color: #3C1E1E;
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'Noto Sans KR', sans-serif;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .kakao-btn:active { background: #e6cf00; }
+  .kakao-btn svg { width: 22px; height: 22px; }
+
+  /* ── 알림 카드 ── */
+  .alert-card {
+    padding: 16px;
+    margin-bottom: 10px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    position: relative;
+    overflow: hidden;
+  }
+  .alert-card.clickable { cursor: pointer; }
+  .alert-card .accent-bar {
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 4px;
+    border-radius: 4px 0 0 4px;
+  }
+
+  .alert-section-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 20px 0 12px;
+  }
+
+  .footer {
+    position: fixed;
+    bottom: 70px;
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 11px;
+    color: #c0c0c0;
+    padding: 8px;
+    pointer-events: none;
+  }
+  .footer span { font-weight: 700; }
+  .container.active .footer { display: none; }
+
+  /* ── 내 주변 ── */
+  .nearby-placeholder {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--gray-400);
+  }
+  .nearby-placeholder svg { width: 48px; height: 48px; stroke: #d1d5db; margin-bottom: 12px; }
+
+  /* ── 최근 본 매물 ── */
+  .recent-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--gray-400);
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container" id="container">
+  <!-- 로고 -->
+  <div class="logo" onclick="goHome()">
+    <span class="logo-text">휙</span>
+    <span class="logo-dot"></span>
+  </div>
+  <div class="tagline">AI가 찾아주는 내 조건에 딱 맞는 매물</div>
+
+  <!-- 검색 -->
+  <div class="search-wrap" id="searchWrap">
+    <div class="search-box">
+      <input type="text" class="search-input" id="searchInput" placeholder="아파트, 지역, 가격으로 검색" autocomplete="off" enterkeyhint="search">
+      <div class="btn-right">
+        <button class="icon-btn btn-search" onclick="doSearch()" title="매물 검색">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+        </button>
+      </div>
+      <!-- 드롭다운 -->
+      <div class="suggest-dropdown" id="dropdown">
+        <div id="recentInDropdown"></div>
+        <div id="suggestStatic">
+          <div class="suggest-label">이렇게 검색해보세요</div>
+          <div class="suggest-item" onclick="pickSuggest(this)">
+            <div class="suggest-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></div>
+            <span class="suggest-text">강남 전세 30평</span>
+          </div>
+          <div class="suggest-item" onclick="pickSuggest(this)">
+            <div class="suggest-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></div>
+            <span class="suggest-text">월세 1000이하</span>
+          </div>
+          <div class="suggest-item" onclick="pickSuggest(this)">
+            <div class="suggest-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></div>
+            <span class="suggest-text">매매 10억</span>
+          </div>
+          <div class="suggest-item" onclick="pickSuggest(this)">
+            <div class="suggest-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></div>
+            <span class="suggest-text">오피스텔 투룸</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="results" id="results"></div>
+
+  <!-- 알림 패널 -->
+  <div class="panel" id="alertPanel"></div>
+
+  <!-- 손님 등록 패널 -->
+  <div class="panel" id="clientPanel"></div>
+
+  <!-- 내주변 패널 -->
+  <div class="panel" id="nearbyPanel"></div>
+
+  <!-- 최근 본 매물 패널 -->
+  <div class="panel" id="recentPanel"></div>
+
+  <!-- 내정보 패널 -->
+  <div class="panel" id="profilePanel"></div>
+
+  <div class="footer">AI가 찾아주는 매물 · <span>휙</span></div>
+</div>
+
+<!-- 하단 탭바: 비로그인 -->
+<div class="bottom-tab-bar visible" id="bottomTabBar">
+  <!-- 홈 -->
+  <button class="tab-btn active" id="tabHome" onclick="switchTab('home')">
+    <div class="tab-icon">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </div>
+    <span class="tab-label">홈</span>
+  </button>
+  <!-- 내주변 -->
+  <button class="tab-btn" id="tabNearby" onclick="switchTab('nearby')">
+    <div class="tab-icon">
+      <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+    </div>
+    <span class="tab-label">내주변</span>
+  </button>
+  <!-- 최근 -->
+  <button class="tab-btn" id="tabRecent" onclick="switchTab('recent')">
+    <div class="tab-icon">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </div>
+    <span class="tab-label">최근</span>
+  </button>
+  <!-- 중개사 (비로그인) -->
+  <button class="tab-btn" id="tabAgent" onclick="switchTab('agent')">
+    <div class="tab-icon">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+    <span class="tab-label">중개사</span>
+  </button>
+</div>
+
+<!-- 하단 탭바: 로그인 후 (중개사) -->
+<div class="bottom-tab-bar" id="agentTabBar">
+  <!-- 홈 -->
+  <button class="tab-btn active" id="tabHomeAgent" onclick="switchTab('home')">
+    <div class="tab-icon">
+      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </div>
+    <span class="tab-label">홈</span>
+  </button>
+  <!-- 손님등록 -->
+  <button class="tab-btn" id="tabClient" onclick="switchTab('client')">
+    <div class="tab-icon">
+      <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+    </div>
+    <span class="tab-label">손님등록</span>
+  </button>
+  <!-- 알림 -->
+  <button class="tab-btn" id="tabAlert" onclick="switchTab('alert')">
+    <div class="tab-icon">
+      <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      <span class="tab-badge" id="badgeAlert"></span>
+    </div>
+    <span class="tab-label">알림</span>
+  </button>
+  <!-- 내정보 -->
+  <button class="tab-btn" id="tabProfile" onclick="switchTab('profile')">
+    <div class="tab-icon">
+      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+    <span class="tab-label">내정보</span>
+  </button>
+</div>
+
+<!-- 로그인 시트 -->
+<div class="overlay" id="overlay" onclick="closeLogin()"></div>
+<div class="login-sheet" id="loginSheet">
+  <div class="login-sheet-bar"></div>
+  <div style="text-align:center;margin-bottom:20px;">
+    <div style="font-size:20px;font-weight:800;color:var(--hwik-dark);margin-bottom:4px;">중개사 로그인</div>
+    <div style="font-size:13px;color:#94a3b8;">매물 관리와 손님 매칭을 시작하세요</div>
+  </div>
+  <button class="kakao-btn" onclick="doKakaoLogin()">
+    <svg viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3C6.48 3 2 6.48 2 10.8c0 2.76 1.84 5.18 4.6 6.56-.2.74-.72 2.68-.82 3.1-.14.52.19.51.4.37.16-.1 2.56-1.74 3.6-2.44.7.1 1.44.16 2.22.16 5.52 0 10-3.48 10-7.76S17.52 3 12 3z"/></svg>
+    카카오로 시작하기
+  </button>
+</div>
+
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js"></script>
+<script>
+// ── 상태 ──
+const container = document.getElementById('container');
+const searchInput = document.getElementById('searchInput');
+const dropdown = document.getElementById('dropdown');
+const results = document.getElementById('results');
+
+let currentUser = null;
+let currentTab = 'home';
+let searchData = [];
+let searchController = null;
+let appLoading = false;
+
+function haptic(ms = 30) { try { navigator.vibrate?.(ms); } catch(_e) {} }
+
+// ── Supabase + Kakao ──
+const SUPABASE_URL = HWIK_CONFIG.SUPABASE_URL;
+const SUPABASE_KEY = HWIK_CONFIG.SUPABASE_KEY;
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: { clockSkewInSeconds: 300 }
+});
+
+window.addEventListener('load', function() {
+  if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
+    Kakao.init(HWIK_CONFIG.KAKAO_JS_KEY);
+  }
+});
+
+// ── 인증 ──
+supabaseClient.auth.getSession().then(({ data: { session } }) => {
+  if (session?.user) { currentUser = session.user; onLoggedIn(); }
+});
+supabaseClient.auth.onAuthStateChange((event, session) => {
+  if (session?.user) { currentUser = session.user; onLoggedIn(); }
+  else { currentUser = null; onLoggedOut(); }
+});
+
+function onLoggedIn() {
+  closeLogin();
+  // 탭바 전환: 비로그인 → 중개사
+  document.getElementById('bottomTabBar').classList.remove('visible');
+  document.getElementById('agentTabBar').classList.add('visible');
+  switchTab('home');
+  updateAlertBadge();
+}
+
+function onLoggedOut() {
+  document.getElementById('agentTabBar').classList.remove('visible');
+  document.getElementById('bottomTabBar').classList.add('visible');
+  switchTab('home');
+}
+
+// ── 로그인 ──
+function showLogin() {
+  document.getElementById('overlay').classList.add('show');
+  setTimeout(() => document.getElementById('loginSheet').classList.add('show'), 10);
+  history.pushState({ login: true }, '');
+}
+function closeLogin() {
+  document.getElementById('loginSheet').classList.remove('show');
+  setTimeout(() => document.getElementById('overlay').classList.remove('show'), 300);
+}
+function doKakaoLogin() {
+  supabaseClient.auth.signInWithOAuth({
+    provider: 'kakao',
+    options: { redirectTo: 'https://hwik.kr/mobile.html' }
+  });
+}
+
+// ── 탭 전환 ──
+function switchTab(tab) {
+  haptic(15);
+  currentTab = tab;
+
+  // 모든 패널 숨기기
+  document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
+
+  // 탭 active 처리
+  const isAgent = !!currentUser;
+  const barId = isAgent ? 'agentTabBar' : 'bottomTabBar';
+  document.querySelectorAll(`#${barId} .tab-btn`).forEach(btn => btn.classList.remove('active'));
+
+  // 검색영역/로고/결과 표시 제어
+  const searchWrap = document.getElementById('searchWrap');
+  const logo = document.querySelector('.logo');
+  const tagline = document.querySelector('.tagline');
+
+  if (tab === 'home') {
+    // 홈: 검색 보이기
+    container.classList.remove('active');
+    searchWrap.style.display = '';
+    logo.style.display = '';
+    tagline.style.display = '';
+    results.innerHTML = '';
+    searchInput.value = '';
+    searchData = [];
+
+    if (isAgent) document.getElementById('tabHomeAgent').classList.add('active');
+    else document.getElementById('tabHome').classList.add('active');
+
+  } else {
+    // 다른 탭: 검색/로고 숨기기
+    container.classList.add('active');
+    searchWrap.style.display = 'none';
+    logo.style.display = 'none';
+    tagline.style.display = 'none';
+    results.innerHTML = '';
+
+    // 해당 탭 버튼 활성화
+    const btnMap = {
+      nearby: 'tabNearby', recent: 'tabRecent', agent: 'tabAgent',
+      client: 'tabClient', alert: 'tabAlert', profile: 'tabProfile'
+    };
+    const btnId = btnMap[tab];
+    if (btnId) document.getElementById(btnId)?.classList.add('active');
+
+    // 패널 표시
+    if (tab === 'nearby') showNearby();
+    else if (tab === 'recent') showRecent();
+    else if (tab === 'agent') showLogin();
+    else if (tab === 'client') showClientRegister();
+    else if (tab === 'alert') showAlerts();
+    else if (tab === 'profile') showProfile();
+
+    history.pushState({ tab }, '');
+  }
+}
+
+// ── 검색 ──
+searchInput.addEventListener('focus', () => {
+  setTimeout(() => searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+  openDropdown();
+});
+searchInput.addEventListener('input', () => {
+  if (searchInput.value.trim()) closeDropdown(); else openDropdown();
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.search-wrap')) closeDropdown();
+});
+searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !appLoading) doSearch(); });
+
+function openDropdown() {
+  if (container.classList.contains('active')) return;
+  renderRecentDropdown();
+  dropdown.classList.add('show');
+  searchInput.classList.add('dropdown-open');
+}
+function closeDropdown() {
+  dropdown.classList.remove('show');
+  searchInput.classList.remove('dropdown-open');
+}
+function pickSuggest(el) {
+  searchInput.value = el.querySelector('.suggest-text').textContent;
+  closeDropdown(); doSearch();
+}
+
+// 최근 검색
+let recentSearches = JSON.parse(localStorage.getItem('hwik_recent') || '[]');
+function addRecent(query) {
+  recentSearches = recentSearches.filter(q => q !== query);
+  recentSearches.unshift(query);
+  if (recentSearches.length > 3) recentSearches = recentSearches.slice(0, 3);
+  localStorage.setItem('hwik_recent', JSON.stringify(recentSearches));
+}
+function renderRecentDropdown() {
+  const recentEl = document.getElementById('recentInDropdown');
+  const staticEl = document.getElementById('suggestStatic');
+  if (!recentEl) return;
+  if (!recentSearches.length) { recentEl.innerHTML = ''; if (staticEl) staticEl.style.display = ''; return; }
+  if (staticEl) staticEl.style.display = 'none';
+  recentEl.innerHTML = `
+    <div class="recent-header">
+      <span class="recent-title">최근 검색</span>
+      <button class="recent-clear" onclick="clearAllRecent()">전체 삭제</button>
+    </div>
+    ${recentSearches.map((q, i) => `
+      <div class="suggest-item" onclick="pickRecent(${i})">
+        <div class="suggest-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg></div>
+        <span class="suggest-text">${esc(q)}</span>
+        <button class="recent-item-del" onclick="event.stopPropagation();deleteRecent(${i})">×</button>
+      </div>
+    `).join('')}
+  `;
+}
+function pickRecent(idx) { searchInput.value = recentSearches[idx] || ''; doSearch(); }
+function deleteRecent(idx) { recentSearches.splice(idx, 1); localStorage.setItem('hwik_recent', JSON.stringify(recentSearches)); renderRecentDropdown(); }
+function clearAllRecent() { recentSearches = []; localStorage.removeItem('hwik_recent'); renderRecentDropdown(); }
+
+async function doSearch() {
+  if (appLoading) return;
+  const query = searchInput.value.trim();
+  if (!query) return;
+
+  addRecent(query);
+  closeDropdown();
+  container.classList.add('active');
+  searchInput.blur();
+  if (searchController) searchController.abort();
+  searchController = new AbortController();
+  appLoading = true;
+
+  // 검색 중 표시
+  results.innerHTML = `
+    <div class="searching">
+      <div class="dot-pulse"><span></span><span></span><span></span></div>
+      "${esc(query)}" 검색 중
+    </div>`;
+
+  try {
+    // 일반 이용자: 공유 매물에서 검색
+    const searchMode = currentUser ? 'my' : 'shared';
+    const agentId = currentUser ? currentUser.id : '';
+
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/search-property`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+      body: JSON.stringify({ query, agent_id: agentId, limit: 30, search_mode: searchMode }),
+      signal: searchController.signal
+    });
+    const data = await res.json();
+    searchData = data.results || [];
+    showSearchResults(searchData);
+  } catch(e) {
+    if (e.name === 'AbortError') return;
+    results.innerHTML = '<div class="results-status" style="text-align:center;padding:32px 0;color:#f87171">검색 오류가 발생했어요</div>';
+  } finally {
+    appLoading = false;
+  }
+}
+
+function showSearchResults(cards) {
+  if (!cards.length) {
+    results.innerHTML = '<div class="results-status" style="text-align:center;padding:32px 0">검색 결과가 없어요</div>';
+    return;
+  }
+  let html = `<div class="results-status"><strong>${cards.length}건</strong></div>`;
+  cards.forEach((item, idx) => {
+    const p = item.property || {};
+    const type = esc(p.type || '');
+    const typeClass = type === '매매' ? 'type-sale' : type === '전세' ? 'type-jeonse' : 'type-rent';
+    const tradeStatus = item.trade_status === '계약중' ? '계약중' : item.trade_status === '완료' ? '완료' : '계약가능';
+    const tradeClass = tradeStatus === '계약가능' ? 'trade-available' : tradeStatus === '계약중' ? 'trade-ongoing' : 'trade-done';
+    const name = esc(p.complex || p.location || '매물');
+    const loc = esc(p.location || '');
+    const detail = [p.area, p.floor].filter(Boolean).map(v => esc(v)).join(' · ');
+    const safeId = esc(item.id);
+
+    html += `
+      <div class="li" onclick="openProperty('${safeId}')">
+        <div class="li-row1">
+          <span class="li-type ${typeClass}">${type}</span>
+          <span class="li-price">${esc(p.price || '')}</span>
+          <span class="li-trade ${tradeClass}">${tradeStatus}</span>
+          <span style="flex:1"></span>
+          <button class="li-btn-detail" onclick="event.stopPropagation(); openProperty('${safeId}')">보기</button>
+        </div>
+        <div class="li-row2">
+          <div class="li-name">${name}${loc && loc !== name ? ' · ' + loc : ''}</div>
+          <div class="li-detail">${detail}</div>
+        </div>
+      </div>`;
+  });
+  results.innerHTML = html;
+
+  // 최근 본 매물에 저장
+  cards.forEach(item => addRecentViewed(item));
+}
+
+// 매물 클릭 → property_chat.html 열기
+function openProperty(cardId) {
+  const agentParam = currentUser ? '&agent=' + currentUser.id : '';
+  window.open('https://hwik.kr/property_chat.html?id=' + cardId + agentParam, '_blank');
+}
+
+// ── 내 주변 ──
+function showNearby() {
+  const panel = document.getElementById('nearbyPanel');
+  panel.style.display = 'block';
+  panel.innerHTML = `
+    <div class="panel-title">내 주변</div>
+    <div class="nearby-placeholder">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+      </svg>
+      <div style="font-size:15px;font-weight:600;margin-bottom:4px;">위치를 허용하면</div>
+      <div style="font-size:13px;">주변 매물을 찾아드려요</div>
+      <button onclick="requestLocation()" style="margin-top:16px;padding:12px 28px;border-radius:12px;border:none;background:var(--hwik-dark);color:var(--hwik-yellow);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">위치 허용하기</button>
+    </div>
+  `;
+}
+
+function requestLocation() {
+  if (!navigator.geolocation) {
+    showToast('이 브라우저에서는 위치 기능을 지원하지 않아요');
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      showToast('위치 확인! 주변 매물 검색 중...');
+      // 추후 위치 기반 검색 구현
+      const panel = document.getElementById('nearbyPanel');
+      panel.innerHTML = `
+        <div class="panel-title">내 주변</div>
+        <div style="text-align:center;padding:40px 0;color:var(--gray-400);font-size:14px;">
+          주변 매물 검색 기능은 준비 중이에요
+        </div>
+      `;
+    },
+    () => { showToast('위치를 가져올 수 없어요'); }
+  );
+}
+
+// ── 최근 본 매물 ──
+function getRecentViewed() {
+  return JSON.parse(localStorage.getItem('hwik_recent_viewed') || '[]');
+}
+function addRecentViewed(item) {
+  let list = getRecentViewed();
+  list = list.filter(v => v.id !== item.id);
+  const p = item.property || {};
+  list.unshift({
+    id: item.id,
+    type: p.type || '',
+    price: p.price || '',
+    name: p.complex || p.location || '',
+    location: p.location || '',
+    area: p.area || '',
+    time: Date.now()
+  });
+  if (list.length > 20) list = list.slice(0, 20);
+  localStorage.setItem('hwik_recent_viewed', JSON.stringify(list));
+}
+
+function showRecent() {
+  const panel = document.getElementById('recentPanel');
+  panel.style.display = 'block';
+  const list = getRecentViewed();
+  if (!list.length) {
+    panel.innerHTML = `
+      <div class="panel-title">최근 본 매물</div>
+      <div class="recent-empty">아직 본 매물이 없어요</div>
+    `;
+    return;
+  }
+  let html = `<div class="panel-title">최근 본 매물</div>`;
+  list.forEach(item => {
+    const typeClass = item.type === '매매' ? 'type-sale' : item.type === '전세' ? 'type-jeonse' : 'type-rent';
+    const safeId = esc(item.id);
+    html += `
+      <div class="li" onclick="openProperty('${safeId}')">
+        <div class="li-row1">
+          <span class="li-type ${typeClass}">${esc(item.type)}</span>
+          <span class="li-price">${esc(item.price)}</span>
+          <span style="flex:1"></span>
+        </div>
+        <div class="li-row2">
+          <div class="li-name">${esc(item.name)}</div>
+          <div class="li-detail">${esc(item.area)}</div>
+        </div>
+      </div>`;
+  });
+  panel.innerHTML = html;
+}
+
+// ── 손님 등록 (중개사 전용) ──
+function showClientRegister() {
+  const panel = document.getElementById('clientPanel');
+  panel.style.display = 'block';
+  panel.innerHTML = `
+    <div class="panel-title">손님 등록</div>
+    <div class="client-register-box">
+      <textarea class="client-input" id="clientInput" placeholder="손님이 찾는 조건을 적어주세요
+
+예) 강남 2룸 전세 3억 이하
+예) 마포 신축 월세 50/80
+예) 서초 매매 15억 30평대"></textarea>
+      <button class="client-submit" id="clientSubmitBtn" onclick="submitClient()">등록하기</button>
+      <div class="client-tip">등록하면 AI가 자동으로 매칭 매물을 찾아 알림으로 보내드려요</div>
+    </div>
+  `;
+  setTimeout(() => document.getElementById('clientInput')?.focus(), 300);
+}
+
+async function submitClient() {
+  const input = document.getElementById('clientInput');
+  const btn = document.getElementById('clientSubmitBtn');
+  const text = input.value.trim();
+  if (!text) { showToast('손님 조건을 입력해주세요'); return; }
+  if (!currentUser) { showLogin(); return; }
+
+  btn.textContent = '등록 중...'; btn.disabled = true;
+
+  try {
+    // parse-property로 AI 파싱
+    const parseRes = await fetch(`${SUPABASE_URL}/functions/v1/parse-property`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+      body: JSON.stringify({ text: '손님 ' + text })
+    });
+    const parsed = await parseRes.json();
+
+    // cards 테이블에 저장
+    const cardData = {
+      id: crypto.randomUUID().replace(/-/g, '').slice(0, 12),
+      agent_id: currentUser.id,
+      property: {
+        ...parsed,
+        type: '손님',
+        rawText: text
+      },
+      trade_status: '계약가능',
+      client_status: '탐색중',
+      search_text: parsed.search_text || text,
+      embedding: parsed.embedding || null,
+      price_number: parsed.price_number || null,
+      deposit: parsed.deposit || null,
+      monthly_rent: parsed.monthly_rent || null,
+    };
+
+    const { error } = await supabaseClient.from('cards').insert(cardData);
+    if (error) throw error;
+
+    input.value = '';
+    showToast('손님 등록 완료! 매칭 알림을 기다려주세요');
+
+    // 자동 매칭 요청
+    fetch(`${SUPABASE_URL}/functions/v1/auto-match`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ card_id: cardData.id, agent_id: currentUser.id })
+    }).catch(() => {});
+
+  } catch(e) {
+    showToast('등록 실패: ' + (e.message || '오류'));
+  } finally {
+    btn.textContent = '등록하기'; btn.disabled = false;
+  }
+}
+
+// ── 알림 (중개사 전용) ──
+async function showAlerts() {
+  const panel = document.getElementById('alertPanel');
+  panel.style.display = 'block';
+  if (!currentUser) return;
+  panel.innerHTML = '<div style="text-align:center;padding:40px 0;color:#94a3b8;">알림 로딩 중...</div>';
+
+  try {
+    const [matchRes, interestRes, overdueRes, upcomingRes] = await Promise.all([
+      supabaseClient.from('match_notifications').select('id, card_id, client_card_id, similarity, created_at')
+        .eq('agent_id', currentUser.id).eq('is_read', false).order('created_at', { ascending: false }).limit(20),
+      supabaseClient.from('card_interests').select('id, card_id, created_at')
+        .eq('agent_id', currentUser.id).order('created_at', { ascending: false }).limit(20),
+      supabaseClient.from('client_notes').select('id, client_card_id, content, alert_date, type')
+        .eq('agent_id', currentUser.id).eq('alert_done', false).not('alert_date', 'is', null).lt('alert_date', new Date().toISOString())
+        .order('alert_date', { ascending: true }).limit(20),
+      supabaseClient.from('client_notes').select('id, client_card_id, content, alert_date, type')
+        .eq('agent_id', currentUser.id).eq('alert_done', false).not('alert_date', 'is', null).gte('alert_date', new Date().toISOString())
+        .order('alert_date', { ascending: true }).limit(20),
+    ]);
+
+    // 매물·손님 ID 모아서 병렬 조회
+    const cardIds = [...new Set([...(matchRes.data||[]).map(m=>m.card_id), ...(interestRes.data||[]).map(i=>i.card_id)])].filter(Boolean);
+    const clientIds = [...new Set([...(overdueRes.data||[]).map(o=>o.client_card_id), ...(upcomingRes.data||[]).map(u=>u.client_card_id), ...(matchRes.data||[]).map(m=>m.client_card_id)])].filter(Boolean);
+
+    let cardMap = {}, clientMap = {};
+    const [cardsRes, clientsRes] = await Promise.all([
+      cardIds.length ? supabaseClient.from('cards').select('id, property').in('id', cardIds) : { data: [] },
+      clientIds.length ? supabaseClient.from('cards').select('id, property').in('id', clientIds) : { data: [] }
+    ]);
+    if (cardsRes.data) cardsRes.data.forEach(c => { cardMap[c.id] = c.property || {}; });
+    if (clientsRes.data) clientsRes.data.forEach(c => { clientMap[c.id] = c.property || {}; });
+
+    let html = '<div class="panel-title">알림</div>';
+
+    function alertCard(color, label, rightText, content) {
+      return `<div class="alert-card">
+        <div class="accent-bar" style="background:${color}"></div>
+        <div style="padding-left:8px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span style="font-size:11px;color:#fff;font-weight:600;background:${color};padding:3px 10px;border-radius:20px;">${label}</span>
+            <span style="font-size:12px;color:#64748b;font-weight:500;">${rightText}</span>
+          </div>
+          <div style="font-size:15px;color:#1a1a2e;font-weight:600;line-height:1.5;">${content}</div>
+        </div>
+      </div>`;
+    }
+
+    // 지연
+    const overdue = overdueRes.data || [];
+    if (overdue.length) {
+      html += `<div class="alert-section-title">
+        <span style="font-size:15px;font-weight:800;color:#ef4444;">지연</span>
+        <span style="font-size:12px;color:#fff;background:#ef4444;padding:2px 10px;border-radius:20px;font-weight:600;">${overdue.length}</span>
+      </div>`;
+      overdue.forEach(a => {
+        const cp = clientMap[a.client_card_id] || {};
+        const clientName = [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
+        const ad = new Date(a.alert_date);
+        html += alertCard('#ef4444', `${ad.getMonth()+1}/${ad.getDate()} 지연`, esc(clientName), esc(a.content));
+      });
+    }
+
+    // 관심
+    const interests = interestRes.data || [];
+    if (interests.length) {
+      html += `<div class="alert-section-title">
+        <span style="font-size:15px;font-weight:800;color:#f59e0b;">관심 표시</span>
+        <span style="font-size:12px;color:#fff;background:#f59e0b;padding:2px 10px;border-radius:20px;font-weight:600;">${interests.length}</span>
+      </div>`;
+      interests.forEach(i => {
+        const p = cardMap[i.card_id] || {};
+        const name = [p.complex, p.location, p.price].filter(Boolean).join(' · ') || '매물';
+        const time = new Date(i.created_at).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
+        html += alertCard('#facc15', '관심 매물', time, `손님이 "${esc(name)}" 보고싶어요`);
+      });
+    }
+
+    // 매칭
+    const matches = matchRes.data || [];
+    if (matches.length) {
+      html += `<div class="alert-section-title">
+        <span style="font-size:15px;font-weight:800;color:#4ecdc4;">새 매칭</span>
+        <span style="font-size:12px;color:#fff;background:#4ecdc4;padding:2px 10px;border-radius:20px;font-weight:600;">${matches.length}</span>
+      </div>`;
+      matches.forEach(m => {
+        const p = cardMap[m.card_id] || {};
+        const cp = clientMap[m.client_card_id] || {};
+        const propName = [p.complex, p.location, p.price].filter(Boolean).join(' · ') || '매물';
+        const clientName = [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
+        html += alertCard('#4ecdc4', '매칭', esc(clientName), esc(propName));
+      });
+    }
+
+    // 예정
+    const upcoming = upcomingRes.data || [];
+    if (upcoming.length) {
+      html += `<div class="alert-section-title">
+        <span style="font-size:15px;font-weight:800;color:#64748b;">예정</span>
+        <span style="font-size:12px;color:#fff;background:#94a3b8;padding:2px 10px;border-radius:20px;font-weight:600;">${upcoming.length}</span>
+      </div>`;
+      upcoming.forEach(a => {
+        const cp = clientMap[a.client_card_id] || {};
+        const clientName = [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
+        const ad = new Date(a.alert_date);
+        html += alertCard('#94a3b8', `${ad.getMonth()+1}/${ad.getDate()} ${esc(a.type||'일정')}`, esc(clientName), esc(a.content));
+      });
+    }
+
+    if (!overdue.length && !interests.length && !matches.length && !upcoming.length) {
+      html += '<div style="text-align:center;padding:60px 0;color:#94a3b8;font-size:14px;">알림이 없어요</div>';
+    }
+
+    panel.innerHTML = html;
+  } catch(e) {
+    panel.innerHTML = '<div style="text-align:center;padding:40px 0;color:#f87171;">알림 로딩 실패</div>';
+  }
+}
+
+async function updateAlertBadge() {
+  if (!currentUser) return;
+  try {
+    const [matchResult, interestResult, overdueResult] = await Promise.all([
+      supabaseClient.from('match_notifications').select('id', { count: 'exact', head: true }).eq('agent_id', currentUser.id).eq('is_read', false),
+      supabaseClient.from('card_interests').select('id', { count: 'exact', head: true }).eq('agent_id', currentUser.id),
+      supabaseClient.from('client_notes').select('id', { count: 'exact', head: true }).eq('agent_id', currentUser.id).eq('alert_done', false).lt('alert_date', new Date().toISOString())
+    ]);
+    const count = (matchResult.count || 0) + (interestResult.count || 0) + (overdueResult.count || 0);
+    const badge = document.getElementById('badgeAlert');
+    if (badge) {
+      if (count > 0) { badge.textContent = count > 99 ? '99+' : count; badge.classList.add('show'); }
+      else { badge.textContent = ''; badge.classList.remove('show'); }
+    }
+  } catch(e) {}
+}
+
+// ── 내정보 (중개사 전용) ──
+async function showProfile() {
+  const panel = document.getElementById('profilePanel');
+  panel.style.display = 'block';
+  if (!currentUser) return;
+
+  panel.innerHTML = '<div class="panel-title">내 정보</div><div style="text-align:center;padding:20px;color:#94a3b8;">로딩 중...</div>';
+
+  try {
+    const { data: profile } = await supabaseClient.from('profiles')
+      .select('business_name, agent_name, phone, profile_photo')
+      .eq('id', currentUser.id).maybeSingle();
+
+    const name = profile?.business_name || profile?.agent_name || '중개사';
+    const phone = profile?.phone || '';
+
+    panel.innerHTML = `
+      <div class="panel-title">내 정보</div>
+      <div class="profile-card">
+        <div class="profile-name">${esc(name)}</div>
+        ${phone ? `<div class="profile-sub">${esc(phone)}</div>` : ''}
+        <div class="profile-sub" style="margin-top:8px;">매물 관리는 PC에서 해주세요</div>
+        <button class="profile-logout" onclick="doLogout()">로그아웃</button>
+      </div>
+    `;
+  } catch(e) {
+    panel.innerHTML = '<div class="panel-title">내 정보</div><div style="text-align:center;padding:20px;color:#f87171;">로딩 실패</div>';
+  }
+}
+
+async function doLogout() {
+  await supabaseClient.auth.signOut();
+  currentUser = null;
+  onLoggedOut();
+  showToast('로그아웃 되었어요');
+}
+
+// ── 홈 ──
+function goHome() { switchTab('home'); }
+
+// ── 토스트 ──
+function showToast(msg) {
+  let t = document.getElementById('mobileToast');
+  if (!t) {
+    t = document.createElement('div');
+    t.id = 'mobileToast';
+    t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:9999;border:1px solid rgba(255,255,255,0.2);white-space:nowrap;transition:opacity 0.3s;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg; t.style.opacity = '1';
+  setTimeout(() => { t.style.opacity = '0'; }, 2000);
+}
+
+// ── 뒤로가기 처리 ──
+history.replaceState({ hwik: 'home' }, '');
+window.addEventListener('popstate', (e) => {
+  // 로그인 시트
+  if (document.getElementById('loginSheet').classList.contains('show')) {
+    closeLogin(); return;
+  }
+  // 홈이 아닌 탭 → 홈으로
+  if (currentTab !== 'home') {
+    switchTab('home');
+    history.pushState({ hwik: 'home' }, '');
+    return;
+  }
+  // 홈에서 뒤로가기 → 앱 종료 방지
+  history.pushState({ hwik: 'home' }, '');
+});
+</script>
+
+<script>
+// ── 서비스워커 등록 + 자동 업데이트 ──
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('/hwik-web/sw.js');
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            newWorker.postMessage('SKIP_WAITING');
+          }
+        });
+      });
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) { refreshing = true; window.location.reload(); }
+      });
+    } catch(e) { console.warn('[휙 SW 등록 실패]', e); }
+  });
+}
+</script>
+</body>
+</html>
