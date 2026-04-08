@@ -221,8 +221,10 @@ def build_intro_sentence(name, addr, year, units, builder, bc, rt, jr):
     if age is not None and age <= 5:
         return f"{addr}에 위치한 {name}은(는) {year}년 준공된 신축 아파트입니다."
     # 대단지
-    if unit_count >= 1000:
+    if unit_count >= 1000 and year:
         return f"{name}은(는) {addr}의 {unit_count:,}세대 대단지 아파트로, {year}년에 준공되었습니다."
+    if unit_count >= 1000:
+        return f"{name}은(는) {addr}의 {unit_count:,}세대 대단지 아파트입니다."
     # 전세 수요 높음
     if jr and float(jr) >= 70:
         return f"{name}은(는) 전세가율 {jr}%로 전세 수요가 높은 {addr} 소재 아파트입니다."
@@ -232,7 +234,9 @@ def build_intro_sentence(name, addr, year, units, builder, bc, rt, jr):
     # 유명 시공사
     major = ["삼성물산", "현대건설", "대우건설", "GS건설", "포스코건설", "대림산업", "롯데건설", "HDC현대산업개발"]
     if builder and any(b in builder for b in major):
-        return f"{name}은(는) {builder} 시공의 아파트로, {addr}에 위치하며 {year}년 준공되었습니다."
+        if year:
+            return f"{name}은(는) {builder} 시공의 아파트로, {addr}에 위치하며 {year}년 준공되었습니다."
+        return f"{name}은(는) {builder} 시공의 아파트로, {addr}에 위치합니다."
     # 구축
     if age is not None and age >= 30:
         return f"{year}년 준공된 {name}은(는) {addr}에 위치한 아파트입니다."
@@ -449,7 +453,11 @@ def build_fallback_html(d):
 
     # SEO 서술형 텍스트 (풍부한 고유 콘텐츠)
     seo = []
-    intro = build_intro_sentence(name, addr, year, units, builder, bc, rt, jr)
+    # 원본 값으로 호출 (esc()는 seo_text 전체에서 적용)
+    raw_name = d.get("complex_name", "")
+    raw_addr = d.get("address", "")
+    raw_builder = d.get("builder", "")
+    intro = build_intro_sentence(raw_name, raw_addr, year, units, raw_builder, bc, rt, jr)
     seo.append(intro)
     if len(traded_areas) >= 2:
         parts = [f"전용 {a}㎡ {format_price(t.get('price'))}" for a, t in traded_areas[:4]]
