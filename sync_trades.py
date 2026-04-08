@@ -359,11 +359,23 @@ def match_trades_to_complex(apt: dict, trade_rows: list) -> list:
     num_match = re.search(r'(\d+차|\d+단지|\d+블록)', kapt_name)
     num_tag = num_match.group(1) if num_match else ""
 
+    # kapt_code가 'A'로 시작하면 아파트 → offi 거래 제외
+    is_apt = (apt.get("kapt_code") or "").upper().startswith("A")
+
     matched = []
     for row in trade_rows:
+        # 아파트 단지면 offi 캐시 제외 (오피스텔 거래 혼입 방지)
+        row_kapt = row.get("kapt_code") or ""
+        if is_apt and row_kapt.endswith("_offi"):
+            continue
+
         items = row.get("data") or []
         for item in items:
-            apt_nm = (item.get("aptNm") or item.get("offiNm") or "").replace(" ", "")
+            # 아파트 단지 → aptNm만 매칭 (offiNm 무시)
+            if is_apt:
+                apt_nm = (item.get("aptNm") or "").replace(" ", "")
+            else:
+                apt_nm = (item.get("aptNm") or item.get("offiNm") or "").replace(" ", "")
             if not apt_nm:
                 continue
 
@@ -408,7 +420,7 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
         cat = str(round(exclu))
         pyeongs_map[cat] = {"exclu": round(exclu, 1), "supply": round(supply, 1)}
 
-    # categories는 항상 실거래 데이터에서 추출 (거래 있는 평형만)
+    # categories는 실거래 데이터에서 추출 (거래 있는 평형만)
     areas = set()
     for t in trades:
         try:
@@ -418,6 +430,18 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
         except:
             pass
     categories = sorted(areas, key=lambda x: float(x))
+
+    # pyeongs 안전망: 공식 면적 목록이 있으면 ±5㎡ 밖의 면적 제거
+    # (상가/근생/오피스텔 거래가 아파트에 섞이는 것 방지)
+    if pyeongs_map:
+        pm_keys = [float(k) for k in pyeongs_map.keys()]
+        filtered = []
+        for cat in categories:
+            cat_f = float(cat)
+            if any(abs(cat_f - pk) <= 5 for pk in pm_keys):
+                filtered.append(cat)
+        if filtered:  # 필터 후 0개면 원본 유지 (pyeongs 데이터 오류 대비)
+            categories = filtered
 
     # pyeongs_map에서 매칭 안 되는 카테고리는 가장 가까운 것으로 매핑 (±10㎡ 이내만)
     if pyeongs_map:
