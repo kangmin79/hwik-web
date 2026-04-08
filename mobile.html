@@ -1374,13 +1374,20 @@ async function showProfile() {
     const name = profile?.business_name || profile?.agent_name || '중개사';
     const phone = profile?.phone || '';
 
+    const initial = name.charAt(0);
+    const photoUrl = profile?.profile_photo || '';
+
     panel.innerHTML = `
-      <div class="panel-title">내 정보</div>
-      <div class="profile-card">
-        <div class="profile-name">${esc(name)}</div>
-        ${phone ? `<div class="profile-sub">${esc(phone)}</div>` : ''}
-        <div class="profile-sub" style="margin-top:8px;">매물 관리는 PC에서 해주세요</div>
-        <button class="profile-logout" onclick="doLogout()">로그아웃</button>
+      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;">
+        <!-- 프로필 원형 -->
+        <div style="width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,#1a1a2e,#2d2b55);display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 8px 32px rgba(26,26,46,0.3);${photoUrl ? `background-image:url('${esc(photoUrl)}');background-size:cover;background-position:center;` : ''}">
+          ${photoUrl ? '' : `<span style="font-size:32px;font-weight:900;color:var(--hwik-yellow);">${esc(initial)}</span>`}
+        </div>
+        <div style="font-size:24px;font-weight:900;color:var(--hwik-dark);letter-spacing:-1px;margin-bottom:6px;">${esc(name)}</div>
+        ${phone ? `<div style="font-size:14px;color:#94a3b8;font-weight:400;letter-spacing:0.5px;">${esc(phone)}</div>` : ''}
+        <div style="width:40px;height:2px;background:var(--hwik-yellow);border-radius:1px;margin:24px 0;"></div>
+        <div style="font-size:13px;color:#c0c0c0;">매물 관리는 PC에서 해주세요</div>
+        <button onclick="doLogout()" style="margin-top:32px;padding:12px 40px;border-radius:12px;border:1px solid #e2e8f0;background:none;color:#94a3b8;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;">로그아웃</button>
       </div>
     `;
   } catch(e) {
