@@ -1617,20 +1617,15 @@
             if (!nav) {
                 nav = document.createElement('div');
                 nav.id = 'cardNav';
-                nav.style.cssText = 'position:fixed; top:12px; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:10px; background:rgba(0,0,0,0.45); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px); padding:6px 16px; border-radius:20px; z-index:50;';
-
-                const indicator = document.createElement('div');
-                indicator.id = 'cardIndicator';
-                indicator.style.cssText = 'font-size:12px; color:rgba(255,255,255,0.6);';
-                nav.appendChild(indicator);
+                nav.style.cssText = 'position:fixed; top:10px; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:6px; z-index:50;';
 
                 const dots = document.createElement('div');
                 dots.id = 'cardDots';
-                dots.style.cssText = 'display: flex; gap: 6px; margin-left: 12px;';
+                dots.style.cssText = 'display:flex; gap:6px;';
 
                 for (let i = 0; i < allCardsData.length; i++) {
                     const dot = document.createElement('div');
-                    dot.style.cssText = 'width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,0.35); transition:all 0.2s; cursor:pointer;';
+                    dot.style.cssText = 'width:6px; height:6px; border-radius:50%; background:rgba(0,0,0,0.25); box-shadow:0 0 2px rgba(0,0,0,0.3); transition:all 0.2s; cursor:pointer;';
                     dot.dataset.index = i;
                     dot.onclick = () => goToCard(i);
                     dots.appendChild(dot);
@@ -1645,12 +1640,10 @@
         }
         
         function updateIndicator() {
-            const indicator = document.getElementById('cardIndicator');
-            if (indicator) indicator.innerHTML = `<span style="color: #fff; font-weight: 600;">${currentIndex + 1}</span> / ${allCardsData.length}`;
             const dots = document.querySelectorAll('#cardDots div');
             dots.forEach((dot, i) => {
-                if (i === currentIndex) { dot.style.background = '#fff'; dot.style.width = '18px'; dot.style.borderRadius = '4px'; }
-                else { dot.style.background = 'rgba(255,255,255,0.35)'; dot.style.width = '7px'; dot.style.borderRadius = '50%'; }
+                if (i === currentIndex) { dot.style.background = '#222'; dot.style.width = '18px'; dot.style.height = '6px'; dot.style.borderRadius = '3px'; dot.style.boxShadow = '0 0 3px rgba(0,0,0,0.4)'; }
+                else { dot.style.background = 'rgba(0,0,0,0.25)'; dot.style.width = '6px'; dot.style.height = '6px'; dot.style.borderRadius = '50%'; dot.style.boxShadow = '0 0 2px rgba(0,0,0,0.3)'; }
             });
         }
         
