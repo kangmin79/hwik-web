@@ -229,6 +229,19 @@
             font-size: 10px; color: rgba(0,0,0,0.35);
         }
 
+        /* 내 말풍선 (오른쪽) */
+        .my-msg {
+            justify-content: flex-end !important;
+        }
+        .my-bubble {
+            padding: 9px 13px;
+            border-radius: 16px 4px 16px 16px;
+            background: #FFEB33;
+            font-size: 13.5px; line-height: 1.5;
+            color: #222; max-width: 240px;
+            word-break: keep-all;
+        }
+
         /* 매물 문의 버튼 */
         .inquiry-btn {
             display: block; width: 100%; padding: 12px;
@@ -254,23 +267,21 @@
             background: #fff;
             border-top: 1px solid #e0e0e0;
         }
-        .chat-input-fake {
-            flex: 1; display: flex; align-items: center; gap: 8px;
-            padding: 10px 14px;
-            background: #f5f5f5;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: background 0.15s;
+        .chat-input-real {
+            flex: 1; padding: 10px 14px;
+            background: #f5f5f5; border: none; border-radius: 20px;
+            font-size: 13px; color: #333; outline: none;
+            font-family: inherit;
         }
-        .chat-input-fake:active { background: #ebebeb; }
-        .chat-input-fake span {
-            font-size: 13px; color: #999;
+        .chat-input-real::placeholder { color: #999; }
+        .chat-input-real:focus { background: #eee; }
+        .send-btn {
+            width: 36px; height: 36px; border-radius: 50%;
+            background: #6366f1; border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; transition: background 0.15s;
         }
-        .chat-input-fake svg {
-            width: 18px; height: 18px; fill: none; stroke: #999;
-            stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
-            flex-shrink: 0;
-        }
+        .send-btn:active { background: #4f46e5; }
         .chat-bottom .call-btn {
             width: 42px; height: 42px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
@@ -395,12 +406,12 @@
     <!-- 채팅 바디 -->
     <div class="chat-body" id="chatBody"></div>
 
-    <!-- 하단 고정 바 (카톡 입력창 스타일) -->
+    <!-- 하단 고정 바 -->
     <div class="chat-bottom" id="chatBottom" style="display:none;">
-        <div class="chat-input-fake" onclick="goBackToKakao()">
-            <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            <span>궁금한 점이 있으시면 카톡으로...</span>
-        </div>
+        <input type="text" class="chat-input-real" id="chatInput" placeholder="궁금한 점을 물어보세요..." autocomplete="off">
+        <button class="send-btn" id="sendBtn" onclick="handleUserQuestion()">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
         <a class="call-btn" id="btnCall" href="#">
             <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
         </a>
@@ -1053,6 +1064,47 @@
                 history.back();
             }
         }, 800);
+    }
+
+    // 엔터키로도 전송
+    document.getElementById('chatInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); handleUserQuestion(); }
+    });
+
+    async function handleUserQuestion() {
+        const input = document.getElementById('chatInput');
+        const question = input.value.trim();
+        if (!question) return;
+        input.value = '';
+        input.blur(); // 키보드 내리기
+
+        // 1. 내 말풍선 (오른쪽, 노란색)
+        const myMsg = document.createElement('div');
+        myMsg.className = 'msg my-msg';
+        myMsg.innerHTML = `<div class="my-bubble">${esc(question)}</div>`;
+        chatBody.appendChild(myMsg);
+        chatBody.scrollTop = chatBody.scrollHeight;
+
+        // 2. 타이핑 표시
+        await wait(600);
+        showTyping(); await wait(800); hideTyping();
+
+        // 3. AI 응답 — 중개사 연결 안내
+        startNewGroup();
+        await addMsg(`좋은 질문이에요! 정확한 답변을 위해 중개사님께 직접 확인해 보시는 게 좋을 것 같아요`);
+        await wait(300);
+
+        // 4. 매물정보 + 질문 복사 버튼
+        const card = allCards[currentIdx] || allCards[0];
+        const cp = card ? (card.property || {}) : {};
+        const copyText = `[휙] 매물 문의\n${cp.type || ''} ${cp.price || ''}\n${cp.location || ''} ${cp.complex || ''}\nQ: ${question}`;
+        const btnMsg = await addMsg(`<button class="inquiry-btn" style="background:#fee500;">카톡으로 질문 보내기</button>`);
+        btnMsg.querySelector('.inquiry-btn').addEventListener('click', function() { copyInquiry(this, copyText); });
+
+        // 5. 입력창 비활성화 (첫 질문만)
+        input.placeholder = '카톡에서 대화를 이어가세요';
+        input.disabled = true;
+        document.getElementById('sendBtn').style.display = 'none';
     }
 
     function goBackToKakao() {
