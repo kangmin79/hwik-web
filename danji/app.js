@@ -867,7 +867,6 @@ function injectJsonLd() {
         "address": { "@type": "PostalAddress", "addressLocality": d.location, "streetAddress": d.address, "addressRegion": "서울특별시", "addressCountry": "KR" },
         "geo": { "@type": "GeoCoordinates", "latitude": d.lat, "longitude": d.lng },
         "description": d.seo_text || '',
-        "numberOfRooms": d.total_units,
         "yearBuilt": d.build_year,
       },
       {
