@@ -445,14 +445,15 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
             pass
     categories = sorted(areas, key=lambda x: float(x))
 
-    # pyeongs 안전망: 공식 면적 목록이 있으면 ±5㎡ 밖의 면적 제거
+    # pyeongs 안전망: 공식 면적 목록이 있으면 ±8㎡ 밖의 면적 제거
     # (상가/근생/오피스텔 거래가 아파트에 섞이는 것 방지)
+    # ±8㎡: 같은 평형이라도 호별 전용면적 차이가 5㎡ 넘는 경우 대비
     if pyeongs_map:
         pm_keys = [float(k) for k in pyeongs_map.keys()]
         filtered = []
         for cat in categories:
             cat_f = float(cat)
-            if any(abs(cat_f - pk) <= 5 for pk in pm_keys):
+            if any(abs(cat_f - pk) <= 8 for pk in pm_keys):
                 filtered.append(cat)
         if filtered:  # 필터 후 0개면 원본 유지 (pyeongs 데이터 오류 대비)
             categories = filtered
