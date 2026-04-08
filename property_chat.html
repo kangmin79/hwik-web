@@ -579,24 +579,17 @@
     let paused = false;
     chatBody.addEventListener('touchstart', () => { paused = true; }, { passive: true });
     chatBody.addEventListener('touchend', () => { paused = false; }, { passive: true });
+    chatBody.addEventListener('touchcancel', () => { paused = false; }, { passive: true });
 
     function wait(ms) {
         return new Promise(resolve => {
-            const start = Date.now();
-            let remaining = ms;
-            function check() {
-                if (paused) { requestAnimationFrame(check); return; }
-                const elapsed = Date.now() - start;
-                if (elapsed >= ms) { resolve(); return; }
-                remaining = ms - elapsed;
-                setTimeout(() => {
-                    if (paused) { requestAnimationFrame(check); return; }
-                    resolve();
-                }, remaining);
-            }
+            // 기본 대기 시간 후, paused면 풀릴 때까지 대기
             setTimeout(() => {
-                if (paused) { requestAnimationFrame(check); return; }
-                resolve();
+                if (!paused) { resolve(); return; }
+                // paused 상태면 50ms마다 체크
+                const interval = setInterval(() => {
+                    if (!paused) { clearInterval(interval); resolve(); }
+                }, 50);
             }, ms);
         });
     }
