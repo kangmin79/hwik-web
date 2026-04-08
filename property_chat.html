@@ -16,180 +16,240 @@
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
             font-family: 'Noto Sans KR', -apple-system, sans-serif;
-            background: #0b0d12;
-            color: #e4e4e7;
+            background: #B2C7D9;
+            color: #333;
             height: 100vh; height: 100dvh;
             display: flex; flex-direction: column;
             overflow: hidden;
         }
 
-        /* ====== 헤더 ====== */
+        /* ====== 헤더 (카톡 스타일) ====== */
         .chat-header {
             flex-shrink: 0;
-            display: flex; align-items: center; gap: 12px;
-            padding: 12px 16px;
-            background: #12141a;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
+            display: flex; align-items: center;
+            padding: 0 12px;
+            height: 52px;
+            background: #A9BDD0;
+            position: relative;
         }
-        .chat-header .avatar {
-            width: 36px; height: 36px; border-radius: 50%;
-            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        .chat-header .back-btn {
+            width: 32px; height: 32px;
             display: flex; align-items: center; justify-content: center;
-            font-size: 14px; font-weight: 800; color: #fff;
-            flex-shrink: 0;
+            background: none; border: none; cursor: pointer;
         }
-        .chat-header .avatar img {
-            width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+        .chat-header .back-btn svg {
+            width: 22px; height: 22px; stroke: #444; fill: none;
+            stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round;
         }
-        .chat-header .info { flex: 1; }
-        .chat-header .name { font-size: 14px; font-weight: 700; color: #fff; }
-        .chat-header .sub { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 1px; }
-        .chat-header .badge {
-            font-size: 10px; padding: 3px 8px; border-radius: 10px;
-            background: rgba(99,102,241,0.15); color: #818cf8;
-            font-weight: 600;
+        .chat-header .center-name {
+            position: absolute; left: 50%; transform: translateX(-50%);
+            font-size: 15px; font-weight: 700; color: #222;
+        }
+        .chat-header .member-count {
+            font-size: 12px; color: rgba(0,0,0,0.35); font-weight: 400; margin-left: 4px;
+        }
+        .chat-header .right-icons {
+            margin-left: auto; display: flex; gap: 8px;
+        }
+        .chat-header .right-icons button {
+            width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            background: none; border: none; cursor: pointer;
+        }
+        .chat-header .right-icons svg {
+            width: 20px; height: 20px; stroke: #444; fill: none;
+            stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
         }
 
         /* ====== 채팅 영역 ====== */
         .chat-body {
             flex: 1; overflow-y: auto; overflow-x: hidden;
-            padding: 16px 14px 24px;
+            padding: 12px 14px 24px;
             scroll-behavior: smooth;
         }
         .chat-body::-webkit-scrollbar { display: none; }
 
+        /* 날짜 구분 */
+        .date-label {
+            text-align: center; margin: 8px 0 14px;
+            font-size: 11px; color: rgba(0,0,0,0.35);
+        }
+        .date-label span {
+            background: rgba(0,0,0,0.08);
+            padding: 4px 12px; border-radius: 12px;
+        }
+
         /* ====== 메시지 ====== */
         .msg {
-            display: flex; gap: 8px; margin-bottom: 10px;
-            align-items: flex-end;
-            opacity: 0; transform: translateY(12px);
-            animation: msgIn 0.35s ease forwards;
+            display: flex; gap: 6px; margin-bottom: 4px;
+            align-items: flex-start;
+            opacity: 0; transform: translateY(10px);
+            animation: msgIn 0.3s ease forwards;
         }
+        .msg.first-in-group { margin-top: 10px; }
         @keyframes msgIn {
             to { opacity: 1; transform: translateY(0); }
         }
-        .msg .bubble {
-            max-width: 80%;
-            padding: 11px 15px;
-            border-radius: 18px 18px 18px 4px;
-            background: #1e2030;
-            font-size: 14px; line-height: 1.55;
-            color: #d4d4d8;
-            word-break: keep-all;
-        }
-        .msg .bubble strong { color: #fff; font-weight: 700; }
 
-        /* 가격 버블 — 강조 */
+        /* 아바타 (첫 메시지에만 표시) */
+        .msg .avatar {
+            width: 36px; height: 36px; border-radius: 14px;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 800; color: #fff;
+            flex-shrink: 0; overflow: hidden;
+        }
+        .msg .avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .msg .avatar-spacer { width: 36px; flex-shrink: 0; }
+
+        /* 이름 */
+        .msg .sender-name {
+            font-size: 11px; color: rgba(0,0,0,0.45);
+            margin-bottom: 3px; margin-left: 2px;
+        }
+
+        /* 버블 */
+        .msg .bubble-wrap { display: flex; flex-direction: column; max-width: calc(100% - 90px); }
+        .msg .bubble {
+            padding: 9px 13px;
+            border-radius: 4px 16px 16px 16px;
+            background: #fff;
+            font-size: 13.5px; line-height: 1.5;
+            color: #222;
+            word-break: keep-all;
+            box-shadow: 0 1px 1px rgba(0,0,0,0.04);
+            position: relative;
+        }
+        .msg .bubble strong { font-weight: 700; }
+
+        /* 시간 */
+        .msg .time {
+            font-size: 10px; color: rgba(0,0,0,0.28);
+            align-self: flex-end; flex-shrink: 0;
+            margin-left: 4px; white-space: nowrap;
+        }
+        .msg .msg-row { display: flex; align-items: flex-end; gap: 4px; }
+
+        /* 가격 버블 */
         .msg .bubble.price-bubble {
-            background: linear-gradient(135deg, #1a1a3e 0%, #1e2045 100%);
-            border: 1px solid rgba(250,204,21,0.2);
+            background: #FFEB33;
+            border-radius: 4px 16px 16px 16px;
         }
         .msg .bubble.price-bubble .price-type {
-            font-size: 11px; color: rgba(255,255,255,0.4);
-            margin-bottom: 4px;
+            font-size: 11px; color: rgba(0,0,0,0.5);
+            margin-bottom: 2px;
         }
         .msg .bubble.price-bubble .price-value {
-            font-size: 22px; font-weight: 800; color: #facc15;
+            font-size: 22px; font-weight: 800; color: #222;
             letter-spacing: -0.5px;
         }
 
         /* 미니맵 버블 */
         .msg .bubble.map-bubble {
-            padding: 0; overflow: hidden; border-radius: 18px 18px 18px 4px;
-            max-width: 75%; cursor: pointer;
+            padding: 0; overflow: hidden; cursor: pointer;
+            border-radius: 4px 16px 16px 16px;
         }
         .map-bubble .map-preview {
-            width: 100%; height: 150px; background: #1a1e2a;
+            width: 240px; height: 140px; background: #e8e8e8;
         }
         .map-bubble .map-label {
-            padding: 10px 14px;
-            font-size: 13px; color: rgba(255,255,255,0.6);
-            background: #1e2030;
-            display: flex; align-items: center; gap: 6px;
+            padding: 8px 12px;
+            font-size: 12px; color: #555;
+            background: #fff;
+            display: flex; align-items: center; gap: 5px;
         }
         .map-bubble .map-label svg {
-            width: 14px; height: 14px; fill: none; stroke: #818cf8;
+            width: 13px; height: 13px; fill: none; stroke: #6366f1;
             stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
         }
 
         /* 사진 버블 */
         .msg .bubble.photo-bubble {
-            padding: 0; overflow: hidden; border-radius: 18px 18px 18px 4px;
-            max-width: 75%; cursor: pointer;
+            padding: 0; overflow: hidden; cursor: pointer;
+            border-radius: 4px 16px 16px 16px;
         }
         .photo-bubble img {
-            width: 100%; max-height: 220px; object-fit: cover; display: block;
+            width: 240px; max-height: 200px; object-fit: cover; display: block;
         }
         .photo-bubble .photo-count {
-            padding: 8px 14px;
-            font-size: 12px; color: rgba(255,255,255,0.4);
-            background: #1e2030;
+            padding: 6px 12px;
+            font-size: 11px; color: #888;
+            background: #fff;
         }
 
         /* 태그 버블 */
         .msg .bubble.tags-bubble {
-            display: flex; flex-wrap: wrap; gap: 6px;
-            padding: 10px 14px;
-            background: transparent;
+            display: flex; flex-wrap: wrap; gap: 5px;
+            padding: 8px 10px;
+            background: #fff;
         }
         .tag-chip {
-            font-size: 12px; font-weight: 500;
-            padding: 5px 12px; border-radius: 20px;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: rgba(255,255,255,0.7);
+            font-size: 11px; font-weight: 600;
+            padding: 4px 10px; border-radius: 12px;
+            background: #f0f0f0;
+            border: 1px solid #e0e0e0;
+            color: #555;
         }
 
-        /* 중개사 코멘트 버블 */
+        /* 태그 카테고리 색상 (카톡 라이트 버전) */
+        .tag-transport { background:#EEF0FF; color:#5B5FC7; border-color:#D8DBFF; }
+        .tag-direction { background:#FFF8E1; color:#B8860B; border-color:#FFE082; }
+        .tag-view { background:#E8F7FC; color:#0E7490; border-color:#BAE6FD; }
+        .tag-school { background:#E8FAF0; color:#15803D; border-color:#BBF7D0; }
+        .tag-facility { background:#FFF0F6; color:#BE185D; border-color:#FBCFE8; }
+        .tag-parking { background:#FFF4EB; color:#C2410C; border-color:#FED7AA; }
+        .tag-pet { background:#F5F0FF; color:#7C3AED; border-color:#DDD6FE; }
+        .tag-finance { background:#ECFDF5; color:#059669; border-color:#A7F3D0; }
+        .tag-structure { background:#FEF2F2; color:#DC2626; border-color:#FECACA; }
+
+        /* 코멘트 버블 */
         .msg .bubble.comment-bubble {
-            background: rgba(99,102,241,0.08);
-            border: 1px solid rgba(99,102,241,0.15);
-            font-style: italic;
-            color: rgba(255,255,255,0.75);
+            background: #F0EDFF;
+            border-radius: 4px 16px 16px 16px;
+        }
+        .comment-bubble .comment-text {
+            color: #333; font-size: 13.5px;
         }
         .comment-bubble .comment-from {
-            margin-top: 8px;
-            font-size: 11px; font-style: normal;
-            color: rgba(255,255,255,0.3);
+            margin-top: 6px;
+            font-size: 10px; color: rgba(0,0,0,0.35);
         }
 
         /* CTA 버블 */
         .msg .bubble.cta-bubble {
-            background: transparent; padding: 0;
-            display: flex; gap: 8px; width: 100%; max-width: 100%;
+            background: transparent; padding: 0; box-shadow: none;
+            display: flex; gap: 6px; max-width: 100%;
         }
         .cta-btn {
-            flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
-            padding: 14px 0; border-radius: 14px;
-            font-size: 14px; font-weight: 700;
+            flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px;
+            padding: 12px 0; border-radius: 10px;
+            font-size: 13px; font-weight: 700;
             text-decoration: none; cursor: pointer;
             transition: opacity 0.15s;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.12);
-            color: rgba(255,255,255,0.8);
         }
         .cta-btn:active { opacity: 0.7; }
-        .cta-btn.btn-call { background: rgba(78,205,196,0.12); color: #4ecdc4; border-color: rgba(78,205,196,0.25); }
-        .cta-btn.btn-kakao { background: rgba(254,229,0,0.12); color: #facc15; border-color: rgba(254,229,0,0.25); }
+        .cta-btn.btn-call { background: #4ecdc4; color: #fff; }
+        .cta-btn.btn-kakao { background: #FEE500; color: #191919; }
 
         /* 다음 매물 버튼 */
         .next-property-btn {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 12px 24px; border-radius: 24px;
-            background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.15));
-            border: 1px solid rgba(99,102,241,0.3);
-            color: #a5b4fc; font-size: 14px; font-weight: 600;
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 10px 20px; border-radius: 20px;
+            background: #fff;
+            border: 1.5px solid #6366f1;
+            color: #6366f1; font-size: 13px; font-weight: 700;
             cursor: pointer; transition: all 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.06);
         }
-        .next-property-btn:active { transform: scale(0.96); }
+        .next-property-btn:active { transform: scale(0.96); background: #f5f3ff; }
 
         /* 타이핑 인디케이터 */
         .typing {
-            display: flex; gap: 4px; padding: 14px 18px;
+            display: flex; gap: 4px; padding: 10px 14px;
         }
         .typing span {
             width: 6px; height: 6px; border-radius: 50%;
-            background: rgba(255,255,255,0.25);
+            background: rgba(0,0,0,0.2);
             animation: blink 1.2s infinite;
         }
         .typing span:nth-child(2) { animation-delay: 0.2s; }
@@ -205,12 +265,12 @@
             align-items: center; justify-content: center;
         }
         .loading-screen .logo {
-            font-size: 36px; font-weight: 900; color: #facc15;
+            font-size: 36px; font-weight: 900; color: #6366f1;
             animation: pulse 0.6s ease-in-out infinite alternate;
         }
         @keyframes pulse { from { transform: scale(0.85); opacity: 0.5; } to { transform: scale(1.15); opacity: 1; } }
 
-        /* 풀스크린 오버레이 (사진/지도) */
+        /* 풀스크린 오버레이 */
         .fullscreen-overlay {
             position: fixed; inset: 0; z-index: 200;
             background: rgba(0,0,0,0.95);
@@ -220,7 +280,7 @@
         .fullscreen-overlay .close-btn {
             position: absolute; top: 16px; right: 16px;
             width: 36px; height: 36px; border-radius: 50%;
-            background: rgba(255,255,255,0.1); border: none;
+            background: rgba(255,255,255,0.15); border: none;
             color: #fff; font-size: 20px; cursor: pointer;
             display: flex; align-items: center; justify-content: center;
         }
@@ -239,38 +299,31 @@
 
         /* 구분선 */
         .divider {
-            text-align: center; margin: 20px 0;
-            font-size: 11px; color: rgba(255,255,255,0.15);
+            text-align: center; margin: 16px 0;
+            font-size: 11px; color: rgba(0,0,0,0.25);
         }
-        .divider::before, .divider::after {
-            content: ''; display: inline-block;
-            width: 40px; height: 1px;
-            background: rgba(255,255,255,0.08);
-            vertical-align: middle; margin: 0 10px;
+        .divider span {
+            background: rgba(0,0,0,0.06);
+            padding: 4px 14px; border-radius: 12px;
         }
-
-        /* 태그 카테고리 색상 */
-        .tag-transport { background:rgba(99,102,241,0.12); color:#818cf8; border-color:rgba(99,102,241,0.25); }
-        .tag-direction { background:rgba(251,191,36,0.12); color:#fbbf24; border-color:rgba(251,191,36,0.25); }
-        .tag-view { background:rgba(56,189,248,0.12); color:#38bdf8; border-color:rgba(56,189,248,0.25); }
-        .tag-school { background:rgba(52,211,153,0.12); color:#34d399; border-color:rgba(52,211,153,0.25); }
-        .tag-facility { background:rgba(244,114,182,0.12); color:#f472b6; border-color:rgba(244,114,182,0.25); }
-        .tag-parking { background:rgba(251,146,60,0.12); color:#fb923c; border-color:rgba(251,146,60,0.25); }
-        .tag-pet { background:rgba(192,132,252,0.12); color:#c084fc; border-color:rgba(192,132,252,0.25); }
-        .tag-finance { background:rgba(74,222,128,0.12); color:#4ade80; border-color:rgba(74,222,128,0.25); }
-        .tag-structure { background:rgba(248,113,113,0.12); color:#f87171; border-color:rgba(248,113,113,0.25); }
     </style>
 </head>
 <body>
 
-    <!-- 헤더 -->
+    <!-- 헤더 (카톡 스타일) -->
     <div class="chat-header" id="chatHeader">
-        <div class="avatar" id="agentAvatar">휙</div>
-        <div class="info">
-            <div class="name" id="agentNameEl">매물 소개</div>
-            <div class="sub" id="agentSubEl">로딩중...</div>
+        <button class="back-btn" onclick="history.back()">
+            <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <div class="center-name">
+            <span id="agentNameEl">매물 소개</span>
+            <span class="member-count" id="memberCount"></span>
         </div>
-        <div class="badge">AI 매물소개</div>
+        <div class="right-icons">
+            <button onclick="if(agentInfo&&agentInfo.phone){location.href='tel:'+agentInfo.phone.replace(/-/g,'')}">
+                <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            </button>
+        </div>
     </div>
 
     <!-- 채팅 바디 -->
@@ -286,6 +339,8 @@
     let allCards = [];
     let currentIdx = 0;
     let agentInfo = null;
+    let agentAvatarHtml = '';
+    let isFirstBubbleInGroup = true;
 
     // ====== 태그 분류 ======
     const TAG_CATS = {
@@ -307,29 +362,67 @@
         return '';
     }
 
-    // ====== XSS 방지 ======
     function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
-    // ====== 메시지 추가 ======
-    function addMsg(html, extraClass = '', delay = 0) {
+    // 현재 시간 포맷 (카톡 스타일)
+    function timeStr() {
+        const now = new Date();
+        const h = now.getHours();
+        const m = String(now.getMinutes()).padStart(2, '0');
+        return `${h >= 12 ? '오후' : '오전'} ${h > 12 ? h - 12 : h}:${m}`;
+    }
+
+    // ====== 메시지 추가 (카톡 스타일) ======
+    function addMsg(html, extraClass = '', showTime = false) {
         return new Promise(resolve => {
-            setTimeout(() => {
-                const div = document.createElement('div');
-                div.className = 'msg';
-                div.innerHTML = `<div class="bubble ${extraClass}">${html}</div>`;
-                chatBody.appendChild(div);
-                chatBody.scrollTop = chatBody.scrollHeight;
-                resolve(div);
-            }, delay);
+            const div = document.createElement('div');
+            div.className = 'msg' + (isFirstBubbleInGroup ? ' first-in-group' : '');
+
+            const avatarEl = isFirstBubbleInGroup
+                ? `<div class="avatar" id="msgAvatar">${agentAvatarHtml}</div>`
+                : `<div class="avatar-spacer"></div>`;
+
+            const agent = agentInfo || {};
+            const senderName = isFirstBubbleInGroup
+                ? `<div class="sender-name">${esc(agent.business_name || agent.name || '휙')}</div>`
+                : '';
+
+            const timeEl = showTime ? `<div class="time">${timeStr()}</div>` : '';
+
+            div.innerHTML = `
+                ${avatarEl}
+                <div class="bubble-wrap">
+                    ${senderName}
+                    <div class="msg-row">
+                        <div class="bubble ${extraClass}">${html}</div>
+                        ${timeEl}
+                    </div>
+                </div>
+            `;
+
+            chatBody.appendChild(div);
+            chatBody.scrollTop = chatBody.scrollHeight;
+            isFirstBubbleInGroup = false;
+            resolve(div);
         });
     }
+
+    // 그룹 시작 (아바타 + 이름 다시 표시)
+    function startNewGroup() { isFirstBubbleInGroup = true; }
 
     // 타이핑 인디케이터
     function showTyping() {
         const div = document.createElement('div');
         div.className = 'msg';
         div.id = 'typingMsg';
-        div.innerHTML = `<div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
+        div.innerHTML = `
+            <div class="avatar-spacer"></div>
+            <div class="bubble-wrap">
+                <div class="msg-row">
+                    <div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>
+                </div>
+            </div>
+        `;
         chatBody.appendChild(div);
         chatBody.scrollTop = chatBody.scrollHeight;
     }
@@ -338,10 +431,20 @@
         if (el) el.remove();
     }
 
-    // 딜레이
     function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-    // ====== 매물 1개 대화로 보여주기 ======
+    // ====== 날짜 라벨 ======
+    function addDateLabel() {
+        const now = new Date();
+        const days = ['일','월','화','수','목','금','토'];
+        const label = `${now.getFullYear()}년 ${now.getMonth()+1}월 ${now.getDate()}일 ${days[now.getDay()]}요일`;
+        const div = document.createElement('div');
+        div.className = 'date-label';
+        div.innerHTML = `<span>${label}</span>`;
+        chatBody.appendChild(div);
+    }
+
+    // ====== 매물 대화 ======
     async function presentProperty(data, isFirst = true) {
         const p = data.property || {};
         const agent = agentInfo || data.agent || {};
@@ -358,22 +461,24 @@
         const agentName = agent.business_name || agent.name || '부동산';
         const agentPhone = agent.phone || '';
 
-        const BASE_DELAY = 400;
-        const d = isFirst ? BASE_DELAY : 200; // 첫 매물만 천천히
+        const d = isFirst ? 400 : 200;
 
-        // 1. 인사 또는 전환
+        // 새 그룹 시작
+        startNewGroup();
+
+        // 1. 인사
         if (isFirst) {
-            showTyping();
-            await wait(600);
-            hideTyping();
+            showTyping(); await wait(600); hideTyping();
             await addMsg(`안녕하세요! <strong>${esc(agentName)}</strong>에서 보내드리는 매물이에요 😊`);
+            await wait(d);
+        } else {
+            showTyping(); await wait(400); hideTyping();
+            await addMsg(`다음 매물 소개해드릴게요!`);
             await wait(d);
         }
 
-        // 2. 거래 유형 + 가격
-        showTyping();
-        await wait(d + 100);
-        hideTyping();
+        // 2. 가격
+        showTyping(); await wait(d + 100); hideTyping();
         await addMsg(`
             <div class="price-type">${esc(type)}</div>
             <div class="price-value">${esc(price)}</div>
@@ -381,9 +486,7 @@
 
         // 3. 위치 + 미니맵
         await wait(d);
-        showTyping();
-        await wait(d);
-        hideTyping();
+        showTyping(); await wait(d); hideTyping();
 
         const locText = complex ? `${esc(location)} ${esc(complex)}` : esc(location);
         const mapId = `map_${currentIdx}_${Date.now()}`;
@@ -402,24 +505,20 @@
         const mapMsg = await addMsg(mapHtml, 'map-bubble');
         mapMsg.querySelector('.bubble').onclick = () => openFullMap(data.lat, data.lng, locText);
 
-        // 미니맵 렌더
         if (data.lat && data.lng) {
             kakao.maps.load(() => {
                 const container = document.getElementById(mapId);
                 if (!container) return;
                 const pos = new kakao.maps.LatLng(data.lat, data.lng);
                 const map = new kakao.maps.Map(container, { center: pos, level: 4, draggable: false, scrollwheel: false });
-                new kakao.maps.Marker({ position: pos, map: map });
+                new kakao.maps.Marker({ position: pos, map });
             });
         }
 
-        // 4. 사진 (있으면)
+        // 4. 사진
         if (photos.length > 0) {
             await wait(d);
-            showTyping();
-            await wait(d);
-            hideTyping();
-
+            showTyping(); await wait(d); hideTyping();
             const photoHtml = `
                 <img src="${photos[0]}" alt="매물 사진" onerror="this.style.display='none'">
                 ${photos.length > 1 ? `<div class="photo-count">사진 ${photos.length}장</div>` : ''}
@@ -428,13 +527,11 @@
             photoMsg.querySelector('.bubble').onclick = () => openGallery(photos, 0);
         }
 
-        // 5. 스펙 (면적, 층, 방)
+        // 5. 스펙
         const specs = [area, floor, room].filter(Boolean);
         if (specs.length > 0) {
             await wait(d);
-            showTyping();
-            await wait(d - 100);
-            hideTyping();
+            showTyping(); await wait(d - 100); hideTyping();
             await addMsg(specs.map(s => `<strong>${esc(s)}</strong>`).join(' · '));
         }
 
@@ -451,63 +548,62 @@
         // 7. 중개사 코멘트
         if (comment) {
             await wait(d);
-            showTyping();
-            await wait(d + 200);
-            hideTyping();
+            showTyping(); await wait(d + 200); hideTyping();
             await addMsg(`
-                "${esc(comment)}"
+                <div class="comment-text">"${esc(comment)}"</div>
                 <div class="comment-from">— ${esc(agentName)}</div>
             `, 'comment-bubble');
         }
 
-        // 8. CTA 버튼
+        // 8. CTA
         await wait(d);
         const tel = agentPhone.replace(/-/g, '');
         await addMsg(`
             <a class="cta-btn btn-call" href="${tel ? 'tel:' + tel : '#'}">📞 전화하기</a>
             <a class="cta-btn btn-kakao" href="#" onclick="goBackToKakao();return false;">💬 카톡문의</a>
-        `, 'cta-bubble');
+        `, 'cta-bubble', true);
 
-        // 9. 다음 매물 버튼 (있으면)
+        // 9. 다음 매물
         if (currentIdx < allCards.length - 1) {
-            await wait(d + 200);
+            await wait(d + 300);
 
-            // 구분선
             const divider = document.createElement('div');
             divider.className = 'divider';
-            divider.textContent = `${currentIdx + 1} / ${allCards.length}`;
+            divider.innerHTML = `<span>${currentIdx + 1} / ${allCards.length}</span>`;
             chatBody.appendChild(divider);
 
-            showTyping();
-            await wait(500);
-            hideTyping();
+            startNewGroup();
+            showTyping(); await wait(500); hideTyping();
 
             const nextCard = allCards[currentIdx + 1];
             const nextP = nextCard.property || {};
-            const nextType = nextP.type || '매물';
-            const nextPrice = nextP.price || '';
-
-            await addMsg(`다음 매물도 보시겠어요?<br><span style="color:rgba(255,255,255,0.4);font-size:12px;">${esc(nextType)} ${esc(nextPrice)}</span>`);
+            await addMsg(`다음 매물도 보시겠어요?<br><span style="color:#888;font-size:12px;">${esc(nextP.type || '매물')} ${esc(nextP.price || '')}</span>`);
 
             await wait(200);
             const btnDiv = document.createElement('div');
             btnDiv.className = 'msg';
-            btnDiv.innerHTML = `<div class="bubble" style="background:transparent;padding:0;">
-                <button class="next-property-btn" onclick="showNextProperty()">네, 보여주세요 👀</button>
-            </div>`;
+            btnDiv.innerHTML = `
+                <div class="avatar-spacer"></div>
+                <div class="bubble-wrap">
+                    <div class="msg-row">
+                        <div class="bubble" style="background:transparent;padding:0;box-shadow:none;">
+                            <button class="next-property-btn" onclick="showNextProperty()">네, 보여주세요 👀</button>
+                        </div>
+                    </div>
+                </div>
+            `;
             chatBody.appendChild(btnDiv);
             chatBody.scrollTop = chatBody.scrollHeight;
         } else if (allCards.length > 1) {
             await wait(d);
             const divider = document.createElement('div');
             divider.className = 'divider';
-            divider.textContent = `${allCards.length}개 매물 모두 확인 완료`;
+            divider.innerHTML = `<span>${allCards.length}개 매물 모두 확인 완료</span>`;
             chatBody.appendChild(divider);
             chatBody.scrollTop = chatBody.scrollHeight;
         }
     }
 
-    // ====== 다음 매물 ======
     function showNextProperty() {
         currentIdx++;
         if (currentIdx >= allCards.length) return;
@@ -531,26 +627,15 @@
         });
     }
 
-    // ====== 풀스크린 갤러리 ======
-    let galleryPhotos = [];
-    let galleryIdx = 0;
-
-    function openGallery(photos, idx) {
-        galleryPhotos = photos;
-        galleryIdx = idx || 0;
-        renderGallery();
-    }
+    // ====== 갤러리 ======
+    let galleryPhotos = [], galleryIdx = 0;
+    function openGallery(photos, idx) { galleryPhotos = photos; galleryIdx = idx || 0; renderGallery(); }
     function renderGallery() {
-        let overlay = document.getElementById('galleryOverlay');
-        if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.className = 'fullscreen-overlay';
-            overlay.id = 'galleryOverlay';
-            document.body.appendChild(overlay);
-        }
-        overlay.innerHTML = `
+        let ov = document.getElementById('galleryOverlay');
+        if (!ov) { ov = document.createElement('div'); ov.className = 'fullscreen-overlay'; ov.id = 'galleryOverlay'; document.body.appendChild(ov); }
+        ov.innerHTML = `
             <button class="close-btn" onclick="document.getElementById('galleryOverlay').remove()">✕</button>
-            <img src="${galleryPhotos[galleryIdx]}" alt="사진 ${galleryIdx + 1}">
+            <img src="${galleryPhotos[galleryIdx]}" alt="사진">
             ${galleryPhotos.length > 1 ? `
                 <button class="nav-btn nav-prev" onclick="galleryNav(-1)">‹</button>
                 <button class="nav-btn nav-next" onclick="galleryNav(1)">›</button>
@@ -558,35 +643,28 @@
             ` : ''}
         `;
     }
-    function galleryNav(dir) {
-        galleryIdx = (galleryIdx + dir + galleryPhotos.length) % galleryPhotos.length;
-        renderGallery();
-    }
+    function galleryNav(dir) { galleryIdx = (galleryIdx + dir + galleryPhotos.length) % galleryPhotos.length; renderGallery(); }
 
-    // ====== 카톡으로 돌아가기 ======
     function goBackToKakao() {
         const ua = navigator.userAgent.toLowerCase();
-        if (ua.indexOf('kakaotalk') > -1) {
-            location.href = 'kakaotalk://inappbrowser/close';
-        } else {
-            window.close();
-            alert('카카오톡 대화창으로 돌아가주세요 😊');
-        }
+        if (ua.indexOf('kakaotalk') > -1) { location.href = 'kakaotalk://inappbrowser/close'; }
+        else { window.close(); alert('카카오톡 대화창으로 돌아가주세요 😊'); }
     }
 
     // ====== 헤더 업데이트 ======
     function updateHeader(agent) {
         const name = agent.business_name || agent.name || '매물 소개';
         document.getElementById('agentNameEl').textContent = name;
-        document.getElementById('agentSubEl').textContent = agent.name ? `${agent.name} · 중개사` : '휙 매물카드';
         if (agent.profile_photo) {
-            document.getElementById('agentAvatar').innerHTML = `<img src="${agent.profile_photo}" alt="">`;
+            agentAvatarHtml = `<img src="${agent.profile_photo}" alt="">`;
+        } else {
+            agentAvatarHtml = '휙';
         }
     }
 
     // ====== 초기화 ======
     async function init() {
-        chatBody.innerHTML = `<div class="loading-screen"><div class="logo">휙</div><div style="margin-top:16px;font-size:13px;color:rgba(255,255,255,0.3);">매물 정보를 불러오는 중...</div></div>`;
+        chatBody.innerHTML = `<div class="loading-screen"><div class="logo">휙</div><div style="margin-top:16px;font-size:13px;color:rgba(0,0,0,0.3);">매물 정보를 불러오는 중...</div></div>`;
 
         const params = new URLSearchParams(location.search);
         const cardId = params.get('id');
@@ -597,40 +675,35 @@
             let ids = [];
             if (cardIds) ids = cardIds.split(',').map(s => s.trim()).filter(Boolean);
             else if (cardId) ids = [cardId];
-            else { chatBody.innerHTML = ''; await addMsg('매물 정보가 없어요 😅'); return; }
+            else { chatBody.innerHTML = ''; startNewGroup(); await addMsg('매물 정보가 없어요 😅'); return; }
 
-            // 중개사 정보 먼저
             if (agentId) {
                 const { data: agData } = await sb.from('profiles').select('*').eq('id', agentId).single();
                 if (agData) { agentInfo = agData; updateHeader(agData); }
             }
 
-            // 카드 로드
             const { data, error } = await sb
                 .from('cards')
                 .select('id, property, agent, agent_comment, photos, lat, lng, trade_status, created_at, agent_id')
                 .in('id', ids);
 
             if (error) throw error;
-            if (!data || data.length === 0) { chatBody.innerHTML = ''; await addMsg('매물을 찾을 수 없어요 😅'); return; }
+            if (!data || data.length === 0) { chatBody.innerHTML = ''; startNewGroup(); await addMsg('매물을 찾을 수 없어요 😅'); return; }
 
-            // 순서 유지 + 완료 필터
             allCards = ids.map(id => data.find(d => d.id === id)).filter(d => d && d.trade_status !== '완료');
-            if (allCards.length === 0) { chatBody.innerHTML = ''; await addMsg('거래가 완료된 매물이에요.<br>중개사에게 다른 매물을 문의해 주세요 🏠'); return; }
+            if (allCards.length === 0) { chatBody.innerHTML = ''; startNewGroup(); await addMsg('거래가 완료된 매물이에요.<br>중개사에게 다른 매물을 문의해 주세요 🏠'); return; }
 
-            // 에이전트 정보 없으면 첫 카드에서
-            if (!agentInfo && allCards[0].agent) {
-                agentInfo = allCards[0].agent;
-                updateHeader(agentInfo);
-            }
+            if (!agentInfo && allCards[0].agent) { agentInfo = allCards[0].agent; updateHeader(agentInfo); }
 
             chatBody.innerHTML = '';
+            addDateLabel();
             currentIdx = 0;
             await presentProperty(allCards[0], true);
 
         } catch (e) {
             console.error('로딩 오류:', e);
             chatBody.innerHTML = '';
+            startNewGroup();
             await addMsg('매물 정보를 불러올 수 없어요 😢');
         }
     }
