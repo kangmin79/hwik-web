@@ -230,7 +230,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
 
     # breadcrumb
     region_link = "/gu.html" if region == "서울" else f"/gu.html?tab={'incheon' if region == '인천' else 'gyeonggi'}"
-    lines.append(f'<nav style="font-size:11px;color:#9ca3af;margin-bottom:12px;">')
+    lines.append(f'<nav style="font-size:11px;color:#6b7280;margin-bottom:12px;">')
     lines.append(f'  <a href="/" style="color:#6b7280;text-decoration:none;">휙</a> &gt;')
     lines.append(f'  <a href="{region_link}" style="color:#6b7280;text-decoration:none;">{esc(region)}</a> &gt;')
     lines.append(f'  <a href="/gu.html?name={url_quote(gu, safe="")}" style="color:#6b7280;text-decoration:none;">{esc(gu)}</a> &gt;')
@@ -349,7 +349,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
             f'<div><div style="font-size:13px;font-weight:600;">{i+1}. {name}</div>'
             f'<div style="font-size:11px;color:#6b7280;margin-top:2px;">{sub_info}</div></div>'
             f'<div style="text-align:right;"><div style="font-size:14px;font-weight:700;">{price}</div>'
-            f'<div style="font-size:11px;color:#9ca3af;margin-top:2px;">{esc(date)}</div></div></a>'
+            f'<div style="font-size:11px;color:#6b7280;margin-top:2px;">{esc(date)}</div></div></a>'
         )
     lines.append('</div>')
 
@@ -473,8 +473,8 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
         sw_names = ", ".join(f"{s.get('name','')}({s.get('line','')})" for s in subways[:2])
         seo_parts.append(f"인근 지하철역은 {sw_names}입니다.")
     seo_parts.append("모든 데이터는 국토교통부 실거래가 공개시스템 기반이며 매일 갱신됩니다.")
-    lines.append(f'<p style="font-size:11px;color:#9ca3af;line-height:1.7;margin-top:16px;">{esc(" ".join(seo_parts))}</p>')
-    lines.append('<p style="font-size:10px;color:#9ca3af;margin-top:8px;">실거래가 출처: 국토교통부 실거래가 공개시스템 &middot; 매일 업데이트</p>')
+    lines.append(f'<p style="font-size:11px;color:#6b7280;line-height:1.7;margin-top:16px;">{esc(" ".join(seo_parts))}</p>')
+    lines.append('<p style="font-size:10px;color:#6b7280;margin-top:8px;">실거래가 출처: 국토교통부 실거래가 공개시스템 &middot; 매일 업데이트</p>')
 
     fallback = "\n    ".join(lines)
 

@@ -1072,7 +1072,13 @@ def generate_sitemap(danji_list: list):
             continue
         slug = _make_slug(d.get("complex_name", ""), d.get("location", ""), did, d.get("address", ""))
         safe_slug = _quote(slug, safe="-")
-        lastmod = (d.get("updated_at") or today)[:10]
+        # lastmod: 최신 거래일 기반 (없으면 updated_at, 그것도 없으면 today)
+        latest_trade_date = ""
+        for c in cats:
+            td = (rt.get(c) or {}).get("date", "")
+            if td and td > latest_trade_date:
+                latest_trade_date = td
+        lastmod = latest_trade_date[:10] if latest_trade_date else (d.get("updated_at") or today)[:10]
         urls.append(f'  <url><loc>{base}/danji/{safe_slug}</loc><lastmod>{lastmod}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>')
         included += 1
 

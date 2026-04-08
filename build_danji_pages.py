@@ -242,7 +242,12 @@ def find_year_ago_trade(d, cat):
         return None
 
 
-def build_intro_sentence(name, addr, year, units, builder, bc, rt, jr):
+def get_prop_type(did):
+    """ID에서 건물 유형 판별: offi- → 오피스텔, 그 외 → 아파트"""
+    return "오피스텔" if did.startswith("offi-") else "아파트"
+
+
+def build_intro_sentence(name, addr, year, units, builder, bc, rt, jr, prop_type="아파트"):
     """데이터 특성에 따라 다른 서두 문장 생성 — 콘텐츠 다양화"""
     from datetime import datetime as _dt
     current_year = _dt.now().year
@@ -250,49 +255,52 @@ def build_intro_sentence(name, addr, year, units, builder, bc, rt, jr):
     unit_count = units if isinstance(units, int) else 0
     price = safe_int(rt[bc].get("price"), 0) if bc and rt.get(bc) else 0
 
+    pt = prop_type
     # 신축 대단지
     if age is not None and age <= 5 and unit_count >= 1000:
         return f"{name}{josa(name,'은/는')} {year}년 준공된 {unit_count:,}세대 규모의 신축 대단지로, {addr}에 있습니다."
     # 신축
     if age is not None and age <= 5:
-        return f"{addr}에 위치한 {name}{josa(name,'은/는')} {year}년 준공된 신축 아파트입니다."
+        return f"{addr}에 위치한 {name}{josa(name,'은/는')} {year}년 준공된 신축 {pt}입니다."
     # 대단지
     if unit_count >= 1000 and year:
-        return f"{name}{josa(name,'은/는')} {addr}의 {unit_count:,}세대 대단지 아파트로, {year}년에 준공되었습니다."
+        return f"{name}{josa(name,'은/는')} {addr}의 {unit_count:,}세대 대단지 {pt}로, {year}년에 준공되었습니다."
     if unit_count >= 1000:
-        return f"{name}{josa(name,'은/는')} {addr}의 {unit_count:,}세대 대단지 아파트입니다."
+        return f"{name}{josa(name,'은/는')} {addr}의 {unit_count:,}세대 대단지 {pt}입니다."
     # 전세 수요 높음
     try:
         jr_float = float(jr) if jr else 0
     except (ValueError, TypeError):
         jr_float = 0
     if jr_float >= 70:
-        return f"{name}{josa(name,'은/는')} 전세가율 {jr}%로 전세가율이 높은 {addr} 소재 아파트입니다."
+        return f"{name}{josa(name,'은/는')} 전세가율 {jr}%로 전세가율이 높은 {addr} 소재 {pt}입니다."
     # 고가
     if price >= 150000:
-        return f"{addr}의 {name}{josa(name,'은/는')} 최근 전용 {bc}㎡가 {format_price(price)}에 거래된 아파트입니다."
+        return f"{addr}의 {name}{josa(name,'은/는')} 최근 전용 {bc}㎡가 {format_price(price)}에 거래된 {pt}입니다."
     # 유명 시공사
     major = ["삼성물산", "현대건설", "대우건설", "GS건설", "포스코건설", "대림산업", "롯데건설", "HDC현대산업개발"]
     if builder and any(b in builder for b in major):
         if year:
-            return f"{name}{josa(name,'은/는')} {builder} 시공의 아파트로, {addr}에 위치하며 {year}년 준공되었습니다."
-        return f"{name}{josa(name,'은/는')} {builder} 시공의 아파트로, {addr}에 위치합니다."
+            return f"{name}{josa(name,'은/는')} {builder} 시공의 {pt}로, {addr}에 위치하며 {year}년 준공되었습니다."
+        return f"{name}{josa(name,'은/는')} {builder} 시공의 {pt}로, {addr}에 위치합니다."
     # 구축
     if age is not None and age >= 30:
-        return f"{year}년 준공된 {name}{josa(name,'은/는')} {addr}에 위치한 아파트입니다."
+        return f"{year}년 준공된 {name}{josa(name,'은/는')} {addr}에 위치한 {pt}입니다."
     # 소형
     if 0 < unit_count < 300:
-        return f"{addr} 소재 {name}{josa(name,'은/는')} 총 {unit_count:,}세대 규모의 아파트입니다."
+        return f"{addr} 소재 {name}{josa(name,'은/는')} 총 {unit_count:,}세대 규모의 {pt}입니다."
     # 기본
     if year and addr:
-        return f"{name}{josa(name,'은/는')} {addr}에 있는 {year}년 준공 아파트입니다."
+        return f"{name}{josa(name,'은/는')} {addr}에 있는 {year}년 준공 {pt}입니다."
     elif addr:
-        return f"{name}{josa(name,'은/는')} {addr}에 위치한 아파트입니다."
-    return f"{name} 아파트입니다."
+        return f"{name}{josa(name,'은/는')} {addr}에 위치한 {pt}입니다."
+    return f"{name} {pt}입니다."
 
 
 def build_fallback_html(d):
     """Googlebot이 읽는 정적 SEO 콘텐츠"""
+    did = d.get("id", "")
+    prop_type = get_prop_type(did)
     name = esc(d.get("complex_name", ""))
     loc = esc(d.get("location", ""))
     loc_parts = (d.get("location") or "").split(" ")
@@ -372,7 +380,7 @@ def build_fallback_html(d):
     # 면적 목록
     if cats:
         area_list = ", ".join(f"전용 {c}㎡" for c in cats)
-        lines.append(f'<p style="font-size:12px;color:#9ca3af;margin-bottom:12px;">면적: {area_list}</p>')
+        lines.append(f'<p style="font-size:12px;color:#6b7280;margin-bottom:12px;">면적: {area_list}</p>')
 
     # 면적별 가격 비교 (2개 이상 면적에 거래가 있을 때)
     traded_areas = [(c, rt[c]) for c in sorted(cats, key=lambda x: int(x) if isinstance(x, str) and x.isdigit() else 999) if rt.get(c) and (rt[c].get("price") or 0) > 0]
@@ -387,13 +395,13 @@ def build_fallback_html(d):
     subway = d.get("nearby_subway") or []
     if subway:
         items = [f"{esc(s.get('name',''))}({esc(clean_line(s.get('line','')))}) 도보 {walk_min(s.get('distance'))}" for s in subway[:3]]
-        lines.append(f'<p style="font-size:12px;color:#9ca3af;margin-bottom:4px;">인근 지하철: {", ".join(items)}</p>')
+        lines.append(f'<p style="font-size:12px;color:#6b7280;margin-bottom:4px;">인근 지하철: {", ".join(items)}</p>')
 
     # 학교
     school = d.get("nearby_school") or []
     if school:
         items = [f"{esc(s.get('name',''))} 도보 {walk_min(s.get('distance'))}" for s in school[:2]]
-        lines.append(f'<p style="font-size:12px;color:#9ca3af;margin-bottom:12px;">인근 학교: {", ".join(items)}</p>')
+        lines.append(f'<p style="font-size:12px;color:#6b7280;margin-bottom:12px;">인근 학교: {", ".join(items)}</p>')
 
     # 단지 스펙
     specs = []
@@ -405,7 +413,7 @@ def build_fallback_html(d):
     if d.get("heating"):
         specs.append(esc(d["heating"]))
     if specs:
-        lines.append(f'<p style="font-size:12px;color:#9ca3af;margin-bottom:12px;">{", ".join(specs)}</p>')
+        lines.append(f'<p style="font-size:12px;color:#6b7280;margin-bottom:12px;">{", ".join(specs)}</p>')
 
     nearby = d.get("nearby_complex") or []
     # 주변 단지 대비 순위
@@ -450,7 +458,7 @@ def build_fallback_html(d):
             lines.append(
                 f'<li><a href="/danji/{nslug}" style="display:flex;justify-content:space-between;'
                 f'padding:10px 12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">'
-                f'<span>{nname} <span style="color:#9ca3af;font-size:11px;">{nloc}</span></span>'
+                f'<span>{nname} <span style="color:#6b7280;font-size:11px;">{nloc}</span></span>'
                 f'<span style="font-weight:600;">{p}</span></a></li>'
             )
         lines.append("</ul>")
@@ -514,7 +522,7 @@ def build_fallback_html(d):
     raw_name = d.get("complex_name", "")
     raw_addr = d.get("address", "")
     raw_builder = d.get("builder", "")
-    intro = build_intro_sentence(raw_name, raw_addr, year, units, raw_builder, bc, rt, jr)
+    intro = build_intro_sentence(raw_name, raw_addr, year, units, raw_builder, bc, rt, jr, prop_type)
     seo.append(intro)
     if len(traded_areas) >= 2:
         parts = [f"전용 {a}㎡ {format_price(t.get('price'))}" for a, t in traded_areas[:4]]
@@ -548,9 +556,9 @@ def build_fallback_html(d):
     seo.append("모든 데이터는 국토교통부 실거래가 공개시스템 기반이며 매일 갱신됩니다.")
     seo_text = " ".join(s for s in seo if s)
     if seo_text:
-        lines.append(f'<p style="font-size:11px;color:#9ca3af;line-height:1.7;margin-top:16px;">{esc(seo_text)}</p>')
+        lines.append(f'<p style="font-size:11px;color:#6b7280;line-height:1.7;margin-top:16px;">{esc(seo_text)}</p>')
 
-    lines.append('<p style="font-size:10px;color:#9ca3af;margin-top:8px;">실거래가 출처: 국토교통부 실거래가 공개시스템 · 매일 업데이트</p>')
+    lines.append('<p style="font-size:10px;color:#6b7280;margin-top:8px;">실거래가 출처: 국토교통부 실거래가 공개시스템 · 매일 업데이트</p>')
 
     # 내부 링크
     loc_parts_raw = (d.get("location") or "").split(" ", 1)
@@ -737,19 +745,25 @@ def generate_page(d):
         desc_parts.append(f"{units}세대")
     if year:
         desc_parts.append(f"{year}년")
-    desc_parts.append("아파트 실거래가, 전세가, 시세 추이")
+    prop_type = get_prop_type(did)
+    desc_parts.append(f"{prop_type} 실거래가, 전세가, 시세 추이")
     desc = " ".join(desc_parts)
 
     canonical = f"https://hwik.kr/danji/{slug}"
     jsonld = build_jsonld(d)
     fallback = build_fallback_html(d)
 
-    # 네이버 메타태그용 시간 — published_time은 데이터 시간, modified_time은 빌드 시점
+    # 네이버 메타태그용 시간 — published_time은 최초 데이터 시간, modified_time은 빌드 시점
+    # modified_time >= published_time 보장
     updated_at = d.get("updated_at", "")
-    published_time = updated_at[:19] + "+00:00" if updated_at and len(updated_at) >= 19 else ""
+    pub_time = updated_at[:19] + "+00:00" if updated_at and len(updated_at) >= 19 else ""
+    mod_time = BUILD_TIME
+    # published가 modified보다 미래이면 swap
+    if pub_time and mod_time and pub_time > mod_time:
+        pub_time, mod_time = mod_time, pub_time
     naver_meta = ""
-    if published_time:
-        naver_meta = f'<meta property="article:published_time" content="{published_time}">\n<meta property="article:modified_time" content="{BUILD_TIME}">'
+    if pub_time:
+        naver_meta = f'<meta property="article:published_time" content="{pub_time}">\n<meta property="article:modified_time" content="{mod_time}">'
 
     return f"""<!DOCTYPE html>
 <html lang="ko">
@@ -788,7 +802,7 @@ def generate_page(d):
     <div class="loading-text">단지 정보 불러오는 중...</div>
   </div>
   <div id="fallback-content" style="padding:20px;">
-    <nav style="font-size:11px;color:#9ca3af;margin-bottom:12px;">
+    <nav style="font-size:11px;color:#6b7280;margin-bottom:12px;">
       <a href="/" style="color:#6b7280;text-decoration:none;">휙</a> &gt;
       <a href="/gu.html?name={gu}" style="color:#6b7280;text-decoration:none;">{gu}</a> &gt;
       {dong_nav}
