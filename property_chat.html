@@ -804,11 +804,11 @@
             const st = validStations[0];
             const stName = st.name.endsWith('역') ? st.name : st.name + '역';
             const coloredLines = st.lines.map(l => `<span style="color:${lineColor(l)};font-weight:700;">${l}</span>`).join(' ');
-            nearbyParts.push(`${esc(stName)}(${coloredLines}) ${walkMin(st.dist)}분`);
+            nearbyParts.push(`${esc(stName)}(${coloredLines}) 도보 ${walkMin(st.dist)}분 정도`);
         }
         if (validSchools.length > 0) {
             const sch = validSchools[0];
-            nearbyParts.push(`${esc(sch.name)} ${walkMin(sch.dist)}분`);
+            nearbyParts.push(`${esc(sch.name)} 도보 ${walkMin(sch.dist)}분 정도`);
         }
         if (nearbyParts.length > 0) {
             await wait(d);
