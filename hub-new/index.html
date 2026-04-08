@@ -1916,44 +1916,6 @@ const Hub = (() => {
         <button onclick="Hub._openProfileEdit()" style="padding:7px 16px;border-radius:20px;border:none;background:var(--primary);color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">프로필 수정</button>
       </div>
 
-      <!-- 일정 -->
-      <div style="margin-bottom:20px;border:1px solid var(--border);border-radius:12px;overflow:hidden;">
-        <div style="font-size:12px;font-weight:800;color:var(--primary);padding:10px 14px;border-bottom:1px solid var(--border);background:var(--primary-bg);">일정 <span style="font-weight:500;color:var(--text-light);">${allNotes.length}건</span></div>
-        ${allNotes.length||unreadMatch.length?`<div style="max-height:300px;overflow-y:auto;padding:4px 14px;">
-        ${allNotes.map(n=>{
-          const isOverdue=n._t==='overdue';const isToday=n._t==='today';
-          const tagColor=isOverdue?'#ef4444':isToday?'var(--primary)':'var(--text-light)';
-          const tagBg=isOverdue?'rgba(239,68,68,0.08)':isToday?'var(--primary-bg)':'rgba(156,163,175,0.06)';
-          const tag=isOverdue?'지연':isToday?'오늘':'내일';
-          const name=clientName(n);
-          return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);${n.client_card_id?'cursor:pointer;':''}" ${n.client_card_id?`onclick="Hub.enterClient('${n.client_card_id}')"`:''}>
-            <span style="font-size:10px;font-weight:800;color:${tagColor};background:${tagBg};padding:2px 8px;border-radius:10px;flex-shrink:0;">${tag}</span>
-            <span style="font-size:12px;color:var(--text-sub);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name?`<b>${esc(name)}</b> `:''}${esc(n.content||'')}</span>
-          </div>`;
-        }).join('')}
-        ${unreadMatch.length?`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;cursor:pointer;" onclick="Hub.openPanel('alert')">
-          <span style="font-size:10px;font-weight:800;color:#f59e0b;background:rgba(245,158,11,0.08);padding:2px 8px;border-radius:10px;flex-shrink:0;">매칭</span>
-          <span style="font-size:12px;color:#f59e0b;font-weight:600;">새 매칭 ${unreadMatch.length}건</span>
-        </div>`:''}
-        </div>`:`<div style="font-size:12px;color:var(--text-light);padding:16px 14px;">예정된 일정이 없습니다</div>`}
-      </div>
-
-      <!-- 계약 진행 -->
-      ${contractCards.length?`<div style="margin-bottom:20px;border:1px solid var(--border);border-radius:12px;overflow:hidden;">
-        <div style="font-size:12px;font-weight:800;color:var(--primary);padding:10px 14px;border-bottom:1px solid var(--border);background:var(--primary-bg);">계약 진행 <span style="color:#f59e0b;">${contractCards.length}</span></div>
-        <div style="max-height:180px;overflow-y:auto;padding:4px 14px;">
-        ${contractCards.map(c=>{
-          const p=c.property||{};const name=clientName(c);
-          const typeColor=p.type==='매매'?'#ea580c':p.type==='전세'?'#4f46e5':'#7c3aed';
-          return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer;" onclick="Hub.enterProperty('${c.id}')">
-            <span style="font-size:10px;font-weight:800;color:${typeColor};background:${typeColor}12;padding:2px 8px;border-radius:10px;flex-shrink:0;">${esc(p.type||'')}</span>
-            <span style="font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><b>${esc(p.price||'')}</b> <span style="color:var(--text-light);">${esc(p.complex||p.location||'')}</span></span>
-            ${name?`<span style="font-size:10px;color:#f59e0b;font-weight:700;flex-shrink:0;">${esc(name)}</span>`:''}
-          </div>`;
-        }).join('')}
-        </div>
-      </div>`:''}
-
       <!-- 로그아웃 -->
       <div style="text-align:center;padding-top:8px;">
         <span style="font-size:11px;color:var(--text-light);cursor:pointer;opacity:0.5;" onclick="Auth.logout()">로그아웃</span>
