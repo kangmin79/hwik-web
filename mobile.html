@@ -826,9 +826,11 @@ window.addEventListener('load', function() {
 });
 
 // ── 인증 ──
+// 탭바 즉시 표시 (세션 확인 전에도 비로그인 탭바 보이기)
+document.getElementById('bottomTabBar').classList.add('visible');
+
 supabaseClient.auth.getSession().then(({ data: { session } }) => {
   if (session?.user) { currentUser = session.user; onLoggedIn(); }
-  else { document.getElementById('bottomTabBar').classList.add('visible'); }
 });
 supabaseClient.auth.onAuthStateChange((event, session) => {
   if (session?.user) { currentUser = session.user; onLoggedIn(); }
