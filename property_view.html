@@ -514,11 +514,12 @@
           display:flex; flex-direction:column;
           background:#0f0f1a; overflow-y:auto; overflow-x:hidden;
         }
-        /* 상단 히어로 */
+        /* 가격 히어로 (지도 아래 오버랩) */
         .noimg-hero {
-          position:relative; padding:48px 28px 36px; text-align:center;
+          position:relative; padding:28px 28px 24px; text-align:center;
+          margin-top:-20px; border-radius:20px 20px 0 0;
           background:linear-gradient(160deg,#0f0f1a 0%,#1a1035 50%,#0d1b2a 100%);
-          overflow:hidden;
+          overflow:hidden; z-index:2;
         }
         .noimg-hero::before {
           content:''; position:absolute; width:400px; height:400px; border-radius:50%;
@@ -612,12 +613,11 @@
           font-size:15px; color:rgba(255,255,255,0.85);
           line-height:1.8; word-break:keep-all; font-weight:500;
         }
-        /* 지도 영역 */
+        /* 지도 영역 (상단 배치) */
         .noimg-map {
-          border-radius:16px; overflow:hidden; height:160px;
-          position:relative; cursor:pointer;
-          border:1px solid rgba(255,255,255,0.06);
-          margin-bottom:20px;
+          width:100%; min-height:max(35%,200px); overflow:hidden;
+          position:relative; cursor:pointer; flex-shrink:0;
+          background:#1a1a2e;
         }
         .noimg-map-label {
           position:absolute; bottom:0; left:0; right:0; z-index:5;
@@ -1241,7 +1241,12 @@
             const cardHtml = `
               <div class="card card-full" id="activeCard" data-template="noimg" data-total="1">
                 <div class="noimg-wrap">
-                  <!-- 히어로 -->
+                  <!-- 1. 지도 (맨 위) -->
+                  <div class="noimg-map" id="noImgMapArea" onclick="openFullscreenMap()">
+                    <div class="noimg-map-label">📍 위치 보기</div>
+                  </div>
+
+                  <!-- 2. 가격 + 정보 -->
                   <div class="noimg-hero">
                     <div class="noimg-type" style="background:${typeBg};color:${typeColor};border:1px solid ${typeColor}30;">
                       <span class="noimg-type-dot" style="background:${dotColor}"></span>${type}
@@ -1253,9 +1258,8 @@
 
                   <div class="noimg-divider"></div>
 
-                  <!-- 정보 바디 -->
+                  <!-- 3. 스펙 + 태그 -->
                   <div class="noimg-body">
-                    <!-- 스펙 그리드 -->
                     ${specItems.length ? `<div class="noimg-specs">
                       ${specItems.map(s => `<div class="noimg-spec-item">
                         <div class="noimg-spec-label">${s.label}</div>
@@ -1263,7 +1267,6 @@
                       </div>`).join('')}
                     </div>` : ''}
 
-                    <!-- 태그 -->
                     ${allTags.length ? `<div class="noimg-tags">
                       ${allTags.map(t => {
                         const cls = _classifySpec(t);
@@ -1272,16 +1275,11 @@
                       }).join('')}
                     </div>` : ''}
 
-                    <!-- 중개사 코멘트 -->
+                    <!-- 4. 중개사 코멘트 (맨 아래) -->
                     ${agentComment ? `<div class="noimg-comment">
                       <div class="noimg-comment-label">💬 중개사 한마디</div>
                       <div class="noimg-comment-text">${esc(agentComment).replace(/\n/g,'<br>')}</div>
                     </div>` : ''}
-
-                    <!-- 지도 -->
-                    <div class="noimg-map" id="noImgMapArea" onclick="openFullscreenMap()">
-                      <div class="noimg-map-label">📍 위치 보기</div>
-                    </div>
 
                     <div class="noimg-watermark">H W I K</div>
                   </div>
