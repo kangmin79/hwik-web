@@ -1085,20 +1085,26 @@
         chatBody.appendChild(myMsg);
         chatBody.scrollTop = chatBody.scrollHeight;
 
-        // 2. 인사 vs 질문 분류
-        const greetings = ['안녕','반갑','하이','헬로','hi','hello','ㅎㅇ','ㅎㅎ','감사','고마','네','넵','넹','오케','ㅇㅋ','ㅇㅇ'];
-        const isGreeting = greetings.some(g => question.replace(/\s/g,'').toLowerCase().includes(g));
+        // 2. 질문 vs 일반 분류
+        const q = question.replace(/\s/g,'').toLowerCase();
+        const hasQuestion = q.includes('?') || q.includes('？');
+        const questionWords = ['가능','되나','있나','없나','얼마','언제','어디','몇','할수','할 수','인가','인지','나요','ㅁ니까','습니까','을까','줄까','는지','건지'];
+        const isQuestion = hasQuestion || questionWords.some(w => q.includes(w));
 
         await wait(600);
         showTyping(); await wait(800); hideTyping();
         startNewGroup();
 
-        if (isGreeting) {
-            // 인사 → 인사로 응답, 입력창 유지
+        if (!isQuestion) {
+            // 인사/감탄 → 응답 후 입력창 유지
             const agent = agentInfo || {};
             const name = agent.business_name || agent.name || '중개사';
-            await addMsg(`안녕하세요! ${esc(name)}입니다 😊 매물 관련 궁금한 점 있으시면 편하게 물어보세요~`);
-            input.value = '';
+            const casualReplies = [
+                `안녕하세요! ${esc(name)}입니다 😊 궁금한 점 있으시면 편하게 물어보세요~`,
+                `네~ 매물 보시고 궁금한 점 있으시면 말씀해주세요!`,
+                `감사합니다! 더 궁금한 거 있으시면 편하게 물어보세요~`,
+            ];
+            await addMsg(casualReplies[Math.floor(Math.random() * casualReplies.length)]);
             return;
         }
 
