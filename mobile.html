@@ -1297,7 +1297,9 @@ let _chatParsed = null;
 let _chatText = '';
 
 function showClientRegister() {
-  // 기존 채팅 영역 제거
+  // 이미 열려있으면 재생성 안 함
+  if (document.getElementById('clientChatArea')) return;
+  // 다른 채팅(브리핑) 제거
   document.querySelector('body > .chat-area')?.remove();
 
   _chatState = 'idle';
@@ -1634,7 +1636,9 @@ function _renderMatchPanel(cardData, parsed, rawText) {
 
 // ── 알림 (채팅 스타일 브리핑) ──
 async function showAlerts() {
-  // 기존 채팅 영역 제거
+  // 이미 열려있으면 재생성 안 함
+  if (document.getElementById('alertChatArea')) return;
+  // 다른 채팅(손님등록) 제거
   document.querySelector('body > .chat-area')?.remove();
 
   if (!currentUser) {
