@@ -913,23 +913,25 @@ const Data = (() => {
   async function uploadPhotos(cardId, files) {
     const results = []; let failCount = 0;
     await Promise.all(files.map(async (file,i) => {
-      const resized = await _resize(file,1200);
-      const path = `cards/${cardId}/${Date.now()}_${i}.jpg`;
-      const { error } = await sb().storage.from('photos').upload(path,resized,{contentType:'image/jpeg'});
-      if (!error) { const { data } = sb().storage.from('photos').getPublicUrl(path); results.push(data?.publicUrl); }
-      else { failCount++; }
+      try {
+        const resized = await _resize(file,1200);
+        const path = `cards/${cardId}/${Date.now()}_${i}.jpg`;
+        const { error } = await sb().storage.from('photos').upload(path,resized,{contentType:'image/jpeg'});
+        if (!error) { const { data } = sb().storage.from('photos').getPublicUrl(path); results.push(data?.publicUrl); }
+        else { failCount++; }
+      } catch { failCount++; }
     }));
     if (failCount > 0) Toast.show(`사진 ${failCount}장 업로드 실패`, 'error');
     return results;
   }
   function _resize(file,max) {
-    return new Promise(resolve => {
-      const img = new Image(); img.onload = () => {
+    return new Promise((resolve,reject) => {
+      const img = new Image(); img.onerror = () => reject(new Error('이미지 로드 실패')); img.onload = () => {
         let w=img.width,h=img.height;
         if(w>max||h>max){const r=Math.min(max/w,max/h);w*=r;h*=r;}
         const c=document.createElement('canvas');c.width=w;c.height=h;
         c.getContext('2d').drawImage(img,0,0,w,h);
-        c.toBlob(b=>resolve(b),'image/jpeg',0.7);
+        c.toBlob(b=>b?resolve(b):reject(new Error('리사이즈 실패')),'image/jpeg',0.7);
       }; img.src=URL.createObjectURL(file);
     });
   }
@@ -2825,7 +2827,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
     if(singleOrMulti!=='multi'){
       // 단건
       const {error}=await Data.shareCardToRoom(singleOrMulti,roomId);
-      if(!error)success=1;else if(error.code==='23505')Toast.show('이미 공유된 매물입니다');
+      if(!error)success=1;else if(error?.code==='23505')Toast.show('이미 공유된 매물입니다');else Toast.show('공유 실패: '+(error?.message||''));
     }else{
       // 여러 건
       for(const card of cards){
@@ -2861,14 +2863,15 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
     const _pf=Data.parsePriceFields(prop.price,prop.type);
     const memoVal=document.getElementById('eMemo')?.value||'';
     const pn={...(c.private_note||{}),memo:memoVal||null};
-    await Auth.sb.from('cards').update({property:prop,photos:[...existPhotos,...newUrls],agent_comment:document.getElementById('eComment').value,private_note:pn,price_number:_pf.price_number,deposit:_pf.deposit,monthly_rent:_pf.monthly_rent}).eq('id',id);
+    const {error:updateErr}=await Auth.sb.from('cards').update({property:prop,photos:[...existPhotos,...newUrls],agent_comment:document.getElementById('eComment').value,private_note:pn,price_number:_pf.price_number,deposit:_pf.deposit,monthly_rent:_pf.monthly_rent}).eq('id',id);
+    if(updateErr){Toast.show('수정 실패: '+updateErr.message);return;}
     Data.updateEmbedding(id);
     Promise.all([Data.batchGenerateTags(id).catch(()=>{}),Data.locateCard(id)]).then(()=>Data.triggerAutoMatch(id));
     document.getElementById('editModal').classList.remove('show');_editNewPhotos=[];Toast.show('수정 완료');
     await Data.loadMyCards(0,true);renderList();
   }
 
-  async function del(id){if(!confirm('매물을 삭제하시겠습니까?'))return;await Data.deleteCard(id);Toast.show('삭제 완료');await Data.loadMyCards(0,true);renderList();}
+  async function del(id){if(!confirm('매물을 삭제하시겠습니까?'))return;const{error}=await Data.deleteCard(id);if(error){Toast.show('삭제 실패: '+error.message,'error');return;}Toast.show('삭제 완료');await Data.loadMyCards(0,true);renderList();}
   async function chgStatus(id,st){
     if(st==='계약중'||st==='완료'){
       // 손님 선택 팝업
