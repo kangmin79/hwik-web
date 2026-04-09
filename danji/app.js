@@ -356,8 +356,7 @@ function render() {
 
   // 평형 (DB categories 기반)
   if (cats.length > 0) {
-    const pyList = cats.map(c => '전용 ' + c + '㎡');
-    seoParts.push(pyList.join(', ') + ' 면적이 있습니다.');
+    seoParts.push('보유 면적(전용): ' + cats.join(', ') + '㎡.');
   }
 
   // 지하철 (DB nearby_subway 기반)
@@ -384,6 +383,12 @@ function render() {
   }
   if (jeonseRate) {
     seoParts.push('전세가율은 ' + jeonseRate + '%입니다.');
+  }
+
+  // 업데이트 날짜
+  if (d.updated_at) {
+    const ud = new Date(d.updated_at);
+    seoParts.push(ud.getFullYear() + '-' + String(ud.getMonth()+1).padStart(2,'0') + '-' + String(ud.getDate()).padStart(2,'0') + ' 업데이트.');
   }
 
   const seoFull = seoParts.join(' ');
@@ -581,16 +586,16 @@ function render() {
       <a class="btn-secondary" href="/card_generator_v2_auth.html" style="display:block;text-align:center;text-decoration:none;">공인중개사 서비스 · 무료로 시작하기</a>
     </div>
 
-    <!-- 데이터 안내 -->
-    <div style="padding:16px;border-top:1px solid var(--border);background:var(--card);">
-      <div style="font-size:12px;font-weight:600;color:var(--sub);margin-bottom:8px;display:flex;align-items:center;gap:5px;">📊 데이터 안내</div>
-      <ul style="font-size:11px;color:var(--muted);line-height:1.8;padding-left:16px;margin:0;">
+    <!-- 데이터 안내 (접기) -->
+    <details style="padding:12px 16px;border-top:1px solid var(--border);background:var(--card);">
+      <summary style="font-size:12px;font-weight:600;color:var(--sub);cursor:pointer;display:flex;align-items:center;gap:5px;list-style:none;">📊 데이터 안내 <span style="font-size:10px;color:var(--muted);margin-left:auto;">▼</span></summary>
+      <ul style="font-size:11px;color:var(--muted);line-height:1.8;padding-left:16px;margin:8px 0 0;">
         <li>실거래가: 국토교통부 실거래가 공개시스템 (매일 자동 수집)</li>
         <li>공급면적: 국토교통부 건축물대장 (전용면적 + 주거공용면적)</li>
         <li>공급면적이 확인되지 않은 단지는 전용면적만 표시합니다</li>
         <li>거래 취소·정정 건은 반영이 지연될 수 있습니다</li>
       </ul>
-    </div>
+    </details>
 
     <!-- SEO -->
     <div class="seo-section">
