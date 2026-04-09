@@ -259,7 +259,65 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 8. tags merge 후 cards 업데이트
+    // 8. ★ 좌표 기반 근처 역/학교 자동 탐지 (반경 500m 역, 1km 학교)
+    if (finalLat && finalLng) {
+      try {
+        // 근처 역 조회 (하버사인 근사: 위도 1도≈111km, 경도 1도≈88km@37°N)
+        const latRange500m = 0.0045; // ~500m
+        const lngRange500m = 0.0057;
+        const { data: nearbyStations } = await supabase
+          .from('stations')
+          .select('name, lat, lon')
+          .gte('lat', finalLat - latRange500m)
+          .lte('lat', finalLat + latRange500m)
+          .gte('lon', finalLng - lngRange500m)
+          .lte('lon', finalLng + lngRange500m)
+          .limit(5);
+
+        if (nearbyStations?.length) {
+          for (const st of nearbyStations) {
+            // 정밀 거리 계산
+            const dLat = (st.lat - finalLat) * 111000;
+            const dLng = (st.lon - finalLng) * 88000;
+            const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+            if (dist <= 500) {
+              const tag = `${st.name}역`;
+              if (!addedTags.includes(tag)) addedTags.push(tag);
+            }
+          }
+          console.log(`근처 역: ${nearbyStations.map(s => s.name).join(', ')}`);
+        }
+
+        // 근처 학교 조회 (반경 1km)
+        const latRange1km = 0.009;
+        const lngRange1km = 0.0114;
+        const { data: nearbySchools } = await supabase
+          .from('schools')
+          .select('name, lat, lon')
+          .gte('lat', finalLat - latRange1km)
+          .lte('lat', finalLat + latRange1km)
+          .gte('lon', finalLng - lngRange1km)
+          .lte('lon', finalLng + lngRange1km)
+          .limit(10);
+
+        if (nearbySchools?.length) {
+          for (const sc of nearbySchools) {
+            const dLat = (sc.lat - finalLat) * 111000;
+            const dLng = (sc.lon - finalLng) * 88000;
+            const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+            if (dist <= 1000) {
+              const tag = sc.name;
+              if (!addedTags.includes(tag)) addedTags.push(tag);
+            }
+          }
+          console.log(`근처 학교: ${nearbySchools.map(s => s.name).join(', ')}`);
+        }
+      } catch (e) {
+        console.warn('근처 역/학교 탐지 실패 (무시):', (e as Error).message);
+      }
+    }
+
+    // 9. tags merge 후 cards 업데이트
     const existingTags: string[] = Array.isArray(card.tags) ? card.tags : [];
     const mergedTags = [...new Set([...existingTags, ...addedTags])];
 
@@ -279,7 +337,7 @@ Deno.serve(async (req) => {
 
     if (updateErr) throw new Error(`카드 업데이트 실패: ${updateErr.message}`);
 
-    // 9. 결과 반환
+    // 10. 결과 반환
     return new Response(JSON.stringify({
       success: true,
       lat: finalLat,
