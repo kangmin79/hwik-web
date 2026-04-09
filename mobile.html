@@ -558,9 +558,12 @@
   .chat-input-wrap {
     flex-shrink: 0;
     display: flex; gap: 8px;
+    align-items: flex-end;
     padding: 8px 12px;
     padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
     background: #fff;
+    border-top: 1px solid #d5dce4;
+    min-height: 56px;
   }
   .chat-input {
     flex: 1; padding: 10px 14px;
