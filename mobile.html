@@ -504,36 +504,25 @@
 
   .client-bottom {
     flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 4px;
-    border-top: 1px solid var(--gray-200);
+    padding: 10px 0 0;
   }
 
-  .client-tip {
-    flex: 1;
-    font-size: 12px;
-    color: #c0c0c0;
-  }
-
-  .client-send {
-    width: 48px;
-    height: 48px;
+  .client-submit-btn {
+    width: 100%;
+    padding: 16px;
     border: none;
-    border-radius: 50%;
-    background: var(--hwik-dark);
-    color: var(--hwik-yellow);
+    border-radius: 14px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    font-size: 16px;
+    font-weight: 800;
+    font-family: 'Noto Sans KR', sans-serif;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
     transition: all 0.2s;
+    letter-spacing: -0.3px;
   }
-  .client-send:active { transform: scale(0.9); }
-  .client-send:disabled { opacity: 0.4; }
-  .client-send svg { width: 22px; height: 22px; fill: none; stroke: var(--hwik-yellow); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .client-submit-btn:active { transform: scale(0.98); opacity: 0.9; }
+  .client-submit-btn:disabled { opacity: 0.5; }
 
   /* ── 내정보 ── */
   .profile-card {
@@ -1213,12 +1202,9 @@ function showClientRegister() {
         <h2>손님 등록</h2>
         <p>손님이 찾는 조건을 말하듯이 적어주세요</p>
       </div>
-      <textarea class="client-input" id="clientInput" placeholder="강남 2룸 전세 3억 이하&#10;&#10;예) 신혼부부, 역세권 선호&#10;보증금 3억 이내 전세&#10;방2 화장실1 이상"></textarea>
+      <textarea class="client-input" id="clientInput" placeholder="강남 2룸 전세 3억 이하&#10;&#10;예) 신혼부부, 역세권 선호&#10;보증금 3억 이내 전세&#10;이름: 홍길동 / 010-1234-5678"></textarea>
       <div class="client-bottom">
-        <span class="client-tip">AI가 자동으로 매칭 매물을 찾아드려요</span>
-        <button class="client-send" id="clientSubmitBtn" onclick="submitClient()">
-          <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </button>
+        <button class="client-submit-btn" onclick="submitClient()">AI로 손님 등록</button>
       </div>
     </div>
   `;
