@@ -767,7 +767,7 @@
   <div class="results" id="results"></div>
 
   <!-- 알림 패널 -->
-  <div class="panel" id="alertPanel"></div>
+  <div class="panel panel-center" id="alertPanel"></div>
 
   <!-- 손님 등록 패널 -->
   <div class="panel panel-center" id="clientPanel"></div>
@@ -832,13 +832,13 @@
     </div>
     <span class="tab-label">손님등록</span>
   </button>
-  <!-- 알림 -->
+  <!-- 알림 (브리핑) -->
   <button class="tab-btn" id="tabAlert" onclick="switchTab('alert')">
     <div class="tab-icon">
       <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
       <span class="tab-badge" id="badgeAlert"></span>
     </div>
-    <span class="tab-label">알림</span>
+    <span class="tab-label">브리핑</span>
   </button>
   <!-- 내정보 -->
   <button class="tab-btn" id="tabProfile" onclick="switchTab('profile')">
@@ -1588,16 +1588,32 @@ function _renderMatchPanel(cardData, parsed, rawText) {
   panel.style.overflow = 'auto';
 }
 
-// ── 알림 (중개사 전용) ──
+// ── 알림 (채팅 스타일 브리핑) ──
 async function showAlerts() {
   const panel = document.getElementById('alertPanel');
-  panel.style.display = 'block';
+  panel.style.display = 'flex';
+  panel.classList.add('chat-mode');
 
-  // 캐시된 알림 즉시 표시
-  const cachedAlert = localStorage.getItem('hwik_alerts_html');
-  if (cachedAlert) panel.innerHTML = cachedAlert;
+  if (!currentUser) { panel.innerHTML = '<div style="padding:40px;text-align:center;color:#94a3b8;">로그인이 필요해요</div>'; return; }
 
-  if (!currentUser) return;
+  // 날짜
+  const today = new Date();
+  const dateStr = `${today.getFullYear()}년 ${today.getMonth()+1}월 ${today.getDate()}일 ${'일월화수목금토'[today.getDay()]}요일`;
+  const hour = today.getHours();
+  const greeting = hour < 12 ? '좋은 아침이에요!' : hour < 18 ? '오늘도 수고하세요!' : '오늘 하루 마무리!';
+
+  panel.innerHTML = `
+    <div class="chat-area">
+      <div class="chat-messages" id="alertMessages">
+        <div class="chat-date"><span>${dateStr}</span></div>
+      </div>
+    </div>`;
+
+  const msgs = document.getElementById('alertMessages');
+  _lastSender = '';
+
+  // 로딩 표시
+  addAlertBubble(`${greeting} 일정을 확인하고 있어요...`, true);
 
   try {
     const [matchRes, interestRes, overdueRes, upcomingRes] = await Promise.all([
@@ -1619,97 +1635,156 @@ async function showAlerts() {
 
     let cardMap = {}, clientMap = {};
     const [cardsRes, clientsRes] = await Promise.all([
-      cardIds.length ? supabaseClient.from('cards').select('id, property').in('id', cardIds) : { data: [] },
-      clientIds.length ? supabaseClient.from('cards').select('id, property').in('id', clientIds) : { data: [] }
+      cardIds.length ? supabaseClient.from('cards').select('id, property, contact_name').in('id', cardIds) : { data: [] },
+      clientIds.length ? supabaseClient.from('cards').select('id, property, contact_name').in('id', clientIds) : { data: [] }
     ]);
-    if (cardsRes.data) cardsRes.data.forEach(c => { cardMap[c.id] = c.property || {}; });
-    if (clientsRes.data) clientsRes.data.forEach(c => { clientMap[c.id] = c.property || {}; });
+    if (cardsRes.data) cardsRes.data.forEach(c => { cardMap[c.id] = { ...c.property, _name: c.contact_name }; });
+    if (clientsRes.data) clientsRes.data.forEach(c => { clientMap[c.id] = { ...c.property, _name: c.contact_name }; });
 
-    let html = '<div class="panel-title">알림</div>';
+    // 첫 인사 버블 교체
+    msgs.querySelectorAll('.msg').forEach(m => m.remove());
+    _lastSender = '';
 
-    function alertCard(color, label, rightText, content) {
-      return `<div class="alert-card">
-        <div class="accent-bar" style="background:${color}"></div>
-        <div style="padding-left:8px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <span style="font-size:11px;color:#fff;font-weight:600;background:${color};padding:3px 10px;border-radius:20px;">${label}</span>
-            <span style="font-size:12px;color:#64748b;font-weight:500;">${rightText}</span>
-          </div>
-          <div style="font-size:15px;color:#1a1a2e;font-weight:600;line-height:1.5;">${content}</div>
-        </div>
-      </div>`;
-    }
-
-    // 지연
+    const upcoming = upcomingRes.data || [];
     const overdue = overdueRes.data || [];
-    if (overdue.length) {
-      html += `<div class="alert-section-title">
-        <span style="font-size:15px;font-weight:800;color:#ef4444;">지연</span>
-        <span style="font-size:12px;color:#fff;background:#ef4444;padding:2px 10px;border-radius:20px;font-weight:600;">${overdue.length}</span>
-      </div>`;
-      overdue.forEach(a => {
-        const cp = clientMap[a.client_card_id] || {};
-        const clientName = [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
-        const ad = new Date(a.alert_date);
-        html += alertCard('#ef4444', `${ad.getMonth()+1}/${ad.getDate()} 지연`, esc(clientName), esc(a.content));
-      });
-    }
-
-    // 관심
-    const interests = interestRes.data || [];
-    if (interests.length) {
-      html += `<div class="alert-section-title">
-        <span style="font-size:15px;font-weight:800;color:#f59e0b;">관심 표시</span>
-        <span style="font-size:12px;color:#fff;background:#f59e0b;padding:2px 10px;border-radius:20px;font-weight:600;">${interests.length}</span>
-      </div>`;
-      interests.forEach(i => {
-        const p = cardMap[i.card_id] || {};
-        const name = [p.complex, p.location, p.price].filter(Boolean).join(' · ') || '매물';
-        const time = new Date(i.created_at).toLocaleString('ko-KR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
-        html += alertCard('#facc15', '관심 매물', time, `손님이 "${esc(name)}" 보고싶어요`);
-      });
-    }
-
-    // 매칭
     const matches = matchRes.data || [];
+    const interests = interestRes.data || [];
+    const totalToday = upcoming.length + matches.length + interests.length;
+
+    // 인사
+    addAlertBubble(`${greeting}`, true);
+
+    // 오늘 예정 일정
+    if (upcoming.length) {
+      addAlertBubble(`오늘 일정 <strong>${upcoming.length}건</strong>이에요`);
+      upcoming.forEach(a => {
+        const cp = clientMap[a.client_card_id] || {};
+        const clientName = cp._name || [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
+        const typeIcon = { '방문':'🏠', '전화':'📞', '계약':'📋', '상담':'💬', '매물소개':'📤' }[a.type] || '📌';
+        const ad = new Date(a.alert_date);
+        const timeStr = `${ad.getHours()}시${ad.getMinutes() ? ad.getMinutes()+'분' : ''}`;
+        addAlertBubble(`
+          <div style="margin-bottom:6px;">${typeIcon} <strong>${esc(clientName)}</strong> — ${timeStr} ${esc(a.type||'일정')}</div>
+          <div style="font-size:13px;color:#555;line-height:1.5;">${esc(a.content)}</div>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button onclick="alertDone('${a.id}',this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--hwik-yellow);color:#1a1a2e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">완료</button>
+            <button onclick="alertPostpone('${a.id}',this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:#e5e7eb;color:#5a5a6e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">내일로</button>
+          </div>`);
+      });
+    }
+
+    // 새 매칭
     if (matches.length) {
-      html += `<div class="alert-section-title">
-        <span style="font-size:15px;font-weight:800;color:#4ecdc4;">새 매칭</span>
-        <span style="font-size:12px;color:#fff;background:#4ecdc4;padding:2px 10px;border-radius:20px;font-weight:600;">${matches.length}</span>
-      </div>`;
+      addAlertBubble(`새 매칭 <strong style="color:#4ecdc4;">${matches.length}건</strong> 있어요`);
       matches.forEach(m => {
         const p = cardMap[m.card_id] || {};
         const cp = clientMap[m.client_card_id] || {};
         const propName = [p.complex, p.location, p.price].filter(Boolean).join(' · ') || '매물';
-        const clientName = [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
-        html += alertCard('#4ecdc4', '매칭', esc(clientName), esc(propName));
+        const clientName = cp._name || [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
+        addAlertBubble(`
+          <div style="font-size:12px;color:#4ecdc4;font-weight:600;margin-bottom:4px;">매칭</div>
+          <div style="font-size:14px;font-weight:700;">${esc(propName)}</div>
+          <div style="font-size:13px;color:#555;margin-top:2px;">${esc(clientName)} 손님과 매칭</div>`);
       });
     }
 
-    // 예정
-    const upcoming = upcomingRes.data || [];
-    if (upcoming.length) {
-      html += `<div class="alert-section-title">
-        <span style="font-size:15px;font-weight:800;color:#64748b;">예정</span>
-        <span style="font-size:12px;color:#fff;background:#94a3b8;padding:2px 10px;border-radius:20px;font-weight:600;">${upcoming.length}</span>
-      </div>`;
-      upcoming.forEach(a => {
-        const cp = clientMap[a.client_card_id] || {};
-        const clientName = [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
-        const ad = new Date(a.alert_date);
-        html += alertCard('#94a3b8', `${ad.getMonth()+1}/${ad.getDate()} ${esc(a.type||'일정')}`, esc(clientName), esc(a.content));
+    // 관심 표시
+    if (interests.length) {
+      addAlertBubble(`손님이 관심 표시한 매물 <strong style="color:#f59e0b;">${interests.length}건</strong>`);
+      interests.forEach(i => {
+        const p = cardMap[i.card_id] || {};
+        const name = [p.complex, p.location, p.price].filter(Boolean).join(' · ') || '매물';
+        addAlertBubble(`
+          <div style="font-size:12px;color:#f59e0b;font-weight:600;margin-bottom:4px;">관심 매물</div>
+          <div style="font-size:14px;font-weight:700;">"${esc(name)}"</div>
+          <div style="font-size:13px;color:#555;margin-top:2px;">손님이 보고싶어요</div>`);
       });
     }
 
-    if (!overdue.length && !interests.length && !matches.length && !upcoming.length) {
-      html += '<div style="text-align:center;padding:60px 0;color:#94a3b8;font-size:14px;">알림이 없어요</div>';
+    // 아무것도 없으면
+    if (!totalToday && !overdue.length) {
+      addAlertBubble('오늘은 예정된 일정이 없어요.<br><span style="color:#94a3b8;font-size:13px;">편한 하루 보내세요!</span>');
     }
 
-    panel.innerHTML = html;
-    localStorage.setItem('hwik_alerts_html', html);
+    // 지연 일정 — 마지막에 물어보기
+    if (overdue.length) {
+      addAlertBubble(`
+        <div style="color:#ef4444;font-weight:700;margin-bottom:6px;">지연된 일정이 ${overdue.length}건 있어요</div>
+        <div style="font-size:13px;color:#555;">확인하시겠어요?</div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button onclick="showOverdueItems()" style="flex:1;padding:10px;border-radius:8px;border:none;background:#ef4444;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">확인</button>
+          <button onclick="this.closest('.msg').style.opacity='0.4';this.closest('.bubble').querySelector('div:last-child').innerHTML='<span style=color:#94a3b8>나중에 확인할게요</span>'" style="flex:1;padding:10px;border-radius:8px;border:none;background:#e5e7eb;color:#5a5a6e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">나중에</button>
+        </div>`);
+      // 지연 데이터 저장
+      window._overdueItems = overdue;
+      window._clientMap = clientMap;
+    }
+
   } catch(e) {
-    if (!cachedAlert) panel.innerHTML = '<div class="panel-title">알림</div><div style="text-align:center;padding:40px 0;color:#f87171;">연결 실패</div>';
+    addAlertBubble('일정을 불러오지 못했어요.<br><span style="color:#f87171;font-size:13px;">' + esc(e.message||'연결 오류') + '</span>');
   }
+}
+
+function addAlertBubble(html, isFirst = false) {
+  const msgs = document.getElementById('alertMessages');
+  if (!msgs) return;
+  const showAvatar = _lastSender !== 'alert-ai';
+  _lastSender = 'alert-ai';
+  const d = document.createElement('div');
+  d.className = 'msg' + (showAvatar ? ' first-in-group' : '');
+  d.innerHTML = `
+    ${showAvatar ? '<div class="avatar">휙</div>' : '<div class="avatar-spacer"></div>'}
+    <div class="bubble-wrap">
+      ${showAvatar ? '<div class="sender-name">휙 AI</div>' : ''}
+      <div class="bubble">${html}</div>
+    </div>`;
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showOverdueItems() {
+  const overdue = window._overdueItems || [];
+  const clientMap = window._clientMap || {};
+  overdue.forEach(a => {
+    const cp = clientMap[a.client_card_id] || {};
+    const clientName = cp._name || [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
+    const ad = new Date(a.alert_date);
+    const dateStr = `${ad.getMonth()+1}/${ad.getDate()}`;
+    const typeIcon = { '방문':'🏠', '전화':'📞', '계약':'📋', '상담':'💬', '매물소개':'📤' }[a.type] || '📌';
+    addAlertBubble(`
+      <div style="color:#ef4444;font-size:12px;font-weight:600;margin-bottom:4px;">${dateStr} 지연</div>
+      <div style="margin-bottom:4px;">${typeIcon} <strong>${esc(clientName)}</strong> — ${esc(a.type||'일정')}</div>
+      <div style="font-size:13px;color:#555;line-height:1.5;">${esc(a.content)}</div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button onclick="alertDone('${a.id}',this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--hwik-yellow);color:#1a1a2e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">완료</button>
+        <button onclick="alertPostpone('${a.id}',this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:#e5e7eb;color:#5a5a6e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">내일로</button>
+      </div>`);
+  });
+}
+
+async function alertDone(noteId, btn) {
+  const wrap = btn.closest('.bubble');
+  try {
+    await supabaseClient.from('client_notes').update({ alert_done: true }).eq('id', noteId);
+    const btns = wrap.querySelector('div:last-child');
+    btns.innerHTML = '<span style="color:#4ecdc4;font-weight:700;font-size:14px;">완료 처리됨</span>';
+    wrap.closest('.msg').style.opacity = '0.5';
+    updateAlertBadge();
+  } catch(e) { showToast('처리 실패'); }
+}
+
+async function alertPostpone(noteId, btn) {
+  const wrap = btn.closest('.bubble');
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(10, 0, 0, 0);
+  try {
+    await supabaseClient.from('client_notes').update({ alert_date: tomorrow.toISOString() }).eq('id', noteId);
+    const btns = wrap.querySelector('div:last-child');
+    btns.innerHTML = '<span style="color:#94a3b8;font-weight:600;font-size:13px;">내일 10시로 미뤘어요</span>';
+    wrap.closest('.msg').style.opacity = '0.5';
+    updateAlertBadge();
+  } catch(e) { showToast('처리 실패'); }
 }
 
 async function updateAlertBadge() {
