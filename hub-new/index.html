@@ -2780,8 +2780,9 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
     const btn=document.querySelector('.btn-send');if(btn)btn.disabled=!has;
   }
 
-  function share1(id){
-    const card=Data.cache.myCards.find(x=>x.id===id)||_searchShared.find(x=>x.id===id);
+  async function share1(id){
+    let card=Data.cache.myCards.find(x=>x.id===id)||_searchShared.find(x=>x.id===id);
+    if(!card){const{data}=await Auth.sb.from('cards').select('*').eq('id',id).eq('agent_id',Auth.user?.id).single();card=data;}
     _openSharePicker(card?[card]:null, id);
   }
   function shareSelected(){
@@ -2831,8 +2832,10 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
     m?.classList.remove('show');
   }
 
-  function edit(id){
-    const c=Data.cache.myCards.find(x=>x.id===id)||(Data.cache.sharedCards||[]).find(x=>x.id===id&&x.agent_id===Auth.user?.id);if(!c)return;const p=c.property||{},m=document.getElementById('editModal');if(!m)return;_editNewPhotos=[];
+  async function edit(id){
+    let c=Data.cache.myCards.find(x=>x.id===id)||(Data.cache.sharedCards||[]).find(x=>x.id===id&&x.agent_id===Auth.user?.id);
+    if(!c){const{data}=await Auth.sb.from('cards').select('*').eq('id',id).eq('agent_id',Auth.user?.id).single();c=data;}
+    if(!c)return;const p=c.property||{},m=document.getElementById('editModal');if(!m)return;_editNewPhotos=[];
     m.innerHTML=`<div class="modal-content edit-modal"><div class="modal-header">매물 수정<button class="modal-close" onclick="this.closest('.modal-overlay').classList.remove('show')">✕</button></div><div class="modal-body">
       <div class="edit-grid"><div class="edit-field"><label>거래유형</label><select id="eType"><option ${p.type==='매매'?'selected':''}>매매</option><option ${p.type==='전세'?'selected':''}>전세</option><option ${p.type==='월세'?'selected':''}>월세</option></select></div><div class="edit-field"><label>가격</label><input id="ePrice" value="${esc(p.price||'')}"></div><div class="edit-field"><label>단지명</label><input id="eComplex" value="${esc(p.complex||'')}"></div><div class="edit-field"><label>위치</label><input id="eLocation" value="${esc(p.location||'')}"></div><div class="edit-field"><label>면적</label><input id="eArea" value="${esc(p.area||'')}"></div><div class="edit-field"><label>층</label><input id="eFloor" value="${esc(p.floor||'')}"></div></div>
       <div class="edit-field" style="margin-top:12px;"><label>특징 태그</label><div class="edit-tags" id="eTags">${(p.features||[]).map(f=>`<span class="edit-chip">${esc(f)} <button onclick="this.parentElement.remove()">✕</button></span>`).join('')}<input class="edit-tag-input" placeholder="태그 추가 (Enter)" onkeydown="if(event.key==='Enter'){event.preventDefault();PanelCards.addTag(this)}"></div></div>
