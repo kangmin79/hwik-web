@@ -9,7 +9,6 @@ let showSupply = false; // 전용/공급 토글
 
 // makeSlug → /makeSlug.js (외부 파일)
 let chart = null;
-let volumeChart = null;
 let RANK_INFO = null;
 
 // ── 유틸 ──
@@ -502,13 +501,11 @@ function render() {
       }).join('') + '</div>';
     })()}
 
-    <!-- 거래량 + 그래프 (월세 탭에서는 숨김) -->
+    <!-- 거래량 + 실거래가 통합 차트 (월세 탭에서는 숨김) -->
     ${currentTab !== '월세' ? `
     <div class="chart-section">
-      <div class="chart-title">거래량</div>
-      <div style="height:40px;position:relative;"><canvas id="volumeChart"></canvas></div>
-      <div class="chart-title" style="margin-top:8px;">실거래가</div>
-      <div class="chart-wrap"><canvas id="priceChart"></canvas></div>
+      <div class="chart-title">실거래가 · 거래량</div>
+      <div style="height:220px;position:relative;"><canvas id="priceChart"></canvas></div>
     </div>
     ` : ''}
 
@@ -606,33 +603,28 @@ function render() {
   renderRankBadge();
 }
 
-// ── 차트 (scatter — 점 하나 = 실거래 1건) ──
+// ── 차트 (combo: 거래량 bar + 실거래가 scatter 통합) ──
 function drawChart() {
   const canvas = document.getElementById('priceChart');
   if (!canvas) return;
 
   if (chart) { chart.destroy(); chart = null; }
-  if (volumeChart) { volumeChart.destroy(); volumeChart = null; }
 
   const suffix = currentTab === '전세' ? '_jeonse' : (currentTab === '월세' ? '_wolse' : '');
   const key = currentPyeong + (suffix || '');
   const ph = (DATA.price_history || {})[key] || [];
 
-  // price_history: [{date:"2024-03-15", price:131000, floor:12}, ...]
-  // 또는 이전 포맷: [{month:"2024-03", avg_price:131000, count:2}, ...]
   let points = [];
 
   if (ph.length > 0 && ph[0].date) {
-    // 신규 포맷: 개별 거래
     points = ph.map(p => ({
       x: p.date,
-      y: Math.round(p.price / 100) / 100, // 억 단위
+      y: Math.round(p.price / 100) / 100,
       floor: p.floor || '',
       date: p.date,
       price: p.price,
     }));
   } else if (ph.length > 0 && ph[0].month) {
-    // 이전 포맷(월평균) 호환: 점 1개로 표시
     points = ph.map(p => ({
       x: p.month + '-15',
       y: Math.round(p.avg_price / 100) / 100,
@@ -642,13 +634,10 @@ function drawChart() {
     }));
   }
 
-  // 폴백: price_history 없으면 현재 평형의 recent_trade만
   if (points.length === 0) {
     const recent = DATA.recent_trade || {};
-    const targetKey = key; // currentPyeong + suffix
     for (const [k, v] of Object.entries(recent)) {
-      // 현재 선택한 평형+탭에 해당하는 키만
-      if (k !== targetKey) continue;
+      if (k !== key) continue;
       if (v.price && v.date) {
         points.push({
           x: v.date,
@@ -668,22 +657,60 @@ function drawChart() {
     return;
   }
 
+  // 월별 거래량 집계
+  const monthlyCounts = {};
+  points.forEach(p => {
+    const ym = p.x.slice(0, 7);
+    monthlyCounts[ym] = (monthlyCounts[ym] || 0) + 1;
+  });
+  const allMonths = Object.keys(monthlyCounts).sort();
+
+  // x축 라벨: 모든 월 (bar + scatter 공유)
+  const xLabels = allMonths;
+  const volData = allMonths.map(m => monthlyCounts[m]);
+  const volMax = Math.max(...volData, 1);
+
+  // scatter 데이터: 월 라벨 인덱스 기반 + 같은 달 내 일자로 미세 오프셋
+  const scatterData = points.map(p => {
+    const ym = p.x.slice(0, 7);
+    const idx = allMonths.indexOf(ym);
+    const day = parseInt(p.x.slice(8, 10) || '15', 10);
+    const offset = (day - 15) / 31 * 0.4; // -0.2 ~ +0.2 범위로 분산
+    return { x: idx + offset, y: p.y };
+  });
+
   const yValues = points.map(p => p.y);
-  const min = Math.floor(Math.min(...yValues) * 0.92);
-  const max = Math.ceil(Math.max(...yValues) * 1.05);
+  const yMin = Math.floor(Math.min(...yValues) * 0.92);
+  const yMax = Math.ceil(Math.max(...yValues) * 1.05);
 
   chart = new Chart(canvas, {
-    type: 'scatter',
     data: {
-      datasets: [{
-        data: points.map(p => ({ x: p.x, y: p.y })),
-        backgroundColor: 'rgba(245,200,66,0.7)',
-        borderColor: '#f5c842',
-        borderWidth: 1,
-        pointRadius: 5,
-        pointHoverRadius: 7,
-        pointHoverBackgroundColor: '#f5c842',
-      }]
+      labels: xLabels,
+      datasets: [
+        {
+          type: 'bar',
+          label: '거래량',
+          data: volData,
+          backgroundColor: 'rgba(245,200,66,0.18)',
+          borderRadius: 2,
+          barPercentage: 0.7,
+          yAxisID: 'yVol',
+          order: 2,
+        },
+        {
+          type: 'scatter',
+          label: '실거래가',
+          data: scatterData,
+          backgroundColor: 'rgba(245,200,66,0.8)',
+          borderColor: '#f5c842',
+          borderWidth: 1,
+          pointRadius: 4.5,
+          pointHoverRadius: 7,
+          pointHoverBackgroundColor: '#f5c842',
+          yAxisID: 'y',
+          order: 1,
+        }
+      ]
     },
     options: {
       responsive: true,
@@ -693,6 +720,7 @@ function drawChart() {
         legend: { display: false },
         tooltip: {
           displayColors: false,
+          filter: item => item.datasetIndex === 1, // scatter만 툴팁
           callbacks: {
             title: ctx => {
               const now = Date.now();
@@ -703,9 +731,7 @@ function drawChart() {
             beforeBody: ctx => {
               const p = points[ctx[0].dataIndex];
               const tabLabel = currentTab || '매매';
-              const pyLabel = currentPyeong ? currentPyeong + '㎡' : '';
               const parts = [tabLabel];
-              if (pyLabel) parts.push(pyLabel);
               if (p.floor) parts.push(p.floor + '층');
               return parts.join(' · ');
             },
@@ -719,7 +745,6 @@ function drawChart() {
       scales: {
         x: {
           type: 'category',
-          labels: [...new Set(points.map(p => p.x))],
           grid: { display: false },
           ticks: {
             font: { size: 10 },
@@ -735,52 +760,19 @@ function drawChart() {
           }
         },
         y: {
+          position: 'left',
           grid: { color: 'rgba(0,0,0,0.05)' },
           ticks: { font: { size: 10 }, color: '#aaa', callback: v => v + '억' },
-          min, max
+          min: yMin, max: yMax,
+        },
+        yVol: {
+          position: 'right',
+          display: false,
+          min: 0, max: volMax * 5, // 바 높이를 차트의 ~20%로 제한
         }
       }
     }
   });
-
-  // ── 거래량 바 차트 ──
-  const volCanvas = document.getElementById('volumeChart');
-  if (volCanvas && points.length > 1) {
-    // 월별 거래 건수 집계
-    const monthlyCounts = {};
-    points.forEach(p => {
-      const ym = p.x.slice(0, 7); // "2025-03"
-      monthlyCounts[ym] = (monthlyCounts[ym] || 0) + 1;
-    });
-    const volMonths = Object.keys(monthlyCounts).sort();
-    const volCounts = volMonths.map(m => monthlyCounts[m]);
-    const volLabels = volMonths.map(m => { const p = m.split('-'); return p[0].slice(2) + '.' + p[1]; });
-
-    volumeChart = new Chart(volCanvas, {
-      type: 'bar',
-      data: {
-        labels: volLabels,
-        datasets: [{
-          data: volCounts,
-          backgroundColor: 'rgba(245,200,66,0.35)',
-          borderRadius: 2,
-          barPercentage: 0.6,
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: { callbacks: { label: ctx => ctx.parsed.y + '건' } }
-        },
-        scales: {
-          x: { display: false },
-          y: { display: false }
-        }
-      }
-    });
-  }
 }
 
 // ── 에러 ──
