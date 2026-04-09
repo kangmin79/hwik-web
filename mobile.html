@@ -1233,10 +1233,18 @@ async function submitClient() {
   if (!text) { showToast('손님 조건을 입력해주세요'); return; }
   if (!currentUser) { showLogin(); return; }
 
-  btn.textContent = '등록 중...'; btn.disabled = true;
+  // 화면을 매칭 결과 뷰로 전환
+  const panel = document.getElementById('clientPanel');
+  panel.innerHTML = `
+    <div style="padding:20px 0;">
+      <div style="text-align:center;margin-bottom:20px;">
+        <div class="dot-pulse"><span></span><span></span><span></span></div>
+        <div style="font-size:14px;color:#94a3b8;margin-top:8px;">AI가 손님 조건을 분석하고 매물을 찾고 있어요</div>
+      </div>
+    </div>`;
 
   try {
-    // parse-property로 AI 파싱
+    // 1. parse-property로 AI 파싱
     const parseRes = await fetch(`${SUPABASE_URL}/functions/v1/parse-property`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
@@ -1244,15 +1252,11 @@ async function submitClient() {
     });
     const parsed = await parseRes.json();
 
-    // cards 테이블에 저장
+    // 2. cards 테이블에 저장
     const cardData = {
       id: crypto.randomUUID().replace(/-/g, '').slice(0, 12),
       agent_id: currentUser.id,
-      property: {
-        ...parsed,
-        type: '손님',
-        rawText: text
-      },
+      property: { ...parsed, type: '손님', rawText: text },
       trade_status: '계약가능',
       client_status: '탐색중',
       search_text: parsed.search_text || text,
@@ -1265,21 +1269,86 @@ async function submitClient() {
     const { error } = await supabaseClient.from('cards').insert(cardData);
     if (error) throw error;
 
-    input.value = '';
-    showToast('손님 등록 완료! 매칭 알림을 기다려주세요');
+    // 3. 자동 매칭 + 매칭 결과 조회 동시 실행
+    const token = (await supabaseClient.auth.getSession()).data.session?.access_token || '';
+    const [, matchRes] = await Promise.all([
+      fetch(`${SUPABASE_URL}/functions/v1/auto-match`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_KEY },
+        body: JSON.stringify({ card_id: cardData.id })
+      }).catch(() => null),
+      fetch(`${SUPABASE_URL}/functions/v1/match-properties`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_KEY },
+        body: JSON.stringify({ client_card_id: cardData.id, limit: 20, threshold: 0.15 })
+      }).then(r => r.json()).catch(() => ({ results: [] }))
+    ]);
 
-    // 자동 매칭 요청
-    fetch(`${SUPABASE_URL}/functions/v1/auto-match`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ card_id: cardData.id, agent_id: currentUser.id })
-    }).catch(() => {});
+    const matches = matchRes.results || [];
+    showClientMatchResults(cardData, parsed, text, matches);
 
   } catch(e) {
     showToast('등록 실패: ' + (e.message || '오류'));
-  } finally {
-    btn.textContent = '등록하기'; btn.disabled = false;
+    showClientRegister(); // 실패 시 입력 화면으로 복귀
   }
+}
+
+function showClientMatchResults(cardData, parsed, rawText, matches) {
+  const panel = document.getElementById('clientPanel');
+  const p = cardData.property || parsed || {};
+  const name = p.location || p.complex || '손님';
+  const conditions = [p.type !== '손님' ? p.type : null, p.price, p.location, p.area].filter(Boolean).join(' · ');
+
+  let html = `
+    <div style="padding:0 0 100px;">
+      <div style="background:#fff;border-radius:16px;padding:16px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <span style="font-size:16px;font-weight:800;color:var(--hwik-dark);">등록 완료</span>
+          <span style="font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(78,205,196,0.1);color:#4ecdc4;font-weight:600;">${esc(p.type === '손님' ? (parsed.category || '') : p.type || '')}</span>
+        </div>
+        <div style="font-size:13px;color:var(--gray-600);line-height:1.5;">${esc(rawText)}</div>
+      </div>
+
+      <div style="font-size:16px;font-weight:800;color:var(--hwik-dark);margin-bottom:12px;">
+        매칭 매물 <span style="color:#4ecdc4;">${matches.length}건</span>
+      </div>`;
+
+  if (!matches.length) {
+    html += `<div style="text-align:center;padding:40px 0;color:#94a3b8;font-size:14px;">아직 매칭 매물이 없어요<br><span style="font-size:12px;">새 매물이 등록되면 알림으로 알려드릴게요</span></div>`;
+  } else {
+    matches.forEach(item => {
+      const mp = item.property || {};
+      const type = esc(mp.type || '');
+      const typeClass = type === '매매' ? 'type-sale' : type === '전세' ? 'type-jeonse' : 'type-rent';
+      const score = item._score || item.similarity || 0;
+      const mName = esc(mp.complex || mp.location || '매물');
+      const detail = [mp.area, mp.floor].filter(Boolean).map(v => esc(v)).join(' · ');
+      const safeId = esc(item.id);
+
+      html += `
+        <div class="li" onclick="openProperty('${safeId}')" style="margin-bottom:10px;">
+          <div class="li-row1">
+            <span class="li-type ${typeClass}">${type}</span>
+            <span class="li-price">${esc(mp.price || '')}</span>
+            ${score > 0 ? `<span style="font-size:11px;color:#4ecdc4;font-weight:700;">${score}점</span>` : ''}
+            <span style="flex:1"></span>
+          </div>
+          <div class="li-row2">
+            <div class="li-name">${mName}</div>
+            <div class="li-detail">${esc(mp.location || '')}${detail ? ' · ' + detail : ''}</div>
+          </div>
+        </div>`;
+    });
+  }
+
+  html += `
+      <div style="text-align:center;padding:20px 0;">
+        <button onclick="showClientRegister()" style="padding:12px 32px;border-radius:12px;border:1.5px solid var(--hwik-dark);background:transparent;color:var(--hwik-dark);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">+ 다른 손님 등록</button>
+      </div>
+    </div>`;
+
+  panel.innerHTML = html;
+  panel.style.overflow = 'auto';
 }
 
 // ── 알림 (중개사 전용) ──
