@@ -469,10 +469,17 @@
   }
 
   .client-input-row {
-    width: 100%;
+    position: fixed;
+    bottom: 72px;
+    left: 16px;
+    right: 16px;
+    max-width: 508px;
+    margin: 0 auto;
     display: flex;
     gap: 8px;
     align-items: flex-end;
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   .client-input {
@@ -487,7 +494,8 @@
     color: var(--text);
     resize: none;
     height: 48px;
-    overflow: hidden;
+    max-height: 140px;
+    overflow-y: auto;
     transition: border-color 0.2s;
     line-height: 1.4;
   }
@@ -513,9 +521,14 @@
   .client-send svg { width: 22px; height: 22px; fill: none; stroke: var(--hwik-yellow); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 
   .client-tip {
+    position: fixed;
+    bottom: 132px;
+    left: 0; right: 0;
+    text-align: center;
     font-size: 12px;
     color: #c0c0c0;
-    margin-top: 16px;
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom);
   }
 
   /* ── 내정보 ── */
@@ -1195,7 +1208,7 @@ function showClientRegister() {
       <div class="panel-title">손님 등록</div>
       <div class="client-desc">손님이 찾는 조건을<br>말하듯이 적어주세요</div>
       <div class="client-input-row">
-        <textarea class="client-input" id="clientInput" placeholder="강남 2룸 전세 3억 이하" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+        <textarea class="client-input" id="clientInput" placeholder="강남 2룸 전세 3억 이하" rows="1" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,140)+'px'"></textarea>
         <button class="client-send" id="clientSubmitBtn" onclick="submitClient()">
           <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </button>
