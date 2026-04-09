@@ -1041,9 +1041,10 @@ async function doSearch() {
     const searchMode = currentUser ? 'my' : 'shared';
     const agentId = currentUser ? currentUser.id : '';
 
+    const _searchToken = currentUser ? ((await supabaseClient.auth.getSession()).data.session?.access_token || SUPABASE_KEY) : SUPABASE_KEY;
     const res = await fetch(`${SUPABASE_URL}/functions/v1/search-property`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _searchToken, 'apikey': SUPABASE_KEY },
       body: JSON.stringify({ query, agent_id: agentId, limit: 30, search_mode: searchMode }),
       signal: searchController.signal
     });
@@ -1251,11 +1252,13 @@ async function doRegisterClient() {
 
   try {
     // 1. parse-property로 AI 파싱
+    const token = (await supabaseClient.auth.getSession()).data.session?.access_token || '';
     const parseRes = await fetch(`${SUPABASE_URL}/functions/v1/parse-property`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SUPABASE_KEY },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_KEY },
       body: JSON.stringify({ text: '손님 ' + text })
     });
+    if (!parseRes.ok) throw new Error('AI 파싱 실패 (' + parseRes.status + ')');
     const parsed = await parseRes.json();
 
     // 2. cards 테이블에 저장
@@ -1276,7 +1279,6 @@ async function doRegisterClient() {
     if (error) throw error;
 
     // 3. 자동 매칭 + 매칭 결과 조회 동시 실행
-    const token = (await supabaseClient.auth.getSession()).data.session?.access_token || '';
     const [, matchRes] = await Promise.all([
       fetch(`${SUPABASE_URL}/functions/v1/auto-match`, {
         method: 'POST',
