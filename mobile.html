@@ -458,8 +458,7 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    height: calc(100dvh - 80px);
-    padding-bottom: 8px;
+    height: calc(100dvh - 140px);
   }
 
   .client-header {
@@ -1226,21 +1225,42 @@ function showClientRegister() {
   setTimeout(() => document.getElementById('clientInput')?.focus(), 300);
 }
 
-async function submitClient() {
+// 보내기 → 확인 화면
+function submitClient() {
   const input = document.getElementById('clientInput');
-  const btn = document.getElementById('clientSubmitBtn');
   const text = input.value.trim();
   if (!text) { showToast('손님 조건을 입력해주세요'); return; }
   if (!currentUser) { showLogin(); return; }
 
-  // 화면을 매칭 결과 뷰로 전환
+  // 확인 화면
+  const panel = document.getElementById('clientPanel');
+  panel.style.overflow = 'auto';
+  window._clientText = text;
+  panel.innerHTML = `
+    <div style="padding:16px 0 100px;">
+      <div style="text-align:center;margin-bottom:16px;">
+        <span style="font-size:18px;font-weight:900;color:var(--hwik-dark);">이 내용으로 등록할까요?</span>
+      </div>
+      <div style="background:#fff;border-radius:16px;padding:20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.04);border:1.5px solid #e8e8ee;">
+        <div style="font-size:15px;color:var(--text);line-height:1.8;white-space:pre-wrap;">${esc(text)}</div>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="showClientRegister();setTimeout(()=>{const i=document.getElementById('clientInput');if(i){i.value=window._clientText||''}},100)" style="flex:1;padding:14px;border-radius:12px;border:1.5px solid #e2e8f0;background:#fff;color:var(--gray-600);font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;">수정</button>
+        <button onclick="doRegisterClient()" style="flex:1;padding:14px;border-radius:12px;border:none;background:var(--hwik-dark);color:var(--hwik-yellow);font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;">등록</button>
+      </div>
+    </div>`;
+}
+
+// 실제 등록 + 매칭
+async function doRegisterClient() {
+  const text = window._clientText || '';
+  if (!text || !currentUser) return;
+
   const panel = document.getElementById('clientPanel');
   panel.innerHTML = `
-    <div style="padding:20px 0;">
-      <div style="text-align:center;margin-bottom:20px;">
-        <div class="dot-pulse"><span></span><span></span><span></span></div>
-        <div style="font-size:14px;color:#94a3b8;margin-top:8px;">AI가 손님 조건을 분석하고 매물을 찾고 있어요</div>
-      </div>
+    <div style="padding:20px 0;text-align:center;">
+      <div class="dot-pulse"><span></span><span></span><span></span></div>
+      <div style="font-size:14px;color:#94a3b8;margin-top:12px;">AI가 손님 조건을 분석하고<br>매물을 찾고 있어요</div>
     </div>`;
 
   try {
