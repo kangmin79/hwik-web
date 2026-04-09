@@ -3234,14 +3234,15 @@ const PanelClient = (() => {
       // 손님 정보 카드
       const _p=property;const _wt=cardData.wanted_trade_type||_p.type||'';
       const _typeColor=_wt.includes('매매')?'#ea580c':_wt.includes('전세')?'#4f46e5':'#7c3aed';
-      const _catLabel=cardData.wanted_categories?.length?cardData.wanted_categories.join(' · '):(r.category||'');
+      const _catKo={'apartment':'아파트','officetel':'오피스텔','room':'원투룸','commercial':'상가','office':'사무실'};
+      const _catLabel=cardData.wanted_categories?.length?cardData.wanted_categories.map(c=>_catKo[c]||c).join(' · '):(_catKo[r.category]||r.category||'');
       let clientCard=`<div style="margin-top:12px;padding:16px;border-radius:14px;border:1.5px solid #4ecdc4;background:rgba(78,205,196,0.04);">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
           <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#f0f4ff,#e8ecff);display:flex;align-items:center;justify-content:center;font-size:20px;">🧑</div>
           <div style="flex:1;">
             <div style="display:flex;align-items:center;gap:6px;">
               <strong style="font-size:15px;">${esc(cardData.contact_name||'새 손님')}</strong>
-              ${_catLabel?`<span style="padding:2px 8px;border-radius:6px;background:${_typeColor}15;color:${_typeColor};font-size:11px;font-weight:700;">${esc(_catLabel)}</span>`:''}
+              ${_catLabel||_wt?`<span style="padding:2px 8px;border-radius:6px;background:${_typeColor}15;color:${_typeColor};font-size:11px;font-weight:700;">${esc((_catLabel?_catLabel+' ':'')+(cardData.wanted_trade_type||_p.price?.match(/월세|전세|매매/)?.[0]||''))}</span>`:''}
             </div>
             <div style="font-size:13px;color:var(--text-sub);margin-top:2px;">${esc(_p.rawText||'').slice(0,60)}</div>
           </div>
