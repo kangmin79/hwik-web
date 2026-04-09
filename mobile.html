@@ -1266,6 +1266,7 @@ async function doRegisterClient() {
       id: crypto.randomUUID().replace(/-/g, '').slice(0, 12),
       agent_id: currentUser.id,
       property: { ...parsed, type: '손님', rawText: text },
+      style: 'noimg',
       trade_status: '계약가능',
       client_status: '탐색중',
       search_text: parsed.search_text || text,
