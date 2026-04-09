@@ -123,11 +123,15 @@ jobs:
         run: python build_danji_pages.py
       - name: 동 정적 페이지 빌드
         run: python build_dong_pages.py
+      - name: 구 정적 페이지 빌드
+        run: python build_gu_pages.py
+      - name: 랭킹 정적 페이지 빌드
+        run: python build_ranking_pages.py
       - name: 커밋 및 푸시
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add sitemap.xml danji/ dong/
+          git add sitemap.xml danji/ dong/ gu/ ranking/
           if git diff --cached --quiet; then
             echo "변경 없음"
           else

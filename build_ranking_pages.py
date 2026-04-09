@@ -1,0 +1,368 @@
+#!/usr/bin/env python3
+"""
+build_ranking_pages.py — 랭킹 정적 HTML 페이지 생성 (SEO)
+
+Supabase danji_pages → ranking/[지역]-[타입].html
+서울/인천/경기/전체 × 매매가/㎡당가격/전세가율↑/전세가율↓ = 16페이지
++ ranking/index.html (기본 진입점)
+
+Usage:
+  python build_ranking_pages.py
+"""
+
+import os, sys, json, time, html as html_mod
+from datetime import datetime, timezone
+from urllib.parse import quote as url_quote
+import requests
+from slug_utils import make_danji_slug
+
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout = open(sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1)
+
+
+def _load_env():
+    for fname in (".env", "env"):
+        env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), fname)
+        if os.path.exists(env_path):
+            with open(env_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#") or "=" not in line:
+                        continue
+                    k, v = line.split("=", 1)
+                    os.environ.setdefault(k.strip(), v.strip())
+
+_load_env()
+
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://jqaxejgzkchxbfzgzyzi.supabase.co")
+SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
+SB_HEADERS = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+RANK_DIR = os.path.join(BASE_DIR, "ranking")
+BUILD_TIME = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S+00:00")
+
+REGION_GU = {
+    "seoul": {"종로구","중구","용산구","성동구","광진구","동대문구","중랑구","성북구","강북구","도봉구",
+              "노원구","은평구","서대문구","마포구","양천구","강서구","구로구","금천구","영등포구","동작구",
+              "관악구","서초구","강남구","송파구","강동구"},
+    "incheon": {"중구","동구","미추홀구","연수구","남동구","부평구","계양구","서구","강화군","옹진군"},
+    "gyeonggi": {"수원시 장안구","수원시 권선구","수원시 팔달구","수원시 영통구","성남시 수정구","성남시 중원구",
+                 "성남시 분당구","의정부시","안양시 만안구","안양시 동안구","부천시","평택시","안산시 상록구",
+                 "안산시 단원구","고양시 덕양구","고양시 일산동구","고양시 일산서구","과천시","구리시","남양주시",
+                 "오산시","시흥시","군포시","의왕시","하남시","용인시 처인구","용인시 기흥구","용인시 수지구",
+                 "파주시","이천시","안성시","김포시","화성시","광주시","양주시","포천시","여주시","연천군",
+                 "가평군","양평군"},
+}
+REGION_LABELS = {"seoul": "서울", "incheon": "인천", "gyeonggi": "경기", "all": "전체"}
+TYPE_LABELS = {"price": "매매가", "sqm": "㎡당 가격", "jeonse": "전세가율 높은", "jeonse_low": "전세가율 낮은"}
+
+
+# ── 유틸 ──────────────────────────────────────────────────
+def esc(s):
+    return html_mod.escape(str(s)) if s else ""
+
+def format_price(manwon):
+    if not manwon:
+        return "-"
+    try:
+        manwon = int(manwon)
+    except (ValueError, TypeError):
+        return "-"
+    if manwon <= 0:
+        return "-"
+    uk = manwon // 10000
+    rest = manwon % 10000
+    if uk > 0 and rest > 0:
+        cheon = rest // 1000
+        return f"{uk}억 {cheon}천" if cheon > 0 else f"{uk}억 {rest}"
+    if uk > 0:
+        return f"{uk}억"
+    return f"{manwon:,}만"
+
+
+# ── Supabase 조회 ─────────────────────────────────────────
+def fetch_all_danji():
+    all_data = []
+    offset = 0
+    while True:
+        resp = requests.get(
+            f"{SUPABASE_URL}/rest/v1/danji_pages",
+            headers={**SB_HEADERS, "Prefer": ""},
+            params={
+                "select": "id,complex_name,location,address,categories,recent_trade,"
+                          "jeonse_rate,total_units,build_year",
+                "order": "id",
+                "offset": offset,
+                "limit": 500,
+            },
+            timeout=30,
+        )
+        data = resp.json() if resp.status_code == 200 else []
+        if not data:
+            break
+        all_data.extend(data)
+        offset += 500
+        if len(data) < 500:
+            break
+        time.sleep(0.2)
+    return all_data
+
+
+def process_data(all_danji):
+    """전체 데이터를 랭킹용으로 가공"""
+    result = []
+    for d in all_danji:
+        if d.get("id", "").startswith("offi-"):
+            continue
+        rt = d.get("recent_trade") or {}
+        cats = d.get("categories") or []
+        price, area = None, None
+        for c in cats:
+            t = rt.get(c)
+            if t and t.get("price") and t["price"] > (price or 0):
+                price = t["price"]
+                area = c
+        if not price:
+            continue
+
+        area_num = float(area) if area and area.replace(".", "").isdigit() else 0
+        loc = d.get("location") or ""
+        gu_token = loc.split(" ")[0]
+        gu_two = " ".join(loc.split(" ")[:2])
+
+        region_key = "etc"
+        if gu_token in REGION_GU["seoul"]:
+            region_key = "seoul"
+        elif gu_token in REGION_GU["incheon"]:
+            region_key = "incheon"
+        elif gu_two in REGION_GU["gyeonggi"] or gu_token in REGION_GU["gyeonggi"]:
+            region_key = "gyeonggi"
+
+        result.append({
+            "id": d["id"], "name": d["complex_name"],
+            "location": loc, "address": d.get("address", ""),
+            "region": region_key, "price": price, "area": area,
+            "area_num": area_num,
+            "sqm_price": round(price / area_num) if area_num > 0 else 0,
+            "jr": d.get("jeonse_rate"), "build_year": d.get("build_year"),
+            "units": d.get("total_units"),
+        })
+    return result
+
+
+def build_ranking_html(region, rank_type, data):
+    """랭킹 페이지 HTML 생성"""
+    area_label = REGION_LABELS.get(region, "전체")
+    type_label = TYPE_LABELS.get(rank_type, "매매가")
+    slug = f"{region}-{rank_type}"
+    canonical = f"https://hwik.kr/ranking/{slug}"
+
+    # 필터
+    if region != "all":
+        filtered = [d for d in data if d["region"] == region]
+    else:
+        filtered = data
+
+    # 정렬
+    if rank_type == "price":
+        sorted_data = sorted(filtered, key=lambda x: x["price"], reverse=True)
+    elif rank_type == "sqm":
+        sorted_data = sorted([d for d in filtered if d["sqm_price"] > 0], key=lambda x: x["sqm_price"], reverse=True)
+    elif rank_type == "jeonse":
+        sorted_data = sorted([d for d in filtered if d.get("jr") and d["jr"] > 0], key=lambda x: x["jr"], reverse=True)
+    elif rank_type == "jeonse_low":
+        sorted_data = sorted([d for d in filtered if d.get("jr") and d["jr"] > 0], key=lambda x: x["jr"])
+    else:
+        sorted_data = sorted(filtered, key=lambda x: x["price"], reverse=True)
+
+    top50 = sorted_data[:50]
+    title = f"{area_label} 아파트 {type_label} 순위 TOP 50 - 휙"
+    desc = f"{area_label} 아파트 {type_label} 순위 TOP 50. 국토교통부 실거래가 기반."
+
+    lines = []
+
+    # 헤더
+    lines.append(f'<header class="header"><div class="header-top">')
+    lines.append(f'  <a class="logo" href="/" style="text-decoration:none;">휙</a>')
+    lines.append(f'  <div><h1 class="header-name">{esc(area_label)} 아파트 순위</h1>')
+    lines.append(f'  <div class="header-sub">{esc(type_label)} TOP 50</div></div>')
+    lines.append(f'</div></header>')
+
+    # 브레드크럼
+    lines.append(f'<nav class="breadcrumb"><a href="/">휙</a><span>&gt;</span><a href="/ranking/">순위</a><span>&gt;</span>{esc(area_label)} {esc(type_label)}</nav>')
+
+    # 지역 탭
+    lines.append(f'<div class="tabs" style="border-bottom:2px solid var(--border);">')
+    for rk, rl in REGION_LABELS.items():
+        active = " active" if rk == region else ""
+        lines.append(f'<a class="tab{active}" style="text-decoration:none;color:inherit;" href="/ranking/{rk}-{rank_type}">{esc(rl)}</a>')
+    lines.append(f'</div>')
+
+    # 타입 탭
+    lines.append(f'<div class="tabs">')
+    for tk, tl in TYPE_LABELS.items():
+        active = " active" if tk == rank_type else ""
+        short_label = tl.replace(" 높은", "↑").replace(" 낮은", "↓")
+        lines.append(f'<a class="tab{active}" style="text-decoration:none;color:inherit;" href="/ranking/{region}-{tk}">{esc(short_label)}</a>')
+    lines.append(f'</div>')
+
+    # 랭킹 목록
+    lines.append(f'<div class="section"><div class="section-title">{esc(area_label)} {esc(type_label)} TOP 50</div>')
+    lines.append(f'<div style="display:flex;flex-direction:column;gap:8px;">')
+    for i, d in enumerate(top50):
+        slug_d = make_danji_slug(d["name"], d["location"], d["id"], d["address"])
+        if rank_type == "price":
+            main_val = format_price(d["price"])
+            sub_val = f'{format_price(d["sqm_price"])}/㎡' if d["sqm_price"] else ""
+        elif rank_type == "sqm":
+            main_val = f'{format_price(d["sqm_price"])}/㎡'
+            sub_val = f'매매 {format_price(d["price"])} · {d["area"]}㎡'
+        else:
+            main_val = f'{d.get("jr", 0)}%'
+            sub_val = f'매매 {format_price(d["price"])}'
+
+        top3 = " top3" if i < 3 else ""
+        lines.append(f'<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/{url_quote(slug_d, safe="-")}">')
+        lines.append(f'  <div class="rank-num{top3}">{i+1}</div>')
+        lines.append(f'  <div class="rank-info"><div class="rank-name">{esc(d["name"])}</div>')
+        lines.append(f'  <div class="rank-sub">{esc(d["location"])}{" · "+str(d["build_year"])+"년" if d.get("build_year") else ""}{" · 전용"+d["area"]+"㎡" if d.get("area") else ""}</div></div>')
+        lines.append(f'  <div class="rank-price"><div class="rank-main">{main_val}</div><div class="rank-detail">{sub_val}</div></div>')
+        lines.append(f'</a>')
+    lines.append(f'</div></div>')
+    lines.append(f'<div class="divider"></div>')
+
+    # FAQ
+    lines.append(f'<div class="faq-section"><div class="section-title">자주 묻는 질문</div>')
+    if top50:
+        lines.append(f'<div class="faq-item"><div class="faq-q">{esc(area_label)}에서 가장 비싼 아파트는?</div>')
+        lines.append(f'<div class="faq-a">{esc(top50[0]["name"])} ({esc(top50[0]["location"])})이 {format_price(top50[0]["price"])}으로 1위입니다.</div></div>')
+        if rank_type == "sqm":
+            lines.append(f'<div class="faq-item"><div class="faq-q">{esc(area_label)} ㎡당 가격 1위는?</div>')
+            lines.append(f'<div class="faq-a">{esc(top50[0]["name"])}이 전용면적 기준 {format_price(top50[0]["sqm_price"])}/㎡으로 1위입니다.</div></div>')
+        if rank_type in ("jeonse", "jeonse_low"):
+            lines.append(f'<div class="faq-item"><div class="faq-q">{esc(area_label)} 전세가율 순위는?</div>')
+            direction = "높은" if rank_type == "jeonse" else "낮은"
+            lines.append(f'<div class="faq-a">전세가율 {direction} 1위는 {esc(top50[0]["name"])} ({top50[0].get("jr",0)}%)입니다.</div></div>')
+    lines.append(f'</div>')
+
+    # SEO
+    seo = f'{esc(area_label)} 아파트 {esc(type_label)} 순위 TOP 50.'
+    if top50:
+        seo += f' {esc(top50[0]["name"])}({format_price(top50[0]["price"])})이 1위.'
+    seo += ' 국토교통부 실거래가 기반.'
+    lines.append(f'<div class="seo-section"><div class="seo-text">{seo}</div>')
+    lines.append(f'<div class="seo-source">데이터 출처: 국토교통부 실거래가 공개시스템 · 매일 업데이트</div></div>')
+
+    body = "\n".join(lines)
+
+    # JSON-LD
+    faq_items = []
+    if top50:
+        faq_items.append({"@type": "Question", "name": f"{area_label}에서 가장 비싼 아파트는?",
+                          "acceptedAnswer": {"@type": "Answer", "text": f"{top50[0]['name']} ({top50[0]['location']})이 {format_price(top50[0]['price'])}으로 1위입니다."}})
+
+    jsonld = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {"@type": "FAQPage", "mainEntity": faq_items} if faq_items else None,
+            {"@type": "BreadcrumbList", "itemListElement": [
+                {"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"},
+                {"@type": "ListItem", "position": 2, "name": "순위"},
+            ]},
+            {"@type": "ItemList", "name": f"{area_label} 아파트 {type_label} 순위",
+             "numberOfItems": len(top50),
+             "itemListElement": [
+                 {"@type": "ListItem", "position": i+1, "name": d["name"],
+                  "url": f"https://hwik.kr/danji/{url_quote(make_danji_slug(d['name'], d['location'], d['id'], d['address']), safe='-')}"}
+                 for i, d in enumerate(top50[:20])
+             ]}
+        ]
+    }
+    jsonld["@graph"] = [x for x in jsonld["@graph"] if x]
+
+    return wrap_html(title, desc, canonical, body, json.dumps(jsonld, ensure_ascii=False))
+
+
+def wrap_html(title, desc, canonical, body, jsonld_str):
+    return f"""<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{esc(title)}</title>
+<meta name="description" content="{esc(desc)}">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+<link rel="canonical" href="{canonical}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="휙">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="{esc(title)}">
+<meta property="og:description" content="{esc(desc)}">
+<meta property="og:image" content="https://hwik.kr/og-image.png">
+<meta property="og:url" content="{canonical}">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="{esc(title)}">
+<meta name="twitter:description" content="{esc(desc)}">
+<meta name="google-site-verification" content="R2ye41AVVTRs8BxEXyEafFSTqMSiHKdb9zgTklrktSI">
+<meta name="naver-site-verification" content="367bd1e77a8ad48b74e345be3e4a0f8125c2c4e1">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){{dataLayer.push(arguments);}}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
+<link rel="stylesheet" href="/danji/style.css">
+<style>
+.tabs {{ display:flex; border-bottom:1px solid var(--border); overflow-x:auto; }}
+.tabs::-webkit-scrollbar {{ display:none; }}
+.tab {{ flex-shrink:0; padding:12px 16px; text-align:center; font-size:13px; color:var(--sub); cursor:pointer; border-bottom:2px solid transparent; transition:all .2s; white-space:nowrap; text-decoration:none; }}
+.tab.active {{ color:var(--text); font-weight:500; border-bottom-color:var(--yellow); }}
+.rank-item {{ display:flex; align-items:center; padding:14px; background:var(--surface); border-radius:var(--radius); cursor:pointer; transition:all .15s; box-shadow:0 1px 4px rgba(0,0,0,0.05); gap:12px; }}
+.rank-item:active {{ transform:scale(0.98); }}
+.rank-num {{ font-size:16px; font-weight:700; color:var(--yellow); min-width:28px; text-align:center; }}
+.rank-num.top3 {{ color:var(--red); }}
+.rank-info {{ flex:1; }}
+.rank-name {{ font-size:13px; font-weight:600; }}
+.rank-sub {{ font-size:11px; color:var(--sub); margin-top:2px; }}
+.rank-price {{ text-align:right; }}
+.rank-main {{ font-size:14px; font-weight:700; }}
+.rank-detail {{ font-size:11px; color:var(--sub); margin-top:2px; }}
+</style>
+<script type="application/ld+json">{jsonld_str}</script>
+</head>
+<body>
+<div class="wrap">
+{body}
+</div>
+</body>
+</html>"""
+
+
+# ── 메인 ──────────────────────────────────────────────────
+def main():
+    os.makedirs(RANK_DIR, exist_ok=True)
+    print("Supabase에서 단지 데이터 조회 중...")
+    all_danji = fetch_all_danji()
+    print(f"  {len(all_danji)}개 단지 로드 완료")
+
+    data = process_data(all_danji)
+    print(f"  {len(data)}개 단지 가격 데이터 가공 완료")
+
+    count = 0
+    for region in REGION_LABELS:
+        for rank_type in TYPE_LABELS:
+            html = build_ranking_html(region, rank_type, data)
+            slug = f"{region}-{rank_type}"
+            fpath = os.path.join(RANK_DIR, f"{slug}.html")
+            with open(fpath, "w", encoding="utf-8") as f:
+                f.write(html)
+            count += 1
+
+    # index.html → 서울 매매가 기본
+    index_html = build_ranking_html("seoul", "price", data)
+    with open(os.path.join(RANK_DIR, "index.html"), "w", encoding="utf-8") as f:
+        f.write(index_html)
+
+    print(f"\n{count}개 랭킹 페이지 생성 + index.html")
+    print(f"출력: {RANK_DIR}")
+
+
+if __name__ == "__main__":
+    main()

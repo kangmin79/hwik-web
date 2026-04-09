@@ -1037,24 +1037,29 @@ def generate_sitemap(danji_list: list):
     # 정적 페이지
     static_pages = [
         ('/', 'daily', '1.0'),
-        ('/gu.html', 'weekly', '0.8'),
         ('/about.html', 'monthly', '0.3'),
-        ('/ranking.html', 'daily', '0.8'),
-        ('/ranking.html?region=incheon', 'daily', '0.7'),
-        ('/ranking.html?region=gyeonggi', 'daily', '0.7'),
-        ('/ranking.html?region=all', 'daily', '0.7'),
     ]
     for path, freq, pri in static_pages:
         urls.append(f'  <url><loc>{base}{path}</loc><lastmod>{today}</lastmod><changefreq>{freq}</changefreq><priority>{pri}</priority></url>')
 
-    # 구/시 목록 페이지 (서울+인천+경기 전체, 중복 제거)
-    seen_gu = set()
-    for region_name in ALL_REGIONS.values():
-        if region_name in seen_gu:
-            continue
-        seen_gu.add(region_name)
-        safe_name = _quote(region_name, safe='')
-        urls.append(f'  <url><loc>{base}/gu.html?name={safe_name}</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>')
+    # 구/시 정적 페이지 (gu/ 폴더)
+    gu_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "gu")
+    if os.path.isdir(gu_dir):
+        urls.append(f'  <url><loc>{base}/gu/</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>')
+        for fname in sorted(os.listdir(gu_dir)):
+            if fname.endswith(".html") and fname != "index.html":
+                slug = fname[:-5]  # .html 제거
+                safe = _quote(slug, safe='-')
+                urls.append(f'  <url><loc>{base}/gu/{safe}</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>')
+
+    # 랭킹 정적 페이지 (ranking/ 폴더)
+    rank_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ranking")
+    if os.path.isdir(rank_dir):
+        urls.append(f'  <url><loc>{base}/ranking/</loc><lastmod>{today}</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>')
+        for fname in sorted(os.listdir(rank_dir)):
+            if fname.endswith(".html") and fname != "index.html":
+                slug = fname[:-5]
+                urls.append(f'  <url><loc>{base}/ranking/{slug}</loc><lastmod>{today}</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>')
 
     # 단지 페이지 (거래 데이터 있는 단지만 — Google 신뢰도 향상)
     included = 0
