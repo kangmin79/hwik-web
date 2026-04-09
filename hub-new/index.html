@@ -3764,23 +3764,20 @@ const PanelClient = (() => {
   }
 
   async function _deleteClient(cardId){
-    await Auth.sb.from('client_notes').delete().eq('client_card_id',cardId);
-    await Auth.sb.from('match_notifications').delete().or(`card_id.eq.${cardId},client_card_id.eq.${cardId}`);
-    await Auth.sb.from('cards').delete().eq('id',cardId).eq('agent_id',Auth.user.id);
+    try{
+      await Auth.sb.from('client_notes').delete().eq('client_card_id',cardId);
+      await Auth.sb.from('match_notifications').delete().or(`card_id.eq.${cardId},client_card_id.eq.${cardId}`);
+      const {error}=await Auth.sb.from('cards').delete().eq('id',cardId).eq('agent_id',Auth.user.id);
+      if(error) throw new Error(error.message);
+    }catch(e){Toast.show('삭제 실패: '+e.message);return;}
     document.getElementById('editModal').classList.remove('show');
     Toast.show('손님이 삭제되었습니다');
     closeDetail();await Data.loadClientCards(0,true);_renderList();await Data.loadCounts();Hub.render();
   }
 
   async function _quickStatus(cardId, status, color) {
-    // 즉시 시각 반영
-    document.querySelectorAll('.cs-btn').forEach(b=>{b.style.background='transparent';});
-    event.target.style.background=color+'20';
-    document.getElementById('clientEditStatus').value=status;
     // 계약완료는 확인 팝업
-    if(status==='계약완료' && !confirm('계약을 완료 하시겠습니까?')){
-      event.target.style.background='transparent';return;
-    }
+    if(status==='계약완료' && !confirm('계약을 완료 하시겠습니까?')) return;
     // 즉시 DB 저장
     const {error}=await Auth.sb.from('cards').update({client_status:status}).eq('id',cardId).eq('agent_id',Auth.user.id);
     if(!error){
@@ -3802,22 +3799,7 @@ const PanelClient = (() => {
     _renderList();
   }
 
-  const _CLIENT_STATUSES = ['탐색중','급해요','협의중','계약완료'];
-  async function _changeClientStatus(cardId, el) {
-    const cur = el.textContent.trim();
-    const next = _CLIENT_STATUSES[(_CLIENT_STATUSES.indexOf(cur)+1)%_CLIENT_STATUSES.length];
-    const {error} = await Data.updateClientStatus(cardId, next);
-    if(!error) {
-      const s = TAG_STYLES[next]||{bg:'rgba(96,165,250,0.12)',color:'#2563eb'};
-      el.textContent = next;
-      el.style.background = s.bg;
-      el.style.color = s.color;
-      const card = Data.cache.clientCards.find(c=>c.id===cardId);
-      if(card) card.client_status = next;
-    } else { Toast.show('상태 변경 실패'); }
-  }
-
-  return { render, registerClient, toggleReg, _addRecent, setFilter, setTradeFilter, setCatFilter, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact, selectClient, closeDetail, detailTab, toggleMatchSel, _hasSelectedClient, _stageTag, _changeClientStatus, _deleteClient, _quickStatus, _loadMore };
+  return { render, registerClient, toggleReg, _addRecent, setFilter, setTradeFilter, setCatFilter, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact, selectClient, closeDetail, detailTab, toggleMatchSel, _hasSelectedClient, _stageTag, _deleteClient, _quickStatus, _loadMore };
 })();
 
 /* ═══════════════════════════════════════════════════════════
