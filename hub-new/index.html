@@ -3712,18 +3712,15 @@ const PanelClient = (() => {
     const card=Data.cache.clientCards.find(c=>c.id===cardId)||Hub.current?.data;
     if(!card)return;const p=card.property||{};
     const m=document.getElementById('editModal');if(!m)return;
-    const curStatus=card.client_status||'탐색중';
-    const statuses=[{k:'탐색중',c:'#2563eb'},{k:'급해요',c:'#dc2626'},{k:'협의중',c:'#b45309'},{k:'계약완료',c:'#15803d'}];
-    const statusBtns=statuses.map(s=>`<button onclick="PanelClient._quickStatus('${cardId}','${s.k}','${s.c}')" class="cs-btn" style="padding:6px 14px;border-radius:20px;border:1.5px solid ${s.c};background:${curStatus===s.k?s.c+'20':'transparent'};color:${s.c};font-size:12px;font-weight:700;cursor:pointer;">${s.k}</button>`).join('');
     m.innerHTML=`<div class="modal-content"><div class="modal-header">손님 정보 수정<button class="modal-close" onclick="this.closest('.modal-overlay').classList.remove('show')">✕</button></div><div class="modal-body">
       <textarea id="clientEditText" class="reg-textarea" style="min-height:120px;" placeholder="손님 조건을 다시 입력하세요">${esc(p.rawText||[p.type,p.price,p.location,p.complex,p.area,...(p.features||[])].filter(Boolean).join(' '))}</textarea>
-      <input type="hidden" id="clientEditStatus" value="${esc(curStatus)}">
-      <div style="margin-top:14px;"><div style="font-size:13px;font-weight:700;margin-bottom:8px;">손님 상태</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${statusBtns}</div></div>
-      <div class="edit-buttons" style="margin-top:16px;display:flex;gap:8px;align-items:center;">
-        <button onclick="if(confirm('이 손님을 삭제할까요?'))PanelClient._deleteClient('${cardId}')" style="padding:8px 16px;border-radius:8px;border:1.5px solid #ef4444;background:transparent;color:#ef4444;font-size:12px;font-weight:700;cursor:pointer;">삭제</button>
-        <div style="flex:1;"></div>
-        <button class="btn-cancel" onclick="this.closest('.modal-overlay').classList.remove('show')">취소</button>
-        <button class="btn-primary" style="width:auto;padding:10px 24px;" id="clientEditBtn" onclick="PanelClient.saveClientEdit('${cardId}')">AI로 재분석</button>
+      <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px;">
+        <button class="btn-primary" style="width:100%;padding:14px;" id="clientEditBtn" onclick="PanelClient.saveClientEdit('${cardId}')">AI로 재분석</button>
+        <div style="display:flex;gap:8px;">
+          <button onclick="PanelClient._quickStatus('${cardId}','계약완료','#15803d')" style="flex:1;padding:12px;border-radius:10px;border:none;background:#15803d;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">✅ 계약완료</button>
+          <button onclick="if(confirm('이 손님을 삭제할까요?'))PanelClient._deleteClient('${cardId}')" style="flex:1;padding:12px;border-radius:10px;border:none;background:#ef4444;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">삭제</button>
+        </div>
+        <button class="btn-cancel" style="width:100%;" onclick="this.closest('.modal-overlay').classList.remove('show')">취소</button>
       </div>
     </div></div>`;m.classList.add('show');
   }
@@ -3740,7 +3737,8 @@ const PanelClient = (() => {
         complex:r.complex||null,area:r.area||null,floor:r.floor||null,room:r.room||null,
         features:r.features||[],moveIn:r.moveIn||null,category:r.category||null,rawText:text
       };
-      const newStatus=document.getElementById('clientEditStatus')?.value||'탐색중';
+      const card2=Data.cache.clientCards.find(c=>c.id===cardId);
+      const newStatus=card2?.client_status||'탐색중';
       await Auth.sb.from('cards').update({
         property, client_status:newStatus,
         price_number:r.price_number||null,deposit:r.deposit||null,monthly_rent:r.monthly_rent||null,
@@ -3751,7 +3749,7 @@ const PanelClient = (() => {
       document.getElementById('editModal').classList.remove('show');
       _updateClientTags(cardId,text);
       Data.batchGenerateTags(cardId);Data.updateEmbedding(cardId);Data.updateClientLocation(cardId);
-      if(newStatus==='계약완료'){Toast.show('🎉 계약 완료! 축하합니다');closeDetail();}else{Toast.show('수정 완료');}
+      Toast.show('수정 완료');
       await Data.loadClientCards(0,true);_renderList();await Data.loadCounts();Hub.render();
     }catch(e){Toast.show('저장 실패: '+e.message);}
     btn.textContent='AI로 재분석';btn.disabled=false;
