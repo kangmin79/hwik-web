@@ -468,11 +468,13 @@
   /* body 직접 자식일 때 풀스크린 */
   body > .chat-area {
     position: fixed;
-    top: 0; left: 0; right: 0;
+    left: 0; right: 0;
     bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+    top: 0;
     height: auto;
     z-index: 199;
   }
+  /* 키보드 올라올 때 visualViewport 기반 리사이즈 */
   .chat-messages {
     flex: 1; overflow-y: auto;
     padding: 12px 14px 16px;
@@ -962,6 +964,32 @@ function doKakaoLogin() {
   supabaseClient.auth.signInWithOAuth({
     provider: 'kakao',
     options: { redirectTo: 'https://hwik.kr/mobile.html' }
+  });
+}
+
+// ── 키보드 대응 (채팅 영역 리사이즈) ──
+if (window.visualViewport) {
+  const TAB_H = 60;
+  window.visualViewport.addEventListener('resize', () => {
+    const chat = document.querySelector('body > .chat-area');
+    if (!chat) return;
+    const vv = window.visualViewport;
+    const kbH = window.innerHeight - vv.height; // 키보드 높이
+    if (kbH > 50) {
+      // 키보드 올라옴 → 탭바 숨기고 채팅을 키보드 위까지
+      chat.style.bottom = kbH + 'px';
+      document.getElementById('bottomTabBar')?.style && (document.getElementById('bottomTabBar').style.display = 'none');
+      document.getElementById('agentTabBar')?.style && (document.getElementById('agentTabBar').style.display = 'none');
+    } else {
+      // 키보드 내려감 → 탭바 복원
+      chat.style.bottom = `calc(${TAB_H}px + env(safe-area-inset-bottom, 0px))`;
+      const barId = currentUser ? 'agentTabBar' : 'bottomTabBar';
+      document.getElementById(barId)?.classList.add('visible');
+      document.getElementById(barId).style.display = '';
+    }
+    // 메시지 영역 스크롤 하단으로
+    const msgs = chat.querySelector('.chat-messages');
+    if (msgs) msgs.scrollTop = msgs.scrollHeight;
   });
 }
 
