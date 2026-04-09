@@ -938,31 +938,19 @@ const Data = (() => {
   }
 
   async function loadAlerts() {
-    const id=uid(); if(!id) return {matches:[],overdue:[],memos:[],noContact:[]};
+    const id=uid(); if(!id) return {matches:[],overdue:[],memos:[],invites:[]};
     const [m,o,me] = await Promise.all([
       sb().from('match_notifications').select('id,card_id,client_card_id,similarity,created_at,is_read').eq('agent_id',id).order('created_at',{ascending:false}).limit(20),
       sb().from('client_notes').select('id,client_card_id,content,alert_date,type,alert_done').eq('agent_id',id).eq('alert_done',false).not('alert_date','is',null).lt('alert_date',new Date().toISOString()).order('alert_date',{ascending:true}).limit(20),
       sb().from('memos').select('id,content,is_read,created_at').eq('agent_id',id).order('created_at',{ascending:false}).limit(20),
     ]);
-    // 9. 미연락 손님 (7일+ 연락 없음)
-    let noContact=[];
-    try{
-      const clients=cache.clientCards||[];
-      if(clients.length){
-        const ids=clients.map(c=>c.id);
-        const{data:notes}=await sb().from('client_notes').select('client_card_id,created_at').in('client_card_id',ids).order('created_at',{ascending:false});
-        const lastContact={};(notes||[]).forEach(n=>{if(!lastContact[n.client_card_id])lastContact[n.client_card_id]=n.created_at;});
-        const sevenDaysAgo=Date.now()-7*86400000;
-        noContact=clients.filter(c=>{const last=lastContact[c.id];return !last||new Date(last).getTime()<sevenDaysAgo;}).slice(0,10);
-      }
-    }catch(_){}
     // 공유방 초대 조회
     let invites=[];
     try{
       const {data:inv}=await sb().from('share_room_members').select('room_id,created_at,share_rooms(id,name)').eq('member_id',id).eq('status','pending');
       invites=(inv||[]).map(r=>({roomId:r.share_rooms?.id,name:r.share_rooms?.name||'공유방',created_at:r.created_at})).filter(r=>r.roomId);
     }catch(_){}
-    return { matches:m.data||[], overdue:o.data||[], memos:me.data||[], noContact, invites };
+    return { matches:m.data||[], overdue:o.data||[], memos:me.data||[], invites };
   }
 
   async function loadCalendarAlerts(year,month) {
@@ -4048,12 +4036,10 @@ const PanelAlert = (() => {
     alerts.overdue.forEach(a=>all.push({type:'overdue',icon:'⚠️',label:esc(a.content||a.type||'일정'),sub:new Date(a.alert_date).toLocaleDateString('ko-KR')+' (지연)',time:new Date(a.alert_date),color:'#ef4444',read:false,id:a.id}));
     alerts.matches.forEach(m=>all.push({type:'match',icon:'🏠',label:'매칭 매물 발견',sub:new Date(m.created_at).toLocaleDateString('ko-KR'),time:new Date(m.created_at),color:'var(--primary)',read:m.is_read,id:m.id}));
     alerts.memos.forEach(m=>all.push({type:'memo',icon:'📝',label:esc(m.content||'메모'),sub:new Date(m.created_at).toLocaleDateString('ko-KR'),time:new Date(m.created_at),color:'#f59e0b',read:m.is_read,id:m.id}));
-    // 9. 미연락 손님 리마인더
-    (alerts.noContact||[]).forEach(c=>{const p=c.property||{};const name=c.contact_name||p.location||'손님';all.push({type:'nocontact',icon:'📞',label:`${esc(name)} — 연락 필요`,sub:'7일+ 미연락',time:new Date(c.created_at),color:'#f97316',read:false,id:'nc_'+c.id});});
-    // 10. 공유방 초대 알림
+    // 공유방 초대 알림
     (alerts.invites||[]).forEach(inv=>{all.push({type:'invite',icon:'📩',label:`${esc(inv.name)} 공유방 초대`,sub:new Date(inv.created_at).toLocaleDateString('ko-KR'),time:new Date(inv.created_at),color:'#8b5cf6',read:false,id:'inv_'+inv.roomId,roomId:inv.roomId});});
     // 7. 우선순위 정렬: 안 읽은 것 우선 → 긴급도(지연>매칭>메모) → 최신순
-    const _priority={'overdue':4,'invite':3.5,'nocontact':3,'match':2,'memo':1};
+    const _priority={'overdue':4,'invite':3.5,'match':2,'memo':1};
     all.sort((a,b)=>{
       if(a.read!==b.read)return a.read?1:-1;
       const pa=_priority[a.type]||0,pb=_priority[b.type]||0;
@@ -4223,13 +4209,11 @@ const PanelAlert = (() => {
     alerts.overdue.forEach(a=>all.push({type:'overdue',icon:'⚠️',label:esc(a.content||a.type||'일정'),sub:new Date(a.alert_date).toLocaleDateString('ko-KR')+' (지연)',time:new Date(a.alert_date),color:'#ef4444',read:false}));
     alerts.matches.forEach(m=>all.push({type:'match',icon:'🏠',label:'매칭 매물 발견',sub:new Date(m.created_at).toLocaleDateString('ko-KR'),time:new Date(m.created_at),color:'var(--primary)',read:m.is_read}));
     alerts.memos.forEach(m=>all.push({type:'memo',icon:'📝',label:esc(m.content||'메모'),sub:new Date(m.created_at).toLocaleDateString('ko-KR'),time:new Date(m.created_at),color:'#f59e0b',read:m.is_read}));
-    (alerts.noContact||[]).forEach(c=>{const p=c.property||{};all.push({type:'nocontact',icon:'📞',label:`${esc(c.contact_name||p.location||'손님')} — 연락 필요`,sub:'7일+ 미연락',time:new Date(c.created_at),color:'#f97316',read:false});});
     (alerts.invites||[]).forEach(inv=>{all.push({type:'invite',icon:'📩',label:`${esc(inv.name)} 공유방 초대`,sub:new Date(inv.created_at).toLocaleDateString('ko-KR'),time:new Date(inv.created_at),color:'#8b5cf6',read:false,roomId:inv.roomId});});
 
     let filtered=all;
     if(key==='al_match')filtered=all.filter(a=>a.type==='match');
     else if(key==='al_schedule')filtered=all.filter(a=>a.type==='overdue');
-    else if(key==='al_nocontact')filtered=all.filter(a=>a.type==='nocontact');
 
     if(key==='al_calendar'){
       const now=new Date();calYear=now.getFullYear();calMonth=now.getMonth()+1;
@@ -4237,8 +4221,8 @@ const PanelAlert = (() => {
       await _renderCal();return;
     }
 
-    const titles={'al_all':'전체 알림','al_match':'매칭 알림','al_schedule':'일정','al_nocontact':'미연락 손님'};
-    const _priority={'overdue':4,'invite':3.5,'nocontact':3,'match':2,'memo':1};
+    const titles={'al_all':'전체 알림','al_match':'매칭 알림','al_schedule':'일정'};
+    const _priority={'overdue':4,'invite':3.5,'match':2,'memo':1};
     filtered.sort((a,b)=>{if(a.read!==b.read)return a.read?1:-1;const pa=_priority[a.type]||0,pb=_priority[b.type]||0;if(pa!==pb)return pb-pa;return b.time-a.time;});
     let h=`<div class="panel-inner">${Hub.panelHead(titles[key]||'알림',filtered.length+'건')}`;
     if(!filtered.length)h+='<div class="empty"><div class="empty-icon">🔔</div>알림이 없어요</div>';
