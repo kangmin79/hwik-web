@@ -782,11 +782,12 @@ const Data = (() => {
   async function loadCounts() {
     const id = uid(); if (!id) return;
     // 미완료 일정 수 + 초대 수 병렬 조회
-    const [{count:overdueCount},{count:inviteCount}] = await Promise.all([
+    const [{count:overdueCount},{count:inviteCount},{count:matchCount}] = await Promise.all([
       sb().from('client_notes').select('id',{count:'exact',head:true}).eq('agent_id',id).eq('alert_done',false).not('alert_date','is',null).lte('alert_date',new Date().toISOString()),
-      sb().from('share_room_members').select('room_id',{count:'exact',head:true}).eq('member_id',id).eq('status','pending')
+      sb().from('share_room_members').select('room_id',{count:'exact',head:true}).eq('member_id',id).eq('status','pending'),
+      sb().from('match_notifications').select('id',{count:'exact',head:true}).eq('agent_id',id).eq('is_read',false)
     ]);
-    cache.counts={my:cache.myCards?.length||0,client:cache.clientCards?.length||0,shared:cache.sharedCards?.length||0,alert:(overdueCount||0)+(inviteCount||0),memo:0};
+    cache.counts={my:cache.myCards?.length||0,client:cache.clientCards?.length||0,shared:cache.sharedCards?.length||0,alert:(overdueCount||0)+(inviteCount||0)+(matchCount||0),memo:0};
   }
 
   async function loadMyCards(off=0, reset=false) {
@@ -2034,7 +2035,7 @@ const Hub = (() => {
     Hub.render(); // 허브 중앙 이름 업데이트
   }
 
-  function _ph(title,count){return '';}
+  function _ph(title,count){return `<div class="panel-head"><div class="panel-title">${esc(title)}${count?` <span>${esc(String(count))}</span>`:''}</div><button class="panel-x" onclick="Hub.closePanel()">✕</button></div>`;}
 
   function onCenterClick(){
     if(current?.type==='client'){
@@ -4175,7 +4176,7 @@ const PanelAlert = (() => {
           <div class="tl-text" style="${done?'text-decoration:line-through;':''}${past?'color:#dc2626;font-weight:700;':''}">${esc(a.content||'')}</div>
           <div class="tl-date">${new Date(a.alert_date).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}${past?' ⚠️ 지연':''}${done?' ✅':''}</div>
         </div>
-        ${!done?`<button onclick="event.stopPropagation();PanelAlert.doneAlert('${a.id}',${day})" style="padding:4px 10px;border-radius:6px;border:none;background:#10b981;color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">완료</button>`:''}
+        ${!done&&!a._isMatch&&!a._isLog?`<button onclick="event.stopPropagation();PanelAlert.doneAlert('${a.id}',${day})" style="padding:4px 10px;border-radius:6px;border:none;background:#10b981;color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">완료</button>`:''}
       </div>`;
     });
     detail.innerHTML=h;
