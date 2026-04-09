@@ -1,3 +1,21 @@
 .env
 __pycache__/
 .claude/
+node_modules/
+
+# 테스트/디버그 파일 (시크릿 포함 가능)
+test-*.mjs
+test-*.js
+test_*.mjs
+test_*.js
+setup-test-*.mjs
+*_test.mjs
+
+# 로그
+*.log
+
+# Python 스크립트 (일회성)
+audit_*.py
+clean_*.py
+qa_*.py
+validate_*.py
