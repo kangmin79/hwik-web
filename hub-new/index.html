@@ -3350,11 +3350,12 @@ const PanelClient = (() => {
 
     // 계약중 손님 최상위 → 최근 본 → 나머지 긴급도순
     const recent=_getRecent();
-    const contractCards=[], recentCards=[], restCards=[];
+    const contractCards=[], recentCards=[], restCards=[], completedCards=[];
     // 계약중: linked_card_id가 있거나, 매물에서 linked_client_id로 연결된 손님
     const linkedClientIds=new Set((Data.cache.myCards||[]).filter(m=>m.linked_client_id&&m.trade_status==='계약중').map(m=>m.linked_client_id));
     cards.forEach(c=>{
-      if(linkedClientIds.has(c.id)||c.linked_card_id)contractCards.push(c);
+      if(c.client_status==='계약완료') completedCards.push(c);
+      else if(linkedClientIds.has(c.id)||c.linked_card_id)contractCards.push(c);
       else if(recent.includes(c.id))recentCards.push(c);
       else restCards.push(c);
     });
@@ -3362,8 +3363,10 @@ const PanelClient = (() => {
     recentCards.sort((a,b)=>recent.indexOf(a.id)-recent.indexOf(b.id));
     // 나머지는 긴급도순
     restCards.sort((a,b)=>{if(b._urgency!==a._urgency)return b._urgency-a._urgency;return new Date(b.created_at)-new Date(a.created_at);});
+    // 완료는 최근순
+    completedCards.sort((a,b)=>new Date(b.updated_at||b.created_at)-new Date(a.updated_at||a.created_at));
 
-    _renderItems([...contractCards,...recentCards,...restCards], recentCards.length, contractCards.length, noteMap);
+    _renderItems([...contractCards,...recentCards,...restCards], recentCards.length, contractCount, noteMap, completedCards);
   }
 
   function _stageTag(lastNoteType){
@@ -3372,7 +3375,7 @@ const PanelClient = (() => {
     return {color:s.color, bg:s.bg, label:t==='메모'?'신규':t};
   }
 
-  async function _renderItems(cards, recentCount, contractCount=0, noteMapFromList=null){const el=document.getElementById('clList');if(!el)return;if(!cards.length){el.innerHTML='<div class="empty"><div class="empty-icon">🙋</div>손님이 없어요</div>';return;}
+  async function _renderItems(cards, recentCount, contractCount=0, noteMapFromList=null, completedCards=[]){const el=document.getElementById('clList');if(!el)return;if(!cards.length&&!completedCards.length){el.innerHTML='<div class="empty"><div class="empty-icon">🙋</div>손님이 없어요</div>';return;}
     // 마지막 메모: _renderList에서 전달받으면 재사용, 아니면 조회
     let lastNotes={};
     if(noteMapFromList){Object.entries(noteMapFromList).forEach(([cid,notes])=>{if(notes[0])lastNotes[cid]=notes[0];});}
@@ -3409,6 +3412,24 @@ const PanelClient = (() => {
         </div>
         ${c.contact_phone?`<span class="client-phone">${esc(c.contact_phone)}</span>`:''}
       </div>`;});
+    // 계약완료 손님 (접히는 섹션)
+    if(completedCards.length){
+      html+=`<div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px;">
+        <div onclick="var b=document.getElementById('completedSection');var a=this.querySelector('span');if(b.style.display==='none'){b.style.display='';a.textContent='▼';}else{b.style.display='none';a.textContent='▶';}" style="cursor:pointer;display:flex;align-items:center;gap:6px;padding:4px 0;">
+          <span style="font-size:10px;color:var(--text-light);">▶</span>
+          <span style="font-size:11px;font-weight:700;color:#15803d;">✅ 계약완료 (${completedCards.length}건)</span>
+        </div>
+        <div id="completedSection" style="display:none;">`;
+      completedCards.forEach(c=>{
+        const p=c.property||{},name=c.contact_name||p.location||p.complex||'손님';
+        const conds=[p.price,p.location,p.complex].filter(Boolean).map(v=>esc(v)).join(' · ');
+        html+=`<div class="item client-item" data-id="${c.id}" style="border-left:3px solid #15803d;opacity:0.6;" onclick='PanelClient.selectClient(JSON.parse(decodeURIComponent("${encodeURIComponent(JSON.stringify(c))}")))'>
+          ${clientWantTag(c)}
+          <div class="item-body"><div class="item-name">${esc(name)}</div><div class="item-sub">${conds}</div></div>
+        </div>`;
+      });
+      html+=`</div></div>`;
+    }
     el.innerHTML=html;
   }
 
