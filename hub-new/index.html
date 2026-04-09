@@ -3444,7 +3444,7 @@ const PanelClient = (() => {
           ${renderTag(t)}${overdue?renderTag('지연'):''}
           <div class="tl-body" style="flex:1;">
             <div class="tl-text" style="${done?'text-decoration:line-through;':''}${overdue?'color:#dc2626;font-weight:700;':''}${isLong?'overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:600px;':''}">${esc(content)}</div>
-            <div class="tl-date">${ds}${as}${done?' ✅ 완료':''}${overdue?' ⚠️ 지연':''}</div>
+            <div class="tl-date">${ds}${as}${done?' ✅ 완료':''}</div>
             ${isLong?`<div id="tl-detail-${n.id}" style="display:none;margin-top:8px;padding:10px;border-radius:8px;background:var(--bg-input);font-size:13px;white-space:pre-wrap;color:var(--text);" onclick="event.stopPropagation();">${esc(content)}</div>`:''}
           </div>
           <div style="display:flex;gap:4px;flex-shrink:0;" onclick="event.stopPropagation();">${n.alert_date&&!n.alert_done?`<button class="tl-done-btn" onclick="PanelClient.noteDone('${n.id}','${card.id}')">완료</button>`:''}<button class="tl-delete-btn" onclick="PanelClient.noteDel('${n.id}','${card.id}')">삭제</button></div>
