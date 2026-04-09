@@ -2072,7 +2072,7 @@ const Hub = (() => {
           </div>
           <div style="font-size:13px;color:var(--text-sub);margin-top:2px;">${conds}</div>
           <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
-            ${card.contact_phone?`<span style="font-size:13px;font-weight:600;">${esc(card.contact_phone)}</span><button onclick="navigator.clipboard.writeText('${escJs((card.contact_phone||"").replace(/[^0-9\\-+]/g,""))}');Toast.show('복사됨')" style="padding:2px 8px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-light);font-size:10px;cursor:pointer;">복사</button>`:''}<span style="font-size:11px;color:var(--text-light);">${dateStr}</span>
+            ${card.contact_phone?`<span style="font-size:13px;font-weight:600;">${esc(card.contact_phone)}</span><button onclick="navigator.clipboard.writeText('${escJs((card.contact_phone||"").replace(/[^0-9+\\-]/g,""))}');Toast.show('복사됨')" style="padding:2px 8px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-light);font-size:10px;cursor:pointer;">복사</button>`:''}<span style="font-size:11px;color:var(--text-light);">${dateStr}</span>
           </div>
         </div>
         <button onclick="PanelClient.editClient('${card.id}')" style="padding:5px 14px;border-radius:8px;border:1.5px solid var(--primary);background:transparent;color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;">수정</button>
@@ -3480,7 +3480,7 @@ const PanelClient = (() => {
         <div class="edit-field" style="margin-top:12px;"><label>전화번호</label><input id="clPhone" value="${esc(card.contact_phone||'')}" placeholder="01012345678"></div>
         <button class="btn-primary" style="margin-top:12px;" onclick="PanelClient.saveContact('${card.id}')">저장</button>
       </div>
-      ${card.contact_phone?`<div style="text-align:center;padding:12px 0;border-top:1px solid var(--border);"><button class="btn-contact" onclick="navigator.clipboard.writeText('${escJs((card.contact_phone||"").replace(/[^0-9\\-+]/g,""))}');Toast.show('복사됨')">${esc(card.contact_phone)} 📋 복사</button></div>`:''}
+      ${card.contact_phone?`<div style="text-align:center;padding:12px 0;border-top:1px solid var(--border);"><button class="btn-contact" onclick="navigator.clipboard.writeText('${escJs((card.contact_phone||"").replace(/[^0-9+\\-]/g,""))}');Toast.show('복사됨')">${esc(card.contact_phone)} 📋 복사</button></div>`:''}
     </div>`;el.innerHTML=h;}
   }
 
