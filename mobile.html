@@ -1607,13 +1607,17 @@ async function showAlerts() {
       <div class="chat-messages" id="alertMessages">
         <div class="chat-date"><span>${dateStr}</span></div>
       </div>
+      <div class="chat-input-wrap">
+        <textarea class="chat-input" id="briefInput" rows="1" placeholder="메모나 손님 조건을 입력하세요" enterkeyhint="send"
+          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();briefSend()}"></textarea>
+        <button class="chat-send-btn" onclick="briefSend()">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
     </div>`;
 
-  const msgs = document.getElementById('alertMessages');
   _lastSender = '';
-
-  // 로딩 표시
-  addAlertBubble(`${greeting} 일정을 확인하고 있어요...`, true);
 
   try {
     const [matchRes, interestRes, overdueRes, upcomingRes] = await Promise.all([
@@ -1814,6 +1818,151 @@ async function alertPostpone(noteId, btn) {
     btnsDiv.innerHTML = '<span style="color:#94a3b8;font-weight:600;font-size:13px;">내일 10시에 다시 알려드릴게요</span>';
     updateAlertBadge();
   } catch(e) { showToast('처리 실패'); }
+}
+
+// 브리핑 채팅 입력 처리
+async function briefSend() {
+  const inp = document.getElementById('briefInput');
+  const text = inp?.value?.trim();
+  if (!text || !currentUser) return;
+  inp.value = ''; inp.style.height = 'auto';
+
+  // 사용자 메시지 (오른쪽 노란 버블)
+  const msgs = document.getElementById('alertMessages');
+  _lastSender = 'user';
+  const ud = document.createElement('div');
+  ud.className = 'msg user-msg first-in-group';
+  ud.innerHTML = `<div class="bubble-wrap"><div class="bubble">${esc(text)}</div></div>`;
+  msgs.appendChild(ud);
+  msgs.scrollTop = msgs.scrollHeight;
+
+  // "손님" 키워드 감지 → 손님 등록 플로우
+  const isClient = /손님|찾는\s*분|구합니다|구해|찾아/.test(text);
+
+  if (isClient) {
+    // AI 파싱 → 확인 카드
+    _lastSender = '';
+    addAlertBubble('손님 조건을 분석하고 있어요...');
+    try {
+      const token = (await supabaseClient.auth.getSession()).data.session?.access_token || '';
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/parse-property`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_KEY },
+        body: JSON.stringify({ text: '손님 ' + text })
+      });
+      if (!res.ok) throw new Error('파싱 실패');
+      const parsed = await res.json();
+      window._briefParsed = parsed;
+      window._briefText = text;
+
+      // 마지막 "분석 중" 버블 제거
+      msgs.lastElementChild?.remove();
+      _lastSender = '';
+
+      const typeColors = { '매매':'#ea580c', '전세':'#4f46e5', '월세':'#7c3aed' };
+      const wt = parsed.wanted_trade_type || parsed.type || '';
+      const tc = typeColors[wt] || '#4ecdc4';
+      const features = (parsed.features || []).map(f => `<span style="padding:2px 8px;border-radius:4px;background:rgba(78,205,196,0.2);color:#4ecdc4;font-size:11px;">${esc(f)}</span>`).join(' ');
+
+      addAlertBubble(`
+        <div style="background:linear-gradient(135deg,#1a1a2e,#242442);border-radius:12px;padding:14px;color:#fff;margin-bottom:8px;">
+          ${wt ? `<span style="display:inline-block;padding:2px 8px;border-radius:4px;background:${tc};color:#fff;font-size:11px;font-weight:700;">${esc(wt)}</span>` : ''}
+          <div style="font-size:18px;font-weight:900;margin-top:6px;">${esc(parsed.price || '')}</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.7);margin-top:2px;">${esc([parsed.location, parsed.complex].filter(Boolean).join(' · '))}</div>
+          ${parsed.contact_name ? `<div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:6px;">👤 ${esc(parsed.contact_name)}${parsed.contact_phone ? ' ' + esc(parsed.contact_phone) : ''}</div>` : ''}
+          ${features ? `<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;">${features}</div>` : ''}
+        </div>
+        이 내용으로 손님 등록할까요?
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button onclick="briefConfirmClient()" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--hwik-yellow);color:#1a1a2e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">등록</button>
+          <button onclick="this.closest('.bubble').querySelector('div:last-child').innerHTML='<span style=font-size:13px;color:#94a3b8>취소했어요. 다시 입력해주세요!</span>'" style="flex:1;padding:10px;border-radius:8px;border:none;background:#e5e7eb;color:#5a5a6e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">다시 입력</button>
+        </div>`);
+    } catch(e) {
+      msgs.lastElementChild?.remove();
+      _lastSender = '';
+      addAlertBubble('손님 분석에 실패했어요. 다시 입력해주세요.');
+    }
+  } else {
+    // 일반 메모 저장
+    try {
+      await supabaseClient.from('memos').insert({ agent_id: currentUser.id, content: text, is_read: false });
+      _lastSender = '';
+      addAlertBubble('메모 저장했어요!<br><span style="font-size:12px;color:#94a3b8;">PC에서도 확인할 수 있어요</span>');
+    } catch(e) {
+      _lastSender = '';
+      addAlertBubble('저장 실패: ' + esc(e.message));
+    }
+  }
+}
+
+// 브리핑에서 손님 등록 확인
+async function briefConfirmClient() {
+  const parsed = window._briefParsed;
+  const text = window._briefText;
+  if (!parsed || !currentUser) return;
+
+  // 버튼 비활성화
+  document.querySelectorAll('.chat-confirm-btns button, .bubble button').forEach(b => { if (b.textContent === '등록') { b.disabled = true; b.textContent = '등록 중...'; } });
+
+  try {
+    const token = (await supabaseClient.auth.getSession()).data.session?.access_token || '';
+    const cardData = {
+      id: crypto.randomUUID().replace(/-/g, '').slice(0, 12),
+      agent_id: currentUser.id,
+      property: { ...parsed, type: '손님', rawText: text },
+      style: 'noimg', color: 'blue',
+      trade_status: '계약가능', client_status: '탐색중',
+      search_text: parsed.search_text || text,
+      embedding: parsed.embedding || null,
+      price_number: parsed.price_number || null,
+      deposit: parsed.deposit || null,
+      monthly_rent: parsed.monthly_rent || null,
+      contact_name: parsed.contact_name || null,
+      contact_phone: parsed.contact_phone || null,
+      tags: parsed.tags || [],
+    };
+    const { error } = await supabaseClient.from('cards').insert(cardData);
+    if (error) throw error;
+
+    // 매칭
+    const matchRes = await fetch(`${SUPABASE_URL}/functions/v1/match-properties`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({ client_card_id: cardData.id, limit: 5, threshold: 0.15 })
+    }).then(r => r.json()).catch(() => ({ results: [] }));
+
+    // 자동매칭도 트리거
+    fetch(`${SUPABASE_URL}/functions/v1/auto-match`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({ card_id: cardData.id })
+    }).catch(() => {});
+
+    const matches = matchRes.results || [];
+    const clientName = parsed.contact_name || '손님';
+
+    _lastSender = '';
+    if (matches.length) {
+      let mhtml = `<strong>${esc(clientName)}</strong> 등록 완료! 매칭 매물 <strong style="color:#4ecdc4;">${matches.length}건</strong>`;
+      matches.slice(0, 3).forEach(m => {
+        const mp = m.property || {};
+        const tc = { '매매':'#ea580c', '전세':'#4f46e5', '월세':'#7c3aed' }[mp.type] || '#94a3b8';
+        mhtml += `<div style="background:#f8f8fa;border-radius:8px;padding:8px 10px;margin-top:6px;border:1px solid #e5e7eb;">
+          <span style="font-size:11px;font-weight:700;color:${tc};">${esc(mp.type||'')}</span> <span style="font-weight:700;">${esc(mp.price||'')}</span>
+          <div style="font-size:12px;color:#666;margin-top:1px;">${esc(mp.complex || mp.location || '')}</div>
+        </div>`;
+      });
+      addAlertBubble(mhtml);
+    } else {
+      addAlertBubble(`<strong>${esc(clientName)}</strong> 등록 완료!<br><span style="color:#94a3b8;font-size:13px;">매칭 매물이 생기면 알려드릴게요</span>`);
+    }
+
+    window._briefParsed = null;
+    window._briefText = '';
+  } catch(e) {
+    _lastSender = '';
+    addAlertBubble('등록 실패: ' + esc(e.message));
+  }
 }
 
 async function updateAlertBadge() {
