@@ -3754,6 +3754,10 @@ const PanelClient = (() => {
     document.querySelectorAll('.cs-btn').forEach(b=>{b.style.background='transparent';});
     event.target.style.background=color+'20';
     document.getElementById('clientEditStatus').value=status;
+    // 계약완료는 확인 팝업
+    if(status==='계약완료' && !confirm('계약을 완료 하시겠습니까?')){
+      event.target.style.background='transparent';return;
+    }
     // 즉시 DB 저장
     const {error}=await Auth.sb.from('cards').update({client_status:status}).eq('id',cardId).eq('agent_id',Auth.user.id);
     if(!error){
