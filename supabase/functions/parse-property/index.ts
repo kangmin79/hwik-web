@@ -249,7 +249,7 @@ function parseMoveInDate(moveIn: string | null | undefined): string | null {
 }
 
 // 단일 가격 문자열 → 만원 단위 숫자
-function parseSinglePrice(str: string): number | null {
+function parseSinglePrice(str: string, isMonthly = false): number | null {
   if (!str) return null;
   try {
     let s = str.replace(/[\s,원보증금월세]/g, '');
@@ -265,7 +265,8 @@ function parseSinglePrice(str: string): number | null {
     }
     if (s.includes('만')) return parseInt(s.replace('만', '')) || null;
     const num = parseInt(s);
-    if (!isNaN(num)) return num <= 100 ? num * 10000 : num;
+    // 월세 금액은 만원 그대로 (50 = 50만원), 매매/전세/보증금은 100 이하면 억 단위로 추정
+    if (!isNaN(num)) return (!isMonthly && num <= 100) ? num * 10000 : num;
   } catch (_e) {}
   return null;
 }
@@ -275,10 +276,11 @@ function parsePriceFields(priceStr: string, type: string): { price_number: numbe
   if (!priceStr) return { price_number: null, deposit: null, monthly_rent: null };
   const clean = priceStr.replace(/[\s,]/g, '');
 
-  if (type === '월세' && clean.includes('/')) {
+  // 슬래시 패턴: "1000/50", "보1065/월90" (월세, 반전세, 전세+관리비 등)
+  if (clean.includes('/')) {
     const parts = clean.split('/');
     const deposit = parseSinglePrice(parts[0]);
-    const monthly = parseSinglePrice(parts[1]);
+    const monthly = parseSinglePrice(parts[1], true);  // 월세는 만원 그대로
     return { price_number: deposit, deposit, monthly_rent: monthly };
   }
 

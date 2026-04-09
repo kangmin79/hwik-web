@@ -297,8 +297,9 @@ export function isPriceMatch(
   // maxPrice 있으면: 매물이 최대가보다 10% 이상 비싸면 탈락
   if (condition.maxPrice && propPrice > condition.maxPrice * 1.1) return false;
 
-  // minPrice 있으면: 매물이 최소가보다 20% 이상 싸면 탈락 (이상 조건)
-  if (condition.minPrice && !condition.maxPrice && propPrice < condition.minPrice * 0.8) return false;
+  // minPrice 있으면: 매물이 최소가보다 30% 이상 싸면 탈락
+  // (maxPrice 유무와 관계없이 항상 체크 — "3억 정도"일 때 5천만원짜리 방지)
+  if (condition.minPrice && propPrice < condition.minPrice * 0.7) return false;
 
   return true;
 }
