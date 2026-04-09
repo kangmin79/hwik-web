@@ -481,17 +481,23 @@
   .client-input {
     flex: 1;
     width: 100%;
-    padding: 16px 18px;
+    padding: 20px;
     font-size: 16px;
     font-family: 'Noto Sans KR', sans-serif;
-    border: none;
-    border-radius: 0;
+    border: 1.5px solid #e8e8ee;
+    border-radius: 16px;
     outline: none;
-    background: transparent;
+    background: #fff;
     color: var(--text);
     resize: none;
-    line-height: 1.7;
+    line-height: 1.8;
     overflow-y: auto;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .client-input:focus {
+    border-color: #c7c7d4;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
   }
   .client-input::placeholder { color: #c0c0c0; }
 
