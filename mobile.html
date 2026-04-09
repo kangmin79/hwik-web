@@ -1667,7 +1667,7 @@ async function showAlerts() {
           <div style="margin-bottom:6px;">${typeIcon} <strong>${esc(clientName)}</strong> — ${timeStr} ${esc(a.type||'일정')}</div>
           <div style="font-size:13px;color:#555;line-height:1.5;">${esc(a.content)}</div>
           <div style="display:flex;gap:8px;margin-top:10px;">
-            <button onclick="alertDone('${a.id}',this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--hwik-yellow);color:#1a1a2e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">완료</button>
+            <button onclick="alertDone('${a.id}','${a.client_card_id}',this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--hwik-yellow);color:#1a1a2e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">완료</button>
             <button onclick="alertPostpone('${a.id}',this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:#e5e7eb;color:#5a5a6e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">내일로</button>
           </div>`);
       });
@@ -1706,16 +1706,15 @@ async function showAlerts() {
       addAlertBubble('오늘은 예정된 일정이 없어요.<br><span style="color:#94a3b8;font-size:13px;">편한 하루 보내세요!</span>');
     }
 
-    // 지연 일정 — 마지막에 물어보기
+    // 지연 일정 — 비서 톤으로 부드럽게
     if (overdue.length) {
       addAlertBubble(`
-        <div style="color:#ef4444;font-weight:700;margin-bottom:6px;">지연된 일정이 ${overdue.length}건 있어요</div>
-        <div style="font-size:13px;color:#555;">확인하시겠어요?</div>
+        <div style="font-weight:600;margin-bottom:6px;">바쁘셔서 놓치신 일정이 ${overdue.length}건 있어요</div>
+        <div style="font-size:13px;color:#555;">지금 다시 챙겨드릴까요?</div>
         <div style="display:flex;gap:8px;margin-top:10px;">
-          <button onclick="showOverdueItems()" style="flex:1;padding:10px;border-radius:8px;border:none;background:#ef4444;color:#fff;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">확인</button>
-          <button onclick="this.closest('.msg').style.opacity='0.4';this.closest('.bubble').querySelector('div:last-child').innerHTML='<span style=color:#94a3b8>나중에 확인할게요</span>'" style="flex:1;padding:10px;border-radius:8px;border:none;background:#e5e7eb;color:#5a5a6e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">나중에</button>
+          <button onclick="showOverdueItems(this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--hwik-dark);color:var(--hwik-yellow);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">챙겨주세요</button>
+          <button onclick="this.closest('.bubble').querySelector('div:last-child').innerHTML='<span style=font-size:13px;color:#94a3b8>알겠어요, 나중에 다시 알려드릴게요</span>'" style="flex:1;padding:10px;border-radius:8px;border:none;background:#e5e7eb;color:#5a5a6e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">나중에</button>
         </div>`);
-      // 지연 데이터 저장
       window._overdueItems = overdue;
       window._clientMap = clientMap;
     }
@@ -1742,35 +1741,66 @@ function addAlertBubble(html, isFirst = false) {
   msgs.scrollTop = msgs.scrollHeight;
 }
 
-function showOverdueItems() {
+function showOverdueItems(btn) {
+  // 버튼 영역 교체
+  if (btn) {
+    const btnsDiv = btn.closest('div');
+    if (btnsDiv) btnsDiv.innerHTML = '<span style="font-size:13px;color:#94a3b8;">확인할게요!</span>';
+  }
   const overdue = window._overdueItems || [];
   const clientMap = window._clientMap || {};
-  overdue.forEach(a => {
-    const cp = clientMap[a.client_card_id] || {};
-    const clientName = cp._name || [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
-    const ad = new Date(a.alert_date);
-    const dateStr = `${ad.getMonth()+1}/${ad.getDate()}`;
-    const typeIcon = { '방문':'🏠', '전화':'📞', '계약':'📋', '상담':'💬', '매물소개':'📤' }[a.type] || '📌';
-    addAlertBubble(`
-      <div style="color:#ef4444;font-size:12px;font-weight:600;margin-bottom:4px;">${dateStr} 지연</div>
-      <div style="margin-bottom:4px;">${typeIcon} <strong>${esc(clientName)}</strong> — ${esc(a.type||'일정')}</div>
-      <div style="font-size:13px;color:#555;line-height:1.5;">${esc(a.content)}</div>
-      <div style="display:flex;gap:8px;margin-top:10px;">
-        <button onclick="alertDone('${a.id}',this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--hwik-yellow);color:#1a1a2e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">완료</button>
-        <button onclick="alertPostpone('${a.id}',this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:#e5e7eb;color:#5a5a6e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">내일로</button>
-      </div>`);
+  // 톡톡톡 순차 표시 (300ms 간격)
+  overdue.forEach((a, i) => {
+    setTimeout(() => {
+      const cp = clientMap[a.client_card_id] || {};
+      const clientName = cp._name || [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
+      const ad = new Date(a.alert_date);
+      const dateStr = `${ad.getMonth()+1}/${ad.getDate()}`;
+      const typeIcon = { '방문':'🏠', '전화':'📞', '계약':'📋', '상담':'💬', '매물소개':'📤' }[a.type] || '📌';
+      addAlertBubble(`
+        <div style="color:#ef4444;font-size:11px;font-weight:600;margin-bottom:4px;">${dateStr}부터 밀린 일정</div>
+        <div style="margin-bottom:4px;">${typeIcon} <strong>${esc(clientName)}</strong> — ${esc(a.type||'일정')}</div>
+        <div style="font-size:13px;color:#555;line-height:1.5;">${esc(a.content)}</div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button onclick="alertDone('${a.id}','${a.client_card_id}',this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--hwik-yellow);color:#1a1a2e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">완료</button>
+          <button onclick="alertPostpone('${a.id}',this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:#e5e7eb;color:#5a5a6e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">내일로</button>
+        </div>`);
+    }, i * 300);
   });
 }
 
-async function alertDone(noteId, btn) {
+async function alertDone(noteId, clientCardId, btn) {
   const wrap = btn.closest('.bubble');
   try {
     await supabaseClient.from('client_notes').update({ alert_done: true }).eq('id', noteId);
-    const btns = wrap.querySelector('div:last-child');
-    btns.innerHTML = '<span style="color:#4ecdc4;font-weight:700;font-size:14px;">완료 처리됨</span>';
-    wrap.closest('.msg').style.opacity = '0.5';
+    // 버튼 → "수고하셨어요! 메모 남기실까요?"
+    const btnsDiv = wrap.querySelector('div:last-child');
+    btnsDiv.innerHTML = `
+      <div style="color:#4ecdc4;font-weight:700;font-size:13px;margin-bottom:8px;">수고하셨어요! 메모 남기실까요?</div>
+      <div style="display:flex;gap:6px;">
+        <input type="text" id="memo-${noteId}" placeholder="상담 내용 메모..." style="flex:1;padding:8px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-size:13px;font-family:inherit;outline:none;color:#1a1a2e;" onkeydown="if(event.key==='Enter')saveBriefMemo('${noteId}','${clientCardId}')">
+        <button onclick="saveBriefMemo('${noteId}','${clientCardId}')" style="padding:8px 14px;border-radius:8px;border:none;background:var(--hwik-dark);color:var(--hwik-yellow);font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;flex-shrink:0;">저장</button>
+      </div>
+      <button onclick="this.parentElement.innerHTML='<span style=color:#94a3b8;font-size:13px>완료!</span>'" style="margin-top:6px;padding:6px;border:none;background:none;color:#94a3b8;font-size:12px;cursor:pointer;font-family:inherit;">괜찮아요, 넘어갈게요</button>`;
+    setTimeout(() => document.getElementById('memo-' + noteId)?.focus(), 100);
     updateAlertBadge();
   } catch(e) { showToast('처리 실패'); }
+}
+
+async function saveBriefMemo(noteId, clientCardId) {
+  const input = document.getElementById('memo-' + noteId);
+  const text = input?.value?.trim();
+  if (!text) { input?.focus(); return; }
+  try {
+    await supabaseClient.from('client_notes').insert({
+      client_card_id: clientCardId,
+      agent_id: currentUser.id,
+      content: text,
+      type: '메모'
+    });
+    const wrap = input.closest('div').parentElement;
+    wrap.innerHTML = '<span style="color:#4ecdc4;font-size:13px;font-weight:600;">메모 저장했어요!</span>';
+  } catch(e) { showToast('저장 실패'); }
 }
 
 async function alertPostpone(noteId, btn) {
@@ -1780,9 +1810,8 @@ async function alertPostpone(noteId, btn) {
   tomorrow.setHours(10, 0, 0, 0);
   try {
     await supabaseClient.from('client_notes').update({ alert_date: tomorrow.toISOString() }).eq('id', noteId);
-    const btns = wrap.querySelector('div:last-child');
-    btns.innerHTML = '<span style="color:#94a3b8;font-weight:600;font-size:13px;">내일 10시로 미뤘어요</span>';
-    wrap.closest('.msg').style.opacity = '0.5';
+    const btnsDiv = wrap.querySelector('div:last-child');
+    btnsDiv.innerHTML = '<span style="color:#94a3b8;font-weight:600;font-size:13px;">내일 10시에 다시 알려드릴게요</span>';
     updateAlertBadge();
   } catch(e) { showToast('처리 실패'); }
 }
