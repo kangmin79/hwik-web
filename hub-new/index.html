@@ -3230,11 +3230,11 @@ const PanelClient = (() => {
       Toast.show('손님이 등록되었습니다!');
       inp.value='';
       document.getElementById('clientRegResult').innerHTML='';
-      await Data.loadClientCards(0,true);_renderList();
-      // 바로 손님 상세 페이지로 이동
-      const savedCard=Data.cache.clientCards.find(x=>x.id===cardData.id);
-      if(savedCard) selectClient(savedCard);
-      else{const{data:fc}=await Auth.sb.from('cards').select('*').eq('id',cardData.id).single();if(fc)selectClient(fc);}
+      // 캐시 갱신 (백그라운드)
+      Data.loadClientCards(0,true);
+      // 바로 손님 상세 페이지로 이동 — DB에서 완전한 카드 조회
+      const{data:fc}=await Auth.sb.from('cards').select('*').eq('id',cardData.id).single();
+      if(fc) selectClient(fc);
     }catch(e){document.getElementById('clientRegResult').innerHTML=`<div class="reg-error" style="margin-top:8px;">오류: ${esc(e.message)}</div>`;}
     btn.textContent='AI로 손님 등록';btn.disabled=false;
   }
