@@ -603,13 +603,13 @@ def build_jsonld(d):
             "@type": "BreadcrumbList",
             "itemListElement": [
                 {"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"},
-                {"@type": "ListItem", "position": 2, "name": f"{gu}", "item": f"https://hwik.kr/gu.html?name={gu}"},
-            ] + ([{"@type": "ListItem", "position": 3, "name": dong_name, "item": f"https://hwik.kr/dong/{dong_slug_str}"}] if dong_name and dong_slug_str and dong_slug_str in DONG_SLUGS else []) + [
-                {"@type": "ListItem", "position": 4 if (dong_name and dong_slug_str and dong_slug_str in DONG_SLUGS) else 3, "name": name, "item": f"https://hwik.kr/danji/{slug}"},
+                {"@type": "ListItem", "position": 2, "name": f"{gu}", "item": f"https://hwik.kr/gu.html?name={url_quote(gu, safe='')}"},
+            ] + ([{"@type": "ListItem", "position": 3, "name": dong_name, "item": f"https://hwik.kr/dong/{url_quote(dong_slug_str, safe='-')}"}] if dong_name and dong_slug_str and dong_slug_str in DONG_SLUGS else []) + [
+                {"@type": "ListItem", "position": 4 if (dong_name and dong_slug_str and dong_slug_str in DONG_SLUGS) else 3, "name": name},
             ],
         },
     ]
-    graph[0]["url"] = f"https://hwik.kr/danji/{slug}"
+    graph[0]["url"] = f"https://hwik.kr/danji/{url_quote(slug, safe='-')}"
     if d.get("lat") and d.get("lng"):
         graph[0]["geo"] = {"@type": "GeoCoordinates", "latitude": d["lat"], "longitude": d["lng"]}
     if d.get("build_year"):
@@ -774,6 +774,7 @@ def generate_page(d):
 <title>{name} 실거래가 시세{title_loc} - 휙</title>
 <meta name="description" content="{esc(desc)}">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+<link rel="icon" href="/favicon.ico">
 <link rel="canonical" id="canonical" href="{canonical}">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="휙">

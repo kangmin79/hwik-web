@@ -223,7 +223,10 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
     most_recent = max(tradeable, key=lambda x: x["_best_trade"].get("date", ""), default=None)
 
     title = f"{gu} {dong} 아파트 실거래가 시세 - 휙"
-    desc = f"{gu} {dong} 아파트 {len(tradeable)}개 단지 실거래가, 시세를 확인하세요. 국토교통부 실거래가 공개시스템 기반."
+    _prices = [x["_best_trade"].get("price", 0) for x in tradeable if x.get("_best_trade")]
+    _valid = [p for p in _prices if p > 0]
+    _price_range = f" {format_price(min(_valid))}~{format_price(max(_valid))}." if len(_valid) >= 2 else ""
+    desc = f"{gu} {dong} 아파트 {len(tradeable)}개 단지 실거래가.{_price_range} 국토교통부 실거래가 공개시스템 기반, 매일 업데이트."
 
     # ── fallback 콘텐츠 ──
     lines = []
@@ -504,7 +507,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
                 {"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"},
                 {"@type": "ListItem", "position": 2, "name": region, "item": f"https://hwik.kr{region_link}"},
                 {"@type": "ListItem", "position": 3, "name": gu, "item": f"https://hwik.kr/gu.html?name={url_quote(gu, safe='')}"},
-                {"@type": "ListItem", "position": 4, "name": dong, "item": canonical},
+                {"@type": "ListItem", "position": 4, "name": dong},
             ],
         },
         {"@type": "FAQPage", "mainEntity": faq_ld},
@@ -536,6 +539,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
 <title>{esc(title)}</title>
 <meta name="description" content="{esc(desc)}">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+<link rel="icon" href="/favicon.ico">
 <link rel="canonical" href="{canonical}">
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="휙">
