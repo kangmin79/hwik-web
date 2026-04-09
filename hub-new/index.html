@@ -3688,9 +3688,19 @@ const PanelClient = (() => {
     const card=Data.cache.clientCards.find(c=>c.id===cardId)||Hub.current?.data;
     if(!card)return;const p=card.property||{};
     const m=document.getElementById('editModal');if(!m)return;
+    const curStatus=card.client_status||'탐색중';
+    const statuses=[{k:'탐색중',c:'#2563eb'},{k:'급해요',c:'#dc2626'},{k:'협의중',c:'#b45309'},{k:'계약완료',c:'#15803d'},{k:'연락두절',c:'#64748b'}];
+    const statusBtns=statuses.map(s=>`<button onclick="document.querySelectorAll('.cs-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('clientEditStatus').value='${s.k}';" class="cs-btn${curStatus===s.k?' active':''}" style="padding:6px 14px;border-radius:20px;border:1.5px solid ${s.c};background:${curStatus===s.k?s.c+'20':'transparent'};color:${s.c};font-size:12px;font-weight:700;cursor:pointer;">${s.k}</button>`).join('');
     m.innerHTML=`<div class="modal-content"><div class="modal-header">손님 정보 수정<button class="modal-close" onclick="this.closest('.modal-overlay').classList.remove('show')">✕</button></div><div class="modal-body">
-      <textarea id="clientEditText" class="reg-textarea" style="min-height:160px;" placeholder="손님 조건을 다시 입력하세요">${esc(p.rawText||[p.type,p.price,p.location,p.complex,p.area,...(p.features||[])].filter(Boolean).join(' '))}</textarea>
-      <div class="edit-buttons"><button class="btn-cancel" onclick="this.closest('.modal-overlay').classList.remove('show')">취소</button><button class="btn-primary" style="width:auto;padding:10px 24px;" id="clientEditBtn" onclick="PanelClient.saveClientEdit('${cardId}')">AI로 재분석</button></div>
+      <textarea id="clientEditText" class="reg-textarea" style="min-height:120px;" placeholder="손님 조건을 다시 입력하세요">${esc(p.rawText||[p.type,p.price,p.location,p.complex,p.area,...(p.features||[])].filter(Boolean).join(' '))}</textarea>
+      <input type="hidden" id="clientEditStatus" value="${esc(curStatus)}">
+      <div style="margin-top:14px;"><div style="font-size:13px;font-weight:700;margin-bottom:8px;">손님 상태</div><div style="display:flex;flex-wrap:wrap;gap:6px;">${statusBtns}</div></div>
+      <div class="edit-buttons" style="margin-top:16px;display:flex;gap:8px;align-items:center;">
+        <button onclick="if(confirm('이 손님을 삭제할까요?'))PanelClient._deleteClient('${cardId}')" style="padding:8px 16px;border-radius:8px;border:1.5px solid #ef4444;background:transparent;color:#ef4444;font-size:12px;font-weight:700;cursor:pointer;">삭제</button>
+        <div style="flex:1;"></div>
+        <button class="btn-cancel" onclick="this.closest('.modal-overlay').classList.remove('show')">취소</button>
+        <button class="btn-primary" style="width:auto;padding:10px 24px;" id="clientEditBtn" onclick="PanelClient.saveClientEdit('${cardId}')">AI로 재분석</button>
+      </div>
     </div></div>`;m.classList.add('show');
   }
 
@@ -3706,8 +3716,9 @@ const PanelClient = (() => {
         complex:r.complex||null,area:r.area||null,floor:r.floor||null,room:r.room||null,
         features:r.features||[],moveIn:r.moveIn||null,category:r.category||null,rawText:text
       };
+      const newStatus=document.getElementById('clientEditStatus')?.value||'탐색중';
       await Auth.sb.from('cards').update({
-        property,
+        property, client_status:newStatus,
         price_number:r.price_number||null,deposit:r.deposit||null,monthly_rent:r.monthly_rent||null,
         wanted_trade_type:r.wanted_trade_type||null,wanted_categories:r.wanted_categories||[],wanted_conditions:r.wanted_conditions||[],
         contact_name:r.contact_name||null,contact_phone:r.contact_phone||null,
@@ -3729,6 +3740,15 @@ const PanelClient = (() => {
     if(Hub.current?.data?.id===cardId){Hub.current.data.contact_name=name;Hub.current.data.contact_phone=phone;}
   }
 
+  async function _deleteClient(cardId){
+    await Auth.sb.from('client_notes').delete().eq('client_card_id',cardId);
+    await Auth.sb.from('match_notifications').delete().or(`card_id.eq.${cardId},client_card_id.eq.${cardId}`);
+    await Auth.sb.from('cards').delete().eq('id',cardId).eq('agent_id',Auth.user.id);
+    document.getElementById('editModal').classList.remove('show');
+    Toast.show('손님이 삭제되었습니다');
+    closeDetail();await Data.loadClientCards(0,true);_renderList();await Data.loadCounts();Hub.render();
+  }
+
   const _CLIENT_STATUSES = ['탐색중','급해요','협의중','계약완료','연락두절'];
   async function _changeClientStatus(cardId, el) {
     const cur = el.textContent.trim();
@@ -3744,7 +3764,7 @@ const PanelClient = (() => {
     } else { Toast.show('상태 변경 실패'); }
   }
 
-  return { render, registerClient, toggleReg, _addRecent, setFilter, setTradeFilter, setCatFilter, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact, selectClient, closeDetail, detailTab, toggleMatchSel, _hasSelectedClient, _stageTag, _changeClientStatus };
+  return { render, registerClient, toggleReg, _addRecent, setFilter, setTradeFilter, setCatFilter, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact, selectClient, closeDetail, detailTab, toggleMatchSel, _hasSelectedClient, _stageTag, _changeClientStatus, _deleteClient };
 })();
 
 /* ═══════════════════════════════════════════════════════════
