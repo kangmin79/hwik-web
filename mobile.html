@@ -535,31 +535,47 @@
     border-radius: 16px 4px 16px 16px;
     color: #1a1a2e; font-weight: 500;
   }
-  /* 확인 카드 */
+  /* 확인 카드 (카톡 스타일) */
   .chat-confirm-card {
-    background: linear-gradient(135deg, #1a1a2e, #242442);
-    border-radius: 14px; padding: 16px; color: #fff; margin: 6px 0;
+    background: #fff; border-radius: 12px;
+    border: 1px solid #e5e8eb; overflow: hidden; margin: 4px 0;
+  }
+  .chat-confirm-card .cc-header {
+    padding: 14px 16px 10px; border-bottom: 1px solid #f0f0f3;
   }
   .chat-confirm-card .cc-type {
-    display: inline-block; padding: 3px 10px;
-    border-radius: 6px; font-size: 12px; font-weight: 700;
+    display: inline-block; padding: 2px 8px;
+    border-radius: 4px; font-size: 11px; font-weight: 700;
   }
-  .chat-confirm-card .cc-price { font-size: 20px; font-weight: 900; letter-spacing: -0.5px; margin-top: 8px; }
-  .chat-confirm-card .cc-location { font-size: 13px; color: rgba(255,255,255,0.7); margin-top: 4px; }
-  .chat-confirm-card .cc-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chat-confirm-card .cc-price { font-size: 18px; font-weight: 900; color: #1a1a2e; letter-spacing: -0.5px; margin-top: 6px; }
+  .chat-confirm-card .cc-body { padding: 10px 16px 12px; }
+  .chat-confirm-card .cc-row {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; color: #5a5a6e; padding: 3px 0;
+  }
+  .chat-confirm-card .cc-row .cc-label { color: #94a3b8; min-width: 40px; }
+  .chat-confirm-card .cc-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
   .chat-confirm-card .cc-tag {
-    padding: 3px 10px; border-radius: 6px;
-    background: rgba(78,205,196,0.2); color: #4ecdc4;
-    font-size: 12px; font-weight: 500;
+    padding: 2px 8px; border-radius: 4px;
+    background: #f0f4ff; color: #4f46e5;
+    font-size: 11px; font-weight: 600;
   }
-  .chat-confirm-btns { display: flex; gap: 8px; margin-top: 12px; }
+  .chat-confirm-card .cc-contact {
+    padding: 10px 16px; background: #f8f9fa; border-top: 1px solid #f0f0f3;
+    font-size: 13px; color: #1a1a2e; font-weight: 600;
+  }
+  .chat-confirm-btns {
+    display: flex; border-top: 1px solid #e5e8eb;
+  }
   .chat-confirm-btns button {
-    flex: 1; padding: 12px; border: none; border-radius: 10px;
-    font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer;
+    flex: 1; padding: 13px; border: none; background: #fff;
+    font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer;
+    color: #5a5a6e;
   }
-  .chat-confirm-btns .btn-yes { background: var(--hwik-yellow); color: #1a1a2e; }
-  .chat-confirm-btns .btn-no { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.8); }
-  .chat-confirm-btns button:active { transform: scale(0.96); }
+  .chat-confirm-btns button + button { border-left: 1px solid #e5e8eb; }
+  .chat-confirm-btns .btn-yes { color: #4f46e5; font-weight: 700; }
+  .chat-confirm-btns .btn-no { color: #94a3b8; }
+  .chat-confirm-btns button:active { background: #f0f0f3; }
   /* 하단 입력 */
   .chat-input-wrap {
     flex-shrink: 0;
@@ -1416,28 +1432,32 @@ async function chatSend() {
 
     removeTyping();
 
-    // 확인 카드
+    // 확인 카드 (카톡 스타일)
     const p = parsed;
     const typeColors = { '매매':'#ea580c', '전세':'#4f46e5', '월세':'#7c3aed' };
     const wantType = p.wanted_trade_type || p.type || '';
     const tColor = typeColors[wantType] || '#4ecdc4';
     const features = (p.features || []).map(f => `<span class="cc-tag">${esc(f)}</span>`).join('');
-    const name = p.contact_name ? `<div style="font-size:13px;color:rgba(255,255,255,0.7);margin-top:8px;">👤 ${esc(p.contact_name)}${p.contact_phone ? ' ' + esc(p.contact_phone) : ''}</div>` : '';
+    const location = [p.location, p.complex].filter(Boolean).join(' ');
+    const detail = [p.area, p.floor, p.room].filter(Boolean).join(' · ');
 
     const cardHtml = `
       <div class="chat-confirm-card">
-        ${wantType ? `<span class="cc-type" style="background:${tColor};color:#fff;">${esc(wantType)}</span>` : ''}
-        ${p.category ? `<span class="cc-type" style="background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);margin-left:4px;">${esc(p.category)}</span>` : ''}
-        <div class="cc-price">${esc(p.price || '')}</div>
-        <div class="cc-location">${esc([p.location, p.complex].filter(Boolean).join(' · '))}</div>
-        ${p.area || p.floor || p.room ? `<div class="cc-location">${esc([p.area, p.floor, p.room].filter(Boolean).join(' · '))}</div>` : ''}
-        ${features ? `<div class="cc-tags">${features}</div>` : ''}
-        ${name}
-      </div>
-      <div style="font-size:14px;color:var(--text);margin-top:8px;">이 내용으로 등록할까요?</div>
-      <div class="chat-confirm-btns">
-        <button class="btn-no" onclick="chatReject()">다시 입력</button>
-        <button class="btn-yes" onclick="chatConfirm()">등록</button>
+        <div class="cc-header">
+          ${wantType ? `<span class="cc-type" style="background:${tColor}15;color:${tColor};">${esc(wantType)}</span>` : ''}
+          ${p.category ? `<span class="cc-type" style="background:#f0f0f3;color:#5a5a6e;margin-left:4px;">${esc(p.category)}</span>` : ''}
+          <div class="cc-price">${esc(p.price || '')}</div>
+        </div>
+        <div class="cc-body">
+          ${location ? `<div class="cc-row"><span class="cc-label">위치</span> ${esc(location)}</div>` : ''}
+          ${detail ? `<div class="cc-row"><span class="cc-label">조건</span> ${esc(detail)}</div>` : ''}
+          ${features ? `<div class="cc-tags">${features}</div>` : ''}
+        </div>
+        ${p.contact_name ? `<div class="cc-contact">👤 ${esc(p.contact_name)}${p.contact_phone ? '  ' + esc(p.contact_phone) : ''}</div>` : ''}
+        <div class="chat-confirm-btns">
+          <button class="btn-no" onclick="chatReject()">다시 입력</button>
+          <button class="btn-yes" onclick="chatConfirm()">등록하기</button>
+        </div>
       </div>`;
     addAiBubble(cardHtml);
     _chatState = 'confirm';
