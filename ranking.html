@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>서울 아파트 순위 - 휙</title>
 <meta name="description" id="meta-desc" content="서울 아파트 매매가, ㎡당 가격, 전세가율 순위를 확인하세요.">
-<meta name="keywords" id="meta-keywords" content="서울 아파트 순위, 비싼 아파트, ㎡당 가격 순위, 전세가율 순위">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="휙">
@@ -19,14 +18,10 @@
 <meta name="naver-site-verification" content="367bd1e77a8ad48b74e345be3e4a0f8125c2c4e1" />
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="config.js"></script>
-<script src="/makeSlug.js"></script>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 :root { --dark:#1a1a2e; --yellow:#f5c842; --yellow-dim:rgba(245,200,66,0.15); --bg:#f8f8fa; --surface:#fff; --card:#f3f4f6; --border:#e5e7eb; --text:#1a1a2e; --sub:#6b7280; --muted:#9ca3af; --red:#e24b4a; --green:#639922; --radius:10px; }
-html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; background:var(--bg); color:var(--text); }
+html,body { height:100%; font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans CJK KR',sans-serif; background:var(--bg); color:var(--text); }
 .wrap { max-width:430px; margin:0 auto; background:var(--surface); min-height:100vh; }
 .header { background:var(--dark); padding:16px; }
 .header-top { display:flex; align-items:center; gap:12px; }
@@ -76,6 +71,9 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
     <p><a href="/gu.html">서울 구별 시세 보기</a> · <a href="/danji/서울-송파구-가락동-헬리오시티아파트-a10025850">헬리오시티 시세</a></p>
   </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="/makeSlug.js"></script>
 <script>
 const sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_KEY);
 // makeSlug → /makeSlug.js (외부 파일)
@@ -215,13 +213,13 @@ function render(gu) {
   const faqItems = [
     top50[0] ? {q: areaLabel+'에서 가장 비싼 아파트는?', a: top50[0].name+' ('+top50[0].location+')이 '+formatPrice(top50[0].price)+'으로 1위입니다. 국토교통부 실거래가 기준.'} : null,
     top50[0] && currentType==='sqm' ? {q: areaLabel+' ㎡당 가격 1위는?', a: top50[0].name+'이 전용면적 기준 '+formatPrice(top50[0].sqmPrice)+'/㎡으로 1위입니다.'} : null,
-    top50[0] && (currentType==='jeonse'||currentType==='jeonse_low') ? {q: areaLabel+' 전세가율 순위는?', a: '전세가율 '+currentType==='jeonse'?'높은':'낮은'+' 1위는 '+top50[0].name+' ('+(top50[0].jr||0)+'%)입니다.'} : null,
+    top50[0] && (currentType==='jeonse'||currentType==='jeonse_low') ? {q: areaLabel+' 전세가율 순위는?', a: '전세가율 '+(currentType==='jeonse'?'높은':'낮은')+' 1위는 '+top50[0].name+' ('+(top50[0].jr||0)+'%)입니다.'} : null,
   ].filter(Boolean);
   const ld = {"@context":"https://schema.org","@graph":[
     faqItems.length>0 ? {"@type":"FAQPage","mainEntity":faqItems.map(f=>({"@type":"Question","name":f.q,"acceptedAnswer":{"@type":"Answer","text":f.a}}))} : null,
     {"@type":"BreadcrumbList","itemListElement":[
       {"@type":"ListItem","position":1,"name":"휙","item":"https://hwik.kr"},
-      {"@type":"ListItem","position":2,"name":"순위","item":"https://hwik.kr/ranking.html"},
+      {"@type":"ListItem","position":2,"name":"순위"},
     ]},
     {"@type":"ItemList","name":areaLabel+" 아파트 "+typeLabel+" 순위","numberOfItems":top50.length,
      "itemListElement":top50.slice(0,20).map((d,i)=>({"@type":"ListItem","position":i+1,"name":d.name,"url":"https://hwik.kr/danji/"+encodeURIComponent(makeSlug(d.name,d.location,d.id,d.address))}))}

@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>아파트 시세 - 휙</title>
 <meta name="description" id="meta-desc" content="서울·인천·경기 아파트 실거래가, 시세 추이를 구별로 확인하세요.">
-<meta name="keywords" id="meta-keywords" content="서울 아파트 시세, 인천 아파트 시세, 경기 아파트 시세, 실거래가, 전세가율, 부동산">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="휙">
@@ -21,10 +20,6 @@
 <meta name="naver-site-verification" content="367bd1e77a8ad48b74e345be3e4a0f8125c2c4e1" />
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="config.js"></script>
-<script src="/makeSlug.js"></script>
 <script>
 // Canonical 즉시 주입 (25개 구별 페이지 중복 방지)
 (function() {
@@ -42,7 +37,7 @@
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 :root { --dark:#1a1a2e; --yellow:#f5c842; --yellow-dim:rgba(245,200,66,0.15); --yellow-bg:rgba(245,200,66,0.04); --bg:#f8f8fa; --surface:#fff; --card:#f3f4f6; --border:#e5e7eb; --text:#1a1a2e; --sub:#6b7280; --muted:#9ca3af; --red:#e24b4a; --green:#639922; --radius:10px; }
-html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; background:var(--bg); color:var(--text); }
+html,body { height:100%; font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans CJK KR',sans-serif; background:var(--bg); color:var(--text); }
 .wrap { max-width:430px; margin:0 auto; background:var(--surface); min-height:100vh; }
 .header { background:var(--dark); padding:16px; }
 .header-top { display:flex; align-items:center; gap:12px; }
@@ -107,7 +102,7 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
   <div class="loading"><div class="loading-spinner"></div><div class="loading-text">불러오는 중...</div></div>
 </div>
 <noscript>
-<div style="max-width:700px;margin:0 auto;padding:20px;font-family:'Noto Sans KR',sans-serif;">
+<div style="max-width:700px;margin:0 auto;padding:20px;font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;">
 <h1>서울·인천·경기 아파트 시세</h1>
 <p>국토교통부 실거래가 기반 아파트 시세를 구별로 확인하세요.</p>
 <h2>서울 (25개 구)</h2>
@@ -155,6 +150,9 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
 <p><a href="/">휙 홈으로</a> · <a href="/ranking.html">아파트 순위</a></p>
 </div>
 </noscript>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="/makeSlug.js"></script>
 <script>
 const sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_KEY);
 // makeSlug → /makeSlug.js (외부 파일)
@@ -202,6 +200,9 @@ let currentRegion = 'seoul';
 function renderGuList() {
   document.title = '서울·인천·경기 아파트 시세 - 휙';
   document.getElementById('og-title').content = document.title;
+  const listUrl = 'https://hwik.kr/gu.html' + (currentRegion !== 'seoul' ? '?tab=' + currentRegion : '');
+  document.getElementById('canonical').href = listUrl;
+  document.getElementById('og-url').content = listUrl;
 
   const r = REGIONS[currentRegion];
   const tabsHtml = Object.entries(REGIONS).map(([key, v]) =>
@@ -238,7 +239,6 @@ function renderGuDetail(guName, data) {
   document.getElementById('tw-title').content = document.title;
   document.getElementById('tw-desc').content = desc;
   document.getElementById('meta-desc').content = desc;
-  document.getElementById('meta-keywords').content = regionLabel+' '+guName+' 아파트 시세,'+guName+' 실거래가,'+guName+' 전세,'+regionLabel+' 부동산';
   const pageUrl = 'https://hwik.kr/gu.html?name=' + encodeURIComponent(guName);
   document.getElementById('canonical').href = pageUrl;
   document.getElementById('og-url').content = pageUrl;
@@ -435,7 +435,7 @@ function injectJsonLd(guName, data) {
       "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr" },
         { "@type": "ListItem", "position": 2, "name": _rLabel + " 구별 시세", "item": "https://hwik.kr/gu.html" },
-        { "@type": "ListItem", "position": 3, "name": guName, "item": "https://hwik.kr/gu.html?name=" + encodeURIComponent(guName) },
+        { "@type": "ListItem", "position": 3, "name": guName },
       ]
     });
     // ItemList
@@ -455,7 +455,7 @@ function injectJsonLd(guName, data) {
       "@type": "BreadcrumbList",
       "itemListElement": [
         { "@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr" },
-        { "@type": "ListItem", "position": 2, "name": "서울 구별 시세", "item": "https://hwik.kr/gu.html" },
+        { "@type": "ListItem", "position": 2, "name": "서울 구별 시세" },
       ]
     });
   }

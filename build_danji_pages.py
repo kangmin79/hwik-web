@@ -165,26 +165,20 @@ def extract_css_js():
         1,
     )
 
-    # ── JS 수정: canonical/og:url을 새 경로에 맞게 ──
+    # ── JS 수정: canonical/og:url을 항상 /danji/slug 형식으로 ──
     js = js.replace(
         "canonicalEl.href = `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;",
-        "canonicalEl.href = location.pathname.includes('/danji/')"
-        " ? `https://hwik.kr/danji/${encodeURIComponent(id)}`"
-        " : `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;",
+        "canonicalEl.href = `https://hwik.kr/danji/${encodeURIComponent(id)}`;",
     )
     js = js.replace(
         "if (ogUrl) ogUrl.content = `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;",
-        "if (ogUrl) ogUrl.content = location.pathname.includes('/danji/')"
-        " ? `https://hwik.kr/danji/${encodeURIComponent(id)}`"
-        " : `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;",
+        "if (ogUrl) ogUrl.content = `https://hwik.kr/danji/${encodeURIComponent(id)}`;",
     )
 
-    # ── JS 수정: 404 리다이렉트도 경로 호환 ──
+    # ── JS 수정: 404 리다이렉트도 /danji/ 형식으로 ──
     js = js.replace(
         "var fullUrl = 'https://hwik.kr/danji.html?id=' + encodeURIComponent(id);",
-        "var fullUrl = location.pathname.includes('/danji/')"
-        " ? 'https://hwik.kr/danji/' + encodeURIComponent(id)"
-        " : 'https://hwik.kr/danji.html?id=' + encodeURIComponent(id);",
+        "var fullUrl = 'https://hwik.kr/danji/' + encodeURIComponent(id);",
     )
 
     return css, js
@@ -590,7 +584,7 @@ def build_jsonld(d):
 
     graph = [
         {
-            "@type": "Residence",
+            "@type": "ApartmentComplex",
             "name": name,
             "address": {
                 "@type": "PostalAddress",
@@ -647,14 +641,25 @@ def build_jsonld(d):
             "name": f"{name} 전세가율은?",
             "acceptedAnswer": {"@type": "Answer", "text": f"{name}의 전세가율은 {jr}%입니다."},
         })
-    # 확장 FAQ (JSON-LD)
+    # 확장 FAQ (JSON-LD) — HTML faq 섹션과 텍스트/순서 동일하게
     high = d.get("all_time_high") or {}
     if bc and high.get(bc):
         h = high[bc]
+        a_text = f"역대 최고가는 {format_price(h.get('price'))}입니다."
+        if h.get("date"):
+            a_text += f" ({h['date']})"
         faq_items.append({
             "@type": "Question",
             "name": f"{name} 역대 최고가는?",
-            "acceptedAnswer": {"@type": "Answer", "text": f"전용 {bc}㎡ 역대 최고가는 {format_price(h.get('price'))}({h.get('date','')})입니다."},
+            "acceptedAnswer": {"@type": "Answer", "text": a_text},
+        })
+    subway = d.get("nearby_subway") or []
+    if subway:
+        a = ", ".join(f"{s.get('name','')}({clean_line(s.get('line',''))}) 도보 {walk_min(s.get('distance'))}" for s in subway[:3])
+        faq_items.append({
+            "@type": "Question",
+            "name": f"{name} 근처 지하철역은?",
+            "acceptedAnswer": {"@type": "Answer", "text": a},
         })
     year_ago_jl = find_year_ago_trade(d, bc) if bc else None
     if year_ago_jl and bc and rt.get(bc):
@@ -666,16 +671,8 @@ def build_jsonld(d):
             faq_items.append({
                 "@type": "Question",
                 "name": f"{name} 1년 전 가격은?",
-                "acceptedAnswer": {"@type": "Answer", "text": f"전용 {bc}㎡ 1년 전 거래가는 {format_price(old_p)}이었으며, 현재 {format_price(cur_p)}으로 {format_price(abs(diff))} {direction}했습니다."},
+                "acceptedAnswer": {"@type": "Answer", "text": f"전용 {bc}㎡ 기준 1년 전 거래가는 {format_price(old_p)}({year_ago_jl.get('date','')})이었으며, 현재 {format_price(cur_p)}으로 {format_price(abs(diff))} {direction}했습니다."},
             })
-    subway = d.get("nearby_subway") or []
-    if subway:
-        a = ", ".join(f"{s.get('name','')}({clean_line(s.get('line',''))}) 도보 {walk_min(s.get('distance'))}" for s in subway[:3])
-        faq_items.append({
-            "@type": "Question",
-            "name": f"{name} 근처 지하철역은?",
-            "acceptedAnswer": {"@type": "Answer", "text": a},
-        })
     school = d.get("nearby_school") or []
     if school:
         a = ", ".join(f"{s.get('name','')} 도보 {walk_min(s.get('distance'))}" for s in school[:3])
@@ -687,7 +684,7 @@ def build_jsonld(d):
     if d.get("total_units") and d.get("build_year"):
         u = d["total_units"]
         u_str = f"{u:,}" if isinstance(u, int) else str(u)
-        txt = f"{name}{josa(name,'은/는')} {d['build_year']}년 준공, 총 {u_str}세대입니다."
+        txt = f"{name}{josa(name,'은/는')} {d['build_year']}년 준공, 총 {u_str}세대 규모입니다."
         if d.get("builder"):
             txt += f" 시공사는 {d['builder']}입니다."
         faq_items.append({
@@ -809,6 +806,7 @@ def generate_page(d):
       {dong_nav}
       {name}
     </nav>
+    <img src="https://jqaxejgzkchxbfzgzyzi.supabase.co/storage/v1/object/public/og-images/danji/{hashlib.md5(did.encode('utf-8')).hexdigest()}.png" alt="{name} 실거래가 시세" width="600" height="315" loading="lazy" style="width:100%;border-radius:8px;margin-bottom:12px;">
     <h1 style="font-size:18px;font-weight:700;margin-bottom:8px;">{name} 실거래가</h1>
     {fallback}
   </div>

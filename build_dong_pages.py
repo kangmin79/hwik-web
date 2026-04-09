@@ -240,7 +240,9 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
     lines.append(f'  {esc(dong)}')
     lines.append(f'</nav>')
 
-    lines.append(f'<h2 style="font-size:18px;font-weight:700;margin-bottom:4px;">{esc(gu)} {esc(dong)} 아파트 시세</h2>')
+    og_hash = hashlib.md5(slug.encode('utf-8')).hexdigest()
+    lines.append(f'<img src="https://jqaxejgzkchxbfzgzyzi.supabase.co/storage/v1/object/public/og-images/dong/{og_hash}.png" alt="{esc(gu)} {esc(dong)} 아파트 시세" width="600" height="315" loading="lazy" style="width:100%;border-radius:8px;margin-bottom:12px;">')
+    lines.append(f'<h2 style="font-size:18px;font-weight:700;margin-bottom:4px;">{esc(gu)} {esc(dong)} 단지별 시세</h2>')
     lines.append(f'<p style="font-size:12px;color:#6b7280;margin-bottom:16px;">{len(tradeable)}개 단지 · 최근 매매가 높은 순</p>')
 
     # 인프라 태그
@@ -497,7 +499,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
             "@type": "ListItem",
             "position": i + 1,
             "name": d.get("complex_name", ""),
-            "url": f"https://hwik.kr/danji/{danji_slug}",
+            "url": f"https://hwik.kr/danji/{url_quote(danji_slug, safe='-')}",
         })
 
     jsonld = json.dumps({"@context": "https://schema.org", "@graph": [
