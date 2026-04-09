@@ -4,6 +4,7 @@ import { DISTRICT_COORDS, haversineDistance } from '../_shared/geo.ts'
 import { fixTypos } from '../_shared/typo.ts'
 import { getAuthUserId } from '../_shared/auth.ts'
 import { generateTags, TAG_WEIGHTS, extractExcludedTags } from '../_shared/tags.ts'
+import { parsePriceCondition, parseAreaCondition } from '../_shared/price.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://hwik.kr',
@@ -80,154 +81,17 @@ Deno.serve(async (req) => {
     }
     const wantedCategory = wantedCats[0] || null;
 
-    // 가격 범위 (더 정밀한 파싱)
-    let minPrice: number | null = null;
-    let maxPrice: number | null = null;
+    // 가격 범위 — shared 모듈 사용
+    const priceCondition = parsePriceCondition(allText, wantedTradeType || '');
+    let minPrice: number | null = priceCondition.minPrice;
+    let maxPrice: number | null = priceCondition.maxPrice;
 
-    // 가격 파싱 헬퍼 (억+천 조합)
-    function _parseKorPrice(s: string): number {
-      let total = 0;
-      const ek = s.match(/(\d+\.?\d*)\s*억/);
-      const ch = s.match(/(\d+)\s*천/);
-      const mn = s.match(/(\d+)\s*만/);
-      if (ek) total += parseFloat(ek[1]) * 10000;
-      if (ch) total += parseInt(ch[1]) * 1000;
-      if (mn) total += parseInt(mn[1]);
-      if (total > 0) return total;
-      const n = parseInt(s.replace(/[^\d]/g, ''));
-      return isNaN(n) ? 0 : n;
-    }
-
-    // ★ "3억 3억5천까지 가능/괜찮" (희망가 + 최대가)
-    const dualPrice = allText.match(/(\d+\.?\d*억(?:\s*\d+천)?)\s+(\d+\.?\d*억(?:\s*\d+천)?)\s*(?:까지|이하|이내|도|면)?\s*(?:가능|괜찮|OK|ok|됩니다|돼요|상관없|무방)/i);
-    if (dualPrice) {
-      minPrice = _parseKorPrice(dualPrice[1]);
-      maxPrice = _parseKorPrice(dualPrice[2]);
-      if (minPrice > maxPrice) { const t = minPrice; minPrice = maxPrice; maxPrice = t; }
-    }
-    // "3억~5억" / "3억에서 5억"
-    if (!maxPrice) {
-      const rangeMatch = allText.match(/(\d+\.?\d*)\s*억\s*(?:~|에서|부터)\s*(\d+\.?\d*)\s*억/);
-      if (rangeMatch) {
-        minPrice = parseFloat(rangeMatch[1]) * 10000;
-        maxPrice = parseFloat(rangeMatch[2]) * 10000;
-      }
-    }
-    // "3억5천 이내/이하/미만/까지/밑으로/내로/안넘는/넘지않게"
-    if (!maxPrice) {
-      const maxMatch = allText.match(/(\d+\.?\d*)\s*억\s*(\d+)?\s*천?\s*(?:이내|이하|미만|까지|밑으로|내로|안넘는|못넘는|넘지\s*않게|안넘게|초과\s*안)/);
-      if (maxMatch) maxPrice = parseFloat(maxMatch[1]) * 10000 + (maxMatch[2] ? parseInt(maxMatch[2]) * 1000 : 0);
-    }
-    // "5천만원 이내" / "5천 이하"
-    if (!maxPrice) {
-      const chun = allText.match(/(\d+)\s*천\s*(?:만원?)?\s*(?:이내|이하|밑으로|까지|넘지\s*않게)/);
-      if (chun) maxPrice = parseInt(chun[1]) * 1000;
-    }
-    // "2억에서 3억 사이"
-    if (!maxPrice) {
-      const betw = allText.match(/(\d+\.?\d*)\s*억\s*(?:에서|부터)\s*(\d+\.?\d*)\s*억\s*(?:사이|까지)/);
-      if (betw) { minPrice = parseFloat(betw[1]) * 10000; maxPrice = parseFloat(betw[2]) * 10000; }
-    }
-    // "3억 이상/초과/넘는/부터/위로"
-    if (!minPrice) {
-      const minMatch = allText.match(/(\d+\.?\d*)\s*억\s*(?:이상|초과|넘는|부터|위로|넘게)/);
-      if (minMatch) minPrice = parseFloat(minMatch[1]) * 10000;
-    }
-    // "3억선" / "3억대" / "3억 정도/쯤/내외/안팎/전후/언저리" → ±15%
-    if (!maxPrice && !minPrice) {
-      const approx = allText.match(/(\d+\.?\d*)\s*억\s*(?:\d*천?\s*)?(?:정도|쯤|선에서|선|대|내외|안팎|전후|언저리)/);
-      if (approx) {
-        const base = parseFloat(approx[1]) * 10000;
-        minPrice = Math.round(base * 0.85);
-        maxPrice = Math.round(base * 1.15);
-      }
-    }
-    // 가격만 단독 ("3억") → 희망가 ±15%
-    if (!maxPrice && !minPrice) {
-      const barePrice = allText.match(/(\d+\.?\d*)\s*억/);
-      if (barePrice) {
-        const base = parseFloat(barePrice[1]) * 10000;
-        minPrice = Math.round(base * 0.85);
-        maxPrice = Math.round(base * 1.15);
-      }
-    }
-    // 월세: 보증금과 월세금 — DB 필드 우선, 없으면 텍스트 파싱
-    let wantedDeposit: number | null = (clientCard as any).deposit || null;
-    let wantedMonthly: number | null = (clientCard as any).monthly_rent || null;
-    let maxDeposit: number | null = null;
-    let maxMonthly: number | null = null;
+    // 월세: DB 필드 우선, 없으면 shared 파싱 결과
+    let wantedDeposit: number | null = (clientCard as any).deposit || priceCondition.deposit;
+    let wantedMonthly: number | null = (clientCard as any).monthly_rent || priceCondition.monthly;
+    let maxDeposit: number | null = priceCondition.maxDeposit;
+    let maxMonthly: number | null = priceCondition.maxMonthly;
     if (wantedTradeType === '월세') {
-      // "보800/월50" "보증금800/월세50" 약어 패턴 (가장 흔한 표기)
-      const boWolMatch = allText.match(/보(?:증금)?\s*(\d[\d,]*)\s*\/\s*월(?:세)?\s*(\d[\d,]*)/);
-      if (boWolMatch) {
-        wantedDeposit = parseInt(boWolMatch[1].replace(/,/g, ''));
-        wantedMonthly = parseInt(boWolMatch[2].replace(/,/g, ''));
-      }
-      // "보증금 1000~2000" 범위
-      if (!wantedDeposit) {
-        const depRange = allText.match(/보(?:증금)?\s*(\d+)\s*[~에서]\s*(\d+)/);
-        if (depRange) { wantedDeposit = parseInt(depRange[1]); maxDeposit = parseInt(depRange[2]); }
-      }
-      // "월세 30~50" 범위
-      if (!wantedMonthly) {
-        const monRange = allText.match(/월(?:세)?\s*(\d+)\s*[~에서]\s*(\d+)/);
-        if (monRange) { wantedMonthly = parseInt(monRange[1]); maxMonthly = parseInt(monRange[2]); }
-      }
-      // 단일 보증금 ("보증금800" 또는 "보800")
-      if (!wantedDeposit) {
-        const depMatch = allText.match(/보(?:증금)?\s*(\d[\d,]*)/);
-        if (depMatch) wantedDeposit = parseInt(depMatch[1].replace(/,/g, ''));
-      }
-      // 단일 월세
-      if (!wantedMonthly) {
-        const monMatch = allText.match(/월(?:세)?\s*(\d+)/);
-        if (monMatch) wantedMonthly = parseInt(monMatch[1]);
-      }
-      // "1000/50" 패턴
-      if (!wantedDeposit && !wantedMonthly) {
-        const slashMatch = allText.match(/(\d+)\s*\/\s*(\d+)/);
-        if (slashMatch) {
-          wantedDeposit = parseInt(slashMatch[1]);
-          wantedMonthly = parseInt(slashMatch[2]);
-        }
-      }
-      // "천에 50" / "오백에 30" 패턴 (말하듯 입력)
-      if (!wantedDeposit && !wantedMonthly) {
-        const koMatch = allText.match(/([\d]+천|[\d]+백|[\d]+억|천|오백|이천|삼천|오천)\s*에\s*(\d+)/);
-        if (koMatch) {
-          let dep = koMatch[1];
-          if (dep === '천') dep = '1000';
-          else if (dep === '오백') dep = '500';
-          else if (dep === '이천') dep = '2000';
-          else if (dep === '삼천') dep = '3000';
-          else if (dep === '오천') dep = '5000';
-          else if (dep.includes('억')) dep = String(parseInt(dep) * 10000);
-          else if (dep.includes('천')) dep = String(parseInt(dep) * 1000);
-          else if (dep.includes('백')) dep = String(parseInt(dep) * 100);
-          wantedDeposit = parseInt(dep);
-          wantedMonthly = parseInt(koMatch[2]);
-        }
-      }
-      // "1000/50 2000/40도 가능" — 두 번째 조건이 max
-      const dualSlash = allText.match(/(\d+)\s*\/\s*(\d+)\s+(\d+)\s*\/\s*(\d+)\s*(?:도|면|까지)?\s*(?:가능|괜찮|OK)/i);
-      if (dualSlash) {
-        wantedDeposit = parseInt(dualSlash[1]);
-        wantedMonthly = parseInt(dualSlash[2]);
-        maxDeposit = parseInt(dualSlash[3]);
-        maxMonthly = parseInt(dualSlash[4]);
-      }
-      // "무보증" / "보증금 없이"
-      if (/무보증|보증금\s*없|보증금\s*0/.test(allText)) { wantedDeposit = 0; maxDeposit = 0; }
-      // "보증금 2000 이하/까지/이내/넘지않게"
-      if (!maxDeposit) {
-        const depMax = allText.match(/보증금\s*(\d+)\s*(?:이하|까지|이내|넘지\s*않게|미만)/);
-        if (depMax) maxDeposit = parseInt(depMax[1]);
-      }
-      // "월세 50 이하/까지"
-      if (!maxMonthly) {
-        const monMax = allText.match(/월(?:세)?\s*(\d+)\s*(?:이하|까지|이내|넘지\s*않게|미만)/);
-        if (monMax) maxMonthly = parseInt(monMax[1]);
-      }
       maxPrice = null;
       minPrice = null;
     }
@@ -249,29 +113,10 @@ Deno.serve(async (req) => {
       if (guShort) wantedLocation = guShort[1] + '구';
     }
 
-    // 평수/면적
-    let wantedMinArea: number | null = null;
-    let wantedMaxArea: number | null = null;
-    // "30평대" → 30~39
-    const areaDaeMatch = allText.match(/(\d+)\s*평\s*대/);
-    if (areaDaeMatch) { wantedMinArea = parseInt(areaDaeMatch[1]); wantedMaxArea = parseInt(areaDaeMatch[1]) + 9; }
-    // "25평 내외" → ±10%
-    if (!wantedMinArea) { const areaNaeMatch = allText.match(/(\d+)\s*평\s*내외/); if (areaNaeMatch) { const p = parseInt(areaNaeMatch[1]); wantedMinArea = Math.round(p * 0.9); wantedMaxArea = Math.round(p * 1.1); } }
-    // "20평 이상" / "최소 20평" / "적어도 25평" / "20평 넘는"
-    if (!wantedMinArea) { const areaMinMatch = allText.match(/(?:최소|적어도)?\s*(\d+)\s*평\s*(?:이상|넘는|넘게)/); if (areaMinMatch) wantedMinArea = parseInt(areaMinMatch[1]); }
-    if (!wantedMinArea) { const areaMinMatch2 = allText.match(/(?:최소|적어도)\s*(\d+)\s*평/); if (areaMinMatch2) wantedMinArea = parseInt(areaMinMatch2[1]); }
-    // "20평 이하" / "최대 25평"
-    if (!wantedMaxArea) { const areaMaxMatch = allText.match(/(?:최대)?\s*(\d+)\s*평\s*(?:이하|까지|미만)/); if (areaMaxMatch) wantedMaxArea = parseInt(areaMaxMatch[1]); }
-    if (!wantedMaxArea) { const areaMaxMatch2 = allText.match(/최대\s*(\d+)\s*평/); if (areaMaxMatch2) wantedMaxArea = parseInt(areaMaxMatch2[1]); }
-    // "20평~30평" / "20평에서 30평 사이"
-    if (!wantedMinArea && !wantedMaxArea) { const areaRange = allText.match(/(\d+)\s*평\s*[~에서]\s*(\d+)\s*평/); if (areaRange) { wantedMinArea = parseInt(areaRange[1]); wantedMaxArea = parseInt(areaRange[2]); } }
-    // "넓은 집" → 30평 이상 / "소형" → 15평 이하
-    if (!wantedMinArea && !wantedMaxArea) {
-      if (/넓은\s*집|넓은\s*곳/.test(allText)) wantedMinArea = 30;
-      else if (/소형|작은\s*집/.test(allText)) wantedMaxArea = 15;
-    }
-    // 숫자만 ("25평") → ±5
-    if (!wantedMinArea && !wantedMaxArea) { const areaMatch = allText.match(/(\d+)\s*평/); if (areaMatch) { const p = parseInt(areaMatch[1]); wantedMinArea = Math.max(p - 5, 1); wantedMaxArea = p + 5; } }
+    // 평수/면적 — shared 모듈 사용
+    const areaCondition = parseAreaCondition(allText);
+    let wantedMinArea: number | null = areaCondition.minArea;
+    let wantedMaxArea: number | null = areaCondition.maxArea;
 
     // 방 수
     let wantedRooms: number | null = null;
