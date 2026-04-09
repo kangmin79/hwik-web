@@ -25,6 +25,7 @@ CREATE POLICY "cards_select_shared" ON cards FOR SELECT
       SELECT cs.card_id FROM card_shares cs
       JOIN share_room_members srm ON srm.room_id = cs.room_id
       WHERE srm.member_id = auth.uid()
+        AND srm.status = 'accepted'
     )
   );
 
@@ -72,6 +73,9 @@ CREATE POLICY "card_shares_select_member" ON card_shares FOR SELECT
 
 CREATE POLICY "card_shares_insert_own" ON card_shares FOR INSERT
   WITH CHECK (card_id IN (SELECT id FROM cards WHERE agent_id = auth.uid()::text));
+
+CREATE POLICY "card_shares_delete_own" ON card_shares FOR DELETE
+  USING (card_id IN (SELECT id FROM cards WHERE agent_id = auth.uid()::text));
 
 -- 6. share_room_members (member_id = uuid)
 ALTER TABLE share_room_members ENABLE ROW LEVEL SECURITY;
