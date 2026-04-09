@@ -774,7 +774,7 @@ const Auth = (() => {
 const Data = (() => {
   const sb = () => Auth.sb;
   const uid = () => Auth.user?.id;
-  const PAGE = 20;
+  const PAGE = 50;
   let _guard = 0;
 
   const cache = { myCards:[], clientCards:[], sharedCards:[], rooms:[], pendingInvites:[], memos:[], counts:{} };
@@ -3412,6 +3412,10 @@ const PanelClient = (() => {
         </div>
         ${c.contact_phone?`<span class="client-phone">${esc(c.contact_phone)}</span>`:''}
       </div>`;});
+    // 더보기 (PAGE 이상이면 다음 페이지 있을 수 있음)
+    if(cards.length>=PAGE && !cQuery.trim()){
+      html+=`<div style="text-align:center;padding:16px 0;"><button onclick="PanelClient._loadMore()" style="padding:10px 32px;border-radius:10px;border:1.5px solid var(--primary);background:transparent;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer;">더보기</button></div>`;
+    }
     // 계약완료 손님 (접히는 섹션)
     if(completedCards.length){
       html+=`<div style="margin-top:16px;border-top:1px solid var(--border);padding-top:12px;">
@@ -3794,6 +3798,12 @@ const PanelClient = (() => {
     } else { Toast.show('상태 변경 실패'); }
   }
 
+  async function _loadMore(){
+    const off=Data.cache.clientCards.length;
+    await Data.loadClientCards(off,false);
+    _renderList();
+  }
+
   const _CLIENT_STATUSES = ['탐색중','급해요','협의중','계약완료'];
   async function _changeClientStatus(cardId, el) {
     const cur = el.textContent.trim();
@@ -3809,7 +3819,7 @@ const PanelClient = (() => {
     } else { Toast.show('상태 변경 실패'); }
   }
 
-  return { render, registerClient, toggleReg, _addRecent, setFilter, setTradeFilter, setCatFilter, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact, selectClient, closeDetail, detailTab, toggleMatchSel, _hasSelectedClient, _stageTag, _changeClientStatus, _deleteClient, _quickStatus };
+  return { render, registerClient, toggleReg, _addRecent, setFilter, setTradeFilter, setCatFilter, setSort, onQ, onQEnter, renderSub, pvNote, saveNote, noteDel, noteDone, reMatch, editClient, saveClientEdit, saveContact, selectClient, closeDetail, detailTab, toggleMatchSel, _hasSelectedClient, _stageTag, _changeClientStatus, _deleteClient, _quickStatus, _loadMore };
 })();
 
 /* ═══════════════════════════════════════════════════════════
