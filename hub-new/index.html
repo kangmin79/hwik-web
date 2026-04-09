@@ -4138,7 +4138,7 @@ const PanelAlert = (() => {
           <div class="tl-text" style="${done?'text-decoration:line-through;':''}${past?'color:#dc2626;font-weight:700;':''}">${esc(a.content||'')}</div>
           <div class="tl-date">${new Date(a.alert_date).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}${past?' ⚠️ 지연':''}${done?' ✅':''}</div>
         </div>
-        ${isPersonal&&!done?`<button onclick="event.stopPropagation();PanelAlert.donePersonal('${a.id}')" style="padding:4px 10px;border-radius:6px;border:none;background:#10b981;color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">완료</button>`:''}
+        ${!done?`<button onclick="event.stopPropagation();PanelAlert.doneAlert('${a.id}',${day})" style="padding:4px 10px;border-radius:6px;border:none;background:#10b981;color:#fff;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">완료</button>`:''}
       </div>`;
     });
     detail.innerHTML=h;
@@ -4168,10 +4168,13 @@ const PanelAlert = (() => {
     Toast.show('일정 추가됨');inp.value='';
     await _renderCal();selectDate(day);
   }
-  async function donePersonal(noteId){
+  async function donePersonal(noteId){ await doneAlert(noteId); }
+  async function doneAlert(noteId,day){
     await Auth.sb.from('client_notes').update({alert_done:true}).eq('id',noteId);
     Toast.show('완료 처리됨');
-    await _renderCal();await Data.loadCounts();Hub.render();
+    await _renderCal();
+    if(day) selectDate(day);
+    await Data.loadCounts();Hub.render();
   }
 
   async function calNav(dir){calMonth+=dir;if(calMonth>12){calMonth=1;calYear++;}if(calMonth<1){calMonth=12;calYear--;}await _renderCal();}
@@ -4227,7 +4230,7 @@ const PanelAlert = (() => {
     const el=document.getElementById('panelContent');if(el)render(el);
   }
 
-  return { render, renderSub, calNav, selectDate, goToClient, acceptInvite, rejectInvite, addPersonal, donePersonal };
+  return { render, renderSub, calNav, selectDate, goToClient, acceptInvite, rejectInvite, addPersonal, donePersonal, doneAlert };
 })();
 
 /* ═══════════════════════════════════════════════════════════
