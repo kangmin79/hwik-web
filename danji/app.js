@@ -606,21 +606,8 @@ function render() {
   renderRankBadge();
 }
 
-// ── Chart.js 동적 로딩 ──
-async function loadChartJs() {
-  if (window.Chart) return;
-  await new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js';
-    s.onload = resolve;
-    s.onerror = reject;
-    document.head.appendChild(s);
-  });
-}
-
 // ── 차트 (scatter — 점 하나 = 실거래 1건) ──
-async function drawChart() {
-  await loadChartJs();
+function drawChart() {
   const canvas = document.getElementById('priceChart');
   if (!canvas) return;
 
