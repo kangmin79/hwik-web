@@ -440,9 +440,9 @@
   .panel.panel-center {
     flex-direction: column;
     justify-content: flex-start;
-    padding: 0 20px 12px;
-    max-height: calc(100dvh - 72px);
-    overflow: hidden;
+    padding: 0 20px 80px;
+    max-height: calc(100dvh - 60px);
+    overflow-y: auto;
   }
 
   .panel-title {
@@ -480,7 +480,8 @@
 
   .client-input {
     width: 100%;
-    height: calc(100dvh - 300px);
+    min-height: 200px;
+    max-height: calc(100dvh - 340px);
     padding: 20px;
     font-size: 16px;
     font-family: 'Noto Sans KR', sans-serif;
