@@ -434,7 +434,13 @@ def build_fallback_html(d):
     if nearby:
         lines.append('<h2 style="font-size:14px;font-weight:600;margin:16px 0 8px;">주변 단지</h2>')
         lines.append('<ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;">')
-        for n in nearby[:5]:
+        shown = 0
+        for n in nearby:
+            if shown >= 5:
+                break
+            nid = n.get("id", "")
+            if nid not in DANJI_SLUG_MAP:
+                continue  # 페이지 미생성 단지 스킵
             prices = n.get("prices") or {}
             nbest = None
             ndiff = 999
@@ -444,12 +450,12 @@ def build_fallback_html(d):
                     ndiff = diff
                     nbest = v
             p = format_price(nbest.get("price")) if nbest and nbest.get("price") else "-"
-            nid = n.get("id", "")
             nname_raw = n.get("name", "")
             nloc_raw = n.get("location", "")
-            nslug = make_slug(nname_raw, nloc_raw, nid, d.get("address", ""))
+            nslug = DANJI_SLUG_MAP[nid]
             nname = esc(nname_raw)
             nloc = esc(nloc_raw)
+            shown += 1
             lines.append(
                 f'<li><a href="/danji/{url_quote(nslug, safe="-")}" style="display:flex;justify-content:space-between;'
                 f'padding:10px 12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">'
@@ -870,6 +876,19 @@ def main():
         f.write(js)
     print(f"  app.js ({len(js):,} bytes)")
 
+    # id → slug 맵 (주변 단지 링크용 — 거래 있는 단지만)
+    global DANJI_SLUG_MAP
+    DANJI_SLUG_MAP = {}
+    for d in all_danji:
+        did = d.get("id", "")
+        if not did:
+            continue
+        rt = d.get("recent_trade") or {}
+        cats = d.get("categories") or []
+        if any(rt.get(c) for c in cats):
+            DANJI_SLUG_MAP[did] = make_slug(d.get("complex_name", ""), d.get("location", ""), did, d.get("address", ""))
+    print(f"slug 맵: {len(DANJI_SLUG_MAP)}개 (거래 있는 단지만)")
+
     count = 0
     skipped = 0
     for d in all_danji:
@@ -883,7 +902,7 @@ def main():
             skipped += 1
             continue
 
-        slug = make_slug(d.get("complex_name", ""), d.get("location", ""), did, d.get("address", ""))
+        slug = DANJI_SLUG_MAP.get(did, make_slug(d.get("complex_name", ""), d.get("location", ""), did, d.get("address", "")))
         page = generate_page(d)
         path = os.path.join(DANJI_DIR, f"{slug}.html")
         with open(path, "w", encoding="utf-8") as f:
