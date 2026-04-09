@@ -3366,7 +3366,7 @@ const PanelClient = (() => {
     // 완료는 최근순
     completedCards.sort((a,b)=>new Date(b.updated_at||b.created_at)-new Date(a.updated_at||a.created_at));
 
-    _renderItems([...contractCards,...recentCards,...restCards], recentCards.length, contractCount, noteMap, completedCards);
+    _renderItems([...contractCards,...recentCards,...restCards], recentCards.length, contractCards.length, noteMap, completedCards);
   }
 
   function _stageTag(lastNoteType){
