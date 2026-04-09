@@ -739,7 +739,7 @@ const Auth = (() => {
 
   async function loadProfile(uid) {
     const id = uid || user?.id; if (!id) return null;
-    const { data } = await sb.from('profiles').select('business_name,agent_name,phone,address,og_version,profile_photo_url').eq('id',id).maybeSingle();
+    const { data } = await sb.from('profiles').select('business_name,agent_name,phone,address,og_version,profile_photo_url,profile_photo').eq('id',id).maybeSingle();
     profile = data;
     if (data) localStorage.setItem('hwik_agent', JSON.stringify({ name:data.agent_name||'', office:data.business_name||'', phone:data.phone||'', address:data.address||'', isAdmin:false }));
     return data;
