@@ -824,7 +824,7 @@ const Data = (() => {
 
   async function loadClientDetail(cardId) {
     const [notesRes, matchRes] = await Promise.all([
-      sb().from('client_notes').select('id,type,content,alert_date,alert_done,created_at,related_card_id').eq('client_card_id',cardId).order('created_at',{ascending:false}),
+      sb().from('client_notes').select('id,type,content,alert_date,alert_done,created_at,related_card_id').eq('client_card_id',cardId).eq('agent_id',uid()).order('created_at',{ascending:false}),
       fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/match-properties`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+(Auth.getToken()),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({client_card_id:cardId,limit:10,threshold:0.15})}).then(r=>{if(!r.ok)throw new Error('매칭 서버 에러');return r.json();}).catch(e=>{Toast.show(e.message||'매칭 조회 실패','error');return {results:[]};})
     ]);
     return { notes:notesRes.data||[], matches:matchRes.results||[] };
@@ -897,7 +897,7 @@ const Data = (() => {
     }
     return result;
   }
-  async function unshareCard(cardId,roomId) { let q=sb().from('card_shares').delete().eq('card_id',cardId); if(roomId) q=q.eq('room_id',roomId); return q; }
+  async function unshareCard(cardId,roomId) { let q=sb().from('card_shares').delete().eq('card_id',cardId).eq('shared_by',uid()); if(roomId) q=q.eq('room_id',roomId); return q; }
 
   async function deleteCard(cardId) {
     // 관련 데이터 정리 (에러 무시 — 본체 삭제가 우선)
@@ -996,12 +996,12 @@ const Data = (() => {
     cache.memos = data||[];
     return cache.memos;
   }
-  async function deleteMemo(id) { return sb().from('memos').delete().eq('id',id); }
+  async function deleteMemo(id) { return sb().from('memos').delete().eq('id',id).eq('agent_id',uid()); }
   async function markMemoRead(id) { return sb().from('memos').update({is_read:true}).eq('id',id); }
 
   async function saveClientNote(cardId, nd) { return sb().from('client_notes').insert({client_card_id:cardId,agent_id:uid(),type:nd.type||'메모',content:nd.content,alert_date:nd.alert_date||null,alert_done:false}); }
-  async function deleteClientNote(noteId) { return sb().from('client_notes').delete().eq('id',noteId); }
-  async function updateNoteAlertDone(noteId,done) { return sb().from('client_notes').update({alert_done:done}).eq('id',noteId); }
+  async function deleteClientNote(noteId) { return sb().from('client_notes').delete().eq('id',noteId).eq('agent_id',uid()); }
+  async function updateNoteAlertDone(noteId,done) { return sb().from('client_notes').update({alert_done:done}).eq('id',noteId).eq('agent_id',uid()); }
 
   async function matchCoords(property) {
     if (!property) return {lat:null,lng:null};
