@@ -17,7 +17,11 @@ export async function getAuthUserId(req: Request): Promise<string | null> {
 
     // JWT 서명 검증 (HMAC-SHA256)
     const jwtSecret = Deno.env.get('JWT_SECRET');
-    if (jwtSecret) {
+    if (!jwtSecret) {
+      console.error('JWT_SECRET 환경변수 미설정 — 인증 거부');
+      return null;
+    }
+    {
       const encoder = new TextEncoder();
       const key = await crypto.subtle.importKey(
         'raw', encoder.encode(jwtSecret),

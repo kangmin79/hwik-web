@@ -867,8 +867,8 @@ const Data = (() => {
     }
     return { data, error };
   }
-  async function deleteRoom(roomId) { return sb().from('share_rooms').delete().eq('id',roomId); }
-  async function renameRoom(roomId,name) { return sb().from('share_rooms').update({name}).eq('id',roomId); }
+  async function deleteRoom(roomId) { return sb().from('share_rooms').delete().eq('id',roomId).eq('owner_id',uid()); }
+  async function renameRoom(roomId,name) { return sb().from('share_rooms').update({name}).eq('id',roomId).eq('owner_id',uid()); }
   async function leaveRoom(roomId) { return sb().from('share_room_members').delete().eq('room_id',roomId).eq('member_id',uid()); }
 
   async function inviteMember(roomId, phone) {
@@ -909,7 +909,7 @@ const Data = (() => {
     ]);
     return sb().from('cards').delete().eq('id',cardId).eq('agent_id',uid());
   }
-  async function updateTradeStatus(cardId,st) { const {error}=await sb().from('cards').update({trade_status:st}).eq('id',cardId); if(!error&&st==='완료') await sb().from('card_shares').delete().eq('card_id',cardId); return {error}; }
+  async function updateTradeStatus(cardId,st) { const {error}=await sb().from('cards').update({trade_status:st}).eq('id',cardId).eq('agent_id',uid()); if(!error&&st==='완료') await sb().from('card_shares').delete().eq('card_id',cardId); return {error}; }
 
   async function uploadPhotos(cardId, files) {
     const results = []; let failCount = 0;
@@ -1091,31 +1091,31 @@ const Data = (() => {
         if(dong)q=q.ilike('umd_nm',`%${dong}%`);else if(gu)q=q.ilike('sgg',`%${gu}%`);
         const{data}=await q.limit(3);
         // 1건만 매칭되면 확실 → 좌표 사용
-        if(data?.length===1&&data[0].lat){await sb().from('cards').update({lat:data[0].lat,lng:data[0].lon}).eq('id',cardId);return;}
+        if(data?.length===1&&data[0].lat){await sb().from('cards').update({lat:data[0].lat,lng:data[0].lon}).eq('id',cardId).eq('agent_id',uid());return;}
         // 여러 건이면 가장 이름 유사한 것 선택
         if(data?.length>1){
           const exact=data.find(d=>d.kapt_name?.replace(/\s/g,'').includes(complex.replace(/\s/g,'')));
-          if(exact?.lat){await sb().from('cards').update({lat:exact.lat,lng:exact.lon}).eq('id',cardId);return;}
+          if(exact?.lat){await sb().from('cards').update({lat:exact.lat,lng:exact.lon}).eq('id',cardId).eq('agent_id',uid());return;}
           // 정확 매칭 없으면 → 건너뜀 (틀린 좌표보다 없는 게 나음)
         }
       }
     }
     // 역이름
     const stM=allText.match(/(\S+역)/);
-    if(stM){const nm=stM[1].replace('역','');if(nm.length>=1){const{data}=await sb().from('stations').select('lat,lon').ilike('name','%'+nm+'%').limit(1);if(data?.[0]){await sb().from('cards').update({lat:data[0].lat,lng:data[0].lon}).eq('id',cardId);return;}}}
+    if(stM){const nm=stM[1].replace('역','');if(nm.length>=1){const{data}=await sb().from('stations').select('lat,lon').ilike('name','%'+nm+'%').limit(1);if(data?.[0]){await sb().from('cards').update({lat:data[0].lat,lng:data[0].lon}).eq('id',cardId).eq('agent_id',uid());return;}}}
     // 학교
     const schM=allText.match(/(\S+(?:대학교|대학|초등학교|중학교|고등학교|초|중|고))/);
-    if(schM){const nm=schM[1].replace(/대학교|대학|초등학교|중학교|고등학교/g,'').replace(/[대초중고]$/,'');if(nm.length>=1){const{data}=await sb().from('schools').select('lat,lon').ilike('name','%'+nm+'%').limit(1);if(data?.[0]){await sb().from('cards').update({lat:data[0].lat,lng:data[0].lon}).eq('id',cardId);return;}}}
+    if(schM){const nm=schM[1].replace(/대학교|대학|초등학교|중학교|고등학교/g,'').replace(/[대초중고]$/,'');if(nm.length>=1){const{data}=await sb().from('schools').select('lat,lon').ilike('name','%'+nm+'%').limit(1);if(data?.[0]){await sb().from('cards').update({lat:data[0].lat,lng:data[0].lon}).eq('id',cardId).eq('agent_id',uid());return;}}}
     // 구 이름→DISTRICT_COORDS 좌표
     const guCoords={'강남구':{lat:37.5172,lng:127.0473},'강동구':{lat:37.5301,lng:127.1238},'강북구':{lat:37.6397,lng:127.0255},'강서구':{lat:37.5510,lng:126.8496},'관악구':{lat:37.4784,lng:126.9516},'광진구':{lat:37.5384,lng:127.0822},'구로구':{lat:37.4954,lng:126.8874},'금천구':{lat:37.4519,lng:126.9020},'노원구':{lat:37.6542,lng:127.0568},'도봉구':{lat:37.6688,lng:127.0471},'동대문구':{lat:37.5744,lng:127.0400},'동작구':{lat:37.5124,lng:126.9393},'마포구':{lat:37.5633,lng:126.9085},'서대문구':{lat:37.5791,lng:126.9368},'서초구':{lat:37.4836,lng:127.0327},'성동구':{lat:37.5633,lng:127.0371},'성북구':{lat:37.5894,lng:127.0167},'송파구':{lat:37.5145,lng:127.1059},'양천구':{lat:37.5170,lng:126.8665},'영등포구':{lat:37.5264,lng:126.8963},'용산구':{lat:37.5326,lng:126.9906},'은평구':{lat:37.6027,lng:126.9291},'종로구':{lat:37.5735,lng:126.9790},'중구':{lat:37.5641,lng:126.9979},'중랑구':{lat:37.6063,lng:127.0925}};
     const guM=allText.match(/([\uAC00-\uD7AF]+구)/);
-    if(guM&&guCoords[guM[1]]){await sb().from('cards').update({lat:guCoords[guM[1]].lat,lng:guCoords[guM[1]].lng}).eq('id',cardId);return;}
+    if(guM&&guCoords[guM[1]]){await sb().from('cards').update({lat:guCoords[guM[1]].lat,lng:guCoords[guM[1]].lng}).eq('id',cardId).eq('agent_id',uid());return;}
     // 동네명→역
     const dongs=['홍대','합정','상수','망원','연남','공덕','잠실','문정','가락','석촌','역삼','삼성','대치','논현','신사','청담','압구정','반포','서초','방배','이태원','한남','성수','건대','여의도','당산','천호','사당','신림','강남','신촌','종로','명동','혜화','왕십리','용산','동대문','신도림','구로','노원','수유'];
-    for(const d of dongs){if(allText.includes(d)){const{data}=await sb().from('stations').select('lat,lon').ilike('name','%'+d+'%').limit(1);if(data?.[0]){await sb().from('cards').update({lat:data[0].lat,lng:data[0].lon}).eq('id',cardId);return;}}}
+    for(const d of dongs){if(allText.includes(d)){const{data}=await sb().from('stations').select('lat,lon').ilike('name','%'+d+'%').limit(1);if(data?.[0]){await sb().from('cards').update({lat:data[0].lat,lng:data[0].lon}).eq('id',cardId).eq('agent_id',uid());return;}}}
     // 최종 fallback: 카카오 API로 동 좌표 검색
     const locQuery=p.location||allText.match(/([\uAC00-\uD7AF]+구\s*[\uAC00-\uD7AF]+동)/)?.[1];
-    if(locQuery){try{const res=await fetch(`https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(locQuery)}&size=1`,{headers:{'Authorization':`KakaoAK ${HWIK_CONFIG.KAKAO_REST_KEY}`}});const d=await res.json();if(d.documents?.[0]){await sb().from('cards').update({lat:parseFloat(d.documents[0].y),lng:parseFloat(d.documents[0].x)}).eq('id',cardId);return;}}catch(_){}}
+    if(locQuery){try{const res=await fetch(`https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(locQuery)}&size=1`,{headers:{'Authorization':`KakaoAK ${HWIK_CONFIG.KAKAO_REST_KEY}`}});const d=await res.json();if(d.documents?.[0]){await sb().from('cards').update({lat:parseFloat(d.documents[0].y),lng:parseFloat(d.documents[0].x)}).eq('id',cardId).eq('agent_id',uid());return;}}catch(_){}}
   }
 
   function triggerAutoMatch(cardId) { fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/auto-match`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({card_id:cardId})}).catch(e=>console.warn('auto-match failed:',e)); }
@@ -1270,9 +1270,11 @@ function featTag(f){
 }
 
 // 전화번호 클릭: PC→복사, 모바일→전화
+function escJs(s){return (s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'\\"').replace(/</g,'\\x3c');}
 function phoneLink(phone){
   if(!phone)return '';
-  return `<span style="color:#60a5fa;cursor:pointer;text-decoration:underline;" onclick="event.preventDefault();event.stopPropagation();if(/Mobi|Android/i.test(navigator.userAgent)){location.href='tel:${esc(phone)}';}else{navigator.clipboard.writeText('${esc(phone)}');Toast.show('번호 복사됨');}">${esc(phone)}</span>`;
+  const safe=escJs(phone.replace(/[^0-9\-+]/g,''));
+  return `<span style="color:#60a5fa;cursor:pointer;text-decoration:underline;" onclick="event.preventDefault();event.stopPropagation();if(/Mobi|Android/i.test(navigator.userAgent)){location.href='tel:${safe}';}else{navigator.clipboard.writeText('${safe}');Toast.show('번호 복사됨');}">${esc(phone)}</span>`;
 }
 
 // 중개사 사무실 주소에서 구 이름 추출 (예시용)
@@ -2070,7 +2072,7 @@ const Hub = (() => {
           </div>
           <div style="font-size:13px;color:var(--text-sub);margin-top:2px;">${conds}</div>
           <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
-            ${card.contact_phone?`<span style="font-size:13px;font-weight:600;">${esc(card.contact_phone)}</span><button onclick="navigator.clipboard.writeText('${esc(card.contact_phone)}');Toast.show('복사됨')" style="padding:2px 8px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-light);font-size:10px;cursor:pointer;">복사</button>`:''}<span style="font-size:11px;color:var(--text-light);">${dateStr}</span>
+            ${card.contact_phone?`<span style="font-size:13px;font-weight:600;">${esc(card.contact_phone)}</span><button onclick="navigator.clipboard.writeText('${escJs((card.contact_phone||"").replace(/[^0-9\\-+]/g,""))}');Toast.show('복사됨')" style="padding:2px 8px;border-radius:4px;border:1px solid var(--border);background:transparent;color:var(--text-light);font-size:10px;cursor:pointer;">복사</button>`:''}<span style="font-size:11px;color:var(--text-light);">${dateStr}</span>
           </div>
         </div>
         <button onclick="PanelClient.editClient('${card.id}')" style="padding:5px 14px;border-radius:8px;border:1.5px solid var(--primary);background:transparent;color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;">수정</button>
@@ -2604,7 +2606,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
             </div>
             <div id="sd-${c.id}" style="display:none;width:100%;margin-top:8px;padding:12px;border-radius:10px;background:var(--bg-input);font-size:12px;" onclick="event.stopPropagation();">
               ${agentName?`<div style="font-weight:700;margin-bottom:6px;">🏢 ${esc(agentName)}${c._agent_phone?' · '+phoneLink(c._agent_phone):''}${roomName?' · <span style="color:#6366f1;">'+esc(roomName)+'</span>':''}</div>`:''}
-              ${photos.length?`<div style="display:flex;gap:6px;margin-bottom:8px;overflow-x:auto;">${photos.map(u=>`<img src="${esc(u)}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0;cursor:pointer;" onclick="window.open('${esc(u)}','_blank')">`).join('')}</div>`:''}
+              ${photos.length?`<div style="display:flex;gap:6px;margin-bottom:8px;overflow-x:auto;">${photos.map(u=>`<img src="${esc(u)}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0;cursor:pointer;" onclick="var _u='${escJs(u)}';if(_u.startsWith('https://'))window.open(_u,'_blank')">`).join('')}</div>`:''}
               ${c.agent_comment?`<div style="color:var(--primary);margin-bottom:4px;">${esc(c.agent_comment)}</div>`:''}
               <div style="color:var(--text-sub);">${[p.type,p.price,p.location,p.complex,p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
               ${(p.features||[]).length?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:4px;">${p.features.map(f=>`${featTag(f)}`).join('')}</div>`:''}
@@ -3077,7 +3079,7 @@ const PanelClient = (() => {
         </div>
         <div style="font-size:12px;color:var(--text);line-height:1.6;">${esc(p.rawText||'')||conds}</div>
         ${p.location?`<div style="font-size:11px;color:var(--text-light);margin-top:2px;">${esc(p.location)}</div>`:''}
-        ${card.contact_phone?`<div style="font-size:13px;font-weight:600;margin-top:8px;display:flex;align-items:center;gap:6px;">${esc(card.contact_phone)} <button onclick="navigator.clipboard.writeText('${esc(card.contact_phone)}');Toast.show('복사됨')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #60a5fa;background:rgba(96,165,250,0.06);color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer;">복사</button> <button onclick="PanelClient.editClient('${card.id}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #f59e0b;background:rgba(245,158,11,0.06);color:#f59e0b;font-size:11px;font-weight:700;cursor:pointer;">수정</button></div>`:
+        ${card.contact_phone?`<div style="font-size:13px;font-weight:600;margin-top:8px;display:flex;align-items:center;gap:6px;">${esc(card.contact_phone)} <button onclick="navigator.clipboard.writeText('${escJs((card.contact_phone||"").replace(/[^0-9\\-+]/g,""))}');Toast.show('복사됨')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #60a5fa;background:rgba(96,165,250,0.06);color:#60a5fa;font-size:11px;font-weight:700;cursor:pointer;">복사</button> <button onclick="PanelClient.editClient('${card.id}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #f59e0b;background:rgba(245,158,11,0.06);color:#f59e0b;font-size:11px;font-weight:700;cursor:pointer;">수정</button></div>`:
         `<div style="margin-top:8px;"><button onclick="PanelClient.editClient('${card.id}')" style="padding:4px 12px;border-radius:6px;border:1.5px solid #f59e0b;background:rgba(245,158,11,0.06);color:#f59e0b;font-size:11px;font-weight:700;cursor:pointer;">수정</button></div>`}
       </div>
     </div>`;
@@ -3478,7 +3480,7 @@ const PanelClient = (() => {
         <div class="edit-field" style="margin-top:12px;"><label>전화번호</label><input id="clPhone" value="${esc(card.contact_phone||'')}" placeholder="01012345678"></div>
         <button class="btn-primary" style="margin-top:12px;" onclick="PanelClient.saveContact('${card.id}')">저장</button>
       </div>
-      ${card.contact_phone?`<div style="text-align:center;padding:12px 0;border-top:1px solid var(--border);"><button class="btn-contact" onclick="navigator.clipboard.writeText('${esc(card.contact_phone)}');Toast.show('복사됨')">${esc(card.contact_phone)} 📋 복사</button></div>`:''}
+      ${card.contact_phone?`<div style="text-align:center;padding:12px 0;border-top:1px solid var(--border);"><button class="btn-contact" onclick="navigator.clipboard.writeText('${escJs((card.contact_phone||"").replace(/[^0-9\\-+]/g,""))}');Toast.show('복사됨')">${esc(card.contact_phone)} 📋 복사</button></div>`:''}
     </div>`;el.innerHTML=h;}
   }
 
@@ -3752,7 +3754,7 @@ const PanelClient = (() => {
 
   async function saveContact(cardId){
     const name=document.getElementById('clName')?.value?.trim(),phone=document.getElementById('clPhone')?.value?.trim();
-    await Auth.sb.from('cards').update({contact_name:name||null,contact_phone:phone||null}).eq('id',cardId);
+    await Auth.sb.from('cards').update({contact_name:name||null,contact_phone:phone||null}).eq('id',cardId).eq('agent_id',Auth.user?.id);
     Toast.show('저장 완료');
     // 허브 현재 데이터 업데이트
     if(Hub.current?.data?.id===cardId){Hub.current.data.contact_name=name;Hub.current.data.contact_phone=phone;}
@@ -3954,7 +3956,7 @@ const PanelShared = (() => {
           </div>
           <div id="sd-${c.id}" style="display:none;width:100%;margin-top:8px;padding:12px;border-radius:10px;background:var(--bg-input);font-size:12px;" onclick="event.stopPropagation();">
             ${!isMine&&c._agent_name?`<div style="font-weight:700;margin-bottom:6px;">🏢 ${esc(c._agent_name)}${c._agent_phone?' · '+phoneLink(c._agent_phone):''}${c._room_name?' · <span style="color:#6366f1;">'+esc(c._room_name)+'</span>':''}</div>`:''}
-            ${photos.length?`<div style="display:flex;gap:6px;margin-bottom:8px;overflow-x:auto;">${photos.map(u=>`<img src="${esc(u)}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0;cursor:pointer;" onclick="window.open('${esc(u)}','_blank')">`).join('')}</div>`:''}
+            ${photos.length?`<div style="display:flex;gap:6px;margin-bottom:8px;overflow-x:auto;">${photos.map(u=>`<img src="${esc(u)}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0;cursor:pointer;" onclick="var _u='${escJs(u)}';if(_u.startsWith('https://'))window.open(_u,'_blank')">`).join('')}</div>`:''}
             ${c.agent_comment?`<div style="color:var(--primary);margin-bottom:4px;">${esc(c.agent_comment)}</div>`:''}
             ${c.private_note?.shared_memo?`<div style="color:#f97316;margin-bottom:4px;">🔶 ${esc(c.private_note.shared_memo)}</div>`:''}
             <div style="color:var(--text-sub);margin-bottom:4px;">${[p.type,p.price,p.location,p.complex,p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
@@ -4012,7 +4014,7 @@ const PanelShared = (() => {
           </div>
           <div id="sd-${c.id}" style="display:none;width:100%;margin-top:8px;padding:12px;border-radius:10px;background:var(--bg-input);font-size:12px;" onclick="event.stopPropagation();">
             ${!isMine&&agentName?`<div style="font-weight:700;margin-bottom:6px;">🏢 ${esc(agentName)}${c._agent_phone?' · '+phoneLink(c._agent_phone):''}${roomName?' · <span style="color:#6366f1;">'+esc(roomName)+'</span>':''}</div>`:''}
-            ${photos.length?`<div style="display:flex;gap:6px;margin-bottom:8px;overflow-x:auto;">${photos.map(u=>`<img src="${esc(u)}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0;cursor:pointer;" onclick="window.open('${esc(u)}','_blank')">`).join('')}</div>`:''}
+            ${photos.length?`<div style="display:flex;gap:6px;margin-bottom:8px;overflow-x:auto;">${photos.map(u=>`<img src="${esc(u)}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0;cursor:pointer;" onclick="var _u='${escJs(u)}';if(_u.startsWith('https://'))window.open(_u,'_blank')">`).join('')}</div>`:''}
             ${c.agent_comment?`<div style="color:var(--primary);margin-bottom:4px;">${esc(c.agent_comment)}</div>`:''}
             <div style="color:var(--text-sub);">${[p.type,p.price,p.location,p.complex,p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
             ${(p.features||[]).length?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-top:4px;">${p.features.map(f=>`${featTag(f)}`).join('')}</div>`:''}
@@ -4203,7 +4205,7 @@ const PanelAlert = (() => {
   }
   async function donePersonal(noteId){ await doneAlert(noteId); }
   async function doneAlert(noteId,day){
-    await Auth.sb.from('client_notes').update({alert_done:true}).eq('id',noteId);
+    await Auth.sb.from('client_notes').update({alert_done:true}).eq('id',noteId).eq('agent_id',Auth.user?.id);
     Toast.show('완료 처리됨');
     await _renderCal();
     if(day) selectDate(day);

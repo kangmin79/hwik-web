@@ -42,6 +42,7 @@ Deno.serve(async (req) => {
       .single();
 
     if (cardErr || !card) throw new Error('매물을 찾을 수 없습니다');
+    if (card.agent_id !== shared_by) throw new Error('본인 매물만 공유 매칭 가능합니다');
 
     const p = card.property || {};
     const tradeType = p.type;

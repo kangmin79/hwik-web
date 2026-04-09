@@ -18,9 +18,9 @@ Deno.serve(async (req) => {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    const { client_card_id, agent_id: bodyAgentId, limit = 10, threshold = 0.15 } = await req.json();
+    const { client_card_id, limit = 10, threshold = 0.15 } = await req.json();
     if (!client_card_id) throw new Error('client_card_id가 필요합니다');
-    const agent_id = await getAuthUserId(req) || bodyAgentId || null;
+    const agent_id = await getAuthUserId(req);
     if (!agent_id) throw new Error('인증이 필요합니다');
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
