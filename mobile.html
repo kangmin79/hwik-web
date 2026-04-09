@@ -23,9 +23,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="config.js"></script>
+<link rel="preconnect" href="https://jqaxejgzkchxbfzgzyzi.supabase.co" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet"></noscript>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
@@ -798,7 +798,9 @@
   </button>
 </div>
 
-<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js" async></script>
 <script>
 // ── 상태 ──
 const container = document.getElementById('container');
@@ -821,11 +823,11 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { clockSkewInSeconds: 300 }
 });
 
-window.addEventListener('load', function() {
+function ensureKakao() {
   if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
     Kakao.init(HWIK_CONFIG.KAKAO_JS_KEY);
   }
-});
+}
 
 // ── 인증 ──
 // 빠른 탭바 표시: localStorage에서 세션 유무 먼저 확인
@@ -882,6 +884,7 @@ function closeLogin() {
   setTimeout(() => document.getElementById('overlay').classList.remove('show'), 300);
 }
 function doKakaoLogin() {
+  ensureKakao();
   supabaseClient.auth.signInWithOAuth({
     provider: 'kakao',
     options: { redirectTo: 'https://hwik.kr/mobile.html' }
