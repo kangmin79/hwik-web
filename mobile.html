@@ -444,6 +444,10 @@
     max-height: calc(100dvh - 60px);
     overflow-y: auto;
   }
+  .panel.panel-center.chat-mode {
+    padding-bottom: 0;
+    overflow: hidden;
+  }
 
   .panel-title {
     font-size: 22px;
@@ -453,76 +457,91 @@
     padding: 0 0 16px;
   }
 
-  /* ── 손님 등록 ── */
-  .client-area {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
+  /* ── 손님 등록 (채팅 스타일) ── */
+  .chat-messages {
+    flex: 1; overflow-y: auto; padding: 16px 0;
+    display: flex; flex-direction: column; gap: 10px;
+    -webkit-overflow-scrolling: touch;
   }
-
-  .client-header {
-    text-align: center;
-    padding: 4px 0 10px;
+  .chat-messages::-webkit-scrollbar { display: none; }
+  .chat-messages { scrollbar-width: none; }
+  .chat-bubble {
+    max-width: 85%; padding: 12px 16px;
+    border-radius: 18px; font-size: 15px;
+    line-height: 1.6; word-break: break-word;
+    animation: chatPop 0.25s ease;
+  }
+  @keyframes chatPop { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .chat-bubble.ai {
+    align-self: flex-start;
+    background: #fff; color: var(--text);
+    border: 1px solid #e5e7eb;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .chat-bubble.user {
+    align-self: flex-end;
+    background: var(--hwik-dark); color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  .chat-bubble .bubble-label {
+    font-size: 11px; color: #94a3b8; font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .chat-confirm-card {
+    background: linear-gradient(135deg, #1a1a2e, #242442);
+    border-radius: 14px; padding: 18px; color: #fff; margin: 6px 0;
+  }
+  .chat-confirm-card .cc-type {
+    display: inline-block; padding: 3px 10px;
+    border-radius: 6px; font-size: 12px; font-weight: 700;
+  }
+  .chat-confirm-card .cc-price { font-size: 20px; font-weight: 900; letter-spacing: -0.5px; margin-top: 8px; }
+  .chat-confirm-card .cc-location { font-size: 13px; color: rgba(255,255,255,0.7); margin-top: 4px; }
+  .chat-confirm-card .cc-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chat-confirm-card .cc-tag {
+    padding: 3px 10px; border-radius: 6px;
+    background: rgba(78,205,196,0.2); color: #4ecdc4;
+    font-size: 12px; font-weight: 500;
+  }
+  .chat-confirm-btns { display: flex; gap: 8px; margin-top: 12px; }
+  .chat-confirm-btns button {
+    flex: 1; padding: 12px; border: none; border-radius: 10px;
+    font-size: 15px; font-weight: 700; font-family: inherit; cursor: pointer;
+  }
+  .chat-confirm-btns .btn-yes { background: var(--hwik-yellow); color: var(--hwik-dark); }
+  .chat-confirm-btns .btn-no { background: rgba(255,255,255,0.15); color: rgba(255,255,255,0.8); }
+  .chat-confirm-btns button:active { transform: scale(0.96); }
+  .chat-input-area {
+    display: flex; gap: 8px;
+    padding: 10px 0;
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
     flex-shrink: 0;
   }
-
-  .client-header h2 {
-    font-size: 18px;
-    font-weight: 900;
-    color: var(--hwik-dark);
-    margin-bottom: 2px;
+  .chat-input {
+    flex: 1; padding: 12px 16px;
+    border: 1.5px solid #e2e8f0; border-radius: 24px;
+    font-size: 15px; font-family: inherit; color: var(--text);
+    outline: none; background: #fff;
+    min-height: 44px; max-height: 100px;
+    resize: none; line-height: 1.4;
   }
-
-  .client-header p {
-    font-size: 12px;
-    color: #94a3b8;
+  .chat-input:focus { border-color: #4ecdc4; box-shadow: 0 0 0 3px rgba(78,205,196,0.1); }
+  .chat-input::placeholder { color: #94a3b8; }
+  .chat-send-btn {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--hwik-dark); border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; align-self: flex-end;
   }
-
-  .client-input {
-    width: 100%;
-    min-height: 200px;
-    max-height: calc(100dvh - 340px);
-    padding: 20px;
-    font-size: 16px;
-    font-family: 'Noto Sans KR', sans-serif;
-    border: 1.5px solid #e8e8ee;
-    border-radius: 16px;
-    outline: none;
-    background: #fff;
-    color: var(--text);
-    resize: none;
-    line-height: 1.8;
-    overflow-y: auto;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.03);
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-  .client-input:focus {
-    border-color: #c7c7d4;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-  }
-  .client-input::placeholder { color: #c0c0c0; }
-
-  .client-bottom {
-    flex-shrink: 0;
-    padding: 10px 0 0;
-  }
-
-  .client-submit-btn {
-    width: 100%;
-    padding: 16px;
-    border: none;
-    border-radius: 14px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    color: #fff;
-    font-size: 16px;
-    font-weight: 800;
-    font-family: 'Noto Sans KR', sans-serif;
-    cursor: pointer;
-    transition: all 0.2s;
-    letter-spacing: -0.3px;
-  }
-  .client-submit-btn:active { transform: scale(0.98); opacity: 0.9; }
-  .client-submit-btn:disabled { opacity: 0.5; }
+  .chat-send-btn svg { width: 20px; height: 20px; stroke: var(--hwik-yellow); stroke-width: 2.5; fill: none; }
+  .chat-send-btn:active { transform: scale(0.9); }
+  .chat-send-btn:disabled { opacity: 0.4; }
+  .typing-dots { display:flex;gap:4px;padding:4px 0; }
+  .typing-dots span { width:7px;height:7px;border-radius:50%;background:#94a3b8;animation:typeBounce 1.4s infinite; }
+  .typing-dots span:nth-child(2) { animation-delay:0.2s; }
+  .typing-dots span:nth-child(3) { animation-delay:0.4s; }
+  @keyframes typeBounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
 
   /* ── 내정보 ── */
   .profile-card {
@@ -766,10 +785,10 @@
     </div>
     <span class="tab-label">홈</span>
   </button>
-  <!-- 손님등록 -->
+  <!-- 손님등록 (채팅) -->
   <button class="tab-btn" id="tabClient" onclick="switchTab('client')">
     <div class="tab-icon">
-      <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
     </div>
     <span class="tab-label">손님등록</span>
   </button>
@@ -903,7 +922,7 @@ function switchTab(tab) {
   currentTab = tab;
 
   // 모든 패널 숨기기
-  document.querySelectorAll('.panel').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.panel').forEach(p => { p.style.display = 'none'; p.classList.remove('chat-mode'); });
 
   // 탭 active 처리
   const isAgent = !!currentUser;
@@ -1194,74 +1213,151 @@ function showRecent() {
 }
 
 // ── 손님 등록 (중개사 전용) ──
+// ── 손님 등록 (채팅 스타일) ──
+let _chatState = 'idle'; // idle | waiting | confirm | done
+let _chatParsed = null;
+let _chatText = '';
+
 function showClientRegister() {
   const panel = document.getElementById('clientPanel');
   panel.style.display = 'flex';
+  panel.classList.add('chat-mode');
+  _chatState = 'idle';
+  _chatParsed = null;
+  _chatText = '';
+
   panel.innerHTML = `
-    <div class="client-area">
-      <div class="client-header">
-        <h2>손님 등록</h2>
-        <p>손님이 찾는 조건을 말하듯이 적어주세요</p>
-      </div>
-      <textarea class="client-input" id="clientInput" placeholder="강남 2룸 전세 3억 이하&#10;&#10;예) 신혼부부, 역세권 선호&#10;보증금 3억 이내 전세&#10;이름: 홍길동 / 010-1234-5678"></textarea>
-      <div class="client-bottom">
-        <button class="client-submit-btn" onclick="submitClient()">AI로 손님 등록</button>
-      </div>
-    </div>
-  `;
-  setTimeout(() => document.getElementById('clientInput')?.focus(), 300);
+    <div class="chat-messages" id="chatMessages"></div>
+    <div class="chat-input-area">
+      <textarea class="chat-input" id="chatInput" rows="1" placeholder="손님 조건을 입력하세요" enterkeyhint="send"
+        oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();chatSend()}"></textarea>
+      <button class="chat-send-btn" id="chatSendBtn" onclick="chatSend()">
+        <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+      </button>
+    </div>`;
+
+  // AI 인사 메시지
+  const msgs = document.getElementById('chatMessages');
+  setTimeout(() => {
+    addAiBubble('어떤 손님을 등록할까요?<br><span style="font-size:13px;color:#94a3b8;margin-top:4px;display:block;">예) 강남 2룸 전세 3억 이하<br>홍길동 010-1234-5678</span>');
+    document.getElementById('chatInput')?.focus();
+  }, 300);
 }
 
-// 보내기 → 확인 화면
-function submitClient() {
-  const input = document.getElementById('clientInput');
-  const text = input.value.trim();
-  if (!text) { showToast('손님 조건을 입력해주세요'); return; }
+function addAiBubble(html) {
+  const msgs = document.getElementById('chatMessages');
+  if (!msgs) return;
+  const d = document.createElement('div');
+  d.className = 'chat-bubble ai';
+  d.innerHTML = '<div class="bubble-label">휙 AI</div>' + html;
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function addUserBubble(text) {
+  const msgs = document.getElementById('chatMessages');
+  if (!msgs) return;
+  const d = document.createElement('div');
+  d.className = 'chat-bubble user';
+  d.textContent = text;
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function addTyping() {
+  const msgs = document.getElementById('chatMessages');
+  if (!msgs) return;
+  const d = document.createElement('div');
+  d.className = 'chat-bubble ai';
+  d.id = 'chatTyping';
+  d.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function removeTyping() {
+  document.getElementById('chatTyping')?.remove();
+}
+
+async function chatSend() {
+  if (_chatState === 'waiting') return;
+  const inp = document.getElementById('chatInput');
+  const text = inp?.value?.trim();
+  if (!text) return;
   if (!currentUser) { showLogin(); return; }
 
-  // 확인 화면
-  const panel = document.getElementById('clientPanel');
-  panel.style.overflow = 'auto';
-  window._clientText = text;
-  panel.innerHTML = `
-    <div style="padding:16px 0 100px;">
-      <div style="text-align:center;margin-bottom:16px;">
-        <span style="font-size:18px;font-weight:900;color:var(--hwik-dark);">이 내용으로 등록할까요?</span>
-      </div>
-      <div style="background:#fff;border-radius:16px;padding:20px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.04);border:1.5px solid #e8e8ee;">
-        <div style="font-size:15px;color:var(--text);line-height:1.8;white-space:pre-wrap;">${esc(text)}</div>
-      </div>
-      <div style="display:flex;gap:10px;">
-        <button onclick="showClientRegister();setTimeout(()=>{const i=document.getElementById('clientInput');if(i){i.value=window._clientText||''}},100)" style="flex:1;padding:14px;border-radius:12px;border:1.5px solid #e2e8f0;background:#fff;color:var(--gray-600);font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;">수정</button>
-        <button onclick="doRegisterClient()" style="flex:1;padding:14px;border-radius:12px;border:none;background:var(--hwik-dark);color:var(--hwik-yellow);font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;">등록</button>
-      </div>
-    </div>`;
-}
+  inp.value = ''; inp.style.height = 'auto';
+  addUserBubble(text);
+  _chatText = text;
+  _chatState = 'waiting';
+  document.getElementById('chatSendBtn').disabled = true;
 
-// 실제 등록 + 매칭
-async function doRegisterClient() {
-  const text = window._clientText || '';
-  if (!text || !currentUser) return;
-
-  const panel = document.getElementById('clientPanel');
-  panel.innerHTML = `
-    <div style="padding:20px 0;text-align:center;">
-      <div class="dot-pulse"><span></span><span></span><span></span></div>
-      <div style="font-size:14px;color:#94a3b8;margin-top:12px;">AI가 손님 조건을 분석하고<br>매물을 찾고 있어요</div>
-    </div>`;
-
+  addTyping();
   try {
-    // 1. parse-property로 AI 파싱
     const token = (await supabaseClient.auth.getSession()).data.session?.access_token || '';
     const parseRes = await fetch(`${SUPABASE_URL}/functions/v1/parse-property`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_KEY },
       body: JSON.stringify({ text: '손님 ' + text })
     });
-    if (!parseRes.ok) throw new Error('AI 파싱 실패 (' + parseRes.status + ')');
+    if (!parseRes.ok) throw new Error('AI 파싱 실패');
     const parsed = await parseRes.json();
+    _chatParsed = parsed;
 
-    // 2. cards 테이블에 저장
+    removeTyping();
+
+    // 확인 카드
+    const p = parsed;
+    const typeColors = { '매매':'#ea580c', '전세':'#4f46e5', '월세':'#7c3aed' };
+    const wantType = p.wanted_trade_type || p.type || '';
+    const tColor = typeColors[wantType] || '#4ecdc4';
+    const features = (p.features || []).map(f => `<span class="cc-tag">${esc(f)}</span>`).join('');
+    const name = p.contact_name ? `<div style="font-size:13px;color:rgba(255,255,255,0.7);margin-top:8px;">👤 ${esc(p.contact_name)}${p.contact_phone ? ' ' + esc(p.contact_phone) : ''}</div>` : '';
+
+    const cardHtml = `
+      <div class="chat-confirm-card">
+        ${wantType ? `<span class="cc-type" style="background:${tColor};color:#fff;">${esc(wantType)}</span>` : ''}
+        ${p.category ? `<span class="cc-type" style="background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);margin-left:4px;">${esc(p.category)}</span>` : ''}
+        <div class="cc-price">${esc(p.price || '')}</div>
+        <div class="cc-location">${esc([p.location, p.complex].filter(Boolean).join(' · '))}</div>
+        ${p.area || p.floor || p.room ? `<div class="cc-location">${esc([p.area, p.floor, p.room].filter(Boolean).join(' · '))}</div>` : ''}
+        ${features ? `<div class="cc-tags">${features}</div>` : ''}
+        ${name}
+      </div>
+      <div style="font-size:14px;color:var(--text);margin-top:8px;">이 내용으로 등록할까요?</div>
+      <div class="chat-confirm-btns">
+        <button class="btn-no" onclick="chatReject()">다시 입력</button>
+        <button class="btn-yes" onclick="chatConfirm()">등록</button>
+      </div>`;
+    addAiBubble(cardHtml);
+    _chatState = 'confirm';
+
+  } catch(e) {
+    removeTyping();
+    addAiBubble('오류가 발생했어요. 다시 입력해주세요.<br><span style="font-size:13px;color:#f87171;">' + esc(e.message) + '</span>');
+    _chatState = 'idle';
+  }
+  document.getElementById('chatSendBtn').disabled = false;
+}
+
+function chatReject() {
+  _chatState = 'idle';
+  _chatParsed = null;
+  addAiBubble('다시 입력해주세요!');
+  document.getElementById('chatInput')?.focus();
+}
+
+async function chatConfirm() {
+  if (!_chatParsed || !currentUser) return;
+  _chatState = 'waiting';
+
+  // 버튼 비활성화
+  document.querySelectorAll('.chat-confirm-btns button').forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
+  addTyping();
+
+  try {
+    const parsed = _chatParsed;
+    const text = _chatText;
+    const token = (await supabaseClient.auth.getSession()).data.session?.access_token || '';
+
     const cardData = {
       id: crypto.randomUUID().replace(/-/g, '').slice(0, 12),
       agent_id: currentUser.id,
@@ -1283,7 +1379,7 @@ async function doRegisterClient() {
     const { error } = await supabaseClient.from('cards').insert(cardData);
     if (error) throw error;
 
-    // 3. 자동 매칭 + 매칭 결과 조회 동시 실행
+    // 자동 매칭 + 매칭 결과 동시
     const [, matchRes] = await Promise.all([
       fetch(`${SUPABASE_URL}/functions/v1/auto-match`, {
         method: 'POST',
@@ -1297,20 +1393,54 @@ async function doRegisterClient() {
       }).then(r => r.json()).catch(() => ({ results: [] }))
     ]);
 
+    removeTyping();
     const matches = matchRes.results || [];
-    showClientMatchResults(cardData, parsed, text, matches);
+    const clientName = parsed.contact_name || '손님';
+
+    if (matches.length > 0) {
+      let matchHtml = `<strong>${esc(clientName)}</strong> 등록 완료!<br>매칭 매물 <strong style="color:#4ecdc4;">${matches.length}건</strong> 찾았어요`;
+      // 상위 3건 미리보기
+      const top3 = matches.slice(0, 3);
+      matchHtml += '<div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">';
+      top3.forEach(m => {
+        const mp = m.property || {};
+        const typeColors = { '매매':'#ea580c', '전세':'#4f46e5', '월세':'#7c3aed' };
+        const tc = typeColors[mp.type] || '#94a3b8';
+        matchHtml += `<div onclick="openProperty('${esc(m.id)}')" style="background:#f8f8fa;border-radius:10px;padding:10px 12px;cursor:pointer;border:1px solid #e5e7eb;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-size:11px;font-weight:700;color:${tc};background:${tc}15;padding:2px 8px;border-radius:4px;">${esc(mp.type||'')}</span>
+            <span style="font-size:14px;font-weight:700;color:var(--text);">${esc(mp.price||'')}</span>
+          </div>
+          <div style="font-size:13px;color:var(--gray-600);margin-top:2px;">${esc(mp.complex || mp.location || '')}</div>
+        </div>`;
+      });
+      matchHtml += '</div>';
+      if (matches.length > 3) {
+        matchHtml += `<div style="text-align:center;margin-top:8px;"><span style="font-size:13px;color:#4ecdc4;font-weight:600;">+ ${matches.length - 3}건 더보기</span></div>`;
+      }
+      addAiBubble(matchHtml);
+    } else {
+      addAiBubble(`<strong>${esc(clientName)}</strong> 등록 완료!<br><span style="color:#94a3b8;">아직 매칭 매물이 없어요. 새 매물이 등록되면 알림으로 알려드릴게요.</span>`);
+    }
+
+    // "다른 손님 등록" 안내
+    setTimeout(() => {
+      addAiBubble('다른 손님도 등록하시겠어요?<br><span style="font-size:13px;color:#94a3b8;">조건을 바로 입력하시면 됩니다</span>');
+    }, 500);
+
+    _chatState = 'idle';
+    _chatParsed = null;
+    _chatText = '';
+    document.getElementById('chatInput')?.focus();
+
+    // 매칭 결과도 저장 (기존 호환)
+    _matchData = matches;
+    window._mcd = cardData; window._mp = parsed; window._mrt = text;
 
   } catch(e) {
-    console.error('손님등록 에러:', e);
-    showToast('등록 실패: ' + (e.message || '오류'));
-    // 에러 시에도 등록은 성공했을 수 있으니, 결과 화면 시도
-    const panel = document.getElementById('clientPanel');
-    panel.innerHTML = `
-      <div style="padding:40px 0;text-align:center;">
-        <div style="font-size:16px;font-weight:700;color:#ef4444;margin-bottom:12px;">오류가 발생했어요</div>
-        <div style="font-size:14px;color:#94a3b8;margin-bottom:20px;">${esc(e.message || '알 수 없는 오류')}</div>
-        <button onclick="showClientRegister();setTimeout(()=>{const i=document.getElementById('clientInput');if(i)i.value=window._clientText||''},100)" style="padding:12px 32px;border-radius:12px;border:1.5px solid var(--hwik-dark);background:transparent;color:var(--hwik-dark);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">다시 시도</button>
-      </div>`;
+    removeTyping();
+    addAiBubble('등록 중 오류가 발생했어요.<br><span style="font-size:13px;color:#f87171;">' + esc(e.message) + '</span><br>다시 입력해주세요.');
+    _chatState = 'idle';
   }
 }
 
