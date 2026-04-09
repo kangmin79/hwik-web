@@ -3,6 +3,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { DISTRICT_COORDS, haversineDistance } from '../_shared/geo.ts'
 import { fixTypos } from '../_shared/typo.ts'
 import { getAuthUserId } from '../_shared/auth.ts'
+import { parsePriceCondition, parseAreaCondition, isPriceMatch, isAreaMatch } from '../_shared/price.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://hwik.kr',
@@ -30,7 +31,7 @@ Deno.serve(async (req) => {
     // 1. 새 매물 조회
     const { data: card, error: cardErr } = await supabase
       .from('cards')
-      .select('id, property, embedding, agent_id, price_number, lat, lng')
+      .select('id, property, embedding, agent_id, price_number, deposit, monthly_rent, lat, lng, kapt_code')
       .eq('id', card_id)
       .single();
 
@@ -76,7 +77,7 @@ Deno.serve(async (req) => {
       // 손님 카드 → 기존 매물과 매칭
       const { data, error } = await supabase
         .from('cards')
-        .select('id, property, embedding, price_number, lat, lng, tags')
+        .select('id, property, embedding, price_number, deposit, monthly_rent, lat, lng, tags, kapt_code')
         .eq('agent_id', agent_id)
         .neq('property->>type', '손님')
         .eq('trade_status', '계약가능')
@@ -99,7 +100,7 @@ Deno.serve(async (req) => {
       // 매물 카드 → 기존 손님과 매칭
       const { data, error } = await supabase
         .from('cards')
-        .select('id, property, private_note, embedding, price_number, wanted_trade_type, lat, lng, tags, required_tags, excluded_tags')
+        .select('id, property, private_note, embedding, price_number, wanted_trade_type, lat, lng, tags, required_tags, excluded_tags, kapt_code')
         .eq('agent_id', agent_id)
         .eq('property->>type', '손님')
         .not('embedding', 'is', null)
@@ -166,20 +167,21 @@ Deno.serve(async (req) => {
         if (!requiredTags.every((t: string) => propTags.includes(t))) return false;
       }
 
-      // 가격 체크
-      const propPrice = property.price_number || 0;
-      if (propPrice > 0) {
-        const maxMatch = allText.match(/(\d+)\s*억\s*(\d+)?\s*천?\s*(?:이내|이하|미만|까지)/);
-        if (maxMatch) {
-          const clientMax = parseInt(maxMatch[1]) * 10000 + (maxMatch[2] ? parseInt(maxMatch[2]) * 1000 : 0);
-          if (propPrice > clientMax * 1.3) return false;
-        }
-        const chunMatch = allText.match(/(\d+)\s*천\s*(?:만원?)?\s*(?:이내|이하)/);
-        if (chunMatch && !maxMatch) {
-          const clientMax = parseInt(chunMatch[1]) * 1000;
-          if (propPrice > clientMax * 1.3) return false;
-        }
-      }
+      // 가격 체크 (정밀 파싱: 이하/이상/그쯤/범위/보월 전부 지원)
+      const tradeTypeStr = prop.type || client.wanted_trade_type || '';
+      const priceCondition = parsePriceCondition(allText, tradeTypeStr);
+      if (!isPriceMatch(
+        property.price_number || 0,
+        priceCondition,
+        tradeTypeStr,
+        property.deposit,
+        property.monthly_rent,
+      )) return false;
+
+      // 면적 체크
+      const areaCondition = parseAreaCondition(allText);
+      if (!isAreaMatch(prop.area, areaCondition)) return false;
+
       return true;
     }
 
@@ -234,7 +236,13 @@ Deno.serve(async (req) => {
         else if (dist <= 5.0) distBonus = 0.05;
       }
 
-      const finalScore = similarity + bonus + distBonus;
+      // ★ 동일 단지(kapt_code) 보너스
+      let kaptBonus = 0;
+      const cardKapt = card.kapt_code;
+      const targetKapt = target.kapt_code;
+      if (cardKapt && targetKapt && cardKapt === targetKapt) kaptBonus = 0.20;
+
+      const finalScore = similarity + bonus + distBonus + kaptBonus;
 
       if (finalScore >= THRESHOLD) {
         if (isClient) {

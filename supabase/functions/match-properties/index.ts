@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
     // 1. 손님 카드 조회
     const { data: clientCard, error: clientError } = await supabase
       .from('cards')
-      .select('id, property, private_note, agent_id, wanted_trade_type, wanted_categories, wanted_conditions, move_in_date, tags, required_tags, excluded_tags, price_number, deposit, monthly_rent')
+      .select('id, property, private_note, agent_id, wanted_trade_type, wanted_categories, wanted_conditions, move_in_date, tags, required_tags, excluded_tags, price_number, deposit, monthly_rent, kapt_code')
       .eq('id', client_card_id)
       .single();
 
@@ -185,7 +185,7 @@ Deno.serve(async (req) => {
     console.log(`태그 매칭: must=[${mustTags}] trades=[${wantedTradeTypes}] cats=[${wantedCats}] price=${minPrice}~${maxPrice}`);
 
     let results: any[] = [];
-    const selectCols = 'id, property, agent_id, agent_comment, price_number, deposit, monthly_rent, trade_status, photos, lat, lng, created_at, search_text, tags';
+    const selectCols = 'id, property, agent_id, agent_comment, price_number, deposit, monthly_rent, trade_status, photos, lat, lng, created_at, search_text, tags, kapt_code';
 
     // 공통 필터 적용 헬퍼
     function applyFilters(q: any, tagsOnly = false) {
@@ -410,7 +410,7 @@ Deno.serve(async (req) => {
       : extractExcludedTags(allText);
 
     // ═══════════════════════════════════════════════════════════
-    // ★ 135점 만점 매칭 점수 (거래유형 35 + 가격 40 + 위치 20 + 매물유형 15 + 태그 20 + 입주 15 + 임베딩 5 → cap 125)
+    // ★ 155점 만점 매칭 점수 (거래유형 35 + 가격 40 + 위치 20 + 매물유형 15 + 태그 20 + 입주 15 + 임베딩 5 + 동일단지 20)
     // ═══════════════════════════════════════════════════════════
     results = results.map((r: any) => {
       let score = 0;
@@ -542,6 +542,10 @@ Deno.serve(async (req) => {
 
       // ⑦ 임베딩 보너스 (보험 — 최대 5점)
       if (r.similarity) score += Math.min(Math.round(r.similarity * 5), 5);
+
+      // ⑧ 동일 단지 보너스 (kapt_code 일치 시 +20점)
+      const clientKapt = (clientCard as any).kapt_code;
+      if (clientKapt && r.kapt_code && clientKapt === r.kapt_code) score += 20;
 
       // ★ 80점 이상 = 강추 매물
       return { ...r, _score: score, _recommend: score >= 80 };

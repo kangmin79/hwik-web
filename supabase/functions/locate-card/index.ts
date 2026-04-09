@@ -197,7 +197,69 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 7. tags merge 후 cards 업데이트
+    // 7. ★ apartments 테이블 매칭 (단지명 → kapt_code)
+    let kaptCode: string | null = null;
+    let kaptName: string | null = null;
+    const complex = (p.complex || '').replace(/아파트|오피스텔/g, '').trim();
+
+    if (complex && complex.length >= 2) {
+      try {
+        // 위치 힌트: 구/동 추출
+        const guMatch = fullText.match(/(강남|서초|송파|마포|용산|성동|광진|영등포|강동|동작|관악|종로|중구|강서|양천|구로|노원|서대문|은평|중랑|도봉|동대문|성북|금천|강북|남동|부평|연수|미추홀|계양|서|동|중|남|인천|수원|성남|고양|용인|안양|안산|부천|화성|의정부|시흥|파주|광명|하남|김포|광주|구리|양주|오산|군포|의왕|과천|포천|여주|이천|가평|양평)/)
+        const sggHint = guMatch ? guMatch[1] : null;
+
+        // 좌표 힌트: 카드 좌표 → 없으면 중개사 기존 매물 평균 좌표
+        let hintLat = finalLat;
+        let hintLng = finalLng;
+
+        if (!hintLat || !hintLng) {
+          // 중개사의 기존 매물에서 평균 좌표 계산
+          const { data: agentCards } = await supabase
+            .from('cards')
+            .select('lat, lng')
+            .eq('agent_id', agent_id)
+            .not('lat', 'is', null)
+            .not('lng', 'is', null)
+            .limit(20);
+          if (agentCards?.length) {
+            hintLat = agentCards.reduce((s: number, c: any) => s + c.lat, 0) / agentCards.length;
+            hintLng = agentCards.reduce((s: number, c: any) => s + c.lng, 0) / agentCards.length;
+          }
+        }
+
+        // match_apartment RPC 호출
+        const { data: aptMatches } = await supabase.rpc('match_apartment', {
+          p_complex: complex,
+          p_sgg: sggHint,
+          p_lat: hintLat,
+          p_lng: hintLng,
+          p_radius_km: 10.0,
+        });
+
+        if (aptMatches?.length) {
+          const best = aptMatches[0];
+          // 신뢰도: score 40 이상이면 자동 확정
+          if (best.score >= 40) {
+            kaptCode = best.kapt_code;
+            kaptName = best.kapt_name;
+            // 좌표가 없으면 단지 좌표로 보강
+            if (!finalLat && !finalLng && best.lat && best.lon) {
+              finalLat = best.lat;
+              finalLng = best.lon;
+              source = 'apartment_db';
+            }
+            // 구/동 태그 보강
+            if (best.sgg && !addedTags.includes(best.sgg)) addedTags.push(best.sgg);
+            if (best.umd_nm && !addedTags.includes(best.umd_nm)) addedTags.push(best.umd_nm);
+            console.log(`단지 매칭: "${complex}" → ${kaptName} (${best.sgg} ${best.umd_nm}) score=${best.score}`);
+          }
+        }
+      } catch (e) {
+        console.warn('단지 매칭 실패 (무시):', (e as Error).message);
+      }
+    }
+
+    // 8. tags merge 후 cards 업데이트
     const existingTags: string[] = Array.isArray(card.tags) ? card.tags : [];
     const mergedTags = [...new Set([...existingTags, ...addedTags])];
 
@@ -205,6 +267,9 @@ Deno.serve(async (req) => {
     if (finalLat && finalLng) {
       updatePayload.lat = finalLat;
       updatePayload.lng = finalLng;
+    }
+    if (kaptCode) {
+      updatePayload.kapt_code = kaptCode;
     }
 
     const { error: updateErr } = await supabase
@@ -214,12 +279,14 @@ Deno.serve(async (req) => {
 
     if (updateErr) throw new Error(`카드 업데이트 실패: ${updateErr.message}`);
 
-    // 8. 결과 반환
+    // 9. 결과 반환
     return new Response(JSON.stringify({
       success: true,
       lat: finalLat,
       lng: finalLng,
       source,
+      kapt_code: kaptCode,
+      kapt_name: kaptName,
       added_tags: addedTags,
       total_tags: mergedTags,
     }), {
