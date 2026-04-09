@@ -617,8 +617,16 @@ function render() {
     // 매매/전세: 가격 관련 FAQ
     if (recentPrice) {
       faqItems.push({ q: `${d.complex_name} 최근 실거래가는?`, a: `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentPrice)}입니다.${recentData && recentData.date ? ' ('+recentData.date+' 기준)' : ''}` });
-      const _areaNum = currentPyeong ? parseFloat(currentPyeong) : 0;
-      if (_areaNum > 0) faqItems.push({ q: `${d.complex_name} ㎡당 가격은?`, a: `전용 ${currentPyeong}㎡ 기준 ㎡당 ${formatPrice(Math.round(recentPrice / _areaNum))}입니다.` });
+      // ㎡당 가격 FAQ: 공급면적 있을 때만 표시 (메트릭과 동일 로직)
+      let _faqSqmArea = currentPyeong ? parseFloat(currentPyeong) : 0;
+      let _faqSqmBasis = '전용면적';
+      if (showSupply && pm[currentPyeong] && pm[currentPyeong].supply && Math.abs((pm[currentPyeong].exclu || 0) - parseFloat(currentPyeong)) <= 10) {
+        _faqSqmArea = pm[currentPyeong].supply;
+        _faqSqmBasis = '공급면적';
+      } else {
+        _faqSqmArea = 0; // 공급면적 없으면 FAQ 생략
+      }
+      if (_faqSqmArea > 0) faqItems.push({ q: `${d.complex_name} ㎡당 가격은?`, a: `${_faqSqmBasis} ${_faqSqmArea}㎡ 기준 ㎡당 ${formatPrice(Math.round(recentPrice / _faqSqmArea))}입니다.` });
     }
     if (jeonseRate) faqItems.push({ q: `${d.complex_name} 전세가율은?`, a: `${d.complex_name}의 전세가율은 ${jeonseRate}%입니다.` });
     if (highPrice) faqItems.push({ q: `${d.complex_name} 최근 3년 최고가는?`, a: `최근 3년 최고가는 ${formatPrice(highPrice)}입니다.${highData && highData.date ? ' ('+highData.date+')' : ''}` });
