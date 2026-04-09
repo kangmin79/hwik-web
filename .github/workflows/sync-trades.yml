@@ -135,23 +135,36 @@ jobs:
             git push
           fi
 
-      - name: SEO 전수 검증 + 이메일 발송
+      - name: SEO + 데이터 검증 + 이메일 발송
         run: |
           python verify_seo.py > seo_result.txt 2>&1 || true
           cat seo_result.txt
+          python verify_data.py > data_result.txt 2>&1 || true
+          cat data_result.txt
           python - <<'PYEOF'
           import smtplib, os
           from email.mime.text import MIMEText
 
           with open("seo_result.txt", encoding="utf-8") as f:
-              body = f.read()
+              seo = f.read()
+          with open("data_result.txt", encoding="utf-8") as f:
+              data = f.read()
 
-          # PASS/FAIL 판별
-          status = "PASS ✓" if "모든 검증 통과" in body else "FAIL ✗"
+          body = seo + "\n\n" + "=" * 70 + "\n\n" + data
           today = os.popen("date -u +%Y-%m-%d").read().strip()
 
+          seo_ok = "모든 검증 통과" in seo
+          data_ok = "모든 데이터 정합성 검증 통과" in data
+          if seo_ok and data_ok:
+              status = "ALL PASS ✓"
+          else:
+              parts = []
+              if not seo_ok: parts.append("SEO")
+              if not data_ok: parts.append("DATA")
+              status = ", ".join(parts) + " FAIL ✗"
+
           msg = MIMEText(body, "plain", "utf-8")
-          msg["Subject"] = f"[휙 SEO] {today} 검증 결과: {status}"
+          msg["Subject"] = f"[휙] {today} 검증: {status}"
           msg["From"] = os.environ["SMTP_USER"]
           msg["To"] = os.environ["REPORT_EMAIL"]
 
