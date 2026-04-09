@@ -630,10 +630,14 @@ def build_jsonld(d):
     jr = d.get("jeonse_rate")
     faq_items = []
     if bc and rt.get(bc):
+        _r = rt[bc]
+        _a = f"최근 매매 실거래가는 {format_price(_r.get('price'))}입니다."
+        if _r.get("date"):
+            _a += f" ({_r['date']} 기준)"
         faq_items.append({
             "@type": "Question",
             "name": f"{name} 최근 실거래가는?",
-            "acceptedAnswer": {"@type": "Answer", "text": f"최근 매매 실거래가는 {format_price(rt[bc].get('price'))}입니다."},
+            "acceptedAnswer": {"@type": "Answer", "text": _a},
         })
     if jr:
         faq_items.append({

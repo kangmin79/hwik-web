@@ -20,10 +20,6 @@
 <meta name="naver-site-verification" content="367bd1e77a8ad48b74e345be3e4a0f8125c2c4e1" />
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="config.js"></script>
-<script src="/makeSlug.js"></script>
 <script>
 // 정적 동 페이지로 리다이렉트 (있는 경우)
 (function() {
@@ -56,7 +52,7 @@
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 :root { --dark:#1a1a2e; --yellow:#f5c842; --yellow-dim:rgba(245,200,66,0.15); --bg:#f8f8fa; --surface:#fff; --card:#f3f4f6; --border:#e5e7eb; --text:#1a1a2e; --sub:#6b7280; --muted:#9ca3af; --red:#e24b4a; --green:#639922; --radius:10px; }
-html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; background:var(--bg); color:var(--text); }
+html,body { height:100%; font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans CJK KR',sans-serif; background:var(--bg); color:var(--text); }
 .wrap { max-width:430px; margin:0 auto; background:var(--surface); min-height:100vh; }
 .header { background:var(--dark); padding:16px; }
 .header-top { display:flex; align-items:center; gap:12px; }
@@ -113,6 +109,9 @@ html,body { height:100%; font-family:'Noto Sans KR',-apple-system,sans-serif; ba
     <p><a href="/gu.html">서울 구별 시세 보기</a> · <a href="/ranking.html">아파트 순위</a></p>
   </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="/makeSlug.js"></script>
 <script>
 const sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_KEY);
 function walkMin(m) { return m ? Math.round(m/67)+'분' : ''; }
@@ -144,7 +143,6 @@ async function loadData() {
   document.getElementById('tw-title').content = document.title;
   document.getElementById('tw-desc').content = desc;
   document.getElementById('meta-desc').content = desc;
-  document.getElementById('meta-keywords').content = dong+' 아파트,'+dong+' 시세,'+dong+' 전세,'+gu+' '+dong+' 실거래가';
   const pageUrl = 'https://hwik.kr/dong.html?gu='+encodeURIComponent(gu)+'&dong='+encodeURIComponent(dong);
   document.getElementById('canonical').href = pageUrl;
   document.getElementById('og-url').content = pageUrl;
