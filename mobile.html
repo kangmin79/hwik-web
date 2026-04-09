@@ -445,7 +445,7 @@
     overflow-y: auto;
   }
   .panel.panel-center.chat-mode {
-    padding-bottom: 0;
+    padding: 0 !important;
     overflow: hidden;
   }
 
@@ -462,10 +462,15 @@
     display: flex; flex-direction: column;
     width: 100%; height: 100%;
     background: #B2C7D9;
-    border-radius: 16px;
+    border-radius: 0;
     overflow: hidden;
-    margin: 0 -20px;
-    width: calc(100% + 40px);
+  }
+  /* body 직접 자식일 때 풀스크린 */
+  body > .chat-area {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+    z-index: 150;
   }
   .chat-messages {
     flex: 1; overflow-y: auto;
@@ -961,8 +966,9 @@ function switchTab(tab) {
   haptic(15);
   currentTab = tab;
 
-  // 모든 패널 숨기기
+  // 모든 패널 숨기기 + body에 붙은 채팅 제거
   document.querySelectorAll('.panel').forEach(p => { p.style.display = 'none'; p.classList.remove('chat-mode'); });
+  document.querySelector('body > .chat-area')?.remove();
 
   // 탭 active 처리
   const isAgent = !!currentUser;
@@ -1259,9 +1265,9 @@ let _chatParsed = null;
 let _chatText = '';
 
 function showClientRegister() {
-  const panel = document.getElementById('clientPanel');
-  panel.style.display = 'flex';
-  panel.classList.add('chat-mode');
+  // 기존 채팅 영역 제거
+  document.querySelector('body > .chat-area')?.remove();
+
   _chatState = 'idle';
   _chatParsed = null;
   _chatText = '';
@@ -1271,8 +1277,11 @@ function showClientRegister() {
   const today = new Date();
   const dateStr = `${today.getFullYear()}년 ${today.getMonth()+1}월 ${today.getDate()}일 ${'일월화수목금토'[today.getDay()]}요일`;
 
-  panel.innerHTML = `
-    <div class="chat-area">
+  // body에 직접 추가 (fixed 정상 동작)
+  const chatArea = document.createElement('div');
+  chatArea.className = 'chat-area';
+  chatArea.id = 'clientChatArea';
+  chatArea.innerHTML = `
       <div class="chat-messages" id="chatMessages">
         <div class="chat-date"><span>${dateStr}</span></div>
       </div>
@@ -1283,8 +1292,8 @@ function showClientRegister() {
         <button class="chat-send-btn" id="chatSendBtn" onclick="chatSend()">
           <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
-      </div>
-    </div>`;
+      </div>`;
+  document.body.appendChild(chatArea);
 
   // AI 인사 메시지
   setTimeout(() => {
@@ -1493,8 +1502,11 @@ function _setMatchFilter(filter, cardData, parsed, rawText) {
 }
 
 function _renderMatchPanel(cardData, parsed, rawText) {
+  // body에 붙은 채팅 제거
+  document.querySelector('body > .chat-area')?.remove();
   const panel = document.getElementById('clientPanel');
-  panel.classList.remove('chat-mode'); // 스크롤 가능하게
+  panel.style.display = 'flex';
+  panel.classList.remove('chat-mode');
   const p = cardData.property || parsed || {};
   const uid = currentUser?.id || '';
   const clientName = cardData.contact_name || parsed.contact_name || '손님';
@@ -1590,11 +1602,15 @@ function _renderMatchPanel(cardData, parsed, rawText) {
 
 // ── 알림 (채팅 스타일 브리핑) ──
 async function showAlerts() {
-  const panel = document.getElementById('alertPanel');
-  panel.style.display = 'flex';
-  panel.classList.add('chat-mode');
+  // 기존 채팅 영역 제거
+  document.querySelector('body > .chat-area')?.remove();
 
-  if (!currentUser) { panel.innerHTML = '<div style="padding:40px;text-align:center;color:#94a3b8;">로그인이 필요해요</div>'; return; }
+  if (!currentUser) {
+    const panel = document.getElementById('alertPanel');
+    panel.style.display = 'flex';
+    panel.innerHTML = '<div style="padding:40px;text-align:center;color:#94a3b8;">로그인이 필요해요</div>';
+    return;
+  }
 
   // 날짜
   const today = new Date();
@@ -1602,8 +1618,11 @@ async function showAlerts() {
   const hour = today.getHours();
   const greeting = hour < 12 ? '좋은 아침이에요!' : hour < 18 ? '오늘도 수고하세요!' : '오늘 하루 마무리!';
 
-  panel.innerHTML = `
-    <div class="chat-area">
+  // body에 직접 추가
+  const chatArea = document.createElement('div');
+  chatArea.className = 'chat-area';
+  chatArea.id = 'alertChatArea';
+  chatArea.innerHTML = `
       <div class="chat-messages" id="alertMessages">
         <div class="chat-date"><span>${dateStr}</span></div>
       </div>
@@ -1614,8 +1633,8 @@ async function showAlerts() {
         <button class="chat-send-btn" onclick="briefSend()">
           <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         </button>
-      </div>
-    </div>`;
+      </div>`;
+  document.body.appendChild(chatArea);
 
   _lastSender = '';
 
