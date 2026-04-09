@@ -75,7 +75,19 @@ sb_session = requests.Session()
 
 APT_TYPES = {"아파트", "공동주택", "연립주택", "다세대주택"}
 OFFI_TYPES = {"오피스텔"}
-RESIDENTIAL_COMMON_KEYWORDS = ['복도', '계단', '승강기', '홀', '현관', '통로', '벽체', '엘리베이터']
+
+# gb=2(공용면적) 중 기타공용으로 판단해 제외할 키워드
+# hoNm이 있더라도 이 키워드가 etcPurps 또는 mainPurpsCdNm에 있으면 제외
+EXCLUDE_COMMON_KEYWORDS = [
+    '대피소', '주차장', '기계실', '전기실', '발전실', '경비실',
+    '관리사무소', '노인정', '경로당', '어린이집', '놀이터',
+    '집하장', '쓰레기', '자전거', '창고', '보일러실', '펌프실',
+]
+
+# 공급면적 합리성 검증: 공급/전용 비율 허용 범위
+# 한국 아파트 실무 기준 1.15~1.55 (오피스텔은 약간 다름)
+SUPPLY_RATIO_MIN = 1.05
+SUPPLY_RATIO_MAX = 1.65
 
 
 def load_apartments(only_empty=True, gu=None):
@@ -224,10 +236,21 @@ def filter_items_for_apt(all_items, kapt_name):
     return []
 
 
-def is_residential_common(etc_purps):
-    if not etc_purps:
+def is_residential_common(etc_purps, main_purps_nm=""):
+    """
+    gb=2(공용면적) 항목이 주거공용면적인지 판단.
+
+    전략: 화이트리스트(키워드 매칭) → 블랙리스트(기타공용 제외)로 전환.
+    - etcPurps/mainPurpsCdNm에 기타공용 키워드가 있으면 제외
+    - etcPurps가 빈 값이어도 블랙리스트에 없으면 주거공용으로 간주
+      (hoNm 필터가 이미 기타공용 대부분을 걸러주므로 안전함)
+    """
+    combined = (etc_purps or "") + (main_purps_nm or "")
+    # 기타공용 키워드가 있으면 제외
+    if any(k in combined for k in EXCLUDE_COMMON_KEYWORDS):
         return False
-    return any(k in etc_purps for k in RESIDENTIAL_COMMON_KEYWORDS)
+    # 블랙리스트 통과 → 주거공용으로 포함
+    return True
 
 
 def calc_pyeongs(items, property_type):
@@ -251,13 +274,19 @@ def calc_pyeongs(items, property_type):
 
         if gb == "1" and purp_nm in target_types:
             ho_expos[ho] = ho_expos.get(ho, 0) + ar
-        elif gb == "2" and is_residential_common(etc_purps):
+        elif gb == "2" and is_residential_common(etc_purps, purp_nm):
             ho_res_common[ho] = ho_res_common.get(ho, 0) + ar
 
     raw = defaultdict(list)
     for ho, expos in ho_expos.items():
         res_com = ho_res_common.get(ho, 0)
         supply = expos + res_com
+        # 합리성 검증: 공급/전용 비율이 허용 범위를 벗어나면 공용면적 0으로 처리
+        # (기타공용이 섞인 이상값 방어)
+        if res_com > 0:
+            ratio = supply / expos
+            if not (SUPPLY_RATIO_MIN <= ratio <= SUPPLY_RATIO_MAX):
+                supply = expos  # 공용면적 신뢰 불가 → 전용만 사용
         raw[round(expos, 2)].append(round(supply, 2))
 
     if not raw:
