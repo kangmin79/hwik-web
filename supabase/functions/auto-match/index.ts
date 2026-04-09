@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
 
     const { card_id } = await req.json();
     if (!card_id) throw new Error('card_id 필요');
-    const agent_id = getAuthUserId(req);
+    const agent_id = await getAuthUserId(req);
     if (!agent_id) throw new Error('인증이 필요합니다');
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
     // 1. 새 매물 조회
     const { data: card, error: cardErr } = await supabase
       .from('cards')
-      .select('id, property, embedding, agent_id, price_number, deposit, monthly_rent, lat, lng, kapt_code')
+      .select('id, property, private_note, embedding, agent_id, price_number, deposit, monthly_rent, lat, lng, kapt_code')
       .eq('id', card_id)
       .single();
 
@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
       }
       const cp = card.property || {};
       const catKo = {apartment:'아파트',officetel:'오피스텔',room:'원투룸',commercial:'상가',office:'사무실'}[cp.category] || '';
-      const cardMemo = card.property?.memo || '';
+      const cardMemo = card.private_note?.memo || card.property?.memo || '';
       const embedText = [cp.type, catKo, cp.price, cp.location, cp.complex, cp.area, cp.floor, cp.room, (cp.features||[]).join(' '), cp.moveIn, cardMemo].filter(Boolean).join(' ');
       const embedResp = await fetch('https://api.openai.com/v1/embeddings', {
         method: 'POST',
@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
       // 손님 카드 → 기존 매물과 매칭
       const { data, error } = await supabase
         .from('cards')
-        .select('id, property, embedding, price_number, deposit, monthly_rent, lat, lng, tags, kapt_code')
+        .select('id, property, private_note, embedding, price_number, deposit, monthly_rent, lat, lng, tags, kapt_code')
         .eq('agent_id', agent_id)
         .neq('property->>type', '손님')
         .eq('trade_status', '계약가능')
@@ -209,14 +209,16 @@ Deno.serve(async (req) => {
     const matches: { propertyId: string; clientId: string; similarity: number }[] = [];
 
     for (const target of filteredTargets) {
-      if (!target.embedding) continue;
+      if (!target.embedding || target.embedding.length !== cardEmb.length) continue;
       let dotProduct = 0, normA = 0, normB = 0;
       for (let i = 0; i < cardEmb.length; i++) {
         dotProduct += cardEmb[i] * target.embedding[i];
         normA += cardEmb[i] * cardEmb[i];
         normB += target.embedding[i] * target.embedding[i];
       }
-      const similarity = dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+      const denom = Math.sqrt(normA) * Math.sqrt(normB);
+      if (denom === 0) continue;
+      const similarity = dotProduct / denom;
       let bonus = 0;
       const targetCat = target.property?.category;
       const cardCat = p.category || '';

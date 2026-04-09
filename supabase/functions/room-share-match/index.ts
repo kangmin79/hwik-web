@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
 
     const { card_id, room_id } = await req.json();
     if (!card_id || !room_id) throw new Error('card_id, room_id 필요');
-    const shared_by = getAuthUserId(req);
+    const shared_by = await getAuthUserId(req);
     if (!shared_by) throw new Error('인증이 필요합니다');
 
     const startTime = Date.now();

@@ -10,6 +10,11 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// LIKE 와일드카드 이스케이프
+function escapeLike(s: string): string {
+  return s.replace(/[%_\\]/g, '\\$&');
+}
+
 // ========== 0. 로컬 빠른 파서 (Claude 없이 즉시 처리) ==========
 function localParseQuery(query: string) {
   // ★ 오타/한글숫자 교정
@@ -514,7 +519,7 @@ Deno.serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // ★ 인증: JWT에서 agent_id 추출
-    const agent_id = getAuthUserId(req);
+    const agent_id = await getAuthUserId(req);
     if (!agent_id) throw new Error('인증이 필요합니다');
     const authUser = agent_id;
 
@@ -671,7 +676,7 @@ Deno.serve(async (req) => {
       if (!searchTags.length) {
         for (const word of searchWords) {
           if (word.length < 2) continue;
-          sqlQuery = sqlQuery.ilike('search_text', `%${word}%`);
+          sqlQuery = sqlQuery.ilike('search_text', `%${escapeLike(word)}%`);
         }
       }
 
@@ -782,7 +787,7 @@ Deno.serve(async (req) => {
           .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number, tags')
           .eq('agent_id', agent_id)
           .neq('property->>type', '손님')
-          .ilike('search_text', `%${kwTerm}%`)
+          .ilike('search_text', `%${escapeLike(kwTerm)}%`)
           .order('created_at', { ascending: false })
           .limit(limit * 3);
         if (finalTradeType) kwQuery = kwQuery.eq('property->>type', finalTradeType);
@@ -808,7 +813,7 @@ Deno.serve(async (req) => {
         .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number, tags')
         .eq('agent_id', agent_id)
         .neq('property->>type', '손님')
-        .ilike('search_text', `%${brandName}%`)
+        .ilike('search_text', `%${escapeLike(brandName)}%`)
         .order('created_at', { ascending: false })
         .limit(limit * 5);
       if (finalTradeType) brandQuery = brandQuery.eq('property->>type', finalTradeType);
@@ -964,7 +969,7 @@ Deno.serve(async (req) => {
             .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number, tags')
             .eq('agent_id', agent_id)
             .neq('property->>type', '손님')
-            .ilike('search_text', `%${loc}%`)
+            .ilike('search_text', `%${escapeLike(loc)}%`)
             .order('created_at', { ascending: false })
             .limit(limit * multiplier);
           if (finalTradeType) locQuery2 = locQuery2.eq('property->>type', finalTradeType);
@@ -994,7 +999,7 @@ Deno.serve(async (req) => {
           const { data } = await supabase
             .from('stations')
             .select('name, lat, lon')
-            .ilike('name', `%${searchName}%`)
+            .ilike('name', `%${escapeLike(searchName)}%`)
             .limit(3);
           facilityData = data?.map(d => ({ name: d.name, latitude: d.lat, longitude: d.lon })) || null;
         } else {
@@ -1002,7 +1007,7 @@ Deno.serve(async (req) => {
           const { data } = await supabase
             .from('schools')
             .select('name, lat, lon')
-            .ilike('name', `%${searchName}%`)
+            .ilike('name', `%${escapeLike(searchName)}%`)
             .limit(3);
           facilityData = data?.map(d => ({ name: d.name, latitude: d.lat, longitude: d.lon })) || null;
         }
@@ -1060,7 +1065,7 @@ Deno.serve(async (req) => {
           .select('id, property, agent, agent_id, search_text, lat, lng, created_at, photos, trade_status, price_number, tags')
           .eq('agent_id', agent_id)
           .neq('property->>type', '손님')
-          .ilike('search_text', `%${term}%`)
+          .ilike('search_text', `%${escapeLike(term)}%`)
           .order('created_at', { ascending: false })
           .limit(limit * 3);
         // ★ Fix 16: 폴백에서도 거래유형 필터 유지

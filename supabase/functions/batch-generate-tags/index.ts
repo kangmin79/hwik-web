@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    const agent_id = getAuthUserId(req);
+    const agent_id = await getAuthUserId(req);
     if (!agent_id) throw new Error('인증이 필요합니다');
 
     // 단일 카드 또는 일괄 처리

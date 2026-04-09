@@ -3,6 +3,11 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { DISTRICT_COORDS } from '../_shared/geo.ts'
 import { getAuthUserId } from '../_shared/auth.ts'
 
+// LIKE 와일드카드 이스케이프
+function escapeLike(s: string): string {
+  return s.replace(/[%_\\]/g, '\\$&');
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://hwik.kr',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -64,7 +69,7 @@ Deno.serve(async (req) => {
     const { card_id } = await req.json();
     if (!card_id) throw new Error('card_id 필요');
 
-    const agent_id = getAuthUserId(req);
+    const agent_id = await getAuthUserId(req);
     if (!agent_id) throw new Error('인증이 필요합니다');
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
@@ -101,7 +106,7 @@ Deno.serve(async (req) => {
         const { data: stations } = await supabase
           .from('stations')
           .select('name, lat, lon')
-          .ilike('name', `%${stationName}%`)
+          .ilike('name', `%${escapeLike(stationName)}%`)
           .limit(1);
 
         if (stations && stations.length > 0) {
@@ -135,7 +140,7 @@ Deno.serve(async (req) => {
           const { data: schools } = await supabase
             .from('schools')
             .select('name, lat, lon')
-            .ilike('name', `%${m[1]}%`)
+            .ilike('name', `%${escapeLike(m[1])}%`)
             .limit(1);
 
           if (schools && schools.length > 0) {
