@@ -348,7 +348,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
         sub_info = " · ".join(sub_parts)
 
         lines.append(
-            f'<a href="/danji/{danji_slug}" style="display:flex;justify-content:space-between;align-items:center;'
+            f'<a href="/danji/{url_quote(danji_slug, safe="-")}" style="display:flex;justify-content:space-between;align-items:center;'
             f'padding:14px;background:#fff;border-radius:10px;text-decoration:none;color:#1a1a2e;'
             f'box-shadow:0 1px 4px rgba(0,0,0,0.05);border-left:3px solid #f5c842;">'
             f'<div><div style="font-size:13px;font-weight:600;">{i+1}. {name}</div>'
@@ -445,7 +445,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
         for od in other_dongs:
             od_slug = make_dong_slug(gu, od, first_addr)
             lines.append(
-                f'<a href="/dong/{od_slug}" style="padding:8px 12px;background:#f3f4f6;border-radius:8px;'
+                f'<a href="/dong/{url_quote(od_slug, safe="-")}" style="padding:8px 12px;background:#f3f4f6;border-radius:8px;'
                 f'text-decoration:none;color:#1a1a2e;font-size:12px;">{esc(od)}</a>'
             )
         lines.append('</div></div>')
