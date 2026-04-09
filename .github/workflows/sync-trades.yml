@@ -102,7 +102,7 @@ jobs:
   build:
     name: sitemap + 정적 페이지 빌드
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 120
     needs: [sync-seoul, sync-incheon, sync-gyeonggi]
     if: always()
     steps:
@@ -110,9 +110,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install requests python-dateutil
+      - run: pip install requests python-dateutil playwright
+      - name: Playwright 브라우저 설치
+        run: python -m playwright install chromium --with-deps
       - name: sitemap 재생성
         run: python sync_trades.py --aggregate-only
+      - name: 단지 OG 이미지 생성 (변경분만)
+        run: python build_og_images.py
+      - name: 동 OG 이미지 생성 (변경분만)
+        run: python build_og_images_dong.py
       - name: 단지 정적 페이지 빌드
         run: python build_danji_pages.py
       - name: 동 정적 페이지 빌드

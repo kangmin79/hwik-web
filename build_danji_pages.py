@@ -9,7 +9,7 @@ Usage:
   python build_danji_pages.py
 """
 
-import os, json, re, time, html as html_mod
+import os, json, re, time, hashlib, html as html_mod
 from datetime import datetime, timezone
 import requests
 from slug_utils import REGION_MAP, METRO_CITIES, clean as _clean, detect_region, make_danji_slug as make_slug, make_dong_slug
@@ -779,20 +779,19 @@ def generate_page(d):
 <meta property="og:locale" content="ko_KR">
 <meta property="og:title" id="og-title" content="{name} 실거래가 시세{title_loc} - 휙">
 <meta property="og:description" id="og-desc" content="{esc(desc)}">
-<meta property="og:image" content="https://hwik.kr/og-image.png">
+<meta property="og:image" content="https://jqaxejgzkchxbfzgzyzi.supabase.co/storage/v1/object/public/og-images/danji/{hashlib.md5(did.encode('utf-8')).hexdigest()}.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:url" id="og-url" content="{canonical}">
 <meta name="google-site-verification" content="R2ye41AVVTRs8BxEXyEafFSTqMSiHKdb9zgTklrktSI" />
 <meta name="naver-site-verification" content="367bd1e77a8ad48b74e345be3e4a0f8125c2c4e1" />
 {naver_meta}
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){{dataLayer.push(arguments);}}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" id="tw-title" content="{name} 실거래가 시세{title_loc} - 휙">
 <meta name="twitter:description" id="tw-desc" content="{esc(desc)}">
 <script type="application/ld+json">{jsonld}</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -813,10 +812,9 @@ def generate_page(d):
   </div>
 </div>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script defer src="/config.js"></script>
 <script defer src="/makeSlug.js"></script>
-<script defer src="app.js?v={int(time.time())}"></script>
+<script defer src="app.js?v={app_js_hash}"></script>
 </body>
 </html>"""
 
@@ -828,6 +826,15 @@ def main():
         sys.stdout = open(sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1)
 
     os.makedirs(DANJI_DIR, exist_ok=True)
+
+    # app.js 캐시 해시 (내용 변경 시에만 캐시 무효화)
+    global app_js_hash
+    app_js_path = os.path.join(DANJI_DIR, "app.js")
+    if os.path.exists(app_js_path):
+        with open(app_js_path, "rb") as f:
+            app_js_hash = hashlib.md5(f.read()).hexdigest()[:8]
+    else:
+        app_js_hash = "0"
 
     # 동 페이지 slug 목록 로드 (동 파일 없으면 링크 생략)
     global DONG_SLUGS

@@ -9,7 +9,7 @@ Usage:
   python build_dong_pages.py
 """
 
-import os, sys, json, re, time, html as html_mod
+import os, sys, json, re, time, hashlib, html as html_mod
 from datetime import datetime, timezone
 import requests
 from collections import defaultdict
@@ -542,23 +542,22 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
 <meta property="og:locale" content="ko_KR">
 <meta property="og:title" content="{esc(title)}">
 <meta property="og:description" content="{esc(desc)}">
-<meta property="og:image" content="https://hwik.kr/og-image.png">
+<meta property="og:image" content="https://jqaxejgzkchxbfzgzyzi.supabase.co/storage/v1/object/public/og-images/dong/{hashlib.md5(slug.encode('utf-8')).hexdigest()}.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:url" content="{canonical}">
 <meta name="google-site-verification" content="R2ye41AVVTRs8BxEXyEafFSTqMSiHKdb9zgTklrktSI" />
 <meta name="naver-site-verification" content="367bd1e77a8ad48b74e345be3e4a0f8125c2c4e1" />
 {dong_naver_meta}
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){{dataLayer.push(arguments);}}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{esc(title)}">
 <meta name="twitter:description" content="{esc(desc)}">
 <script type="application/ld+json">{jsonld}</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
 <style>
 *{{margin:0;padding:0;box-sizing:border-box}}
-html,body{{height:100%;font-family:'Noto Sans KR',-apple-system,sans-serif;background:#f8f8fa;color:#1a1a2e}}
+html,body{{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans CJK KR',sans-serif;background:#f8f8fa;color:#1a1a2e}}
 .wrap{{max-width:430px;margin:0 auto;background:#fff;min-height:100vh}}
 .header{{background:#1a1a2e;padding:16px}}
 .header-top{{display:flex;align-items:center;gap:12px}}
