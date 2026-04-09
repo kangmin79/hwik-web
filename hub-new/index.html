@@ -1700,7 +1700,7 @@ const Hub = (() => {
   const MAIN=[{key:'register',label:'매물 등록',angle:-90},{key:'my',label:'내 매물',angle:-18},{key:'client',label:'손님',angle:54},{key:'alert',label:'알림',angle:126},{key:'shared',label:'공유방',angle:198}];
   const CLIENT=[{key:'cl_conditions',label:'희망 조건',angle:-90},{key:'cl_match',label:'매칭 매물',angle:-30},{key:'cl_timeline',label:'상담 기록',angle:30},{key:'cl_schedule',label:'일정/알림',angle:90},{key:'cl_contact',label:'연락처',angle:150},{key:'cl_back',label:'← 돌아가기',angle:210}];
   const PROPERTY=[{key:'pr_detail',label:'상세 정보',angle:-90},{key:'pr_status',label:'거래 상태',angle:30},{key:'pr_back',label:'← 돌아가기',angle:150}];
-  const ALERT=[{key:'al_calendar',label:'달력',angle:-90},{key:'al_back',label:'← 돌아가기',angle:90}];
+  const ALERT=[{key:'al_all',label:'전체 알림',angle:-90},{key:'al_calendar',label:'달력',angle:30},{key:'al_back',label:'← 돌아가기',angle:150}];
 
   function render(nodes,center) {
     // 인자 없이 호출 시 현재 상태 유지 (손님 상세 등에서 허브 복구 방지)
@@ -1789,7 +1789,7 @@ const Hub = (() => {
     current={type:'alert',nodes:ALERT,center:{icon:'🔔',name:'알림',sub:''}};
     closePanel();render(ALERT,current.center);
     // 바로 전체 알림 패널 열기
-    setTimeout(()=>_openAlertSub('al_calendar'),100);
+    setTimeout(()=>_openAlertSub('al_all'),100);
   }
 
   function _openAlertSub(key){
@@ -4150,10 +4150,9 @@ const PanelAlert = (() => {
   }
 
   function selectDate(day){
-    document.querySelectorAll('.cal-day').forEach(el=>el.classList.remove('selected'));
-    event?.target?.closest('.cal-day')?.classList.add('selected');
+    document.querySelectorAll('.cal-day').forEach(el=>{el.classList.remove('selected');if(el.querySelector('.cal-num')?.textContent==day)el.classList.add('selected');});
     const detail=document.getElementById('calDetail');if(!detail)return;
-    const evts=(calAlerts||[]).filter(a=>new Date(a.alert_date).getDate()===day).sort((a,b)=>(a.alert_done?1:0)-(b.alert_done?1:0));
+    const evts=(calAlerts||[]).filter(a=>{const d=new Date(a.alert_date);return d.getDate()===day&&d.getMonth()+1===calMonth&&d.getFullYear()===calYear;}).sort((a,b)=>(a.alert_done?1:0)-(b.alert_done?1:0));
     const today=new Date();
     const clients=Data.cache.clientCards||[];
     const clientMap={};clients.forEach(c=>{clientMap[c.id]=c.contact_name||c.property?.location||'손님';});
@@ -4227,7 +4226,8 @@ const PanelAlert = (() => {
     (alerts.invites||[]).forEach(inv=>{all.push({type:'invite',icon:'📩',label:`${esc(inv.name)} 공유방 초대`,sub:new Date(inv.created_at).toLocaleDateString('ko-KR'),time:new Date(inv.created_at),color:'#8b5cf6',read:false,roomId:inv.roomId});});
 
     let filtered=all;
-    if(key==='al_schedule')filtered=all.filter(a=>a.type==='overdue');
+    if(key==='al_match')filtered=all.filter(a=>a.type==='match');
+    else if(key==='al_schedule')filtered=all.filter(a=>a.type==='overdue');
     else if(key==='al_nocontact')filtered=all.filter(a=>a.type==='nocontact');
 
     if(key==='al_calendar'){
@@ -4258,14 +4258,14 @@ const PanelAlert = (() => {
     Toast.show('공유방 참여 완료');
     await Promise.all([Data.loadRooms(),Data.loadPendingInvites(),Data.loadCounts()]);
     Hub.render();
-    const el=document.getElementById('panelContent');if(el)render(el);
+    const el=document.getElementById('panelArea');if(el)render(el);
   }
   async function rejectInvite(roomId){
     const{error}=await Data.rejectInvite(roomId);
     if(error){Toast.show('거절 실패','error');return;}
     Toast.show('초대 거절됨');
     await Data.loadCounts();Hub.render();
-    const el=document.getElementById('panelContent');if(el)render(el);
+    const el=document.getElementById('panelArea');if(el)render(el);
   }
 
   return { render, renderSub, calNav, selectDate, goToClient, acceptInvite, rejectInvite, addPersonal, donePersonal, doneAlert };

@@ -995,13 +995,21 @@
             try {
                 const { data, error } = await supabaseClient
                     .from('cards')
-                    .select('id, property, agent, style, color, agent_comment, photos, lat, lng, view_count, trade_status, created_at, agent_id')
+                    .select('id, property, style, color, agent_comment, photos, lat, lng, view_count, trade_status, created_at, agent_id')
                     .eq('id', cardId)
                     .single();
-                
+
                 if (error) throw error;
                 if (!data) { showError('매물 정보를 찾을 수 없습니다.'); return; }
                 if (isExpired(data)) { showError('거래가 완료된 매물이에요.<br><br>중개사에게 다른 매물을 문의해 주세요.', '🏠'); return; }
+
+                // 중개사 정보 fetch (overrideAgent 없을 때)
+                if (!overrideAgent && data.agent_id) {
+                    try {
+                        const { data: prof } = await supabaseClient.from('profiles').select('business_name, agent_name, phone, profile_photo').eq('id', data.agent_id).maybeSingle();
+                        if (prof) data.agent = { name: prof.business_name || prof.agent_name, business_name: prof.business_name, phone: prof.phone, profile_photo: prof.profile_photo };
+                    } catch(e) { console.warn('중개사 정보 로드 실패:', e); }
+                }
                 
                 // ★ 조회수 증가
                 try {
@@ -1584,12 +1592,26 @@
             try {
                 const { data, error } = await supabaseClient
                     .from('cards')
-                    .select('id, property, agent, style, color, agent_comment, photos, lat, lng, view_count, trade_status, created_at, agent_id')
+                    .select('id, property, style, color, agent_comment, photos, lat, lng, view_count, trade_status, created_at, agent_id')
                     .in('id', cardIds);
-                
+
                 if (error) throw error;
                 if (!data || data.length === 0) { showError('매물 정보를 찾을 수 없습니다.'); return; }
-                
+
+                // 중개사 정보 fetch (overrideAgent 없을 때)
+                if (!overrideAgent && data.length > 0) {
+                    const agentIds = [...new Set(data.map(d => d.agent_id).filter(Boolean))];
+                    if (agentIds.length) {
+                        try {
+                            const { data: profs } = await supabaseClient.from('profiles').select('id, business_name, agent_name, phone, profile_photo').in('id', agentIds);
+                            if (profs) {
+                                const profMap = {}; profs.forEach(p => { profMap[p.id] = p; });
+                                data.forEach(d => { const pr = profMap[d.agent_id]; if (pr) d.agent = { name: pr.business_name || pr.agent_name, business_name: pr.business_name, phone: pr.phone, profile_photo: pr.profile_photo }; });
+                            }
+                        } catch(e) { console.warn('중개사 정보 로드 실패:', e); }
+                    }
+                }
+
                 allCardsData = cardIds.map(id => data.find(d => d.id === id)).filter(Boolean);
                 allCardsData.forEach(c => sanitizeCardForViewer(c));
                 const validCards = allCardsData.filter(d => !isExpired(d));
