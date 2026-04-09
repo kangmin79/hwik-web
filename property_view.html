@@ -4,7 +4,7 @@
 <meta name="robots" content="noindex,nofollow">
     <meta charset="UTF-8">
     <meta name="google-site-verification" content="R2ye41AVVTRs8BxEXyEafFSTqMSiHKdb9zgTklrktSI" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>매물 정보 - 휙</title>
 
     <!-- 기본 OG (카카오 크롤러용 - JS 미실행 환경) -->
@@ -920,7 +920,8 @@
         window.addEventListener('error', (e) => { logError('unhandled_error', e.message, { file: e.filename, line: e.lineno }); });
         window.addEventListener('unhandledrejection', (e) => { logError('unhandled_promise', String(e.reason).slice(0, 500)); });
 
-        // ★ XSS 방지: esc()는 config.js에서 로드됨
+        // ★ XSS 방지: esc() fallback (config.js 로드 실패 대비)
+        if (typeof esc !== 'function') { window.esc = (s) => { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }; }
 
         // ★ 비공개 데이터 제거 (손님 화면에서 중개사 전용 정보 노출 방지)
         function sanitizeCardForViewer(card) {
@@ -2159,7 +2160,7 @@
 
             // 관심 등록
             btn.textContent = '등록 중...';
-            const bundleId = new URLSearchParams(location.search).get('cards') || card.id;
+            const bundleId = new URLSearchParams(location.search).get('ids') || card.id;
             const { error } = await supabaseClient.from('card_interests').insert({
                 card_id: card.id,
                 bundle_id: bundleId,
