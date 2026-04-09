@@ -451,6 +451,7 @@ body.dark .phone-screen{background:#0f172a;}
 .cal-day .cal-evt.schedule{background:#dbeafe;color:#2563eb;}
 .cal-day .cal-evt.done{background:#e2e8f0;color:#64748b;text-decoration:line-through;}
 .cal-day .cal-evt.log{background:#dcfce7;color:#15803d;}
+.cal-day .cal-evt.match{background:#ede9fe;color:#7c3aed;}
 
 /* ═══════════════════════════════════════════════════════════
    13. 상세 정보
@@ -966,13 +967,22 @@ const Data = (() => {
     const start = `${year}-${String(month).padStart(2,'0')}-01`;
     const em = month===12?1:month+1, ey = month===12?year+1:year;
     const end = `${ey}-${String(em).padStart(2,'0')}-01`;
-    // 병렬 조회: 일정 + 기록
-    const [{ data: scheduled }, { data: logs }] = await Promise.all([
+    // 병렬 조회: 일정 + 기록 + 매칭 알림
+    const [{ data: scheduled }, { data: logs }, { data: matches }] = await Promise.all([
       sb().from('client_notes').select('id,client_card_id,content,alert_date,type,alert_done,created_at').eq('agent_id',id).not('alert_date','is',null).gte('alert_date',start).lt('alert_date',end).order('alert_date',{ascending:true}),
-      sb().from('client_notes').select('id,client_card_id,content,alert_date,type,alert_done,created_at').eq('agent_id',id).is('alert_date',null).gte('created_at',start).lt('created_at',end).order('created_at',{ascending:true})
+      sb().from('client_notes').select('id,client_card_id,content,alert_date,type,alert_done,created_at').eq('agent_id',id).is('alert_date',null).gte('created_at',start).lt('created_at',end).order('created_at',{ascending:true}),
+      sb().from('match_notifications').select('id,client_card_id,card_id,similarity,is_read,created_at').eq('agent_id',id).gte('created_at',start).lt('created_at',end).order('created_at',{ascending:true})
     ]);
+    // 매칭 알림 → 달력 이벤트로 변환
+    const clients = cache.clientCards||[];
+    const clientMap = {};clients.forEach(c=>{clientMap[c.id]=c.contact_name||c.property?.location||'손님';});
+    const matchEvents = (matches||[]).map(m=>({
+      id:m.id, client_card_id:m.client_card_id,
+      content:`${clientMap[m.client_card_id]||'손님'} 매칭 ${m.similarity}점`,
+      alert_date:m.created_at, type:'매칭', alert_done:m.is_read, _isMatch:true
+    }));
     // logs는 alert_date 대신 created_at을 사용
-    const merged = [...(scheduled||[]), ...(logs||[]).map(n=>({...n, alert_date:n.created_at, _isLog:true}))];
+    const merged = [...(scheduled||[]), ...(logs||[]).map(n=>({...n, alert_date:n.created_at, _isLog:true})), ...matchEvents];
     merged.sort((a,b)=>new Date(a.alert_date).getTime()-new Date(b.alert_date).getTime());
     return merged;
   }
@@ -1184,6 +1194,7 @@ const TAG_STYLES = {
   '정산':    {bg:'rgba(16,185,129,0.12)',  color:'#047857'},
   '신규':    {bg:'rgba(99,102,241,0.12)',  color:'#4f46e5'},
   '지연':    {bg:'rgba(239,68,68,0.15)',  color:'#dc2626'},
+  '매칭':    {bg:'rgba(124,58,237,0.12)', color:'#7c3aed'},
 };
 // _featColors → TAG_STYLES 자동 병합 (이미 있는 키는 유지)
 Object.entries(_featColors).forEach(([tag,color])=>{
@@ -1687,7 +1698,7 @@ const Hub = (() => {
   const MAIN=[{key:'register',label:'매물 등록',angle:-90},{key:'my',label:'내 매물',angle:-18},{key:'client',label:'손님',angle:54},{key:'alert',label:'알림',angle:126},{key:'shared',label:'공유방',angle:198}];
   const CLIENT=[{key:'cl_conditions',label:'희망 조건',angle:-90},{key:'cl_match',label:'매칭 매물',angle:-30},{key:'cl_timeline',label:'상담 기록',angle:30},{key:'cl_schedule',label:'일정/알림',angle:90},{key:'cl_contact',label:'연락처',angle:150},{key:'cl_back',label:'← 돌아가기',angle:210}];
   const PROPERTY=[{key:'pr_detail',label:'상세 정보',angle:-90},{key:'pr_status',label:'거래 상태',angle:30},{key:'pr_back',label:'← 돌아가기',angle:150}];
-  const ALERT=[{key:'al_calendar',label:'달력',angle:-90},{key:'al_match',label:'매칭 알림',angle:30},{key:'al_back',label:'← 돌아가기',angle:150}];
+  const ALERT=[{key:'al_calendar',label:'달력',angle:-90},{key:'al_back',label:'← 돌아가기',angle:90}];
 
   function render(nodes,center) {
     // 인자 없이 호출 시 현재 상태 유지 (손님 상세 등에서 허브 복구 방지)
@@ -4067,7 +4078,7 @@ const PanelAlert = (() => {
       let evtHtml='';
       evts.slice(0,3).forEach(a=>{
         const past=new Date(a.alert_date)<today&&!a.alert_done;
-        const cls=a._isLog?'log':a.alert_done?'done':past?'overdue':'schedule';
+        const cls=a._isMatch?'match':a._isLog?'log':a.alert_done?'done':past?'overdue':'schedule';
         evtHtml+=`<span class="cal-evt ${cls}">${esc((a.content||a.type||'').slice(0,15))}</span>`;
       });
       if(evts.length>3)evtHtml+=`<span style="font-size:9px;font-weight:600;color:var(--text-light);">+${evts.length-3}건</span>`;
@@ -4154,8 +4165,7 @@ const PanelAlert = (() => {
     (alerts.invites||[]).forEach(inv=>{all.push({type:'invite',icon:'📩',label:`${esc(inv.name)} 공유방 초대`,sub:new Date(inv.created_at).toLocaleDateString('ko-KR'),time:new Date(inv.created_at),color:'#8b5cf6',read:false,roomId:inv.roomId});});
 
     let filtered=all;
-    if(key==='al_match')filtered=all.filter(a=>a.type==='match');
-    else if(key==='al_schedule')filtered=all.filter(a=>a.type==='overdue');
+    if(key==='al_schedule')filtered=all.filter(a=>a.type==='overdue');
     else if(key==='al_nocontact')filtered=all.filter(a=>a.type==='nocontact');
 
     if(key==='al_calendar'){
