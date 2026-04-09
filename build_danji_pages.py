@@ -822,6 +822,7 @@ def generate_page(d):
   </div>
 </div>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script defer src="/config.js"></script>
 <script defer src="/makeSlug.js"></script>
 <script defer src="app.js?v={app_js_hash}"></script>
