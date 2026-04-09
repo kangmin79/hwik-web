@@ -134,3 +134,29 @@ jobs:
             git commit -m "자동 빌드: sitemap + 단지 페이지 ($(date -u +%Y-%m-%d))"
             git push
           fi
+
+      - name: SEO 전수 검증 + 이메일 발송
+        run: |
+          python verify_seo.py > seo_result.txt 2>&1 || true
+          cat seo_result.txt
+          python - <<'PYEOF'
+          import smtplib, os
+          from email.mime.text import MIMEText
+
+          with open("seo_result.txt", encoding="utf-8") as f:
+              body = f.read()
+
+          # PASS/FAIL 판별
+          status = "PASS ✓" if "모든 검증 통과" in body else "FAIL ✗"
+          today = os.popen("date -u +%Y-%m-%d").read().strip()
+
+          msg = MIMEText(body, "plain", "utf-8")
+          msg["Subject"] = f"[휙 SEO] {today} 검증 결과: {status}"
+          msg["From"] = os.environ["SMTP_USER"]
+          msg["To"] = os.environ["REPORT_EMAIL"]
+
+          with smtplib.SMTP_SSL("smtp.gmail.com", 465) as s:
+              s.login(os.environ["SMTP_USER"], os.environ["SMTP_PASS"])
+              s.send_message(msg)
+          print(f"이메일 발송 완료 → {os.environ['REPORT_EMAIL']}")
+          PYEOF

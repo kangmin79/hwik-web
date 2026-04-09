@@ -11,8 +11,9 @@ from urllib.parse import unquote, urlparse
 from collections import defaultdict
 from pathlib import Path
 
-# Windows 콘솔 UTF-8 출력
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+# 콘솔 UTF-8 출력 (Windows 전용)
+if sys.platform == 'win32':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 BASE = Path(__file__).parent.resolve()
 DOMAIN = "https://hwik.kr"
