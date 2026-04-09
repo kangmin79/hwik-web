@@ -1374,13 +1374,20 @@ function addAiBubble(html, isFirst = false) {
   msgs.appendChild(d);
   msgs.scrollTop = msgs.scrollHeight;
 }
+function _getAgentName() {
+  try { return JSON.parse(localStorage.getItem('hwik_profile'))?.name || '나'; } catch { return '나'; }
+}
 function addUserBubble(text) {
   const msgs = document.getElementById('chatMessages');
   if (!msgs) return;
+  const showName = _lastSender !== 'user';
   _lastSender = 'user';
   const d = document.createElement('div');
-  d.className = 'msg user-msg first-in-group';
-  d.innerHTML = `<div class="bubble-wrap"><div class="bubble">${esc(text)}</div></div>`;
+  d.className = 'msg user-msg' + (showName ? ' first-in-group' : '');
+  d.innerHTML = `<div class="bubble-wrap">
+    ${showName ? `<div class="sender-name" style="text-align:right;">${esc(_getAgentName())}</div>` : ''}
+    <div class="bubble">${esc(text)}</div>
+  </div>`;
   msgs.appendChild(d);
   msgs.scrollTop = msgs.scrollHeight;
 }
