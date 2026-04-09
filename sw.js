@@ -1,6 +1,6 @@
 // 휙 서비스워커 — network first 전략
 // 버전 바꾸면 캐시 전체 교체됨
-const CACHE_VERSION = 'hwik-v2';
+const CACHE_VERSION = 'hwik-v3';
 
 const CACHE_FILES = [
   'mobile-v6.html',
