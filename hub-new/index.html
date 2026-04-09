@@ -2872,6 +2872,8 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
     if(card?.linked_client_id)ops.push(Auth.sb.from('cards').update({linked_card_id:null}).eq('id',card.linked_client_id));
     await Promise.all(ops);
     Toast.show('상태 변경: '+st);await Data.loadMyCards(0,true);renderList();
+    // 공유방 열려있으면 갱신
+    if(Hub.activePanel==='shared'){await Data.loadSharedCards();PanelShared.render(document.getElementById('panelArea'));}
   }
 
   async function _showClientPicker(cardId,newStatus){
@@ -2930,6 +2932,7 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
     await Promise.all(ops);
     Toast.show(newStatus+(clientId?' — 손님 연결 완료':''));
     await Data.loadMyCards(0,true);renderList();
+    if(Hub.activePanel==='shared'){await Data.loadSharedCards();PanelShared.render(document.getElementById('panelArea'));}
   }
 
   // 손님 매칭 탭에서 매물 선택 → 계약 진행
@@ -3957,6 +3960,12 @@ const PanelShared = (() => {
             <div style="color:var(--text-sub);margin-bottom:4px;">${[p.type,p.price,p.location,p.complex,p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ')}</div>
             ${(p.features||[]).length?`<div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:4px;">${p.features.map(f=>`${featTag(f)}`).join('')}</div>`:''}
             ${p.moveIn?`<div style="color:var(--text-light);font-size:11px;">입주: ${esc(p.moveIn)}</div>`:''}
+            ${isMine?`<div style="display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);">
+              <span style="font-size:11px;color:var(--text-light);">거래상태</span>
+              <button onclick="PanelCards.chgStatus('${c.id}','계약가능')" style="padding:3px 10px;border-radius:6px;border:1px solid ${st==='계약가능'?'#22c55e':'var(--border)'};background:${st==='계약가능'?'rgba(34,197,94,0.1)':'transparent'};color:${st==='계약가능'?'#22c55e':'var(--text-light)'};font-size:10px;font-weight:700;cursor:pointer;">계약가능</button>
+              <button onclick="PanelCards.chgStatus('${c.id}','계약중')" style="padding:3px 10px;border-radius:6px;border:1px solid ${st==='계약중'?'#f59e0b':'var(--border)'};background:${st==='계약중'?'rgba(245,158,11,0.1)':'transparent'};color:${st==='계약중'?'#f59e0b':'var(--text-light)'};font-size:10px;font-weight:700;cursor:pointer;">계약중</button>
+              <button onclick="PanelCards.chgStatus('${c.id}','완료')" style="padding:3px 10px;border-radius:6px;border:1px solid ${st==='완료'?'#ef4444':'var(--border)'};background:${st==='완료'?'rgba(239,68,68,0.1)':'transparent'};color:${st==='완료'?'#ef4444':'var(--text-light)'};font-size:10px;font-weight:700;cursor:pointer;">완료</button>
+            </div>`:''}
           </div>
         </div>`;
     });
