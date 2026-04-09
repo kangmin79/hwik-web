@@ -161,7 +161,7 @@ def has_trade_data(d):
 
 
 # ── 동별 HTML 생성 ────────────────────────────────────────
-def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
+def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=None):
     """동 페이지 정적 HTML 생성"""
     first_addr = danji_list[0].get("address", "") if danji_list else ""
     slug = make_dong_slug(gu, dong, first_addr)
@@ -443,7 +443,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
         lines.append(f'<h2 style="font-size:14px;font-weight:600;margin-bottom:8px;">{esc(gu)} 다른 동</h2>')
         lines.append('<div style="display:flex;flex-wrap:wrap;gap:6px;">')
         for od in other_dongs:
-            od_slug = make_dong_slug(gu, od, first_addr)
+            od_slug = (dong_slug_map or {}).get((gu, od)) or make_dong_slug(gu, od, first_addr)
             lines.append(
                 f'<a href="/dong/{url_quote(od_slug, safe="-")}" style="padding:8px 12px;background:#f3f4f6;border-radius:8px;'
                 f'text-decoration:none;color:#1a1a2e;font-size:12px;">{esc(od)}</a>'
@@ -638,6 +638,12 @@ def main():
     for gu in gu_dongs:
         gu_dongs[gu].sort()
 
+    # 동별 slug 사전 계산 (다른 동 링크에 올바른 slug 사용)
+    dong_slug_map = {}  # (gu, dong) → slug
+    for (gu, dong), danji_list in dong_groups.items():
+        first_addr = danji_list[0].get("address", "") if danji_list else ""
+        dong_slug_map[(gu, dong)] = make_dong_slug(gu, dong, first_addr)
+
     print(f"동 그룹: {len(dong_groups)}개, 생성 대상(거래 3개+): {sum(len(v) for v in gu_dongs.values())}개")
 
     count = 0
@@ -647,7 +653,7 @@ def main():
         region = region_cache.get(gu, "")
         same_gu = gu_dongs.get(gu, [])
 
-        page = build_dong_html(gu, dong, danji_list, region, same_gu)
+        page = build_dong_html(gu, dong, danji_list, region, same_gu, dong_slug_map)
         if page is None:
             skipped += 1
             continue

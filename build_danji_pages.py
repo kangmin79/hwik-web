@@ -451,7 +451,7 @@ def build_fallback_html(d):
             nname = esc(nname_raw)
             nloc = esc(nloc_raw)
             lines.append(
-                f'<li><a href="/danji/{nslug}" style="display:flex;justify-content:space-between;'
+                f'<li><a href="/danji/{url_quote(nslug, safe="-")}" style="display:flex;justify-content:space-between;'
                 f'padding:10px 12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">'
                 f'<span>{nname} <span style="color:#6b7280;font-size:11px;">{nloc}</span></span>'
                 f'<span style="font-weight:600;">{p}</span></a></li>'
@@ -564,8 +564,8 @@ def build_fallback_html(d):
         dong_slug_str = make_dong_slug(gu_for_link, dong_name, d.get("address", ""))
     lines.append('<div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">')
     if dong_name and dong_slug_str and dong_slug_str in DONG_SLUGS:
-        lines.append(f'<a href="/dong/{dong_slug_str}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{esc(dong_name)} 다른 단지 시세 →</a>')
-    lines.append(f'<a href="/gu.html?name={gu}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{gu} 전체 시세 →</a>')
+        lines.append(f'<a href="/dong/{url_quote(dong_slug_str, safe="-")}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{esc(dong_name)} 다른 단지 시세 →</a>')
+    lines.append(f'<a href="/gu.html?name={url_quote(gu, safe="")}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{gu} 전체 시세 →</a>')
     lines.append('<a href="/ranking.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">아파트 순위 →</a>')
     lines.append("</div>")
 
@@ -735,7 +735,7 @@ def generate_page(d):
     gu = esc(loc_parts[0]) if loc_parts else ""
     dong_raw = loc_parts[1] if len(loc_parts) >= 2 else ""
     dong_slug_nav = make_dong_slug(loc_parts[0], dong_raw, d.get("address", "")) if dong_raw else ""
-    dong_nav = f'<a href="/dong/{dong_slug_nav}" style="color:#6b7280;text-decoration:none;">{esc(dong_raw)}</a> &gt;\n      ' if dong_raw and dong_slug_nav and dong_slug_nav in DONG_SLUGS else ""
+    dong_nav = f'<a href="/dong/{url_quote(dong_slug_nav, safe="-")}" style="color:#6b7280;text-decoration:none;">{esc(dong_raw)}</a> &gt;\n      ' if dong_raw and dong_slug_nav and dong_slug_nav in DONG_SLUGS else ""
     units = d.get("total_units", "")
     year = d.get("build_year", "")
     # title용 위치 (중복 타이틀 방지 — 구+동)
@@ -806,7 +806,7 @@ def generate_page(d):
   <div id="fallback-content" style="padding:20px;">
     <nav style="font-size:11px;color:#6b7280;margin-bottom:12px;">
       <a href="/" style="color:#6b7280;text-decoration:none;">휙</a> &gt;
-      <a href="/gu.html?name={gu}" style="color:#6b7280;text-decoration:none;">{gu}</a> &gt;
+      <a href="/gu.html?name={url_quote(gu, safe='')}" style="color:#6b7280;text-decoration:none;">{gu}</a> &gt;
       {dong_nav}
       {name}
     </nav>
