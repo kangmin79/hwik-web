@@ -1186,7 +1186,6 @@ const TAG_STYLES = {
   '급해요':  {bg:'rgba(239,68,68,0.12)',   color:'#dc2626'},
   '협의중':  {bg:'rgba(245,158,11,0.12)',  color:'#b45309'},
   '계약완료': {bg:'rgba(34,197,94,0.12)',   color:'#15803d'},
-  '연락두절': {bg:'rgba(148,163,184,0.10)', color:'#64748b'},
   // 하위 호환 (구 태그명)
   '상담':    {bg:'rgba(96,165,250,0.12)',  color:'#2563eb'},
   '서류':    {bg:'rgba(139,92,246,0.12)',  color:'#7c3aed'},
@@ -3689,7 +3688,7 @@ const PanelClient = (() => {
     if(!card)return;const p=card.property||{};
     const m=document.getElementById('editModal');if(!m)return;
     const curStatus=card.client_status||'탐색중';
-    const statuses=[{k:'탐색중',c:'#2563eb'},{k:'급해요',c:'#dc2626'},{k:'협의중',c:'#b45309'},{k:'계약완료',c:'#15803d'},{k:'연락두절',c:'#64748b'}];
+    const statuses=[{k:'탐색중',c:'#2563eb'},{k:'급해요',c:'#dc2626'},{k:'협의중',c:'#b45309'},{k:'계약완료',c:'#15803d'}];
     const statusBtns=statuses.map(s=>`<button onclick="document.querySelectorAll('.cs-btn').forEach(b=>b.classList.remove('active'));this.classList.add('active');document.getElementById('clientEditStatus').value='${s.k}';" class="cs-btn${curStatus===s.k?' active':''}" style="padding:6px 14px;border-radius:20px;border:1.5px solid ${s.c};background:${curStatus===s.k?s.c+'20':'transparent'};color:${s.c};font-size:12px;font-weight:700;cursor:pointer;">${s.k}</button>`).join('');
     m.innerHTML=`<div class="modal-content"><div class="modal-header">손님 정보 수정<button class="modal-close" onclick="this.closest('.modal-overlay').classList.remove('show')">✕</button></div><div class="modal-body">
       <textarea id="clientEditText" class="reg-textarea" style="min-height:120px;" placeholder="손님 조건을 다시 입력하세요">${esc(p.rawText||[p.type,p.price,p.location,p.complex,p.area,...(p.features||[])].filter(Boolean).join(' '))}</textarea>
@@ -3727,7 +3726,8 @@ const PanelClient = (() => {
       document.getElementById('editModal').classList.remove('show');
       _updateClientTags(cardId,text);
       Data.batchGenerateTags(cardId);Data.updateEmbedding(cardId);Data.updateClientLocation(cardId);
-      Toast.show('수정 완료');await Data.loadClientCards(0,true);_renderList();
+      if(newStatus==='계약완료'){Toast.show('🎉 계약 완료! 축하합니다');closeDetail();}else{Toast.show('수정 완료');}
+      await Data.loadClientCards(0,true);_renderList();await Data.loadCounts();Hub.render();
     }catch(e){Toast.show('저장 실패: '+e.message);}
     btn.textContent='AI로 재분석';btn.disabled=false;
   }
@@ -3749,7 +3749,7 @@ const PanelClient = (() => {
     closeDetail();await Data.loadClientCards(0,true);_renderList();await Data.loadCounts();Hub.render();
   }
 
-  const _CLIENT_STATUSES = ['탐색중','급해요','협의중','계약완료','연락두절'];
+  const _CLIENT_STATUSES = ['탐색중','급해요','협의중','계약완료'];
   async function _changeClientStatus(cardId, el) {
     const cur = el.textContent.trim();
     const next = _CLIENT_STATUSES[(_CLIENT_STATUSES.indexOf(cur)+1)%_CLIENT_STATUSES.length];
