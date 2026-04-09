@@ -457,50 +457,58 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    align-items: center;
+    height: calc(100vh - 130px);
+  }
+
+  .client-header {
     text-align: center;
+    padding: 8px 0 12px;
+    flex-shrink: 0;
   }
 
-  .client-desc {
-    font-size: 15px;
+  .client-header h2 {
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--hwik-dark);
+    margin-bottom: 4px;
+  }
+
+  .client-header p {
+    font-size: 13px;
     color: #94a3b8;
-    margin-bottom: 28px;
-    line-height: 1.6;
-  }
-
-  .client-input-row {
-    position: fixed;
-    bottom: 72px;
-    left: 16px;
-    right: 16px;
-    max-width: 508px;
-    margin: 0 auto;
-    display: flex;
-    gap: 8px;
-    align-items: flex-end;
-    z-index: 100;
-    padding-bottom: env(safe-area-inset-bottom);
   }
 
   .client-input {
     flex: 1;
-    padding: 14px 18px;
+    width: 100%;
+    padding: 16px 18px;
     font-size: 16px;
     font-family: 'Noto Sans KR', sans-serif;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 22px;
+    border: none;
+    border-radius: 0;
     outline: none;
-    background: #fff;
+    background: transparent;
     color: var(--text);
     resize: none;
-    height: 48px;
-    max-height: 140px;
+    line-height: 1.7;
     overflow-y: auto;
-    transition: border-color 0.2s;
-    line-height: 1.4;
   }
-  .client-input:focus { border-color: var(--hwik-dark); box-shadow: 0 0 0 3px rgba(26,26,46,0.08); }
   .client-input::placeholder { color: #c0c0c0; }
+
+  .client-bottom {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 4px;
+    border-top: 1px solid var(--gray-200);
+  }
+
+  .client-tip {
+    flex: 1;
+    font-size: 12px;
+    color: #c0c0c0;
+  }
 
   .client-send {
     width: 48px;
@@ -519,17 +527,6 @@
   .client-send:active { transform: scale(0.9); }
   .client-send:disabled { opacity: 0.4; }
   .client-send svg { width: 22px; height: 22px; fill: none; stroke: var(--hwik-yellow); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-
-  .client-tip {
-    position: fixed;
-    bottom: 132px;
-    left: 0; right: 0;
-    text-align: center;
-    font-size: 12px;
-    color: #c0c0c0;
-    z-index: 100;
-    padding-bottom: env(safe-area-inset-bottom);
-  }
 
   /* ── 내정보 ── */
   .profile-card {
@@ -1205,15 +1202,17 @@ function showClientRegister() {
   panel.style.display = 'flex';
   panel.innerHTML = `
     <div class="client-area">
-      <div class="panel-title">손님 등록</div>
-      <div class="client-desc">손님이 찾는 조건을<br>말하듯이 적어주세요</div>
-      <div class="client-input-row">
-        <textarea class="client-input" id="clientInput" placeholder="강남 2룸 전세 3억 이하" rows="1" oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,140)+'px'"></textarea>
+      <div class="client-header">
+        <h2>손님 등록</h2>
+        <p>손님이 찾는 조건을 말하듯이 적어주세요</p>
+      </div>
+      <textarea class="client-input" id="clientInput" placeholder="강남 2룸 전세 3억 이하&#10;&#10;예) 신혼부부, 역세권 선호&#10;보증금 3억 이내 전세&#10;방2 화장실1 이상"></textarea>
+      <div class="client-bottom">
+        <span class="client-tip">AI가 자동으로 매칭 매물을 찾아드려요</span>
         <button class="client-send" id="clientSubmitBtn" onclick="submitClient()">
           <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </button>
       </div>
-      <div class="client-tip">AI가 자동으로 매칭 매물을 찾아드려요</div>
     </div>
   `;
   setTimeout(() => document.getElementById('clientInput')?.focus(), 300);
