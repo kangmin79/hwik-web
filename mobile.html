@@ -1294,8 +1294,16 @@ async function doRegisterClient() {
     showClientMatchResults(cardData, parsed, text, matches);
 
   } catch(e) {
+    console.error('손님등록 에러:', e);
     showToast('등록 실패: ' + (e.message || '오류'));
-    showClientRegister(); // 실패 시 입력 화면으로 복귀
+    // 에러 시에도 등록은 성공했을 수 있으니, 결과 화면 시도
+    const panel = document.getElementById('clientPanel');
+    panel.innerHTML = `
+      <div style="padding:40px 0;text-align:center;">
+        <div style="font-size:16px;font-weight:700;color:#ef4444;margin-bottom:12px;">오류가 발생했어요</div>
+        <div style="font-size:14px;color:#94a3b8;margin-bottom:20px;">${esc(e.message || '알 수 없는 오류')}</div>
+        <button onclick="showClientRegister();setTimeout(()=>{const i=document.getElementById('clientInput');if(i)i.value=window._clientText||''},100)" style="padding:12px 32px;border-radius:12px;border:1.5px solid var(--hwik-dark);background:transparent;color:var(--hwik-dark);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">다시 시도</button>
+      </div>`;
   }
 }
 
