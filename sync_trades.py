@@ -1086,6 +1086,7 @@ def generate_sitemap(danji_list: list):
     from collections import defaultdict as _defaultdict
     dong_trade_count = _defaultdict(int)  # (gu, dong) → 거래 있는 단지 수
     dong_addr_cache = {}  # (gu, dong) → 첫 번째 단지의 address
+    dong_latest_date = {}  # (gu, dong) → 최신 거래일
     for d in all_danji:
         loc = d.get("location", "")
         if not loc:
@@ -1096,9 +1097,15 @@ def generate_sitemap(danji_list: list):
         rt = d.get("recent_trade") or {}
         cats = d.get("categories") or []
         if any(rt.get(c) for c in cats):
-            dong_trade_count[(parts[0], parts[1])] += 1
-            if (parts[0], parts[1]) not in dong_addr_cache:
-                dong_addr_cache[(parts[0], parts[1])] = d.get("address", "")
+            key = (parts[0], parts[1])
+            dong_trade_count[key] += 1
+            if key not in dong_addr_cache:
+                dong_addr_cache[key] = d.get("address", "")
+            # 동 내 최신 거래일 추적
+            for c in cats:
+                td = (rt.get(c) or {}).get("date", "")
+                if td and td > dong_latest_date.get(key, ""):
+                    dong_latest_date[key] = td
 
     dong_count = 0
     for (gu, dong), cnt in sorted(dong_trade_count.items()):
@@ -1107,7 +1114,8 @@ def generate_sitemap(danji_list: list):
         addr = dong_addr_cache.get((gu, dong), "")
         dong_slug = _make_dong_slug(gu, dong, addr)
         safe_dong_slug = _quote(dong_slug, safe="-")
-        urls.append(f'  <url><loc>{base}/dong/{safe_dong_slug}</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>')
+        dong_lastmod = dong_latest_date.get((gu, dong), today)[:10]
+        urls.append(f'  <url><loc>{base}/dong/{safe_dong_slug}</loc><lastmod>{dong_lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>')
         dong_count += 1
 
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
@@ -1131,6 +1139,7 @@ def main():
     parser.add_argument("--months", type=int, default=2, help="수집할 월 수 (기본: 2 = 당월+전월)")
     parser.add_argument("--skip-aggregate", action="store_true", help="집계 건너뛰기 (수집만)")
     parser.add_argument("--aggregate-only", action="store_true", help="집계만 (수집 건너뛰기)")
+    parser.add_argument("--sitemap-only", action="store_true", help="sitemap만 재생성 (DB danji_pages 기반)")
     parser.add_argument("--gu", default=None, help="특정 구/시만 (예: 11440=마포구, 28185=연수구, 41135=분당구)")
     parser.add_argument("--seoul", action="store_true", help="서울 전체만 처리")
     parser.add_argument("--gyeonggi", action="store_true", help="경기도 전체만 처리")
@@ -1159,6 +1168,12 @@ def main():
     else:
         print("❌ DB 연결 실패 (메인 + fallback 모두)")
         sys.exit(1)
+
+    # --sitemap-only: DB에서 danji_pages만 읽어 sitemap 재생성 후 종료
+    if args.sitemap_only:
+        print("🗺️  sitemap만 재생성 (--sitemap-only)")
+        generate_sitemap([])  # all_danji는 내부에서 DB 조회
+        return
 
     print(f"{'='*50}")
     print(f"🔄 실거래가 동기화")
