@@ -3413,7 +3413,7 @@ const PanelClient = (() => {
         ${c.contact_phone?`<span class="client-phone">${esc(c.contact_phone)}</span>`:''}
       </div>`;});
     // 더보기 (PAGE 이상이면 다음 페이지 있을 수 있음)
-    if(cards.length>=PAGE && !cQuery.trim()){
+    if(cards.length>=50 && !cQuery.trim()){
       html+=`<div style="text-align:center;padding:16px 0;"><button onclick="PanelClient._loadMore()" style="padding:10px 32px;border-radius:10px;border:1.5px solid var(--primary);background:transparent;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer;">더보기</button></div>`;
     }
     // 계약완료 손님 (접히는 섹션)
