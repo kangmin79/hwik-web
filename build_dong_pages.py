@@ -165,7 +165,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
     """동 페이지 정적 HTML 생성"""
     first_addr = danji_list[0].get("address", "") if danji_list else ""
     slug = make_dong_slug(gu, dong, first_addr)
-    canonical = f"https://hwik.kr/dong/{slug}"
+    canonical = f"https://hwik.kr/dong/{url_quote(slug, safe='-')}"
 
     # 거래 있는 단지만 필터 + 가격순 정렬
     tradeable = []
@@ -237,7 +237,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs):
     lines.append(f'  {esc(dong)}')
     lines.append(f'</nav>')
 
-    lines.append(f'<h1 style="font-size:18px;font-weight:700;margin-bottom:4px;">{esc(gu)} {esc(dong)} 아파트 시세</h1>')
+    lines.append(f'<h2 style="font-size:18px;font-weight:700;margin-bottom:4px;">{esc(gu)} {esc(dong)} 아파트 시세</h2>')
     lines.append(f'<p style="font-size:12px;color:#6b7280;margin-bottom:16px;">{len(tradeable)}개 단지 · 최근 매매가 높은 순</p>')
 
     # 인프라 태그

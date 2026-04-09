@@ -11,6 +11,7 @@ Usage:
 
 import os, json, re, time, hashlib, html as html_mod
 from datetime import datetime, timezone
+from urllib.parse import quote as url_quote
 import requests
 from slug_utils import REGION_MAP, METRO_CITIES, clean as _clean, detect_region, make_danji_slug as make_slug, make_dong_slug
 
@@ -749,7 +750,7 @@ def generate_page(d):
     desc_parts.append(f"{prop_type} 실거래가, 전세가, 시세 추이")
     desc = " ".join(desc_parts)
 
-    canonical = f"https://hwik.kr/danji/{slug}"
+    canonical = f"https://hwik.kr/danji/{url_quote(slug, safe='-')}"
     jsonld = build_jsonld(d)
     fallback = build_fallback_html(d)
 
