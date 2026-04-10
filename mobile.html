@@ -1021,6 +1021,8 @@ function switchTab(tab) {
   // 모든 패널 숨기기 + body에 붙은 채팅 제거
   document.querySelectorAll('.panel').forEach(p => { p.style.display = 'none'; p.classList.remove('chat-mode'); });
   document.querySelector('body > .chat-area')?.remove();
+  // 진행 중이던 브리핑 큐 무효화
+  if (typeof _alertGen !== 'undefined') _alertGen++;
 
   // 탭 active 처리
   const isAgent = !!currentUser;
@@ -1755,11 +1757,13 @@ function _renderMatchPanel(cardData, parsed, rawText) {
 }
 
 // ── 알림 (채팅 스타일 브리핑) ──
+let _alertGen = 0; // 호출 세대 — 중복/경쟁 방지
 async function showAlerts() {
   // 이미 열려있으면 재생성 안 함
   if (document.getElementById('alertChatArea')) return;
   // 다른 채팅(손님등록) 제거
   document.querySelector('body > .chat-area')?.remove();
+  const myGen = ++_alertGen;
 
   if (!currentUser) {
     const panel = document.getElementById('alertPanel');
@@ -1886,9 +1890,15 @@ async function showAlerts() {
       window._clientMap = clientMap;
     }
 
+    // 내가 최신 호출이 아니면 무시 (중복 방지)
+    if (myGen !== _alertGen) return;
+
     // 큐 순차 재생 (300ms 간격, 톡톡톡)
     q.forEach((item, i) => {
-      setTimeout(() => addAlertBubble(item.html, item.first), i * 300);
+      setTimeout(() => {
+        if (myGen !== _alertGen) return; // 재생 도중에도 체크
+        addAlertBubble(item.html, item.first);
+      }, i * 300);
     });
 
   } catch(e) {
@@ -2242,23 +2252,13 @@ window.addEventListener('popstate', (e) => {
 </script>
 
 <script>
-// ── 서비스워커 등록 + 자동 업데이트 ──
+// ── 서비스워커 등록 (수동 업데이트) ──
+// 자동 reload 제거 — 작업 중 매칭 결과/채팅이 날아가는 문제 방지
+// 새 버전은 사용자가 완전히 앱을 닫았다 다시 열 때 적용됨
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const reg = await navigator.serviceWorker.register('/sw.js');
-      reg.addEventListener('updatefound', () => {
-        const newWorker = reg.installing;
-        newWorker.addEventListener('statechange', () => {
-          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-            newWorker.postMessage('SKIP_WAITING');
-          }
-        });
-      });
-      let refreshing = false;
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!refreshing) { refreshing = true; window.location.reload(); }
-      });
+      await navigator.serviceWorker.register('/sw.js');
     } catch(e) { console.warn('[휙 SW 등록 실패]', e); }
   });
 }
