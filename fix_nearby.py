@@ -69,6 +69,14 @@ def main():
     )
     print(f"  🏫 {len(schools)}개 학교 로드")
 
+    # 안전 검증: 데이터 0건이면 인증 실패 의심 → 즉시 중단
+    if not stations:
+        print("❌ 지하철역 0건 — 인증 실패 의심. 중단합니다.")
+        sys.exit(1)
+    if not schools:
+        print("❌ 학교 0건 — 인증 실패 의심. 중단합니다.")
+        sys.exit(1)
+
     # 3) danji_pages 전체 로드 (id, lat, lng만)
     danji = load_all("danji_pages", "id,lat,lng")
     print(f"  🏢 {len(danji)}개 단지 로드\n")

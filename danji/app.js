@@ -848,7 +848,7 @@ function injectJsonLd() {
   const d = DATA;
   const locParts = (d.location || '').split(' ');
   const guName = locParts[0] || '';
-  const canonUrl = `https://hwik.kr/danji/${encodeURIComponent(new URLSearchParams(location.search).get('id') || id)}`;
+  const canonUrl = `https://hwik.kr/danji/${encodeURIComponent(new URLSearchParams(location.search).get('id') || DATA.id)}`;
 
   const subway = d.nearby_subway || [];
   const recentFirst = d.categories && d.categories[0] ? (d.recent_trade || {})[d.categories[0]] : null;
@@ -870,7 +870,7 @@ function injectJsonLd() {
       {
         "@type": "Residence",
         "name": d.complex_name,
-        "address": { "@type": "PostalAddress", "addressLocality": d.location, "streetAddress": d.address, "addressRegion": "서울특별시", "addressCountry": "KR" },
+        "address": { "@type": "PostalAddress", "addressLocality": d.location, "streetAddress": d.address, "addressRegion": (d.address || '').split(' ')[0] || "서울특별시", "addressCountry": "KR" },
         "geo": { "@type": "GeoCoordinates", "latitude": d.lat, "longitude": d.lng },
         "description": d.seo_text || '',
         "numberOfRooms": d.total_units,

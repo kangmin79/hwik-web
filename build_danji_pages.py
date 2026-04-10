@@ -838,22 +838,24 @@ def main():
 
     os.makedirs(DANJI_DIR, exist_ok=True)
 
-    # app.js 캐시 해시 (내용 변경 시에만 캐시 무효화)
-    global app_js_hash
-    app_js_path = os.path.join(DANJI_DIR, "app.js")
-    if os.path.exists(app_js_path):
-        with open(app_js_path, "rb") as f:
-            app_js_hash = hashlib.md5(f.read()).hexdigest()[:8]
-    else:
-        app_js_hash = "0"
-
     # 동 페이지 slug 목록 로드 (동 파일 없으면 링크 생략)
     global DONG_SLUGS
     if os.path.isdir(DONG_DIR):
         DONG_SLUGS = {os.path.splitext(f)[0] for f in os.listdir(DONG_DIR) if f.endswith(".html")}
     print(f"동 페이지 {len(DONG_SLUGS)}개 인식")
 
-    # 옛 HTML 파일 삭제 (고아 파일 방지, style.css/app.js는 유지)
+    # ── 데이터 먼저 확보 (실패 시 기존 파일 보존) ──
+    print("danji_pages 조회 중...")
+    all_danji = fetch_all_danji()
+    if not all_danji:
+        print("❌ 데이터 0건 — 중단 (기존 페이지 유지)")
+        sys.exit(1)
+    print(f"{len(all_danji)}개 단지 로드")
+
+    print("CSS/JS 추출 중...")
+    css, js = extract_css_js()
+
+    # ── 데이터 확보 후 기존 HTML 삭제 ──
     old_count = 0
     for f in os.listdir(DANJI_DIR):
         if f.endswith(".html"):
@@ -862,13 +864,6 @@ def main():
     if old_count:
         print(f"기존 {old_count}개 HTML 삭제")
 
-    print("danji_pages 조회 중...")
-    all_danji = fetch_all_danji()
-    print(f"{len(all_danji)}개 단지 로드")
-
-    print("CSS/JS 추출 중...")
-    css, js = extract_css_js()
-
     with open(os.path.join(DANJI_DIR, "style.css"), "w", encoding="utf-8") as f:
         f.write(css)
     print(f"  style.css ({len(css):,} bytes)")
@@ -876,6 +871,12 @@ def main():
     with open(os.path.join(DANJI_DIR, "app.js"), "w", encoding="utf-8") as f:
         f.write(js)
     print(f"  app.js ({len(js):,} bytes)")
+
+    # app.js 캐시 해시 (새 파일 기준으로 계산)
+    global app_js_hash
+    app_js_path = os.path.join(DANJI_DIR, "app.js")
+    with open(app_js_path, "rb") as f:
+        app_js_hash = hashlib.md5(f.read()).hexdigest()[:8]
 
     # id → slug 맵 (주변 단지 링크용 — 거래 있는 단지만)
     global DANJI_SLUG_MAP
