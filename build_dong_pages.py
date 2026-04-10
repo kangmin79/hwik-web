@@ -246,11 +246,12 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
     lines = []
 
     # breadcrumb
-    region_link = "/gu.html" if region == "서울" else f"/gu.html?tab={'incheon' if region == '인천' else 'gyeonggi'}"
+    # 지역 탭 링크 — 정적 /gu/ 인덱스로 통일 (탭 파라미터는 정적 페이지에서 무의미)
+    region_link = "/gu/"
     lines.append(f'<nav style="font-size:11px;color:#6b7280;margin-bottom:12px;">')
     lines.append(f'  <a href="/" style="color:#6b7280;text-decoration:none;">휙</a> &gt;')
     lines.append(f'  <a href="{region_link}" style="color:#6b7280;text-decoration:none;">{esc(region)}</a> &gt;')
-    lines.append(f'  <a href="/gu.html?name={url_quote(gu, safe="")}" style="color:#6b7280;text-decoration:none;">{esc(gu)}</a> &gt;')
+    lines.append(f'  <a href="/gu/{url_quote(gu.replace(" ", "-"), safe="-")}" style="color:#6b7280;text-decoration:none;">{esc(gu)}</a> &gt;')
     lines.append(f'  {esc(dong)}')
     lines.append(f'</nav>')
 
@@ -462,7 +463,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
 
     # 내부 링크
     lines.append('<div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">')
-    lines.append(f'<a href="/gu.html?name={url_quote(gu, safe="")}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{esc(gu)} 전체 시세 &rarr;</a>')
+    lines.append(f'<a href="/gu/{url_quote(gu.replace(" ", "-"), safe="-")}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{esc(gu)} 전체 시세 &rarr;</a>')
     lines.append('<a href="/ranking.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">아파트 순위 &rarr;</a>')
     lines.append('</div>')
 
@@ -518,7 +519,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
             "itemListElement": [
                 {"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"},
                 {"@type": "ListItem", "position": 2, "name": region, "item": f"https://hwik.kr{region_link}"},
-                {"@type": "ListItem", "position": 3, "name": gu, "item": f"https://hwik.kr/gu.html?name={url_quote(gu, safe='')}"},
+                {"@type": "ListItem", "position": 3, "name": gu, "item": f"https://hwik.kr/gu/{url_quote(gu.replace(' ', '-'), safe='-')}"},
                 {"@type": "ListItem", "position": 4, "name": dong},
             ],
         },

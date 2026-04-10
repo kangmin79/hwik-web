@@ -24,22 +24,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="config.js"></script>
 <script src="/makeSlug.js"></script>
-<script>
-// Canonical + og:url 즉시 주입
-(function() {
-  var id = new URLSearchParams(location.search).get('id');
-  if (id) {
-    var fullUrl = 'https://hwik.kr/danji/' + encodeURIComponent(id);
-    var link = document.createElement('link');
-    link.rel = 'canonical';
-    link.id = 'canonical';
-    link.href = fullUrl;
-    document.head.appendChild(link);
-    var ogUrl = document.getElementById('og-url');
-    if (ogUrl) ogUrl.content = fullUrl;
-  }
-})();
-</script>
+<!-- noindex로 이미 색인 차단됨. 깨진 canonical 주입 제거 (2026-04-10) -->
+<!-- 초기 인라인 스크립트가 /danji/{id} 같은 404 URL을 canonical로 지정해서 -->
+<!-- Google이 "중복 페이지, 사용자와 다른 표준 선택" 에러를 93건 발생시킴 -->
+<!-- 데이터 로드 후 올바른 canonical(L301~314)은 유지 — 페이지 공유 시 OG 메타용 -->
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 :root {

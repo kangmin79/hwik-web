@@ -580,7 +580,7 @@ def build_fallback_html(d):
     lines.append('<div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">')
     if dong_name and dong_slug_str and dong_slug_str in DONG_SLUGS:
         lines.append(f'<a href="/dong/{url_quote(dong_slug_str, safe="-")}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{esc(dong_name)} 다른 단지 시세 →</a>')
-    lines.append(f'<a href="/gu.html?name={url_quote(gu, safe="")}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{gu} 전체 시세 →</a>')
+    lines.append(f'<a href="/gu/{url_quote(gu.replace(" ", "-"), safe="-")}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{gu} 전체 시세 →</a>')
     lines.append('<a href="/ranking.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">아파트 순위 →</a>')
     lines.append("</div>")
 
@@ -612,7 +612,7 @@ def build_jsonld(d):
             "@type": "BreadcrumbList",
             "itemListElement": [
                 {"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"},
-                {"@type": "ListItem", "position": 2, "name": f"{gu}", "item": f"https://hwik.kr/gu.html?name={url_quote(gu, safe='')}"},
+                {"@type": "ListItem", "position": 2, "name": f"{gu}", "item": f"https://hwik.kr/gu/{url_quote(gu.replace(' ', '-'), safe='-')}"},
             ] + ([{"@type": "ListItem", "position": 3, "name": dong_name, "item": f"https://hwik.kr/dong/{url_quote(dong_slug_str, safe='-')}"}] if dong_name and dong_slug_str and dong_slug_str in DONG_SLUGS else []) + [
                 {"@type": "ListItem", "position": 4 if (dong_name and dong_slug_str and dong_slug_str in DONG_SLUGS) else 3, "name": name},
             ],
@@ -821,7 +821,7 @@ def generate_page(d):
   <div id="fallback-content" style="padding:20px;">
     <nav style="font-size:11px;color:#6b7280;margin-bottom:12px;">
       <a href="/" style="color:#6b7280;text-decoration:none;">휙</a> &gt;
-      <a href="/gu.html?name={url_quote(gu, safe='')}" style="color:#6b7280;text-decoration:none;">{gu}</a> &gt;
+      <a href="/gu/{url_quote(gu.replace(' ', '-'), safe='-')}" style="color:#6b7280;text-decoration:none;">{gu}</a> &gt;
       {dong_nav}
       {name}
     </nav>
