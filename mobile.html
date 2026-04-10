@@ -1737,11 +1737,9 @@ async function showAlerts() {
   _lastSender = '';
 
   try {
-    const [matchRes, interestRes, overdueRes, upcomingRes] = await Promise.all([
+    const [matchRes, overdueRes, upcomingRes] = await Promise.all([
       supabaseClient.from('match_notifications').select('id, card_id, client_card_id, similarity, created_at')
         .eq('agent_id', currentUser.id).eq('is_read', false).order('created_at', { ascending: false }).limit(20),
-      supabaseClient.from('card_interests').select('id, card_id, created_at')
-        .eq('agent_id', currentUser.id).order('created_at', { ascending: false }).limit(20),
       supabaseClient.from('client_notes').select('id, client_card_id, content, alert_date, type')
         .eq('agent_id', currentUser.id).eq('alert_done', false).not('alert_date', 'is', null).lt('alert_date', new Date().toISOString())
         .order('alert_date', { ascending: true }).limit(20),
@@ -1751,7 +1749,7 @@ async function showAlerts() {
     ]);
 
     // 매물·손님 ID 모아서 병렬 조회
-    const cardIds = [...new Set([...(matchRes.data||[]).map(m=>m.card_id), ...(interestRes.data||[]).map(i=>i.card_id)])].filter(Boolean);
+    const cardIds = [...new Set([...(matchRes.data||[]).map(m=>m.card_id)])].filter(Boolean);
     const clientIds = [...new Set([...(overdueRes.data||[]).map(o=>o.client_card_id), ...(upcomingRes.data||[]).map(u=>u.client_card_id), ...(matchRes.data||[]).map(m=>m.client_card_id)])].filter(Boolean);
 
     let cardMap = {}, clientMap = {};
@@ -1770,8 +1768,7 @@ async function showAlerts() {
     const upcoming = upcomingRes.data || [];
     const overdue = overdueRes.data || [];
     const matches = matchRes.data || [];
-    const interests = interestRes.data || [];
-    const totalToday = upcoming.length + matches.length + interests.length;
+    const totalToday = upcoming.length + matches.length;
 
     // 메시지 큐에 모아서 순차 표시
     const q = [];
@@ -1810,19 +1807,6 @@ async function showAlerts() {
           <div style="font-size:12px;color:#4ecdc4;font-weight:600;margin-bottom:4px;">매칭</div>
           <div style="font-size:14px;font-weight:700;">${esc(propName)}</div>
           <div style="font-size:13px;color:#555;margin-top:2px;">${esc(clientName)} 손님과 매칭</div>` });
-      });
-    }
-
-    // 관심 표시
-    if (interests.length) {
-      q.push({ html: `손님이 관심 표시한 매물 <strong style="color:#f59e0b;">${interests.length}건</strong>` });
-      interests.forEach(i => {
-        const p = cardMap[i.card_id] || {};
-        const name = [p.complex, p.location, p.price].filter(Boolean).join(' · ') || '매물';
-        q.push({ html: `
-          <div style="font-size:12px;color:#f59e0b;font-weight:600;margin-bottom:4px;">관심 매물</div>
-          <div style="font-size:14px;font-weight:700;">"${esc(name)}"</div>
-          <div style="font-size:13px;color:#555;margin-top:2px;">손님이 보고싶어요</div>` });
       });
     }
 
@@ -2099,12 +2083,11 @@ async function briefConfirmClient() {
 async function updateAlertBadge() {
   if (!currentUser) return;
   try {
-    const [matchResult, interestResult, overdueResult] = await Promise.all([
+    const [matchResult, overdueResult] = await Promise.all([
       supabaseClient.from('match_notifications').select('id', { count: 'exact', head: true }).eq('agent_id', currentUser.id).eq('is_read', false),
-      supabaseClient.from('card_interests').select('id', { count: 'exact', head: true }).eq('agent_id', currentUser.id),
       supabaseClient.from('client_notes').select('id', { count: 'exact', head: true }).eq('agent_id', currentUser.id).eq('alert_done', false).lt('alert_date', new Date().toISOString())
     ]);
-    const count = (matchResult.count || 0) + (interestResult.count || 0) + (overdueResult.count || 0);
+    const count = (matchResult.count || 0) + (overdueResult.count || 0);
     const badge = document.getElementById('badgeAlert');
     if (badge) {
       if (count > 0) { badge.textContent = count > 99 ? '99+' : count; badge.classList.add('show'); }
