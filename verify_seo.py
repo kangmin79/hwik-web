@@ -46,6 +46,8 @@ def build_file_index():
 
     danji_slugs = set()
     dong_slugs = set()
+    gu_slugs = set()
+    ranking_slugs = set()
     all_html_paths = []
 
     if danji_dir.is_dir():
@@ -60,11 +62,25 @@ def build_file_index():
                 dong_slugs.add(f.stem)
                 all_html_paths.append(("dong", f))
 
+    gu_dir = BASE / "gu"
+    if gu_dir.is_dir():
+        for f in gu_dir.iterdir():
+            if f.is_file() and f.suffix == '.html':
+                gu_slugs.add(f.stem)
+                all_html_paths.append(("gu", f))
+
+    ranking_dir = BASE / "ranking"
+    if ranking_dir.is_dir():
+        for f in ranking_dir.iterdir():
+            if f.is_file() and f.suffix == '.html':
+                ranking_slugs.add(f.stem)
+                all_html_paths.append(("ranking", f))
+
     for f in BASE.iterdir():
         if f.is_file() and f.suffix == '.html':
             all_html_paths.append(("root", f))
 
-    return root_files, danji_slugs, dong_slugs, all_html_paths
+    return root_files, danji_slugs, dong_slugs, gu_slugs, ranking_slugs, all_html_paths
 
 
 # ── 유틸리티 ────────────────────────────────────────────────
@@ -83,10 +99,15 @@ def extract_urls_from_jsonld(obj):
     return urls
 
 
-def resolve_link(href, root_files, danji_slugs, dong_slugs):
+def resolve_link(href, root_files, danji_slugs, dong_slugs, gu_slugs=None, ranking_slugs=None):
     """링크가 내부인지, 대상 파일이 존재하는지 반환.
     Returns: (is_internal, exists, detail)
     """
+    if gu_slugs is None:
+        gu_slugs = set()
+    if ranking_slugs is None:
+        ranking_slugs = set()
+
     if not href or href.startswith('#') or href.startswith('javascript:') or href.startswith('mailto:') or href.startswith('tel:'):
         return False, True, None
     # JS 템플릿 변수 (동적 페이지 - danji.html, dong.html, gu.html 등)
@@ -96,7 +117,7 @@ def resolve_link(href, root_files, danji_slugs, dong_slugs):
     if "'+encodeURIComponent" in href or "'+makeSlug" in href or "'+esc(" in href:
         return False, True, None
     # JS에서 잘린 경로 (/danji/ 로 끝나는 불완전 href)
-    if href.rstrip('/') in ('/danji', '/dong'):
+    if href.rstrip('/') in ('/danji', '/dong', '/gu', '/ranking'):
         return False, True, None
 
     # 절대 URL → 경로 추출
@@ -128,6 +149,24 @@ def resolve_link(href, root_files, danji_slugs, dong_slugs):
             return True, True, None
         return True, False, f"dong 없음: {slug[:60]}"
 
+    # /gu/SLUG
+    if decoded.startswith('/gu/'):
+        slug = decoded[4:]
+        if not slug or slug == 'index':
+            return True, 'index' in gu_slugs, "gu/index.html 없음"
+        if slug in gu_slugs:
+            return True, True, None
+        return True, False, f"gu 없음: {slug[:60]}"
+
+    # /ranking/SLUG
+    if decoded.startswith('/ranking/'):
+        slug = decoded[9:]
+        if not slug or slug == 'index':
+            return True, 'index' in ranking_slugs, "ranking/index.html 없음"
+        if slug in ranking_slugs:
+            return True, True, None
+        return True, False, f"ranking 없음: {slug[:60]}"
+
     # /
     if decoded == '/':
         return True, 'index.html' in root_files, "index.html 없음"
@@ -154,7 +193,7 @@ def resolve_link(href, root_files, danji_slugs, dong_slugs):
 
 
 # ── 검증 1: 내부 링크 ──────────────────────────────────────
-def check_links(category, fname, html, root_files, danji_slugs, dong_slugs, errors):
+def check_links(category, fname, html, root_files, danji_slugs, dong_slugs, errors, gu_slugs=None, ranking_slugs=None):
     total = 0
     checked = 0
     # <a href> 추출
@@ -178,7 +217,7 @@ def check_links(category, fname, html, root_files, danji_slugs, dong_slugs, erro
 
     total = len(hrefs)
     for href in hrefs:
-        is_internal, exists, detail = resolve_link(href, root_files, danji_slugs, dong_slugs)
+        is_internal, exists, detail = resolve_link(href, root_files, danji_slugs, dong_slugs, gu_slugs, ranking_slugs)
         if is_internal:
             checked += 1
             if not exists:
@@ -305,7 +344,12 @@ def check_pagespeed(category, fname, html, errors):
 
 
 # ── 검증 4: sitemap.xml ↔ 실제 파일 ───────────────────────
-def verify_sitemap(root_files, danji_slugs, dong_slugs):
+def verify_sitemap(root_files, danji_slugs, dong_slugs, gu_slugs=None, ranking_slugs=None):
+    if gu_slugs is None:
+        gu_slugs = set()
+    if ranking_slugs is None:
+        ranking_slugs = set()
+
     errors = defaultdict(list)
     sitemap_path = BASE / "sitemap.xml"
     if not sitemap_path.is_file():
@@ -318,6 +362,8 @@ def verify_sitemap(root_files, danji_slugs, dong_slugs):
 
     sitemap_danji = set()
     sitemap_dong = set()
+    sitemap_gu = set()
+    sitemap_ranking = set()
     url_count = 0
 
     for url_elem in root.findall('sm:url', ns):
@@ -351,6 +397,26 @@ def verify_sitemap(root_files, danji_slugs, dong_slugs):
             sitemap_dong.add(slug)
             if slug not in dong_slugs:
                 errors["sitemap_file_missing"].append(f"dong/{slug[:60]}")
+        elif path.startswith('/gu/'):
+            slug = path[4:]
+            if slug:
+                sitemap_gu.add(slug)
+                if slug not in gu_slugs:
+                    errors["sitemap_file_missing"].append(f"gu/{slug[:60]}")
+            else:
+                sitemap_gu.add("index")
+                if "index" not in gu_slugs:
+                    errors["sitemap_file_missing"].append("gu/index")
+        elif path.startswith('/ranking/'):
+            slug = path[9:]
+            if slug:
+                sitemap_ranking.add(slug)
+                if slug not in ranking_slugs:
+                    errors["sitemap_file_missing"].append(f"ranking/{slug[:60]}")
+            else:
+                sitemap_ranking.add("index")
+                if "index" not in ranking_slugs:
+                    errors["sitemap_file_missing"].append("ranking/index")
         elif path in ('', '/'):
             if 'index.html' not in root_files:
                 errors["sitemap_file_missing"].append("/")
@@ -367,6 +433,14 @@ def verify_sitemap(root_files, danji_slugs, dong_slugs):
     for slug in dong_slugs:
         if slug not in sitemap_dong:
             errors["file_not_in_sitemap"].append(f"dong/{slug[:60]}")
+
+    for slug in gu_slugs:
+        if slug not in sitemap_gu:
+            errors["file_not_in_sitemap"].append(f"gu/{slug[:60]}")
+
+    for slug in ranking_slugs:
+        if slug not in sitemap_ranking:
+            errors["file_not_in_sitemap"].append(f"ranking/{slug[:60]}")
 
     return errors, url_count
 
@@ -394,9 +468,10 @@ def main():
     print("=" * 70)
 
     # Phase 0
-    root_files, danji_slugs, dong_slugs, all_html_paths = build_file_index()
+    root_files, danji_slugs, dong_slugs, gu_slugs, ranking_slugs, all_html_paths = build_file_index()
     print(f"\n파일 인덱스: root HTML {sum(1 for c,_ in all_html_paths if c=='root')}개, "
           f"danji {len(danji_slugs)}개, dong {len(dong_slugs)}개, "
+          f"gu {len(gu_slugs)}개, ranking {len(ranking_slugs)}개, "
           f"총 HTML {len(all_html_paths)}개\n")
 
     # Phase 1-3: 단일 루프
@@ -418,7 +493,7 @@ def main():
         file_count += 1
 
         # 검증 1
-        t, c = check_links(category, fname, html, root_files, danji_slugs, dong_slugs, link_errors)
+        t, c = check_links(category, fname, html, root_files, danji_slugs, dong_slugs, link_errors, gu_slugs, ranking_slugs)
         total_links += t
         checked_links += c
 
@@ -475,7 +550,7 @@ def main():
     print(f"\n{'=' * 70}")
     print("  검증 4: sitemap.xml ↔ 실제 파일")
     print("=" * 70)
-    sitemap_errors, sitemap_count = verify_sitemap(root_files, danji_slugs, dong_slugs)
+    sitemap_errors, sitemap_count = verify_sitemap(root_files, danji_slugs, dong_slugs, gu_slugs, ranking_slugs)
     print(f"  sitemap URL: {sitemap_count:,}개")
     print_errors("sitemap → 파일 없음", sitemap_errors.get("sitemap_file_missing", []))
     print_errors("파일 → sitemap 미등록", sitemap_errors.get("file_not_in_sitemap", []))
