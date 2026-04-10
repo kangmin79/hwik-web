@@ -1589,12 +1589,61 @@ function _setMatchFilter(filter, cardData, parsed, rawText) {
   _renderMatchPanel(cardData, parsed, rawText);
 }
 
+let _selectedMatchIds = new Set();
+
+function _toggleMatchSelect(id, el) {
+  if (_selectedMatchIds.has(id)) {
+    _selectedMatchIds.delete(id);
+    el.style.background = '';
+    el.style.borderColor = el.dataset.mine === '1' ? '#4ecdc4' : '';
+  } else {
+    if (_selectedMatchIds.size >= 10) { showToast('최대 10개까지 선택 가능해요'); return; }
+    _selectedMatchIds.add(id);
+    el.style.background = '#fffbeb';
+    el.style.borderColor = 'var(--hwik-yellow)';
+  }
+  _updateSendBar();
+}
+
+function _updateSendBar() {
+  const bar = document.getElementById('matchSendBar');
+  if (!bar) return;
+  const n = _selectedMatchIds.size;
+  if (n === 0) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  bar.querySelector('.send-count').textContent = `${n}개 선택`;
+}
+
+async function _sendMatchesToClient() {
+  if (_selectedMatchIds.size === 0) return;
+  const uid = currentUser?.id || '';
+  const ids = [..._selectedMatchIds].join(',');
+  const url = `https://hwik.kr/property_chat.html?ids=${ids}${uid ? '&agent=' + uid : ''}`;
+  const clientName = window._mcd?.contact_name || '손님';
+  const msg = `[휙] ${clientName}님께 추천드리는 매물 ${_selectedMatchIds.size}건입니다.\n${url}`;
+
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: '휙 매물 추천', text: msg, url });
+      showToast('공유 완료!');
+      return;
+    } catch(e) { /* 사용자 취소 or 실패 → 클립보드로 폴백 */ }
+  }
+  try {
+    await navigator.clipboard.writeText(msg);
+    showToast('링크 복사됨 — 카톡에 붙여넣기 하세요');
+  } catch(e) {
+    prompt('링크를 복사해 카톡에 붙여넣기 하세요:', msg);
+  }
+}
+
 function _renderMatchPanel(cardData, parsed, rawText) {
   // body에 붙은 채팅 제거
   document.querySelector('body > .chat-area')?.remove();
   const panel = document.getElementById('clientPanel');
   panel.style.display = 'flex';
   panel.classList.remove('chat-mode');
+  _selectedMatchIds = new Set();
   const p = cardData.property || parsed || {};
   const uid = currentUser?.id || '';
   const clientName = cardData.contact_name || parsed.contact_name || '손님';
@@ -1644,10 +1693,11 @@ function _renderMatchPanel(cardData, parsed, rawText) {
     </div>
 
     <!-- 매칭 매물 -->
-    <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
       <span style="font-size:16px;font-weight:800;color:var(--hwik-dark);">매칭 매물</span>
       <span style="font-size:13px;color:#4ecdc4;font-weight:700;">${_matchData.length}건</span>
     </div>
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px;">탭해서 선택 → 카톡으로 한 번에 보내기</div>
 
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
       <button onclick="_setMatchFilter('all',window._mcd,window._mp,window._mrt)" style="${tabStyle(_matchFilter==='all')}">전체 ${_matchData.length}</button>
@@ -1670,13 +1720,14 @@ function _renderMatchPanel(cardData, parsed, rawText) {
       const isMine = item.agent_id === uid;
 
       html += `
-        <div class="li" onclick="openProperty('${safeId}')" style="margin-bottom:10px;${isMine ? 'border-color:#4ecdc4;' : ''}">
+        <div class="li match-item" onclick="_toggleMatchSelect('${safeId}',this)" data-mine="${isMine?'1':'0'}" style="margin-bottom:10px;${isMine ? 'border-color:#4ecdc4;' : ''}cursor:pointer;position:relative;">
           <div class="li-row1">
             <span class="li-type ${typeClass}">${type}</span>
             <span class="li-price">${esc(mp.price || '')}</span>
             ${score > 0 ? `<span style="font-size:11px;color:#4ecdc4;font-weight:700;">${score}점</span>` : ''}
             ${isMine ? `<span style="font-size:10px;padding:2px 8px;border-radius:10px;background:#4ecdc4;color:#fff;font-weight:700;">내 매물</span>` : ''}
             <span style="flex:1"></span>
+            <button onclick="event.stopPropagation();openProperty('${safeId}')" style="padding:4px 10px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;color:#5a5a6e;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;">상세</button>
           </div>
           <div class="li-row2">
             <div class="li-name">${mName}</div>
@@ -1690,6 +1741,13 @@ function _renderMatchPanel(cardData, parsed, rawText) {
       <div style="text-align:center;padding:20px 0;">
         <button onclick="showClientRegister()" style="padding:12px 32px;border-radius:12px;border:1.5px solid var(--hwik-dark);background:transparent;color:var(--hwik-dark);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">+ 다른 손님 등록</button>
       </div>
+    </div>
+    <!-- 선택 전송 고정바 -->
+    <div id="matchSendBar" style="display:none;position:fixed;left:0;right:0;bottom:calc(60px + env(safe-area-inset-bottom, 0px));padding:12px 16px;background:#fff;border-top:1px solid #e5e8eb;box-shadow:0 -4px 16px rgba(0,0,0,0.08);align-items:center;gap:10px;z-index:150;max-width:540px;margin:0 auto;">
+      <div class="send-count" style="font-size:14px;font-weight:700;color:var(--hwik-dark);">0개 선택</div>
+      <div style="flex:1;"></div>
+      <button onclick="_selectedMatchIds=new Set();_renderMatchPanel(window._mcd,window._mp,window._mrt)" style="padding:10px 14px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#94a3b8;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;">취소</button>
+      <button onclick="_sendMatchesToClient()" style="padding:10px 18px;border-radius:8px;border:none;background:var(--hwik-dark);color:var(--hwik-yellow);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">📤 카톡으로 보내기</button>
     </div>`;
 
   panel.innerHTML = html;
