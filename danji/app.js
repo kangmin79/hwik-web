@@ -488,14 +488,9 @@ function render() {
         <div class="price-card-sub">${highData && highData.floor ? highData.floor + '층' : ''}${highData && highData.date ? ' · ' + highData.date : ''}</div>
       </div>
     </div>
-    ${jeonseRate ? `<div class="metrics"><div class="metric" style="grid-column:span 3;text-align:center;">
-      <div class="metric-label">전세가율</div>
-      <div class="metric-value" style="font-size:18px;font-weight:600;">${jeonseRate}%</div>
-    </div></div>` : ''}` : ''}
-    <!-- 지표 2행: ㎡당 가격 + 주차 + 최고층/세대수 (월세 탭에서는 숨김) -->
-    ${currentTab === '월세' ? '' : (() => {
+    ${(() => {
       const cells = [];
-      // ㎡당 가격 (공급면적 있을 때만)
+      if (jeonseRate) cells.push({label:'전세가율', value:jeonseRate+'%'});
       const supplyInfo = pm[currentPyeong];
       const hasSupply = supplyInfo && supplyInfo.supply && supplyInfo.supply > 0;
       if (hasSupply && recentPrice) {
@@ -504,9 +499,7 @@ function render() {
       } else if (d.total_units) {
         cells.push({label:'세대수', value:d.total_units.toLocaleString()+'세대'});
       }
-      // 최고층
       if (d.top_floor) cells.push({label:'최고층', value:d.top_floor+'층'});
-
       if (cells.length === 0) return '';
       return '<div class="metrics">' + cells.map(c => {
         const fontSize = (c.value && c.value.length > 6) ? ' style="font-size:13px"' : '';
