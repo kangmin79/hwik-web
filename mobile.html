@@ -1773,64 +1773,67 @@ async function showAlerts() {
     const interests = interestRes.data || [];
     const totalToday = upcoming.length + matches.length + interests.length;
 
+    // 메시지 큐에 모아서 순차 표시
+    const q = [];
+
     // 인사
-    addAlertBubble(`${greeting}`, true);
+    q.push({ html: `${greeting}`, first: true });
 
     // 오늘 예정 일정
     if (upcoming.length) {
-      addAlertBubble(`오늘 일정 <strong>${upcoming.length}건</strong>이에요`);
+      q.push({ html: `오늘 일정 <strong>${upcoming.length}건</strong>이에요` });
       upcoming.forEach(a => {
         const cp = clientMap[a.client_card_id] || {};
         const clientName = cp._name || [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
         const typeIcon = { '방문':'🏠', '전화':'📞', '계약':'📋', '상담':'💬', '매물소개':'📤' }[a.type] || '📌';
         const ad = new Date(a.alert_date);
         const timeStr = `${ad.getHours()}시${ad.getMinutes() ? ad.getMinutes()+'분' : ''}`;
-        addAlertBubble(`
+        q.push({ html: `
           <div style="margin-bottom:6px;">${typeIcon} <strong>${esc(clientName)}</strong> — ${timeStr} ${esc(a.type||'일정')}</div>
           <div style="font-size:13px;color:#555;line-height:1.5;">${esc(a.content)}</div>
           <div style="display:flex;gap:8px;margin-top:10px;">
             <button onclick="alertDone('${a.id}','${a.client_card_id}',this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--hwik-yellow);color:#1a1a2e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">완료</button>
             <button onclick="alertPostpone('${a.id}',this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:#e5e7eb;color:#5a5a6e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">내일로</button>
-          </div>`);
+          </div>` });
       });
     }
 
     // 새 매칭
     if (matches.length) {
-      addAlertBubble(`새 매칭 <strong style="color:#4ecdc4;">${matches.length}건</strong> 있어요`);
+      q.push({ html: `새 매칭 <strong style="color:#4ecdc4;">${matches.length}건</strong> 있어요` });
       matches.forEach(m => {
         const p = cardMap[m.card_id] || {};
         const cp = clientMap[m.client_card_id] || {};
         const propName = [p.complex, p.location, p.price].filter(Boolean).join(' · ') || '매물';
         const clientName = cp._name || [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
-        addAlertBubble(`
+        q.push({ html: `
           <div style="font-size:12px;color:#4ecdc4;font-weight:600;margin-bottom:4px;">매칭</div>
           <div style="font-size:14px;font-weight:700;">${esc(propName)}</div>
-          <div style="font-size:13px;color:#555;margin-top:2px;">${esc(clientName)} 손님과 매칭</div>`);
+          <div style="font-size:13px;color:#555;margin-top:2px;">${esc(clientName)} 손님과 매칭</div>` });
       });
     }
 
     // 관심 표시
     if (interests.length) {
-      addAlertBubble(`손님이 관심 표시한 매물 <strong style="color:#f59e0b;">${interests.length}건</strong>`);
+      q.push({ html: `손님이 관심 표시한 매물 <strong style="color:#f59e0b;">${interests.length}건</strong>` });
       interests.forEach(i => {
         const p = cardMap[i.card_id] || {};
         const name = [p.complex, p.location, p.price].filter(Boolean).join(' · ') || '매물';
-        addAlertBubble(`
+        q.push({ html: `
           <div style="font-size:12px;color:#f59e0b;font-weight:600;margin-bottom:4px;">관심 매물</div>
           <div style="font-size:14px;font-weight:700;">"${esc(name)}"</div>
-          <div style="font-size:13px;color:#555;margin-top:2px;">손님이 보고싶어요</div>`);
+          <div style="font-size:13px;color:#555;margin-top:2px;">손님이 보고싶어요</div>` });
       });
     }
 
     // 아무것도 없으면
     if (!totalToday && !overdue.length) {
-      addAlertBubble('오늘은 예정된 일정이 없어요.<br><span style="color:#94a3b8;font-size:13px;">편한 하루 보내세요!</span>');
+      q.push({ html: '오늘은 예정된 일정이 없어요.<br><span style="color:#94a3b8;font-size:13px;">편한 하루 보내세요!</span>' });
     }
 
     // 지연 일정 — 비서 톤으로 부드럽게
     if (overdue.length) {
-      addAlertBubble(`
+      q.push({ html: `
         <div style="font-weight:600;margin-bottom:6px;">바쁘셔서 놓치신 일정이 ${overdue.length}건 있어요</div>
         <div style="font-size:13px;color:#555;">지금 다시 챙겨드릴까요?</div>
         <div style="display:flex;gap:8px;margin-top:10px;">
@@ -1840,6 +1843,11 @@ async function showAlerts() {
       window._overdueItems = overdue;
       window._clientMap = clientMap;
     }
+
+    // 큐 순차 재생 (300ms 간격, 톡톡톡)
+    q.forEach((item, i) => {
+      setTimeout(() => addAlertBubble(item.html, item.first), i * 300);
+    });
 
   } catch(e) {
     addAlertBubble('일정을 불러오지 못했어요.<br><span style="color:#f87171;font-size:13px;">' + esc(e.message||'연결 오류') + '</span>');
