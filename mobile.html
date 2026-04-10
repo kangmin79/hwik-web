@@ -1968,36 +1968,11 @@ function fadeOutMsg(el, label) {
 }
 
 async function alertDone(noteId, clientCardId, btn) {
-  const wrap = btn.closest('.bubble');
   try {
     await supabaseClient.from('client_notes').update({ alert_done: true }).eq('id', noteId);
-    // 버튼 → "수고하셨어요! 메모 남기실까요?"
-    const btnsDiv = wrap.querySelector('div:last-child');
-    btnsDiv.innerHTML = `
-      <div style="color:#4ecdc4;font-weight:700;font-size:13px;margin-bottom:8px;">수고하셨어요! 메모 남기실까요?</div>
-      <div style="display:flex;gap:6px;">
-        <input type="text" id="memo-${noteId}" placeholder="상담 내용 메모..." style="flex:1;padding:8px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-size:13px;font-family:inherit;outline:none;color:#1a1a2e;" onkeydown="if(event.key==='Enter')saveBriefMemo('${noteId}','${clientCardId}')">
-        <button onclick="saveBriefMemo('${noteId}','${clientCardId}')" style="padding:8px 14px;border-radius:8px;border:none;background:var(--hwik-dark);color:var(--hwik-yellow);font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;flex-shrink:0;">저장</button>
-      </div>
-      <button onclick="fadeOutMsg(this,'완료')" style="margin-top:6px;padding:6px;border:none;background:none;color:#94a3b8;font-size:12px;cursor:pointer;font-family:inherit;">괜찮아요, 넘어갈게요</button>`;
-    setTimeout(() => document.getElementById('memo-' + noteId)?.focus(), 100);
+    fadeOutMsg(btn);
     updateAlertBadge();
   } catch(e) { showToast('처리 실패'); }
-}
-
-async function saveBriefMemo(noteId, clientCardId) {
-  const input = document.getElementById('memo-' + noteId);
-  const text = input?.value?.trim();
-  if (!text) { input?.focus(); return; }
-  try {
-    await supabaseClient.from('client_notes').insert({
-      client_card_id: clientCardId,
-      agent_id: currentUser.id,
-      content: text,
-      type: '메모'
-    });
-    fadeOutMsg(input, '메모 저장했어요!');
-  } catch(e) { showToast('저장 실패'); }
 }
 
 async function alertPostpone(noteId, btn) {
