@@ -115,6 +115,7 @@ html,body { height:100%; font-family:-apple-system,BlinkMacSystemFont,'Apple SD 
 <script>
 const sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_KEY);
 function walkMin(m) { return m ? Math.round(m/67)+'분' : ''; }
+function cleanLine(l) { return (l||'').replace('수도권 도시철도 ','').trim(); }
 // makeSlug → /makeSlug.js (외부 파일)
 
 async function loadData() {
@@ -184,8 +185,8 @@ async function loadData() {
 
   // 태그
   const tagHtml = [
-    ...subways.map(s => `<span class="tag">${esc(s.name)}(${esc(s.line)}) ${walkMin(s.distance)}</span>`),
-    ...schools.slice(0,2).map(s => `<span class="tag school">${esc(s.name)} ${walkMin(s.distance)}</span>`)
+    ...subways.map(s => `<span class="tag">${esc(s.name)}(${esc(cleanLine(s.line))}) 도보 ${walkMin(s.distance)}</span>`),
+    ...schools.slice(0,2).map(s => `<span class="tag school">${esc(s.name)} 도보 ${walkMin(s.distance)}</span>`)
   ].join('');
 
   const html = `
@@ -219,7 +220,7 @@ async function loadData() {
       <div class="section-title">자주 묻는 질문</div>
       <div class="faq-item"><div class="faq-q">${esc(dong)} 아파트 평균 시세는?</div><div class="faq-a">${esc(gu)} ${esc(dong)} ${data.length}개 단지 평균 매매가는 ${avgPrice?formatPrice(avgPrice):'정보 확인 중'}입니다.</div></div>
       ${danjiList[0] && danjiList[0].sqmPrice ? `<div class="faq-item"><div class="faq-q">${esc(dong)}에서 가장 비싼 아파트는?</div><div class="faq-a">전용면적 ㎡당 가격 기준 ${esc(danjiList[0].name)}이(가) ${formatPrice(danjiList[0].sqmPrice)}/㎡으로 가장 높습니다.</div></div>` : ''}
-      ${subways.length > 0 ? `<div class="faq-item"><div class="faq-q">${esc(dong)} 근처 지하철역은?</div><div class="faq-a">${subways.map(s=>s.name+'('+s.line+') 도보 '+walkMin(s.distance)).join(', ')}</div></div>` : ''}
+      ${subways.length > 0 ? `<div class="faq-item"><div class="faq-q">${esc(dong)} 근처 지하철역은?</div><div class="faq-a">${subways.map(s=>s.name+'('+cleanLine(s.line)+') 도보 '+walkMin(s.distance)).join(', ')}</div></div>` : ''}
     </div>
 
     <div class="cta-section"><a class="btn-primary" style="display:block;text-align:center;text-decoration:none;" href="mobile-v6.html">${esc(dong)} 매물 전체보기</a></div>
@@ -231,7 +232,7 @@ async function loadData() {
   const faqItems = [
     {q: dong+' 아파트 평균 시세는?', a: gu+' '+dong+' '+data.length+'개 단지 평균 매매가는 '+(avgPrice?formatPrice(avgPrice):'정보 확인 중')+'입니다. 국토교통부 실거래가 공개시스템 기준.'},
     danjiList[0]&&danjiList[0].sqmPrice ? {q: dong+'에서 가장 비싼 아파트는?', a: '전용면적 ㎡당 가격 기준 '+danjiList[0].name+'이(가) '+formatPrice(danjiList[0].sqmPrice)+'/㎡으로 가장 높습니다.'} : null,
-    subways.length>0 ? {q: dong+' 근처 지하철역은?', a: subways.map(s=>s.name+'('+s.line+') 도보 '+walkMin(s.distance)).join(', ')} : null,
+    subways.length>0 ? {q: dong+' 근처 지하철역은?', a: subways.map(s=>s.name+'('+cleanLine(s.line)+') 도보 '+walkMin(s.distance)).join(', ')} : null,
   ].filter(Boolean);
   const ld = {"@context":"https://schema.org","@graph":[
     {"@type":"FAQPage","mainEntity":faqItems.map(f=>({"@type":"Question","name":f.q,"acceptedAnswer":{"@type":"Answer","text":f.a}}))},
