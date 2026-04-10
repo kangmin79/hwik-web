@@ -357,8 +357,7 @@ function render() {
 
   // 평형 (DB categories 기반)
   if (cats.length > 0) {
-    const pyList = cats.map(c => '전용 ' + c + '㎡');
-    seoParts.push(pyList.join(', ') + ' 면적이 있습니다.');
+    seoParts.push('보유 면적(전용): ' + cats.join(', ') + '㎡.');
   }
 
   // 지하철 (DB nearby_subway 기반)
@@ -540,6 +539,21 @@ function render() {
       <div style="font-size:11px;color:var(--sub);margin-bottom:12px;margin-top:-6px;">${currentTab === '월세' ? '매매가 기준 · ' : ''}${showSupply && pm[currentPyeong] && pm[currentPyeong].supply && Math.abs((pm[currentPyeong].exclu||0)-parseFloat(currentPyeong))<=10 ? '공급 '+Math.round(pm[currentPyeong].supply)+'㎡' : '전용 '+(currentPyeong||'84')+'㎡'} ±10㎡ 기준</div>
       <div style="display:flex;flex-direction:column;gap:8px;">${nearbyHtml || '<div style="font-size:12px;color:var(--sub);">주변 단지 정보가 없습니다</div>'}</div>
     </div>
+
+    <!-- 데이터 안내 -->
+    <div class="section" style="padding-bottom:0;">
+      <details style="font-size:12px;color:var(--sub);">
+        <summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--text);padding:4px 0;">데이터 안내 ▼</summary>
+        <div style="margin-top:8px;line-height:1.8;">
+          <b>실거래가</b>: 국토교통부 실거래가 공개시스템 (매일 자동 수집)<br>
+          <b>공급면적</b>: 국토교통부 건축물대장 (전용면적 + 주거공용면적)<br>
+          공급면적이 확인되지 않은 단지는 전용면적만 표시합니다<br>
+          거래 취소·정정 건은 반영이 지연될 수 있습니다
+        </div>
+      </details>
+    </div>
+
+    <div class="divider"></div>
 
     <!-- FAQ -->
     <div class="faq-section">
