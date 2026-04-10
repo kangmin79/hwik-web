@@ -85,6 +85,11 @@ def walk_min(m):
         return ""
 
 
+def clean_line(line):
+    """노선명 정제: '수도권 도시철도 9호선' → '9호선'"""
+    return re.sub(r'\s+', ' ', str(line)).replace("수도권 도시철도 ", "").strip()
+
+
 def josa(word, particle_pair="은/는"):
     """한글 받침 유무에 따라 올바른 조사 반환."""
     a, b = particle_pair.split("/")
@@ -248,7 +253,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
     # 인프라 태그
     tags = []
     for s in subways[:4]:
-        tags.append(f'<span style="display:inline-block;padding:3px 8px;background:rgba(59,130,246,0.1);border-radius:12px;font-size:10px;color:#3b82f6;margin:0 4px 4px 0;">{esc(s.get("name",""))}({esc(s.get("line",""))}) 도보 {walk_min(s.get("distance"))}</span>')
+        tags.append(f'<span style="display:inline-block;padding:3px 8px;background:rgba(59,130,246,0.1);border-radius:12px;font-size:10px;color:#3b82f6;margin:0 4px 4px 0;">{esc(s.get("name",""))}({esc(clean_line(s.get("line","")))}) 도보 {walk_min(s.get("distance"))}</span>')
     for s in schools[:3]:
         tags.append(f'<span style="display:inline-block;padding:3px 8px;background:rgba(99,153,34,0.1);border-radius:12px;font-size:10px;color:#639922;margin:0 4px 4px 0;">{esc(s.get("name",""))} 도보 {walk_min(s.get("distance"))}</span>')
     if tags:
@@ -278,7 +283,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
     if oldest and newest and oldest.get("build_year") and newest.get("build_year"):
         lines.append(f'준공년도 범위: {oldest.get("build_year")}년 ~ {newest.get("build_year")}년<br>')
     if subways:
-        sw_names = ", ".join(f"{s.get('name','')}({s.get('line','')})" for s in subways[:3])
+        sw_names = ", ".join(f"{s.get('name','')}({clean_line(s.get('line',''))})" for s in subways[:3])
         lines.append(f'인근 지하철: {esc(sw_names)}<br>')
     if schools:
         sc_names = ", ".join(s.get("name", "") for s in schools[:3])
@@ -376,7 +381,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
         ))
     if subways:
         subway_text = ", ".join(
-            f"{s.get('name','')}({s.get('line','')}) 도보 {walk_min(s.get('distance'))}"
+            f"{s.get('name','')}({clean_line(s.get('line',''))}) 도보 {walk_min(s.get('distance'))}"
             for s in subways[:3]
         )
         faq.append((f"{dong} 근처 지하철역은?", subway_text))
@@ -475,7 +480,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
     if oldest and newest and oldest.get("build_year") and newest.get("build_year"):
         seo_parts.append(f"준공년도는 {oldest.get('build_year')}년부터 {newest.get('build_year')}년까지 분포합니다.")
     if subways:
-        sw_names = ", ".join(f"{s.get('name','')}({s.get('line','')})" for s in subways[:2])
+        sw_names = ", ".join(f"{s.get('name','')}({clean_line(s.get('line',''))})" for s in subways[:2])
         seo_parts.append(f"인근 지하철역은 {sw_names}입니다.")
     seo_parts.append("모든 데이터는 국토교통부 실거래가 공개시스템 기반이며 매일 갱신됩니다.")
     lines.append(f'<p style="font-size:11px;color:#6b7280;line-height:1.7;margin-top:16px;">{esc(" ".join(seo_parts))}</p>')
