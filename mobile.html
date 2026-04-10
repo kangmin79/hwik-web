@@ -1315,11 +1315,13 @@ let _chatState = 'idle'; // idle | waiting | confirm | done
 let _chatParsed = null;
 let _chatText = '';
 
+let _chatGreetTimer = null;
 function showClientRegister() {
   // 이미 열려있으면 재생성 안 함
   if (document.getElementById('clientChatArea')) return;
   // 다른 채팅(브리핑) 제거
   document.querySelector('body > .chat-area')?.remove();
+  if (_chatGreetTimer) { clearTimeout(_chatGreetTimer); _chatGreetTimer = null; }
 
   _chatState = 'idle';
   _chatParsed = null;
@@ -1348,8 +1350,10 @@ function showClientRegister() {
       </div>`;
   document.body.appendChild(chatArea);
 
-  // AI 인사 메시지
-  setTimeout(() => {
+  // AI 인사 메시지 (1회만)
+  _chatGreetTimer = setTimeout(() => {
+    _chatGreetTimer = null;
+    if (!document.getElementById('clientChatArea')) return;
     addAiBubble('어떤 손님을 등록할까요?', true);
     addAiBubble('예) 강남 2룸 전세 3억 이하<br>홍길동 010-1234-5678');
     document.getElementById('chatInput')?.focus();
