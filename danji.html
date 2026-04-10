@@ -806,7 +806,7 @@ function render() {
           거래 취소·정정 건은 반영이 지연될 수 있습니다
         </div>
       </details>
-      <div class="seo-source" style="margin-top:8px;">실거래가 출처: 국토교통부 실거래가 공개시스템 · 매일 업데이트</div>
+      <div class="seo-source" style="margin-top:8px;">실거래가 출처: 국토교통부 실거래가 공개시스템 · ${d.updated_at ? d.updated_at.slice(0,10) + ' 업데이트' : '매일 업데이트'}</div>
     </div>
   `;
 
