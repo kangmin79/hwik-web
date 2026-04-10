@@ -115,7 +115,7 @@ html,body { height:100%; font-family:-apple-system,BlinkMacSystemFont,'Apple SD 
 <script>
 const sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_KEY);
 function walkMin(m) { return m ? Math.round(m/67)+'분' : ''; }
-function cleanLine(l) { return (l||'').replace('수도권 도시철도 ','').trim(); }
+function cleanLine(l) { return (l||'').replace(/^(수도권|서울|부산|대구|대전|광주|인천)?\s*(경량)?도시철도\s*/,'').replace(/^수도권\s*광역철도\s*/,'').replace('인천국제공항선','공항철도').replace('부산김해경전철','김해경전철').trim() || l; }
 // makeSlug → /makeSlug.js (외부 파일)
 
 async function loadData() {

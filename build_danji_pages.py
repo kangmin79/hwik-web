@@ -81,10 +81,17 @@ def walk_min(m):
 
 
 def clean_line(line):
-    """지하철 노선명 정리 (이중 공백, 불필요 접두어 제거)"""
+    """지하철 노선명 정리: '수도권 경량도시철도 신림선' → '신림선'"""
     if not line:
         return ""
-    return re.sub(r'\s+', ' ', str(line)).replace("수도권 도시철도 ", "").strip()
+    s = re.sub(r'\s+', ' ', str(line)).strip()
+    # 접두어 제거: 수도권/서울/부산/대구/대전/광주/인천 + 도시철도/경량도시철도/광역철도
+    s = re.sub(r'^(수도권|서울|부산|대구|대전|광주|인천)?\s*(경량)?도시철도\s*', '', s).strip()
+    s = re.sub(r'^수도권\s*광역철도\s*', '', s).strip()
+    # 특수 케이스
+    s = s.replace('인천국제공항선', '공항철도')
+    s = s.replace('부산김해경전철', '김해경전철')
+    return s or str(line).strip()
 
 
 def josa(word, particle_pair="은/는"):
