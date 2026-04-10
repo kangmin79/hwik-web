@@ -39,20 +39,30 @@ PRICE_RE = re.compile(r'[0-9]+억(\s*[0-9]+천?)?|[0-9]+,[0-9]{3}만')  # 2억 5
 A_HREF_RE = re.compile(r'<a\s[^>]*href=["\']([^"\']+)["\']', re.I)
 
 
-def fetch(url, timeout=TIMEOUT):
-    """URL GET → (status, body, error)"""
-    req = urllib.request.Request(url, headers={
-        'User-Agent': 'Mozilla/5.0 (hwik-verify/1.0)',
-        'Accept': 'text/html,application/xml',
-    })
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
-            body = r.read().decode('utf-8', errors='replace')
-            return r.status, body, None
-    except urllib.error.HTTPError as e:
-        return e.code, "", str(e)
-    except Exception as e:
-        return 0, "", str(e)
+def fetch(url, timeout=TIMEOUT, retries=2):
+    """URL GET → (status, body, error). 일시적 5xx/네트워크 오류 자동 재시도."""
+    last_err = None
+    last_status = 0
+    for attempt in range(retries + 1):
+        req = urllib.request.Request(url, headers={
+            'User-Agent': 'Mozilla/5.0 (hwik-verify/1.0)',
+            'Accept': 'text/html,application/xml',
+        })
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                body = r.read().decode('utf-8', errors='replace')
+                return r.status, body, None
+        except urllib.error.HTTPError as e:
+            last_status = e.code
+            last_err = str(e)
+            # 5xx만 재시도, 4xx는 즉시 포기
+            if e.code < 500:
+                return e.code, "", str(e)
+        except Exception as e:
+            last_err = str(e)
+        if attempt < retries:
+            time.sleep(1.0 + attempt * 0.5)  # 1초, 1.5초
+    return last_status, "", last_err
 
 
 def check_page(url):
