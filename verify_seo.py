@@ -306,6 +306,38 @@ def check_jsonld(category, fname, html, errors):
             errors["missing_type"].append((fid, "ItemList"))
 
 
+# ── 검증 5: 최근 수정 버그 재발 방지 ────────────────────────
+def check_regressions(category, fname, html, errors):
+    """최근 고친 버그가 재발했는지 (canonUrl undefined, addressRegion 하드코딩, 노선명 누출, 오피스텔)"""
+    fid = f"{category}/{fname}"
+
+    # canonUrl에 undefined 들어감 (danji bug #2)
+    if 'danji/undefined' in html or 'id=undefined' in html:
+        errors["canon_undefined"].append(fid)
+
+    # addressRegion "서울특별시" 하드코딩 — 서울이 아닌 주소에 박힌 경우
+    # static danji 파일만 검사 (dynamic danji.html은 JS 분기라 제외)
+    if category == "danji":
+        ar_matches = re.findall(r'"addressRegion"\s*:\s*"([^"]+)"', html)
+        addr_match = re.search(r'"address"\s*:\s*"([^"]+)"', html)
+        if ar_matches and addr_match:
+            addr_first = addr_match.group(1).split()[0] if addr_match.group(1) else ""
+            for ar in ar_matches:
+                if addr_first and ar != addr_first and ar == "서울특별시":
+                    errors["addr_region_hardcoded"].append((fid, f"addr={addr_first} ar={ar}"))
+                    break
+
+    # "수도권 도시철도" / "경량도시철도" 노선명 누출 (dong 전용)
+    if category == "dong":
+        if re.search(r'수도권\s*(경량)?도시철도', html) or re.search(r'수도권\s*광역철도', html):
+            errors["subway_line_leak"].append(fid)
+
+    # dong 페이지에 오피스텔 slug 포함 (offi- prefix로 시작하는 danji 링크)
+    if category == "dong":
+        if re.search(r'/danji/[^"\']*offi-', html):
+            errors["officetel_in_dong"].append(fid)
+
+
 # ── 검증 3: PageSpeed 핵심 지표 ────────────────────────────
 def check_pagespeed(category, fname, html, errors):
     fid = f"{category}/{fname}"
@@ -397,8 +429,8 @@ def verify_sitemap(root_files, danji_slugs, dong_slugs, gu_slugs=None, ranking_s
             sitemap_dong.add(slug)
             if slug not in dong_slugs:
                 errors["sitemap_file_missing"].append(f"dong/{slug[:60]}")
-        elif path.startswith('/gu/'):
-            slug = path[4:]
+        elif path == '/gu' or path.startswith('/gu/'):
+            slug = path[4:] if path.startswith('/gu/') else ""
             if slug:
                 sitemap_gu.add(slug)
                 if slug not in gu_slugs:
@@ -407,8 +439,8 @@ def verify_sitemap(root_files, danji_slugs, dong_slugs, gu_slugs=None, ranking_s
                 sitemap_gu.add("index")
                 if "index" not in gu_slugs:
                     errors["sitemap_file_missing"].append("gu/index")
-        elif path.startswith('/ranking/'):
-            slug = path[9:]
+        elif path == '/ranking' or path.startswith('/ranking/'):
+            slug = path[9:] if path.startswith('/ranking/') else ""
             if slug:
                 sitemap_ranking.add(slug)
                 if slug not in ranking_slugs:
@@ -478,6 +510,7 @@ def main():
     link_errors = defaultdict(list)
     jsonld_errors = defaultdict(list)
     speed_errors = defaultdict(list)
+    regression_errors = defaultdict(list)
     total_links = 0
     checked_links = 0
     file_count = 0
@@ -502,6 +535,9 @@ def main():
 
         # 검증 3
         check_pagespeed(category, fname, html, speed_errors)
+
+        # 검증 5: 회귀 방지
+        check_regressions(category, fname, html, regression_errors)
 
         if file_count % 2000 == 0:
             print(f"  ... {file_count}개 검사 완료")
@@ -546,6 +582,15 @@ def main():
     print_errors("head 동기 스크립트", speed_errors.get("sync_script_in_head", []))
     print_errors("img 속성 누락 (width/height/loading)", speed_errors.get("img_missing_attrs", []))
 
+    # ── 검증 5 결과 ──
+    print(f"\n{'=' * 70}")
+    print("  검증 5: 최근 수정 버그 회귀 방지")
+    print("=" * 70)
+    print_errors("canonUrl/id undefined", regression_errors.get("canon_undefined", []))
+    print_errors("addressRegion 하드코딩 (주소 불일치)", regression_errors.get("addr_region_hardcoded", []))
+    print_errors("노선명 '수도권 도시철도' 누출", regression_errors.get("subway_line_leak", []))
+    print_errors("dong 페이지에 오피스텔 포함", regression_errors.get("officetel_in_dong", []))
+
     # ── 검증 4 결과 ──
     print(f"\n{'=' * 70}")
     print("  검증 4: sitemap.xml ↔ 실제 파일")
@@ -566,6 +611,7 @@ def main():
         + sum(len(v) for v in jsonld_errors.values())
         + sum(len(v) for v in speed_errors.values())
         + sum(len(v) for v in sitemap_errors.values())
+        + sum(len(v) for v in regression_errors.values())
     )
 
     checks = [
@@ -573,6 +619,7 @@ def main():
         ("검증 2 JSON-LD", sum(len(v) for v in jsonld_errors.values())),
         ("검증 3 PageSpeed", sum(len(v) for v in speed_errors.values())),
         ("검증 4 Sitemap", sum(len(v) for v in sitemap_errors.values())),
+        ("검증 5 회귀 방지", sum(len(v) for v in regression_errors.values())),
     ]
     for name, cnt in checks:
         status = "✓ PASS" if cnt == 0 else f"✗ FAIL ({cnt}건)"

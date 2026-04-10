@@ -270,7 +270,7 @@ def build_gu_detail_html(gu_name, danji_list):
 
     lines.append(f'<div class="divider"></div>')
 
-    # 동별 단지
+    # 동별 단지 (실제 생성된 dong 페이지만 링크)
     if dong_list:
         lines.append(f'<div class="section"><div class="section-title">동별 단지</div>')
         lines.append(f'<div class="dong-grid">')
@@ -279,10 +279,17 @@ def build_gu_detail_html(gu_name, danji_list):
             first_d = next((d for d in danji_list if d.get("location", "").split(" ")[1:2] == [dong]), None)
             addr = first_d.get("address", "") if first_d else ""
             dong_slug = make_dong_slug(gu_name, dong, addr)
-            lines.append(f'<a class="dong-item" style="text-decoration:none;color:inherit;" href="/dong/{url_quote(dong_slug, safe="-")}">')
-            lines.append(f'  <div class="dong-name">{esc(dong)}</div>')
-            lines.append(f'  <div class="dong-count">{info["count"]}개 단지{" · 평균 "+avg_p if avg_p else ""}</div>')
-            lines.append(f'</a>')
+            if dong_slug in DONG_SLUG_SET:
+                lines.append(f'<a class="dong-item" style="text-decoration:none;color:inherit;" href="/dong/{url_quote(dong_slug, safe="-")}">')
+                lines.append(f'  <div class="dong-name">{esc(dong)}</div>')
+                lines.append(f'  <div class="dong-count">{info["count"]}개 단지{" · 평균 "+avg_p if avg_p else ""}</div>')
+                lines.append(f'</a>')
+            else:
+                # dong 페이지 없음 — 링크 없이 표시
+                lines.append(f'<div class="dong-item">')
+                lines.append(f'  <div class="dong-name">{esc(dong)}</div>')
+                lines.append(f'  <div class="dong-count">{info["count"]}개 단지{" · 평균 "+avg_p if avg_p else ""}</div>')
+                lines.append(f'</div>')
         lines.append(f'</div></div>')
         lines.append(f'<div class="divider"></div>')
 
@@ -304,7 +311,7 @@ def build_gu_detail_html(gu_name, danji_list):
         lines.append(f'<div class="section"><div class="section-title">최근 거래</div>')
         lines.append(f'<div style="display:flex;flex-direction:column;gap:8px;">')
         for t in trades[:10]:
-            slug_d = make_danji_slug(t["name"], "", t["id"], t["address"])
+            slug_d = make_danji_slug(t["name"], t.get("location", ""), t["id"], t["address"])
             lines.append(f'<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/{url_quote(slug_d, safe="-")}">')
             lines.append(f'  <div><div class="trade-price">{format_price(t["price"])}</div>')
             lines.append(f'  <div class="trade-detail">{esc(t["name"])} · {t["area"]}㎡{" · "+str(t["floor"])+"층" if t.get("floor") else ""}</div></div>')
@@ -341,7 +348,8 @@ def build_gu_detail_html(gu_name, danji_list):
         seo_text += f" 평균 전세가율 {avg_jr}%."
     seo_text += " 국토교통부 실거래가 공개시스템 데이터 기반."
     lines.append(f'<div class="seo-section"><div class="seo-text">{seo_text}</div>')
-    lines.append(f'<div class="seo-source">실거래가 출처: 국토교통부 · 최종 데이터 확인: {datetime.now().strftime('%Y-%m-%d')}</div></div>')
+    _today = datetime.now().strftime("%Y-%m-%d")
+    lines.append(f'<div class="seo-source">실거래가 출처: 국토교통부 · 최종 데이터 확인: {_today}</div></div>')
 
     body = "\n".join(lines)
 
@@ -400,13 +408,16 @@ def build_gu_index_html():
         lines.append(f'<div class="gu-grid">')
         for g in r["list"]:
             g_slug = g.replace(" ", "-")
+            if g_slug not in GU_SLUG_SET:
+                continue  # 실제 생성된 구만 링크
             lines.append(f'<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/{url_quote(g_slug, safe="-")}">')
             lines.append(f'  <div class="gu-name">{esc(g)}</div><div class="gu-info">아파트 시세 보기 →</div>')
             lines.append(f'</a>')
         lines.append(f'</div></div>')
 
     lines.append(f'<div class="seo-section"><div class="seo-text">서울·인천·경기 아파트 실거래가, 시세 추이를 구별로 확인하세요. 국토교통부 실거래가 공개시스템 데이터 기반.</div>')
-    lines.append(f'<div class="seo-source">실거래가 출처: 국토교통부 · 최종 데이터 확인: {datetime.now().strftime('%Y-%m-%d')}</div></div>')
+    _today_idx = datetime.now().strftime("%Y-%m-%d")
+    lines.append(f'<div class="seo-source">실거래가 출처: 국토교통부 · 최종 데이터 확인: {_today_idx}</div></div>')
 
     body = "\n".join(lines)
 
@@ -482,8 +493,32 @@ def wrap_html(title, desc, canonical, body, jsonld_str):
 
 
 # ── 메인 ──────────────────────────────────────────────────
+# 생성될 슬러그 집합 (링크 유효성 체크용)
+GU_SLUG_SET = set()
+DONG_SLUG_SET = set()
+DANJI_SLUG_SET = set()
+
+
 def main():
+    global GU_SLUG_SET, DONG_SLUG_SET, DANJI_SLUG_SET
     os.makedirs(GU_DIR, exist_ok=True)
+
+    # 기존 gu HTML 전부 삭제 (과거 버전 파일 정리)
+    for f in os.listdir(GU_DIR):
+        if f.endswith(".html"):
+            os.remove(os.path.join(GU_DIR, f))
+
+    # dong/danji 폴더에 이미 존재하는 슬러그 로드 (gu 페이지에서 링크 필터용)
+    DONG_DIR = os.path.join(BASE_DIR, "dong")
+    if os.path.isdir(DONG_DIR):
+        DONG_SLUG_SET = {os.path.splitext(f)[0] for f in os.listdir(DONG_DIR) if f.endswith(".html")}
+    print(f"동 슬러그 {len(DONG_SLUG_SET)}개 인식")
+
+    DANJI_DIR = os.path.join(BASE_DIR, "danji")
+    if os.path.isdir(DANJI_DIR):
+        DANJI_SLUG_SET = {os.path.splitext(f)[0] for f in os.listdir(DANJI_DIR) if f.endswith(".html")}
+    print(f"단지 슬러그 {len(DANJI_SLUG_SET)}개 인식")
+
     print("Supabase에서 단지 데이터 조회 중...")
     all_danji = fetch_all_danji()
     print(f"  {len(all_danji)}개 단지 로드 완료")
@@ -495,10 +530,14 @@ def main():
             if " " in g:
                 two_token_gu.add(g)
 
-    # 구별 분류
+    # 구별 분류 (실제 생성된 danji 페이지가 있는 단지만 포함)
     gu_map = defaultdict(list)
     for d in all_danji:
         if d.get("id", "").startswith("offi-"):
+            continue
+        # 생성된 danji 페이지가 없으면 제외 (rental-only 등)
+        slug_d = make_danji_slug(d.get("complex_name", ""), d.get("location", ""), d.get("id", ""), d.get("address", ""))
+        if slug_d not in DANJI_SLUG_SET:
             continue
         loc = d.get("location") or ""
         parts = loc.split(" ")
@@ -515,10 +554,11 @@ def main():
         if gu:
             gu_map[gu].append(d)
 
-    # 인덱스 페이지
-    index_html = build_gu_index_html()
-    with open(os.path.join(GU_DIR, "index.html"), "w", encoding="utf-8") as f:
-        f.write(index_html)
+    # 생성될 구 슬러그 집합 미리 계산 (인덱스가 올바른 링크만 표시하도록)
+    for gu_name, danji_list in gu_map.items():
+        if len(danji_list) >= 3:
+            GU_SLUG_SET.add(gu_name.replace(" ", "-"))
+    print(f"생성 예정 구 {len(GU_SLUG_SET)}개")
 
     # 각 구별 상세 페이지
     count = 0
@@ -533,6 +573,11 @@ def main():
         with open(fpath, "w", encoding="utf-8") as f:
             f.write(html)
         count += 1
+
+    # 인덱스 페이지 (구 슬러그 집합 기반으로 링크 필터)
+    index_html = build_gu_index_html()
+    with open(os.path.join(GU_DIR, "index.html"), "w", encoding="utf-8") as f:
+        f.write(index_html)
 
     print(f"\n{count}개 구 페이지 생성, {skip}개 스킵 (단지 3개 미만)")
     print(f"출력: {GU_DIR}")

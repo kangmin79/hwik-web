@@ -1062,6 +1062,10 @@ def generate_sitemap(danji_list: list):
         did = d.get("id", "")
         if not did:
             continue
+        # 오피스텔 제외 (아파트만 노출)
+        if did.startswith("offi-"):
+            excluded += 1
+            continue
         # 거래 데이터 있는지 확인
         rt = d.get("recent_trade") or {}
         cats = d.get("categories") or []
@@ -1087,6 +1091,9 @@ def generate_sitemap(danji_list: list):
     dong_addr_cache = {}  # (gu, dong) → 첫 번째 단지의 address
     dong_latest_date = {}  # (gu, dong) → 최신 거래일
     for d in all_danji:
+        # 오피스텔 제외 (dong 집계에서도)
+        if (d.get("id") or "").startswith("offi-"):
+            continue
         loc = d.get("location", "")
         if not loc:
             continue

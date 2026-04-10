@@ -119,6 +119,7 @@ def fetch_all_danji():
                           "price_history,"
                           "nearby_subway,nearby_school,nearby_complex,"
                           "lat,lng,top_floor,parking,heating,builder,updated_at",
+                "id": "not.like.offi-*",  # 오피스텔 제외 (아파트만 생성)
                 "order": "id",
                 "offset": offset,
                 "limit": 500,
