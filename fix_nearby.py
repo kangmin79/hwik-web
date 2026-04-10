@@ -3,6 +3,7 @@ danji_pages에서 좌표가 있는 전체 단지에 대해
 stations/schools 테이블과 거리 계산 후 업데이트
 """
 import requests, math, os, sys, time, json
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://api.hwik.kr")
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
@@ -123,7 +124,7 @@ def main():
 
     print(f"  ✅ {len(updates)}개 단지 nearby 계산 완료\n")
 
-    # 5) 개별 PATCH로 nearby만 업데이트 (upsert는 partial row에서 실패 가능)
+    # 5) 병렬 PATCH로 nearby만 업데이트
     patch_headers = {
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}",
@@ -132,7 +133,9 @@ def main():
     }
     total = 0
     errors = 0
-    for i, u in enumerate(updates):
+
+    def patch_one(u):
+        s = requests.Session()
         did = u["id"]
         body = {
             "nearby_subway": u["nearby_subway"],
@@ -140,28 +143,34 @@ def main():
         }
         for attempt in range(3):
             try:
-                resp = session.patch(
+                resp = s.patch(
                     f"{SUPABASE_URL}/rest/v1/danji_pages?id=eq.{did}",
                     headers=patch_headers,
                     json=body,
-                    timeout=30,
+                    timeout=15,
                 )
                 if resp.status_code in (200, 204):
-                    total += 1
-                else:
-                    if attempt == 2:
-                        errors += 1
-                        print(f"  ⚠️ {did}: {resp.status_code} {resp.text[:100]}")
-                break
+                    return True
+                if attempt == 2:
+                    return f"{did}: {resp.status_code}"
             except Exception as e:
-                if attempt < 2:
-                    time.sleep(1)
-                else:
-                    errors += 1
-                    print(f"  ⚠️ {did}: {e}")
+                if attempt == 2:
+                    return f"{did}: {e}"
+                time.sleep(0.5)
+        return False
 
-        if (i + 1) % 1000 == 0:
-            print(f"  ... {i+1}/{len(updates)} 완료")
+    with ThreadPoolExecutor(max_workers=20) as pool:
+        futures = {pool.submit(patch_one, u): u for u in updates}
+        for i, fut in enumerate(as_completed(futures)):
+            result = fut.result()
+            if result is True:
+                total += 1
+            else:
+                errors += 1
+                if isinstance(result, str):
+                    print(f"  ⚠️ {result}")
+            if (i + 1) % 2000 == 0:
+                print(f"  ... {i+1}/{len(updates)} 완료")
 
     print(f"\n✅ {total}개 단지 nearby 복구 완료 (에러: {errors}건)")
 
