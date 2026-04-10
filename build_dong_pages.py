@@ -247,8 +247,6 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
     lines.append(f'  {esc(dong)}')
     lines.append(f'</nav>')
 
-    og_hash = hashlib.md5(slug.encode('utf-8')).hexdigest()
-    lines.append(f'<img src="https://jqaxejgzkchxbfzgzyzi.supabase.co/storage/v1/object/public/og-images/dong/{og_hash}.png" alt="{esc(gu)} {esc(dong)} 아파트 시세" width="600" height="315" loading="lazy" style="width:100%;border-radius:8px;margin-bottom:12px;">')
     lines.append(f'<h2 style="font-size:18px;font-weight:700;margin-bottom:4px;">{esc(gu)} {esc(dong)} 단지별 시세</h2>')
     lines.append(f'<p style="font-size:12px;color:#6b7280;margin-bottom:16px;">{len(tradeable)}개 단지 · 최근 매매가 높은 순</p>')
 
@@ -261,77 +259,14 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
     if tags:
         lines.append(f'<div style="margin-bottom:16px;">{"".join(tags)}</div>')
 
-    # 동네 리포트
-    most_expensive = tradeable[0] if tradeable else None  # 이미 가격순 정렬됨
+    # 통계용 변수
+    most_expensive = tradeable[0] if tradeable else None
     cheapest = tradeable[-1] if len(tradeable) > 1 else None
     most_units = max(tradeable, key=lambda x: (x.get("total_units") or 0), default=None)
     newest = max(tradeable, key=lambda x: (x.get("build_year") or 0), default=None)
     oldest = min(tradeable, key=lambda x: (x.get("build_year") or 9999), default=None)
 
-    lines.append('<div style="margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;">')
-    lines.append(f'<h2 style="font-size:14px;font-weight:700;margin-bottom:10px;">{esc(gu)} {esc(dong)} 부동산 요약</h2>')
-    lines.append(f'<div style="font-size:12px;line-height:2;color:#374151;">')
-    lines.append(f'아파트 단지: <strong>{len(tradeable)}개</strong><br>')
-    if most_expensive:
-        me_price = format_price(most_expensive["_best_trade"].get("price"))
-        lines.append(f'최고 거래가: <strong>{esc(most_expensive.get("complex_name",""))}</strong> 전용 {most_expensive["_best_area"]}㎡ {me_price}<br>')
-    if cheapest and cheapest != most_expensive:
-        ch_price = format_price(cheapest["_best_trade"].get("price"))
-        lines.append(f'최저 거래가: <strong>{esc(cheapest.get("complex_name",""))}</strong> 전용 {cheapest["_best_area"]}㎡ {ch_price}<br>')
-    if most_units and (most_units.get("total_units") or 0) > 0:
-        mu = most_units.get("total_units")
-        mu_str = f"{mu:,}" if isinstance(mu, int) else str(mu)
-        lines.append(f'최다 세대: <strong>{esc(most_units.get("complex_name",""))}</strong> {mu_str}세대<br>')
-    if oldest and newest and oldest.get("build_year") and newest.get("build_year"):
-        lines.append(f'준공년도 범위: {oldest.get("build_year")}년 ~ {newest.get("build_year")}년<br>')
-    if subways:
-        sw_names = ", ".join(f"{s.get('name','')}({clean_line(s.get('line',''))})" for s in subways[:3])
-        lines.append(f'인근 지하철: {esc(sw_names)}<br>')
-    if schools:
-        sc_names = ", ".join(s.get("name", "") for s in schools[:3])
-        lines.append(f'인근 학교: {esc(sc_names)}<br>')
-    lines.append(f'데이터 기준: 국토교통부 실거래가 공개시스템 · 최종 데이터 확인: {today}<br>')
-    # 준공년도 분류
-    from datetime import datetime as _dt
-    _cy = _dt.now().year
-    new_count = sum(1 for x in tradeable if x.get("build_year") and (_cy - x["build_year"]) <= 10)
-    old_count = sum(1 for x in tradeable if x.get("build_year") and (_cy - x["build_year"]) > 20)
-    if new_count or old_count:
-        age_parts = []
-        if new_count:
-            age_parts.append(f"10년 이내 신축 {new_count}개")
-        if old_count:
-            age_parts.append(f"20년 초과 {old_count}개")
-        lines.append(f'준공년도: {", ".join(age_parts)}<br>')
-    # 역세권 비율
-    station_count = sum(1 for x in tradeable if any(
-        (s.get("distance") or 9999) <= 800 for s in (x.get("nearby_subway") or [])
-    ))
-    if station_count:
-        lines.append(f'역세권(지하철 도보권): 전체 {len(tradeable)}개 중 <strong>{station_count}개</strong><br>')
-    # 가격 분포
-    all_prices = [x["_best_trade"].get("price", 0) for x in tradeable if x.get("_best_trade")]
-    valid_prices = [p for p in all_prices if p > 0]
-    if len(valid_prices) >= 2:
-        lines.append(f'가격 분포: {format_price(min(valid_prices))} ~ {format_price(max(valid_prices))}')
-    lines.append(f'</div></div>')
-
-    # 단지 간 비교 문장
-    if most_expensive and cheapest and most_expensive != cheapest:
-        me_p = most_expensive["_best_trade"].get("price", 0)
-        ch_p = cheapest["_best_trade"].get("price", 0)
-        if me_p and ch_p:
-            diff = me_p - ch_p
-            lines.append(
-                f'<p style="font-size:12px;color:#6b7280;line-height:1.7;margin-bottom:16px;">'
-                f'{esc(dong)}에서 가장 높은 거래가는 {esc(most_expensive.get("complex_name",""))} '
-                f'전용 {most_expensive["_best_area"]}㎡ {format_price(me_p)}이고, '
-                f'가장 낮은 거래가는 {esc(cheapest.get("complex_name",""))} '
-                f'전용 {cheapest["_best_area"]}㎡ {format_price(ch_p)}입니다. '
-                f'{format_price(diff)}의 차이가 있습니다.</p>'
-            )
-
-    # 단지 목록
+    # 단지 목록 (순위 바로 표시)
     lines.append('<div style="display:flex;flex-direction:column;gap:8px;">')
     for i, d in enumerate(tradeable):
         name = esc(d.get("complex_name", ""))
@@ -364,6 +299,67 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
             f'<div style="font-size:11px;color:#6b7280;margin-top:2px;">{esc(date)}</div></div></a>'
         )
     lines.append('</div>')
+
+    # 단지 간 비교 문장
+    if most_expensive and cheapest and most_expensive != cheapest:
+        me_p = most_expensive["_best_trade"].get("price", 0)
+        ch_p = cheapest["_best_trade"].get("price", 0)
+        if me_p and ch_p:
+            diff = me_p - ch_p
+            lines.append(
+                f'<p style="font-size:12px;color:#6b7280;line-height:1.7;margin:16px 0;">'
+                f'{esc(dong)}에서 가장 높은 거래가는 {esc(most_expensive.get("complex_name",""))} '
+                f'전용 {most_expensive["_best_area"]}㎡ {format_price(me_p)}이고, '
+                f'가장 낮은 거래가는 {esc(cheapest.get("complex_name",""))} '
+                f'전용 {cheapest["_best_area"]}㎡ {format_price(ch_p)}입니다. '
+                f'{format_price(diff)}의 차이가 있습니다.</p>'
+            )
+
+    # 동네 요약
+    lines.append('<div style="margin:20px 0;padding:16px;background:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;">')
+    lines.append(f'<h2 style="font-size:14px;font-weight:700;margin-bottom:10px;">{esc(gu)} {esc(dong)} 부동산 요약</h2>')
+    lines.append(f'<div style="font-size:12px;line-height:2;color:#374151;">')
+    lines.append(f'아파트 단지: <strong>{len(tradeable)}개</strong><br>')
+    if most_expensive:
+        me_price = format_price(most_expensive["_best_trade"].get("price"))
+        lines.append(f'최고 거래가: <strong>{esc(most_expensive.get("complex_name",""))}</strong> 전용 {most_expensive["_best_area"]}㎡ {me_price}<br>')
+    if cheapest and cheapest != most_expensive:
+        ch_price = format_price(cheapest["_best_trade"].get("price"))
+        lines.append(f'최저 거래가: <strong>{esc(cheapest.get("complex_name",""))}</strong> 전용 {cheapest["_best_area"]}㎡ {ch_price}<br>')
+    if most_units and (most_units.get("total_units") or 0) > 0:
+        mu = most_units.get("total_units")
+        mu_str = f"{mu:,}" if isinstance(mu, int) else str(mu)
+        lines.append(f'최다 세대: <strong>{esc(most_units.get("complex_name",""))}</strong> {mu_str}세대<br>')
+    if oldest and newest and oldest.get("build_year") and newest.get("build_year"):
+        lines.append(f'준공년도 범위: {oldest.get("build_year")}년 ~ {newest.get("build_year")}년<br>')
+    if subways:
+        sw_names = ", ".join(f"{s.get('name','')}({clean_line(s.get('line',''))})" for s in subways[:3])
+        lines.append(f'인근 지하철: {esc(sw_names)}<br>')
+    if schools:
+        sc_names = ", ".join(s.get("name", "") for s in schools[:3])
+        lines.append(f'인근 학교: {esc(sc_names)}<br>')
+    lines.append(f'데이터 기준: 국토교통부 실거래가 공개시스템 · 최종 데이터 확인: {today}<br>')
+    from datetime import datetime as _dt
+    _cy = _dt.now().year
+    new_count = sum(1 for x in tradeable if x.get("build_year") and (_cy - x["build_year"]) <= 10)
+    old_count = sum(1 for x in tradeable if x.get("build_year") and (_cy - x["build_year"]) > 20)
+    if new_count or old_count:
+        age_parts = []
+        if new_count:
+            age_parts.append(f"10년 이내 신축 {new_count}개")
+        if old_count:
+            age_parts.append(f"20년 초과 {old_count}개")
+        lines.append(f'준공년도: {", ".join(age_parts)}<br>')
+    station_count = sum(1 for x in tradeable if any(
+        (s.get("distance") or 9999) <= 800 for s in (x.get("nearby_subway") or [])
+    ))
+    if station_count:
+        lines.append(f'역세권(지하철 도보권): 전체 {len(tradeable)}개 중 <strong>{station_count}개</strong><br>')
+    all_prices = [x["_best_trade"].get("price", 0) for x in tradeable if x.get("_best_trade")]
+    valid_prices = [p for p in all_prices if p > 0]
+    if len(valid_prices) >= 2:
+        lines.append(f'가격 분포: {format_price(min(valid_prices))} ~ {format_price(max(valid_prices))}')
+    lines.append(f'</div></div>')
 
     # FAQ
     faq = []
