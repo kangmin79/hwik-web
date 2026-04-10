@@ -49,6 +49,11 @@
     background: var(--bg);
     color: var(--text);
     overflow: hidden;
+    overscroll-behavior-y: contain; /* pull-to-refresh 방지 */
+  }
+  /* 내부 스크롤 컨테이너도 막기 */
+  .panel, .chat-messages, .chat-area {
+    overscroll-behavior-y: contain;
   }
 
   /* ── 레이아웃 ── */
