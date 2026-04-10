@@ -1443,9 +1443,23 @@ async function chatSend() {
     });
     if (!parseRes.ok) throw new Error('AI 파싱 실패');
     const parsed = await parseRes.json();
-    _chatParsed = parsed;
 
     removeTyping();
+
+    // 핵심 정보 검증 — 거래유형·위치·가격 중 하나라도 없으면 재입력
+    const _wt = parsed.wanted_trade_type || parsed.type || '';
+    const _loc = parsed.location || parsed.complex || '';
+    const _pr = parsed.price || '';
+    if (!_wt && !_loc && !_pr) {
+      addAiBubble('부동산 정보를 인식하지 못했어요 😅<br>거래유형, 위치, 가격 등을 포함해서 다시 입력해주세요!');
+      addAiBubble('예) 강남 2룸 전세 3억 이하<br>홍길동 010-1234-5678');
+      _chatState = 'idle';
+      document.getElementById('chatSendBtn').disabled = false;
+      document.getElementById('chatInput')?.focus();
+      return;
+    }
+
+    _chatParsed = parsed;
 
     // 확인 카드 (카톡 스타일)
     const p = parsed;
