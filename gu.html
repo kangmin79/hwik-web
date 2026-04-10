@@ -224,7 +224,7 @@ function renderGuList() {
         ${r.list.map(g => `<a class="gu-item" style="text-decoration:none;color:inherit;" href="gu.html?name=${encodeURIComponent(g)}"><div class="gu-name">${esc(g)}</div><div class="gu-info">아파트 시세 보기 →</div></a>`).join('')}
       </div>
     </div>
-    <div class="seo-section"><div class="seo-text">${esc(r.label)} ${esc(r.sub)}의 아파트 실거래가, 전세가, 시세 추이를 확인하세요. 국토교통부 실거래가 공개시스템 데이터 기반.</div><div class="seo-source">데이터 출처: 국토교통부 실거래가 공개시스템 · 매일 업데이트</div></div>
+    <div class="seo-section"><div class="seo-text">${esc(r.label)} ${esc(r.sub)}의 아파트 실거래가, 전세가, 시세 추이를 확인하세요. 국토교통부 실거래가 공개시스템 데이터 기반.</div><div class="seo-source">실거래가 출처: 국토교통부 · 최종 데이터 확인: ${new Date().toISOString().slice(0,10)}</div></div>
   `;
   document.getElementById('app').innerHTML = html;
   injectJsonLd(null, null);
@@ -403,7 +403,7 @@ function renderGuDetail(guName, data) {
 
     <div class="seo-section">
       <div class="seo-text">${esc(guName)}의 아파트 실거래가, 전세가, 시세 추이를 확인하세요. ${data.length}개 단지, ${totalUnits.toLocaleString()}세대 규모. ${avgPrice ? '평균 매매가 '+formatPrice(avgPrice)+'.' : ''} ${avgJr ? '평균 전세가율 '+avgJr+'%.' : ''} 국토교통부 실거래가 공개시스템 데이터 기반.</div>
-      <div class="seo-source">데이터 출처: 국토교통부 실거래가 공개시스템 · 매일 업데이트</div>
+      <div class="seo-source">실거래가 출처: 국토교통부 · 최종 데이터 확인: ${new Date().toISOString().slice(0,10)}</div>
     </div>
   `;
   document.getElementById('app').innerHTML = html;
@@ -420,7 +420,7 @@ function injectJsonLd(guName, data) {
         {
           "@type": "Question",
           "name": guName + " 아파트 평균 매매가는?",
-          "acceptedAnswer": { "@type": "Answer", "text": guName + " 아파트 실거래가 기반 평균 매매가는 휙(hwik.kr)에서 확인하세요. 국토교통부 실거래가 공개시스템 데이터 매일 업데이트." }
+          "acceptedAnswer": { "@type": "Answer", "text": guName + " 아파트 실거래가 기반 평균 매매가는 휙(hwik.kr)에서 확인하세요. 국토교통부 실거래가 공개시스템 데이터 기반." }
         },
         {
           "@type": "Question",

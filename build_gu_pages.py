@@ -341,7 +341,7 @@ def build_gu_detail_html(gu_name, danji_list):
         seo_text += f" 평균 전세가율 {avg_jr}%."
     seo_text += " 국토교통부 실거래가 공개시스템 데이터 기반."
     lines.append(f'<div class="seo-section"><div class="seo-text">{seo_text}</div>')
-    lines.append(f'<div class="seo-source">데이터 출처: 국토교통부 실거래가 공개시스템 · 매일 업데이트</div></div>')
+    lines.append(f'<div class="seo-source">실거래가 출처: 국토교통부 · 최종 데이터 확인: {datetime.now().strftime('%Y-%m-%d')}</div></div>')
 
     body = "\n".join(lines)
 
@@ -406,7 +406,7 @@ def build_gu_index_html():
         lines.append(f'</div></div>')
 
     lines.append(f'<div class="seo-section"><div class="seo-text">서울·인천·경기 아파트 실거래가, 시세 추이를 구별로 확인하세요. 국토교통부 실거래가 공개시스템 데이터 기반.</div>')
-    lines.append(f'<div class="seo-source">데이터 출처: 국토교통부 실거래가 공개시스템 · 매일 업데이트</div></div>')
+    lines.append(f'<div class="seo-source">실거래가 출처: 국토교통부 · 최종 데이터 확인: {datetime.now().strftime('%Y-%m-%d')}</div></div>')
 
     body = "\n".join(lines)
 

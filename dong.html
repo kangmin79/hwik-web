@@ -224,7 +224,7 @@ async function loadData() {
     </div>
 
     <div class="cta-section"><a class="btn-primary" style="display:block;text-align:center;text-decoration:none;" href="mobile-v6.html">${esc(dong)} 매물 전체보기</a></div>
-    <div class="seo-section"><div class="seo-text">${esc(gu)} ${esc(dong)} 아파트 ${data.length}개 단지의 실거래가, 전세가, 시세를 확인하세요. ${avgPrice?'평균 매매가 '+formatPrice(avgPrice)+'.':''} ${avgJr?'평균 전세가율 '+avgJr+'%.':''}</div><div class="seo-source">데이터 출처: 국토교통부 실거래가 공개시스템 · 매일 업데이트</div></div>
+    <div class="seo-section"><div class="seo-text">${esc(gu)} ${esc(dong)} 아파트 ${data.length}개 단지의 실거래가, 전세가, 시세를 확인하세요. ${avgPrice?'평균 매매가 '+formatPrice(avgPrice)+'.':''} ${avgJr?'평균 전세가율 '+avgJr+'%.':''}</div><div class="seo-source">실거래가 출처: 국토교통부 · 최종 데이터 확인: ${new Date().toISOString().slice(0,10)}</div></div>
   `;
   document.getElementById('app').innerHTML = html;
 

@@ -554,12 +554,13 @@ def build_fallback_html(d):
         seo.append(f"인근 학교로 {names}{josa(last_name, '이/가')} 있습니다.")
     if total_recent_trades >= 2:
         seo.append(f"최근 1년간 {total_recent_trades}건의 매매 거래가 있었습니다.")
-    seo.append("모든 데이터는 국토교통부 실거래가 공개시스템 기반이며 매일 갱신됩니다.")
+    _today = datetime.now().strftime('%Y-%m-%d')
+    seo.append(f"모든 데이터는 국토교통부 실거래가 공개시스템 기반입니다. 최종 데이터 확인: {_today}.")
     seo_text = " ".join(s for s in seo if s)
     if seo_text:
         lines.append(f'<p style="font-size:11px;color:#6b7280;line-height:1.7;margin-top:16px;">{esc(seo_text)}</p>')
 
-    lines.append('<p style="font-size:10px;color:#6b7280;margin-top:8px;">실거래가 출처: 국토교통부 실거래가 공개시스템 · 매일 업데이트</p>')
+    lines.append(f'<p style="font-size:10px;color:#6b7280;margin-top:8px;">실거래가 출처: 국토교통부 · 최종 데이터 확인: {_today}</p>')
 
     # 내부 링크
     loc_parts_raw = (d.get("location") or "").split(" ", 1)

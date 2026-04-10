@@ -231,7 +231,8 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
     _prices = [x["_best_trade"].get("price", 0) for x in tradeable if x.get("_best_trade")]
     _valid = [p for p in _prices if p > 0]
     _price_range = f" {format_price(min(_valid))}~{format_price(max(_valid))}." if len(_valid) >= 2 else ""
-    desc = f"{gu} {dong} 아파트 {len(tradeable)}개 단지 실거래가.{_price_range} 국토교통부 실거래가 공개시스템 기반, 매일 업데이트."
+    today = datetime.now().strftime('%Y-%m-%d')
+    desc = f"{gu} {dong} 아파트 {len(tradeable)}개 단지 실거래가.{_price_range} 국토교통부 실거래가 공개시스템 기반."
 
     # ── fallback 콘텐츠 ──
     lines = []
@@ -288,7 +289,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
     if schools:
         sc_names = ", ".join(s.get("name", "") for s in schools[:3])
         lines.append(f'인근 학교: {esc(sc_names)}<br>')
-    lines.append(f'데이터 기준: 국토교통부 실거래가 공개시스템, 매일 갱신<br>')
+    lines.append(f'데이터 기준: 국토교통부 실거래가 공개시스템 · 최종 데이터 확인: {today}<br>')
     # 준공년도 분류
     from datetime import datetime as _dt
     _cy = _dt.now().year
@@ -482,9 +483,9 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
     if subways:
         sw_names = ", ".join(f"{s.get('name','')}({clean_line(s.get('line',''))})" for s in subways[:2])
         seo_parts.append(f"인근 지하철역은 {sw_names}입니다.")
-    seo_parts.append("모든 데이터는 국토교통부 실거래가 공개시스템 기반이며 매일 갱신됩니다.")
+    seo_parts.append(f"모든 데이터는 국토교통부 실거래가 공개시스템 기반입니다. 최종 데이터 확인: {today}.")
     lines.append(f'<p style="font-size:11px;color:#6b7280;line-height:1.7;margin-top:16px;">{esc(" ".join(seo_parts))}</p>')
-    lines.append('<p style="font-size:10px;color:#6b7280;margin-top:8px;">실거래가 출처: 국토교통부 실거래가 공개시스템 &middot; 매일 업데이트</p>')
+    lines.append(f'<p style="font-size:10px;color:#6b7280;margin-top:8px;">실거래가 출처: 국토교통부 &middot; 최종 데이터 확인: {today}</p>')
 
     fallback = "\n    ".join(lines)
 

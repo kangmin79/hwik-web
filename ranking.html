@@ -205,7 +205,7 @@ function render(gu) {
       ${top50[0] && currentType==='sqm' ? `<div class="faq-item"><div class="faq-q">${esc(areaLabel)} ㎡당 가격 1위는?</div><div class="faq-a">${esc(top50[0].name)}이 전용면적 기준 ${formatPrice(top50[0].sqmPrice)}/㎡으로 1위입니다.</div></div>` : ''}
     </div>
 
-    <div class="seo-section"><div class="seo-text">${esc(areaLabel)} 아파트 ${esc(typeLabel)} 순위 TOP 50. ${top50[0]?esc(top50[0].name)+'('+formatPrice(top50[0].price)+')이 1위.':''} 국토교통부 실거래가 기반.</div><div class="seo-source">데이터 출처: 국토교통부 실거래가 공개시스템 · 매일 업데이트</div></div>
+    <div class="seo-section"><div class="seo-text">${esc(areaLabel)} 아파트 ${esc(typeLabel)} 순위 TOP 50. ${top50[0]?esc(top50[0].name)+'('+formatPrice(top50[0].price)+')이 1위.':''} 국토교통부 실거래가 기반.</div><div class="seo-source">실거래가 출처: 국토교통부 · 최종 데이터 확인: ${new Date().toISOString().slice(0,10)}</div></div>
   `;
   document.getElementById('app').innerHTML = html;
 

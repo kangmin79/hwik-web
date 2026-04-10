@@ -252,7 +252,7 @@ def build_ranking_html(region, rank_type, data):
         seo += f' {esc(top50[0]["name"])}({format_price(top50[0]["price"])})이 1위.'
     seo += ' 국토교통부 실거래가 기반.'
     lines.append(f'<div class="seo-section"><div class="seo-text">{seo}</div>')
-    lines.append(f'<div class="seo-source">데이터 출처: 국토교통부 실거래가 공개시스템 · 매일 업데이트</div></div>')
+    lines.append(f'<div class="seo-source">실거래가 출처: 국토교통부 · 최종 데이터 확인: {datetime.now().strftime('%Y-%m-%d')}</div></div>')
 
     body = "\n".join(lines)
 
