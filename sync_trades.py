@@ -434,38 +434,33 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
         cat = str(round(exclu))
         pyeongs_map[cat] = {"exclu": round(exclu, 1), "supply": round(supply, 1)}
 
-    # categories는 실거래 데이터에서 추출 (거래 있는 평형만)
+    # categories: pyeongs_map이 있으면 공식 면적으로 직접 매핑 (상가/중복 방지)
+    pm_keys = sorted([float(k) for k in pyeongs_map.keys()]) if pyeongs_map else []
+
+    def _match_official(area_val):
+        """실거래 면적 → 가장 가까운 공식 면적 키 (±5㎡ 이내만)"""
+        if not pm_keys:
+            return str(round(area_val))
+        best_k, best_d = None, 999
+        for pk in pm_keys:
+            d = abs(area_val - pk)
+            if d < best_d:
+                best_k, best_d = pk, d
+        return str(round(best_k)) if best_d <= 5 else None
+
     areas = set()
     for t in trades:
         try:
             area = float(t.get("excluUseAr") or t.get("exclusiveArea") or 0)
             if area > 0:
-                areas.add(str(round(area)))
+                matched = _match_official(area)
+                if matched:
+                    areas.add(matched)
         except:
             pass
     categories = sorted(areas, key=lambda x: float(x))
 
-    # pyeongs 안전망: 공식 면적 목록이 있으면 ±8㎡ 밖의 면적 제거
-    # (상가/근생/오피스텔 거래가 아파트에 섞이는 것 방지)
-    # ±8㎡: 같은 평형이라도 호별 전용면적 차이가 5㎡ 넘는 경우 대비
-    if pyeongs_map:
-        pm_keys = [float(k) for k in pyeongs_map.keys()]
-        filtered = []
-        for cat in categories:
-            cat_f = float(cat)
-            if any(abs(cat_f - pk) <= 8 for pk in pm_keys):
-                filtered.append(cat)
-        if filtered:  # 필터 후 0개면 원본 유지 (pyeongs 데이터 오류 대비)
-            categories = filtered
-
-    # pyeongs_map에서 매칭 안 되는 카테고리는 가장 가까운 것으로 매핑 (±10㎡ 이내만)
-    if pyeongs_map:
-        pm_keys = [float(k) for k in pyeongs_map.keys()]
-        for cat in categories:
-            if cat not in pyeongs_map and pm_keys:
-                closest = min(pm_keys, key=lambda k: abs(k - float(cat)))
-                if abs(closest - float(cat)) <= 10:
-                    pyeongs_map[cat] = pyeongs_map[str(round(closest))]
+    # pyeongs_map 없는 경우 fallback: round(area) 그대로 사용 (위에서 처리됨)
 
     # 거래를 평형별로 분류
     def get_cat(trade_item):
@@ -475,14 +470,7 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
             return None
         if area <= 0:
             return None
-        # 가장 가까운 카테고리 매칭 (±3㎡ 허용)
-        best_cat, best_diff = None, 999
-        for cat in categories:
-            diff = abs(area - float(cat))
-            if diff < best_diff and diff <= 3:
-                best_cat = cat
-                best_diff = diff
-        return best_cat
+        return _match_official(area)
 
     def parse_price(t):
         """만원 단위 가격 파싱"""
