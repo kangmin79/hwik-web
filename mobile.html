@@ -1763,7 +1763,8 @@ async function showAlerts() {
     if (clientsRes.data) clientsRes.data.forEach(c => { clientMap[c.id] = { ...c.property, _name: c.contact_name }; });
 
     // 첫 인사 버블 교체
-    msgs.querySelectorAll('.msg').forEach(m => m.remove());
+    const msgs = document.getElementById('alertMessages');
+    if (msgs) msgs.querySelectorAll('.msg').forEach(m => m.remove());
     _lastSender = '';
 
     const upcoming = upcomingRes.data || [];
