@@ -178,8 +178,26 @@ function render() {
     tagHtml += `<div class="tag-line">${subwayItems}</div>`;
   }
   if (school.length > 0) {
-    const schoolText = school.slice(0,2).map(s => shortSchool(esc(s.name)) + ' ' + walkMin(s.distance)).join(' <span class="tag-sep">·</span> ');
-    tagHtml += `<div class="tag-line tag-school-line"><span class="tag-icon">🏫</span>${schoolText}</div>`;
+    function schoolColor(type) {
+      if (!type) return '#888';
+      if (type.includes('초등')) return '#4CAF50';
+      if (type.includes('중학')) return '#2196F3';
+      if (type.includes('고등')) return '#9C27B0';
+      return '#888';
+    }
+    function schoolLabel(type) {
+      if (!type) return '학';
+      if (type.includes('초등')) return '초';
+      if (type.includes('중학')) return '중';
+      if (type.includes('고등')) return '고';
+      return '학';
+    }
+    const schoolItems = school.slice(0,3).map(s => {
+      const bg = schoolColor(s.type);
+      const label = schoolLabel(s.type);
+      return `<span class="station-tag"><span class="line-badge" style="background:${bg}">${label}</span><span class="station-name">${shortSchool(esc(s.name))}</span> <span class="station-time">${walkMin(s.distance)}</span></span>`;
+    }).join('<span class="tag-sep">·</span>');
+    tagHtml += `<div class="tag-line tag-school-line">${schoolItems}</div>`;
   }
 
   // 전용/공급 토글 + 면적 버튼
