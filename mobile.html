@@ -978,12 +978,15 @@ function closeLogin() {
   document.getElementById('loginSheet').classList.remove('show');
   setTimeout(() => document.getElementById('overlay').classList.remove('show'), 300);
 }
-function doKakaoLogin() {
-  ensureKakao();
-  supabaseClient.auth.signInWithOAuth({
-    provider: 'kakao',
-    options: { redirectTo: 'https://hwik.kr/mobile.html' }
-  });
+async function doKakaoLogin() {
+  try {
+    ensureKakao();
+    const { data, error } = await supabaseClient.auth.signInWithOAuth({
+      provider: 'kakao',
+      options: { redirectTo: 'https://hwik.kr/mobile.html' }
+    });
+    if (error) { alert('로그인 오류: ' + error.message); console.error('Login error:', error); }
+  } catch(e) { alert('로그인 실패: ' + e.message); console.error('Login exception:', e); }
 }
 
 // ── 키보드 대응 (채팅 영역 리사이즈) ──
