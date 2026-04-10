@@ -962,13 +962,18 @@ function onLoggedIn() {
   // 현재 보고 있는 탭 다시 로드 (데이터 연결)
   if (currentTab !== 'home') switchTab(currentTab);
   updateAlertBadge();
+  // 브리핑 데이터 프리페치 — 사용자가 탭 누르기 전에 백그라운드 로드
+  if (typeof prefetchBrief === 'function') prefetchBrief();
 }
 
 function onLoggedOut() {
   document.querySelector('body > .chat-area')?.remove(); // 채팅도 제거
   document.getElementById('agentTabBar').classList.remove('visible');
   document.getElementById('bottomTabBar').classList.add('visible');
-  try { localStorage.removeItem('hwik_alert_count'); } catch(e) {}
+  try {
+    localStorage.removeItem('hwik_alert_count');
+    localStorage.removeItem('hwik_brief_cache_v1');
+  } catch(e) {}
   _setBadgeUI(0);
   switchTab('home');
 }
@@ -1769,30 +1774,147 @@ function _renderMatchPanel(cardData, parsed, rawText) {
 // ── 알림 (채팅 스타일 브리핑) ──
 let _alertGen = 0; // 호출 세대 — 중복/경쟁 방지
 let _alertLoading = false; // 동시 실행 방지 뮤텍스
+let _briefPromise = null;  // 프리페치 Promise
+const BRIEF_CACHE_KEY = 'hwik_brief_cache_v1';
+
+// 데이터 가져오기만 (렌더 X)
+async function _fetchBriefData() {
+  if (!currentUser) return null;
+  const nowIso = new Date().toISOString();
+  const [matchRes, overdueRes, upcomingRes] = await Promise.all([
+    supabaseClient.from('match_notifications').select('id, card_id, client_card_id, similarity, created_at')
+      .eq('agent_id', currentUser.id).eq('is_read', false).order('created_at', { ascending: false }).limit(20),
+    supabaseClient.from('client_notes').select('id, client_card_id, content, alert_date, type')
+      .eq('agent_id', currentUser.id).eq('alert_done', false).not('alert_date', 'is', null).lt('alert_date', nowIso)
+      .order('alert_date', { ascending: true }).limit(20),
+    supabaseClient.from('client_notes').select('id, client_card_id, content, alert_date, type')
+      .eq('agent_id', currentUser.id).eq('alert_done', false).not('alert_date', 'is', null).gte('alert_date', nowIso)
+      .order('alert_date', { ascending: true }).limit(20),
+  ]);
+
+  const cardIds = [...new Set((matchRes.data||[]).map(m=>m.card_id))].filter(Boolean);
+  const clientIds = [...new Set([
+    ...(overdueRes.data||[]).map(o=>o.client_card_id),
+    ...(upcomingRes.data||[]).map(u=>u.client_card_id),
+    ...(matchRes.data||[]).map(m=>m.client_card_id)
+  ])].filter(Boolean);
+
+  const [cardsRes, clientsRes] = await Promise.all([
+    cardIds.length ? supabaseClient.from('cards').select('id, property, contact_name').in('id', cardIds) : Promise.resolve({ data: [] }),
+    clientIds.length ? supabaseClient.from('cards').select('id, property, contact_name').in('id', clientIds) : Promise.resolve({ data: [] })
+  ]);
+
+  const cardMap = {}, clientMap = {};
+  (cardsRes.data||[]).forEach(c => { cardMap[c.id] = { ...c.property, _name: c.contact_name }; });
+  (clientsRes.data||[]).forEach(c => { clientMap[c.id] = { ...c.property, _name: c.contact_name }; });
+
+  return {
+    matches: matchRes.data || [],
+    overdue: overdueRes.data || [],
+    upcoming: upcomingRes.data || [],
+    cardMap, clientMap,
+    savedAt: Date.now()
+  };
+}
+
+// 로그인 직후 프리페치 트리거 — 사용자가 탭 누르기 전에 미리 로드
+function prefetchBrief() {
+  if (!currentUser) return;
+  _briefPromise = _fetchBriefData().then(data => {
+    if (data) {
+      try { localStorage.setItem(BRIEF_CACHE_KEY, JSON.stringify(data)); } catch(e) {}
+    }
+    return data;
+  }).catch(e => { console.warn('[brief prefetch]', e); return null; });
+}
+
+// 데이터 → 메시지 큐
+function _buildBriefQueue(data) {
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? '좋은 아침이에요!' : hour < 18 ? '오늘도 수고하세요!' : '오늘 하루 마무리!';
+  const q = [{ html: greeting, first: true }];
+
+  const { matches = [], overdue = [], upcoming = [], cardMap = {}, clientMap = {} } = data || {};
+  const totalToday = upcoming.length + matches.length;
+
+  if (upcoming.length) {
+    q.push({ html: `오늘 일정 <strong>${upcoming.length}건</strong>이에요` });
+    upcoming.forEach(a => {
+      const cp = clientMap[a.client_card_id] || {};
+      const clientName = cp._name || [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
+      const typeIcon = { '방문':'🏠', '전화':'📞', '계약':'📋', '상담':'💬', '매물소개':'📤' }[a.type] || '📌';
+      const ad = new Date(a.alert_date);
+      const timeStr = `${ad.getHours()}시${ad.getMinutes() ? ad.getMinutes()+'분' : ''}`;
+      q.push({ html: `
+        <div style="margin-bottom:6px;">${typeIcon} <strong>${esc(clientName)}</strong> — ${timeStr} ${esc(a.type||'일정')}</div>
+        <div style="font-size:13px;color:#555;line-height:1.5;">${esc(a.content)}</div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button onclick="alertDone('${a.id}','${a.client_card_id}',this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--hwik-yellow);color:#1a1a2e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">완료</button>
+          <button onclick="alertPostpone('${a.id}',this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:#e5e7eb;color:#5a5a6e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">내일로</button>
+        </div>` });
+    });
+  }
+
+  if (matches.length) {
+    q.push({ html: `새 매칭 <strong style="color:#4ecdc4;">${matches.length}건</strong> 있어요` });
+    matches.forEach(m => {
+      const p = cardMap[m.card_id] || {};
+      const cp = clientMap[m.client_card_id] || {};
+      const propName = [p.complex, p.location, p.price].filter(Boolean).join(' · ') || '매물';
+      const clientName = cp._name || [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
+      q.push({ html: `
+        <div style="font-size:12px;color:#4ecdc4;font-weight:600;margin-bottom:4px;">매칭</div>
+        <div style="font-size:14px;font-weight:700;">${esc(propName)}</div>
+        <div style="font-size:13px;color:#555;margin-top:2px;">${esc(clientName)} 손님과 매칭</div>` });
+    });
+  }
+
+  if (!totalToday && !overdue.length) {
+    q.push({ html: '오늘은 예정된 일정이 없어요.<br><span style="color:#94a3b8;font-size:13px;">편한 하루 보내세요!</span>' });
+  }
+
+  if (overdue.length) {
+    q.push({ html: `
+      <div style="font-weight:600;margin-bottom:6px;">바쁘셔서 놓치신 일정이 ${overdue.length}건 있어요</div>
+      <div style="font-size:13px;color:#555;">지금 다시 챙겨드릴까요?</div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button onclick="showOverdueItems(this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--hwik-dark);color:var(--hwik-yellow);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">챙겨주세요</button>
+        <button onclick="dismissOverdue(this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:#e5e7eb;color:#5a5a6e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">나중에</button>
+      </div>` });
+    window._overdueItems = overdue;
+    window._clientMap = clientMap;
+  }
+
+  return q;
+}
+
+// 큐 → DOM (기존 메시지 클리어 후 렌더)
+function _renderBriefQueue(q) {
+  const msgs = document.getElementById('alertMessages');
+  if (!msgs) return;
+  msgs.querySelectorAll('.msg').forEach(m => m.remove());
+  _lastSender = '';
+  q.forEach(item => addAlertBubble(item.html, item.first));
+}
+
 async function showAlerts() {
-  // 이미 열려있으면 재생성 안 함
   if (document.getElementById('alertChatArea')) return;
-  // 다른 showAlerts가 진행 중이면 무시
   if (_alertLoading) return;
   _alertLoading = true;
-  // 모든 기존 chat-area 제거 (중복 방지 — 여러 개 있을 수 있음)
   document.querySelectorAll('body > .chat-area').forEach(el => el.remove());
   const myGen = ++_alertGen;
 
   if (!currentUser) {
+    _alertLoading = false;
     const panel = document.getElementById('alertPanel');
     panel.style.display = 'flex';
     panel.innerHTML = '<div style="padding:40px;text-align:center;color:#94a3b8;">로그인이 필요해요</div>';
     return;
   }
 
-  // 날짜
+  // 채팅 영역 생성 (즉시)
   const today = new Date();
   const dateStr = `${today.getFullYear()}년 ${today.getMonth()+1}월 ${today.getDate()}일 ${'일월화수목금토'[today.getDay()]}요일`;
-  const hour = today.getHours();
-  const greeting = hour < 12 ? '좋은 아침이에요!' : hour < 18 ? '오늘도 수고하세요!' : '오늘 하루 마무리!';
-
-  // body에 직접 추가
   const chatArea = document.createElement('div');
   chatArea.className = 'chat-area';
   chatArea.id = 'alertChatArea';
@@ -1809,109 +1931,32 @@ async function showAlerts() {
         </button>
       </div>`;
   document.body.appendChild(chatArea);
-
   _lastSender = '';
 
+  // 1단계: localStorage 캐시 즉시 렌더 (0초)
+  let rendered = false;
   try {
-    const [matchRes, overdueRes, upcomingRes] = await Promise.all([
-      supabaseClient.from('match_notifications').select('id, card_id, client_card_id, similarity, created_at')
-        .eq('agent_id', currentUser.id).eq('is_read', false).order('created_at', { ascending: false }).limit(20),
-      supabaseClient.from('client_notes').select('id, client_card_id, content, alert_date, type')
-        .eq('agent_id', currentUser.id).eq('alert_done', false).not('alert_date', 'is', null).lt('alert_date', new Date().toISOString())
-        .order('alert_date', { ascending: true }).limit(20),
-      supabaseClient.from('client_notes').select('id, client_card_id, content, alert_date, type')
-        .eq('agent_id', currentUser.id).eq('alert_done', false).not('alert_date', 'is', null).gte('alert_date', new Date().toISOString())
-        .order('alert_date', { ascending: true }).limit(20),
-    ]);
-
-    // 매물·손님 ID 모아서 병렬 조회
-    const cardIds = [...new Set([...(matchRes.data||[]).map(m=>m.card_id)])].filter(Boolean);
-    const clientIds = [...new Set([...(overdueRes.data||[]).map(o=>o.client_card_id), ...(upcomingRes.data||[]).map(u=>u.client_card_id), ...(matchRes.data||[]).map(m=>m.client_card_id)])].filter(Boolean);
-
-    let cardMap = {}, clientMap = {};
-    const [cardsRes, clientsRes] = await Promise.all([
-      cardIds.length ? supabaseClient.from('cards').select('id, property, contact_name').in('id', cardIds) : { data: [] },
-      clientIds.length ? supabaseClient.from('cards').select('id, property, contact_name').in('id', clientIds) : { data: [] }
-    ]);
-    if (cardsRes.data) cardsRes.data.forEach(c => { cardMap[c.id] = { ...c.property, _name: c.contact_name }; });
-    if (clientsRes.data) clientsRes.data.forEach(c => { clientMap[c.id] = { ...c.property, _name: c.contact_name }; });
-
-    // 첫 인사 버블 교체
-    const msgs = document.getElementById('alertMessages');
-    if (msgs) msgs.querySelectorAll('.msg').forEach(m => m.remove());
-    _lastSender = '';
-
-    const upcoming = upcomingRes.data || [];
-    const overdue = overdueRes.data || [];
-    const matches = matchRes.data || [];
-    const totalToday = upcoming.length + matches.length;
-
-    // 메시지 큐에 모아서 순차 표시
-    const q = [];
-
-    // 인사
-    q.push({ html: `${greeting}`, first: true });
-
-    // 오늘 예정 일정
-    if (upcoming.length) {
-      q.push({ html: `오늘 일정 <strong>${upcoming.length}건</strong>이에요` });
-      upcoming.forEach(a => {
-        const cp = clientMap[a.client_card_id] || {};
-        const clientName = cp._name || [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
-        const typeIcon = { '방문':'🏠', '전화':'📞', '계약':'📋', '상담':'💬', '매물소개':'📤' }[a.type] || '📌';
-        const ad = new Date(a.alert_date);
-        const timeStr = `${ad.getHours()}시${ad.getMinutes() ? ad.getMinutes()+'분' : ''}`;
-        q.push({ html: `
-          <div style="margin-bottom:6px;">${typeIcon} <strong>${esc(clientName)}</strong> — ${timeStr} ${esc(a.type||'일정')}</div>
-          <div style="font-size:13px;color:#555;line-height:1.5;">${esc(a.content)}</div>
-          <div style="display:flex;gap:8px;margin-top:10px;">
-            <button onclick="alertDone('${a.id}','${a.client_card_id}',this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--hwik-yellow);color:#1a1a2e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">완료</button>
-            <button onclick="alertPostpone('${a.id}',this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:#e5e7eb;color:#5a5a6e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">내일로</button>
-          </div>` });
-      });
+    const cached = localStorage.getItem(BRIEF_CACHE_KEY);
+    if (cached) {
+      const data = JSON.parse(cached);
+      _renderBriefQueue(_buildBriefQueue(data));
+      rendered = true;
     }
+  } catch(e) {}
 
-    // 새 매칭
-    if (matches.length) {
-      q.push({ html: `새 매칭 <strong style="color:#4ecdc4;">${matches.length}건</strong> 있어요` });
-      matches.forEach(m => {
-        const p = cardMap[m.card_id] || {};
-        const cp = clientMap[m.client_card_id] || {};
-        const propName = [p.complex, p.location, p.price].filter(Boolean).join(' · ') || '매물';
-        const clientName = cp._name || [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
-        q.push({ html: `
-          <div style="font-size:12px;color:#4ecdc4;font-weight:600;margin-bottom:4px;">매칭</div>
-          <div style="font-size:14px;font-weight:700;">${esc(propName)}</div>
-          <div style="font-size:13px;color:#555;margin-top:2px;">${esc(clientName)} 손님과 매칭</div>` });
-      });
-    }
+  // 2단계: 프리페치 or 새 fetch로 최신 데이터 → 재렌더
+  try {
+    if (!_briefPromise) _briefPromise = _fetchBriefData().then(data => {
+      if (data) { try { localStorage.setItem(BRIEF_CACHE_KEY, JSON.stringify(data)); } catch(e) {} }
+      return data;
+    });
+    const data = await _briefPromise;
+    _briefPromise = null;
 
-    // 아무것도 없으면
-    if (!totalToday && !overdue.length) {
-      q.push({ html: '오늘은 예정된 일정이 없어요.<br><span style="color:#94a3b8;font-size:13px;">편한 하루 보내세요!</span>' });
-    }
-
-    // 지연 일정 — 비서 톤으로 부드럽게
-    if (overdue.length) {
-      q.push({ html: `
-        <div style="font-weight:600;margin-bottom:6px;">바쁘셔서 놓치신 일정이 ${overdue.length}건 있어요</div>
-        <div style="font-size:13px;color:#555;">지금 다시 챙겨드릴까요?</div>
-        <div style="display:flex;gap:8px;margin-top:10px;">
-          <button onclick="showOverdueItems(this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--hwik-dark);color:var(--hwik-yellow);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">챙겨주세요</button>
-          <button onclick="dismissOverdue(this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:#e5e7eb;color:#5a5a6e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">나중에</button>
-        </div>` });
-      window._overdueItems = overdue;
-      window._clientMap = clientMap;
-    }
-
-    // 내가 최신 호출이 아니면 무시 (중복 방지)
     if (myGen !== _alertGen) { _alertLoading = false; return; }
-
-    // 큐 한번에 렌더 (setTimeout 제거 — race condition 방지)
-    q.forEach(item => addAlertBubble(item.html, item.first));
-
+    if (data) _renderBriefQueue(_buildBriefQueue(data));
   } catch(e) {
-    addAlertBubble('일정을 불러오지 못했어요.<br><span style="color:#f87171;font-size:13px;">' + esc(e.message||'연결 오류') + '</span>');
+    if (!rendered) addAlertBubble('일정을 불러오지 못했어요.<br><span style="color:#f87171;font-size:13px;">' + esc(e.message||'연결 오류') + '</span>');
   } finally {
     _alertLoading = false;
   }
