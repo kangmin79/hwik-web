@@ -117,6 +117,7 @@ def fetch_all_danji():
                 "select": "id,complex_name,location,address,build_year,total_units,"
                           "categories,recent_trade,all_time_high,jeonse_rate,"
                           "nearby_subway,nearby_school,lat,lng,price_history,updated_at,builder",
+                "id": "not.like.offi-*",
                 "order": "id",
                 "offset": offset,
                 "limit": 500,
