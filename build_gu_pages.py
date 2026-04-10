@@ -159,9 +159,10 @@ def build_gu_detail_html(gu_name, danji_list):
         rt = d.get("recent_trade") or {}
         cats = d.get("categories") or []
 
-        # 동 분류
+        # 동 분류 (gu_name이 2토큰이면 dong은 parts[2])
         parts = (d.get("location") or "").split(" ")
-        dong = parts[1] if len(parts) >= 2 else ""
+        gu_tokens = len(gu_name.split(" "))
+        dong = parts[gu_tokens] if len(parts) > gu_tokens else ""
         if dong:
             dong_map[dong]["count"] += 1
 
@@ -487,6 +488,13 @@ def main():
     all_danji = fetch_all_danji()
     print(f"  {len(all_danji)}개 단지 로드 완료")
 
+    # 2토큰 구/시 목록 (경기도 하위 구 분할 시/군)
+    two_token_gu = set()
+    for r in REGIONS.values():
+        for g in r["list"]:
+            if " " in g:
+                two_token_gu.add(g)
+
     # 구별 분류
     gu_map = defaultdict(list)
     for d in all_danji:
@@ -494,7 +502,16 @@ def main():
             continue
         loc = d.get("location") or ""
         parts = loc.split(" ")
-        gu = parts[0] if parts else ""
+        if not parts:
+            continue
+        # 2토큰 구 먼저 체크 (수원시 장안구, 성남시 분당구 등)
+        gu = None
+        if len(parts) >= 2:
+            two = parts[0] + " " + parts[1]
+            if two in two_token_gu:
+                gu = two
+        if not gu:
+            gu = parts[0]
         if gu:
             gu_map[gu].append(d)
 
