@@ -1022,14 +1022,17 @@ if (window.visualViewport) {
 
 // ── 탭 전환 ──
 function switchTab(tab) {
+  // 같은 탭 연속 탭 차단 (브리핑 중복 로드 방지)
+  if (tab === currentTab && tab === 'alert' && document.getElementById('alertChatArea')) return;
   haptic(15);
   currentTab = tab;
 
-  // 모든 패널 숨기기 + body에 붙은 채팅 제거
+  // 모든 패널 숨기기 + body에 붙은 채팅 제거 (여러 개 있을 수 있음)
   document.querySelectorAll('.panel').forEach(p => { p.style.display = 'none'; p.classList.remove('chat-mode'); });
-  document.querySelector('body > .chat-area')?.remove();
+  document.querySelectorAll('body > .chat-area').forEach(el => el.remove());
   // 진행 중이던 브리핑 큐 무효화
   if (typeof _alertGen !== 'undefined') _alertGen++;
+  if (typeof _alertLoading !== 'undefined') _alertLoading = false;
 
   // 탭 active 처리
   const isAgent = !!currentUser;
@@ -1765,11 +1768,15 @@ function _renderMatchPanel(cardData, parsed, rawText) {
 
 // ── 알림 (채팅 스타일 브리핑) ──
 let _alertGen = 0; // 호출 세대 — 중복/경쟁 방지
+let _alertLoading = false; // 동시 실행 방지 뮤텍스
 async function showAlerts() {
   // 이미 열려있으면 재생성 안 함
   if (document.getElementById('alertChatArea')) return;
-  // 다른 채팅(손님등록) 제거
-  document.querySelector('body > .chat-area')?.remove();
+  // 다른 showAlerts가 진행 중이면 무시
+  if (_alertLoading) return;
+  _alertLoading = true;
+  // 모든 기존 chat-area 제거 (중복 방지 — 여러 개 있을 수 있음)
+  document.querySelectorAll('body > .chat-area').forEach(el => el.remove());
   const myGen = ++_alertGen;
 
   if (!currentUser) {
@@ -1898,18 +1905,15 @@ async function showAlerts() {
     }
 
     // 내가 최신 호출이 아니면 무시 (중복 방지)
-    if (myGen !== _alertGen) return;
+    if (myGen !== _alertGen) { _alertLoading = false; return; }
 
-    // 큐 순차 재생 (300ms 간격, 톡톡톡)
-    q.forEach((item, i) => {
-      setTimeout(() => {
-        if (myGen !== _alertGen) return; // 재생 도중에도 체크
-        addAlertBubble(item.html, item.first);
-      }, i * 300);
-    });
+    // 큐 한번에 렌더 (setTimeout 제거 — race condition 방지)
+    q.forEach(item => addAlertBubble(item.html, item.first));
 
   } catch(e) {
     addAlertBubble('일정을 불러오지 못했어요.<br><span style="color:#f87171;font-size:13px;">' + esc(e.message||'연결 오류') + '</span>');
+  } finally {
+    _alertLoading = false;
   }
 }
 
