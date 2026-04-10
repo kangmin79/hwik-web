@@ -356,7 +356,8 @@ function render() {
 
   // 평형 (DB categories 기반)
   if (cats.length > 0) {
-    seoParts.push('보유 면적(전용): ' + cats.join(', ') + '㎡.');
+    const pyList = cats.map(c => '전용 ' + c + '㎡');
+    seoParts.push(pyList.join(', ') + ' 면적이 있습니다.');
   }
 
   // 지하철 (DB nearby_subway 기반)
@@ -385,12 +386,6 @@ function render() {
     seoParts.push('전세가율은 ' + jeonseRate + '%입니다.');
   }
 
-  // 업데이트 날짜
-  if (d.updated_at) {
-    const ud = new Date(d.updated_at);
-    seoParts.push(ud.getFullYear() + '-' + String(ud.getMonth()+1).padStart(2,'0') + '-' + String(ud.getDate()).padStart(2,'0') + ' 업데이트.');
-  }
-
   const seoFull = seoParts.join(' ');
   const seoShort = seoFull.length > 120 ? seoFull.slice(0,120) : seoFull;
   const seoRest = seoFull.length > 120 ? seoFull.slice(120) : '';
@@ -409,16 +404,8 @@ function render() {
     // 매매/전세: 가격 관련 FAQ
     if (recentPrice) {
       faqItems.push({ q: `${d.complex_name} 최근 실거래가는?`, a: `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentPrice)}입니다.${recentData && recentData.date ? ' ('+recentData.date+' 기준)' : ''}` });
-      // ㎡당 가격 FAQ: 공급면적 있을 때만 표시 (메트릭과 동일 로직)
-      let _faqSqmArea = currentPyeong ? parseFloat(currentPyeong) : 0;
-      let _faqSqmBasis = '전용면적';
-      if (showSupply && pm[currentPyeong] && pm[currentPyeong].supply && Math.abs((pm[currentPyeong].exclu || 0) - parseFloat(currentPyeong)) <= 10) {
-        _faqSqmArea = pm[currentPyeong].supply;
-        _faqSqmBasis = '공급면적';
-      } else {
-        _faqSqmArea = 0; // 공급면적 없으면 FAQ 생략
-      }
-      if (_faqSqmArea > 0) faqItems.push({ q: `${d.complex_name} ㎡당 가격은?`, a: `${_faqSqmBasis} ${_faqSqmArea}㎡ 기준 ㎡당 ${formatPrice(Math.round(recentPrice / _faqSqmArea))}입니다.` });
+      const _areaNum = currentPyeong ? parseFloat(currentPyeong) : 0;
+      if (_areaNum > 0) faqItems.push({ q: `${d.complex_name} ㎡당 가격은?`, a: `전용 ${currentPyeong}㎡ 기준 ㎡당 ${formatPrice(Math.round(recentPrice / _areaNum))}입니다.` });
     }
     if (jeonseRate) faqItems.push({ q: `${d.complex_name} 전세가율은?`, a: `${d.complex_name}의 전세가율은 ${jeonseRate}%입니다.` });
     if (highPrice) faqItems.push({ q: `${d.complex_name} 최근 3년 최고가는?`, a: `최근 3년 최고가는 ${formatPrice(highPrice)}입니다.${highData && highData.date ? ' ('+highData.date+')' : ''}` });
@@ -483,11 +470,14 @@ function render() {
         <div class="price-card-sub">${highData && highData.floor ? highData.floor + '층' : ''}${highData && highData.date ? ' · ' + highData.date : ''}</div>
       </div>
     </div>
-    ` : ''}
-    <!-- 지표: 3칸 한 줄 (㎡당 가격 + 전세가율 + 최고층 / 공급 없으면 세대수 + 전세가율 + 주차) -->
+    ${jeonseRate ? `<div class="metrics"><div class="metric" style="grid-column:span 3;text-align:center;">
+      <div class="metric-label">전세가율</div>
+      <div class="metric-value" style="font-size:18px;font-weight:600;">${jeonseRate}%</div>
+    </div></div>` : ''}` : ''}
+    <!-- 지표 2행: ㎡당 가격 + 주차 + 최고층/세대수 (월세 탭에서는 숨김) -->
     ${currentTab === '월세' ? '' : (() => {
       const cells = [];
-      // ㎡당 가격 (공급면적 우선)
+      // ㎡당 가격 (전용/공급 토글 반영)
       let sqmArea = currentPyeong ? parseFloat(currentPyeong) : 0;
       let sqmBasis = '전용면적 기준';
       if (showSupply && pm[currentPyeong] && pm[currentPyeong].supply && Math.abs((pm[currentPyeong].exclu || 0) - parseFloat(currentPyeong)) <= 10) {
@@ -495,20 +485,14 @@ function render() {
         sqmBasis = '공급면적 기준';
       }
       const sqmPrice = (recentPrice && sqmArea > 0) ? Math.round(recentPrice / sqmArea) : null;
+      if (sqmPrice) cells.push({label:'㎡당 가격', value:formatPrice(sqmPrice), sub:sqmBasis});
+      // 주차
       const pk = parseInt(d.parking || 0);
       const hh = parseInt(d.total_units || 0);
-
-      if (sqmPrice) {
-        // 공급면적 있음: ㎡당 가격 | 전세가율 | 최고층
-        cells.push({label:'㎡당 가격', value:formatPrice(sqmPrice), sub:sqmBasis});
-        if (jeonseRate) cells.push({label:'전세가율', value:jeonseRate+'%'});
-        if (d.top_floor) cells.push({label:'최고층', value:d.top_floor+'층'});
-      } else {
-        // 공급면적 없음: 세대수 | 전세가율 | 주차
-        if (hh > 0) cells.push({label:'세대수', value:hh.toLocaleString()+'세대'});
-        if (jeonseRate) cells.push({label:'전세가율', value:jeonseRate+'%'});
-        if (pk > 0) cells.push({label:'주차', value:pk.toLocaleString()+'대', sub: hh > 0 ? '세대당 '+(pk/hh).toFixed(1)+'대' : ''});
-      }
+      if (pk > 0) cells.push({label:'주차', value:pk.toLocaleString()+'대', sub: hh > 0 ? '세대당 '+(pk/hh).toFixed(1)+'대' : ''});
+      // 최고층 또는 세대수
+      if (d.top_floor) cells.push({label:'최고층', value:d.top_floor+'층'});
+      else if (d.total_units) cells.push({label:'세대수', value:d.total_units.toLocaleString()+'세대'});
 
       if (cells.length === 0) return '';
       return '<div class="metrics">' + cells.map(c => {
@@ -585,17 +569,6 @@ function render() {
       <a class="btn-primary" href="/mobile-v6.html" style="display:block;text-align:center;text-decoration:none;">이 단지 매물 전체보기</a>
       <a class="btn-secondary" href="/card_generator_v2_auth.html" style="display:block;text-align:center;text-decoration:none;">공인중개사 서비스 · 무료로 시작하기</a>
     </div>
-
-    <!-- 데이터 안내 (접기) -->
-    <details style="padding:12px 16px;border-top:1px solid var(--border);background:var(--card);">
-      <summary style="font-size:12px;font-weight:600;color:var(--sub);cursor:pointer;display:flex;align-items:center;gap:5px;list-style:none;">📊 데이터 안내 <span style="font-size:10px;color:var(--muted);margin-left:auto;">▼</span></summary>
-      <ul style="font-size:11px;color:var(--muted);line-height:1.8;padding-left:16px;margin:8px 0 0;">
-        <li>실거래가: 국토교통부 실거래가 공개시스템 (매일 자동 수집)</li>
-        <li>공급면적: 국토교통부 건축물대장 (전용면적 + 주거공용면적)</li>
-        <li>공급면적이 확인되지 않은 단지는 전용면적만 표시합니다</li>
-        <li>거래 취소·정정 건은 반영이 지연될 수 있습니다</li>
-      </ul>
-    </details>
 
     <!-- SEO -->
     <div class="seo-section">
