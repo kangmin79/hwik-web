@@ -540,21 +540,6 @@ function render() {
       <div style="display:flex;flex-direction:column;gap:8px;">${nearbyHtml || '<div style="font-size:12px;color:var(--sub);">주변 단지 정보가 없습니다</div>'}</div>
     </div>
 
-    <!-- 데이터 안내 -->
-    <div class="section" style="padding-bottom:0;">
-      <details style="font-size:12px;color:var(--sub);">
-        <summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--text);padding:4px 0;">데이터 안내 ▼</summary>
-        <div style="margin-top:8px;line-height:1.8;">
-          <b>실거래가</b>: 국토교통부 실거래가 공개시스템 (매일 자동 수집)<br>
-          <b>공급면적</b>: 국토교통부 건축물대장 (전용면적 + 주거공용면적)<br>
-          공급면적이 확인되지 않은 단지는 전용면적만 표시합니다<br>
-          거래 취소·정정 건은 반영이 지연될 수 있습니다
-        </div>
-      </details>
-    </div>
-
-    <div class="divider"></div>
-
     <!-- FAQ -->
     <div class="faq-section">
       <div class="section-title">자주 묻는 질문</div>
@@ -592,7 +577,16 @@ function render() {
       <div class="seo-text">
         ${esc(seoShort)}${seoRest ? '<span id="seoMore" style="display:none;">' + esc(seoRest) + '</span><span class="seo-more" onclick="document.getElementById(\'seoMore\').style.display=\'inline\';this.style.display=\'none\';"> 더보기</span>' : ''}
       </div>
-      <div class="seo-source">실거래가 출처: 국토교통부 실거래가 공개시스템 · 매일 업데이트</div>
+      <details style="font-size:12px;color:var(--sub);margin-top:10px;">
+        <summary style="cursor:pointer;">데이터 안내 ▼</summary>
+        <div style="margin-top:6px;line-height:1.8;">
+          <b>실거래가</b>: 국토교통부 실거래가 공개시스템 (매일 자동 수집)<br>
+          <b>공급면적</b>: 국토교통부 건축물대장 (전용면적 + 주거공용면적)<br>
+          공급면적이 확인되지 않은 단지는 전용면적만 표시합니다<br>
+          거래 취소·정정 건은 반영이 지연될 수 있습니다
+        </div>
+      </details>
+      <div class="seo-source" style="margin-top:8px;">실거래가 출처: 국토교통부 실거래가 공개시스템 · 매일 업데이트</div>
     </div>
   `;
 
