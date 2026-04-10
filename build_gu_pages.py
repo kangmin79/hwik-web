@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from urllib.parse import quote as url_quote
 import requests
 from collections import defaultdict
-from slug_utils import make_danji_slug, make_dong_slug
+from slug_utils import make_danji_slug, make_dong_slug, detect_region as slug_detect_region
 
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout = open(sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1)
@@ -531,9 +531,14 @@ def main():
                 two_token_gu.add(g)
 
     # 구별 분류 (실제 생성된 danji 페이지가 있는 단지만 포함)
+    # 서울/인천/경기만 /gu/ 페이지 생성 — 광역시는 슬러그 충돌 방지로 제외
+    ALLOWED_REGIONS = {"서울", "인천", "경기"}
     gu_map = defaultdict(list)
     for d in all_danji:
         if d.get("id", "").startswith("offi-"):
+            continue
+        # 지역 필터: 서울/인천/경기만
+        if slug_detect_region(d.get("address", "")) not in ALLOWED_REGIONS:
             continue
         # 생성된 danji 페이지가 없으면 제외 (rental-only 등)
         slug_d = make_danji_slug(d.get("complex_name", ""), d.get("location", ""), d.get("id", ""), d.get("address", ""))

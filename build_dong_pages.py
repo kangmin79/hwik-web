@@ -176,9 +176,18 @@ def has_trade_data(d):
 # ── 동별 HTML 생성 ────────────────────────────────────────
 def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=None):
     """동 페이지 정적 HTML 생성"""
-    first_addr = danji_list[0].get("address", "") if danji_list else ""
+    # 첫 번째 non-empty address 선택
+    first_addr = ""
+    for _d in danji_list:
+        _a = _d.get("address", "") or ""
+        if _a:
+            first_addr = _a
+            break
     slug = make_dong_slug(gu, dong, first_addr)
     canonical = f"https://hwik.kr/dong/{url_quote(slug, safe='-')}"
+
+    # /gu/ 페이지 존재 여부: 서울/인천/경기만 (슬러그 충돌 방지)
+    has_gu_page = region in ("서울", "인천", "경기")
 
     # 거래 있는 단지만 필터 + 가격순 정렬
     tradeable = []
@@ -250,8 +259,13 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
     region_link = "/gu/"
     lines.append(f'<nav style="font-size:11px;color:#6b7280;margin-bottom:12px;">')
     lines.append(f'  <a href="/" style="color:#6b7280;text-decoration:none;">휙</a> &gt;')
-    lines.append(f'  <a href="{region_link}" style="color:#6b7280;text-decoration:none;">{esc(region)}</a> &gt;')
-    lines.append(f'  <a href="/gu/{url_quote(gu.replace(" ", "-"), safe="-")}" style="color:#6b7280;text-decoration:none;">{esc(gu)}</a> &gt;')
+    if has_gu_page:
+        lines.append(f'  <a href="{region_link}" style="color:#6b7280;text-decoration:none;">{esc(region)}</a> &gt;')
+        lines.append(f'  <a href="/gu/{url_quote(gu.replace(" ", "-"), safe="-")}" style="color:#6b7280;text-decoration:none;">{esc(gu)}</a> &gt;')
+    else:
+        if region:
+            lines.append(f'  <span style="color:#6b7280;">{esc(region)}</span> &gt;')
+        lines.append(f'  <span style="color:#6b7280;">{esc(gu)}</span> &gt;')
     lines.append(f'  {esc(dong)}')
     lines.append(f'</nav>')
 
@@ -454,7 +468,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
         lines.append(f'<h2 style="font-size:14px;font-weight:600;margin-bottom:8px;">{esc(gu)} 다른 동</h2>')
         lines.append('<div style="display:flex;flex-wrap:wrap;gap:6px;">')
         for od in other_dongs:
-            od_slug = (dong_slug_map or {}).get((gu, od)) or make_dong_slug(gu, od, first_addr)
+            od_slug = (dong_slug_map or {}).get((region, gu, od)) or make_dong_slug(gu, od, first_addr)
             lines.append(
                 f'<a href="/dong/{url_quote(od_slug, safe="-")}" style="padding:8px 12px;background:#f3f4f6;border-radius:8px;'
                 f'text-decoration:none;color:#1a1a2e;font-size:12px;">{esc(od)}</a>'
@@ -463,8 +477,9 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
 
     # 내부 링크
     lines.append('<div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">')
-    lines.append(f'<a href="/gu/{url_quote(gu.replace(" ", "-"), safe="-")}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{esc(gu)} 전체 시세 &rarr;</a>')
-    lines.append('<a href="/ranking.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">아파트 순위 &rarr;</a>')
+    if has_gu_page:
+        lines.append(f'<a href="/gu/{url_quote(gu.replace(" ", "-"), safe="-")}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{esc(gu)} 전체 시세 &rarr;</a>')
+        lines.append('<a href="/ranking.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">아파트 순위 &rarr;</a>')
     lines.append('</div>')
 
     # SEO 서술 (풍부한 고유 콘텐츠) — 서두 다양화
@@ -513,15 +528,25 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
             "url": f"https://hwik.kr/danji/{url_quote(danji_slug, safe='-')}",
         })
 
+    _bc = [{"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"}]
+    _pos = 2
+    if has_gu_page:
+        _bc.append({"@type": "ListItem", "position": _pos, "name": region, "item": f"https://hwik.kr{region_link}"})
+        _pos += 1
+        _bc.append({"@type": "ListItem", "position": _pos, "name": gu, "item": f"https://hwik.kr/gu/{url_quote(gu.replace(' ', '-'), safe='-')}"})
+        _pos += 1
+    else:
+        if region:
+            _bc.append({"@type": "ListItem", "position": _pos, "name": region})
+            _pos += 1
+        _bc.append({"@type": "ListItem", "position": _pos, "name": gu})
+        _pos += 1
+    _bc.append({"@type": "ListItem", "position": _pos, "name": dong})
+
     jsonld = json.dumps({"@context": "https://schema.org", "@graph": [
         {
             "@type": "BreadcrumbList",
-            "itemListElement": [
-                {"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"},
-                {"@type": "ListItem", "position": 2, "name": region, "item": f"https://hwik.kr{region_link}"},
-                {"@type": "ListItem", "position": 3, "name": gu, "item": f"https://hwik.kr/gu/{url_quote(gu.replace(' ', '-'), safe='-')}"},
-                {"@type": "ListItem", "position": 4, "name": dong},
-            ],
+            "itemListElement": _bc,
         },
         {"@type": "FAQPage", "mainEntity": faq_ld},
         {
@@ -620,9 +645,10 @@ def main():
     all_danji = fetch_all_danji()
     print(f"{len(all_danji)}개 단지 로드")
 
-    # 동별 그룹화 (gu, dong) → [danji, ...]
+    # 동별 그룹화 (region, gu, dong) → [danji, ...]
+    # region을 키에 포함하여 동일 (gu, dong)의 지역 충돌 방지
+    # 예: 대전 서구 둔산동 vs 전북 익산 둔산동 (이전엔 병합됐음)
     dong_groups = defaultdict(list)
-    region_cache = {}  # gu → region
 
     for d in all_danji:
         loc = d.get("location", "")
@@ -632,44 +658,53 @@ def main():
         if len(parts) < 2:
             continue
         gu, dong = parts[0], parts[1]
-        dong_groups[(gu, dong)].append(d)
-
-        # 지역 판별 (address 기반)
-        if gu not in region_cache:
-            region = detect_region(d.get("address", ""))
-            if region:
-                region_cache[gu] = region
+        region = detect_region(d.get("address", "") or "")
+        if not region:
+            # address 비어있음 → 그룹 키에 region 없음 → 슬러그가 "gu-dong" 형태로 생성됨
+            # 이런 고아 row는 skip (데이터 정합성 이슈)
+            continue
+        dong_groups[(region, gu, dong)].append(d)
 
     # 구별 동 목록 (같은 구 다른 동 링크용) — 거래 3개+ 동만
-    gu_dongs = defaultdict(list)
-    for (gu, dong), danji_list in dong_groups.items():
+    gu_dongs = defaultdict(list)  # (region, gu) → [dong, ...]
+    for (region, gu, dong), danji_list in dong_groups.items():
         trade_count = sum(1 for d in danji_list if has_trade_data(d))
         if trade_count >= MIN_DANJI_WITH_TRADE:
-            gu_dongs[gu].append(dong)
-    for gu in gu_dongs:
-        gu_dongs[gu].sort()
+            gu_dongs[(region, gu)].append(dong)
+    for k in gu_dongs:
+        gu_dongs[k].sort()
 
     # 동별 slug 사전 계산 (다른 동 링크에 올바른 slug 사용)
-    dong_slug_map = {}  # (gu, dong) → slug
-    for (gu, dong), danji_list in dong_groups.items():
-        first_addr = danji_list[0].get("address", "") if danji_list else ""
-        dong_slug_map[(gu, dong)] = make_dong_slug(gu, dong, first_addr)
+    dong_slug_map = {}  # (region, gu, dong) → slug
+    for (region, gu, dong), danji_list in dong_groups.items():
+        # 첫 번째 non-empty address 선택 (더 안정적)
+        first_addr = ""
+        for d in danji_list:
+            a = d.get("address", "") or ""
+            if a:
+                first_addr = a
+                break
+        dong_slug_map[(region, gu, dong)] = make_dong_slug(gu, dong, first_addr)
 
     print(f"동 그룹: {len(dong_groups)}개, 생성 대상(거래 3개+): {sum(len(v) for v in gu_dongs.values())}개")
 
     count = 0
     skipped = 0
 
-    for (gu, dong), danji_list in sorted(dong_groups.items()):
-        region = region_cache.get(gu, "")
-        same_gu = gu_dongs.get(gu, [])
+    for (region, gu, dong), danji_list in sorted(dong_groups.items()):
+        same_gu = gu_dongs.get((region, gu), [])
 
         page = build_dong_html(gu, dong, danji_list, region, same_gu, dong_slug_map)
         if page is None:
             skipped += 1
             continue
 
-        first_addr = danji_list[0].get("address", "") if danji_list else ""
+        first_addr = ""
+        for d in danji_list:
+            a = d.get("address", "") or ""
+            if a:
+                first_addr = a
+                break
         slug = make_dong_slug(gu, dong, first_addr)
         path = os.path.join(DONG_DIR, f"{slug}.html")
         with open(path, "w", encoding="utf-8") as f:

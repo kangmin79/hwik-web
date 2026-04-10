@@ -45,6 +45,14 @@ DONG_DIR = os.path.join(BASE_DIR, "dong")
 # 동 페이지 slug 목록 (빌드 시 로드 — 동 파일 없는 곳은 링크 생략)
 DONG_SLUGS = set()
 
+# /gu/ 페이지가 존재하는 지역 (단일-토큰 구 슬러그 충돌 방지)
+GU_PAGE_REGIONS = {"서울", "인천", "경기"}
+
+
+def _has_gu_page(address):
+    """해당 주소가 /gu/ 페이지가 있는 지역인지 확인"""
+    return detect_region(address or "") in GU_PAGE_REGIONS
+
 
 # ── 유틸 ──────────────────────────────────────────────────
 def esc(s):
@@ -580,8 +588,9 @@ def build_fallback_html(d):
     lines.append('<div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">')
     if dong_name and dong_slug_str and dong_slug_str in DONG_SLUGS:
         lines.append(f'<a href="/dong/{url_quote(dong_slug_str, safe="-")}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{esc(dong_name)} 다른 단지 시세 →</a>')
-    lines.append(f'<a href="/gu/{url_quote(gu.replace(" ", "-"), safe="-")}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{gu} 전체 시세 →</a>')
-    lines.append('<a href="/ranking.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">아파트 순위 →</a>')
+    if _has_gu_page(d.get("address", "")):
+        lines.append(f'<a href="/gu/{url_quote(gu.replace(" ", "-"), safe="-")}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{gu} 전체 시세 →</a>')
+        lines.append('<a href="/ranking.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">아파트 순위 →</a>')
     lines.append("</div>")
 
     return "\n    ".join(lines)
@@ -597,6 +606,22 @@ def build_jsonld(d):
     dong_slug_str = make_dong_slug(gu, dong_name, d.get("address", "")) if dong_name else ""
     slug = make_slug(name, d.get("location", ""), did, d.get("address", ""))
 
+    has_gu = _has_gu_page(d.get("address", ""))
+    has_dong = dong_name and dong_slug_str and dong_slug_str in DONG_SLUGS
+
+    breadcrumb_items = [{"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"}]
+    pos = 2
+    if has_gu:
+        breadcrumb_items.append({"@type": "ListItem", "position": pos, "name": f"{gu}", "item": f"https://hwik.kr/gu/{url_quote(gu.replace(' ', '-'), safe='-')}"})
+        pos += 1
+    elif gu:
+        breadcrumb_items.append({"@type": "ListItem", "position": pos, "name": f"{gu}"})
+        pos += 1
+    if has_dong:
+        breadcrumb_items.append({"@type": "ListItem", "position": pos, "name": dong_name, "item": f"https://hwik.kr/dong/{url_quote(dong_slug_str, safe='-')}"})
+        pos += 1
+    breadcrumb_items.append({"@type": "ListItem", "position": pos, "name": name})
+
     graph = [
         {
             "@type": "ApartmentComplex",
@@ -610,12 +635,7 @@ def build_jsonld(d):
         },
         {
             "@type": "BreadcrumbList",
-            "itemListElement": [
-                {"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"},
-                {"@type": "ListItem", "position": 2, "name": f"{gu}", "item": f"https://hwik.kr/gu/{url_quote(gu.replace(' ', '-'), safe='-')}"},
-            ] + ([{"@type": "ListItem", "position": 3, "name": dong_name, "item": f"https://hwik.kr/dong/{url_quote(dong_slug_str, safe='-')}"}] if dong_name and dong_slug_str and dong_slug_str in DONG_SLUGS else []) + [
-                {"@type": "ListItem", "position": 4 if (dong_name and dong_slug_str and dong_slug_str in DONG_SLUGS) else 3, "name": name},
-            ],
+            "itemListElement": breadcrumb_items,
         },
     ]
     graph[0]["url"] = f"https://hwik.kr/danji/{url_quote(slug, safe='-')}"
@@ -751,6 +771,11 @@ def generate_page(d):
     dong_raw = loc_parts[1] if len(loc_parts) >= 2 else ""
     dong_slug_nav = make_dong_slug(loc_parts[0], dong_raw, d.get("address", "")) if dong_raw else ""
     dong_nav = f'<a href="/dong/{url_quote(dong_slug_nav, safe="-")}" style="color:#6b7280;text-decoration:none;">{esc(dong_raw)}</a> &gt;\n      ' if dong_raw and dong_slug_nav and dong_slug_nav in DONG_SLUGS else ""
+    _has_gu = _has_gu_page(d.get("address", ""))
+    gu_nav = (
+        f'<a href="/gu/{url_quote(loc_parts[0].replace(" ", "-"), safe="-")}" style="color:#6b7280;text-decoration:none;">{gu}</a> &gt;'
+        if _has_gu and gu else (f'<span style="color:#6b7280;">{gu}</span> &gt;' if gu else "")
+    )
     units = d.get("total_units", "")
     year = d.get("build_year", "")
     # title용 위치 (중복 타이틀 방지 — 구+동)
@@ -821,7 +846,7 @@ def generate_page(d):
   <div id="fallback-content" style="padding:20px;">
     <nav style="font-size:11px;color:#6b7280;margin-bottom:12px;">
       <a href="/" style="color:#6b7280;text-decoration:none;">휙</a> &gt;
-      <a href="/gu/{url_quote(gu.replace(' ', '-'), safe='-')}" style="color:#6b7280;text-decoration:none;">{gu}</a> &gt;
+      {gu_nav}
       {dong_nav}
       {name}
     </nav>

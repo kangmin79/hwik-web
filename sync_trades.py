@@ -129,8 +129,46 @@ GYEONGGI_SI = {
     "41800": "연천군",        "41820": "가평군",          "41830": "양평군",
 }
 
-# ── 수도권 전체 ───────────────────────────────────────────
-ALL_REGIONS = {**SEOUL_GU, **INCHEON_GU, **GYEONGGI_SI}
+# ── 부산 16개 구/군 ──────────────────────────────────────
+BUSAN_GU = {
+    "26110": "중구",     "26140": "서구",       "26170": "동구",
+    "26200": "영도구",   "26230": "부산진구",   "26260": "동래구",
+    "26290": "남구",     "26320": "북구",       "26350": "해운대구",
+    "26380": "사하구",   "26410": "금정구",     "26440": "강서구",
+    "26470": "연제구",   "26500": "수영구",     "26530": "사상구",
+    "26710": "기장군",
+}
+
+# ── 대구 9개 구/군 ───────────────────────────────────────
+DAEGU_GU = {
+    "27110": "중구",   "27140": "동구",   "27170": "서구",
+    "27200": "남구",   "27230": "북구",   "27260": "수성구",
+    "27290": "달서구", "27710": "달성군", "27720": "군위군",
+}
+
+# ── 광주 5개 구 ──────────────────────────────────────────
+GWANGJU_GU = {
+    "29110": "동구", "29140": "서구", "29155": "남구",
+    "29170": "북구", "29200": "광산구",
+}
+
+# ── 대전 5개 구 ──────────────────────────────────────────
+DAEJEON_GU = {
+    "30110": "동구",   "30140": "중구",   "30170": "서구",
+    "30200": "유성구", "30230": "대덕구",
+}
+
+# ── 울산 5개 구/군 ───────────────────────────────────────
+ULSAN_GU = {
+    "31110": "중구", "31140": "남구", "31170": "동구",
+    "31200": "북구", "31710": "울주군",
+}
+
+# ── 전국 (수도권 + 5대 광역시) ───────────────────────────
+ALL_REGIONS = {
+    **SEOUL_GU, **INCHEON_GU, **GYEONGGI_SI,
+    **BUSAN_GU, **DAEGU_GU, **GWANGJU_GU, **DAEJEON_GU, **ULSAN_GU,
+}
 
 # ── API URL ─────────────────────────────────────────────
 APT_TRADE_URL = "http://apis.data.go.kr/1613000/RTMSDataSvcAptTradeDev/getRTMSDataSvcAptTradeDev"
@@ -680,28 +718,36 @@ def update_danji_pages(danji_list: list):
             if key in d and not d[key]:
                 del d[key]
 
+    # PostgREST는 배치 내 모든 행의 키가 동일해야 함(PGRST102).
+    # nearby_* 키 유무가 행마다 다를 수 있으므로 스키마 시그니처별로 그룹핑.
+    by_schema: dict[tuple, list] = {}
+    for d in danji_list:
+        sig = tuple(sorted(d.keys()))
+        by_schema.setdefault(sig, []).append(d)
+
     batch_size = 50
     total = 0
-    for i in range(0, len(danji_list), batch_size):
-        batch = danji_list[i:i + batch_size]
-        for attempt in range(3):
-            try:
-                resp = sb_session.post(
-                    f"{SUPABASE_URL}/rest/v1/danji_pages",
-                    headers=SB_HEADERS,
-                    json=batch,
-                    timeout=90,
-                )
-                if resp.status_code in (200, 201):
-                    total += len(batch)
-                else:
-                    print(f"  ⚠️ danji_pages upsert: {resp.status_code} {resp.text[:200]}")
-                break
-            except Exception as e:
-                if attempt < 2:
-                    time.sleep(3)
-                else:
-                    print(f"  ⚠️ danji_pages upsert 실패: {e}")
+    for sig, rows in by_schema.items():
+        for i in range(0, len(rows), batch_size):
+            batch = rows[i:i + batch_size]
+            for attempt in range(3):
+                try:
+                    resp = sb_session.post(
+                        f"{SUPABASE_URL}/rest/v1/danji_pages",
+                        headers=SB_HEADERS,
+                        json=batch,
+                        timeout=90,
+                    )
+                    if resp.status_code in (200, 201):
+                        total += len(batch)
+                    else:
+                        print(f"  ⚠️ danji_pages upsert: {resp.status_code} {resp.text[:200]}")
+                    break
+                except Exception as e:
+                    if attempt < 2:
+                        time.sleep(3)
+                    else:
+                        print(f"  ⚠️ danji_pages upsert 실패: {e}")
 
     return total
 
@@ -1086,10 +1132,12 @@ def generate_sitemap(danji_list: list):
         included += 1
 
     # 동 페이지 (거래 있는 단지 3개 이상인 동만)
+    # key에 region 포함 → 지역 충돌 방지 (예: 대전 서구 둔산동 vs 전북 익산 둔산동)
     from collections import defaultdict as _defaultdict
-    dong_trade_count = _defaultdict(int)  # (gu, dong) → 거래 있는 단지 수
-    dong_addr_cache = {}  # (gu, dong) → 첫 번째 단지의 address
-    dong_latest_date = {}  # (gu, dong) → 최신 거래일
+    from slug_utils import detect_region as _detect_region
+    dong_trade_count = _defaultdict(int)  # (region, gu, dong) → 거래 있는 단지 수
+    dong_addr_cache = {}  # (region, gu, dong) → 첫 번째 non-empty address
+    dong_latest_date = {}  # (region, gu, dong) → 최신 거래일
     for d in all_danji:
         # 오피스텔 제외 (dong 집계에서도)
         if (d.get("id") or "").startswith("offi-"):
@@ -1100,13 +1148,17 @@ def generate_sitemap(danji_list: list):
         parts = loc.split(" ", 1)
         if len(parts) < 2:
             continue
+        region = _detect_region(d.get("address", "") or "")
+        if not region:
+            continue
         rt = d.get("recent_trade") or {}
         cats = d.get("categories") or []
         if any(rt.get(c) for c in cats):
-            key = (parts[0], parts[1])
+            key = (region, parts[0], parts[1])
             dong_trade_count[key] += 1
-            if key not in dong_addr_cache:
-                dong_addr_cache[key] = d.get("address", "")
+            addr_val = d.get("address", "") or ""
+            if addr_val and (key not in dong_addr_cache or not dong_addr_cache[key]):
+                dong_addr_cache[key] = addr_val
             # 동 내 최신 거래일 추적
             for c in cats:
                 td = (rt.get(c) or {}).get("date", "")
@@ -1114,13 +1166,13 @@ def generate_sitemap(danji_list: list):
                     dong_latest_date[key] = td
 
     dong_count = 0
-    for (gu, dong), cnt in sorted(dong_trade_count.items()):
+    for (region, gu, dong), cnt in sorted(dong_trade_count.items()):
         if cnt < 3:
             continue
-        addr = dong_addr_cache.get((gu, dong), "")
+        addr = dong_addr_cache.get((region, gu, dong), "")
         dong_slug = _make_dong_slug(gu, dong, addr)
         safe_dong_slug = _quote(dong_slug, safe="-")
-        dong_lastmod = dong_latest_date.get((gu, dong), today)[:10]
+        dong_lastmod = dong_latest_date.get((region, gu, dong), today)[:10]
         urls.append(f'  <url><loc>{base}/dong/{safe_dong_slug}</loc><lastmod>{dong_lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>')
         dong_count += 1
 
@@ -1150,6 +1202,11 @@ def main():
     parser.add_argument("--seoul", action="store_true", help="서울 전체만 처리")
     parser.add_argument("--gyeonggi", action="store_true", help="경기도 전체만 처리")
     parser.add_argument("--incheon", action="store_true", help="인천 전체만 처리")
+    parser.add_argument("--busan", action="store_true", help="부산 전체만 처리")
+    parser.add_argument("--daegu", action="store_true", help="대구 전체만 처리")
+    parser.add_argument("--gwangju", action="store_true", help="광주 전체만 처리")
+    parser.add_argument("--daejeon", action="store_true", help="대전 전체만 처리")
+    parser.add_argument("--ulsan", action="store_true", help="울산 전체만 처리")
     parser.add_argument("--reset-danji", action="store_true", help="danji_pages 전체 삭제 후 재생성")
     args = parser.parse_args()
 
@@ -1195,6 +1252,16 @@ def main():
         lawd_codes = list(GYEONGGI_SI.keys())
     elif args.incheon:
         lawd_codes = list(INCHEON_GU.keys())
+    elif args.busan:
+        lawd_codes = list(BUSAN_GU.keys())
+    elif args.daegu:
+        lawd_codes = list(DAEGU_GU.keys())
+    elif args.gwangju:
+        lawd_codes = list(GWANGJU_GU.keys())
+    elif args.daejeon:
+        lawd_codes = list(DAEJEON_GU.keys())
+    elif args.ulsan:
+        lawd_codes = list(ULSAN_GU.keys())
     else:
         lawd_codes = list(ALL_REGIONS.keys())
 
