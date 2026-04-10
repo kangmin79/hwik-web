@@ -487,8 +487,8 @@ function render() {
         <div class="price-card-value">${highPrice ? formatPrice(highPrice) : '-'}</div>
         <div class="price-card-sub">${highData && highData.floor ? highData.floor + '층' : ''}${highData && highData.date ? ' · ' + highData.date : ''}</div>
       </div>
-    </div>
-    ${(() => {
+    </div>` : ''}
+    ${currentTab !== '월세' ? (() => {
       const cells = [];
       if (jeonseRate) cells.push({label:'전세가율', value:jeonseRate+'%'});
       const supplyInfo = pm[currentPyeong];
@@ -505,7 +505,7 @@ function render() {
         const fontSize = (c.value && c.value.length > 6) ? ' style="font-size:13px"' : '';
         return '<div class="metric"><div class="metric-label">'+esc(c.label)+'</div><div class="metric-value"'+fontSize+'>'+esc(c.value)+'</div>'+(c.sub ? '<div class="metric-change neutral">'+esc(c.sub)+'</div>' : '')+'</div>';
       }).join('') + '</div>';
-    })()}
+    })() : ''}
 
     <!-- 거래량 + 그래프 (월세 탭에서는 숨김) -->
     ${currentTab !== '월세' ? `
