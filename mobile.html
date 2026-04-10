@@ -1838,7 +1838,7 @@ async function showAlerts() {
         <div style="font-size:13px;color:#555;">지금 다시 챙겨드릴까요?</div>
         <div style="display:flex;gap:8px;margin-top:10px;">
           <button onclick="showOverdueItems(this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--hwik-dark);color:var(--hwik-yellow);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">챙겨주세요</button>
-          <button onclick="this.closest('.bubble').querySelector('div:last-child').innerHTML='<span style=font-size:13px;color:#94a3b8>알겠어요, 나중에 다시 알려드릴게요</span>'" style="flex:1;padding:10px;border-radius:8px;border:none;background:#e5e7eb;color:#5a5a6e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">나중에</button>
+          <button onclick="dismissOverdue(this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:#e5e7eb;color:#5a5a6e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">나중에</button>
         </div>`);
       window._overdueItems = overdue;
       window._clientMap = clientMap;
@@ -1869,6 +1869,11 @@ function addAlertBubble(html, isFirst = false) {
     </div>`;
   msgs.appendChild(d);
   msgs.scrollTop = msgs.scrollHeight;
+}
+
+function dismissOverdue(btn) {
+  const btnsDiv = btn.closest('div');
+  if (btnsDiv) btnsDiv.innerHTML = '<span style="font-size:13px;color:#94a3b8">알겠어요, 나중에 다시 알려드릴게요</span>';
 }
 
 function showOverdueItems(btn) {
