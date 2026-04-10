@@ -686,6 +686,12 @@ def update_danji_pages(danji_list: list):
         seen[d["id"]] = d
     danji_list = list(seen.values())
 
+    # nearby 필드가 비어있으면 키 제거 → 기존 DB 값 보존
+    for d in danji_list:
+        for key in ("nearby_subway", "nearby_school", "nearby_complex"):
+            if key in d and not d[key]:
+                del d[key]
+
     batch_size = 50
     total = 0
     for i in range(0, len(danji_list), batch_size):
