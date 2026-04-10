@@ -960,6 +960,7 @@ function onLoggedIn() {
 }
 
 function onLoggedOut() {
+  document.querySelector('body > .chat-area')?.remove(); // 채팅도 제거
   document.getElementById('agentTabBar').classList.remove('visible');
   document.getElementById('bottomTabBar').classList.add('visible');
   switchTab('home');
