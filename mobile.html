@@ -968,6 +968,8 @@ function onLoggedOut() {
   document.querySelector('body > .chat-area')?.remove(); // 채팅도 제거
   document.getElementById('agentTabBar').classList.remove('visible');
   document.getElementById('bottomTabBar').classList.add('visible');
+  try { localStorage.removeItem('hwik_alert_count'); } catch(e) {}
+  _setBadgeUI(0);
   switchTab('home');
 }
 
@@ -2146,6 +2148,22 @@ async function briefConfirmClient() {
   }
 }
 
+function _setBadgeUI(count) {
+  const badge = document.getElementById('badgeAlert');
+  if (!badge) return;
+  if (count > 0) { badge.textContent = count > 99 ? '99+' : count; badge.classList.add('show'); }
+  else { badge.textContent = ''; badge.classList.remove('show'); }
+}
+
+// 페이지 로드 직후 캐시된 카운트로 즉시 뱃지 표시 (DB 기다리지 않음)
+function showCachedBadge() {
+  try {
+    const cached = localStorage.getItem('hwik_alert_count');
+    if (cached !== null) _setBadgeUI(parseInt(cached, 10) || 0);
+  } catch(e) {}
+}
+showCachedBadge();
+
 async function updateAlertBadge() {
   if (!currentUser) return;
   try {
@@ -2154,11 +2172,8 @@ async function updateAlertBadge() {
       supabaseClient.from('client_notes').select('id', { count: 'exact', head: true }).eq('agent_id', currentUser.id).eq('alert_done', false).lt('alert_date', new Date().toISOString())
     ]);
     const count = (matchResult.count || 0) + (overdueResult.count || 0);
-    const badge = document.getElementById('badgeAlert');
-    if (badge) {
-      if (count > 0) { badge.textContent = count > 99 ? '99+' : count; badge.classList.add('show'); }
-      else { badge.textContent = ''; badge.classList.remove('show'); }
-    }
+    _setBadgeUI(count);
+    try { localStorage.setItem('hwik_alert_count', String(count)); } catch(e) {}
   } catch(e) {}
 }
 
