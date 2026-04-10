@@ -1888,6 +1888,27 @@ function showOverdueItems(btn) {
   });
 }
 
+// 메시지 전체 페이드아웃 후 제거
+function fadeOutMsg(el, label) {
+  const msg = el.closest('.msg');
+  if (!msg) return;
+  if (label) {
+    msg.querySelector('.bubble').innerHTML = `<span style="color:#94a3b8;font-size:13px;">${label}</span>`;
+  }
+  setTimeout(() => {
+    msg.style.transition = 'opacity 0.4s, max-height 0.4s, margin 0.4s';
+    msg.style.overflow = 'hidden';
+    msg.style.maxHeight = msg.offsetHeight + 'px';
+    requestAnimationFrame(() => {
+      msg.style.opacity = '0';
+      msg.style.maxHeight = '0';
+      msg.style.marginTop = '0';
+      msg.style.marginBottom = '0';
+    });
+    setTimeout(() => msg.remove(), 400);
+  }, label ? 600 : 0);
+}
+
 async function alertDone(noteId, clientCardId, btn) {
   const wrap = btn.closest('.bubble');
   try {
@@ -1900,7 +1921,7 @@ async function alertDone(noteId, clientCardId, btn) {
         <input type="text" id="memo-${noteId}" placeholder="상담 내용 메모..." style="flex:1;padding:8px 12px;border-radius:8px;border:1.5px solid #e2e8f0;font-size:13px;font-family:inherit;outline:none;color:#1a1a2e;" onkeydown="if(event.key==='Enter')saveBriefMemo('${noteId}','${clientCardId}')">
         <button onclick="saveBriefMemo('${noteId}','${clientCardId}')" style="padding:8px 14px;border-radius:8px;border:none;background:var(--hwik-dark);color:var(--hwik-yellow);font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;flex-shrink:0;">저장</button>
       </div>
-      <button onclick="this.parentElement.innerHTML='<span style=color:#94a3b8;font-size:13px>완료!</span>'" style="margin-top:6px;padding:6px;border:none;background:none;color:#94a3b8;font-size:12px;cursor:pointer;font-family:inherit;">괜찮아요, 넘어갈게요</button>`;
+      <button onclick="fadeOutMsg(this,'완료')" style="margin-top:6px;padding:6px;border:none;background:none;color:#94a3b8;font-size:12px;cursor:pointer;font-family:inherit;">괜찮아요, 넘어갈게요</button>`;
     setTimeout(() => document.getElementById('memo-' + noteId)?.focus(), 100);
     updateAlertBadge();
   } catch(e) { showToast('처리 실패'); }
@@ -1917,20 +1938,17 @@ async function saveBriefMemo(noteId, clientCardId) {
       content: text,
       type: '메모'
     });
-    const wrap = input.closest('div').parentElement;
-    wrap.innerHTML = '<span style="color:#4ecdc4;font-size:13px;font-weight:600;">메모 저장했어요!</span>';
+    fadeOutMsg(input, '메모 저장했어요!');
   } catch(e) { showToast('저장 실패'); }
 }
 
 async function alertPostpone(noteId, btn) {
-  const wrap = btn.closest('.bubble');
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(10, 0, 0, 0);
   try {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(10, 0, 0, 0);
     await supabaseClient.from('client_notes').update({ alert_date: tomorrow.toISOString() }).eq('id', noteId);
-    const btnsDiv = wrap.querySelector('div:last-child');
-    btnsDiv.innerHTML = '<span style="color:#94a3b8;font-weight:600;font-size:13px;">내일 10시에 다시 알려드릴게요</span>';
+    fadeOutMsg(btn, '내일 10시에 다시 알려드릴게요');
     updateAlertBadge();
   } catch(e) { showToast('처리 실패'); }
 }
