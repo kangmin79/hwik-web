@@ -1450,8 +1450,10 @@ async function chatSend() {
     // 확인 카드 (카톡 스타일)
     const p = parsed;
     const typeColors = { '매매':'#ea580c', '전세':'#4f46e5', '월세':'#7c3aed' };
+    const catKo = { apartment:'아파트', officetel:'오피스텔', room:'원룸/빌라', commercial:'상가', office:'사무실', villa:'빌라', house:'주택' };
     const wantType = p.wanted_trade_type || p.type || '';
     const tColor = typeColors[wantType] || '#4ecdc4';
+    const catLabel = catKo[p.category] || p.category || '';
     const features = (p.features || []).map(f => `<span class="cc-tag">${esc(f)}</span>`).join('');
     const location = [p.location, p.complex].filter(Boolean).join(' ');
     const detail = [p.area, p.floor, p.room].filter(Boolean).join(' · ');
@@ -1460,7 +1462,7 @@ async function chatSend() {
       <div class="chat-confirm-card">
         <div class="cc-header">
           ${wantType ? `<span class="cc-type" style="background:${tColor}15;color:${tColor};">${esc(wantType)}</span>` : ''}
-          ${p.category ? `<span class="cc-type" style="background:#f0f0f3;color:#5a5a6e;margin-left:4px;">${esc(p.category)}</span>` : ''}
+          ${catLabel ? `<span class="cc-type" style="background:#f0f0f3;color:#5a5a6e;margin-left:4px;">${esc(catLabel)}</span>` : ''}
           <div class="cc-price">${esc(p.price || '')}</div>
         </div>
         <div class="cc-body">
