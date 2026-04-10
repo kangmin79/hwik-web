@@ -1601,24 +1601,32 @@ function _renderMatchPanel(cardData, parsed, rawText) {
   const features = (p.features || parsed.features || []);
   const condition = [p.price || parsed.price, p.location || parsed.location, p.complex || parsed.complex].filter(Boolean).join(' · ');
 
+  const catKo2 = { apartment:'아파트', officetel:'오피스텔', room:'원룸/빌라', commercial:'상가', office:'사무실', villa:'빌라', house:'주택' };
+  const catLabel2 = catKo2[p.category || parsed.category] || p.category || parsed.category || '';
+  const detail2 = [p.area||parsed.area, p.floor||parsed.floor, p.room||parsed.room].filter(Boolean).join(' · ');
+
   let html = `<div style="padding:0 0 100px;">
     <!-- 손님 정보 카드 -->
-    <div style="background:linear-gradient(135deg,#1a1a2e,#242442);border-radius:16px;padding:20px;margin-bottom:16px;color:#fff;">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-        <div style="width:40px;height:40px;border-radius:50%;background:rgba(78,205,196,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;">👤</div>
-        <div>
-          <div style="font-size:17px;font-weight:800;">${esc(clientName)}</div>
-          ${clientPhone ? `<div style="font-size:13px;color:rgba(255,255,255,0.6);margin-top:1px;">${esc(clientPhone)}</div>` : ''}
+    <div style="background:#fff;border-radius:12px;border:1px solid #e5e8eb;overflow:hidden;margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:10px;padding:16px 16px 12px;border-bottom:1px solid #f0f0f3;">
+        <div style="width:40px;height:40px;border-radius:50%;background:#f0f4ff;display:flex;align-items:center;justify-content:center;font-size:18px;">👤</div>
+        <div style="flex:1;">
+          <div style="font-size:16px;font-weight:800;color:#1a1a2e;">${esc(clientName)}</div>
+          ${clientPhone ? `<div style="font-size:13px;color:#94a3b8;margin-top:1px;">${esc(clientPhone)}</div>` : ''}
         </div>
-        <span style="margin-left:auto;padding:4px 12px;border-radius:20px;background:rgba(78,205,196,0.2);color:#4ecdc4;font-size:12px;font-weight:700;">탐색중</span>
+        <span style="padding:4px 12px;border-radius:20px;background:#f0fdf4;color:#16a34a;font-size:11px;font-weight:700;">탐색중</span>
       </div>
-      ${wantType ? `<span style="display:inline-block;padding:3px 10px;border-radius:6px;background:${tColor};color:#fff;font-size:12px;font-weight:700;margin-bottom:8px;">${esc(wantType)}</span>` : ''}
-      ${p.category || parsed.category ? `<span style="display:inline-block;padding:3px 10px;border-radius:6px;background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.8);font-size:12px;font-weight:600;margin-bottom:8px;margin-left:4px;">${esc(p.category || parsed.category)}</span>` : ''}
-      <div style="font-size:20px;font-weight:900;letter-spacing:-0.5px;">${esc(p.price || parsed.price || '')}</div>
-      <div style="font-size:14px;color:rgba(255,255,255,0.7);margin-top:4px;">${esc(condition)}</div>
-      ${(p.area||parsed.area)||(p.floor||parsed.floor)||(p.room||parsed.room) ? `<div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:2px;">${esc([p.area||parsed.area,p.floor||parsed.floor,p.room||parsed.room].filter(Boolean).join(' · '))}</div>` : ''}
-      ${features.length ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;">${features.map(f=>`<span style="padding:3px 10px;border-radius:6px;background:rgba(78,205,196,0.2);color:#4ecdc4;font-size:12px;font-weight:500;">${esc(f)}</span>`).join('')}</div>` : ''}
-      ${clientPhone ? `<a href="tel:${clientPhone.replace(/[-.\s]/g,'')}" style="display:block;text-align:center;padding:12px;margin-top:14px;border-radius:10px;background:rgba(255,255,255,0.1);color:#fff;font-size:14px;font-weight:700;text-decoration:none;">📞 전화하기</a>` : ''}
+      <div style="padding:14px 16px;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+          ${wantType ? `<span style="display:inline-block;padding:2px 8px;border-radius:4px;background:${tColor}15;color:${tColor};font-size:11px;font-weight:700;">${esc(wantType)}</span>` : ''}
+          ${catLabel2 ? `<span style="display:inline-block;padding:2px 8px;border-radius:4px;background:#f0f0f3;color:#5a5a6e;font-size:11px;font-weight:600;">${esc(catLabel2)}</span>` : ''}
+        </div>
+        <div style="font-size:18px;font-weight:900;color:#1a1a2e;letter-spacing:-0.5px;">${esc(p.price || parsed.price || '')}</div>
+        ${condition ? `<div style="font-size:13px;color:#5a5a6e;margin-top:4px;">${esc(condition)}</div>` : ''}
+        ${detail2 ? `<div style="font-size:13px;color:#94a3b8;margin-top:2px;">${esc(detail2)}</div>` : ''}
+        ${features.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;">${features.map(f=>`<span style="padding:2px 8px;border-radius:4px;background:#f0f4ff;color:#4f46e5;font-size:11px;font-weight:600;">${esc(f)}</span>`).join('')}</div>` : ''}
+      </div>
+      ${clientPhone ? `<a href="tel:${clientPhone.replace(/[-.\s]/g,'')}" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:13px;border-top:1px solid #e5e8eb;color:#4f46e5;font-size:14px;font-weight:700;text-decoration:none;">📞 전화하기</a>` : ''}
     </div>
 
     <!-- 매칭 매물 -->
