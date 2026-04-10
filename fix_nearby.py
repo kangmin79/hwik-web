@@ -123,34 +123,47 @@ def main():
 
     print(f"  ✅ {len(updates)}개 단지 nearby 계산 완료\n")
 
-    # 5) batch upsert (nearby만 업데이트)
-    batch_size = 100
+    # 5) 개별 PATCH로 nearby만 업데이트 (upsert는 partial row에서 실패 가능)
+    patch_headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal",
+    }
     total = 0
-    for i in range(0, len(updates), batch_size):
-        batch = updates[i:i + batch_size]
+    errors = 0
+    for i, u in enumerate(updates):
+        did = u["id"]
+        body = {
+            "nearby_subway": u["nearby_subway"],
+            "nearby_school": u["nearby_school"],
+        }
         for attempt in range(3):
             try:
-                resp = session.post(
-                    f"{SUPABASE_URL}/rest/v1/danji_pages",
-                    headers=HEADERS,
-                    json=batch,
-                    timeout=90,
+                resp = session.patch(
+                    f"{SUPABASE_URL}/rest/v1/danji_pages?id=eq.{did}",
+                    headers=patch_headers,
+                    json=body,
+                    timeout=30,
                 )
-                if resp.status_code in (200, 201):
-                    total += len(batch)
+                if resp.status_code in (200, 204):
+                    total += 1
                 else:
-                    print(f"  ⚠️ upsert {resp.status_code}: {resp.text[:200]}")
+                    if attempt == 2:
+                        errors += 1
+                        print(f"  ⚠️ {did}: {resp.status_code} {resp.text[:100]}")
                 break
             except Exception as e:
                 if attempt < 2:
-                    time.sleep(3)
+                    time.sleep(1)
                 else:
-                    print(f"  ⚠️ 실패: {e}")
+                    errors += 1
+                    print(f"  ⚠️ {did}: {e}")
 
-        if (i + batch_size) % 500 == 0:
-            print(f"  ... {total}/{len(updates)} 완료")
+        if (i + 1) % 1000 == 0:
+            print(f"  ... {i+1}/{len(updates)} 완료")
 
-    print(f"\n✅ {total}개 단지 nearby 복구 완료")
+    print(f"\n✅ {total}개 단지 nearby 복구 완료 (에러: {errors}건)")
 
 
 if __name__ == "__main__":
