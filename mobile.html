@@ -979,8 +979,13 @@ function onLoggedIn() {
   // 탭바 전환: 비로그인 → 중개사
   document.getElementById('bottomTabBar').classList.remove('visible');
   document.getElementById('agentTabBar').classList.add('visible');
-  // 현재 보고 있는 탭 다시 로드 (데이터 연결)
-  if (currentTab !== 'home') switchTab(currentTab);
+  // 현재 보고 있는 탭 다시 로드 (데이터 연결) — 단, 이미 탭 UI가 렌더링돼 있으면 스킵
+  // (세션 복원 시 onAuthStateChange가 뒤늦게 발생해서 탭이 깜박이던 버그 방지)
+  if (currentTab !== 'home') {
+    const chatExists = !!document.querySelector('body > .chat-area');
+    const panelShown = [...document.querySelectorAll('.panel')].some(p => p.style.display && p.style.display !== 'none');
+    if (!chatExists && !panelShown) switchTab(currentTab);
+  }
   updateAlertBadge();
   // 브리핑 데이터 프리페치 — 사용자가 탭 누르기 전에 백그라운드 로드
   if (typeof prefetchBrief === 'function') prefetchBrief();
