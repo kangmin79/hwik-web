@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEO 관리자 대시보드 - 휙</title>
+<meta name="robots" content="noindex, nofollow">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/config.js"></script>
+<script src="/makeSlug.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif; background:#0a0a12; color:#e2e8f0; min-height:100vh; }
+a { color:#4ecdc4; text-decoration:none; }
+a:hover { text-decoration:underline; }
+
+/* ===== 로그인 ===== */
+.login-screen { display:flex; align-items:center; justify-content:center; min-height:100vh; }
+.login-box { background:#1a1a2e; border:1px solid rgba(250,204,21,0.2); border-radius:16px; padding:40px 32px; width:100%; max-width:360px; text-align:center; }
+.login-box .logo { font-size:36px; font-weight:900; color:#facc15; margin-bottom:8px; }
+.login-box .subtitle { font-size:13px; color:#888; margin-bottom:28px; }
+.login-btn { width:100%; padding:14px; background:#FEE500; color:#3C1E1E; border:none; border-radius:10px; font-size:15px; font-weight:700; cursor:pointer; }
+.login-error { color:#f87171; font-size:13px; margin-top:12px; display:none; }
+
+/* ===== 대시보드 ===== */
+.dashboard { display:none; }
+.top-bar { padding:16px 24px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(255,255,255,0.07); }
+.top-bar .logo { font-size:22px; font-weight:900; color:#facc15; }
+.top-bar .label { font-size:12px; color:#888; background:rgba(255,255,255,0.05); padding:4px 10px; border-radius:6px; margin-left:10px; }
+.top-bar .actions { display:flex; gap:8px; }
+.btn { background:rgba(250,204,21,0.1); color:#facc15; border:1px solid rgba(250,204,21,0.2); padding:8px 14px; border-radius:8px; font-size:13px; cursor:pointer; font-family:inherit; }
+.btn:hover { background:rgba(250,204,21,0.2); }
+.btn.logout { background:rgba(248,113,113,0.1); color:#f87171; border-color:rgba(248,113,113,0.3); }
+
+.container { max-width:1280px; margin:0 auto; padding:24px; }
+.update-time { text-align:right; font-size:12px; color:#555; margin-bottom:20px; }
+
+/* ===== 통계 카드 ===== */
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px; margin-bottom:32px; }
+.stat-card { background:#1a1a2e; border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:20px; transition:all .2s; }
+.stat-card:hover { border-color:rgba(250,204,21,0.4); }
+.stat-card .label { font-size:12px; color:#888; margin-bottom:8px; }
+.stat-card .value { font-size:30px; font-weight:800; color:#fff; line-height:1; }
+.stat-card .sub { font-size:12px; color:#666; margin-top:8px; }
+.stat-card.highlight { border-color:rgba(250,204,21,0.3); }
+.stat-card.highlight .value { color:#facc15; }
+.stat-card.warn { border-color:rgba(248,113,113,0.3); }
+.stat-card.warn .value { color:#f87171; }
+.stat-card.ok { border-color:rgba(78,205,196,0.3); }
+.stat-card.ok .value { color:#4ecdc4; }
+.delta { font-size:12px; margin-left:6px; }
+.delta.ok { color:#4ecdc4; }
+.delta.warn { color:#f87171; }
+
+/* ===== 섹션 ===== */
+.section { margin-bottom:32px; background:#1a1a2e; border:1px solid rgba(255,255,255,0.07); border-radius:14px; padding:22px; }
+.section-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:8px; }
+.section-title { font-size:17px; font-weight:700; }
+.section-title .hint { font-size:12px; font-weight:400; color:#666; margin-left:8px; }
+.section-badge { font-size:12px; color:#888; background:rgba(255,255,255,0.05); padding:4px 10px; border-radius:6px; }
+
+/* ===== 지역 분포 바차트 ===== */
+.region-list { display:flex; flex-direction:column; gap:8px; }
+.region-row { display:grid; grid-template-columns:90px 1fr 60px; gap:12px; align-items:center; font-size:13px; }
+.region-row .name { color:#bbb; }
+.region-row .bar-wrap { height:18px; background:rgba(255,255,255,0.04); border-radius:4px; overflow:hidden; position:relative; }
+.region-row .bar { height:100%; background:linear-gradient(90deg, #facc15, #f59e0b); border-radius:4px; transition:width .4s; }
+.region-row .count { text-align:right; color:#facc15; font-weight:600; font-variant-numeric:tabular-nums; }
+
+/* ===== 테이블 ===== */
+.table-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; font-size:13px; }
+thead th { background:rgba(255,255,255,0.03); padding:10px 12px; text-align:left; font-weight:600; color:#888; border-bottom:1px solid rgba(255,255,255,0.07); white-space:nowrap; font-size:12px; }
+tbody td { padding:10px 12px; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:top; }
+tbody tr:hover { background:rgba(255,255,255,0.02); }
+.mono { font-family:'SFMono-Regular', Consolas, monospace; font-size:12px; }
+
+/* ===== 뱃지 ===== */
+.badge { display:inline-block; padding:3px 8px; border-radius:6px; font-size:11px; font-weight:600; white-space:nowrap; }
+.badge.ok { background:rgba(78,205,196,0.15); color:#4ecdc4; }
+.badge.warn { background:rgba(251,146,60,0.15); color:#fb923c; }
+.badge.err { background:rgba(248,113,113,0.15); color:#f87171; }
+.badge.neutral { background:rgba(255,255,255,0.06); color:#999; }
+
+/* ===== 진행 ===== */
+.loading { text-align:center; padding:30px; color:#666; font-size:13px; }
+.spinner { display:inline-block; width:20px; height:20px; border:3px solid rgba(250,204,21,0.2); border-top-color:#facc15; border-radius:50%; animation:spin .8s linear infinite; vertical-align:middle; margin-right:8px; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.progress { height:6px; background:rgba(255,255,255,0.05); border-radius:3px; overflow:hidden; margin-top:8px; }
+.progress-bar { height:100%; background:#facc15; transition:width .3s; width:0%; }
+
+/* ===== 비교 결과 ===== */
+.cmp-card { background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.06); border-radius:10px; padding:14px; margin-bottom:10px; }
+.cmp-card.err { border-color:rgba(248,113,113,0.3); }
+.cmp-card.warn { border-color:rgba(251,146,60,0.3); }
+.cmp-card-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:6px; }
+.cmp-card-title { font-size:14px; font-weight:600; }
+.cmp-card-url { font-size:11px; color:#666; }
+.cmp-fields { display:grid; grid-template-columns:140px 1fr 1fr 50px; gap:6px 10px; font-size:12px; }
+.cmp-fields .field-name { color:#888; padding:4px 0; }
+.cmp-fields .field-val { padding:4px 0; color:#ddd; word-break:break-all; }
+.cmp-fields .field-val.mismatch { color:#fb923c; }
+.cmp-fields .field-hdr { color:#666; font-size:10px; text-transform:uppercase; padding-bottom:4px; border-bottom:1px solid rgba(255,255,255,0.08); }
+
+/* ===== 반응형 ===== */
+@media (max-width: 720px) {
+  .stats-grid { grid-template-columns:repeat(2, 1fr); }
+  .stat-card .value { font-size:22px; }
+  .container { padding:14px; }
+  .section { padding:16px; }
+  .cmp-fields { grid-template-columns:90px 1fr 1fr 40px; font-size:11px; }
+  .region-row { grid-template-columns:70px 1fr 50px; font-size:12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== 로그인 ===== -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="logo">휙</div>
+    <div class="subtitle">SEO 관리자 대시보드</div>
+    <button class="login-btn" onclick="adminLogin()">카카오 로그인</button>
+    <div class="login-error" id="loginError">관리자 권한이 없는 계정입니다</div>
+  </div>
+</div>
+
+<!-- ===== 대시보드 ===== -->
+<div class="dashboard" id="dashboard">
+  <div class="top-bar">
+    <div style="display:flex;align-items:center;">
+      <span class="logo">휙</span>
+      <span class="label">SEO 관리자</span>
+    </div>
+    <div class="actions">
+      <button class="btn" onclick="runAll()">↻ 전체 새로고침</button>
+      <button class="btn logout" onclick="adminLogout()">로그아웃</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="update-time" id="updateTime"></div>
+
+    <!-- ===== 통계 카드 ===== -->
+    <div class="stats-grid">
+      <div class="stat-card highlight">
+        <div class="label">전체 정적 페이지</div>
+        <div class="value" id="statTotal">-</div>
+        <div class="sub">danji + dong + gu + ranking</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">단지 페이지</div>
+        <div class="value" id="statDanji">-</div>
+        <div class="sub">DB <span id="statDanjiDb">-</span> · <span id="statDanjiDelta">-</span></div>
+      </div>
+      <div class="stat-card">
+        <div class="label">동 페이지</div>
+        <div class="value" id="statDong">-</div>
+        <div class="sub">읍·면·동 단위</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">구/시 + 순위</div>
+        <div class="value" id="statGuRank">-</div>
+        <div class="sub">구 <span id="statGu">-</span> · 순위 <span id="statRank">-</span></div>
+      </div>
+      <div class="stat-card ok">
+        <div class="label">사이트맵 URL</div>
+        <div class="value" id="statSitemap">-</div>
+        <div class="sub">sitemap.xml 등록 수</div>
+      </div>
+    </div>
+
+    <!-- ===== 지역 분포 ===== -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">지역별 단지 페이지 분포<span class="hint">파일명 prefix 기반</span></div>
+        <div class="section-badge" id="regionTotal">-</div>
+      </div>
+      <div id="regionList" class="region-list">
+        <div class="loading"><span class="spinner"></span>집계 중...</div>
+      </div>
+    </div>
+
+    <!-- ===== 데이터 정확도 검증 (핵심) ===== -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">⭐ 데이터 정확도 검증<span class="hint">DB ↔ 페이지 JSON-LD 비교</span></div>
+        <div>
+          <select id="cmpSampleSize" class="btn" style="background:#0a0a12;color:#e2e8f0;">
+            <option value="5">5개 샘플</option>
+            <option value="10" selected>10개 샘플</option>
+            <option value="20">20개 샘플</option>
+            <option value="50">50개 샘플</option>
+          </select>
+          <button class="btn" onclick="runAccuracy()">재검증</button>
+        </div>
+      </div>
+      <div class="progress" id="cmpProgress" style="display:none;"><div class="progress-bar" id="cmpProgressBar"></div></div>
+      <div id="cmpSummary" style="margin:10px 0; font-size:13px; color:#aaa;"></div>
+      <div id="cmpResults">
+        <div class="loading">샘플을 뽑아서 "재검증" 버튼을 눌러주세요.</div>
+      </div>
+    </div>
+
+    <!-- ===== URL 연결 확인 ===== -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">URL 연결 확인<span class="hint">실제 HTTP 접속 테스트</span></div>
+        <div>
+          <select id="urlSampleSize" class="btn" style="background:#0a0a12;color:#e2e8f0;">
+            <option value="10">10개</option>
+            <option value="30" selected>30개</option>
+            <option value="100">100개</option>
+          </select>
+          <button class="btn" onclick="runUrlCheck()">검사</button>
+        </div>
+      </div>
+      <div class="progress" id="urlProgress" style="display:none;"><div class="progress-bar" id="urlProgressBar"></div></div>
+      <div id="urlSummary" style="margin:10px 0; font-size:13px; color:#aaa;"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>카테고리</th>
+              <th>URL</th>
+              <th>상태</th>
+              <th>응답</th>
+            </tr>
+          </thead>
+          <tbody id="urlResults">
+            <tr><td colspan="4" class="loading">샘플 크기를 선택 후 "검사" 버튼을 눌러주세요.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ===== 내부 링크 검증 ===== -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">내부 링크 검증<span class="hint">메인/허브 페이지의 링크 유효성</span></div>
+        <button class="btn" onclick="runLinkCheck()">검사</button>
+      </div>
+      <div id="linkSummary" style="margin:10px 0; font-size:13px; color:#aaa;"></div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>출처 페이지</th>
+              <th>링크</th>
+              <th>텍스트</th>
+              <th>상태</th>
+            </tr>
+          </thead>
+          <tbody id="linkResults">
+            <tr><td colspan="4" class="loading">"검사" 버튼을 눌러주세요.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ====================================================
+// 공통 유틸
+// ====================================================
+const SUPABASE_URL = HWIK_CONFIG.SUPABASE_URL;
+const SUPABASE_KEY = HWIK_CONFIG.SUPABASE_KEY;
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let currentUser = null;
+
+function $(id){ return document.getElementById(id); }
+function esc(s){ if(s==null) return ''; return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+async function parallelLimit(items, limit, worker){
+  const results = new Array(items.length);
+  let idx = 0;
+  async function runner(){
+    while(true){
+      const i = idx++;
+      if(i >= items.length) return;
+      try { results[i] = await worker(items[i], i); }
+      catch(e){ results[i] = { error: e.message || String(e) }; }
+    }
+  }
+  await Promise.all(Array(Math.min(limit, items.length)).fill(0).map(runner));
+  return results;
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+// ====================================================
+// 인증
+// ====================================================
+async function checkIsAdmin(userId){
+  try {
+    const { data } = await sb.from('profiles').select('is_admin').eq('id', userId).maybeSingle();
+    return data?.is_admin === true;
+  } catch(e){ return false; }
+}
+async function adminLogin(){
+  const { error } = await sb.auth.signInWithOAuth({ provider:'kakao', options:{ redirectTo:window.location.href } });
+  if(error) alert('로그인 실패: '+error.message);
+}
+async function adminLogout(){
+  await sb.auth.signOut();
+  currentUser = null;
+  $('loginScreen').style.display = '';
+  $('dashboard').style.display = 'none';
+}
+function showDashboard(){
+  $('loginScreen').style.display = 'none';
+  $('dashboard').style.display = 'block';
+  $('updateTime').textContent = '마지막 업데이트: ' + new Date().toLocaleString('ko-KR',{timeZone:'Asia/Seoul'});
+  runAll();
+}
+sb.auth.onAuthStateChange(async (event, session) => {
+  if(session?.user){
+    currentUser = session.user;
+    if(await checkIsAdmin(currentUser.id)) showDashboard();
+    else {
+      $('loginError').style.display = 'block';
+      await sb.auth.signOut();
+    }
+  }
+});
+(async () => {
+  const { data:{ session } } = await sb.auth.getSession();
+  if(session?.user && await checkIsAdmin(session.user.id)){
+    currentUser = session.user;
+    showDashboard();
+  }
+})();
+
+// ====================================================
+// 사이트맵 캐시
+// ====================================================
+async function loadSitemap(){
+  if(window.__sitemapCache) return window.__sitemapCache;
+  const r = await fetch('/sitemap.xml', {cache:'no-store'});
+  const text = await r.text();
+  const doc = new DOMParser().parseFromString(text, 'text/xml');
+  const locs = Array.from(doc.getElementsByTagName('loc')).map(el => el.textContent.trim());
+  const cats = { danji:[], dong:[], gu:[], ranking:[], root:[] };
+  locs.forEach(u => {
+    if(u.includes('/danji/')) cats.danji.push(u);
+    else if(u.includes('/dong/')) cats.dong.push(u);
+    else if(u.includes('/gu/')) cats.gu.push(u);
+    else if(u.includes('/ranking/')) cats.ranking.push(u);
+    else cats.root.push(u);
+  });
+  window.__sitemapCache = { all:locs, cats };
+  return window.__sitemapCache;
+}
+
+// ====================================================
+// Section 1: 통계
+// ====================================================
+async function loadStats(){
+  // DB: danji_pages 전체 카운트 (아파트만)
+  const dbCountP = (async () => {
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/danji_pages?id=not.like.offi-*&select=id`, {
+        method:'HEAD',
+        headers:{
+          apikey: SUPABASE_KEY,
+          Authorization: 'Bearer '+SUPABASE_KEY,
+          Prefer: 'count=exact'
+        }
+      });
+      const range = r.headers.get('Content-Range') || '';
+      const m = range.match(/\/(\d+)$/);
+      return m ? parseInt(m[1],10) : 0;
+    } catch(e){ return 0; }
+  })();
+
+  const sm = await loadSitemap();
+  const [dbCount] = await Promise.all([dbCountP]);
+
+  const total = sm.cats.danji.length + sm.cats.dong.length + sm.cats.gu.length + sm.cats.ranking.length;
+  $('statTotal').textContent = total.toLocaleString();
+  $('statDanji').textContent = sm.cats.danji.length.toLocaleString();
+  $('statDanjiDb').textContent = dbCount.toLocaleString();
+  const delta = sm.cats.danji.length - dbCount;
+  const deltaEl = $('statDanjiDelta');
+  if(delta === 0){
+    deltaEl.innerHTML = '<span class="delta ok">✓ 일치</span>';
+  } else {
+    deltaEl.innerHTML = `<span class="delta warn">${delta>0?'+':''}${delta}</span>`;
+  }
+  $('statDong').textContent = sm.cats.dong.length.toLocaleString();
+  $('statGu').textContent = sm.cats.gu.length.toLocaleString();
+  $('statRank').textContent = sm.cats.ranking.length.toLocaleString();
+  $('statGuRank').textContent = (sm.cats.gu.length + sm.cats.ranking.length).toLocaleString();
+  $('statSitemap').textContent = sm.all.length.toLocaleString();
+}
+
+// ====================================================
+// Section 2: 지역 분포
+// ====================================================
+// 파일명 prefix → 지역 매핑
+// 광역시(부산/대구/광주/대전/울산)는 slug 가 `{구}-{동}-...` 로 시작 (addr 기반)
+// 이 페이지에서는 DB의 address 대신 파일명 패턴으로 추정:
+//   '경기-...' '인천-...' 등으로 시작하면 해당 도/광역시
+//   그 외는 서울(구 이름 직접) 로 간주
+const DO_REGIONS = ['경기','인천','부산','대구','광주','대전','울산','세종','강원','충북','충남','전북','전남','경북','경남','제주'];
+const SEOUL_GU = ['강남구','강동구','강북구','강서구','관악구','광진구','구로구','금천구','노원구','도봉구','동대문구','동작구','마포구','서대문구','서초구','성동구','성북구','송파구','양천구','영등포구','용산구','은평구','종로구','중구','중랑구'];
+
+async function loadRegionBreakdown(){
+  const sm = await loadSitemap();
+  const counts = {};
+  sm.cats.danji.forEach(url => {
+    // URL 끝의 slug 부분에서 첫 단어 추출
+    const slug = decodeURIComponent(url.split('/').pop() || '');
+    const first = slug.split('-')[0] || '';
+    let region = null;
+    if(DO_REGIONS.includes(first)) region = first;
+    else if(SEOUL_GU.includes(first)) region = '서울';
+    else region = '기타';
+    counts[region] = (counts[region] || 0) + 1;
+  });
+  const entries = Object.entries(counts).sort((a,b) => b[1]-a[1]);
+  const max = Math.max(...entries.map(e => e[1]), 1);
+  const total = entries.reduce((s,e) => s+e[1], 0);
+  $('regionTotal').textContent = total.toLocaleString() + '건';
+  $('regionList').innerHTML = entries.map(([name,cnt]) => `
+    <div class="region-row">
+      <div class="name">${esc(name)}</div>
+      <div class="bar-wrap"><div class="bar" style="width:${(cnt/max*100).toFixed(1)}%"></div></div>
+      <div class="count">${cnt.toLocaleString()}</div>
+    </div>
+  `).join('');
+}
+
+// ====================================================
+// Section 3: 데이터 정확도 검증 (핵심)
+// ====================================================
+
+// 한국식 가격 문자열 → 만원 숫자
+function parseKoreanPrice(s){
+  if(!s) return null;
+  const t = String(s).replace(/\s+/g,'');
+  let total = 0;
+  const eokM = t.match(/(\d+)억/);
+  if(eokM) total += parseInt(eokM[1],10) * 10000;
+  const cheonM = t.match(/억([0-9,]+)천/) || (!eokM && t.match(/(\d+)천/));
+  if(cheonM) total += parseInt(cheonM[1].replace(/,/g,''),10) * 1000;
+  const manM = t.match(/천([0-9,]+)만?$/);
+  if(manM) total += parseInt(manM[1].replace(/,/g,''),10);
+  // 숫자만 있는 경우 (e.g., "12345")
+  if(total === 0 && /^\d+$/.test(t)) total = parseInt(t,10);
+  return total || null;
+}
+
+// DB row의 recent_trade에서 매매가(만원) 추출
+function extractDbRecent(row){
+  const rt = row.recent_trade;
+  if(!rt) return null;
+  try {
+    const obj = typeof rt === 'string' ? JSON.parse(rt) : rt;
+    // 보통 {매매:{price:..., date:...}, 전세:{...}}
+    const sale = obj.매매 || obj.sale || obj.trade;
+    if(sale && (sale.price || sale.amount)){
+      return { price: sale.price || sale.amount, date: sale.date || '' };
+    }
+  } catch(e){}
+  return null;
+}
+
+async function fetchPageJsonLd(url){
+  const r = await fetch(url, {cache:'no-store'});
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  const html = await r.text();
+  // JSON-LD script 추출
+  const m = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
+  if(!m) throw new Error('JSON-LD 없음');
+  let ld;
+  try { ld = JSON.parse(m[1]); }
+  catch(e){ throw new Error('JSON-LD 파싱실패'); }
+  const graph = ld['@graph'] || [ld];
+  const complex = graph.find(g => g['@type'] === 'ApartmentComplex');
+  const breadcrumb = graph.find(g => g['@type'] === 'BreadcrumbList');
+  const faq = graph.find(g => g['@type'] === 'FAQPage');
+  return { complex, breadcrumb, faq, html };
+}
+
+async function runAccuracy(){
+  const sampleSize = parseInt($('cmpSampleSize').value, 10);
+  $('cmpResults').innerHTML = '<div class="loading"><span class="spinner"></span>DB 샘플 추출 중...</div>';
+  $('cmpProgress').style.display = 'block';
+  $('cmpProgressBar').style.width = '0%';
+  $('cmpSummary').textContent = '';
+
+  // 1) DB에서 랜덤 샘플 추출 — PostgREST 랜덤 방식 없으므로 최근 N*3 중 랜덤
+  const { data: rows, error } = await sb.from('danji_pages')
+    .select('id,complex_name,location,address,build_year,total_units,recent_trade,all_time_high,jeonse_rate,nearby_subway,lat,lng')
+    .not('id','like','offi-%')
+    .order('updated_at', {ascending:false})
+    .limit(sampleSize * 5);
+  if(error){
+    $('cmpResults').innerHTML = `<div class="loading">❌ DB 조회 실패: ${esc(error.message)}</div>`;
+    return;
+  }
+  const picked = shuffle(rows).slice(0, sampleSize);
+  if(picked.length === 0){
+    $('cmpResults').innerHTML = '<div class="loading">DB에 조회된 행 없음</div>';
+    return;
+  }
+
+  // 2) 각 행에 대해 slug 계산 → 페이지 fetch → 비교
+  let done = 0;
+  const results = await parallelLimit(picked, 5, async (row) => {
+    const slug = makeSlug(row.complex_name, row.location, row.id, row.address || '');
+    const url = `/danji/${encodeURIComponent(slug)}`;
+    const out = { row, slug, url, fields:[], status:'ok', mismatch:0 };
+    try {
+      const { complex, breadcrumb } = await fetchPageJsonLd(url);
+      if(!complex){ out.status = 'err'; out.error = 'ApartmentComplex 누락'; done++; updateProg(); return out; }
+
+      // 필드 비교
+      const pageName = complex.name || '';
+      const pageAddr = complex.address?.addressLocality || '';
+      const pageLat = complex.geo?.latitude;
+      const pageLng = complex.geo?.longitude;
+      const pageYear = complex.yearBuilt;
+
+      const addField = (name, dbVal, pageVal, match) => {
+        if(!match) out.mismatch++;
+        out.fields.push({ name, dbVal, pageVal, match });
+      };
+
+      addField('단지명', row.complex_name, pageName, (row.complex_name||'').trim() === pageName.trim());
+      addField('주소(동)', row.location, pageAddr, (row.location||'').trim() === pageAddr.trim());
+      addField('준공년도', row.build_year, pageYear, Number(row.build_year) === Number(pageYear));
+      const latOk = Math.abs((row.lat||0) - (pageLat||0)) < 0.0001;
+      const lngOk = Math.abs((row.lng||0) - (pageLng||0)) < 0.0001;
+      addField('위도', row.lat, pageLat, latOk);
+      addField('경도', row.lng, pageLng, lngOk);
+
+      if(out.mismatch > 0) out.status = 'warn';
+    } catch(e){
+      out.status = 'err';
+      out.error = e.message || String(e);
+    }
+    done++;
+    updateProg();
+    return out;
+  });
+
+  function updateProg(){
+    $('cmpProgressBar').style.width = (done/picked.length*100).toFixed(1)+'%';
+  }
+
+  // 3) 결과 렌더
+  const okCount = results.filter(r => r.status==='ok').length;
+  const warnCount = results.filter(r => r.status==='warn').length;
+  const errCount = results.filter(r => r.status==='err').length;
+  $('cmpSummary').innerHTML = `
+    <span class="badge ok">✓ 일치 ${okCount}</span>
+    <span class="badge warn" style="margin-left:6px;">△ 불일치 ${warnCount}</span>
+    <span class="badge err" style="margin-left:6px;">✗ 오류 ${errCount}</span>
+    <span style="margin-left:10px;color:#666;">정확도 ${((okCount/results.length)*100).toFixed(1)}%</span>
+  `;
+
+  const html = results.map(r => {
+    if(r.status === 'err'){
+      return `<div class="cmp-card err">
+        <div class="cmp-card-head">
+          <div class="cmp-card-title">${esc(r.row.complex_name)} <span class="badge err">오류</span></div>
+          <div class="cmp-card-url"><a href="${esc(r.url)}" target="_blank">${esc(r.url)}</a></div>
+        </div>
+        <div style="color:#f87171;font-size:12px;">❌ ${esc(r.error)}</div>
+      </div>`;
+    }
+    return `<div class="cmp-card ${r.status==='warn'?'warn':''}">
+      <div class="cmp-card-head">
+        <div class="cmp-card-title">${esc(r.row.complex_name)} ${r.status==='ok'?'<span class="badge ok">일치</span>':'<span class="badge warn">불일치 '+r.mismatch+'</span>'}</div>
+        <div class="cmp-card-url"><a href="${esc(r.url)}" target="_blank">${esc(r.url)}</a></div>
+      </div>
+      <div class="cmp-fields">
+        <div class="field-hdr">필드</div>
+        <div class="field-hdr">DB</div>
+        <div class="field-hdr">페이지</div>
+        <div class="field-hdr">판정</div>
+        ${r.fields.map(f => `
+          <div class="field-name">${esc(f.name)}</div>
+          <div class="field-val ${f.match?'':'mismatch'}">${esc(f.dbVal)}</div>
+          <div class="field-val ${f.match?'':'mismatch'}">${esc(f.pageVal)}</div>
+          <div>${f.match?'<span class="badge ok">✓</span>':'<span class="badge warn">≠</span>'}</div>
+        `).join('')}
+      </div>
+    </div>`;
+  }).join('');
+  $('cmpResults').innerHTML = html;
+}
+
+// ====================================================
+// Section 4: URL 연결 확인
+// ====================================================
+async function checkOne(url){
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), 8000);
+  try {
+    // HEAD 먼저 시도, 실패하면 GET
+    let r = await fetch(url, {method:'HEAD', signal:controller.signal, cache:'no-store'}).catch(() => null);
+    if(!r || !r.ok){
+      r = await fetch(url, {method:'GET', signal:controller.signal, cache:'no-store'}).catch(() => null);
+    }
+    clearTimeout(t);
+    if(!r) return { ok:false, status:0, error:'네트워크 오류' };
+    return { ok:r.ok, status:r.status };
+  } catch(e){
+    clearTimeout(t);
+    return { ok:false, status:0, error:e.name==='AbortError'?'타임아웃':(e.message||String(e)) };
+  }
+}
+
+async function runUrlCheck(){
+  const size = parseInt($('urlSampleSize').value, 10);
+  const sm = await loadSitemap();
+  // 각 카테고리에서 비율대로 샘플
+  const pick = [];
+  const cats = ['danji','dong','gu','ranking'];
+  const weights = { danji:0.5, dong:0.2, gu:0.15, ranking:0.15 };
+  for(const c of cats){
+    const n = Math.max(1, Math.round(size * weights[c]));
+    pick.push(...shuffle(sm.cats[c]).slice(0, n).map(u => ({cat:c, url:u})));
+  }
+  const list = pick.slice(0, size);
+
+  $('urlResults').innerHTML = '<tr><td colspan="4" class="loading"><span class="spinner"></span>검사 중... (0/'+list.length+')</td></tr>';
+  $('urlProgress').style.display = 'block';
+  $('urlProgressBar').style.width = '0%';
+  let done = 0;
+
+  const results = await parallelLimit(list, 8, async (item) => {
+    const r = await checkOne(item.url);
+    done++;
+    $('urlProgressBar').style.width = (done/list.length*100).toFixed(1)+'%';
+    return { ...item, ...r };
+  });
+
+  const okCount = results.filter(r => r.ok).length;
+  const errCount = results.length - okCount;
+  $('urlSummary').innerHTML = `
+    <span class="badge ok">✓ 정상 ${okCount}</span>
+    <span class="badge err" style="margin-left:6px;">✗ 실패 ${errCount}</span>
+    <span style="margin-left:10px;color:#666;">성공률 ${((okCount/results.length)*100).toFixed(1)}%</span>
+  `;
+
+  $('urlResults').innerHTML = results.map(r => `
+    <tr>
+      <td><span class="badge neutral">${r.cat}</span></td>
+      <td class="mono"><a href="${esc(r.url)}" target="_blank">${esc(decodeURIComponent(r.url.replace('https://hwik.kr','')))}</a></td>
+      <td>${r.ok?'<span class="badge ok">'+r.status+'</span>':'<span class="badge err">'+(r.status||'ERR')+'</span>'}</td>
+      <td style="color:#666;font-size:11px;">${esc(r.error || 'OK')}</td>
+    </tr>
+  `).join('');
+}
+
+// ====================================================
+// Section 5: 내부 링크 검증
+// ====================================================
+async function runLinkCheck(){
+  $('linkResults').innerHTML = '<tr><td colspan="4" class="loading"><span class="spinner"></span>검사 중...</td></tr>';
+  const pages = ['/', '/gu/', '/ranking/', '/ranking.html'];
+  const rows = [];
+  for(const p of pages){
+    try {
+      const r = await fetch(p, {cache:'no-store'});
+      if(!r.ok){ rows.push({src:p, href:'-', text:'-', status:'err', msg:'페이지 로드 실패 '+r.status}); continue; }
+      const html = await r.text();
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      const links = Array.from(doc.querySelectorAll('a[href]'))
+        .map(a => ({ href:a.getAttribute('href'), text:a.textContent.trim().slice(0,30) }))
+        .filter(l => l.href && !l.href.startsWith('mailto:') && !l.href.startsWith('tel:') && !l.href.startsWith('#') && !l.href.startsWith('javascript:'));
+      // 외부 링크 제외
+      const internal = links.filter(l => !l.href.startsWith('http') || l.href.startsWith('https://hwik.kr'));
+      for(const l of internal){
+        rows.push({src:p, href:l.href, text:l.text, status:'pending'});
+      }
+    } catch(e){
+      rows.push({src:p, href:'-', text:'-', status:'err', msg:e.message});
+    }
+  }
+
+  // 각 링크 HEAD 체크 (중복 제거)
+  const seen = new Set();
+  const toCheck = rows.filter(r => {
+    if(r.status !== 'pending') return false;
+    const key = r.href.startsWith('http') ? r.href : 'https://hwik.kr'+r.href;
+    if(seen.has(key)) { r._dup = true; return false; }
+    seen.add(key);
+    r._url = key;
+    return true;
+  });
+
+  const checked = await parallelLimit(toCheck, 6, async (r) => {
+    const res = await checkOne(r._url);
+    r.status = res.ok ? 'ok' : 'err';
+    r.msg = res.ok ? ('HTTP '+res.status) : (res.error || ('HTTP '+res.status));
+    return r;
+  });
+
+  // 중복은 이미 검사된 것과 동일 처리
+  const urlMap = new Map(checked.map(r => [r._url, r]));
+  rows.forEach(r => {
+    if(r._dup){
+      const key = r.href.startsWith('http') ? r.href : 'https://hwik.kr'+r.href;
+      const orig = urlMap.get(key);
+      if(orig){ r.status = orig.status; r.msg = '(중복) '+orig.msg; }
+    }
+  });
+
+  const okCount = rows.filter(r => r.status==='ok').length;
+  const errCount = rows.filter(r => r.status==='err').length;
+  $('linkSummary').innerHTML = `
+    <span class="badge ok">✓ 정상 ${okCount}</span>
+    <span class="badge err" style="margin-left:6px;">✗ 실패 ${errCount}</span>
+    <span style="margin-left:10px;color:#666;">총 ${rows.length}개 (중복 포함)</span>
+  `;
+
+  $('linkResults').innerHTML = rows.map(r => `
+    <tr>
+      <td class="mono">${esc(r.src)}</td>
+      <td class="mono" style="max-width:320px;overflow:hidden;text-overflow:ellipsis;"><a href="${esc(r.href)}" target="_blank">${esc(r.href)}</a></td>
+      <td style="color:#aaa;">${esc(r.text)}</td>
+      <td>${r.status==='ok'?'<span class="badge ok">'+esc(r.msg||'OK')+'</span>':'<span class="badge err">'+esc(r.msg||'ERR')+'</span>'}</td>
+    </tr>
+  `).join('');
+}
+
+// ====================================================
+// 전체 실행
+// ====================================================
+async function runAll(){
+  $('updateTime').textContent = '마지막 업데이트: ' + new Date().toLocaleString('ko-KR',{timeZone:'Asia/Seoul'});
+  window.__sitemapCache = null; // 재로드
+  await loadStats();
+  await loadRegionBreakdown();
+  // 정확도/URL/내부링크는 수동 버튼 (무거움)
+}
+</script>
+</body>
+</html>
