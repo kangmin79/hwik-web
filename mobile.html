@@ -1509,10 +1509,18 @@ function addUserBubble(text) {
   msgs.scrollTop = msgs.scrollHeight;
 }
 let _typingTimer = null;
+function _typingLabelText() {
+  // 실제 파싱 중일 때만 "분석 중" — 아니면 "듣고 있어요"
+  return _chatState === 'waiting' ? '분석 중이에요...' : '듣고 있어요...';
+}
+function _refreshTypingLabel() {
+  const t = document.getElementById('typingText');
+  if (t) t.textContent = _typingLabelText();
+}
 function addTyping() {
   const msgs = document.getElementById('chatMessages');
   if (!msgs) return;
-  if (document.getElementById('chatTyping')) return; // 이미 있으면 중복 방지
+  if (document.getElementById('chatTyping')) { _refreshTypingLabel(); return; }
   const showAvatar = _lastSender !== 'ai';
   _lastSender = 'ai';
   const d = document.createElement('div');
@@ -1524,15 +1532,15 @@ function addTyping() {
       ${showAvatar ? '<div class="sender-name">휙 AI</div>' : ''}
       <div class="bubble">
         <div class="typing-dots"><span></span><span></span><span></span></div>
-        <div id="typingText" style="font-size:12px;color:rgba(0,0,0,0.4);margin-top:4px;display:none;">분석 중이에요...</div>
+        <div id="typingText" style="font-size:12px;color:rgba(0,0,0,0.4);margin-top:4px;display:none;">${_typingLabelText()}</div>
       </div>
     </div>`;
   msgs.appendChild(d);
   msgs.scrollTop = msgs.scrollHeight;
-  // 2초 후 텍스트 표시
+  // 2초 후 라벨 노출 (상태 기반 라벨 갱신)
   _typingTimer = setTimeout(() => {
     const t = document.getElementById('typingText');
-    if (t) t.style.display = 'block';
+    if (t) { t.textContent = _typingLabelText(); t.style.display = 'block'; }
   }, 2000);
 }
 function removeTyping() {
@@ -1617,6 +1625,7 @@ async function chatSend() {
 async function _processChatBuffer() {
   if (_chatState === 'waiting') return;
   _chatState = 'waiting';
+  _refreshTypingLabel(); // "듣고 있어요" → "분석 중이에요"
   const btn = document.getElementById('chatSendBtn');
   if (btn) btn.disabled = true;
 
