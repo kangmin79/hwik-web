@@ -127,6 +127,31 @@ jobs:
         run: python build_gu_pages.py
       - name: 랭킹 정적 페이지 빌드
         run: python build_ranking_pages.py
+
+      # ── pre-push 브라우저 검증 게이트 ──────────────────────
+      # 빌드 결과를 runner-local http.server 로 서빙해서 Chromium 으로 열고
+      # 주요 페이지(허브/gu/dong/danji/ranking/shell/depth-1/depth-2/주변단지)
+      # 를 검증. 하나라도 실패하면 이 스텝이 exit 1 → 이후 "커밋 및 푸시"
+      # 스텝이 실행되지 않아 나쁜 상태가 원격에 올라가지 않는다.
+      #
+      # 이 게이트가 왜 존재하는지:
+      #   2026-04-11~12 2일 연속 extract_css_js() 회귀로 13,000개 단지 페이지가
+      #   자동 빌드에 의해 덮어써져 production 이 터졌다. HEAD 200 OK 만으로는
+      #   "서버는 응답 정상, 브라우저에선 리치 UI 비어있음" 상황을 못 잡는다.
+      #   verify_browser.py 로 실제 Chromium DOM 체크를 빌드 직후·push 전에
+      #   실행해 나쁜 상태가 원격에 올라가기 전에 차단한다.
+      #
+      # 관련 메모: memory/feedback_long_session_regressions.md
+      - name: pre-push 브라우저 검증 게이트
+        run: |
+          set -e
+          python -m http.server 8000 &>/tmp/http_server.log &
+          SERVER_PID=$!
+          trap "kill $SERVER_PID 2>/dev/null || true" EXIT
+          sleep 2
+          echo "브라우저 검증 시작 (localhost:8000)"
+          VERIFY_HOST=http://localhost:8000 python verify_browser.py
+
       - name: 커밋 및 푸시
         run: |
           git config user.name "github-actions[bot]"
@@ -138,6 +163,45 @@ jobs:
             git commit -m "자동 빌드: sitemap + 단지 페이지 ($(date -u +%Y-%m-%d))"
             git push
           fi
+
+      # ── 게이트 실패 시 알림 이메일 (push 가 일어나지 않았음을 명시) ──
+      - name: 게이트 실패 이메일
+        if: failure()
+        run: |
+          python - <<'PYEOF'
+          import smtplib, os
+          from email.mime.text import MIMEText
+
+          today = os.popen("date -u +%Y-%m-%d").read().strip()
+          run_url = f"https://github.com/{os.environ.get('GITHUB_REPOSITORY','')}/actions/runs/{os.environ.get('GITHUB_RUN_ID','')}"
+          body = (
+              "[휙] 자동 빌드 pre-push 게이트 실패\n\n"
+              "브라우저 검증(verify_browser.py) 이 실패해 GitHub Actions 가\n"
+              "sitemap.xml / danji/ / dong/ / gu/ / ranking/ 변경을 원격에\n"
+              "푸시하지 않고 중단했습니다. production 은 이전 상태 그대로이며\n"
+              "오늘 치 실거래가 데이터도 repo 에는 반영되지 않았습니다.\n\n"
+              "확인 방법:\n"
+              f"  1) 워크플로 로그 열기: {run_url}\n"
+              "  2) 'pre-push 브라우저 검증 게이트' 스텝의 로그에서 실패 페이지 확인\n"
+              "  3) 로컬에서 `python build_danji_pages.py` 등 관련 빌드 재현 후\n"
+              "     `python verify_browser.py` 로 로컬 디버그\n\n"
+              "자주 실패하는 원인:\n"
+              "  - danji/app.js 또는 danji/style.css 덮어쓰기 회귀\n"
+              "    → memory/feedback_long_session_regressions.md 참고\n"
+              "  - build_*.py 가 엉뚱한 경로를 만들거나 리다이렉트 셸로 축소\n"
+              "  - 새 단지 데이터 형식이 기존 렌더러와 호환 안 됨\n\n"
+              "이 이메일은 자동 빌드가 '안전하게' 중단됐다는 뜻입니다.\n"
+              "production 에는 아무 영향 없습니다 — 천천히 원인 파악 후 재실행하세요.\n"
+          )
+          msg = MIMEText(body, "plain", "utf-8")
+          msg["Subject"] = f"[휙][BLOCKED] {today} 자동 빌드 — pre-push 게이트 실패 (push 안 됨)"
+          msg["From"] = os.environ["SMTP_USER"]
+          msg["To"] = os.environ["REPORT_EMAIL"]
+          with smtplib.SMTP_SSL("smtp.gmail.com", 465) as s:
+              s.login(os.environ["SMTP_USER"], os.environ["SMTP_PASS"])
+              s.send_message(msg)
+          print(f"게이트 실패 이메일 발송 → {os.environ['REPORT_EMAIL']}")
+          PYEOF
 
       - name: SEO + 데이터 검증 + 이메일 발송
         run: |

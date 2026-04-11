@@ -27,7 +27,9 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout = open(sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1)
 
 BASE = os.path.dirname(os.path.abspath(__file__))
-HOST = "https://hwik.kr"
+# HOST 는 env var 로도 덮어쓸 수 있음 — CI pre-push 검증에서
+# localhost http.server 로 돌릴 때 사용 (VERIFY_HOST=http://localhost:8000)
+HOST = os.environ.get("VERIFY_HOST", "https://hwik.kr").rstrip("/")
 WAIT_MS = 1500   # JS defer 완료 대기
 NAV_TIMEOUT = 15000
 
@@ -202,9 +204,14 @@ def main():
         page = ctx.new_page()
 
         # PASS 1: 페이지 직접 열기
+        # flake 완화: 실패 시 1회 재시도. 두 번 연속 실패해야 진짜 FAIL.
+        # (CDN miss, 네트워크 일시 장애 대비. localhost 에선 거의 재시도 안 걸림.)
         results_by_cat = {}
         for cat, url, expected in targets:
             ok, final, final_path, expected_or_err = check_page(page, url, expected, f"{cat}: {url}")
+            if not ok:
+                page.wait_for_timeout(500)
+                ok, final, final_path, expected_or_err = check_page(page, url, expected, f"{cat}: {url}")
             results_by_cat.setdefault(cat, []).append({
                 "ok": ok, "url": url, "final": final, "expected": expected_or_err, "label": f"{cat}",
             })
@@ -305,6 +312,7 @@ def main():
     else:
         print(f"❌ 총 {total_fails}개 문제")
     print("=" * 70)
+    return total_fails
 
 if __name__ == "__main__":
-    main()
+    sys.exit(1 if main() > 0 else 0)
