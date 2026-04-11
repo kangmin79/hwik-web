@@ -1,8 +1,10 @@
 
 (function(){
+  // 정적 /danji/{slug} 페이지에는 ?id= 가 없음 → 아무것도 하지 않음.
+  // legacy ?id= 플로우만 슬러그 URL 로 리다이렉트.
   var p = new URLSearchParams(location.search);
   var id = p.get('id');
-  if (!id) { location.replace('/'); return; }
+  if (!id) return;
   try {
     var sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_KEY);
     sb.from('danji_pages')
