@@ -1666,7 +1666,6 @@ async function _processChatBuffer() {
   if (nextMissing) {
     _chatMissing = nextMissing;
     addAiBubble(_FIELD_QUESTIONS[nextMissing]);
-    addAiBubble('<span style="font-size:11px;color:#94a3b8;">해당 없으면 "없음" 입력</span>');
     _chatState = 'idle';
     if (btn) btn.disabled = false;
     document.getElementById('chatInput')?.focus();
