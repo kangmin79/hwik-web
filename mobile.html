@@ -496,15 +496,18 @@
     background: rgba(0,0,0,0.08);
     padding: 4px 12px; border-radius: 12px;
   }
-  /* 메시지 행 */
+  /* 메시지 행 — opacity 1 기본값 (reduce-motion 환경에서도 보임) */
   .msg {
     display: flex; gap: 6px; margin-bottom: 4px;
     align-items: flex-start;
-    opacity: 0; transform: translateY(10px);
-    animation: msgIn 0.3s ease forwards;
+    opacity: 1;
+    animation: msgIn 0.3s ease;
   }
   .msg.first-in-group { margin-top: 10px; }
-  @keyframes msgIn { to { opacity:1; transform:translateY(0); } }
+  @keyframes msgIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  @media (prefers-reduced-motion: reduce) {
+    .msg { animation: none; }
+  }
   /* 아바타 */
   .msg .avatar {
     width: 36px; height: 36px; border-radius: 14px;
