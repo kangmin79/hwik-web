@@ -72,6 +72,54 @@ const CONFIRM_KEYBOARD = {
   ]],
 }
 
+// 필드별 inline keyboard — 선택지 뻔한 필드만 (탭 한 번 = 파싱 없이 즉시 주입)
+const TRADE_KEYBOARD = {
+  inline_keyboard: [
+    [
+      { text: '매매', callback_data: 'ft:매매' },
+      { text: '전세', callback_data: 'ft:전세' },
+      { text: '월세', callback_data: 'ft:월세' },
+      { text: '반전세', callback_data: 'ft:반전세' },
+    ],
+    [{ text: '없음', callback_data: 'ft:skip' }],
+  ],
+}
+
+const CATEGORY_KEYBOARD = {
+  inline_keyboard: [
+    [
+      { text: '아파트', callback_data: 'fc:apartment' },
+      { text: '오피스텔', callback_data: 'fc:officetel' },
+    ],
+    [
+      { text: '빌라', callback_data: 'fc:villa' },
+      { text: '원룸', callback_data: 'fc:room' },
+    ],
+    [
+      { text: '상가', callback_data: 'fc:commercial' },
+      { text: '사무실', callback_data: 'fc:office' },
+    ],
+    [{ text: '없음', callback_data: 'fc:skip' }],
+  ],
+}
+
+const FIELD_KEYBOARDS: Record<string, any> = {
+  trade: TRADE_KEYBOARD,
+  category: CATEGORY_KEYBOARD,
+}
+
+// 카테고리 슬러그 → 한국어 라벨 (callback 후 확인 메시지용)
+const CATEGORY_KO: Record<string, string> = {
+  apartment: '아파트', officetel: '오피스텔', villa: '빌라',
+  room: '원룸/빌라', commercial: '상가', office: '사무실', house: '주택',
+}
+
+// 누락 필드 질문 한 번에 보내기 — 선택지 있으면 inline 버튼, 없으면 타이핑 유도
+async function askField(chatId: number, field: string) {
+  const kb = FIELD_KEYBOARDS[field]
+  return reply(chatId, FIELD_QUESTIONS[field], kb ? { reply_markup: kb } : {})
+}
+
 // 파싱 결과에서 특정 필드가 채워졌는지 (skipped 포함)
 function hasField(draft: any, skipped: string[], field: string): boolean {
   if (skipped.includes(field)) return true
@@ -546,7 +594,7 @@ async function handleText(chatId: number, text: string, agent: any) {
         state: 'idle',
         draft_type: 'client',
       })
-      return reply(chatId, FIELD_QUESTIONS[nextMissing], { reply_markup: MAIN_KEYBOARD })
+      return askField(chatId, nextMissing)
     }
     // 모두 채워짐 또는 스킵 → 확인 카드
     await saveDraft(chatId, agent.id, {
@@ -607,7 +655,7 @@ async function handleText(chatId: number, text: string, agent: any) {
         state: 'idle',
         draft_type: 'client',
       })
-      return reply(chatId, FIELD_QUESTIONS[missing], { reply_markup: MAIN_KEYBOARD })
+      return askField(chatId, missing)
     }
 
     // 모두 채워짐 → 확인 카드
@@ -665,6 +713,67 @@ async function handleCallbackQuery(cb: any) {
         parse_mode: 'HTML',
       }).catch(() => {})
     }
+    return
+  }
+
+  // ========== 필드 버튼 (거래/종류) ==========
+  if (data.startsWith('ft:') || data.startsWith('fc:')) {
+    const prefix = data.slice(0, 2)
+    const value = data.slice(3)
+    const field = prefix === 'ft' ? 'trade' : 'category'
+
+    let newDraft = { ...(draftRow.draft || {}) }
+    const newSkipped = [...(draftRow.skipped || [])]
+
+    let selectedLabel = ''
+    if (value === 'skip') {
+      if (!newSkipped.includes(field)) newSkipped.push(field)
+      selectedLabel = '없음'
+    } else if (field === 'trade') {
+      newDraft.wanted_trade_type = value
+      selectedLabel = value
+    } else {
+      newDraft.category = value
+      selectedLabel = CATEGORY_KO[value] || value
+    }
+
+    // 현재 질문 메시지 → "✅ 선택 완료" 로 변환 (버튼 제거)
+    if (messageId) {
+      await tg('editMessageText', {
+        chat_id: chatId,
+        message_id: messageId,
+        text: `✅ <b>${field === 'trade' ? '거래' : '종류'}</b>: ${selectedLabel}`,
+        parse_mode: 'HTML',
+        reply_markup: { inline_keyboard: [] },
+      }).catch(() => {})
+    }
+
+    const nextMissing = findMissingField(newDraft, newSkipped)
+    if (nextMissing) {
+      await saveDraft(chatId, agent.id, {
+        draft: newDraft,
+        raw_text: draftRow.raw_text,
+        skipped: newSkipped,
+        missing_field: nextMissing,
+        state: 'idle',
+        draft_type: 'client',
+      })
+      await askField(chatId, nextMissing)
+      return
+    }
+
+    // 모두 채워짐 → 확인 카드
+    await saveDraft(chatId, agent.id, {
+      draft: newDraft,
+      raw_text: draftRow.raw_text,
+      skipped: newSkipped,
+      missing_field: null,
+      state: 'confirm',
+      draft_type: 'client',
+    })
+    await reply(chatId, buildClientSummary(newDraft), {
+      reply_markup: CONFIRM_KEYBOARD,
+    })
     return
   }
 
