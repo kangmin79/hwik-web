@@ -27,6 +27,8 @@ const BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN')!
 const WEBHOOK_SECRET = Deno.env.get('TELEGRAM_WEBHOOK_SECRET') || ''
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
+const HWIK_INTERNAL_SECRET = Deno.env.get('HWIK_INTERNAL_SECRET') || ''
 
 const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
   auth: { persistSession: false, autoRefreshToken: false }
@@ -198,11 +200,14 @@ async function buildBriefing(agentId: string): Promise<string> {
 }
 
 async function parseProperty(text: string) {
+  // ANON_KEY 로 gateway JWT 체크 통과 + x-hwik-internal 헤더로 함수 내부 bypass 트리거
   const res = await fetch(`${SUPABASE_URL}/functions/v1/parse-property`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${SERVICE_ROLE}`,
+      'Authorization': `Bearer ${ANON_KEY}`,
+      'apikey': ANON_KEY,
+      'x-hwik-internal': HWIK_INTERNAL_SECRET,
     },
     body: JSON.stringify({ text }),
   })
@@ -381,13 +386,17 @@ async function handleText(chatId: number, text: string, agent: any) {
     })
 
     // 비동기 매칭 트리거 (응답 기다리지 않음)
+    const internalHeaders = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${ANON_KEY}`,
+      'apikey': ANON_KEY,
+      'x-hwik-internal': HWIK_INTERNAL_SECRET,
+      'x-agent-id': agent.id,
+    }
     if (isClient) {
       fetch(`${SUPABASE_URL}/functions/v1/match-properties`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SERVICE_ROLE}`,
-        },
+        headers: internalHeaders,
         body: JSON.stringify({
           client_card_id: cardId,
           agent_id: agent.id,
@@ -412,10 +421,7 @@ async function handleText(chatId: number, text: string, agent: any) {
     } else {
       fetch(`${SUPABASE_URL}/functions/v1/auto-match`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SERVICE_ROLE}`,
-        },
+        headers: internalHeaders,
         body: JSON.stringify({ card_id: cardId, agent_id: agent.id }),
       }).catch(() => {})
     }

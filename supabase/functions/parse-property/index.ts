@@ -322,8 +322,10 @@ Deno.serve(async (req) => {
 
   const token = authHeader.replace('Bearer ', '');
   const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-  // 내부 서비스 간 호출(telegram-webhook 등) — service_role 토큰이면 유저 체크 스킵
-  const isInternalCall = token === SERVICE_ROLE;
+  // 내부 서비스 간 호출(telegram-webhook 등) — 전용 시크릿 헤더로 bypass
+  const internalSecret = Deno.env.get('HWIK_INTERNAL_SECRET') || '';
+  const internalHeader = req.headers.get('x-hwik-internal') || '';
+  const isInternalCall = internalSecret.length > 0 && internalHeader === internalSecret;
   if (!isInternalCall) {
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, SERVICE_ROLE);
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
