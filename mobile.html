@@ -927,12 +927,17 @@ function ensureKakao() {
 }
 
 // ── 인증 ──
-// 빠른 탭바 표시: localStorage에서 세션 유무 먼저 확인
+// 빠른 탭바 표시 + currentUser 즉시 복원 (auth.getSession 네트워크 대기 X)
 (function quickTabCheck() {
   try {
     const key = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
-    if (key && JSON.parse(localStorage.getItem(key))?.user) {
+    const cached = key ? JSON.parse(localStorage.getItem(key)) : null;
+    if (cached?.user) {
+      // currentUser를 localStorage에서 즉시 복원 — 네트워크 검증 전이라도 UI 렌더 가능
+      currentUser = cached.user;
       document.getElementById('agentTabBar').classList.add('visible');
+      // 브리핑 프리페치도 즉시 시작 (getSession 기다리지 않음)
+      setTimeout(() => { try { prefetchBrief(); } catch(_) {} }, 0);
     } else {
       document.getElementById('bottomTabBar').classList.add('visible');
     }
@@ -942,9 +947,14 @@ function ensureKakao() {
 })();
 
 supabaseClient.auth.getSession().then(({ data: { session } }) => {
-  if (session?.user) { currentUser = session.user; onLoggedIn(); }
+  if (session?.user) {
+    const wasRestored = !!currentUser;
+    currentUser = session.user;
+    if (!wasRestored) onLoggedIn();
+  }
   else {
     // 혹시 빠른 체크가 잘못됐으면 교정
+    currentUser = null;
     document.getElementById('agentTabBar').classList.remove('visible');
     document.getElementById('bottomTabBar').classList.add('visible');
   }
@@ -954,7 +964,10 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
   else { currentUser = null; onLoggedOut(); }
 });
 
+let _loggedInFired = false;
 function onLoggedIn() {
+  if (_loggedInFired) return; // 중복 호출 방지 (quickTabCheck + getSession + onAuthStateChange)
+  _loggedInFired = true;
   closeLogin();
   // 탭바 전환: 비로그인 → 중개사
   document.getElementById('bottomTabBar').classList.remove('visible');
@@ -967,6 +980,7 @@ function onLoggedIn() {
 }
 
 function onLoggedOut() {
+  _loggedInFired = false;
   document.querySelector('body > .chat-area')?.remove(); // 채팅도 제거
   document.getElementById('agentTabBar').classList.remove('visible');
   document.getElementById('bottomTabBar').classList.add('visible');
@@ -1820,12 +1834,13 @@ async function _fetchBriefData() {
 // 로그인 직후 프리페치 트리거 — 사용자가 탭 누르기 전에 미리 로드
 function prefetchBrief() {
   if (!currentUser) return;
+  if (_briefPromise) return; // 이미 진행 중이면 재호출 무시
   _briefPromise = _fetchBriefData().then(data => {
     if (data) {
       try { localStorage.setItem(BRIEF_CACHE_KEY, JSON.stringify(data)); } catch(e) {}
     }
     return data;
-  }).catch(e => { console.warn('[brief prefetch]', e); return null; });
+  }).catch(e => { console.warn('[brief prefetch]', e); _briefPromise = null; return null; });
 }
 
 // 데이터 → 메시지 큐
