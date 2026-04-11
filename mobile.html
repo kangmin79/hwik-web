@@ -1388,11 +1388,11 @@ let _chatMissing = null;  // 현재 AI가 물어보는 필드
 // 필수 필드 + 질문 문구 (우선순위 순)
 const _REQUIRED_FIELDS = ['trade', 'location', 'price', 'category', 'contact'];
 const _FIELD_QUESTIONS = {
-  trade:    '어떤 거래를 원하시나요?<br><span style="font-size:12px;color:#94a3b8;">매매 / 전세 / 월세 / 반전세</span>',
-  location: '어느 지역에서 찾으시나요?<br><span style="font-size:12px;color:#94a3b8;">예) 강남구 역삼동, 마포구, 분당</span>',
-  price:    '예산은 어느 정도인가요?<br><span style="font-size:12px;color:#94a3b8;">예) 5억 이하, 보증금 1000 월 60, 3억대</span>',
-  category: '어떤 매물을 찾으시나요?<br><span style="font-size:12px;color:#94a3b8;">아파트 / 오피스텔 / 빌라 / 원룸 / 상가 / 사무실</span>',
-  contact:  '손님 이름이나 연락처 있으면 알려주세요.<br><span style="font-size:12px;color:#94a3b8;">예) 홍길동 010-1234-5678<br>없으면 "없음" 입력</span>'
+  trade:    '손님이 원하는 거래는요?<br><span style="font-size:12px;color:#94a3b8;">매매 / 전세 / 월세 / 반전세</span>',
+  location: '손님이 원하는 지역은요?<br><span style="font-size:12px;color:#94a3b8;">예) 강남구 역삼동, 마포구, 분당</span>',
+  price:    '손님 예산은 어느 정도인가요?<br><span style="font-size:12px;color:#94a3b8;">예) 5억 이하, 보증금 1000 월 60, 3억대</span>',
+  category: '손님이 원하는 매물 종류는요?<br><span style="font-size:12px;color:#94a3b8;">아파트 / 오피스텔 / 빌라 / 원룸 / 상가 / 사무실</span>',
+  contact:  '손님 이름이나 연락처 알려주세요.<br><span style="font-size:12px;color:#94a3b8;">예) 홍길동 010-1234-5678<br>없으면 "없음" 입력</span>'
 };
 const _SKIP_KEYWORDS = /^(없음|없어|없습니다|스킵|skip|상관없|몰라요?|모름|패스|pass|생략)$/i;
 
