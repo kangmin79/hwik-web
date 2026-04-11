@@ -34,11 +34,15 @@ const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
 
 // ========== 중개사 메인 키보드 (입력창 아래 상시 고정) ==========
 // 타이핑 부담 제거 — 버튼 탭으로 주요 기능 모두 접근
+// PC/모바일 모두에서 한 줄로 붙도록 4개 한 row, 텍스트는 짧게
 const MAIN_KEYBOARD = {
   keyboard: [
-    [{ text: '📋 오늘 브리핑' }],
-    [{ text: '🏠 매물 등록' }, { text: '🙋 손님 등록' }],
-    [{ text: 'ⓘ 내 정보' }],
+    [
+      { text: '📋 브리핑' },
+      { text: '🏠 매물' },
+      { text: '🙋 손님' },
+      { text: 'ⓘ 내 정보' },
+    ],
   ],
   resize_keyboard: true,
   is_persistent: true,
@@ -287,7 +291,7 @@ async function handleText(chatId: number, text: string, agent: any) {
   }
 
   // ========== 버튼 텍스트 분기 (타이핑 부담 제거 UX) ==========
-  if (text === '📋 오늘 브리핑') {
+  if (text === '📋 브리핑') {
     await tg('sendChatAction', { chat_id: chatId, action: 'typing' })
     try {
       const brief = await buildBriefing(agent.id)
@@ -296,14 +300,14 @@ async function handleText(chatId: number, text: string, agent: any) {
       return reply(chatId, `❌ 브리핑 조회 실패: ${e.message}`, { reply_markup: MAIN_KEYBOARD })
     }
   }
-  if (text === '🏠 매물 등록') {
+  if (text === '🏠 매물') {
     return reply(
       chatId,
       `🏠 <b>매물 등록</b>\n\n다음 메시지에 매물 정보를 자유롭게 입력해주세요. AI 가 알아서 분석합니다.\n\n<b>예시</b>\n<code>래미안 32평 15억 남향 고층 깨끗해 010-9999-8888 박사장</code>\n\n가격·위치·면적·층·특징·연락처 등 아는 것만 적으면 돼요.`,
       { reply_markup: MAIN_KEYBOARD }
     )
   }
-  if (text === '🙋 손님 등록') {
+  if (text === '🙋 손님') {
     return reply(
       chatId,
       `🙋 <b>손님 등록</b>\n\n다음 메시지에 찾는 손님 조건을 입력해주세요.\n\n<b>예시</b>\n<code>강남구 20억 이하 아파트 찾는 분 010-1111-2222 김손님</code>\n\n등록하면 자동으로 매칭 매물을 찾아드려요 🎯`,
