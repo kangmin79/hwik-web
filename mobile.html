@@ -569,6 +569,10 @@
     padding: 10px 16px; background: #f8f9fa; border-top: 1px solid #f0f0f3;
     font-size: 13px; color: #1a1a2e; font-weight: 600;
   }
+  .chat-confirm-card .cc-warning {
+    padding: 8px 16px; background: #fef3c7; border-top: 1px solid #fde68a;
+    font-size: 12px; color: #92400e; font-weight: 600;
+  }
   .chat-confirm-btns {
     display: flex; border-top: 1px solid #e5e8eb;
   }
@@ -1495,6 +1499,27 @@ async function chatSend() {
 
     _chatParsed = parsed;
 
+    // 중복 손님 체크 (같은 번호로 이미 등록된 손님 카드 찾기)
+    let dupInfo = null;
+    if (parsed.contact_phone) {
+      const phone = parsed.contact_phone;
+      const digits = phone.replace(/\D/g, '');
+      try {
+        const { data: dupes } = await supabaseClient.from('cards')
+          .select('id, contact_name, contact_phone, property, created_at')
+          .eq('agent_id', currentUser.id)
+          .in('contact_phone', [...new Set([phone, digits])])
+          .limit(5);
+        const clientDupe = (dupes||[]).find(c => c.property?.type === '손님');
+        if (clientDupe) {
+          dupInfo = {
+            name: clientDupe.contact_name || '이름없음',
+            when: new Date(clientDupe.created_at).toLocaleDateString('ko-KR')
+          };
+        }
+      } catch(_) { /* 중복 체크 실패는 무시 — 등록은 계속 진행 */ }
+    }
+
     // 확인 카드 (카톡 스타일)
     const p = parsed;
     const typeColors = { '매매':'#ea580c', '전세':'#4f46e5', '월세':'#7c3aed' };
@@ -1505,6 +1530,15 @@ async function chatSend() {
     const features = (p.features || []).map(f => `<span class="cc-tag">${esc(f)}</span>`).join('');
     const location = [p.location, p.complex].filter(Boolean).join(' ');
     const detail = [p.area, p.floor, p.room].filter(Boolean).join(' · ');
+
+    // 연락처 누락 경고
+    const hasName = !!p.contact_name;
+    const hasPhone = !!p.contact_phone;
+    const missingLabel = !hasName && !hasPhone ? '이름·연락처' : !hasName ? '이름' : !hasPhone ? '연락처' : '';
+
+    const warnings = [];
+    if (dupInfo) warnings.push(`<div class="cc-warning" style="background:#fee2e2;border-top-color:#fecaca;color:#991b1b;">⚠️ 이미 등록된 손님: <b>${esc(dupInfo.name)}</b> (${esc(dupInfo.when)})<br><span style="font-weight:500;">그래도 등록하려면 아래 버튼을 누르세요</span></div>`);
+    if (missingLabel) warnings.push(`<div class="cc-warning">⚠️ ${missingLabel} 없이 등록됩니다 — 나중에 수정할 수 있어요</div>`);
 
     const cardHtml = `
       <div class="chat-confirm-card">
@@ -1519,9 +1553,10 @@ async function chatSend() {
           ${features ? `<div class="cc-tags">${features}</div>` : ''}
         </div>
         ${p.contact_name ? `<div class="cc-contact">👤 ${esc(p.contact_name)}${p.contact_phone ? '  ' + esc(p.contact_phone) : ''}</div>` : ''}
+        ${warnings.join('')}
         <div class="chat-confirm-btns">
           <button class="btn-no" onclick="chatReject()">다시 입력</button>
-          <button class="btn-yes" onclick="chatConfirm()">등록하기</button>
+          <button class="btn-yes" onclick="chatConfirm()">${dupInfo ? '그래도 등록' : '등록하기'}</button>
         </div>
       </div>`;
     addAiBubble(cardHtml);
@@ -1564,6 +1599,7 @@ async function chatConfirm() {
       trade_status: '계약가능',
       client_status: '탐색중',
       search_text: parsed.search_text || text,
+      search_text_private: parsed.search_text_private || null,
       embedding: parsed.embedding || null,
       price_number: parsed.price_number || null,
       deposit: parsed.deposit || null,
@@ -1575,6 +1611,7 @@ async function chatConfirm() {
 
     const { error } = await supabaseClient.from('cards').insert(cardData);
     if (error) throw error;
+    showToast('✅ 손님 등록 완료');
 
     // 자동 매칭 + 매칭 결과 동시
     const [, matchRes] = await Promise.all([
