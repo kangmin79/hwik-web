@@ -321,12 +321,17 @@ Deno.serve(async (req) => {
   }
 
   const token = authHeader.replace('Bearer ', '');
-  const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-  const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-  if (authError || !user) {
-    return new Response(JSON.stringify({ error: '로그인이 필요합니다.' }), {
-      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+  const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  // 내부 서비스 간 호출(telegram-webhook 등) — service_role 토큰이면 유저 체크 스킵
+  const isInternalCall = token === SERVICE_ROLE;
+  if (!isInternalCall) {
+    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, SERVICE_ROLE);
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: '로그인이 필요합니다.' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
   }
 
   try {
