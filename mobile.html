@@ -1461,7 +1461,7 @@ function showClientRegister() {
       </div>
       <div class="chat-input-wrap">
         <textarea class="chat-input" id="chatInput" rows="1" placeholder="손님 조건을 입력하세요" enterkeyhint="send"
-          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"
+          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px';_onChatTyping()"
           onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();chatSend()}"></textarea>
         <button class="chat-send-btn" id="chatSendBtn" onclick="chatSend()">
           <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
@@ -1539,10 +1539,30 @@ function removeTyping() {
   document.getElementById('chatTyping')?.remove();
 }
 
-// ── 카톡 끊어치기 대응: debounce + buffer 재처리 ──
+// ── 카톡 끊어치기 대응: debounce + 타이핑 감지 ──
 let _chatBuffer = '';          // 디바운스 대기 중 누적되는 사용자 입력
-let _chatDebounceTimer = null; // 마지막 입력 후 _CHAT_DEBOUNCE_MS 기다리는 타이머
-const _CHAT_DEBOUNCE_MS = 900; // 0.9초 동안 추가 입력 없으면 파싱 시작
+let _chatDebounceTimer = null; // 마지막 활동 후 _CHAT_DEBOUNCE_MS 기다리는 타이머
+const _CHAT_DEBOUNCE_MS = 900; // 0.9초 동안 추가 활동(전송/타이핑) 없으면 파싱 시작
+
+// 입력창 타이핑 중일 때 호출됨 — 디바운스 타이머를 계속 리셋
+function _onChatTyping() {
+  if (_chatDebounceTimer) {
+    clearTimeout(_chatDebounceTimer);
+    _chatDebounceTimer = setTimeout(_checkAndProcessBuffer, _CHAT_DEBOUNCE_MS);
+  }
+}
+
+// 타이머 만료 시 호출 — 입력창에 글이 남아있으면 더 기다림
+function _checkAndProcessBuffer() {
+  _chatDebounceTimer = null;
+  const inp = document.getElementById('chatInput');
+  if (inp && inp.value.trim()) {
+    // 사용자가 아직 입력 중 — 다시 0.9초 기다림 (점3개 계속 유지)
+    _chatDebounceTimer = setTimeout(_checkAndProcessBuffer, _CHAT_DEBOUNCE_MS);
+    return;
+  }
+  _processChatBuffer();
+}
 
 async function chatSend() {
   // 확인 카드 떠있는 동안엔 입력 무시 (버튼으로 진행해야 함)
@@ -1575,12 +1595,9 @@ async function chatSend() {
   // 즉시 "타이핑 중" 점 3개 표시 (사용자가 반응을 느끼도록)
   if (!document.getElementById('chatTyping')) addTyping();
 
-  // 디바운스 타이머 — 0.9초 내 추가 입력 있으면 리셋
+  // 디바운스 타이머 — 0.9초 내 추가 활동(전송/타이핑) 있으면 리셋
   if (_chatDebounceTimer) { clearTimeout(_chatDebounceTimer); _chatDebounceTimer = null; }
-  _chatDebounceTimer = setTimeout(() => {
-    _chatDebounceTimer = null;
-    _processChatBuffer();
-  }, _CHAT_DEBOUNCE_MS);
+  _chatDebounceTimer = setTimeout(_checkAndProcessBuffer, _CHAT_DEBOUNCE_MS);
 }
 
 async function _processChatBuffer() {
