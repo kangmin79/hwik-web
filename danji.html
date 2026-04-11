@@ -1,4 +1,21 @@
 <!DOCTYPE html>
+<!--
+  ⚠️⚠️⚠️  경고: 이 파일은 레거시 리다이렉트 셸입니다  ⚠️⚠️⚠️
+
+  - 이 파일은 SPA 소스가 아닙니다. 단지 상세 페이지의 실제 렌더링 로직은
+    danji/app.js (수동 관리, ~946줄) 와 danji/style.css (수동 관리, 151줄) 에
+    직접 들어 있습니다.
+  - build_danji_pages.py 는 이 파일에서 아무것도 추출하지 않습니다. 과거
+    extract_css_js() 함수가 있었지만 2026-04-12 에 통째로 삭제됐습니다.
+  - 이유: 이 셸의 7줄짜리 스피너 CSS / 21줄짜리 리다이렉트 JS 가 실제
+    렌더러를 덮어써 13,000개 단지 페이지가 2일 연속 깨진 사고(42e191ed77)
+    때문입니다. Day1 은 app.js, Day2 는 style.css — 같은 패턴 2회 반복.
+  - 복원이 필요해 보이면 먼저 읽을 것:
+      memory/feedback_long_session_regressions.md
+      git log --all -S "extract_css_js"
+  - danji/app.js, danji/style.css 는 직접 편집하고 직접 커밋하세요.
+    빌드 스크립트가 만지게 만들면 다시 터집니다.
+-->
 <html lang="ko">
 <head>
 <meta charset="UTF-8">

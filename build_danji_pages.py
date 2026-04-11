@@ -145,59 +145,15 @@ def fetch_all_danji():
     return all_data
 
 
-# ── CSS/JS 추출 ───────────────────────────────────────────
-def extract_css_js():
-    """danji.html에서 CSS와 메인 JS를 추출하여 외부 파일로 분리"""
-    path = os.path.join(BASE_DIR, "danji.html")
-    with open(path, "r", encoding="utf-8") as f:
-        content = f.read()
-
-    # CSS
-    css_m = re.search(r"<style>(.*?)</style>", content, re.DOTALL)
-    css = css_m.group(1).strip() if css_m else ""
-
-    # 메인 JS (const sb = supabase.createClient 부터 마지막 </script> 전까지)
-    js_m = re.search(
-        r"<script>\s*\nconst sb = supabase\.createClient.*?</script>",
-        content, re.DOTALL,
-    )
-    if js_m:
-        js = js_m.group(0)
-        js = js.replace("<script>", "", 1)
-        js = js[:js.rfind("</script>")]
-        js = js.strip()
-    else:
-        # 폴백: 가장 큰 script 블록
-        blocks = re.findall(r"<script>(.*?)</script>", content, re.DOTALL)
-        js = max(blocks, key=len) if blocks else ""
-
-    # ── JS 수정: URL 경로에서도 ID 추출 (slug에서 맨 뒤 ID) ──
-    js = js.replace(
-        "const id = new URLSearchParams(location.search).get('id');",
-        "const id = new URLSearchParams(location.search).get('id')"
-        " || (location.pathname.match(/-(a\\d+)(?:\\.html)?$/) || [])[1]"
-        " || (location.pathname.match(/((?:offi|apt)-[^/]+?)(?:\\.html)?$/) || [])[1]"
-        " || null;",
-        1,
-    )
-
-    # ── JS 수정: canonical/og:url을 항상 /danji/slug 형식으로 ──
-    js = js.replace(
-        "canonicalEl.href = `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;",
-        "canonicalEl.href = `https://hwik.kr/danji/${encodeURIComponent(id)}`;",
-    )
-    js = js.replace(
-        "if (ogUrl) ogUrl.content = `https://hwik.kr/danji.html?id=${encodeURIComponent(id)}`;",
-        "if (ogUrl) ogUrl.content = `https://hwik.kr/danji/${encodeURIComponent(id)}`;",
-    )
-
-    # ── JS 수정: 404 리다이렉트도 /danji/ 형식으로 ──
-    js = js.replace(
-        "var fullUrl = 'https://hwik.kr/danji.html?id=' + encodeURIComponent(id);",
-        "var fullUrl = 'https://hwik.kr/danji/' + encodeURIComponent(id);",
-    )
-
-    return css, js
+# ── extract_css_js() 삭제됨 (2026-04-12) ──────────────────
+# danji.html 에서 <style>/<script> 를 뽑아 danji/style.css, danji/app.js 에
+# 쓰던 로직. danji.html 이 레거시 리다이렉트 셸로 축소된 뒤 2일 연속
+# (사고 42e191ed77 / Day1 app.js, Day2 style.css) 빈 껍데기로 13,000개
+# 단지 페이지를 덮어쓰는 회귀가 발생해 통째로 제거. danji/app.js 와
+# danji/style.css 는 수동 관리 파일이며 빌드가 절대 만지지 않는다.
+# 복원 금지. 복원이 필요해 보이면 먼저 이 주석과
+# memory/feedback_long_session_regressions.md 를 읽을 것.
+# git log --all -S "extract_css_js" 로 이전 구현 추적 가능.
 
 
 # ── 단지별 SEO 콘텐츠 생성 ────────────────────────────────
@@ -909,9 +865,6 @@ def main():
         sys.exit(1)
     print(f"{len(all_danji)}개 단지 로드")
 
-    print("CSS/JS 추출 중...")
-    css, js = extract_css_js()
-
     # ── 데이터 확보 후 기존 HTML 삭제 ──
     old_count = 0
     for f in os.listdir(DANJI_DIR):
@@ -920,23 +873,6 @@ def main():
             old_count += 1
     if old_count:
         print(f"기존 {old_count}개 HTML 삭제")
-
-    # ⚠️ danji/style.css 도 수동 관리 파일 — 자동 재생성 금지
-    # 이유: app.js 와 동일. danji.html 이 레거시 리다이렉트 셸로 축소된 뒤
-    #       extract_css_js() 가 셸의 7줄짜리 로딩 스피너 CSS를 뽑아
-    #       실제 단지 페이지용 151줄 CSS를 덮어씀 → 페이지가 스타일 없이
-    #       흰 바탕에 플레인 텍스트로 렌더되는 회귀 발생 (사고: 42e191ed77).
-    # 관련 메모: memory/feedback_long_session_regressions.md
-    # _ = css  # 사용 안 함 (추출은 유지하되 파일 덮어쓰기만 중단)
-
-    # ⚠️ danji/app.js 는 수동 관리 파일 — 자동 재생성 금지
-    # 이유: danji.html 이 레거시 URL 리다이렉트 셸(56줄)로 축소된 뒤,
-    #       extract_css_js() 가 이 셸에서 JS를 뽑으면 21줄짜리 빈 껍데기가 나와
-    #       13,000개 단지 페이지가 홈으로 튕기는 회귀가 발생했음 (사고: 42e191ed77).
-    #       풀 UI 렌더러(kindBadge, STATIC_NEARBY_HREF, decodeURIComponent 등)는
-    #       직접 danji/app.js 를 편집해 관리하고 커밋한다.
-    # 관련 메모: memory/feedback_long_session_regressions.md
-    # _ = js  # 사용 안 함 (추출은 유지하되 파일 덮어쓰기만 중단)
 
     # app.js 캐시 해시 (디스크의 수동 관리 파일 기준으로 계산)
     global app_js_hash
