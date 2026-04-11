@@ -458,10 +458,18 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
         except:
             return 0
 
+    def parse_kind(t):
+        # 국토부 매매 API의 거래유형(dealingGbn): "중개거래" | "직거래" | ""
+        # 전월세 API는 해당 필드 없음
+        raw = (t.get("dealingGbn") or "").strip()
+        if raw in ("중개거래", "직거래"):
+            return raw
+        return ""
+
     # 분류
     recent_trade = {}
     all_time_high = {}
-    price_history = defaultdict(list)  # {cat: [{date, price, floor}, ...]}
+    price_history = defaultdict(list)  # {cat: [{date, price, floor, kind}, ...]}
 
     for t in trades:
         cat = get_cat(t)
@@ -473,6 +481,7 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
         deal_type = t.get("_deal_type", "매매")
         date_str = parse_date(t)
         floor = parse_floor(t)
+        kind = parse_kind(t)
 
         if deal_type == "매매":
             suffix = ""
@@ -486,6 +495,8 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
 
         # 개별 거래 기록
         record = {"date": date_str, "price": price, "floor": floor}
+        if kind:
+            record["kind"] = kind
         # 월세는 월세금도 저장
         if deal_type == "월세":
             monthly_raw = t.get("monthlyRent") or t.get("monthlyAmount") or "0"
@@ -502,6 +513,7 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
                 "floor": floor,
                 "date": date_str,
                 "type": deal_type,
+                "kind": kind,
             }
 
         # 3년 내 최고 (매매 + 전세)
@@ -511,6 +523,7 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
                 all_time_high[high_key] = {
                     "price": price,
                     "date": date_str,
+                    "kind": kind,
                 }
 
     if not recent_trade:
@@ -538,7 +551,7 @@ def aggregate_danji(apt: dict, trades: list) -> dict | None:
         seen = set()
         deduped = []
         for it in items:
-            sig = (it.get("date",""), it.get("price",0), it.get("floor",0), it.get("monthly",0))
+            sig = (it.get("date",""), it.get("price",0), it.get("floor",0), it.get("monthly",0), it.get("kind",""))
             if sig not in seen:
                 seen.add(sig)
                 deduped.append(it)

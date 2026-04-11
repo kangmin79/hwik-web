@@ -341,25 +341,37 @@ def build_fallback_html(d):
         info += f" · {builder}"
     lines.append(f'<p style="font-size:13px;color:#6b7280;margin-bottom:16px;">{info}</p>')
 
-    # 시세
+    # 시세 (직거래/중개거래 뱃지 포함)
+    def _kind_badge(kind):
+        if kind not in ("직거래", "중개거래"):
+            return ""
+        is_direct = (kind == "직거래")
+        bg = "#fef3c7" if is_direct else "#dbeafe"
+        fg = "#92400e" if is_direct else "#1e40af"
+        return (f'<span style="display:inline-block;background:{bg};color:{fg};'
+                f'font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;'
+                f'margin-left:6px;vertical-align:middle;">{kind}</span>')
+
     if bc and rt.get(bc):
         r = rt[bc]
         txt = f"전용 {bc}㎡ 최근 매매가: {format_price(r.get('price'))}"
         if r.get("date"):
             txt += f" ({r['date']})"
-        lines.append(f'<p style="font-size:15px;font-weight:600;margin-bottom:6px;">{txt}</p>')
+        lines.append(f'<p style="font-size:15px;font-weight:600;margin-bottom:6px;">{txt}{_kind_badge(r.get("kind",""))}</p>')
     if bc and high.get(bc):
         h = high[bc]
         txt = f"역대 최고가: {format_price(h.get('price'))}"
         if h.get("date"):
             txt += f" ({h['date']})"
-        lines.append(f'<p style="font-size:13px;color:#6b7280;margin-bottom:6px;">{txt}</p>')
+        lines.append(f'<p style="font-size:13px;color:#6b7280;margin-bottom:6px;">{txt}{_kind_badge(h.get("kind",""))}</p>')
     if jr:
         lines.append(f'<p style="font-size:13px;color:#6b7280;margin-bottom:6px;">전세가율: {jr}%</p>')
 
-    # 시계열 비교 (1년 전 거래와 비교)
+    # 시계열 비교 (1년 전 거래와 비교) — 어느 한쪽이 직거래면 왜곡 가능성이 커 비교 생략
     year_ago = find_year_ago_trade(d, bc) if bc else None
-    if year_ago and bc and rt.get(bc):
+    _cur_kind = (rt.get(bc, {}) or {}).get("kind") if bc else ""
+    _old_kind = (year_ago or {}).get("kind") if year_ago else ""
+    if year_ago and bc and rt.get(bc) and _cur_kind != "직거래" and _old_kind != "직거래":
         cur_price = rt[bc].get("price", 0)
         old_price = year_ago.get("price", 0)
         if cur_price and old_price and cur_price != old_price:

@@ -32,6 +32,15 @@ function distText(m) {
   return m >= 1000 ? (m/1000).toFixed(1) + 'km' : m + 'm';
 }
 
+// 거래유형 뱃지 (직거래: 주황 / 중개거래: 파랑)
+function kindBadge(kind) {
+  if (!kind) return '';
+  const isDirect = kind === '직거래';
+  const bg = isDirect ? '#fef3c7' : '#dbeafe';
+  const fg = isDirect ? '#92400e' : '#1e40af';
+  return `<span style="display:inline-block;background:${bg};color:${fg};font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;margin-left:6px;vertical-align:middle;line-height:1.4;">${kind}</span>`;
+}
+
 function walkMin(m) {
   if (!m) return '';
   return Math.round(m / 67) + '분'; // 도보 평균 80m/분 → 67m/분 보수적
@@ -275,13 +284,18 @@ function render() {
   }
 
   // 지표 변화량 (최근 3년 최고 대비 금액 + %)
+  // 최근 거래가 직거래면 시장가 왜곡 가능성이 커서 하락률 대신 주의 문구만 표시
   let changeHtml = '';
   if (recentPrice && highPrice) {
-    const diff = recentPrice - highPrice;
-    const pct = Math.round(Math.abs(diff) / highPrice * 1000) / 10;
-    if (diff < 0) changeHtml = `<div class="price-card-change down">최고 대비 -${formatPrice(Math.abs(diff))}(${pct}%)</div>`;
-    else if (diff > 0) changeHtml = `<div class="price-card-change up">최고가 경신</div>`;
-    else changeHtml = `<div class="price-card-change neutral">최고가 동일</div>`;
+    if (recentData && recentData.kind === '직거래') {
+      changeHtml = `<div class="price-card-change neutral" style="color:#92400e;">최근 거래는 직거래 — 시세 해석 주의</div>`;
+    } else {
+      const diff = recentPrice - highPrice;
+      const pct = Math.round(Math.abs(diff) / highPrice * 1000) / 10;
+      if (diff < 0) changeHtml = `<div class="price-card-change down">최고 대비 -${formatPrice(Math.abs(diff))}(${pct}%)</div>`;
+      else if (diff > 0) changeHtml = `<div class="price-card-change up">최고가 경신</div>`;
+      else changeHtml = `<div class="price-card-change neutral">최고가 동일</div>`;
+    }
   }
 
   // 최근 거래 목록 (현재 선택 평형 + 탭 기준)
@@ -317,7 +331,7 @@ function render() {
     return `
     <div class="trade-item">
       <div>
-        <div class="trade-price">${priceDisplay}</div>
+        <div class="trade-price">${priceDisplay}${kindBadge(t.kind || '')}</div>
         <div class="trade-detail">${pyLabel}${t.floor ? ' · ' + t.floor + '층' : ''}</div>
       </div>
       <div class="trade-date">${esc(t.date || '')}</div>
@@ -507,13 +521,13 @@ function render() {
     ${currentTab !== '월세' ? `<div class="price-cards">
       <div class="price-card primary">
         <div class="price-card-label">최근 ${currentTab === '전세' ? '전세가' : '실거래가'}</div>
-        <div class="price-card-value">${recentPrice ? formatPrice(recentPrice) : '-'}</div>
+        <div class="price-card-value">${recentPrice ? formatPrice(recentPrice) : '-'}${recentData ? kindBadge(recentData.kind || '') : ''}</div>
         <div class="price-card-sub">${recentData && recentData.floor ? recentData.floor + '층' : ''}${recentData && recentData.date ? ' · ' + recentData.date : ''}</div>
         ${changeHtml}
       </div>
       <div class="price-card secondary">
         <div class="price-card-label">최근 3년 최고${currentTab === '전세' ? ' 전세가' : '가'}</div>
-        <div class="price-card-value">${highPrice ? formatPrice(highPrice) : '-'}</div>
+        <div class="price-card-value">${highPrice ? formatPrice(highPrice) : '-'}${highData ? kindBadge(highData.kind || '') : ''}</div>
         <div class="price-card-sub">${highData && highData.floor ? highData.floor + '층' : ''}${highData && highData.date ? ' · ' + highData.date : ''}</div>
       </div>
     </div>` : ''}
