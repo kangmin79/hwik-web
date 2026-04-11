@@ -1813,7 +1813,13 @@ async function chatConfirm() {
 
     const { error } = await supabaseClient.from('cards').insert(cardData);
     if (error) throw error;
-    showToast('✅ 손님 등록 완료');
+
+    // 등록 완료 + 매칭 시작 메시지 (채팅 맥락 유지)
+    removeTyping();
+    const clientDisplayName = parsed.contact_name || '손님';
+    addAiBubble(`✅ <b>${esc(clientDisplayName)}</b>님 등록 완료!`);
+    addAiBubble('🔍 AI가 딱 맞는 매물 찾고 있어요...');
+    addTyping(); // 매칭 진행 중 점3개 유지
 
     // 자동 매칭 + 매칭 결과 동시
     const [, matchRes] = await Promise.all([
@@ -1832,10 +1838,17 @@ async function chatConfirm() {
     removeTyping();
     const matches = matchRes.results || [];
 
-    // 채팅 닫고 → 손님 정보 + 매칭 매물 화면으로 전환
+    // 매칭 결과 안내
+    if (matches.length) {
+      addAiBubble(`🎯 매칭 매물 <b>${matches.length}건</b> 찾았어요!<br><span style="font-size:12px;color:#94a3b8;">잠시 후 매물 리스트로 이동합니다</span>`);
+    } else {
+      addAiBubble('지금 당장 맞는 매물이 없네요 😅<br><span style="font-size:12px;color:#94a3b8;">새 매물이 등록되면 알림으로 알려드릴게요</span>');
+    }
+
+    // 채팅 닫고 → 손님 정보 + 매칭 매물 화면으로 전환 (0.9초 후)
     _matchData = matches;
     window._mcd = cardData; window._mp = parsed; window._mrt = text;
-    showClientMatchResults(cardData, parsed, text, matches);
+    setTimeout(() => showClientMatchResults(cardData, parsed, text, matches), 900);
 
     _chatState = 'idle';
     _chatParsed = null;
