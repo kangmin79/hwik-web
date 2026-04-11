@@ -1349,10 +1349,58 @@ function showRecent() {
 }
 
 // ── 손님 등록 (중개사 전용) ──
-// ── 손님 등록 (채팅 스타일) ──
+// ── 손님 등록 (채팅 스타일 - 대화형 수집) ──
 let _chatState = 'idle'; // idle | waiting | confirm | done
-let _chatParsed = null;
-let _chatText = '';
+let _chatParsed = null;   // 최종 병합 결과 (확인 카드용)
+let _chatDraft = null;    // { rawText, skipped: Set, parsed } — 누적 수집 상태
+let _chatText = '';       // 통합 raw text (레거시, confirm 단계에서 사용)
+let _chatMissing = null;  // 현재 AI가 물어보는 필드
+
+// 필수 필드 + 질문 문구 (우선순위 순)
+const _REQUIRED_FIELDS = ['trade', 'location', 'price', 'category', 'contact'];
+const _FIELD_QUESTIONS = {
+  trade:    '어떤 거래를 원하시나요?<br><span style="font-size:12px;color:#94a3b8;">매매 / 전세 / 월세 / 반전세</span>',
+  location: '어느 지역에서 찾으시나요?<br><span style="font-size:12px;color:#94a3b8;">예) 강남구 역삼동, 마포구, 분당</span>',
+  price:    '예산은 어느 정도인가요?<br><span style="font-size:12px;color:#94a3b8;">예) 5억 이하, 보증금 1000 월 60, 3억대</span>',
+  category: '어떤 매물을 찾으시나요?<br><span style="font-size:12px;color:#94a3b8;">아파트 / 오피스텔 / 빌라 / 원룸 / 상가 / 사무실</span>',
+  contact:  '손님 이름이나 연락처 있으면 알려주세요.<br><span style="font-size:12px;color:#94a3b8;">예) 홍길동 010-1234-5678<br>없으면 "없음" 입력</span>'
+};
+const _SKIP_KEYWORDS = /^(없음|없어|없습니다|스킵|skip|상관없|몰라요?|모름|패스|pass|생략)$/i;
+
+// 파싱 결과에서 특정 필드 존재 여부
+function _hasField(draft, field) {
+  const p = draft?.parsed || {};
+  if (draft?.skipped?.has(field)) return true;
+  switch (field) {
+    case 'trade':    return !!(p.wanted_trade_type || (p.type && p.type !== '손님' && p.type !== ''));
+    case 'location': return !!(p.location || p.complex);
+    case 'price':    return !!(p.price || p.price_number || p.deposit || p.monthly_rent);
+    case 'category': return !!p.category;
+    case 'contact':  return !!(p.contact_name || p.contact_phone);
+  }
+  return false;
+}
+
+// 다음 빠진 필수 필드 찾기 (우선순위 순)
+function _findMissingField(draft) {
+  for (const f of _REQUIRED_FIELDS) {
+    if (!_hasField(draft, f)) return f;
+  }
+  return null;
+}
+
+// 누적 머지 — 새 파싱 결과를 기존 draft에 병합 (non-empty 값이 이김)
+function _mergeDraft(draft, newParsed) {
+  const merged = { ...(draft.parsed || {}) };
+  for (const k in newParsed) {
+    const v = newParsed[k];
+    if (v === null || v === undefined || v === '') continue;
+    if (Array.isArray(v) && v.length === 0) continue;
+    merged[k] = v;
+  }
+  draft.parsed = merged;
+  return draft;
+}
 
 let _chatGreetTimer = null;
 function showClientRegister() {
@@ -1364,7 +1412,9 @@ function showClientRegister() {
 
   _chatState = 'idle';
   _chatParsed = null;
+  _chatDraft = { rawText: '', skipped: new Set(), parsed: {} };
   _chatText = '';
+  _chatMissing = null;
   _lastSender = '';
 
   // 오늘 날짜
@@ -1389,12 +1439,12 @@ function showClientRegister() {
       </div>`;
   document.body.appendChild(chatArea);
 
-  // AI 인사 메시지 (1회만)
+  // AI 인사 메시지 (1회만) — 한 번에 다 말해도 되고, 나눠서 말해도 됨
   _chatGreetTimer = setTimeout(() => {
     _chatGreetTimer = null;
     if (!document.getElementById('clientChatArea')) return;
-    addAiBubble('어떤 손님을 등록할까요?', true);
-    addAiBubble('예) 강남 2룸 전세 3억 이하<br>홍길동 010-1234-5678');
+    addAiBubble('어떤 손님을 찾으시나요?', true);
+    addAiBubble('<span style="font-size:12px;color:#94a3b8;">한 번에 다 말씀하셔도 되고, 하나씩 알려주셔도 돼요.<br>예) 강남 전세 5억 이하 홍길동 010-1234-5678</span>');
     document.getElementById('chatInput')?.focus();
   }, 300);
 }
@@ -1467,37 +1517,77 @@ async function chatSend() {
 
   inp.value = ''; inp.style.height = 'auto';
   addUserBubble(text);
-  _chatText = text;
   _chatState = 'waiting';
   document.getElementById('chatSendBtn').disabled = true;
 
-  addTyping();
-  try {
-    const token = (await supabaseClient.auth.getSession()).data.session?.access_token || '';
-    const parseRes = await fetch(`${SUPABASE_URL}/functions/v1/parse-property`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_KEY },
-      body: JSON.stringify({ text: '손님 ' + text })
-    });
-    if (!parseRes.ok) throw new Error('AI 파싱 실패');
-    const parsed = await parseRes.json();
+  // draft 초기화 안전장치
+  if (!_chatDraft) _chatDraft = { rawText: '', skipped: new Set(), parsed: {} };
 
-    removeTyping();
-
-    // 핵심 정보 검증 — 거래유형·위치·가격 중 하나라도 없으면 재입력
-    const _wt = parsed.wanted_trade_type || parsed.type || '';
-    const _loc = parsed.location || parsed.complex || '';
-    const _pr = parsed.price || '';
-    if (!_wt && !_loc && !_pr) {
-      addAiBubble('부동산 정보를 인식하지 못했어요 😅<br>거래유형, 위치, 가격 등을 포함해서 다시 입력해주세요!');
-      addAiBubble('예) 강남 2룸 전세 3억 이하<br>홍길동 010-1234-5678');
+  // "없음/스킵" 키워드 처리 — 현재 물어본 필드 스킵
+  if (_chatMissing && _SKIP_KEYWORDS.test(text)) {
+    _chatDraft.skipped.add(_chatMissing);
+    _chatMissing = null;
+    // 스킵 후 다음 필드 확인
+    const nextMissing = _findMissingField(_chatDraft);
+    if (nextMissing) {
+      _chatMissing = nextMissing;
+      addAiBubble(_FIELD_QUESTIONS[nextMissing]);
       _chatState = 'idle';
       document.getElementById('chatSendBtn').disabled = false;
       document.getElementById('chatInput')?.focus();
       return;
     }
+    // 모두 채워졌으면 확인 카드로 — parsed가 비어있진 않아야 함
+    if (!Object.keys(_chatDraft.parsed).length) {
+      addAiBubble('죄송해요, 아직 정보가 부족해요. 손님 조건을 다시 알려주세요.');
+      _chatMissing = null;
+      _chatState = 'idle';
+      document.getElementById('chatSendBtn').disabled = false;
+      return;
+    }
+  } else {
+    // 누적 텍스트에 추가 후 전체 재파싱 (Sonnet 4.6 품질 우선)
+    _chatDraft.rawText = (_chatDraft.rawText ? _chatDraft.rawText + ' ' : '') + text;
+    _chatMissing = null;
 
+    addTyping();
+    try {
+      const token = (await supabaseClient.auth.getSession()).data.session?.access_token || '';
+      const parseRes = await fetch(`${SUPABASE_URL}/functions/v1/parse-property`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_KEY },
+        body: JSON.stringify({ text: '손님 ' + _chatDraft.rawText })
+      });
+      if (!parseRes.ok) throw new Error('AI 파싱 실패');
+      const parsed = await parseRes.json();
+      removeTyping();
+      _mergeDraft(_chatDraft, parsed);
+    } catch(e) {
+      removeTyping();
+      addAiBubble('오류가 발생했어요. 다시 입력해주세요.<br><span style="font-size:13px;color:#f87171;">' + esc(e.message) + '</span>');
+      _chatState = 'idle';
+      document.getElementById('chatSendBtn').disabled = false;
+      return;
+    }
+
+    // 다음 누락 필드 찾기
+    const nextMissing = _findMissingField(_chatDraft);
+    if (nextMissing) {
+      _chatMissing = nextMissing;
+      addAiBubble(_FIELD_QUESTIONS[nextMissing]);
+      addAiBubble('<span style="font-size:11px;color:#94a3b8;">해당 없으면 "없음" 입력</span>');
+      _chatState = 'idle';
+      document.getElementById('chatSendBtn').disabled = false;
+      document.getElementById('chatInput')?.focus();
+      return;
+    }
+  }
+
+  // ── 모든 필수 필드 확보 → 확인 카드 ──
+  try {
+    const parsed = _chatDraft.parsed;
     _chatParsed = parsed;
+    _chatText = _chatDraft.rawText;
 
     // 중복 손님 체크 (같은 번호로 이미 등록된 손님 카드 찾기)
     let dupInfo = null;
@@ -1573,7 +1663,10 @@ async function chatSend() {
 function chatReject() {
   _chatState = 'idle';
   _chatParsed = null;
-  addAiBubble('다시 입력해주세요!');
+  _chatDraft = { rawText: '', skipped: new Set(), parsed: {} };
+  _chatMissing = null;
+  _chatText = '';
+  addAiBubble('처음부터 다시 알려주세요!<br><span style="font-size:12px;color:#94a3b8;">예) 강남 전세 5억 이하 홍길동 010-1234-5678</span>');
   document.getElementById('chatInput')?.focus();
 }
 
@@ -1638,6 +1731,8 @@ async function chatConfirm() {
     _chatState = 'idle';
     _chatParsed = null;
     _chatText = '';
+    _chatDraft = { rawText: '', skipped: new Set(), parsed: {} };
+    _chatMissing = null;
 
   } catch(e) {
     removeTyping();
