@@ -27,7 +27,7 @@ METRO_CITIES = {"서울", "인천", "부산", "대구", "광주", "대전", "울
 
 
 def clean(s):
-    """JS \w는 ASCII만 ([A-Za-z0-9_]) → JS _cl()과 100% 동기화"""
+    r"""JS \w는 ASCII만 ([A-Za-z0-9_]) → JS _cl()과 100% 동기화"""
     s = re.sub(r'[^A-Za-z0-9_\uAC00-\uD7A3]', '-', s or "")
     return re.sub(r'-+', '-', s).strip('-')
 
