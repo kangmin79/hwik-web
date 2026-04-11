@@ -330,6 +330,79 @@ def wrap_html(title, desc, canonical, body, jsonld_str):
 </html>"""
 
 
+def build_hub_html():
+    """/ranking/ 허브 페이지 — self-canonical, 9개 지역 × 4개 타입 전체 링크.
+    중복 콘텐츠 방지를 위해 seoul-price.html 과 다른 본문/메타 사용."""
+    title = "전국 아파트 순위 - 서울·인천·경기·5대 광역시 | 휙"
+    desc = "서울·인천·경기·부산·대구·광주·대전·울산 아파트 매매가·㎡당·전세가율 순위 TOP 50. 국토교통부 실거래가 기반."
+    canonical = "https://hwik.kr/ranking/"
+
+    # 본문
+    lines = []
+    lines.append('<header class="header"><div class="header-top">')
+    lines.append('  <a class="logo" href="/" style="text-decoration:none;">휙</a>')
+    lines.append('  <div><div class="header-name">전국 아파트 순위</div><div class="header-sub">서울·인천·경기·5대 광역시</div></div>')
+    lines.append('</div></header>')
+    lines.append('<nav class="breadcrumb"><a href="/">휙</a><span>&gt;</span>순위</nav>')
+
+    # 스토리텔링용 H2 섹션 (얇은 콘텐츠 방지)
+    lines.append('<div class="section"><h2 style="font-size:16px;margin:8px 0 12px;">무엇을 볼 수 있나요?</h2>')
+    lines.append('<p style="font-size:13px;color:var(--sub);line-height:1.7;">국토교통부 실거래가 공개시스템을 기반으로 서울·인천·경기 및 5대 광역시의 아파트 매매가·㎡당 가격·전세가율 순위를 지역별로 확인할 수 있습니다. 각 지역별로 최근 실거래가 있는 아파트만 집계하며, 매일 새벽 자동 갱신됩니다.</p>')
+    lines.append('</div>')
+
+    # 지역 × 타입 링크 그리드
+    region_order = ["all", "seoul", "incheon", "gyeonggi", "busan", "daegu", "gwangju", "daejeon", "ulsan"]
+    type_order = [("price", "매매가"), ("sqm", "㎡당 가격"), ("jeonse", "전세가율 높은"), ("jeonse_low", "전세가율 낮은")]
+
+    for region in region_order:
+        if region not in REGION_LABELS:
+            continue
+        label = REGION_LABELS[region]
+        lines.append(f'<div class="section"><h2 style="font-size:15px;margin:16px 0 10px;border-left:3px solid var(--yellow);padding-left:8px;">{esc(label)} 아파트 순위</h2>')
+        lines.append('<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">')
+        for tk, tl in type_order:
+            href = f"/ranking/{region}-{tk}"
+            desc_short = {"price": "매매가 높은 순", "sqm": "㎡당 가격 높은 순",
+                          "jeonse": "전세가율 높은 순", "jeonse_low": "전세가율 낮은 순"}[tk]
+            lines.append(
+                f'<a href="{href}" style="display:block;padding:12px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:inherit;border-left:3px solid var(--yellow);">'
+                f'<div style="font-size:13px;font-weight:600;">{esc(tl)} TOP 50</div>'
+                f'<div style="font-size:11px;color:var(--sub);margin-top:3px;">{esc(label)} {desc_short}</div>'
+                f'</a>'
+            )
+        lines.append('</div></div>')
+
+    # 하단 네비
+    lines.append('<div style="margin-top:32px;padding:20px;background:var(--card);border-radius:var(--radius);text-align:center;">')
+    lines.append('  <a href="/gu/" style="display:inline-block;margin:0 8px;color:var(--yellow);font-weight:600;text-decoration:none;">구별 시세 →</a>')
+    lines.append('  <a href="/dong/" style="display:inline-block;margin:0 8px;color:var(--yellow);font-weight:600;text-decoration:none;">동별 시세 →</a>')
+    lines.append('</div>')
+
+    _today = datetime.now().strftime("%Y-%m-%d")
+    lines.append(f'<div style="margin-top:20px;padding:12px;font-size:11px;color:var(--muted);text-align:center;">출처: 국토교통부 실거래가 공개시스템 · 마지막 갱신 {_today}</div>')
+
+    body = "\n".join(lines)
+
+    # JSON-LD: BreadcrumbList + ItemList (지역 허브)
+    jsonld = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {"@type": "BreadcrumbList", "itemListElement": [
+                {"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"},
+                {"@type": "ListItem", "position": 2, "name": "순위"},
+            ]},
+            {"@type": "ItemList", "name": "전국 아파트 순위",
+             "itemListElement": [
+                 {"@type": "ListItem", "position": i + 1,
+                  "name": f"{REGION_LABELS[r]} 아파트 순위",
+                  "url": f"https://hwik.kr/ranking/{r}-price"}
+                 for i, r in enumerate([x for x in region_order if x in REGION_LABELS])
+             ]}
+        ]
+    }
+    return wrap_html(title, desc, canonical, body, json.dumps(jsonld, ensure_ascii=False))
+
+
 # ── 메인 ──────────────────────────────────────────────────
 def main():
     os.makedirs(RANK_DIR, exist_ok=True)
@@ -350,12 +423,12 @@ def main():
                 f.write(html)
             count += 1
 
-    # index.html → 서울 매매가 기본
-    index_html = build_ranking_html("seoul", "price", data)
+    # index.html → 자가 정규화 허브 (중복 콘텐츠 방지)
+    index_html = build_hub_html()
     with open(os.path.join(RANK_DIR, "index.html"), "w", encoding="utf-8") as f:
         f.write(index_html)
 
-    print(f"\n{count}개 랭킹 페이지 생성 + index.html")
+    print(f"\n{count}개 랭킹 페이지 생성 + index.html(허브)")
     print(f"출력: {RANK_DIR}")
 
 
