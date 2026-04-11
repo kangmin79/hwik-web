@@ -48,6 +48,28 @@ function markAsNotFound() {
   location.replace('/404.html');
 }
 
+// ── 정적 HTML 의 주변 단지 href 캡처 (id → href) ──
+// build_danji_pages.py 가 DB address 필드로 정확하게 생성한 정적 slug 를
+// render() 재렌더링 과정에서 잃지 않도록, 로드 시점에 미리 수집.
+// n.location 에 구(區)가 누락된 케이스(예: "수원시 정자동")에서 runtime makeSlug
+// 가 구를 빠뜨려 404 URL 을 만드는 것을 방지.
+const STATIC_NEARBY_HREF = {};
+(function captureStaticNearbyHref() {
+  try {
+    document.querySelectorAll('.nearby-item, a[href^="/danji/"]').forEach(function(el) {
+      var h = el.getAttribute('href') || '';
+      if (!h.startsWith('/danji/')) return;
+      // id 추출: -a숫자 또는 apt-/offi- 접미사
+      var decoded = h;
+      try { decoded = decodeURIComponent(h); } catch (e) {}
+      var m1 = decoded.match(/-(a\d+)(?:\.html)?$/);
+      var m2 = decoded.match(/((?:offi|apt)-[^/]+?)(?:\.html)?$/);
+      var nid = (m1 && m1[1]) || (m2 && m2[1]);
+      if (nid && !STATIC_NEARBY_HREF[nid]) STATIC_NEARBY_HREF[nid] = h;
+    });
+  } catch (e) {}
+})();
+
 // ── 데이터 로드 ──
 async function loadData() {
   // location.pathname 은 한글이 percent-encoded 로 반환되므로 디코드 후 매칭
@@ -343,7 +365,7 @@ function render() {
       else areaLabel = '전용 ' + bestExclu + '㎡';
     }
     return `
-    <a class="nearby-item" href="/danji/${encodeURIComponent(makeSlug(n.name, n.location, n.id, parentMetro && n.location ? (parentMetro + ' ' + n.location) : ''))}" style="text-decoration:none;color:inherit;">
+    <a class="nearby-item" href="${STATIC_NEARBY_HREF[n.id] || ('/danji/' + encodeURIComponent(makeSlug(n.name, n.location, n.id, parentMetro && n.location ? (parentMetro + ' ' + n.location) : '')))}" style="text-decoration:none;color:inherit;">
       <div>
         <div class="nearby-name">${esc(n.name)}</div>
         <div class="nearby-sub">${esc(n.location)} ${n.distance ? '· '+distText(n.distance) : ''}${areaLabel ? ' · '+areaLabel : ''}</div>
