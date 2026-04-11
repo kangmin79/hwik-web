@@ -1794,8 +1794,8 @@ let _alertLoading = false; // 동시 실행 방지 뮤텍스
 let _briefPromise = null;  // 프리페치 Promise
 const BRIEF_CACHE_KEY = 'hwik_brief_cache_v1';
 
-// 데이터 가져오기만 (렌더 X)
-async function _fetchBriefData() {
+// 1라운드만: notes + match (cards 조회 없음) — 약 500ms
+async function _fetchBriefBasic() {
   if (!currentUser) return null;
   const nowIso = new Date().toISOString();
   const [matchRes, overdueRes, upcomingRes] = await Promise.all([
@@ -1808,37 +1808,47 @@ async function _fetchBriefData() {
       .eq('agent_id', currentUser.id).eq('alert_done', false).not('alert_date', 'is', null).gte('alert_date', nowIso)
       .order('alert_date', { ascending: true }).limit(20),
   ]);
+  return {
+    matches: matchRes.data || [],
+    overdue: overdueRes.data || [],
+    upcoming: upcomingRes.data || [],
+    cardMap: {}, clientMap: {},
+    savedAt: Date.now()
+  };
+}
 
-  const cardIds = [...new Set((matchRes.data||[]).map(m=>m.card_id))].filter(Boolean);
+// 2라운드: 이름 채우기 (기본 데이터에 cardMap/clientMap 추가) — 백그라운드
+async function _enrichBriefNames(basic) {
+  if (!basic) return basic;
+  const cardIds = [...new Set((basic.matches||[]).map(m=>m.card_id))].filter(Boolean);
   const clientIds = [...new Set([
-    ...(overdueRes.data||[]).map(o=>o.client_card_id),
-    ...(upcomingRes.data||[]).map(u=>u.client_card_id),
-    ...(matchRes.data||[]).map(m=>m.client_card_id)
+    ...(basic.overdue||[]).map(o=>o.client_card_id),
+    ...(basic.upcoming||[]).map(u=>u.client_card_id),
+    ...(basic.matches||[]).map(m=>m.client_card_id)
   ])].filter(Boolean);
+  if (!cardIds.length && !clientIds.length) return basic;
 
   const [cardsRes, clientsRes] = await Promise.all([
     cardIds.length ? supabaseClient.from('cards').select('id, property, contact_name').in('id', cardIds) : Promise.resolve({ data: [] }),
     clientIds.length ? supabaseClient.from('cards').select('id, property, contact_name').in('id', clientIds) : Promise.resolve({ data: [] })
   ]);
-
   const cardMap = {}, clientMap = {};
   (cardsRes.data||[]).forEach(c => { cardMap[c.id] = { ...c.property, _name: c.contact_name }; });
   (clientsRes.data||[]).forEach(c => { clientMap[c.id] = { ...c.property, _name: c.contact_name }; });
-
-  return {
-    matches: matchRes.data || [],
-    overdue: overdueRes.data || [],
-    upcoming: upcomingRes.data || [],
-    cardMap, clientMap,
-    savedAt: Date.now()
-  };
+  return { ...basic, cardMap, clientMap };
 }
 
-// 로그인 직후 프리페치 트리거 — 사용자가 탭 누르기 전에 미리 로드
+// 전체 (하위호환용)
+async function _fetchBriefData() {
+  const basic = await _fetchBriefBasic();
+  return _enrichBriefNames(basic);
+}
+
+// 로그인 직후 프리페치 트리거 — basic(1라운드)만 먼저 로드
 function prefetchBrief() {
   if (!currentUser) return;
-  if (_briefPromise) return; // 이미 진행 중이면 재호출 무시
-  _briefPromise = _fetchBriefData().then(data => {
+  if (_briefPromise) return;
+  _briefPromise = _fetchBriefBasic().then(data => {
     if (data) {
       try { localStorage.setItem(BRIEF_CACHE_KEY, JSON.stringify(data)); } catch(e) {}
     }
@@ -1967,22 +1977,32 @@ async function showAlerts() {
     }
   } catch(e) {}
 
-  // 2단계: 프리페치 or 새 fetch로 최신 데이터 → 재렌더
+  // 2단계: basic (1라운드) 데이터 렌더 — 가장 빠름 (~500ms)
+  let basicData = null;
   try {
-    if (!_briefPromise) _briefPromise = _fetchBriefData().then(data => {
+    if (!_briefPromise) _briefPromise = _fetchBriefBasic().then(data => {
       if (data) { try { localStorage.setItem(BRIEF_CACHE_KEY, JSON.stringify(data)); } catch(e) {} }
       return data;
     });
-    const data = await _briefPromise;
+    basicData = await _briefPromise;
     _briefPromise = null;
 
     if (myGen !== _alertGen) { _alertLoading = false; return; }
-    if (data) _renderBriefQueue(_buildBriefQueue(data));
+    if (basicData) _renderBriefQueue(_buildBriefQueue(basicData));
   } catch(e) {
     if (!rendered) addAlertBubble('일정을 불러오지 못했어요.<br><span style="color:#f87171;font-size:13px;">' + esc(e.message||'연결 오류') + '</span>');
-  } finally {
-    _alertLoading = false;
   }
+
+  // 3단계: 이름 채우기 (백그라운드, 사용자에겐 조용히 갱신)
+  if (basicData) {
+    _enrichBriefNames(basicData).then(full => {
+      if (myGen !== _alertGen || !full) return;
+      try { localStorage.setItem(BRIEF_CACHE_KEY, JSON.stringify(full)); } catch(e) {}
+      _renderBriefQueue(_buildBriefQueue(full));
+    }).catch(e => { console.warn('[brief enrich]', e); });
+  }
+
+  _alertLoading = false;
 }
 
 function addAlertBubble(html, isFirst = false) {
