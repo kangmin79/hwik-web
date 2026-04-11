@@ -70,8 +70,7 @@
 
   .container.active {
     justify-content: flex-start;
-    padding-top: 12px;
-    padding-bottom: 0;
+    padding: 0;
   }
 
   /* ── 로고 ── */
@@ -276,6 +275,7 @@
     cursor: pointer;
     transition: all 0.15s ease;
     border: 2px solid transparent;
+    overflow: hidden;
   }
   .li:active { transform: scale(0.98); }
 
@@ -284,6 +284,7 @@
     align-items: center;
     gap: 8px;
     margin-bottom: 8px;
+    min-width: 0;
   }
 
   .li-type {
@@ -302,6 +303,10 @@
     font-weight: 800;
     color: var(--hwik-dark);
     letter-spacing: -0.5px;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   .li-trade {
@@ -315,9 +320,19 @@
   .trade-ongoing { background: #fef3c7; color: #d97706; }
   .trade-done { background: #f3f4f6; color: #6b7280; }
 
-  .li-row2 { padding-left: 2px; }
-  .li-name { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
-  .li-detail { font-size: 12px; color: var(--gray-400); }
+  .li-row2 { padding-left: 2px; min-width: 0; }
+  .li-name {
+    font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px;
+    white-space: nowrap; overflow: hidden;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+  }
+  .li-detail {
+    font-size: 12px; color: var(--gray-400);
+    white-space: nowrap; overflow: hidden;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
+  }
 
   .li-btn-detail {
     padding: 5px 12px;
@@ -330,6 +345,186 @@
     cursor: pointer;
     flex-shrink: 0;
   }
+
+  /* ── 매칭 카드 (손님-매물 매칭 리스트) ── */
+  .match-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 11px 12px;
+    margin: 0 0 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    border: 1.5px solid #f1f5f9;
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+    overflow: hidden;
+  }
+  .match-card:active { transform: scale(0.99); }
+  .match-card-inner {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .match-info-col {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .match-row1 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+  }
+  .match-cat-badge {
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: #eef2ff;
+    color: #4f46e5;
+    border: 1px solid #e0e7ff;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .match-status-badge {
+    font-size: 10.5px;
+    font-weight: 700;
+    color: #16a34a;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+  .match-status-badge.ongoing { color: #d97706; }
+  .match-status-badge.done { color: #9ca3af; }
+  .match-price {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--hwik-dark);
+    letter-spacing: -0.3px;
+    flex-shrink: 0;
+    white-space: nowrap;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .match-score {
+    font-size: 11px;
+    font-weight: 700;
+    color: #4ecdc4;
+    flex-shrink: 0;
+    white-space: nowrap;
+    margin-left: auto;
+  }
+  .match-row2 {
+    font-size: 12px;
+    color: #64748b;
+    white-space: nowrap;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent);
+  }
+  .match-row2 .name { font-weight: 700; color: var(--text); }
+  .match-row3 {
+    display: flex;
+    gap: 4px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 18px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 18px), transparent);
+  }
+  .match-tag {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .match-tag.c0 { background: #e0f2fe; color: #0369a1; }
+  .match-tag.c1 { background: #dcfce7; color: #15803d; }
+  .match-tag.c2 { background: #fef3c7; color: #a16207; }
+  .match-tag.c3 { background: #f3e8ff; color: #7e22ce; }
+  .match-tag.c4 { background: #fee2e2; color: #b91c1c; }
+  .match-tag-more {
+    font-size: 10px;
+    font-weight: 600;
+    color: #94a3b8;
+    white-space: nowrap;
+    flex-shrink: 0;
+    align-self: center;
+    padding-left: 2px;
+  }
+  .match-source {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #64748b;
+    padding-top: 4px;
+    margin-top: 2px;
+    border-top: 1px dashed #e2e8f0;
+    white-space: nowrap;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 18px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 18px), transparent);
+  }
+  .match-source .office { font-weight: 700; color: var(--text); }
+  .match-source .room {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: #f0fdfa;
+    color: #0d9488;
+    font-weight: 700;
+    font-size: 10px;
+    border: 1px solid #ccfbf1;
+  }
+  .match-source .sep { color: #cbd5e1; }
+  .match-right-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    justify-content: center;
+  }
+  .match-thumb {
+    width: 52px;
+    height: 52px;
+    border-radius: 8px;
+    background-size: cover;
+    background-position: center;
+    background-color: #f1f5f9;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .match-thumb-count {
+    position: absolute;
+    right: 3px;
+    bottom: 3px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  .match-detail-btn {
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #5a5a6e;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    word-break: keep-all;
+    flex-shrink: 0;
+  }
+  .match-detail-btn:active { background: #f8fafc; }
 
   /* ── 검색 중 ── */
   .searching {
@@ -445,7 +640,7 @@
   .panel.panel-center {
     flex-direction: column;
     justify-content: flex-start;
-    padding: 0 10px 80px;
+    padding: 8px 6px 80px;
     max-height: calc(100dvh - 60px);
     overflow-y: auto;
   }
@@ -1593,6 +1788,21 @@ function removeTyping() {
   if (_typingTimer) { clearTimeout(_typingTimer); _typingTimer = null; }
   document.getElementById('chatTyping')?.remove();
 }
+// 타이핑 인디케이터를 그 자리에서 AI 버블로 변환 (DOM 재생성 없이 → 페이드인 플리커 방지)
+// 대체할 #chatTyping이 없으면 일반 addAiBubble로 폴백
+function morphTypingToAiBubble(html) {
+  const node = document.getElementById('chatTyping');
+  if (!node) { addAiBubble(html); return; }
+  if (_typingTimer) { clearTimeout(_typingTimer); _typingTimer = null; }
+  const prevSender = _lastSender;
+  _lastSender = 'ai';
+  const bubble = node.querySelector('.bubble');
+  if (bubble) bubble.innerHTML = html;
+  node.removeAttribute('id'); // 다음 removeTyping이 이걸 지우지 않도록
+  const msgs = document.getElementById('chatMessages');
+  if (msgs) msgs.scrollTop = msgs.scrollHeight;
+  if (prevSender === 'user') playNotifySound();
+}
 
 // ── 카톡 끊어치기 대응: debounce + 타이핑 감지 ──
 let _chatBuffer = '';          // 디바운스 대기 중 누적되는 사용자 입력
@@ -1714,13 +1924,11 @@ async function _processChatBuffer() {
     // while 루프: 파싱 중 새 버퍼 쌓였으면 이어서 파싱
   }
 
-  removeTyping();
-
   // 누락 필드 체크
   const nextMissing = _findMissingField(_chatDraft);
   if (nextMissing) {
     _chatMissing = nextMissing;
-    addAiBubble(_FIELD_QUESTIONS[nextMissing]);
+    morphTypingToAiBubble(_FIELD_QUESTIONS[nextMissing]);
     _chatState = 'idle';
     if (btn) btn.disabled = false;
     document.getElementById('chatInput')?.focus();
@@ -1730,12 +1938,15 @@ async function _processChatBuffer() {
 
   // 채워진 정보가 전혀 없으면 (스킵만 눌렀을 때 등) 재안내
   if (!Object.keys(_chatDraft.parsed).length) {
-    addAiBubble('아직 정보가 부족해요. 손님 조건을 알려주세요.');
+    morphTypingToAiBubble('아직 정보가 부족해요. 손님 조건을 알려주세요.');
     _chatState = 'idle';
     if (btn) btn.disabled = false;
     _updateTypingIndicator();
     return;
   }
+
+  // 확인 카드는 타이핑 인디를 없애고 이어서 요약 버블 여러 개 추가하는 흐름이므로 제거
+  removeTyping();
 
   // 모두 채워짐 → 확인 카드
   try {
@@ -2076,29 +2287,64 @@ function _renderMatchPanel(cardData, parsed, rawText) {
     const msg = _matchFilter === 'my' ? '내 매물 중 매칭이 없어요' : _matchFilter === 'shared' ? '공유 매물 중 매칭이 없어요' : '아직 매칭 매물이 없어요';
     html += `<div style="text-align:center;padding:40px 0;color:#94a3b8;font-size:14px;">${msg}<br><span style="font-size:12px;">새 매물이 등록되면 알림으로 알려드릴게요</span></div>`;
   } else {
+    const CAT_KO = { apartment:'아파트', officetel:'오피스텔', villa:'빌라', room:'원룸', commercial:'상가', office:'사무실' };
     filtered.forEach(item => {
       const mp = item.property || {};
       const type = esc(mp.type || '');
-      const typeClass = type === '매매' ? 'type-sale' : type === '전세' ? 'type-jeonse' : 'type-rent';
+      const catLabel = CAT_KO[mp.category] || '';
+      const catBadge = [catLabel, type].filter(Boolean).join(' ');
       const score = item._score || item.similarity || 0;
       const mName = esc(mp.complex || mp.location || '매물');
-      const detail = [mp.area, mp.floor].filter(Boolean).map(v => esc(v)).join(' · ');
+      const locBits = [mp.location, mp.area, mp.floor].filter(Boolean).map(v => esc(v)).join(' · ');
       const safeId = esc(item.id);
       const isMine = item.agent_id === uid;
 
+      const tsRaw = item.trade_status || '계약가능';
+      const tsClass = tsRaw === '계약중' ? 'ongoing' : tsRaw === '완료' ? 'done' : '';
+      const tagsArr = (Array.isArray(item.tags) && item.tags.length ? item.tags : (mp.features || [])).filter(Boolean);
+      const tagsShow = tagsArr.slice(0, 3);
+      const tagsRest = tagsArr.length - tagsShow.length;
+      const tagsHtml = tagsShow.length
+        ? `<div class="match-row3">${tagsShow.map((t,i) => `<span class="match-tag c${i%5}">${esc(t)}</span>`).join('')}${tagsRest > 0 ? `<span class="match-tag-more">+${tagsRest}</span>` : ''}</div>`
+        : '';
+
+      const photos = Array.isArray(item.photos) ? item.photos : [];
+      const firstPhoto = photos[0] || '';
+      const thumbHtml = firstPhoto
+        ? `<div class="match-thumb" style="background-image:url('${esc(firstPhoto)}')">${photos.length > 1 ? `<span class="match-thumb-count">${photos.length}</span>` : ''}</div>`
+        : '';
+
+      // 공유 매물 출처 (사무실 · 공유방)
+      let sourceHtml = '';
+      if (!isMine) {
+        const officeName = item._agent?.name ? esc(item._agent.name) : '';
+        const roomName = item._room ? esc(item._room) : '';
+        if (officeName || roomName) {
+          const parts = [];
+          if (officeName) parts.push(`<span class="office">${officeName}</span>`);
+          if (roomName) parts.push(`<span class="room">${roomName}</span>`);
+          sourceHtml = `<div class="match-source">${parts.join('<span class="sep">·</span>')}</div>`;
+        }
+      }
+
       html += `
-        <div class="li match-item" onclick="_toggleMatchSelect('${safeId}',this)" data-mine="${isMine?'1':'0'}" style="margin-bottom:10px;${isMine ? 'border-color:#4ecdc4;' : ''}cursor:pointer;position:relative;">
-          <div class="li-row1">
-            <span class="li-type ${typeClass}">${type}</span>
-            <span class="li-price">${esc(mp.price || '')}</span>
-            ${score > 0 ? `<span style="font-size:11px;color:#4ecdc4;font-weight:700;">${score}점</span>` : ''}
-            ${isMine ? `<span style="font-size:10px;padding:2px 8px;border-radius:10px;background:#4ecdc4;color:#fff;font-weight:700;">내 매물</span>` : ''}
-            <span style="flex:1"></span>
-            <button onclick="event.stopPropagation();openProperty('${safeId}')" style="padding:4px 10px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;color:#5a5a6e;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;">상세</button>
-          </div>
-          <div class="li-row2">
-            <div class="li-name">${mName}</div>
-            <div class="li-detail">${esc(mp.location || '')}${detail ? ' · ' + detail : ''}</div>
+        <div class="match-card match-item" onclick="_toggleMatchSelect('${safeId}',this)" data-mine="${isMine?'1':'0'}" style="${isMine ? 'border-color:#4ecdc4;' : ''}">
+          <div class="match-card-inner">
+            <div class="match-info-col">
+              <div class="match-row1">
+                ${catBadge ? `<span class="match-cat-badge">${esc(catBadge)}</span>` : ''}
+                <span class="match-status-badge ${tsClass}">${esc(tsRaw)}</span>
+                <span class="match-price">${esc(mp.price || '')}</span>
+                ${score > 0 ? `<span class="match-score">${score}점</span>` : ''}
+              </div>
+              <div class="match-row2"><span class="name">${mName}</span>${locBits ? ' · ' + locBits : ''}</div>
+              ${tagsHtml}
+              ${sourceHtml}
+            </div>
+            <div class="match-right-col">
+              ${thumbHtml}
+              <button class="match-detail-btn" onclick="event.stopPropagation();openProperty('${safeId}')">상세</button>
+            </div>
           </div>
         </div>`;
     });

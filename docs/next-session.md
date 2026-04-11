@@ -1,26 +1,27 @@
-# 다음 세션 (2026-04-11)
+# 다음 세션 (2026-04-12)
 
-## 최우선 — 새벽 sync 검증
-1. **GitHub Actions sync 성공 확인** (매일 새벽 1시 KST)
-2. **`python verify_seo.py`** — 로컬 전수 검사 4/5 PASS 확인
-3. **`python -X utf8 verify_live.py`** — 서버 전수 검사 0건 확인 (8,260 URL)
-4. **샘플 스팟체크 3곳** — 새 거래 반영, JSON-LD 회귀 없는지
+## 어제(04-11) 작업 상태
+손님 등록 채팅 UX 8원칙 확정("기가 막히네") + 매칭 카드 재설계 + 타이핑 플리커 해결 + 여백 축소 → **전부 미커밋**
 
-## 깨끗하면 → 전국 확장 Phase 1 (광역시)
-- 부산/대구/광주/대전/울산 — 주소 구조가 수도권과 동일, 리스크 낮음
-- `sync_trades.py` 지역 코드 리스트 확장 + Actions matrix
-- 로컬에서 한 광역시만 먼저 테스트 후 전체 실행
+## 내일 최우선 4개 (순서대로)
 
-## 후순위
-- **gu 페이지 고유 OG 이미지 생성** — 전국 확장 후 한꺼번에 (지금 59개는 공통 이미지)
-- 새벽 sync 카테고리 중복(52/60 등) 해결 확인
-- 브레드크럼 동 링크 추가 (휙 > 서울 강남구 > 역삼동 > 단지명)
-- FAQ ㎡당 가격 질문 공급면적 기준 통일
-- sync 후 nearby 비율 급락 시 이메일 경고
+### ① 미커밋 커밋
+- `mobile.html` (채팅 UX, 매칭 카드, 플리커, 여백)
+- `supabase/migrations/20260411100000_client_notes_nullable_card_id.sql`
+- `docs/2026-04-11.md`, `docs/next-session.md`
+- 메시지 제안: `feat(mobile): 손님 등록 채팅 UX 8원칙 + 매칭 카드 재설계`
 
-## 현재 상태 (오늘 마지막)
-- 커밋 `f4d5e696f8` 배포 완료
-- 8,260 URL 전수 검사 PASS (로컬/서버 둘 다)
-- 오피스텔 3,374개 삭제 + `not.like.offi-*` 필터로 재발 방지
-- Google Search Console 재제출 완료 (11,699 → 8,260)
-- 신규 도구: `verify_live.py` (서버 HTTP 전수 검사, 100초)
+### ② DB 마이그레이션 실행
+Supabase 대시보드 SQL 에디터에서 직접 실행:
+```sql
+ALTER TABLE public.client_notes ALTER COLUMN client_card_id DROP NOT NULL;
+```
+→ 달력 "개인 일정 추가" 버튼 복구 (직접 DB 접속 불가)
+
+### ③ 손님 등록 남은 버그 3개
+1. `search_text_private` 미저장 — `chatConfirm` insert 시 누락 ([mobile.html:1558-1574](mobile.html#L1558-L1574))
+2. 등록 성공 토스트 없음 — 매칭 화면으로만 전환
+3. `locate-card` 호출 없음 — 거리 매칭 보너스 0점
+
+### ④ 브리핑 복귀
+손님 등록 3개 버그 처리 후 돌아감. 상세: [docs/2026-04-11.md](docs/2026-04-11.md) 1~2번 섹션
