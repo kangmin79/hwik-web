@@ -1117,6 +1117,7 @@ function switchTab(tab) {
     logo.style.display = '';
     tagline.style.display = '';
     results.innerHTML = '';
+    results.style.display = '';
     searchInput.value = '';
     searchData = [];
 
@@ -1124,12 +1125,13 @@ function switchTab(tab) {
     else document.getElementById('tabHome').classList.add('active');
 
   } else {
-    // 다른 탭: 검색/로고 숨기기
+    // 다른 탭: 검색/로고/결과영역 숨기기 (빈 results가 패딩으로 공간 먹는 문제 방지)
     container.classList.add('active');
     searchWrap.style.display = 'none';
     logo.style.display = 'none';
     tagline.style.display = 'none';
     results.innerHTML = '';
+    results.style.display = 'none';
 
     // 해당 탭 버튼 활성화
     const btnMap = {
