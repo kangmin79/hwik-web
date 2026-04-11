@@ -1584,9 +1584,6 @@ function _checkAndProcessBuffer() {
 }
 
 async function chatSend() {
-  // 확인 카드 떠있는 동안엔 입력 무시 (버튼으로 진행해야 함)
-  if (_chatState === 'confirm') return;
-
   const inp = document.getElementById('chatInput');
   const text = inp?.value?.trim();
   if (!text) return;
@@ -1599,6 +1596,15 @@ async function chatSend() {
   if (/^(처음부터|리셋|취소|초기화)$/.test(text)) {
     chatReset();
     return;
+  }
+
+  // 확인 카드 떠있는데 추가 입력 → 자동 수정 모드 진입 (카드 닫고 병합 재파싱)
+  if (_chatState === 'confirm') {
+    _chatState = 'idle';
+    _chatParsed = null;
+    // 기존 확인 카드 버튼 비활성화
+    document.querySelectorAll('.chat-confirm-btns button').forEach(b => { b.disabled = true; b.style.opacity = '0.4'; });
+    // 아래는 일반 흐름으로 이어짐 → 버퍼 누적 + 파싱
   }
 
   if (!_chatDraft) _chatDraft = { rawText: '', skipped: new Set(), parsed: {} };
