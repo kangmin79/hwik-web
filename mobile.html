@@ -1348,6 +1348,35 @@ function showRecent() {
   panel.innerHTML = html;
 }
 
+// ── KST(한국 표준시) 헬퍼 — 기기 타임존 무관하게 한국 시간 기준 ──
+function _kstNow() {
+  // Intl로 KST 연/월/일/시/분/요일 추출
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false, weekday: 'short'
+  });
+  const parts = Object.fromEntries(fmt.formatToParts(new Date()).map(p => [p.type, p.value]));
+  const dayIdx = { Sun:0, Mon:1, Tue:2, Wed:3, Thu:4, Fri:5, Sat:6 }[parts.weekday] ?? 0;
+  return {
+    y: +parts.year, mo: +parts.month, d: +parts.day,
+    h: +parts.hour % 24, m: +parts.minute, day: dayIdx
+  };
+}
+function _kstDateStr() {
+  const k = _kstNow();
+  return `${k.y}년 ${k.mo}월 ${k.d}일 ${'일월화수목금토'[k.day]}요일`;
+}
+function _kstGreeting() {
+  const h = _kstNow().h;
+  if (h < 6)  return '늦은 밤이네요';
+  if (h < 12) return '좋은 아침이에요!';
+  if (h < 14) return '점심 맛있게 드세요';
+  if (h < 18) return '오늘도 수고하세요!';
+  if (h < 22) return '오늘 하루 마무리!';
+  return '늦은 시간까지 수고 많으세요';
+}
+
 // ── 손님 등록 (중개사 전용) ──
 // ── 손님 등록 (채팅 스타일 - 대화형 수집) ──
 let _chatState = 'idle'; // idle | waiting | confirm | done
@@ -1417,9 +1446,8 @@ function showClientRegister() {
   _chatMissing = null;
   _lastSender = '';
 
-  // 오늘 날짜
-  const today = new Date();
-  const dateStr = `${today.getFullYear()}년 ${today.getMonth()+1}월 ${today.getDate()}일 ${'일월화수목금토'[today.getDay()]}요일`;
+  // 오늘 날짜 (한국 시간 기준)
+  const dateStr = _kstDateStr();
 
   // body에 직접 추가 (fixed 정상 동작)
   const chatArea = document.createElement('div');
@@ -1439,11 +1467,12 @@ function showClientRegister() {
       </div>`;
   document.body.appendChild(chatArea);
 
-  // AI 인사 메시지 (1회만) — 한 번에 다 말해도 되고, 나눠서 말해도 됨
+  // AI 인사 메시지 (1회만) — 한국 시간 기준 시간대별 인사 + 질문
   _chatGreetTimer = setTimeout(() => {
     _chatGreetTimer = null;
     if (!document.getElementById('clientChatArea')) return;
-    addAiBubble('어떤 손님을 찾으시나요?', true);
+    addAiBubble(_kstGreeting(), true);
+    addAiBubble('어떤 손님을 찾으시나요?');
     addAiBubble('<span style="font-size:12px;color:#94a3b8;">한 번에 다 말씀하셔도 되고, 하나씩 알려주셔도 돼요.<br>예) 강남 전세 5억 이하 홍길동 010-1234-5678</span>');
     document.getElementById('chatInput')?.focus();
   }, 300);
@@ -1997,8 +2026,7 @@ function prefetchBrief() {
 
 // 데이터 → 메시지 큐
 function _buildBriefQueue(data) {
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? '좋은 아침이에요!' : hour < 18 ? '오늘도 수고하세요!' : '오늘 하루 마무리!';
+  const greeting = _kstGreeting();
   const q = [{ html: greeting, first: true }];
 
   const { matches = [], overdue = [], upcoming = [], cardMap = {}, clientMap = {} } = data || {};
@@ -2083,9 +2111,8 @@ async function showAlerts() {
     return;
   }
 
-  // 채팅 영역 생성 (즉시)
-  const today = new Date();
-  const dateStr = `${today.getFullYear()}년 ${today.getMonth()+1}월 ${today.getDate()}일 ${'일월화수목금토'[today.getDay()]}요일`;
+  // 채팅 영역 생성 (즉시) — 한국 시간 기준
+  const dateStr = _kstDateStr();
   const chatArea = document.createElement('div');
   chatArea.className = 'chat-area';
   chatArea.id = 'alertChatArea';
@@ -2104,10 +2131,8 @@ async function showAlerts() {
   document.body.appendChild(chatArea);
   _lastSender = '';
 
-  // 0단계: 인사 버블 즉시 표시 (네트워크/캐시 기다리지 않음)
-  const hourImm = new Date().getHours();
-  const greetingImm = hourImm < 12 ? '좋은 아침이에요!' : hourImm < 18 ? '오늘도 수고하세요!' : '오늘 하루 마무리!';
-  addAlertBubble(greetingImm, true);
+  // 0단계: 인사 버블 즉시 표시 (네트워크/캐시 기다리지 않음, 한국 시간 기준)
+  addAlertBubble(_kstGreeting(), true);
 
   // 1단계: localStorage 캐시 즉시 렌더 (0초)
   let rendered = false;
