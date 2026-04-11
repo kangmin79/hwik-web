@@ -920,6 +920,41 @@ let appLoading = false;
 
 function haptic(ms = 30) { try { navigator.vibrate?.(ms); } catch(_e) {} }
 
+// ── 알림 소리 (Web Audio, 코드 생성 "띵") ──
+// 기본 OFF, 내정보에서 토글. 첫 사용자 제스처 이후 unlock 됨.
+const SOUND_KEY = 'hwik_sound_enabled';
+function isSoundEnabled() { return localStorage.getItem(SOUND_KEY) === '1'; }
+function setSoundEnabled(v) { localStorage.setItem(SOUND_KEY, v ? '1' : '0'); }
+let _audioCtx = null;
+function _getAudioCtx() {
+  if (_audioCtx) return _audioCtx;
+  try { _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+  catch(_) { return null; }
+  return _audioCtx;
+}
+function playNotifySound() {
+  if (!isSoundEnabled()) return;
+  const ctx = _getAudioCtx();
+  if (!ctx) return;
+  // 브라우저가 첫 제스처 전이면 suspended 상태 — resume 시도
+  if (ctx.state === 'suspended') { try { ctx.resume(); } catch(_) {} }
+  try {
+    const now = ctx.currentTime;
+    // 두 음 "띠링" — 880Hz → 1175Hz, 짧게
+    [{f:880, t:0, d:0.08}, {f:1175, t:0.09, d:0.12}].forEach(({f,t,d}) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = f;
+      gain.gain.setValueAtTime(0, now + t);
+      gain.gain.linearRampToValueAtTime(0.12, now + t + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + t + d);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(now + t); osc.stop(now + t + d);
+    });
+  } catch(_) {}
+}
+
 // ── Supabase + Kakao ──
 const SUPABASE_URL = HWIK_CONFIG.SUPABASE_URL;
 const SUPABASE_KEY = HWIK_CONFIG.SUPABASE_KEY;
@@ -1491,6 +1526,7 @@ function addAiBubble(html, isFirst = false) {
   const msgs = document.getElementById('chatMessages');
   if (!msgs) return;
   const showAvatar = _lastSender !== 'ai';
+  const prevSender = _lastSender;
   _lastSender = 'ai';
   const d = document.createElement('div');
   d.className = 'msg' + (showAvatar ? ' first-in-group' : '');
@@ -1502,6 +1538,8 @@ function addAiBubble(html, isFirst = false) {
     </div>`;
   msgs.appendChild(d);
   msgs.scrollTop = msgs.scrollHeight;
+  // 사용자 메시지 직후 AI 응답이 올 때만 소리 (인삿말/연속 AI는 무음)
+  if (!isFirst && prevSender === 'user') playNotifySound();
 }
 function addUserBubble(text) {
   const msgs = document.getElementById('chatMessages');
@@ -2581,9 +2619,20 @@ function renderProfileHTML(name, phone, photoUrl) {
       ${phone ? `<div style="font-size:14px;color:#94a3b8;font-weight:400;letter-spacing:0.5px;">${esc(phone)}</div>` : ''}
       <div style="width:40px;height:2px;background:var(--hwik-yellow);border-radius:1px;margin:24px 0;"></div>
       <div style="font-size:13px;color:#c0c0c0;">매물 관리는 PC에서 해주세요</div>
-      <button onclick="doLogout()" style="margin-top:32px;padding:12px 40px;border-radius:12px;border:1px solid #e2e8f0;background:none;color:#94a3b8;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;">로그아웃</button>
+      <label style="margin-top:24px;display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:12px;background:#f8f8fa;border:1px solid #e5e8eb;cursor:pointer;user-select:none;">
+        <input type="checkbox" id="soundToggle" ${isSoundEnabled() ? 'checked' : ''} onchange="toggleSound(this.checked)" style="width:18px;height:18px;accent-color:var(--hwik-yellow);cursor:pointer;">
+        <span style="font-size:14px;color:var(--hwik-dark);font-weight:600;">알림 소리</span>
+        <span style="font-size:11px;color:#94a3b8;">새 메시지 띠링</span>
+      </label>
+      <button onclick="doLogout()" style="margin-top:20px;padding:12px 40px;border-radius:12px;border:1px solid #e2e8f0;background:none;color:#94a3b8;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;">로그아웃</button>
     </div>
   `;
+}
+function toggleSound(v) {
+  setSoundEnabled(v);
+  haptic(10);
+  if (v) { playNotifySound(); showToast('알림 소리 켜짐'); }
+  else showToast('알림 소리 꺼짐');
 }
 
 async function showProfile() {
