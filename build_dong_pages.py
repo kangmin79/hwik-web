@@ -481,7 +481,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
     lines.append('<div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">')
     if has_gu_page:
         lines.append(f'<a href="/gu/{url_quote(gu_page_slug, safe="-")}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{esc(gu)} 전체 시세 &rarr;</a>')
-        lines.append('<a href="/ranking.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">아파트 순위 &rarr;</a>')
+        lines.append('<a href="/ranking/" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">아파트 순위 &rarr;</a>')
     lines.append('</div>')
 
     # SEO 서술 (풍부한 고유 콘텐츠) — 서두 다양화

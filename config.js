@@ -151,7 +151,7 @@ const CATEGORY_EN = {
                 "description": "서울 아파트 실거래가, 전세가, 시세 추이를 한눈에. 6,000개 단지 데이터 매일 업데이트.",
                 "potentialAction": {
                     "@type": "SearchAction",
-                    "target": "https://hwik.kr/gu.html?name={search_term_string}",
+                    "target": "https://hwik.kr/gu/{search_term_string}",
                     "query-input": "required name=search_term_string"
                 }
             }

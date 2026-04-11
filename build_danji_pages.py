@@ -594,7 +594,7 @@ def build_fallback_html(d):
         _region_label = detect_region(d.get("address", "") or "")
         _gu_url = gu_url_slug(_region_label, gu_raw)
         lines.append(f'<a href="/gu/{url_quote(_gu_url, safe="-")}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{gu} 전체 시세 →</a>')
-        lines.append('<a href="/ranking.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">아파트 순위 →</a>')
+        lines.append('<a href="/ranking/" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">아파트 순위 →</a>')
     lines.append("</div>")
 
     return "\n    ".join(lines)
