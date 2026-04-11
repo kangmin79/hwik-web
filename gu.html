@@ -30,13 +30,11 @@ a{display:inline-block;padding:10px 20px;background:#1a1a2e;color:#fff;text-deco
 <script>
 (function(){
   var p = new URLSearchParams(location.search);
-  var name = p.get('name');
+  var name = (p.get('name') || '').trim();
   if (!name) { location.replace('/'); return; }
-  // 첫 단어만 사용 ("수원시 장안구" → "수원시")
-  var first = name.split(/\s+/)[0];
-  if (!first) { location.replace('/'); return; }
-  // /gu/{first}는 서울/인천/경기 범위. 404면 브라우저가 처리.
-  location.replace('/gu/' + encodeURIComponent(first));
+  // "수원시 장안구" → "수원시-장안구" (공백 → 하이픈, slug_utils.py와 동일)
+  var slug = name.replace(/\s+/g, '-');
+  location.replace('/gu/' + encodeURIComponent(slug));
 })();
 </script>
 </body>
