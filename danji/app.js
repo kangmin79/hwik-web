@@ -50,9 +50,13 @@ function markAsNotFound() {
 
 // ── 데이터 로드 ──
 async function loadData() {
+  // location.pathname 은 한글이 percent-encoded 로 반환되므로 디코드 후 매칭
+  // (apt-/offi- 접미사에 한글이 포함된 ID가 0 rows 로 귀결되는 것 방지)
+  let _path = location.pathname;
+  try { _path = decodeURIComponent(_path); } catch (e) {}
   const id = new URLSearchParams(location.search).get('id')
-    || (location.pathname.match(/-(a\d+)(?:\.html)?$/) || [])[1]
-    || (location.pathname.match(/((?:offi|apt)-[^/]+?)(?:\.html)?$/) || [])[1]
+    || (_path.match(/-(a\d+)(?:\.html)?$/) || [])[1]
+    || (_path.match(/((?:offi|apt)-[^/]+?)(?:\.html)?$/) || [])[1]
     || null;
   if (!id) { markAsNotFound(); return; }
 
