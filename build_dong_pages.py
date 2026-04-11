@@ -726,6 +726,13 @@ def main():
     print(f"\n{count}개 동 페이지 생성, {skipped}개 스킵 (거래 단지 {MIN_DANJI_WITH_TRADE}개 미만)")
     print(f"출력: {DONG_DIR}/")
 
+    # /dong/ 인덱스 페이지 자동 생성 (지역·구별 그룹화된 허브)
+    try:
+        from build_dong_index import build_index as _build_dong_index
+        _build_dong_index()
+    except Exception as _e:
+        print(f"⚠️ dong/index.html 생성 실패: {_e}")
+
 
 if __name__ == "__main__":
     main()
