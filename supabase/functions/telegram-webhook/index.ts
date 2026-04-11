@@ -32,6 +32,18 @@ const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
   auth: { persistSession: false, autoRefreshToken: false }
 })
 
+// ========== 중개사 메인 키보드 (입력창 아래 상시 고정) ==========
+// 타이핑 부담 제거 — 버튼 탭으로 주요 기능 모두 접근
+const MAIN_KEYBOARD = {
+  keyboard: [
+    [{ text: '📋 오늘 브리핑' }],
+    [{ text: '🏠 매물 등록' }, { text: '🙋 손님 등록' }],
+    [{ text: 'ⓘ 내 정보' }],
+  ],
+  resize_keyboard: true,
+  is_persistent: true,
+}
+
 // ========== Telegram API helpers ==========
 async function tg(method: string, body: Record<string, unknown>) {
   return fetch(`https://api.telegram.org/bot${BOT_TOKEN}/${method}`, {
@@ -94,6 +106,93 @@ async function linkAgent(agentId: string, chatId: number) {
     .eq('id', agentId)
 }
 
+// ========== 브리핑 ==========
+// mobile.html _buildBriefQueue 의 봇 버전. 오늘/지연 알림 + 매칭 요약.
+async function buildBriefing(agentId: string): Promise<string> {
+  const nowIso = new Date().toISOString()
+  const today = nowIso.slice(0, 10)
+
+  const [overdueRes, upcomingRes, matchRes] = await Promise.all([
+    admin.from('client_notes')
+      .select('id, client_card_id, content, alert_date, type')
+      .eq('agent_id', agentId)
+      .eq('alert_done', false)
+      .not('alert_date', 'is', null)
+      .lt('alert_date', nowIso)
+      .order('alert_date', { ascending: true })
+      .limit(20),
+    admin.from('client_notes')
+      .select('id, client_card_id, content, alert_date, type')
+      .eq('agent_id', agentId)
+      .eq('alert_done', false)
+      .not('alert_date', 'is', null)
+      .gte('alert_date', nowIso)
+      .lte('alert_date', today + 'T23:59:59.999Z')
+      .order('alert_date', { ascending: true })
+      .limit(20),
+    admin.from('match_notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('agent_id', agentId)
+      .eq('is_read', false),
+  ])
+
+  // log/match 타입 제외 (mobile.html 과 동일 필터)
+  const excludeTypes = new Set(['log', 'match', '로그', '매칭'])
+  const overdue = (overdueRes.data || []).filter((a: any) => !excludeTypes.has(a.type))
+  const upcoming = (upcomingRes.data || []).filter((a: any) => !excludeTypes.has(a.type))
+  const newMatches = matchRes.count || 0
+
+  const lines: string[] = []
+  const hour = new Date(Date.now() + 9 * 3600 * 1000).getUTCHours()
+  const greet = hour < 6 ? '새벽이에요' : hour < 12 ? '좋은 아침이에요' : hour < 18 ? '좋은 오후에요' : '좋은 저녁이에요'
+  lines.push(`🌅 <b>${greet}</b>`)
+  lines.push('')
+
+  const typeIcon: Record<string, string> = {
+    '방문': '🏠', '전화': '📞', '계약': '📋', '상담': '💬', '매물소개': '📤',
+  }
+
+  if (upcoming.length) {
+    lines.push(`📅 <b>오늘 일정 ${upcoming.length}건</b>`)
+    upcoming.slice(0, 10).forEach((a: any) => {
+      const ad = new Date(a.alert_date)
+      const h = ad.getUTCHours() + 9
+      const hh = h >= 24 ? h - 24 : h
+      const mm = ad.getUTCMinutes()
+      const time = `${hh}시${mm ? mm + '분' : ''}`
+      const icon = typeIcon[a.type] || '📌'
+      const content = (a.content || '').replace(/\n/g, ' ').slice(0, 50)
+      lines.push(`${icon} ${time} · ${content}`)
+    })
+    if (upcoming.length > 10) lines.push(`  외 ${upcoming.length - 10}건`)
+    lines.push('')
+  }
+
+  if (newMatches > 0) {
+    lines.push(`🎯 <b>새 매칭 ${newMatches}건</b>`)
+    lines.push(`https://hwik.kr/mobile.html 에서 확인`)
+    lines.push('')
+  }
+
+  if (overdue.length) {
+    lines.push(`⏰ <b>지연 ${overdue.length}건</b>`)
+    overdue.slice(0, 5).forEach((a: any) => {
+      const dateStr = a.alert_date.slice(5, 10).replace('-', '/')
+      const content = (a.content || '').replace(/\n/g, ' ').slice(0, 40)
+      lines.push(`• ${dateStr} · ${content}`)
+    })
+    if (overdue.length > 5) lines.push(`  외 ${overdue.length - 5}건`)
+    lines.push('')
+  }
+
+  if (!upcoming.length && !newMatches && !overdue.length) {
+    lines.push('📭 오늘은 예정된 일정이 없어요.')
+    lines.push('편한 하루 보내세요 🙂')
+  }
+
+  return lines.join('\n').trim()
+}
+
 async function parseProperty(text: string) {
   const res = await fetch(`${SUPABASE_URL}/functions/v1/parse-property`, {
     method: 'POST',
@@ -118,7 +217,8 @@ async function handleCommand(chatId: number, cmd: string, agent: any) {
         const name = agent.agent_name || agent.business_name || '중개사'
         return reply(
           chatId,
-          `안녕하세요, <b>${name}</b>님!\n\n매물 정보를 자연스럽게 텍스트로 보내주세요.\n\n<b>예시</b>\n• 매물: "래미안 32평 15억 남향 고층 010-1234-5678 김사장"\n• 손님: "강남구 20억 이하 찾는 분 010-1234-5678"\n\n<b>명령어</b>\n/me — 내 정보\n/unlink — 연동 해제\n/help — 도움말`
+          `안녕하세요, <b>${name}</b>님! 🙂\n\n아래 버튼을 눌러서 시작하세요.\n\n• <b>📋 오늘 브리핑</b> — 지연·오늘 일정·새 매칭 한눈에\n• <b>🏠 매물 등록</b> — 매물 정보 자유롭게 입력\n• <b>🙋 손님 등록</b> — 찾는 손님 조건 입력\n• <b>ⓘ 내 정보</b> — 내 프로필 확인`,
+          { reply_markup: MAIN_KEYBOARD }
         )
       }
       return reply(
@@ -134,7 +234,8 @@ async function handleCommand(chatId: number, cmd: string, agent: any) {
         : '-'
       return reply(
         chatId,
-        `<b>${agent.agent_name || '(이름없음)'}</b>\n${agent.business_name || ''}\n${agent.phone || ''}\n\n연동일: ${linkedDate}`
+        `<b>${agent.agent_name || '(이름없음)'}</b>\n${agent.business_name || ''}\n${agent.phone || ''}\n\n연동일: ${linkedDate}`,
+        { reply_markup: MAIN_KEYBOARD }
       )
     }
 
@@ -144,17 +245,12 @@ async function handleCommand(chatId: number, cmd: string, agent: any) {
         .from('profiles')
         .update({ telegram_chat_id: null, telegram_linked_at: null })
         .eq('id', agent.id)
-      return reply(chatId, '연동 해제 완료. 다시 연결하려면 /start')
-    }
-
-    case '/help': {
-      return reply(
-        chatId,
-        `<b>휙 봇 사용법</b>\n\n매물 정보를 자연스럽게 텍스트로 보내주세요. AI가 파싱해서 등록해드려요.\n\n<b>예시</b>\n• 매물: "래미안 32평 15억 남향 고층"\n• 손님: "강남구 20억 이하 찾는 분"\n\n<b>명령어</b>\n/start — 시작/환영\n/me — 내 정보\n/unlink — 연동 해제\n/help — 도움말`
-      )
+      return reply(chatId, '연동 해제 완료. 다시 연결하려면 /start', {
+        reply_markup: { remove_keyboard: true },
+      })
     }
   }
-  return reply(chatId, `알 수 없는 명령어: ${cmd}\n/help 도움말`)
+  return reply(chatId, '아래 버튼을 이용해주세요.', { reply_markup: MAIN_KEYBOARD })
 }
 
 // ========== Text handlers ==========
@@ -185,12 +281,41 @@ async function handleText(chatId: number, text: string, agent: any) {
     const name = found.agent_name || found.business_name || '중개사'
     return reply(
       chatId,
-      `<b>${name}</b>님, 연동 완료! 🎉\n\n이제 매물 정보를 텍스트로 보내주시면 제가 등록해드려요.\n\n/help 도움말`
+      `<b>${name}</b>님, 연동 완료! 🎉\n\n아래 버튼을 눌러서 바로 시작하세요 👇`,
+      { reply_markup: MAIN_KEYBOARD }
     )
   }
 
+  // ========== 버튼 텍스트 분기 (타이핑 부담 제거 UX) ==========
+  if (text === '📋 오늘 브리핑') {
+    await tg('sendChatAction', { chat_id: chatId, action: 'typing' })
+    try {
+      const brief = await buildBriefing(agent.id)
+      return reply(chatId, brief, { reply_markup: MAIN_KEYBOARD })
+    } catch (e: any) {
+      return reply(chatId, `❌ 브리핑 조회 실패: ${e.message}`, { reply_markup: MAIN_KEYBOARD })
+    }
+  }
+  if (text === '🏠 매물 등록') {
+    return reply(
+      chatId,
+      `🏠 <b>매물 등록</b>\n\n다음 메시지에 매물 정보를 자유롭게 입력해주세요. AI 가 알아서 분석합니다.\n\n<b>예시</b>\n<code>래미안 32평 15억 남향 고층 깨끗해 010-9999-8888 박사장</code>\n\n가격·위치·면적·층·특징·연락처 등 아는 것만 적으면 돼요.`,
+      { reply_markup: MAIN_KEYBOARD }
+    )
+  }
+  if (text === '🙋 손님 등록') {
+    return reply(
+      chatId,
+      `🙋 <b>손님 등록</b>\n\n다음 메시지에 찾는 손님 조건을 입력해주세요.\n\n<b>예시</b>\n<code>강남구 20억 이하 아파트 찾는 분 010-1111-2222 김손님</code>\n\n등록하면 자동으로 매칭 매물을 찾아드려요 🎯`,
+      { reply_markup: MAIN_KEYBOARD }
+    )
+  }
+  if (text === 'ⓘ 내 정보') {
+    return handleCommand(chatId, '/me', agent)
+  }
+
   if (text.trim().length < 10) {
-    return reply(chatId, '매물 정보가 너무 짧아요. 가격·위치·면적 등을 더 적어주세요.')
+    return reply(chatId, '매물 정보가 너무 짧아요. 가격·위치·면적 등을 더 적어주세요.', { reply_markup: MAIN_KEYBOARD })
   }
 
   // 파싱 시작
@@ -247,7 +372,9 @@ async function handleText(chatId: number, text: string, agent: any) {
         : null,
     ].filter(Boolean).join('\n')
 
-    await reply(chatId, `${summary}\n\n🔗 https://hwik.kr/property_chat.html?id=${cardId}`)
+    await reply(chatId, `${summary}\n\n🔗 https://hwik.kr/property_chat.html?id=${cardId}`, {
+      reply_markup: MAIN_KEYBOARD,
+    })
 
     // 비동기 매칭 트리거 (응답 기다리지 않음)
     if (isClient) {
