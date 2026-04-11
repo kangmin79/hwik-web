@@ -1526,8 +1526,9 @@ function addTyping() {
   const msgs = document.getElementById('chatMessages');
   if (!msgs) return;
   if (document.getElementById('chatTyping')) { _refreshTypingLabel(); return; }
+  // 타이핑 인디케이터는 일시적 DOM — _lastSender를 영구 변경하지 않음
+  // (제거될 때 다음 AI 버블이 아바타를 새로 띄우도록)
   const showAvatar = _lastSender !== 'ai';
-  _lastSender = 'ai';
   const d = document.createElement('div');
   d.className = 'msg' + (showAvatar ? ' first-in-group' : '');
   d.id = 'chatTyping';
