@@ -921,9 +921,13 @@ def main():
     if old_count:
         print(f"기존 {old_count}개 HTML 삭제")
 
-    with open(os.path.join(DANJI_DIR, "style.css"), "w", encoding="utf-8") as f:
-        f.write(css)
-    print(f"  style.css ({len(css):,} bytes)")
+    # ⚠️ danji/style.css 도 수동 관리 파일 — 자동 재생성 금지
+    # 이유: app.js 와 동일. danji.html 이 레거시 리다이렉트 셸로 축소된 뒤
+    #       extract_css_js() 가 셸의 7줄짜리 로딩 스피너 CSS를 뽑아
+    #       실제 단지 페이지용 151줄 CSS를 덮어씀 → 페이지가 스타일 없이
+    #       흰 바탕에 플레인 텍스트로 렌더되는 회귀 발생 (사고: 42e191ed77).
+    # 관련 메모: memory/feedback_long_session_regressions.md
+    # _ = css  # 사용 안 함 (추출은 유지하되 파일 덮어쓰기만 중단)
 
     # ⚠️ danji/app.js 는 수동 관리 파일 — 자동 재생성 금지
     # 이유: danji.html 이 레거시 URL 리다이렉트 셸(56줄)로 축소된 뒤,
