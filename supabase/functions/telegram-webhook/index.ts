@@ -370,6 +370,10 @@ async function handleText(chatId: number, text: string, agent: any) {
       '매매': '🏠', '전세': '🔑', '월세': '💰', '손님': '🙋',
     }
     const emoji = typeEmoji[parsed.type] || '🏠'
+    // AI 가 이해한 태그 — 중개사에게 "제대로 읽었음" 피드백 + 잘못 파싱 시 즉시 수정 유도
+    const tagLine = Array.isArray(parsed.tags) && parsed.tags.length
+      ? '🏷 ' + parsed.tags.slice(0, 8).map((t: string) => `#${t}`).join(' ')
+      : null
     const summary = [
       `${emoji} <b>${parsed.type || '매물'} 등록 완료</b>`,
       parsed.price ? `💵 ${parsed.price}` : null,
@@ -379,6 +383,7 @@ async function handleText(chatId: number, text: string, agent: any) {
       parsed.contact_name
         ? `👤 ${parsed.contact_name}${parsed.contact_phone ? ' · ' + parsed.contact_phone : ''}`
         : null,
+      tagLine,
     ].filter(Boolean).join('\n')
 
     await reply(chatId, `${summary}\n\n🔗 https://hwik.kr/property_chat.html?id=${cardId}`, {
@@ -412,7 +417,9 @@ async function handleText(chatId: number, text: string, agent: any) {
             .slice(0, 3)
             .map((x: any) => {
               const p = x.property || {}
-              return `• ${p.type || ''} ${p.price || ''} — ${p.complex || p.location || ''}`
+              const head = `• ${p.type || ''} ${p.price || ''} — ${p.complex || p.location || ''}`
+              const tags = Array.isArray(x.tags) ? x.tags.slice(0, 3) : []
+              return tags.length ? `${head}\n   ${tags.map((t: string) => `#${t}`).join(' ')}` : head
             })
             .join('\n')
           return reply(chatId, `🎯 <b>매칭 매물 ${matches.length}건</b>\n${lines}`)
