@@ -1948,6 +1948,11 @@ async function showAlerts() {
   document.body.appendChild(chatArea);
   _lastSender = '';
 
+  // 0단계: 인사 버블 즉시 표시 (네트워크/캐시 기다리지 않음)
+  const hourImm = new Date().getHours();
+  const greetingImm = hourImm < 12 ? '좋은 아침이에요!' : hourImm < 18 ? '오늘도 수고하세요!' : '오늘 하루 마무리!';
+  addAlertBubble(greetingImm, true);
+
   // 1단계: localStorage 캐시 즉시 렌더 (0초)
   let rendered = false;
   try {
