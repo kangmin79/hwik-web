@@ -120,8 +120,14 @@ def extract_gu_from_address(address, two_token_gu_set=None):
     - 경기 1토큰: "경기도 의정부시 ..." → "의정부시"
     - 추출 실패: "" 반환
 
-    두 번째 인자 two_token_gu_set 을 주면 2토큰 후보를 해당 세트로 제한.
+    two_token_gu_set 미지정 시 regions.GYEONGGI_TWO_TOKEN_GU 를 기본값으로 사용.
     """
+    if two_token_gu_set is None:
+        try:
+            from regions import GYEONGGI_TWO_TOKEN_GU
+            two_token_gu_set = GYEONGGI_TWO_TOKEN_GU
+        except ImportError:
+            two_token_gu_set = None
     if not address:
         return ""
     addr_parts = address.split()

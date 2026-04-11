@@ -15,6 +15,7 @@ from urllib.parse import quote as url_quote
 import requests
 from collections import defaultdict
 from slug_utils import make_danji_slug, make_dong_slug, detect_region as slug_detect_region, extract_gu_from_address, gu_url_slug
+from regions import REGIONS, METRO_KEYS, REGION_LABEL_TO_KEY, GYEONGGI_TWO_TOKEN_GU
 
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout = open(sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1)
@@ -43,58 +44,7 @@ GU_DIR = os.path.join(BASE_DIR, "gu")
 BUILD_TIME = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S+00:00")
 TODAY = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
-REGIONS = {
-    "seoul": {
-        "label": "서울", "sub": "25개 구",
-        "list": ["종로구","중구","용산구","성동구","광진구","동대문구","중랑구","성북구","강북구","도봉구",
-                 "노원구","은평구","서대문구","마포구","양천구","강서구","구로구","금천구","영등포구","동작구",
-                 "관악구","서초구","강남구","송파구","강동구"]
-    },
-    "incheon": {
-        "label": "인천", "sub": "10개 구·군",
-        "list": ["중구","동구","미추홀구","연수구","남동구","부평구","계양구","서구","강화군","옹진군"]
-    },
-    "gyeonggi": {
-        "label": "경기", "sub": "42개 시·구",
-        "list": ["수원시 장안구","수원시 권선구","수원시 팔달구","수원시 영통구","성남시 수정구","성남시 중원구",
-                 "성남시 분당구","의정부시","안양시 만안구","안양시 동안구","부천시","광명시","평택시","동두천시",
-                 "안산시 상록구","안산시 단원구","고양시 덕양구","고양시 일산동구","고양시 일산서구","과천시","구리시","남양주시",
-                 "오산시","시흥시","군포시","의왕시","하남시","용인시 처인구","용인시 기흥구","용인시 수지구",
-                 "파주시","이천시","안성시","김포시","화성시","광주시","양주시","포천시","여주시","연천군",
-                 "가평군","양평군"]
-    },
-    "busan": {
-        "label": "부산", "sub": "16개 구·군",
-        "list": ["중구","서구","동구","영도구","부산진구","동래구","남구","북구","해운대구",
-                 "사하구","금정구","강서구","연제구","수영구","사상구","기장군"]
-    },
-    "daegu": {
-        "label": "대구", "sub": "9개 구·군",
-        "list": ["중구","동구","서구","남구","북구","수성구","달서구","달성군","군위군"]
-    },
-    "gwangju": {
-        "label": "광주", "sub": "5개 구",
-        "list": ["동구","서구","남구","북구","광산구"]
-    },
-    "daejeon": {
-        "label": "대전", "sub": "5개 구",
-        "list": ["동구","중구","서구","유성구","대덕구"]
-    },
-    "ulsan": {
-        "label": "울산", "sub": "5개 구·군",
-        "list": ["중구","남구","동구","북구","울주군"]
-    },
-}
-
-# 5대 광역시: 이름 충돌(중구/동구/서구/남구/북구)을 피하기 위해 파일명에 지역 라벨 접두 사용
-METRO_KEYS = {"busan", "daegu", "gwangju", "daejeon", "ulsan"}
-
-# slug_utils.detect_region()가 반환하는 짧은 라벨 → REGIONS 키
-REGION_LABEL_TO_KEY = {
-    "서울": "seoul", "인천": "incheon", "경기": "gyeonggi",
-    "부산": "busan", "대구": "daegu", "광주": "gwangju",
-    "대전": "daejeon", "울산": "ulsan",
-}
+# REGIONS / METRO_KEYS / REGION_LABEL_TO_KEY 는 regions.py 단일 소스에서 import.
 
 
 def gu_filename(region_key, gu_name):
@@ -584,12 +534,8 @@ def main():
         if f.endswith(".html"):
             os.remove(os.path.join(GU_DIR, f))
 
-    # 2토큰 구/시 목록 (경기도 하위 구 분할 시/군)
-    two_token_gu = set()
-    for r in REGIONS.values():
-        for g in r["list"]:
-            if " " in g:
-                two_token_gu.add(g)
+    # 2토큰 구/시 목록 (경기도 하위 구 분할 시/군) — regions.py 단일 소스
+    two_token_gu = GYEONGGI_TWO_TOKEN_GU
 
     # 구별 분류 (실제 생성된 danji 페이지가 있는 단지만 포함)
     # 서울/인천/경기/5대 광역시 모두 지원. 이름 충돌은 (region_key, gu_name) 튜플 키로 해결.
