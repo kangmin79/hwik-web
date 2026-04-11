@@ -3,252 +3,57 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>아파트 시세 - 휙</title>
-<meta name="description" id="meta-desc" content="동별 아파트 실거래가, 시세 추이를 확인하세요.">
+<title>이동 중... - 휙</title>
 <meta name="robots" content="noindex, follow">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="휙">
-<meta property="og:locale" content="ko_KR">
-<meta property="og:title" id="og-title" content="아파트 시세 - 휙">
-<meta property="og:description" id="og-desc" content="동별 아파트 실거래가, 시세 추이를 확인하세요.">
-<meta property="og:image" content="https://hwik.kr/og-image.png">
-<meta property="og:url" id="og-url" content="https://hwik.kr/dong.html">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" id="tw-title" content="아파트 시세 - 휙">
-<meta name="twitter:description" id="tw-desc" content="동별 아파트 실거래가, 시세 추이를 확인하세요.">
-<meta name="google-site-verification" content="R2ye41AVVTRs8BxEXyEafFSTqMSiHKdb9zgTklrktSI" />
-<meta name="naver-site-verification" content="367bd1e77a8ad48b74e345be3e4a0f8125c2c4e1" />
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
-<script>
-// 정적 동 페이지로 리다이렉트 (있는 경우)
-(function() {
-  var p = new URLSearchParams(location.search);
-  var gu = p.get('gu'), dong = p.get('dong');
-  if (gu && dong) {
-    var slug = (gu + '-' + dong).replace(/[^\w가-힣]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-    var staticUrl = '/dong/' + encodeURIComponent(slug);
-    // 정적 페이지 존재 여부 확인 후 리다이렉트
-    var xhr = new XMLHttpRequest();
-    xhr.open('HEAD', staticUrl, true);
-    xhr.onreadystatechange = function() {
-      if (xhr.readyState === 4 && xhr.status === 200) {
-        location.replace(staticUrl);
-      }
-    };
-    xhr.send();
-  }
-  // canonical (리다이렉트 안 되는 경우 대비)
-  var url = gu && dong
-    ? 'https://hwik.kr/dong/' + encodeURIComponent((gu+'-'+dong).replace(/[^\w가-힣]/g,'-').replace(/-+/g,'-').replace(/^-|-$/g,''))
-    : 'https://hwik.kr/dong.html';
-  var link = document.createElement('link');
-  link.rel = 'canonical'; link.id = 'canonical'; link.href = url;
-  document.head.appendChild(link);
-  var ogUrl = document.getElementById('og-url');
-  if (ogUrl) ogUrl.content = url;
-})();
-</script>
+<meta name="description" content="휙 동별 아파트 시세 페이지로 이동합니다.">
+<link rel="canonical" href="https://hwik.kr/">
+<meta http-equiv="refresh" content="3; url=https://hwik.kr/">
 <style>
-* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-:root { --dark:#1a1a2e; --yellow:#f5c842; --yellow-dim:rgba(245,200,66,0.15); --bg:#f8f8fa; --surface:#fff; --card:#f3f4f6; --border:#e5e7eb; --text:#1a1a2e; --sub:#6b7280; --muted:#9ca3af; --red:#e24b4a; --green:#639922; --radius:10px; }
-html,body { height:100%; font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic','Noto Sans CJK KR',sans-serif; background:var(--bg); color:var(--text); }
-.wrap { max-width:430px; margin:0 auto; background:var(--surface); min-height:100vh; }
-.header { background:var(--dark); padding:16px; }
-.header-top { display:flex; align-items:center; gap:12px; }
-.logo { width:36px; height:36px; background:var(--yellow); border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; color:var(--dark); cursor:pointer; }
-.header-name { font-size:17px; font-weight:500; color:#fff; }
-.header-sub { font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px; }
-.breadcrumb { padding:10px 16px; font-size:11px; color:var(--muted); }
-.breadcrumb a { color:var(--sub); text-decoration:none; }
-.breadcrumb span { margin:0 4px; }
-.section { padding:16px; }
-.section-title { font-size:14px; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
-.section-title::before { content:''; display:inline-block; width:3px; height:14px; background:var(--yellow); border-radius:2px; }
-.metrics { padding:0 16px 12px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
-.metric { background:var(--card); border-radius:var(--radius); padding:12px; }
-.metric-label { font-size:10px; color:var(--sub); margin-bottom:4px; }
-.metric-value { font-size:15px; font-weight:500; }
-.divider { height:8px; background:var(--card); }
-.danji-item { display:flex; justify-content:space-between; align-items:center; padding:14px; background:var(--surface); border-radius:var(--radius); cursor:pointer; transition:all .15s; box-shadow:0 1px 4px rgba(0,0,0,0.05); border-left:3px solid var(--yellow); }
-.danji-item:active { transform:scale(0.98); }
-.danji-name { font-size:13px; font-weight:600; }
-.danji-sub { font-size:11px; color:var(--sub); margin-top:2px; }
-.danji-price { font-size:14px; font-weight:700; text-align:right; }
-.danji-rate { font-size:11px; color:var(--sub); text-align:right; margin-top:2px; }
-.trade-item { display:flex; justify-content:space-between; padding:12px 14px; background:var(--surface); border-radius:var(--radius); border-left:3px solid var(--yellow); box-shadow:0 1px 4px rgba(0,0,0,0.06); }
-.trade-price { font-size:16px; font-weight:700; }
-.trade-detail { font-size:11px; color:var(--sub); margin-top:3px; }
-.trade-date { font-size:11px; color:var(--muted); align-self:center; }
-.faq-section { padding:16px; }
-.faq-item { border-bottom:1px solid var(--border); padding:12px 0; }
-.faq-item:last-child { border-bottom:none; }
-.faq-q { font-size:13px; font-weight:500; margin-bottom:4px; }
-.faq-a { font-size:12px; color:var(--sub); line-height:1.6; }
-.seo-section { padding:16px; border-top:1px solid var(--border); background:var(--card); }
-.seo-text { font-size:11px; color:var(--muted); line-height:1.7; }
-.seo-source { margin-top:8px; font-size:10px; color:var(--muted); }
-.cta-section { padding:16px; border-top:1px solid var(--border); }
-.btn-primary { width:100%; padding:14px; background:var(--yellow); border:none; border-radius:var(--radius); font-size:14px; font-weight:500; color:var(--dark); cursor:pointer; font-family:inherit; }
-.btn-primary:active { transform:scale(0.97); }
-.loading { display:flex; flex-direction:column; align-items:center; justify-content:center; height:80vh; gap:12px; }
-.loading-spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--yellow); border-radius:50%; animation:spin .8s linear infinite; }
-@keyframes spin { to { transform:rotate(360deg); } }
-.error { text-align:center; padding:60px 20px; }
-.error-msg { font-size:14px; color:var(--sub); }
-.tag { display:inline-block; padding:3px 8px; background:rgba(59,130,246,0.1); border-radius:12px; font-size:10px; color:#3b82f6; margin-right:4px; margin-bottom:4px; }
-.tag.school { background:rgba(99,153,34,0.1); color:var(--green); }
+html,body{margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;background:#f8f8fa;color:#1a1a2e;}
+.box{max-width:430px;margin:80px auto;padding:40px 24px;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.06);text-align:center;}
+.logo{width:48px;height:48px;background:#f5c842;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;color:#1a1a2e;margin:0 auto 16px;}
+h1{font-size:16px;margin:0 0 8px;font-weight:600;}
+p{font-size:13px;color:#6b7280;margin:0 0 20px;line-height:1.6;}
+a{display:inline-block;padding:10px 20px;background:#1a1a2e;color:#fff;text-decoration:none;border-radius:8px;font-size:13px;}
+.spinner{width:24px;height:24px;border:3px solid #e5e7eb;border-top-color:#f5c842;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg);}}
 </style>
 </head>
 <body>
-<div class="wrap" id="app">
-  <div class="loading"><div class="loading-spinner"></div><div class="loading-text">불러오는 중...</div></div>
-  <div id="fallback-content" style="padding:20px;">
-    <h1>동별 아파트 실거래가 시세 - 휙</h1>
-    <p>서울 각 동별 아파트 매매/전세/월세 실거래가, 시세 추이를 확인하세요. 국토교통부 실거래가 공개시스템 데이터 기반.</p>
-    <p><a href="/gu.html">서울 구별 시세 보기</a> · <a href="/ranking.html">아파트 순위</a></p>
-  </div>
+<div class="box">
+  <div class="logo">휙</div>
+  <div class="spinner"></div>
+  <h1>새 페이지로 이동 중입니다</h1>
+  <p>페이지 주소가 변경되었습니다.<br>잠시만 기다려 주세요.</p>
+  <a href="https://hwik.kr/">바로 이동</a>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="config.js"></script>
+<script src="/config.js"></script>
 <script src="/makeSlug.js"></script>
 <script>
-const sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_KEY);
-function walkMin(m) { return m ? Math.round(m/67)+'분' : ''; }
-function cleanLine(l) { return (l||'').replace(/^(수도권|서울|부산|대구|대전|광주|인천)?\s*(경량)?도시철도\s*/,'').replace(/^수도권\s*광역철도\s*/,'').replace('인천국제공항선','공항철도').replace('부산김해경전철','김해경전철').trim() || l; }
-// makeSlug → /makeSlug.js (외부 파일)
-
-async function loadData() {
-  const params = new URLSearchParams(location.search);
-  const gu = params.get('gu');
-  const dong = params.get('dong');
-  if (!gu || !dong) { document.getElementById('app').innerHTML = '<div class="error"><div class="error-msg">구/동 정보가 없습니다</div></div>'; return; }
-
-  const loc = gu + ' ' + dong;
-  const { data, error } = await sb.from('danji_pages')
-    .select('id,complex_name,location,address,categories,recent_trade,all_time_high,jeonse_rate,total_units,build_year,nearby_subway,nearby_school')
-    .ilike('location', loc + '%')
-    .not('id', 'like', 'offi-%')
-    .order('complex_name');
-
-  if (error || !data || data.length === 0) {
-    document.getElementById('app').innerHTML = '<div class="error"><div style="font-size:48px;margin-bottom:12px;">🏠</div><div class="error-msg">'+esc(loc)+' 데이터가 없습니다</div></div>';
-    return;
-  }
-
-  // SEO
-  document.title = gu + ' ' + dong + ' 아파트 실거래가 시세 - 휙';
-  const desc = gu + ' ' + dong + ' 아파트 ' + data.length + '개 단지 실거래가, 전세가, 시세를 한눈에.';
-  document.getElementById('og-title').content = document.title;
-  document.getElementById('og-desc').content = desc;
-  document.getElementById('tw-title').content = document.title;
-  document.getElementById('tw-desc').content = desc;
-  document.getElementById('meta-desc').content = desc;
-  const pageUrl = 'https://hwik.kr/dong.html?gu='+encodeURIComponent(gu)+'&dong='+encodeURIComponent(dong);
-  document.getElementById('canonical').href = pageUrl;
-  document.getElementById('og-url').content = pageUrl;
-
-  // 집계
-  let priceSum=0, priceCount=0, jrSum=0, jrCount=0;
-  const danjiList = [];
-
-  // 주변 지하철/학교 (첫 단지 기준)
-  const firstSubway = data.find(d => d.nearby_subway && d.nearby_subway.length > 0);
-  const firstSchool = data.find(d => d.nearby_school && d.nearby_school.length > 0);
-  const subways = firstSubway ? firstSubway.nearby_subway : [];
-  const schools = firstSchool ? firstSchool.nearby_school : [];
-
-  data.forEach(d => {
-    const rt = d.recent_trade || {};
-    const cats = d.categories || [];
-    let mainPrice = null, mainArea = null, mainPy = 0;
-    for (const c of cats) {
-      const t = rt[c];
-      if (t && t.price) { mainPrice = t.price; mainArea = c; mainPy = Math.round(parseInt(c)/3.3058); break; }
-    }
-    const jr = d.jeonse_rate;
-    if (mainPrice) { priceSum += mainPrice; priceCount++; }
-    if (jr && jr > 0 && jr < 200) { jrSum += jr; jrCount++; }
-
-    const areaNum = parseFloat(mainArea) || 0;
-    danjiList.push({
-      id: d.id, name: d.complex_name, location: d.location, address: d.address,
-      price: mainPrice, area: mainArea, areaNum,
-      sqmPrice: (mainPrice && areaNum > 0) ? Math.round(mainPrice / areaNum) : 0,
-      jr, buildYear: d.build_year, units: d.total_units,
-    });
-  });
-
-  danjiList.sort((a,b) => (b.sqmPrice||0) - (a.sqmPrice||0));
-  const avgPrice = priceCount > 0 ? Math.round(priceSum/priceCount) : null;
-  const avgJr = jrCount > 0 ? Math.round(jrSum/jrCount*10)/10 : null;
-
-  // 태그
-  const tagHtml = [
-    ...subways.map(s => `<span class="tag">${esc(s.name)}(${esc(cleanLine(s.line))}) 도보 ${walkMin(s.distance)}</span>`),
-    ...schools.slice(0,2).map(s => `<span class="tag school">${esc(s.name)} 도보 ${walkMin(s.distance)}</span>`)
-  ].join('');
-
-  const html = `
-    <header class="header"><div class="header-top">
-      <a class="logo" href="/" style="text-decoration:none;">휙</a>
-      <div><h1 class="header-name">${esc(gu)} ${esc(dong)} 아파트 시세</h1><div class="header-sub">${data.length}개 단지 · ㎡당 가격순</div></div>
-    </div></header>
-
-    <nav class="breadcrumb"><a href="/">휙</a><span>&gt;</span><a href="gu.html">서울</a><span>&gt;</span><a href="gu.html?name=${encodeURIComponent(gu)}">${esc(gu)}</a><span>&gt;</span>${esc(dong)}</nav>
-
-    ${tagHtml ? '<div style="padding:8px 16px;">'+tagHtml+'</div>' : ''}
-
-    <div class="metrics">
-      <div class="metric"><div class="metric-label">단지 수</div><div class="metric-value">${data.length}개</div></div>
-      <div class="metric"><div class="metric-label">평균 매매가</div><div class="metric-value">${avgPrice ? formatPrice(avgPrice) : '-'}</div></div>
-      <div class="metric"><div class="metric-label">평균 전세가율</div><div class="metric-value">${avgJr ? avgJr+'%' : '-'}</div></div>
-    </div>
-
-    <div class="divider"></div>
-
-    <div class="section">
-      <div class="section-title">단지별 시세 (㎡당 가격순, 전용면적 기준)</div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        ${danjiList.map((d,i) => `<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/${encodeURIComponent(makeSlug(d.name,d.location,d.id,d.address))}"><div><div class="danji-name">${i+1}. ${esc(d.name)}</div><div class="danji-sub">${d.buildYear?d.buildYear+'년':''}${d.units?' · '+d.units+'세대':''}${d.area?' · 전용'+d.area+'㎡':''}</div></div><div><div class="danji-price">${d.price?formatPrice(d.price):'-'}</div><div class="danji-rate">${d.sqmPrice?formatPrice(d.sqmPrice)+'/㎡':''}${d.jr?' · 전세'+d.jr+'%':''}</div></div></a>`).join('')}
-      </div>
-    </div>
-
-    <div class="divider"></div>
-
-    <div class="faq-section">
-      <div class="section-title">자주 묻는 질문</div>
-      <div class="faq-item"><div class="faq-q">${esc(dong)} 아파트 평균 시세는?</div><div class="faq-a">${esc(gu)} ${esc(dong)} ${data.length}개 단지 평균 매매가는 ${avgPrice?formatPrice(avgPrice):'정보 확인 중'}입니다.</div></div>
-      ${danjiList[0] && danjiList[0].sqmPrice ? `<div class="faq-item"><div class="faq-q">${esc(dong)}에서 가장 비싼 아파트는?</div><div class="faq-a">전용면적 ㎡당 가격 기준 ${esc(danjiList[0].name)}이(가) ${formatPrice(danjiList[0].sqmPrice)}/㎡으로 가장 높습니다.</div></div>` : ''}
-      ${subways.length > 0 ? `<div class="faq-item"><div class="faq-q">${esc(dong)} 근처 지하철역은?</div><div class="faq-a">${subways.map(s=>s.name+'('+cleanLine(s.line)+') 도보 '+walkMin(s.distance)).join(', ')}</div></div>` : ''}
-    </div>
-
-    <div class="cta-section"><a class="btn-primary" style="display:block;text-align:center;text-decoration:none;" href="mobile-v6.html">${esc(dong)} 매물 전체보기</a></div>
-    <div class="seo-section"><div class="seo-text">${esc(gu)} ${esc(dong)} 아파트 ${data.length}개 단지의 실거래가, 전세가, 시세를 확인하세요. ${avgPrice?'평균 매매가 '+formatPrice(avgPrice)+'.':''} ${avgJr?'평균 전세가율 '+avgJr+'%.':''}</div><div class="seo-source">실거래가 출처: 국토교통부 · 최종 데이터 확인: ${new Date().toISOString().slice(0,10)}</div></div>
-  `;
-  document.getElementById('app').innerHTML = html;
-
-  // JSON-LD
-  const faqItems = [
-    {q: dong+' 아파트 평균 시세는?', a: gu+' '+dong+' '+data.length+'개 단지 평균 매매가는 '+(avgPrice?formatPrice(avgPrice):'정보 확인 중')+'입니다. 국토교통부 실거래가 공개시스템 기준.'},
-    danjiList[0]&&danjiList[0].sqmPrice ? {q: dong+'에서 가장 비싼 아파트는?', a: '전용면적 ㎡당 가격 기준 '+danjiList[0].name+'이(가) '+formatPrice(danjiList[0].sqmPrice)+'/㎡으로 가장 높습니다.'} : null,
-    subways.length>0 ? {q: dong+' 근처 지하철역은?', a: subways.map(s=>s.name+'('+cleanLine(s.line)+') 도보 '+walkMin(s.distance)).join(', ')} : null,
-  ].filter(Boolean);
-  const ld = {"@context":"https://schema.org","@graph":[
-    {"@type":"FAQPage","mainEntity":faqItems.map(f=>({"@type":"Question","name":f.q,"acceptedAnswer":{"@type":"Answer","text":f.a}}))},
-    {"@type":"BreadcrumbList","itemListElement":[
-      {"@type":"ListItem","position":1,"name":"휙","item":"https://hwik.kr"},
-      {"@type":"ListItem","position":2,"name":"서울","item":"https://hwik.kr/gu.html"},
-      {"@type":"ListItem","position":3,"name":gu,"item":"https://hwik.kr/gu.html?name="+encodeURIComponent(gu)},
-      {"@type":"ListItem","position":4,"name":dong,"item":pageUrl},
-    ]},
-    {"@type":"ItemList","name":gu+" "+dong+" 아파트","numberOfItems":data.length,
-     "itemListElement":danjiList.slice(0,20).map((d,i)=>({"@type":"ListItem","position":i+1,"name":d.name,"url":"https://hwik.kr/danji/"+encodeURIComponent(makeSlug(d.name,d.location,d.id,d.address))}))}
-  ]};
-  const s = document.createElement('script'); s.type='application/ld+json'; s.textContent=JSON.stringify(ld); document.head.appendChild(s);
-}
-
-loadData();
+(function(){
+  var p = new URLSearchParams(location.search);
+  var gu = p.get('gu'), dong = p.get('dong');
+  if (!gu || !dong) { location.replace('/'); return; }
+  try {
+    var sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_KEY);
+    sb.from('danji_pages')
+      .select('address,location')
+      .eq('location', gu + ' ' + dong)
+      .not('id','like','offi-%')
+      .limit(1)
+      .then(function(r){
+        var row = r && r.data && r.data[0];
+        if (row && row.address) {
+          var slug = makeDongSlug(gu, dong, row.address);
+          location.replace('/dong/' + slug);
+        } else {
+          location.replace('/');
+        }
+      })
+      .catch(function(){ location.replace('/'); });
+  } catch(e) { location.replace('/'); }
+})();
 </script>
 </body>
 </html>

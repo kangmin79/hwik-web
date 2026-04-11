@@ -165,7 +165,7 @@ function render(gu) {
       <div><h1 class="header-name">${esc(areaLabel)} 아파트 순위</h1><div class="header-sub">${typeLabel} TOP 50</div></div>
     </div></header>
 
-    <nav class="breadcrumb"><a href="/">휙</a><span>&gt;</span>${gu ? '<a href="gu.html">서울</a><span>&gt;</span><a href="gu.html?name='+encodeURIComponent(gu)+'">'+esc(gu)+'</a><span>&gt;</span>' : ''}<a href="ranking.html">순위</a></nav>
+    <nav class="breadcrumb"><a href="/">휙</a><span>&gt;</span>${gu ? '<a href="/gu/">서울</a><span>&gt;</span><a href="/gu/'+encodeURIComponent(gu)+'">'+esc(gu)+'</a><span>&gt;</span>' : ''}<a href="ranking.html">순위</a></nav>
 
     ${!gu ? `<div class="tabs" style="border-bottom:2px solid var(--border);">
       <div class="tab${currentRegion==='seoul'?' active':''}" onclick="switchRegion('seoul')">서울</div>
