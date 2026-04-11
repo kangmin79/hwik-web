@@ -14,7 +14,7 @@ import os, sys, json, time, html as html_mod
 from datetime import datetime, timezone
 from urllib.parse import quote as url_quote
 import requests
-from slug_utils import make_danji_slug
+from slug_utils import make_danji_slug, detect_region as slug_detect_region
 
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout = open(sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1)
@@ -42,19 +42,17 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 RANK_DIR = os.path.join(BASE_DIR, "ranking")
 BUILD_TIME = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S+00:00")
 
-REGION_GU = {
-    "seoul": {"종로구","중구","용산구","성동구","광진구","동대문구","중랑구","성북구","강북구","도봉구",
-              "노원구","은평구","서대문구","마포구","양천구","강서구","구로구","금천구","영등포구","동작구",
-              "관악구","서초구","강남구","송파구","강동구"},
-    "incheon": {"중구","동구","미추홀구","연수구","남동구","부평구","계양구","서구","강화군","옹진군"},
-    "gyeonggi": {"수원시 장안구","수원시 권선구","수원시 팔달구","수원시 영통구","성남시 수정구","성남시 중원구",
-                 "성남시 분당구","의정부시","안양시 만안구","안양시 동안구","부천시","평택시","안산시 상록구",
-                 "안산시 단원구","고양시 덕양구","고양시 일산동구","고양시 일산서구","과천시","구리시","남양주시",
-                 "오산시","시흥시","군포시","의왕시","하남시","용인시 처인구","용인시 기흥구","용인시 수지구",
-                 "파주시","이천시","안성시","김포시","화성시","광주시","양주시","포천시","여주시","연천군",
-                 "가평군","양평군"},
+REGION_LABELS = {
+    "seoul": "서울", "incheon": "인천", "gyeonggi": "경기",
+    "busan": "부산", "daegu": "대구", "gwangju": "광주", "daejeon": "대전", "ulsan": "울산",
+    "all": "전체",
 }
-REGION_LABELS = {"seoul": "서울", "incheon": "인천", "gyeonggi": "경기", "all": "전체"}
+# slug_utils.detect_region() 반환 라벨 → region_key
+REGION_LABEL_TO_KEY = {
+    "서울": "seoul", "인천": "incheon", "경기": "gyeonggi",
+    "부산": "busan", "대구": "daegu", "광주": "gwangju",
+    "대전": "daejeon", "울산": "ulsan",
+}
 TYPE_LABELS = {"price": "매매가", "sqm": "㎡당 가격", "jeonse": "전세가율 높은", "jeonse_low": "전세가율 낮은"}
 
 
@@ -128,16 +126,12 @@ def process_data(all_danji):
 
         area_num = float(area) if area and area.replace(".", "").isdigit() else 0
         loc = d.get("location") or ""
-        gu_token = loc.split(" ")[0]
-        gu_two = " ".join(loc.split(" ")[:2])
 
-        region_key = "etc"
-        if gu_token in REGION_GU["seoul"]:
-            region_key = "seoul"
-        elif gu_token in REGION_GU["incheon"]:
-            region_key = "incheon"
-        elif gu_two in REGION_GU["gyeonggi"] or gu_token in REGION_GU["gyeonggi"]:
-            region_key = "gyeonggi"
+        # address 기반 지역 판정 (광역시 구 이름 충돌 방지)
+        region_label = slug_detect_region(d.get("address", ""))
+        region_key = REGION_LABEL_TO_KEY.get(region_label, "etc")
+        if region_key == "etc":
+            continue  # 지원 지역 외
 
         result.append({
             "id": d["id"], "name": d["complex_name"],

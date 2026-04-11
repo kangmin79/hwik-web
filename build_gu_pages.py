@@ -63,7 +63,50 @@ REGIONS = {
                  "파주시","이천시","안성시","김포시","화성시","광주시","양주시","포천시","여주시","연천군",
                  "가평군","양평군"]
     },
+    "busan": {
+        "label": "부산", "sub": "16개 구·군",
+        "list": ["중구","서구","동구","영도구","부산진구","동래구","남구","북구","해운대구",
+                 "사하구","금정구","강서구","연제구","수영구","사상구","기장군"]
+    },
+    "daegu": {
+        "label": "대구", "sub": "9개 구·군",
+        "list": ["중구","동구","서구","남구","북구","수성구","달서구","달성군","군위군"]
+    },
+    "gwangju": {
+        "label": "광주", "sub": "5개 구",
+        "list": ["동구","서구","남구","북구","광산구"]
+    },
+    "daejeon": {
+        "label": "대전", "sub": "5개 구",
+        "list": ["동구","중구","서구","유성구","대덕구"]
+    },
+    "ulsan": {
+        "label": "울산", "sub": "5개 구·군",
+        "list": ["중구","남구","동구","북구","울주군"]
+    },
 }
+
+# 5대 광역시: 이름 충돌(중구/동구/서구/남구/북구)을 피하기 위해 파일명에 지역 라벨 접두 사용
+METRO_KEYS = {"busan", "daegu", "gwangju", "daejeon", "ulsan"}
+
+# slug_utils.detect_region()가 반환하는 짧은 라벨 → REGIONS 키
+REGION_LABEL_TO_KEY = {
+    "서울": "seoul", "인천": "incheon", "경기": "gyeonggi",
+    "부산": "busan", "대구": "daegu", "광주": "gwangju",
+    "대전": "daejeon", "울산": "ulsan",
+}
+
+
+def gu_filename(region_key, gu_name):
+    """구 페이지 파일명(슬러그).
+    서울/인천/경기: {gu}.html  (기존 URL 유지)
+    5대 광역시:   {label}-{gu}.html  (이름 충돌 방지)
+    """
+    slug = gu_name.replace(" ", "-")
+    if region_key in METRO_KEYS:
+        label = REGIONS[region_key]["label"]
+        return f"{label}-{slug}"
+    return slug
 
 
 # ── 유틸 ──────────────────────────────────────────────────
@@ -139,11 +182,15 @@ def best_trade(d):
     return best, rt[best]
 
 
-def build_gu_detail_html(gu_name, danji_list):
-    """구 상세 페이지 HTML 생성"""
-    region_key = detect_region(gu_name)
+def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None):
+    """구 상세 페이지 HTML 생성
+    region_key: 지역 키 (없으면 detect_region으로 추정 — 광역시 충돌 주의)
+    sibling_gus: [(gu_name, filename_slug), ...] 같은 지역의 다른 구 (상호 링크용)
+    """
+    if region_key is None:
+        region_key = detect_region(gu_name)
     region_label = REGIONS[region_key]["label"]
-    slug = gu_name.replace(" ", "-")
+    slug = gu_filename(region_key, gu_name)
     canonical = f"https://hwik.kr/gu/{url_quote(slug, safe='-')}"
 
     # 집계
@@ -320,6 +367,17 @@ def build_gu_detail_html(gu_name, danji_list):
         lines.append(f'</div></div>')
         lines.append(f'<div class="divider"></div>')
 
+    # 같은 지역의 다른 구 (상호 링크)
+    if sibling_gus:
+        lines.append(f'<div class="section"><div class="section-title">{esc(region_label)}의 다른 구/시</div>')
+        lines.append(f'<div class="gu-grid">')
+        for sib_name, sib_slug in sibling_gus:
+            lines.append(f'<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/{url_quote(sib_slug, safe="-")}">')
+            lines.append(f'  <div class="gu-name">{esc(sib_name)}</div><div class="gu-info">시세 보기 →</div>')
+            lines.append(f'</a>')
+        lines.append(f'</div></div>')
+        lines.append(f'<div class="divider"></div>')
+
     # FAQ
     lines.append(f'<div class="faq-section"><div class="section-title">자주 묻는 질문</div>')
     lines.append(f'<div class="faq-item"><div class="faq-q">{esc(gu_name)} 아파트 평균 시세는?</div>')
@@ -392,30 +450,31 @@ def build_gu_detail_html(gu_name, danji_list):
 
 def build_gu_index_html():
     """전체 구 목록 인덱스 페이지"""
-    title = "서울·인천·경기 아파트 시세 - 휙"
-    desc = "서울·인천·경기 아파트 실거래가, 시세 추이를 구별로 확인하세요."
+    title = "전국 아파트 시세 - 서울·인천·경기·5대 광역시 | 휙"
+    desc = "서울·인천·경기·부산·대구·광주·대전·울산 아파트 실거래가, 시세 추이를 구별로 확인하세요."
     canonical = "https://hwik.kr/gu/"
 
     lines = []
     lines.append(f'<header class="header"><div class="header-top">')
     lines.append(f'  <a class="logo" href="/" style="text-decoration:none;">휙</a>')
-    lines.append(f'  <div><div class="header-name">아파트 시세</div><div class="header-sub">서울·인천·경기</div></div>')
+    lines.append(f'  <div><div class="header-name">아파트 시세</div><div class="header-sub">서울·인천·경기·5대 광역시</div></div>')
     lines.append(f'</div></header>')
     lines.append(f'<nav class="breadcrumb"><a href="/">휙</a><span>&gt;</span>구별 시세</nav>')
 
     for key, r in REGIONS.items():
+        # 해당 지역에 생성된 구가 1개라도 있어야 섹션 출력
+        visible = [(g, gu_filename(key, g)) for g in r["list"] if gu_filename(key, g) in GU_SLUG_SET]
+        if not visible:
+            continue
         lines.append(f'<div class="section"><div class="section-title">{esc(r["label"])} {esc(r["sub"])}</div>')
         lines.append(f'<div class="gu-grid">')
-        for g in r["list"]:
-            g_slug = g.replace(" ", "-")
-            if g_slug not in GU_SLUG_SET:
-                continue  # 실제 생성된 구만 링크
+        for g, g_slug in visible:
             lines.append(f'<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/{url_quote(g_slug, safe="-")}">')
             lines.append(f'  <div class="gu-name">{esc(g)}</div><div class="gu-info">아파트 시세 보기 →</div>')
             lines.append(f'</a>')
         lines.append(f'</div></div>')
 
-    lines.append(f'<div class="seo-section"><div class="seo-text">서울·인천·경기 아파트 실거래가, 시세 추이를 구별로 확인하세요. 국토교통부 실거래가 공개시스템 데이터 기반.</div>')
+    lines.append(f'<div class="seo-section"><div class="seo-text">서울·인천·경기·부산·대구·광주·대전·울산 아파트 실거래가, 시세 추이를 구별로 확인하세요. 국토교통부 실거래가 공개시스템 데이터 기반.</div>')
     _today_idx = datetime.now().strftime("%Y-%m-%d")
     lines.append(f'<div class="seo-source">실거래가 출처: 국토교통부 · 최종 데이터 확인: {_today_idx}</div></div>')
 
@@ -531,15 +590,16 @@ def main():
                 two_token_gu.add(g)
 
     # 구별 분류 (실제 생성된 danji 페이지가 있는 단지만 포함)
-    # 서울/인천/경기만 /gu/ 페이지 생성 — 광역시는 슬러그 충돌 방지로 제외
-    ALLOWED_REGIONS = {"서울", "인천", "경기"}
-    gu_map = defaultdict(list)
+    # 서울/인천/경기/5대 광역시 모두 지원. 이름 충돌은 (region_key, gu_name) 튜플 키로 해결.
+    gu_map = defaultdict(list)  # key: (region_key, gu_name)
     for d in all_danji:
         if d.get("id", "").startswith("offi-"):
             continue
-        # 지역 필터: 서울/인천/경기만
-        if slug_detect_region(d.get("address", "")) not in ALLOWED_REGIONS:
-            continue
+        # 지역 판정: address → "서울"/"부산"/... → region_key
+        region_label = slug_detect_region(d.get("address", ""))
+        region_key = REGION_LABEL_TO_KEY.get(region_label)
+        if not region_key:
+            continue  # 지원하지 않는 지역
         # 생성된 danji 페이지가 없으면 제외 (rental-only 등)
         slug_d = make_danji_slug(d.get("complex_name", ""), d.get("location", ""), d.get("id", ""), d.get("address", ""))
         if slug_d not in DANJI_SLUG_SET:
@@ -557,23 +617,33 @@ def main():
         if not gu:
             gu = parts[0]
         if gu:
-            gu_map[gu].append(d)
+            gu_map[(region_key, gu)].append(d)
 
     # 생성될 구 슬러그 집합 미리 계산 (인덱스가 올바른 링크만 표시하도록)
-    for gu_name, danji_list in gu_map.items():
+    for (region_key, gu_name), danji_list in gu_map.items():
         if len(danji_list) >= 3:
-            GU_SLUG_SET.add(gu_name.replace(" ", "-"))
+            GU_SLUG_SET.add(gu_filename(region_key, gu_name))
     print(f"생성 예정 구 {len(GU_SLUG_SET)}개")
+
+    # 지역별 sibling 맵 (상호 링크용): region_key → [(gu_name, filename_slug), ...]
+    siblings_by_region = defaultdict(list)
+    for (region_key, gu_name), danji_list in gu_map.items():
+        if len(danji_list) >= 3:
+            siblings_by_region[region_key].append((gu_name, gu_filename(region_key, gu_name)))
+    for region_key in siblings_by_region:
+        siblings_by_region[region_key].sort(key=lambda x: x[0])
 
     # 각 구별 상세 페이지
     count = 0
     skip = 0
-    for gu_name, danji_list in sorted(gu_map.items()):
+    for (region_key, gu_name), danji_list in sorted(gu_map.items()):
         if len(danji_list) < 3:
             skip += 1
             continue
-        html = build_gu_detail_html(gu_name, danji_list)
-        slug = gu_name.replace(" ", "-")
+        # 같은 지역의 다른 구 (자기 자신 제외, 최대 20개)
+        sibs = [s for s in siblings_by_region[region_key] if s[0] != gu_name][:20]
+        html = build_gu_detail_html(gu_name, danji_list, region_key=region_key, sibling_gus=sibs)
+        slug = gu_filename(region_key, gu_name)
         fpath = os.path.join(GU_DIR, f"{slug}.html")
         with open(fpath, "w", encoding="utf-8") as f:
             f.write(html)
