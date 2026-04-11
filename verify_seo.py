@@ -424,11 +424,16 @@ def verify_sitemap(root_files, danji_slugs, dong_slugs, gu_slugs=None, ranking_s
             sitemap_danji.add(slug)
             if slug not in danji_slugs:
                 errors["sitemap_file_missing"].append(f"danji/{slug[:60]}")
-        elif path.startswith('/dong/'):
-            slug = path[6:]
-            sitemap_dong.add(slug)
-            if slug not in dong_slugs:
-                errors["sitemap_file_missing"].append(f"dong/{slug[:60]}")
+        elif path == '/dong' or path.startswith('/dong/'):
+            slug = path[6:] if path.startswith('/dong/') else ""
+            if slug:
+                sitemap_dong.add(slug)
+                if slug not in dong_slugs:
+                    errors["sitemap_file_missing"].append(f"dong/{slug[:60]}")
+            else:
+                sitemap_dong.add("index")
+                if "index" not in dong_slugs:
+                    errors["sitemap_file_missing"].append("dong/index")
         elif path == '/gu' or path.startswith('/gu/'):
             slug = path[4:] if path.startswith('/gu/') else ""
             if slug:

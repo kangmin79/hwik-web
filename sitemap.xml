@@ -2,6 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://hwik.kr/</loc><lastmod>2026-04-11</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>
   <url><loc>https://hwik.kr/about.html</loc><lastmod>2026-04-11</lastmod><changefreq>monthly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://hwik.kr/dong/</loc><lastmod>2026-04-12</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://hwik.kr/gu/</loc><lastmod>2026-04-11</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://hwik.kr/gu/%EA%B0%80%ED%8F%89%EA%B5%B0</loc><lastmod>2026-04-11</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
   <url><loc>https://hwik.kr/gu/%EA%B0%95%EB%82%A8%EA%B5%AC</loc><lastmod>2026-04-11</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
