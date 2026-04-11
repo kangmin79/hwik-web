@@ -50,6 +50,129 @@ const MAIN_KEYBOARD = {
   is_persistent: true,
 }
 
+// ========== 손님 등록 채팅 플로우 상수 ==========
+// mobile.html _REQUIRED_FIELDS / _FIELD_QUESTIONS / _SKIP_KEYWORDS 의 봇 버전
+const REQUIRED_CLIENT_FIELDS = ['trade', 'location', 'price', 'category', 'contact'] as const
+const FIELD_QUESTIONS: Record<string, string> = {
+  trade: '손님이 원하는 <b>거래</b>는요?\n<i>매매 / 전세 / 월세 / 반전세</i>\n<i>없으면 "없음"</i>',
+  location: '손님이 원하는 <b>지역</b>은요?\n<i>예) 강남구 역삼동, 마포구, 분당</i>\n<i>없으면 "없음"</i>',
+  price: '손님 <b>예산</b>은 어느 정도인가요?\n<i>예) 5억 이하, 보증금 1000 월 60, 3억대</i>\n<i>없으면 "없음"</i>',
+  category: '손님이 원하는 <b>매물 종류</b>는요?\n<i>아파트 / 오피스텔 / 빌라 / 원룸 / 상가 / 사무실</i>\n<i>없으면 "없음"</i>',
+  contact: '손님 <b>이름이나 연락처</b> 알려주세요.\n<i>예) 홍길동 010-1234-5678</i>\n<i>없으면 "없음"</i>',
+}
+const SKIP_RE = /^(없음|없어|없습니다|스킵|skip|상관없|몰라요?|모름|패스|pass|생략)$/i
+const RESET_RE = /^(처음부터|리셋|취소|초기화)$/
+
+// 확인 카드 inline keyboard (메시지 하단 버튼)
+const CONFIRM_KEYBOARD = {
+  inline_keyboard: [[
+    { text: '✅ 등록하기', callback_data: 'confirm_register' },
+    { text: '✏️ 수정', callback_data: 'confirm_edit' },
+    { text: '❌ 취소', callback_data: 'confirm_cancel' },
+  ]],
+}
+
+// 파싱 결과에서 특정 필드가 채워졌는지 (skipped 포함)
+function hasField(draft: any, skipped: string[], field: string): boolean {
+  if (skipped.includes(field)) return true
+  const p = draft || {}
+  switch (field) {
+    case 'trade':
+      return !!(p.wanted_trade_type || (p.type && p.type !== '손님' && p.type !== ''))
+    case 'location':
+      return !!(p.location || p.complex)
+    case 'price':
+      return !!(p.price || p.price_number || p.deposit || p.monthly_rent)
+    case 'category':
+      return !!p.category
+    case 'contact':
+      return !!(p.contact_name || p.contact_phone)
+  }
+  return false
+}
+
+function findMissingField(draft: any, skipped: string[]): string | null {
+  for (const f of REQUIRED_CLIENT_FIELDS) {
+    if (!hasField(draft, skipped, f)) return f
+  }
+  return null
+}
+
+// 새 파싱 결과를 기존 draft 에 병합 (non-empty 값이 이김)
+function mergeDraft(existing: any, newParsed: any): any {
+  const merged = { ...(existing || {}) }
+  for (const k in newParsed) {
+    const v = newParsed[k]
+    if (v === null || v === undefined || v === '') continue
+    if (Array.isArray(v) && v.length === 0) continue
+    merged[k] = v
+  }
+  return merged
+}
+
+// 확인 카드 본문 생성 (mobile.html _chatParsed summaryBubble 의 텍스트 버전)
+function buildClientSummary(parsed: any): string {
+  const location = [parsed.location, parsed.complex].filter(Boolean).join(' ')
+  const wantType = parsed.wanted_trade_type || parsed.type || ''
+  const catKo: Record<string, string> = {
+    apartment: '아파트', officetel: '오피스텔', room: '원룸/빌라',
+    commercial: '상가', office: '사무실', villa: '빌라', house: '주택',
+  }
+  const catLabel = catKo[parsed.category] || parsed.category || ''
+
+  const sumParts: string[] = []
+  if (location) sumParts.push(`<b>${location}</b>`)
+  if (wantType && wantType !== '손님') sumParts.push(`<b>${wantType}</b>`)
+  if (parsed.price) sumParts.push(`<b>${parsed.price}</b>`)
+  if (catLabel) sumParts.push(`<b>${catLabel}</b>`)
+
+  const contactLine = [parsed.contact_name, parsed.contact_phone].filter(Boolean).join(' ')
+  const tagLine = Array.isArray(parsed.tags) && parsed.tags.length
+    ? '🏷 ' + parsed.tags.slice(0, 6).map((t: string) => `#${t}`).join(' ')
+    : null
+
+  const lines: string[] = ['정리해드릴게요 ✨', '']
+  if (sumParts.length) lines.push(`📋 ${sumParts.join(' ')}`)
+  if (contactLine) lines.push(`👤 <b>${contactLine}</b> 손님`)
+  if (tagLine) lines.push(tagLine)
+
+  // 누락 경고 (이름/연락처는 경고만, mobile.html 과 동일)
+  const hasName = !!parsed.contact_name
+  const hasPhone = !!parsed.contact_phone
+  const missingLabel = !hasName && !hasPhone ? '이름·연락처' : !hasName ? '이름' : !hasPhone ? '연락처' : ''
+  if (missingLabel) {
+    lines.push('')
+    lines.push(`⚠️ <i>${missingLabel} 없이 등록됩니다 — 나중에 수정할 수 있어요</i>`)
+  }
+
+  lines.push('')
+  lines.push('이대로 <b>등록할까요?</b>')
+  return lines.join('\n')
+}
+
+// ========== Draft DB helpers ==========
+async function getDraftRow(chatId: number) {
+  const { data } = await admin
+    .from('telegram_drafts')
+    .select('*')
+    .eq('chat_id', chatId)
+    .maybeSingle()
+  return data
+}
+
+async function saveDraft(chatId: number, agentId: string, patch: Record<string, unknown>) {
+  return admin.from('telegram_drafts').upsert({
+    chat_id: chatId,
+    agent_id: agentId,
+    ...patch,
+    updated_at: new Date().toISOString(),
+  })
+}
+
+async function clearDraft(chatId: number) {
+  return admin.from('telegram_drafts').delete().eq('chat_id', chatId)
+}
+
 // ========== Telegram API helpers ==========
 async function tg(method: string, body: Record<string, unknown>) {
   return fetch(`https://api.telegram.org/bot${BOT_TOKEN}/${method}`, {
@@ -262,6 +385,72 @@ async function handleCommand(chatId: number, cmd: string, agent: any) {
   return reply(chatId, '아래 버튼을 이용해주세요.', { reply_markup: MAIN_KEYBOARD })
 }
 
+// ========== 매물 등록 (단발성, 기존 플로우) ==========
+async function registerPropertyOneShot(chatId: number, text: string, agent: any, thinkingId: number | undefined, parsed: any) {
+  const cardId = crypto.randomUUID().replace(/-/g, '').slice(0, 12)
+  const cardData: Record<string, unknown> = {
+    id: cardId,
+    agent_id: agent.id,
+    property: { ...parsed, rawText: text },
+    style: 'noimg',
+    color: 'blue',
+    trade_status: '계약가능',
+    search_text: parsed.search_text || text,
+    search_text_private: parsed.search_text_private || null,
+    embedding: parsed.embedding || null,
+    price_number: parsed.price_number || null,
+    deposit: parsed.deposit || null,
+    monthly_rent: parsed.monthly_rent || null,
+    contact_name: parsed.contact_name || null,
+    contact_phone: parsed.contact_phone || null,
+    tags: parsed.tags || [],
+  }
+
+  const { error } = await admin.from('cards').insert(cardData)
+  if (error) throw new Error(`DB insert 실패: ${error.message}`)
+
+  if (thinkingId) {
+    await tg('deleteMessage', { chat_id: chatId, message_id: thinkingId }).catch(() => {})
+  }
+
+  const typeEmoji: Record<string, string> = {
+    '매매': '🏠', '전세': '🔑', '월세': '💰',
+  }
+  const emoji = typeEmoji[parsed.type] || '🏠'
+  const tagLine = Array.isArray(parsed.tags) && parsed.tags.length
+    ? '🏷 ' + parsed.tags.slice(0, 8).map((t: string) => `#${t}`).join(' ')
+    : null
+  const summary = [
+    `${emoji} <b>${parsed.type || '매물'} 등록 완료</b>`,
+    parsed.price ? `💵 ${parsed.price}` : null,
+    parsed.complex ? `🏢 ${parsed.complex}` : null,
+    parsed.location ? `📍 ${parsed.location}` : null,
+    parsed.area ? `📐 ${parsed.area}` : null,
+    parsed.contact_name
+      ? `👤 ${parsed.contact_name}${parsed.contact_phone ? ' · ' + parsed.contact_phone : ''}`
+      : null,
+    tagLine,
+  ].filter(Boolean).join('\n')
+
+  await reply(chatId, `${summary}\n\n🔗 https://hwik.kr/property_chat.html?id=${cardId}`, {
+    reply_markup: MAIN_KEYBOARD,
+  })
+
+  // 매물 → auto-match (비동기)
+  const internalHeaders = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${ANON_KEY}`,
+    'apikey': ANON_KEY,
+    'x-hwik-internal': HWIK_INTERNAL_SECRET,
+    'x-agent-id': agent.id,
+  }
+  fetch(`${SUPABASE_URL}/functions/v1/auto-match`, {
+    method: 'POST',
+    headers: internalHeaders,
+    body: JSON.stringify({ card_id: cardId, agent_id: agent.id }),
+  }).catch(() => {})
+}
+
 // ========== Text handlers ==========
 async function handleText(chatId: number, text: string, agent: any) {
   // 연동 안 됐으면 폰번호로 연결 시도
@@ -295,6 +484,16 @@ async function handleText(chatId: number, text: string, agent: any) {
     )
   }
 
+  // ========== 리셋 키워드 (어느 상태에서든 처음부터) ==========
+  if (RESET_RE.test(text)) {
+    await clearDraft(chatId)
+    return reply(
+      chatId,
+      '처음부터 다시 알려주세요! 🙂\n<i>예) 강남 전세 5억 이하 홍길동 010-1234-5678</i>',
+      { reply_markup: MAIN_KEYBOARD }
+    )
+  }
+
   // ========== 버튼 텍스트 분기 (타이핑 부담 제거 UX) ==========
   if (text === '📋 브리핑') {
     await tg('sendChatAction', { chat_id: chatId, action: 'typing' })
@@ -306,6 +505,8 @@ async function handleText(chatId: number, text: string, agent: any) {
     }
   }
   if (text === '🏠 매물') {
+    // 매물 모드로 전환 — 진행 중 손님 draft 있으면 초기화
+    await clearDraft(chatId)
     return reply(
       chatId,
       `🏠 <b>매물 등록</b>\n\n다음 메시지에 매물 정보를 자유롭게 입력해주세요. AI 가 알아서 분석합니다.\n\n<b>예시</b>\n<code>래미안 32평 15억 남향 고층 깨끗해 010-9999-8888 박사장</code>\n\n가격·위치·면적·층·특징·연락처 등 아는 것만 적으면 돼요.`,
@@ -313,9 +514,14 @@ async function handleText(chatId: number, text: string, agent: any) {
     )
   }
   if (text === '🙋 손님') {
+    // 손님 모드 초기화 — 빈 draft 생성 (이후 첫 메시지부터 채팅 플로우)
+    await saveDraft(chatId, agent.id, {
+      draft: {}, raw_text: '', skipped: [],
+      missing_field: null, state: 'idle', draft_type: 'client',
+    })
     return reply(
       chatId,
-      `🙋 <b>손님 등록</b>\n\n다음 메시지에 찾는 손님 조건을 입력해주세요.\n\n<b>예시</b>\n<code>강남구 20억 이하 아파트 찾는 분 010-1111-2222 김손님</code>\n\n등록하면 자동으로 매칭 매물을 찾아드려요 🎯`,
+      `🙋 <b>손님 등록</b>\n\n다음 메시지에 손님이 찾는 조건을 알려주세요. 한 번에 다 말해도 되고, 하나씩 알려주셔도 돼요.\n\n<b>예시</b>\n<code>강남 전세 5억 이하 홍길동 010-1234-5678</code>\n\n빠진 정보는 제가 이어서 물어볼게요 🙂\n<i>취소: "처음부터" 입력</i>`,
       { reply_markup: MAIN_KEYBOARD }
     )
   }
@@ -323,115 +529,99 @@ async function handleText(chatId: number, text: string, agent: any) {
     return handleCommand(chatId, '/me', agent)
   }
 
-  if (text.trim().length < 10) {
+  // ========== 현재 draft 상태 로드 ==========
+  const existingDraft = await getDraftRow(chatId)
+  const inClientFlow = existingDraft?.draft_type === 'client'
+
+  // ========== 스킵 키워드 (누락 필드 질문 대기 중일 때만) ==========
+  if (inClientFlow && existingDraft.missing_field && SKIP_RE.test(text)) {
+    const newSkipped = [...(existingDraft.skipped || []), existingDraft.missing_field]
+    const nextMissing = findMissingField(existingDraft.draft, newSkipped)
+    if (nextMissing) {
+      await saveDraft(chatId, agent.id, {
+        draft: existingDraft.draft,
+        raw_text: existingDraft.raw_text,
+        skipped: newSkipped,
+        missing_field: nextMissing,
+        state: 'idle',
+        draft_type: 'client',
+      })
+      return reply(chatId, FIELD_QUESTIONS[nextMissing], { reply_markup: MAIN_KEYBOARD })
+    }
+    // 모두 채워짐 또는 스킵 → 확인 카드
+    await saveDraft(chatId, agent.id, {
+      draft: existingDraft.draft,
+      raw_text: existingDraft.raw_text,
+      skipped: newSkipped,
+      missing_field: null,
+      state: 'confirm',
+      draft_type: 'client',
+    })
+    await reply(chatId, buildClientSummary(existingDraft.draft), {
+      reply_markup: CONFIRM_KEYBOARD,
+    })
+    return
+  }
+
+  // 너무 짧은 입력은 손님 flow 중엔 허용, 그 외엔 거절
+  if (!inClientFlow && text.trim().length < 10) {
     return reply(chatId, '매물 정보가 너무 짧아요. 가격·위치·면적 등을 더 적어주세요.', { reply_markup: MAIN_KEYBOARD })
   }
 
-  // 파싱 시작
+  // ========== 파싱 ==========
   await tg('sendChatAction', { chat_id: chatId, action: 'typing' })
   const thinkingRes = await reply(chatId, '🤖 분석 중...')
   const thinkingJson = await thinkingRes.json().catch(() => ({}))
   const thinkingId = thinkingJson?.result?.message_id as number | undefined
 
   try {
-    const parsed = await parseProperty(text)
-    const isClient = parsed.type === '손님' || /손님|찾는/.test(parsed.type || '')
+    // 손님 flow 중이면 누적 text + "손님 " 접두 (parse-property 가 type='손님' 로 일관되게 응답하도록)
+    const combinedRaw = inClientFlow
+      ? ((existingDraft.raw_text || '') + ' ' + text).trim()
+      : text
+    const parseInput = inClientFlow ? '손님 ' + combinedRaw : text
+    const parsed = await parseProperty(parseInput)
+    const isClient = inClientFlow || parsed.type === '손님' || /손님|찾는/.test(parsed.type || '')
 
-    const cardId = crypto.randomUUID().replace(/-/g, '').slice(0, 12)
-    const cardData: Record<string, unknown> = {
-      id: cardId,
-      agent_id: agent.id,
-      property: { ...parsed, rawText: text },
-      style: 'noimg',
-      color: 'blue',
-      trade_status: '계약가능',
-      search_text: parsed.search_text || text,
-      search_text_private: parsed.search_text_private || null,
-      embedding: parsed.embedding || null,
-      price_number: parsed.price_number || null,
-      deposit: parsed.deposit || null,
-      monthly_rent: parsed.monthly_rent || null,
-      contact_name: parsed.contact_name || null,
-      contact_phone: parsed.contact_phone || null,
-      tags: parsed.tags || [],
-    }
-    if (isClient) cardData.client_status = '탐색중'
-
-    const { error } = await admin.from('cards').insert(cardData)
-    if (error) throw new Error(`DB insert 실패: ${error.message}`)
-
-    // "분석 중" 버블 삭제
     if (thinkingId) {
       await tg('deleteMessage', { chat_id: chatId, message_id: thinkingId }).catch(() => {})
     }
 
-    // 확인 메시지
-    const typeEmoji: Record<string, string> = {
-      '매매': '🏠', '전세': '🔑', '월세': '💰', '손님': '🙋',
+    if (!isClient) {
+      // 매물 — 기존 단발성 플로우
+      return registerPropertyOneShot(chatId, text, agent, undefined, parsed)
     }
-    const emoji = typeEmoji[parsed.type] || '🏠'
-    // AI 가 이해한 태그 — 중개사에게 "제대로 읽었음" 피드백 + 잘못 파싱 시 즉시 수정 유도
-    const tagLine = Array.isArray(parsed.tags) && parsed.tags.length
-      ? '🏷 ' + parsed.tags.slice(0, 8).map((t: string) => `#${t}`).join(' ')
-      : null
-    const summary = [
-      `${emoji} <b>${parsed.type || '매물'} 등록 완료</b>`,
-      parsed.price ? `💵 ${parsed.price}` : null,
-      parsed.complex ? `🏢 ${parsed.complex}` : null,
-      parsed.location ? `📍 ${parsed.location}` : null,
-      parsed.area ? `📐 ${parsed.area}` : null,
-      parsed.contact_name
-        ? `👤 ${parsed.contact_name}${parsed.contact_phone ? ' · ' + parsed.contact_phone : ''}`
-        : null,
-      tagLine,
-    ].filter(Boolean).join('\n')
 
-    await reply(chatId, `${summary}\n\n🔗 https://hwik.kr/property_chat.html?id=${cardId}`, {
-      reply_markup: MAIN_KEYBOARD,
-    })
+    // ========== 손님 채팅 플로우 ==========
+    const mergedDraft = mergeDraft(existingDraft?.draft || {}, parsed)
+    const skipped = existingDraft?.skipped || []
+    const newRaw = combinedRaw
 
-    // 비동기 매칭 트리거 (응답 기다리지 않음)
-    const internalHeaders = {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${ANON_KEY}`,
-      'apikey': ANON_KEY,
-      'x-hwik-internal': HWIK_INTERNAL_SECRET,
-      'x-agent-id': agent.id,
-    }
-    if (isClient) {
-      fetch(`${SUPABASE_URL}/functions/v1/match-properties`, {
-        method: 'POST',
-        headers: internalHeaders,
-        body: JSON.stringify({
-          client_card_id: cardId,
-          agent_id: agent.id,
-          limit: 3,
-          threshold: 0.15,
-        }),
+    const missing = findMissingField(mergedDraft, skipped)
+    if (missing) {
+      await saveDraft(chatId, agent.id, {
+        draft: mergedDraft,
+        raw_text: newRaw,
+        skipped,
+        missing_field: missing,
+        state: 'idle',
+        draft_type: 'client',
       })
-        .then((r) => r.json())
-        .then((m) => {
-          const matches = m?.results || []
-          if (!matches.length) return
-          const lines = matches
-            .slice(0, 3)
-            .map((x: any) => {
-              const p = x.property || {}
-              const head = `• ${p.type || ''} ${p.price || ''} — ${p.complex || p.location || ''}`
-              const tags = Array.isArray(x.tags) ? x.tags.slice(0, 3) : []
-              return tags.length ? `${head}\n   ${tags.map((t: string) => `#${t}`).join(' ')}` : head
-            })
-            .join('\n')
-          return reply(chatId, `🎯 <b>매칭 매물 ${matches.length}건</b>\n${lines}`)
-        })
-        .catch(() => {})
-    } else {
-      fetch(`${SUPABASE_URL}/functions/v1/auto-match`, {
-        method: 'POST',
-        headers: internalHeaders,
-        body: JSON.stringify({ card_id: cardId, agent_id: agent.id }),
-      }).catch(() => {})
+      return reply(chatId, FIELD_QUESTIONS[missing], { reply_markup: MAIN_KEYBOARD })
     }
+
+    // 모두 채워짐 → 확인 카드
+    await saveDraft(chatId, agent.id, {
+      draft: mergedDraft,
+      raw_text: newRaw,
+      skipped,
+      missing_field: null,
+      state: 'confirm',
+      draft_type: 'client',
+    })
+    await reply(chatId, buildClientSummary(mergedDraft), {
+      reply_markup: CONFIRM_KEYBOARD,
+    })
   } catch (e: any) {
     const errMsg = `❌ 등록 실패: ${e.message || e}`
     if (thinkingId) {
@@ -445,6 +635,172 @@ async function handleText(chatId: number, text: string, agent: any) {
     } else {
       await reply(chatId, errMsg)
     }
+  }
+}
+
+// ========== Callback query handler (inline keyboard 버튼 탭) ==========
+async function handleCallbackQuery(cb: any) {
+  const chatId = cb.message?.chat?.id as number | undefined
+  const messageId = cb.message?.message_id as number | undefined
+  const data = cb.data as string
+  const cbId = cb.id
+
+  if (!chatId || !data) return
+
+  // 즉시 ack (버튼 로딩 표시 제거)
+  await tg('answerCallbackQuery', { callback_query_id: cbId }).catch(() => {})
+
+  const agent = await findAgentByChatId(chatId)
+  if (!agent) {
+    return reply(chatId, '연동이 해제되었어요. /start 로 다시 시작해주세요.')
+  }
+
+  const draftRow = await getDraftRow(chatId)
+  if (!draftRow) {
+    if (messageId) {
+      await tg('editMessageText', {
+        chat_id: chatId,
+        message_id: messageId,
+        text: '<i>이미 처리된 요청이에요.</i>',
+        parse_mode: 'HTML',
+      }).catch(() => {})
+    }
+    return
+  }
+
+  // ========== 등록하기 ==========
+  if (data === 'confirm_register') {
+    const parsed = draftRow.draft || {}
+    const rawText = draftRow.raw_text || ''
+    const cardId = crypto.randomUUID().replace(/-/g, '').slice(0, 12)
+
+    const cardData: Record<string, unknown> = {
+      id: cardId,
+      agent_id: agent.id,
+      property: { ...parsed, type: '손님', rawText },
+      style: 'noimg',
+      color: 'blue',
+      trade_status: '계약가능',
+      client_status: '탐색중',
+      search_text: parsed.search_text || rawText,
+      search_text_private: parsed.search_text_private || null,
+      embedding: parsed.embedding || null,
+      price_number: parsed.price_number || null,
+      deposit: parsed.deposit || null,
+      monthly_rent: parsed.monthly_rent || null,
+      contact_name: parsed.contact_name || null,
+      contact_phone: parsed.contact_phone || null,
+      tags: parsed.tags || [],
+    }
+
+    const { error } = await admin.from('cards').insert(cardData)
+    if (error) {
+      if (messageId) {
+        await tg('editMessageText', {
+          chat_id: chatId,
+          message_id: messageId,
+          text: `❌ 등록 실패: ${error.message}`,
+          parse_mode: 'HTML',
+        }).catch(() => {})
+      }
+      return
+    }
+
+    await clearDraft(chatId)
+
+    // 확인 카드 → 완료 메시지로 교체 (inline 버튼 제거)
+    const displayName = parsed.contact_name || '손님'
+    if (messageId) {
+      await tg('editMessageText', {
+        chat_id: chatId,
+        message_id: messageId,
+        text: `✅ <b>${displayName}</b>님 등록 완료\n\n🔗 https://hwik.kr/property_chat.html?id=${cardId}`,
+        parse_mode: 'HTML',
+        disable_web_page_preview: true,
+      }).catch(() => {})
+    }
+
+    // 매칭 진행
+    await reply(chatId, '🔍 AI가 딱 맞는 매물 찾고 있어요...')
+    const internalHeaders = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${ANON_KEY}`,
+      'apikey': ANON_KEY,
+      'x-hwik-internal': HWIK_INTERNAL_SECRET,
+      'x-agent-id': agent.id,
+    }
+    fetch(`${SUPABASE_URL}/functions/v1/match-properties`, {
+      method: 'POST',
+      headers: internalHeaders,
+      body: JSON.stringify({
+        client_card_id: cardId,
+        agent_id: agent.id,
+        limit: 3,
+        threshold: 0.15,
+      }),
+    })
+      .then((r) => r.json())
+      .then((m) => {
+        const matches = m?.results || []
+        if (!matches.length) {
+          return reply(
+            chatId,
+            '지금 당장 맞는 매물이 없네요 😅\n<i>새 매물이 등록되면 알림으로 알려드릴게요</i>',
+            { reply_markup: MAIN_KEYBOARD }
+          )
+        }
+        const lines = matches
+          .slice(0, 3)
+          .map((x: any) => {
+            const p = x.property || {}
+            const head = `• ${p.type || ''} ${p.price || ''} — ${p.complex || p.location || ''}`
+            const tags = Array.isArray(x.tags) ? x.tags.slice(0, 3) : []
+            return tags.length ? `${head}\n   ${tags.map((t: string) => `#${t}`).join(' ')}` : head
+          })
+          .join('\n')
+        return reply(
+          chatId,
+          `🎯 <b>매칭 매물 ${matches.length}건</b>\n${lines}`,
+          { reply_markup: MAIN_KEYBOARD }
+        )
+      })
+      .catch(() => {})
+    return
+  }
+
+  // ========== 수정 (기존 draft 유지, 추가 입력 받기) ==========
+  if (data === 'confirm_edit') {
+    await saveDraft(chatId, agent.id, {
+      draft: draftRow.draft,
+      raw_text: draftRow.raw_text,
+      skipped: draftRow.skipped || [],
+      missing_field: null,
+      state: 'idle',
+      draft_type: 'client',
+    })
+    if (messageId) {
+      await tg('editMessageText', {
+        chat_id: chatId,
+        message_id: messageId,
+        text: '✏️ <b>수정 모드</b>\n추가하거나 바꿀 내용을 알려주세요.\n<i>예) 이름 홍길동\n예) 지역 강남구\n예) 예산 5억 이하\n\n취소: "처음부터" 입력</i>',
+        parse_mode: 'HTML',
+      }).catch(() => {})
+    }
+    return
+  }
+
+  // ========== 취소 ==========
+  if (data === 'confirm_cancel') {
+    await clearDraft(chatId)
+    if (messageId) {
+      await tg('editMessageText', {
+        chat_id: chatId,
+        message_id: messageId,
+        text: '❌ 손님 등록 취소',
+        parse_mode: 'HTML',
+      }).catch(() => {})
+    }
+    return
   }
 }
 
@@ -465,6 +821,16 @@ Deno.serve(async (req) => {
     update = await req.json()
   } catch {
     return new Response('bad request', { status: 400 })
+  }
+
+  // inline keyboard 버튼 탭
+  if (update.callback_query) {
+    try {
+      await handleCallbackQuery(update.callback_query)
+    } catch (e: any) {
+      console.error('callback error:', e)
+    }
+    return new Response('ok')
   }
 
   const msg = update.message || update.edited_message
