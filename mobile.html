@@ -1908,7 +1908,7 @@ function _buildBriefQueue(data) {
     if (data && data._error) {
       q.push({ html: `일정을 불러오지 못했어요.<br><span style="color:#f87171;font-size:12px;">${esc(data._error)}</span>` });
     } else {
-      q.push({ html: `오늘은 예정된 일정이 없어요.<br><span style="color:#94a3b8;font-size:12px;">편한 하루 보내세요!</span><br><span style="color:#cbd5e1;font-size:10px;">(agent: ${(data?._agentId||'?').slice(0,8)}…)</span>` });
+      q.push({ html: `오늘은 예정된 일정이 없어요.<br><span style="color:#94a3b8;font-size:12px;">편한 하루 보내세요!</span>` });
     }
   }
 

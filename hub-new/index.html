@@ -4134,7 +4134,7 @@ const PanelAlert = (() => {
         evtHtml+=`<span class="cal-evt ${cls}">${esc((a.content||a.type||'').slice(0,15))}</span>`;
       });
       if(evts.length>3)evtHtml+=`<span style="font-size:9px;font-weight:600;color:var(--text-light);">+${evts.length-3}건</span>`;
-      const hasOverdue=evts.some(a=>new Date(a.alert_date)<today&&!a.alert_done);
+      const hasOverdue=evts.some(a=>!a._isLog&&!a._isMatch&&new Date(a.alert_date)<today&&!a.alert_done);
       const dayOfWeek=(startDay+d-1)%7;
       const dayClass=dayOfWeek===0?' sun':dayOfWeek===6?' sat':'';
       html+=`<div class="cal-day${isToday?' today':''}${hasOverdue?' overdue-day':''}${dayClass}" onclick="PanelAlert.selectDate(${d})"><div class="cal-num">${d}</div>${evtHtml}</div>`;
@@ -4157,7 +4157,8 @@ const PanelAlert = (() => {
     </div>`;
     if(!evts.length)h+=`<div style="padding:8px 0;font-size:13px;color:var(--text-light);">일정 없음</div>`;
     evts.forEach(a=>{
-      const past=new Date(a.alert_date)<today&&!a.alert_done;
+      // 로그/매칭은 과거 기록이라 "지연"으로 표시 안 함
+      const past=!a._isLog&&!a._isMatch&&new Date(a.alert_date)<today&&!a.alert_done;
       const done=a.alert_done;
       const clientName=clientMap[a.client_card_id]||'';
       const isPersonal=!a.client_card_id;
@@ -4194,7 +4195,14 @@ const PanelAlert = (() => {
       client_card_id:null, agent_id:Auth.user.id, type:'일정', content,
       alert_date:alertDate.toISOString(), alert_done:false
     });
-    if(error){Toast.show('저장 실패','error');return;}
+    if(error){
+      console.error('[addPersonal]',error);
+      const msg = (error.message||'').includes('not-null')||error.code==='23502'
+        ? 'DB 마이그레이션 필요 (client_card_id nullable)'
+        : ('저장 실패: '+(error.message||'알 수 없는 오류'));
+      Toast.show(msg,'error');
+      return;
+    }
     Toast.show('일정 추가됨');inp.value='';
     await _renderCal();selectDate(day);
   }
