@@ -1808,12 +1808,19 @@ async function _fetchBriefBasic() {
       .eq('agent_id', currentUser.id).eq('alert_done', false).not('alert_date', 'is', null).gte('alert_date', nowIso)
       .order('alert_date', { ascending: true }).limit(20),
   ]);
+  // 에러 로깅 (디버깅용)
+  if (matchRes.error) console.error('[brief match error]', matchRes.error);
+  if (overdueRes.error) console.error('[brief overdue error]', overdueRes.error);
+  if (upcomingRes.error) console.error('[brief upcoming error]', upcomingRes.error);
+  const firstError = matchRes.error || overdueRes.error || upcomingRes.error;
   return {
     matches: matchRes.data || [],
     overdue: overdueRes.data || [],
     upcoming: upcomingRes.data || [],
     cardMap: {}, clientMap: {},
-    savedAt: Date.now()
+    savedAt: Date.now(),
+    _error: firstError ? (firstError.message || String(firstError)) : null,
+    _agentId: currentUser.id
   };
 }
 
@@ -1898,7 +1905,11 @@ function _buildBriefQueue(data) {
   }
 
   if (!totalToday && !overdue.length) {
-    q.push({ html: '오늘은 예정된 일정이 없어요.<br><span style="color:#94a3b8;font-size:13px;">편한 하루 보내세요!</span>' });
+    if (data && data._error) {
+      q.push({ html: `일정을 불러오지 못했어요.<br><span style="color:#f87171;font-size:12px;">${esc(data._error)}</span>` });
+    } else {
+      q.push({ html: `오늘은 예정된 일정이 없어요.<br><span style="color:#94a3b8;font-size:12px;">편한 하루 보내세요!</span><br><span style="color:#cbd5e1;font-size:10px;">(agent: ${(data?._agentId||'?').slice(0,8)}…)</span>` });
+    }
   }
 
   if (overdue.length) {
