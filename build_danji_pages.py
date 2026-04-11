@@ -13,7 +13,7 @@ import os, json, re, time, hashlib, html as html_mod
 from datetime import datetime, timezone
 from urllib.parse import quote as url_quote
 import requests
-from slug_utils import REGION_MAP, METRO_CITIES, clean as _clean, detect_region, make_danji_slug as make_slug, make_dong_slug
+from slug_utils import REGION_MAP, METRO_CITIES, clean as _clean, detect_region, make_danji_slug as make_slug, make_dong_slug, extract_gu_from_address, gu_url_slug
 
 BUILD_TIME = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S+00:00")
 
@@ -45,8 +45,8 @@ DONG_DIR = os.path.join(BASE_DIR, "dong")
 # 동 페이지 slug 목록 (빌드 시 로드 — 동 파일 없는 곳은 링크 생략)
 DONG_SLUGS = set()
 
-# /gu/ 페이지가 존재하는 지역 (단일-토큰 구 슬러그 충돌 방지)
-GU_PAGE_REGIONS = {"서울", "인천", "경기"}
+# /gu/ 페이지가 존재하는 지역
+GU_PAGE_REGIONS = {"서울", "인천", "경기", "부산", "대구", "광주", "대전", "울산"}
 
 
 def _has_gu_page(address):
@@ -315,7 +315,9 @@ def build_fallback_html(d):
     name = esc(d.get("complex_name", ""))
     loc = esc(d.get("location", ""))
     loc_parts = (d.get("location") or "").split(" ")
-    gu = esc(loc_parts[0]) if loc_parts else ""
+    # gu: address 우선 (경기 "수원시 장안구" 2토큰 정확히 인식), 실패 시 location fallback
+    gu_raw = extract_gu_from_address(d.get("address", "")) or (loc_parts[0] if loc_parts else "")
+    gu = esc(gu_raw)
     addr = esc(d.get("address", ""))
     year = d.get("build_year", "")
     units = d.get("total_units", "")
@@ -581,7 +583,7 @@ def build_fallback_html(d):
     # 내부 링크
     loc_parts_raw = (d.get("location") or "").split(" ", 1)
     dong_name = loc_parts_raw[1] if len(loc_parts_raw) >= 2 else ""
-    gu_for_link = loc_parts_raw[0] if loc_parts_raw else ""
+    gu_for_link = extract_gu_from_address(d.get("address", "")) or (loc_parts_raw[0] if loc_parts_raw else "")
     dong_slug_str = ""
     if dong_name:
         dong_slug_str = make_dong_slug(gu_for_link, dong_name, d.get("address", ""))
@@ -589,7 +591,9 @@ def build_fallback_html(d):
     if dong_name and dong_slug_str and dong_slug_str in DONG_SLUGS:
         lines.append(f'<a href="/dong/{url_quote(dong_slug_str, safe="-")}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{esc(dong_name)} 다른 단지 시세 →</a>')
     if _has_gu_page(d.get("address", "")):
-        lines.append(f'<a href="/gu/{url_quote(gu.replace(" ", "-"), safe="-")}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{gu} 전체 시세 →</a>')
+        _region_label = detect_region(d.get("address", "") or "")
+        _gu_url = gu_url_slug(_region_label, gu_raw)
+        lines.append(f'<a href="/gu/{url_quote(_gu_url, safe="-")}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{gu} 전체 시세 →</a>')
         lines.append('<a href="/ranking.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">아파트 순위 →</a>')
     lines.append("</div>")
 
@@ -601,7 +605,8 @@ def build_jsonld(d):
     did = d.get("id", "")
     name = d.get("complex_name", "")
     loc_parts = (d.get("location") or "").split(" ", 1)
-    gu = loc_parts[0] if loc_parts else ""
+    # gu: address 우선 (경기 "수원시 장안구" 2토큰 정확히 인식), 실패 시 location fallback
+    gu = extract_gu_from_address(d.get("address", "")) or (loc_parts[0] if loc_parts else "")
     dong_name = loc_parts[1] if len(loc_parts) >= 2 else ""
     dong_slug_str = make_dong_slug(gu, dong_name, d.get("address", "")) if dong_name else ""
     slug = make_slug(name, d.get("location", ""), did, d.get("address", ""))
@@ -612,7 +617,9 @@ def build_jsonld(d):
     breadcrumb_items = [{"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"}]
     pos = 2
     if has_gu:
-        breadcrumb_items.append({"@type": "ListItem", "position": pos, "name": f"{gu}", "item": f"https://hwik.kr/gu/{url_quote(gu.replace(' ', '-'), safe='-')}"})
+        _region_label = detect_region(d.get("address", "") or "")
+        _gu_url = gu_url_slug(_region_label, gu)
+        breadcrumb_items.append({"@type": "ListItem", "position": pos, "name": f"{gu}", "item": f"https://hwik.kr/gu/{url_quote(_gu_url, safe='-')}"})
         pos += 1
     elif gu:
         breadcrumb_items.append({"@type": "ListItem", "position": pos, "name": f"{gu}"})
@@ -767,13 +774,17 @@ def generate_page(d):
     name = esc(raw_name)
     loc = esc(raw_loc)
     loc_parts = raw_loc.split(" ", 1)
-    gu = esc(loc_parts[0]) if loc_parts else ""
+    # gu: address 우선 (경기 "수원시 장안구" 2토큰 정확히 인식), 실패 시 location fallback
+    gu_raw = extract_gu_from_address(d.get("address", "")) or (loc_parts[0] if loc_parts else "")
+    gu = esc(gu_raw)
     dong_raw = loc_parts[1] if len(loc_parts) >= 2 else ""
-    dong_slug_nav = make_dong_slug(loc_parts[0], dong_raw, d.get("address", "")) if dong_raw else ""
+    dong_slug_nav = make_dong_slug(gu_raw, dong_raw, d.get("address", "")) if dong_raw else ""
     dong_nav = f'<a href="/dong/{url_quote(dong_slug_nav, safe="-")}" style="color:#6b7280;text-decoration:none;">{esc(dong_raw)}</a> &gt;\n      ' if dong_raw and dong_slug_nav and dong_slug_nav in DONG_SLUGS else ""
     _has_gu = _has_gu_page(d.get("address", ""))
+    _region_label_nav = detect_region(d.get("address", "") or "")
+    _gu_url_nav = gu_url_slug(_region_label_nav, gu_raw) if _has_gu else ""
     gu_nav = (
-        f'<a href="/gu/{url_quote(loc_parts[0].replace(" ", "-"), safe="-")}" style="color:#6b7280;text-decoration:none;">{gu}</a> &gt;'
+        f'<a href="/gu/{url_quote(_gu_url_nav, safe="-")}" style="color:#6b7280;text-decoration:none;">{gu}</a> &gt;'
         if _has_gu and gu else (f'<span style="color:#6b7280;">{gu}</span> &gt;' if gu else "")
     )
     units = d.get("total_units", "")

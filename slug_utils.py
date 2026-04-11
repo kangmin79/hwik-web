@@ -94,6 +94,56 @@ def make_danji_slug(name, location, did, address=""):
     return "-".join([clean(p) for p in slug_parts if p])
 
 
+def gu_url_slug(region_label, gu_name):
+    """구 페이지 URL 슬러그 생성 — build_gu_pages.py의 gu_filename()과 동일 규칙.
+
+    - 서울/경기: gu_name 그대로 (공백은 하이픈)
+    - 인천: 기본 gu_name, 단 '중구'는 '인천-중구' (서울 중구와 충돌 방지)
+    - 5대 광역시(부산/대구/광주/대전/울산): '{label}-{gu}' (이름 충돌 방지)
+    """
+    if not gu_name:
+        return ""
+    slug = gu_name.replace(" ", "-")
+    metro = {"부산", "대구", "광주", "대전", "울산"}
+    if region_label in metro:
+        return f"{region_label}-{slug}"
+    if region_label == "인천" and gu_name == "중구":
+        return "인천-중구"
+    return slug
+
+
+def extract_gu_from_address(address, two_token_gu_set=None):
+    """도로명주소에서 정확한 '구/시' 이름을 추출.
+
+    - 서울/광역시: "서울특별시 강남구 ..." → "강남구"
+    - 경기 2토큰: "경기도 수원시 장안구 ..." → "수원시 장안구" (2토큰 세트에 있을 때)
+    - 경기 1토큰: "경기도 의정부시 ..." → "의정부시"
+    - 추출 실패: "" 반환
+
+    두 번째 인자 two_token_gu_set 을 주면 2토큰 후보를 해당 세트로 제한.
+    """
+    if not address:
+        return ""
+    addr_parts = address.split()
+    if len(addr_parts) < 2:
+        return ""
+    # 첫 번째 토큰은 지역명(서울특별시/경기도 등), 두 번째부터 행정구역
+    # words[1] 이 "구/군" → 광역시 형태
+    if addr_parts[1].endswith("구") or addr_parts[1].endswith("군"):
+        return addr_parts[1]
+    # words[1] 이 "시" 이고 words[2] 가 "구" → 2토큰 gu 가능성
+    if len(addr_parts) >= 3 and addr_parts[1].endswith("시") and addr_parts[2].endswith("구"):
+        candidate = f"{addr_parts[1]} {addr_parts[2]}"
+        # two_token_gu_set 이 주어지면 해당 세트에 있을 때만 2토큰으로 인정
+        if two_token_gu_set is None or candidate in two_token_gu_set:
+            return candidate
+        return addr_parts[1]
+    # 일반 시/군 (의정부시, 가평군 등)
+    if addr_parts[1].endswith("시") or addr_parts[1].endswith("군"):
+        return addr_parts[1]
+    return ""
+
+
 def make_dong_slug(gu, dong, address=""):
     """동 slug 생성: 서울-강남구-도곡동"""
     addr_parts = (address or "").split()

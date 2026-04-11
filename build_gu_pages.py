@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from urllib.parse import quote as url_quote
 import requests
 from collections import defaultdict
-from slug_utils import make_danji_slug, make_dong_slug, detect_region as slug_detect_region
+from slug_utils import make_danji_slug, make_dong_slug, detect_region as slug_detect_region, extract_gu_from_address, gu_url_slug
 
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout = open(sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1)
@@ -98,15 +98,13 @@ REGION_LABEL_TO_KEY = {
 
 
 def gu_filename(region_key, gu_name):
-    """구 페이지 파일명(슬러그).
+    """구 페이지 파일명(슬러그) — slug_utils.gu_url_slug 에 위임.
     서울/인천/경기: {gu}.html  (기존 URL 유지)
     5대 광역시:   {label}-{gu}.html  (이름 충돌 방지)
+    예외: 인천 중구는 서울 중구와 충돌하므로 "인천-중구" 로 분리
     """
-    slug = gu_name.replace(" ", "-")
-    if region_key in METRO_KEYS:
-        label = REGIONS[region_key]["label"]
-        return f"{label}-{slug}"
-    return slug
+    label = REGIONS[region_key]["label"]
+    return gu_url_slug(label, gu_name)
 
 
 # ── 유틸 ──────────────────────────────────────────────────
@@ -562,11 +560,6 @@ def main():
     global GU_SLUG_SET, DONG_SLUG_SET, DANJI_SLUG_SET
     os.makedirs(GU_DIR, exist_ok=True)
 
-    # 기존 gu HTML 전부 삭제 (과거 버전 파일 정리)
-    for f in os.listdir(GU_DIR):
-        if f.endswith(".html"):
-            os.remove(os.path.join(GU_DIR, f))
-
     # dong/danji 폴더에 이미 존재하는 슬러그 로드 (gu 페이지에서 링크 필터용)
     DONG_DIR = os.path.join(BASE_DIR, "dong")
     if os.path.isdir(DONG_DIR):
@@ -578,9 +571,18 @@ def main():
         DANJI_SLUG_SET = {os.path.splitext(f)[0] for f in os.listdir(DANJI_DIR) if f.endswith(".html")}
     print(f"단지 슬러그 {len(DANJI_SLUG_SET)}개 인식")
 
+    # ── 데이터 먼저 확보 (실패 시 기존 파일 보존) ──
     print("Supabase에서 단지 데이터 조회 중...")
     all_danji = fetch_all_danji()
+    if not all_danji:
+        print("❌ 데이터 0건 — 중단 (기존 gu 페이지 유지)")
+        sys.exit(1)
     print(f"  {len(all_danji)}개 단지 로드 완료")
+
+    # ── 데이터 확보 후 기존 gu HTML 전부 삭제 ──
+    for f in os.listdir(GU_DIR):
+        if f.endswith(".html"):
+            os.remove(os.path.join(GU_DIR, f))
 
     # 2토큰 구/시 목록 (경기도 하위 구 분할 시/군)
     two_token_gu = set()
@@ -604,18 +606,21 @@ def main():
         slug_d = make_danji_slug(d.get("complex_name", ""), d.get("location", ""), d.get("id", ""), d.get("address", ""))
         if slug_d not in DANJI_SLUG_SET:
             continue
-        loc = d.get("location") or ""
-        parts = loc.split(" ")
-        if not parts:
-            continue
-        # 2토큰 구 먼저 체크 (수원시 장안구, 성남시 분당구 등)
-        gu = None
-        if len(parts) >= 2:
-            two = parts[0] + " " + parts[1]
-            if two in two_token_gu:
-                gu = two
+        # gu 추출: address 우선 (경기 2토큰 "수원시 장안구" 정확히 인식),
+        # address 없으면 location 에서 fallback
+        address = d.get("address") or ""
+        gu = extract_gu_from_address(address, two_token_gu)
         if not gu:
-            gu = parts[0]
+            loc = d.get("location") or ""
+            parts = loc.split(" ")
+            if not parts:
+                continue
+            if len(parts) >= 2:
+                two = parts[0] + " " + parts[1]
+                if two in two_token_gu:
+                    gu = two
+            if not gu:
+                gu = parts[0]
         if gu:
             gu_map[(region_key, gu)].append(d)
 

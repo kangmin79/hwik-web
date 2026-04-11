@@ -17,6 +17,7 @@ from urllib.parse import quote as url_quote
 from slug_utils import (
     REGION_MAP, METRO_CITIES, clean as _clean,
     detect_region, make_danji_slug, make_dong_slug,
+    extract_gu_from_address, gu_url_slug,
 )
 
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
@@ -186,8 +187,9 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
     slug = make_dong_slug(gu, dong, first_addr)
     canonical = f"https://hwik.kr/dong/{url_quote(slug, safe='-')}"
 
-    # /gu/ 페이지 존재 여부: 서울/인천/경기만 (슬러그 충돌 방지)
-    has_gu_page = region in ("서울", "인천", "경기")
+    # /gu/ 페이지 존재 여부: 서울/인천/경기 + 5대 광역시
+    has_gu_page = region in ("서울", "인천", "경기", "부산", "대구", "광주", "대전", "울산")
+    gu_page_slug = gu_url_slug(region, gu) if has_gu_page else ""
 
     # 거래 있는 단지만 필터 + 가격순 정렬
     tradeable = []
@@ -261,7 +263,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
     lines.append(f'  <a href="/" style="color:#6b7280;text-decoration:none;">휙</a> &gt;')
     if has_gu_page:
         lines.append(f'  <a href="{region_link}" style="color:#6b7280;text-decoration:none;">{esc(region)}</a> &gt;')
-        lines.append(f'  <a href="/gu/{url_quote(gu.replace(" ", "-"), safe="-")}" style="color:#6b7280;text-decoration:none;">{esc(gu)}</a> &gt;')
+        lines.append(f'  <a href="/gu/{url_quote(gu_page_slug, safe="-")}" style="color:#6b7280;text-decoration:none;">{esc(gu)}</a> &gt;')
     else:
         if region:
             lines.append(f'  <span style="color:#6b7280;">{esc(region)}</span> &gt;')
@@ -478,7 +480,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
     # 내부 링크
     lines.append('<div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">')
     if has_gu_page:
-        lines.append(f'<a href="/gu/{url_quote(gu.replace(" ", "-"), safe="-")}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{esc(gu)} 전체 시세 &rarr;</a>')
+        lines.append(f'<a href="/gu/{url_quote(gu_page_slug, safe="-")}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{esc(gu)} 전체 시세 &rarr;</a>')
         lines.append('<a href="/ranking.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">아파트 순위 &rarr;</a>')
     lines.append('</div>')
 
@@ -533,7 +535,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
     if has_gu_page:
         _bc.append({"@type": "ListItem", "position": _pos, "name": region, "item": f"https://hwik.kr{region_link}"})
         _pos += 1
-        _bc.append({"@type": "ListItem", "position": _pos, "name": gu, "item": f"https://hwik.kr/gu/{url_quote(gu.replace(' ', '-'), safe='-')}"})
+        _bc.append({"@type": "ListItem", "position": _pos, "name": gu, "item": f"https://hwik.kr/gu/{url_quote(gu_page_slug, safe='-')}"})
         _pos += 1
     else:
         if region:
@@ -632,7 +634,15 @@ html,body{{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Apple SD Go
 def main():
     os.makedirs(DONG_DIR, exist_ok=True)
 
-    # 옛 HTML 파일 삭제 (고아 파일 방지)
+    # ── 데이터 먼저 확보 (실패 시 기존 파일 보존) ──
+    print("danji_pages 조회 중...")
+    all_danji = fetch_all_danji()
+    if not all_danji:
+        print("❌ 데이터 0건 — 중단 (기존 dong 페이지 유지)")
+        sys.exit(1)
+    print(f"{len(all_danji)}개 단지 로드")
+
+    # ── 데이터 확보 후 옛 HTML 파일 삭제 (고아 파일 방지) ──
     old_count = 0
     for f in os.listdir(DONG_DIR):
         if f.endswith(".html"):
@@ -640,10 +650,6 @@ def main():
             old_count += 1
     if old_count:
         print(f"기존 {old_count}개 HTML 삭제")
-
-    print("danji_pages 조회 중...")
-    all_danji = fetch_all_danji()
-    print(f"{len(all_danji)}개 단지 로드")
 
     # 동별 그룹화 (region, gu, dong) → [danji, ...]
     # region을 키에 포함하여 동일 (gu, dong)의 지역 충돌 방지
@@ -657,12 +663,15 @@ def main():
         parts = loc.split(" ", 1)
         if len(parts) < 2:
             continue
-        gu, dong = parts[0], parts[1]
-        region = detect_region(d.get("address", "") or "")
+        dong = parts[1]
+        address = d.get("address", "") or ""
+        region = detect_region(address)
         if not region:
             # address 비어있음 → 그룹 키에 region 없음 → 슬러그가 "gu-dong" 형태로 생성됨
             # 이런 고아 row는 skip (데이터 정합성 이슈)
             continue
+        # gu: address 우선 (경기 "수원시 장안구" 2토큰 정확히 인식), 실패 시 location fallback
+        gu = extract_gu_from_address(address) or parts[0]
         dong_groups[(region, gu, dong)].append(d)
 
     # 구별 동 목록 (같은 구 다른 동 링크용) — 거래 3개+ 동만
