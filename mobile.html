@@ -1553,21 +1553,18 @@ let _chatBuffer = '';          // 디바운스 대기 중 누적되는 사용자
 let _chatDebounceTimer = null; // 마지막 활동 후 _CHAT_DEBOUNCE_MS 기다리는 타이머
 const _CHAT_DEBOUNCE_MS = 900; // 0.9초 동안 추가 활동(전송/타이핑) 없으면 파싱 시작
 
-// 입력 상태에 따라 점3개(타이핑 인디케이터) 자동 토글 —
-// 입력창에 글 있음 OR 버퍼 대기 중 OR 파싱 중 → 표시, 아니면 숨김
+// 타이핑 인디케이터 토글 — 카톡 스타일:
+// 보낸 후 버퍼에 쌓여있거나 실제 파싱 중일 때만 표시 (입력 중엔 안 보임)
 function _updateTypingIndicator() {
   if (!document.getElementById('clientChatArea')) return; // 손님 등록 화면에서만
-  const inp = document.getElementById('chatInput');
-  const hasText = !!(inp && inp.value.trim());
-  const shouldShow = hasText || _chatBuffer || _chatState === 'waiting';
+  const shouldShow = !!_chatBuffer || _chatState === 'waiting';
   const exists = !!document.getElementById('chatTyping');
   if (shouldShow && !exists) addTyping();
   else if (!shouldShow && exists) removeTyping();
 }
 
-// 입력창 타이핑 중일 때 호출됨 — 점3개 표시 + 디바운스 타이머 리셋
+// 입력창 타이핑 중일 때 호출됨 — 디바운스 타이머만 리셋 (UI 노출 없음)
 function _onChatTyping() {
-  _updateTypingIndicator();
   if (_chatDebounceTimer) {
     clearTimeout(_chatDebounceTimer);
     _chatDebounceTimer = setTimeout(_checkAndProcessBuffer, _CHAT_DEBOUNCE_MS);
