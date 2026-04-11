@@ -925,11 +925,16 @@ def main():
         f.write(css)
     print(f"  style.css ({len(css):,} bytes)")
 
-    with open(os.path.join(DANJI_DIR, "app.js"), "w", encoding="utf-8") as f:
-        f.write(js)
-    print(f"  app.js ({len(js):,} bytes)")
+    # ⚠️ danji/app.js 는 수동 관리 파일 — 자동 재생성 금지
+    # 이유: danji.html 이 레거시 URL 리다이렉트 셸(56줄)로 축소된 뒤,
+    #       extract_css_js() 가 이 셸에서 JS를 뽑으면 21줄짜리 빈 껍데기가 나와
+    #       13,000개 단지 페이지가 홈으로 튕기는 회귀가 발생했음 (사고: 42e191ed77).
+    #       풀 UI 렌더러(kindBadge, STATIC_NEARBY_HREF, decodeURIComponent 등)는
+    #       직접 danji/app.js 를 편집해 관리하고 커밋한다.
+    # 관련 메모: memory/feedback_long_session_regressions.md
+    # _ = js  # 사용 안 함 (추출은 유지하되 파일 덮어쓰기만 중단)
 
-    # app.js 캐시 해시 (새 파일 기준으로 계산)
+    # app.js 캐시 해시 (디스크의 수동 관리 파일 기준으로 계산)
     global app_js_hash
     app_js_path = os.path.join(DANJI_DIR, "app.js")
     with open(app_js_path, "rb") as f:
