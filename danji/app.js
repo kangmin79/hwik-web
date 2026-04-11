@@ -314,6 +314,9 @@ function render() {
 
   // 주변 단지 (현재 선택 평형 기준으로 비교)
   const curArea = currentPyeong ? parseInt(currentPyeong) : 84;
+  // 주변 단지 slug용 주소: 부모 주소의 시(市) 부분 + 주변 단지 자체 location(구/동)
+  // d.address 그대로 쓰면 부모의 "구"가 씌워져 잘못된 URL 생성됨 (예: 종로구 창신동 → 성북구 창신동)
+  const parentMetro = (d.address || '').split(/\s+/)[0] || '';
   const nearbyHtml = nearby.map(n => {
     const prices = n.prices || {};
     // 현재 선택 평형에서 가장 가까운 가격 찾기 (±10㎡ 우선, 없으면 가장 가까운 면적)
@@ -336,7 +339,7 @@ function render() {
       else areaLabel = '전용 ' + bestExclu + '㎡';
     }
     return `
-    <a class="nearby-item" href="/danji/${encodeURIComponent(makeSlug(n.name, n.location, n.id, d.address))}" style="text-decoration:none;color:inherit;">
+    <a class="nearby-item" href="/danji/${encodeURIComponent(makeSlug(n.name, n.location, n.id, parentMetro && n.location ? (parentMetro + ' ' + n.location) : ''))}" style="text-decoration:none;color:inherit;">
       <div>
         <div class="nearby-name">${esc(n.name)}</div>
         <div class="nearby-sub">${esc(n.location)} ${n.distance ? '· '+distText(n.distance) : ''}${areaLabel ? ' · '+areaLabel : ''}</div>
