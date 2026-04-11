@@ -269,6 +269,7 @@ const SUPABASE_URL = HWIK_CONFIG.SUPABASE_URL;
 const SUPABASE_KEY = HWIK_CONFIG.SUPABASE_KEY;
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let currentUser = null;
+let dbDanjiCount = 0; // 통계 로드 시 갱신, 정확도 검증에서 랜덤 offset 계산에 사용
 
 function $(id){ return document.getElementById(id); }
 function esc(s){ if(s==null) return ''; return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -384,6 +385,7 @@ async function loadStats(){
 
   const sm = await loadSitemap();
   const [dbCount] = await Promise.all([dbCountP]);
+  dbDanjiCount = dbCount;
 
   const total = sm.cats.danji.length + sm.cats.dong.length + sm.cats.gu.length + sm.cats.ranking.length;
   $('statTotal').textContent = total.toLocaleString();
@@ -497,12 +499,27 @@ async function runAccuracy(){
   $('cmpProgressBar').style.width = '0%';
   $('cmpSummary').textContent = '';
 
-  // 1) DB에서 랜덤 샘플 추출 — PostgREST 랜덤 방식 없으므로 최근 N*3 중 랜덤
+  // 1) DB에서 랜덤 offset 슬라이스로 샘플 추출 — 전체 풀에서 진짜 랜덤
+  //    통계가 먼저 로드되지 않았으면 지금 카운트를 잠시 받아옴
+  if(!dbDanjiCount){
+    try {
+      const r = await fetch(`${SUPABASE_URL}/rest/v1/danji_pages?id=not.like.offi-*&select=id`, {
+        method:'HEAD',
+        headers:{ apikey:SUPABASE_KEY, Authorization:'Bearer '+SUPABASE_KEY, Prefer:'count=exact' }
+      });
+      const m = (r.headers.get('Content-Range')||'').match(/\/(\d+)$/);
+      if(m) dbDanjiCount = parseInt(m[1],10);
+    } catch(e){}
+  }
+  // 랜덤 슬라이스: 0 ~ (총-50) 중 랜덤 offset에서 50행
+  const sliceSize = Math.max(sampleSize, 50);
+  const maxOffset = Math.max(0, dbDanjiCount - sliceSize);
+  const randomOffset = Math.floor(Math.random() * (maxOffset + 1));
   const { data: rows, error } = await sb.from('danji_pages')
     .select('id,complex_name,location,address,build_year,total_units,recent_trade,all_time_high,jeonse_rate,nearby_subway,lat,lng')
     .not('id','like','offi-%')
-    .order('updated_at', {ascending:false})
-    .limit(sampleSize * 5);
+    .order('id', {ascending:true})
+    .range(randomOffset, randomOffset + sliceSize - 1);
   if(error){
     $('cmpResults').innerHTML = `<div class="loading">❌ DB 조회 실패: ${esc(error.message)}</div>`;
     return;
