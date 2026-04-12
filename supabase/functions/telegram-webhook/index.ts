@@ -83,21 +83,10 @@ const MAIN_INLINE = {
   ],
 }
 
-// 등록 플로우 중 보이는 inline 메뉴 — 취소 + 메인 4개
-// 모든 질문 메시지에 박아둬서 어디서든 빠져나오거나 다른 메뉴로 점프 가능
+// 등록 플로우 중 질문 메시지에 붙이는 버튼 — 취소 하나만 (채팅 공간 최소화)
 const FLOW_CANCEL_INLINE = {
   inline_keyboard: [
-    [
-      { text: '❌ 등록 취소', callback_data: 'flow:cancel' },
-    ],
-    [
-      { text: '📋 브리핑', callback_data: 'menu:brief' },
-      { text: '🏠 매물', callback_data: 'menu:property' },
-    ],
-    [
-      { text: '🙋 손님', callback_data: 'menu:client' },
-      { text: 'ⓘ 내 정보', callback_data: 'menu:me' },
-    ],
+    [{ text: '❌ 등록 취소', callback_data: 'flow:cancel' }],
   ],
 }
 
