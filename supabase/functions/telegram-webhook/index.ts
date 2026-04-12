@@ -50,6 +50,24 @@ const MAIN_KEYBOARD = {
   is_persistent: true,
 }
 
+// 손님 등록 진행 중 키보드 — 하단에 "❌ 등록 취소" 추가
+// reply_keyboard 는 메시지 바깥 영역이라 double-tap 좋아요 반응과 충돌 X
+const CLIENT_FLOW_KEYBOARD = {
+  keyboard: [
+    [
+      { text: '📋 브리핑' },
+      { text: '🏠 매물' },
+      { text: '🙋 손님' },
+      { text: 'ⓘ 내 정보' },
+    ],
+    [
+      { text: '❌ 등록 취소' },
+    ],
+  ],
+  resize_keyboard: true,
+  is_persistent: true,
+}
+
 // ========== 손님 등록 채팅 플로우 상수 ==========
 // mobile.html _REQUIRED_FIELDS / _FIELD_QUESTIONS / _SKIP_KEYWORDS 의 봇 버전
 const REQUIRED_CLIENT_FIELDS = ['trade', 'location', 'price', 'category', 'contact'] as const
@@ -73,9 +91,8 @@ const CONFIRM_KEYBOARD = {
 }
 
 // 필드별 inline keyboard — 선택지 뻔한 필드만 (탭 한 번 = 파싱 없이 즉시 주입)
-// 모든 필드 질문에 "❌ 등록 취소" 버튼 붙여서 어디서든 중단 가능
-const CANCEL_ROW = [{ text: '❌ 등록 취소', callback_data: 'field_cancel' }]
-
+// 취소는 reply_keyboard (CLIENT_FLOW_KEYBOARD) 에만 두고 여기엔 안 넣음
+// — 이유: 텔레그램 데스크톱 double-tap 좋아요 반응과 충돌 방지
 const TRADE_KEYBOARD = {
   inline_keyboard: [
     [
@@ -85,7 +102,6 @@ const TRADE_KEYBOARD = {
       { text: '반전세', callback_data: 'ft:반전세' },
     ],
     [{ text: '없음', callback_data: 'ft:skip' }],
-    CANCEL_ROW,
   ],
 }
 
@@ -104,13 +120,7 @@ const CATEGORY_KEYBOARD = {
       { text: '사무실', callback_data: 'fc:office' },
     ],
     [{ text: '없음', callback_data: 'fc:skip' }],
-    CANCEL_ROW,
   ],
-}
-
-// 텍스트 입력 필드(지역/예산/연락처)에는 취소 버튼만
-const TEXT_FIELD_KEYBOARD = {
-  inline_keyboard: [CANCEL_ROW],
 }
 
 const FIELD_KEYBOARDS: Record<string, any> = {
@@ -124,10 +134,10 @@ const CATEGORY_KO: Record<string, string> = {
   room: '원룸/빌라', commercial: '상가', office: '사무실', house: '주택',
 }
 
-// 누락 필드 질문 한 번에 보내기 — 선택지 있으면 inline 버튼 + 취소, 없으면 취소만
+// 누락 필드 질문 — inline 버튼은 선택지 필드만, 텍스트 필드는 reply_keyboard 유지
 async function askField(chatId: number, field: string) {
-  const kb = FIELD_KEYBOARDS[field] || TEXT_FIELD_KEYBOARD
-  return reply(chatId, FIELD_QUESTIONS[field], { reply_markup: kb })
+  const kb = FIELD_KEYBOARDS[field]
+  return reply(chatId, FIELD_QUESTIONS[field], kb ? { reply_markup: kb } : {})
 }
 
 // 파싱 결과에서 특정 필드가 채워졌는지 (skipped 포함)
@@ -542,12 +552,12 @@ async function handleText(chatId: number, text: string, agent: any) {
     )
   }
 
-  // ========== 리셋 키워드 (어느 상태에서든 처음부터) ==========
-  if (RESET_RE.test(text)) {
+  // ========== 리셋 / 취소 키워드 (어느 상태에서든 처음부터) ==========
+  if (RESET_RE.test(text) || text === '❌ 등록 취소') {
     await clearDraft(chatId)
     return reply(
       chatId,
-      '처음부터 다시 알려주세요! 🙂\n예) 강남 전세 5억 이하 홍길동 010-1234-5678',
+      '❌ 손님 등록 취소',
       { reply_markup: MAIN_KEYBOARD }
     )
   }
@@ -580,7 +590,7 @@ async function handleText(chatId: number, text: string, agent: any) {
     return reply(
       chatId,
       `🙋 <b>손님 등록</b>\n\n다음 메시지에 손님이 찾는 조건을 알려주세요. 한 번에 다 말해도 되고, 하나씩 알려주셔도 돼요.\n\n<b>예시</b>\n<code>강남 전세 5억 이하 홍길동 010-1234-5678</code>`,
-      { reply_markup: MAIN_KEYBOARD }
+      { reply_markup: CLIENT_FLOW_KEYBOARD }
     )
   }
   if (text === 'ⓘ 내 정보') {
@@ -723,22 +733,6 @@ async function handleCallbackQuery(cb: any) {
         parse_mode: 'HTML',
       }).catch(() => {})
     }
-    return
-  }
-
-  // ========== 필드 질문 중 취소 ==========
-  if (data === 'field_cancel') {
-    await clearDraft(chatId)
-    if (messageId) {
-      await tg('editMessageText', {
-        chat_id: chatId,
-        message_id: messageId,
-        text: '❌ 손님 등록 취소',
-        parse_mode: 'HTML',
-        reply_markup: { inline_keyboard: [] },
-      }).catch(() => {})
-    }
-    await reply(chatId, '언제든 아래 버튼으로 다시 시작하세요 🙂', { reply_markup: MAIN_KEYBOARD })
     return
   }
 
