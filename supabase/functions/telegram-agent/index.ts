@@ -9,11 +9,42 @@
 // Output: { intent, updates, reply, action, missing_question }
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+import { createClient } from 'jsr:@supabase/supabase-js@2'
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')!
 const HWIK_INTERNAL_SECRET = Deno.env.get('HWIK_INTERNAL_SECRET') || ''
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
+const SERVICE_ROLE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
-// ========== 시스템 프롬프트 ==========
+const admin = createClient(SUPABASE_URL, SERVICE_ROLE, {
+  auth: { persistSession: false, autoRefreshToken: false }
+})
+
+// ========== DB에서 최신 프롬프트 로드 (5분 캐시) ==========
+
+const promptCache: Record<string, { text: string; expires: number }> = {}
+
+async function loadPrompt(draftType: string): Promise<string | null> {
+  const key = draftType
+  if (promptCache[key] && Date.now() < promptCache[key].expires) {
+    return promptCache[key].text
+  }
+  const { data } = await admin
+    .from('agent_prompts')
+    .select('prompt_text')
+    .eq('draft_type', draftType)
+    .eq('is_current', true)
+    .order('version', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  if (data?.prompt_text) {
+    promptCache[key] = { text: data.prompt_text, expires: Date.now() + 5 * 60 * 1000 }
+    return data.prompt_text
+  }
+  return null
+}
+
+// ========== 하드코딩 프롬프트 (DB에 없을 때 fallback) ==========
 
 function buildPrompt(draftType: 'property' | 'client', draft: any, mode: string): string {
   const draftJson = JSON.stringify(draft || {}, null, 2)
@@ -57,18 +88,23 @@ ${draftJson}
 
 규칙:
 - 부동산 매물과 무관한 메시지(일정, 인사, 일상 대화 등) → intent: off_topic
-  reply는 메시지 내용을 자연스럽게 인정하되 봇 기능 짧게 안내
+  reply는 자연스럽게 인정하되 봇 기능 짧게 안내
   예) "내일 3시 방문 예정이군요. 저는 매물·손님 등록을 도와드릴 수 있어요."
-- 이미 파악된 정보는 다시 묻지 말 것
-- confirm 조건: contact(이름 또는 전화번호) 있거나 "없음" 의사 밝히면 → action: confirm
-  (location이 없어도 contact 있으면 confirm 가능 — 위치는 나중에 수정 가능)
-- 월세이고 monthly_rent 있으면 보증금 따로 묻지 말 것 (없으면 그냥 진행)
-- 질문은 짧게, 한 번에 하나만. 층수/단지명 같은 선택적 정보는 묻지 말 것
+- 단, "없음", "없어", "나중에", "모름", "스킵", "패스" 는 off_topic 아님 → contact_skipped: true + action: confirm
+- 이미 draft에 있는 정보는 절대 다시 묻지 말 것
+- draft에 정보 있는 상태에서 추가 정보(층수, 특징 등)가 들어오면 → intent: property_data, action: confirm (이미 필수 채워졌으면)
+- confirm 조건 (아래 중 하나):
+    a) contact_name 또는 contact_phone 있음
+    b) contact_skipped: true (없음/나중에/모름/스킵 발화)
+  contact 외 나머지(층수, 단지명, 면적, 특징)는 없어도 confirm 가능
+- 질문할 게 있으면 딱 하나만. 층수/단지명/면적/주차/향 같은 선택 정보는 절대 묻지 말 것
+- 월세+monthly_rent 있으면 보증금 묻지 말 것
 - 가격 숫자 변환: 7억→700000000, 3억5천→350000000
   월세: 보증금1000 월50 → deposit:10000000, monthly_rent:50000
-  월세만 있을 때: 250만→monthly_rent:2500000 (보증금 묻지 말 것)
+  월세만 있을 때: 250만→monthly_rent:2500000
 - category: 아파트→apartment, 오피스텔→officetel, 빌라→villa,
             원룸→room, 상가→commercial, 사무실→office, 주택→house
+- 전화번호만 보내도(draft에 매물 정보 있으면) → contact_phone 저장 + action: confirm
 
 JSON으로만 응답 (null 필드는 생략):
 {
@@ -102,22 +138,26 @@ JSON으로만 응답 (null 필드는 생략):
 현재까지 파악된 정보:
 ${draftJson}
 
-필수 정보 5가지:
+필수 정보 4가지 (이것만 있으면 confirm):
 1. trade (거래유형): 매매/전세/월세/반전세
 2. location (지역): 구+동 또는 단지명 수준
 3. price (가격/예산): 금액
-4. category (매물종류): 아파트/오피스텔/빌라/원룸/상가/사무실
-5. contact (손님 연락처): 이름 또는 전화번호
+4. contact (손님 연락처): 이름 또는 전화번호 중 하나만 있어도 됨
+
+category(매물종류)는 선택사항 — 없어도 confirm 가능
 
 규칙:
 - 부동산 손님 조건과 무관한 메시지 → intent: off_topic
   reply는 메시지 내용을 자연스럽게 인정하되 봇 기능 짧게 안내
 - "찾아요", "원해요", "원하는", "구해요", "살고 싶어", "가능" 등 수요 표현 → intent: client_data
 - 이미 파악된 필드는 다시 묻지 말 것
-- confirm 조건: trade(거래유형) + location(지역) + price(가격/예산) + contact(이름 또는 전화번호) 4개 모두 있으면 반드시 confirm
-  category 없어도 confirm 가능. 층수/단지명/면적 없어도 confirm 가능.
-  이미 draft에 있는 필드는 채워진 것으로 간주할 것
-- 질문은 자연스럽게, 한 번에 1~2개까지
+- draft에 있는 필드는 이미 채워진 것. 절대 다시 묻지 말 것
+- confirm 조건: trade + location + price + contact(이름 또는 전화번호 중 하나) 4개 있으면 반드시 confirm
+  (category/층수/단지명/면적 없어도 confirm. draft 포함해서 판단)
+  contact는 이름 하나만 있어도 됨. 전화번호 하나만 있어도 됨. 둘 다 필요 없음.
+- "모름", "없어", "나중에", "스킵" 발화 시 해당 필드 스킵 처리 후 나머지 필드로 진행
+- draft에 정보 있는 상태에서 추가 발화(특징, 층수 등)가 들어오면 → intent: update, action: confirm (이미 필수 4개 있으면)
+- 질문은 딱 하나만. 한 번에 1개만 물어볼 것
 - 가격 숫자 변환: 5억→500000000, 보증금1000 월60→deposit:10000000,monthly_rent:60000
 - category: 아파트→apartment, 오피스텔→officetel, 빌라→villa,
             원룸→room, 상가→commercial, 사무실→office, 주택→house
@@ -203,7 +243,15 @@ Deno.serve(async (req) => {
     )
   }
 
-  const prompt = buildPrompt(draft_type, draft || {}, mode)
+  // DB에 최적화된 프롬프트가 있으면 사용, 없으면 하드코딩 fallback
+  const dbPrompt = mode === 'register' ? await loadPrompt(draft_type) : null
+  const basePrompt = dbPrompt || buildPrompt(draft_type, draft || {}, mode)
+  // draft 컨텍스트를 프롬프트에 주입 (DB 프롬프트는 {DRAFT} 플레이스홀더 사용)
+  const prompt = basePrompt.includes('{DRAFT}')
+    ? basePrompt.replace('{DRAFT}', JSON.stringify(draft || {}, null, 2))
+    : dbPrompt
+      ? basePrompt + `\n\n현재까지 파악된 정보:\n${JSON.stringify(draft || {}, null, 2)}`
+      : basePrompt
 
   // Claude Haiku 호출 (25초 타임아웃)
   const controller = new AbortController()
