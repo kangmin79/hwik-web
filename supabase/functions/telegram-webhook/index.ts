@@ -875,12 +875,18 @@ async function handleText(chatId: number, text: string, agent: any) {
       : buildClientSummary(mergedDraft)
     await reply(chatId, summary, { reply_markup: CONFIRM_KEYBOARD })
   } catch (e: any) {
-    const errMsg = `❌ 등록 실패: ${e.message || e}`
+    // parse-property 가 위치/정보 부족으로 실패한 경우 → 안내 메시지
+    const msg = e.message || ''
+    const isInfoShort = msg.includes('누락') || msg.includes('location') || msg.includes('400') || msg.includes('500')
+    const errMsg = isInfoShort
+      ? '매물·손님 정보를 더 알려주세요.\n예) 지역, 가격, 거래 유형'
+      : `파싱 오류: ${msg.slice(0, 80)}`
     if (thinkingId) {
       await tg('editMessageText', {
         chat_id: chatId,
         message_id: thinkingId,
         text: errMsg,
+        reply_markup: MAIN_INLINE,
       }).catch(() => {
         return reply(chatId, errMsg, { reply_markup: MAIN_INLINE })
       })
@@ -1112,7 +1118,7 @@ async function handleCallbackQuery(cb: any) {
       return
     }
 
-    // 매물 등록 완료 → auto-match 비동기 + 한마디 질문으로 이동
+    // 매물 등록 완료 → auto-match 비동기 + 공유방/사진 단계로
     const displayName = parsed.complex || parsed.location || '매물'
     fetch(`${SUPABASE_URL}/functions/v1/auto-match`, {
       method: 'POST',
@@ -1130,21 +1136,21 @@ async function handleCallbackQuery(cb: any) {
       }).catch(() => {})
     }
 
-    // draft 에 cardId/displayName 저장 후 한마디 질문
-    await saveDraft(chatId, agent.id, {
+    // draft 에 cardId/displayName 저장 후 공유방/사진 단계로
+    const pendingDraft = {
       draft: { ...parsed, _pending_card_id: cardId, _display_name: displayName },
       raw_text: draftRow.raw_text || '',
       skipped: [],
       missing_field: null,
-      state: 'comment',
+      state: 'share_select',
       draft_type: 'property',
-    })
-    return reply(chatId, '손님에게 전하는 말이 있으세요?', { reply_markup: SKIP_INLINE })
+    }
+    await saveDraft(chatId, agent.id, pendingDraft)
+    return askShareOrFinish(chatId, agent.id, { ...draftRow, ...pendingDraft, draft: pendingDraft.draft })
   }
 
-  // ========== 한마디/공유방 건너뛰기 ==========
+  // ========== 공유방/사진 건너뛰기 ==========
   if (data === 'step:skip') {
-    if (draftRow.state === 'comment') return askShareOrFinish(chatId, agent.id, draftRow)
     if (draftRow.state === 'share_select') return askPhoto(chatId, agent.id, draftRow)
     if (draftRow.state === 'photo_wait') return finishProperty(chatId, draftRow)
     return
