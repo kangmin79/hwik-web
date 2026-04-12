@@ -134,10 +134,13 @@ const CATEGORY_KO: Record<string, string> = {
   room: '원룸/빌라', commercial: '상가', office: '사무실', house: '주택',
 }
 
-// 누락 필드 질문 — inline 버튼은 선택지 필드만, 텍스트 필드는 reply_keyboard 유지
+// 누락 필드 질문 — 선택지 필드는 inline 버튼, 텍스트 필드는 CLIENT_FLOW_KEYBOARD 재적용
+// (reply_markup 이 inline 이면 reply_keyboard 는 기존 상태 유지)
 async function askField(chatId: number, field: string) {
   const kb = FIELD_KEYBOARDS[field]
-  return reply(chatId, FIELD_QUESTIONS[field], kb ? { reply_markup: kb } : {})
+  return reply(chatId, FIELD_QUESTIONS[field], {
+    reply_markup: kb || CLIENT_FLOW_KEYBOARD,
+  })
 }
 
 // 파싱 결과에서 특정 필드가 채워졌는지 (skipped 포함)
@@ -638,7 +641,9 @@ async function handleText(chatId: number, text: string, agent: any) {
 
   // ========== 파싱 ==========
   await tg('sendChatAction', { chat_id: chatId, action: 'typing' })
-  const thinkingRes = await reply(chatId, '🤖 분석 중...')
+  const thinkingRes = await reply(chatId, '🤖 분석 중...', {
+    reply_markup: inClientFlow ? CLIENT_FLOW_KEYBOARD : MAIN_KEYBOARD,
+  })
   const thinkingJson = await thinkingRes.json().catch(() => ({}))
   const thinkingId = thinkingJson?.result?.message_id as number | undefined
 
@@ -698,10 +703,10 @@ async function handleText(chatId: number, text: string, agent: any) {
         message_id: thinkingId,
         text: errMsg,
       }).catch(() => {
-        return reply(chatId, errMsg)
+        return reply(chatId, errMsg, { reply_markup: MAIN_KEYBOARD })
       })
     } else {
-      await reply(chatId, errMsg)
+      await reply(chatId, errMsg, { reply_markup: MAIN_KEYBOARD })
     }
   }
 }
@@ -850,7 +855,9 @@ async function handleCallbackQuery(cb: any) {
     }
 
     // 매칭 진행
-    await reply(chatId, '🔍 AI가 딱 맞는 매물 찾고 있어요...')
+    await reply(chatId, '🔍 AI가 딱 맞는 매물 찾고 있어요...', {
+      reply_markup: MAIN_KEYBOARD,
+    })
     const internalHeaders = {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${ANON_KEY}`,
@@ -929,6 +936,8 @@ async function handleCallbackQuery(cb: any) {
         parse_mode: 'HTML',
       }).catch(() => {})
     }
+    // reply_keyboard 를 MAIN_KEYBOARD 로 되돌리기 위해 follow-up
+    await reply(chatId, '메뉴로 돌아왔어요.', { reply_markup: MAIN_KEYBOARD })
     return
   }
 }
@@ -980,7 +989,9 @@ Deno.serve(async (req) => {
     }
   } catch (e: any) {
     console.error('handler error:', e)
-    await reply(chatId, `❌ 오류: ${e.message || e}`).catch(() => {})
+    await reply(chatId, `❌ 오류: ${e.message || e}`, {
+      reply_markup: MAIN_KEYBOARD,
+    }).catch(() => {})
   }
 
   // Telegram 은 200 OK 만 받으면 됨 (재시도 방지)
