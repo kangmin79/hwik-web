@@ -316,7 +316,7 @@ def build_fallback_html(d):
         lines.append(f'<p style="font-size:15px;font-weight:600;margin-bottom:6px;">{txt}{_kind_badge(r.get("kind",""))}</p>')
     if bc and high.get(bc):
         h = high[bc]
-        txt = f"역대 최고가: {format_price(h.get('price'))}"
+        txt = f"최근 5년 최고가: {format_price(h.get('price'))}"
         if h.get("date"):
             txt += f" ({h['date']})"
         lines.append(f'<p style="font-size:13px;color:#6b7280;margin-bottom:6px;">{txt}{_kind_badge(h.get("kind",""))}</p>')
@@ -462,10 +462,10 @@ def build_fallback_html(d):
         faq.append((f"{name} 전세가율은?", f"{name}의 전세가율은 {jr}%입니다."))
     if bc and high.get(bc):
         h = high[bc]
-        a = f"역대 최고가는 {format_price(h.get('price'))}입니다."
+        a = f"최근 5년 최고가는 {format_price(h.get('price'))}입니다."
         if h.get("date"):
             a += f" ({h['date']})"
-        faq.append((f"{name} 역대 최고가는?", a))
+        faq.append((f"{name} 최근 5년 최고가는?", a))
     if subway:
         a = ", ".join(f"{esc(s.get('name',''))}({esc(clean_line(s.get('line','')))}) 도보 {walk_min(s.get('distance'))}" for s in subway[:3])
         faq.append((f"{name} 근처 지하철역은?", a))
@@ -521,7 +521,7 @@ def build_fallback_html(d):
     if bc and high.get(bc):
         h = high[bc]
         h_date = f" ({h['date']})" if h.get("date") else ""
-        seo.append(f"전용 {bc}㎡ 역대 최고가는 {format_price(h.get('price'))}{h_date}입니다.")
+        seo.append(f"전용 {bc}㎡ 최근 5년 최고가는 {format_price(h.get('price'))}{h_date}입니다.")
     if jr:
         seo.append(f"전세가율은 {jr}%입니다.")
     if year_ago and bc and rt.get(bc):
@@ -659,12 +659,12 @@ def build_jsonld(d):
     high = d.get("all_time_high") or {}
     if bc and high.get(bc):
         h = high[bc]
-        a_text = f"역대 최고가는 {format_price(h.get('price'))}입니다."
+        a_text = f"최근 5년 최고가는 {format_price(h.get('price'))}입니다."
         if h.get("date"):
             a_text += f" ({h['date']})"
         faq_items.append({
             "@type": "Question",
-            "name": f"{name} 역대 최고가는?",
+            "name": f"{name} 최근 5년 최고가는?",
             "acceptedAnswer": {"@type": "Answer", "text": a_text},
         })
     subway = d.get("nearby_subway") or []
