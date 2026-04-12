@@ -496,72 +496,6 @@ async function handleCommand(chatId: number, cmd: string, agent: any) {
   return reply(chatId, '아래 버튼을 이용해주세요.', { reply_markup: MAIN_KEYBOARD })
 }
 
-// ========== 매물 등록 (단발성, 기존 플로우) ==========
-async function registerPropertyOneShot(chatId: number, text: string, agent: any, thinkingId: number | undefined, parsed: any) {
-  const cardId = crypto.randomUUID().replace(/-/g, '').slice(0, 12)
-  const cardData: Record<string, unknown> = {
-    id: cardId,
-    agent_id: agent.id,
-    property: { ...parsed, rawText: text },
-    style: 'noimg',
-    color: 'blue',
-    trade_status: '계약가능',
-    search_text: parsed.search_text || text,
-    search_text_private: parsed.search_text_private || null,
-    embedding: parsed.embedding || null,
-    price_number: parsed.price_number || null,
-    deposit: parsed.deposit || null,
-    monthly_rent: parsed.monthly_rent || null,
-    contact_name: parsed.contact_name || null,
-    contact_phone: parsed.contact_phone || null,
-    tags: parsed.tags || [],
-  }
-
-  const { error } = await admin.from('cards').insert(cardData)
-  if (error) throw new Error(`DB insert 실패: ${error.message}`)
-
-  if (thinkingId) {
-    await tg('deleteMessage', { chat_id: chatId, message_id: thinkingId }).catch(() => {})
-  }
-
-  const typeEmoji: Record<string, string> = {
-    '매매': '🏠', '전세': '🔑', '월세': '💰',
-  }
-  const emoji = typeEmoji[parsed.type] || '🏠'
-  const tagLine = Array.isArray(parsed.tags) && parsed.tags.length
-    ? '🏷 ' + parsed.tags.slice(0, 8).map((t: string) => `#${t}`).join(' ')
-    : null
-  const summary = [
-    `${emoji} <b>${parsed.type || '매물'} 등록 완료</b>`,
-    parsed.price ? `💵 ${parsed.price}` : null,
-    parsed.complex ? `🏢 ${parsed.complex}` : null,
-    parsed.location ? `📍 ${parsed.location}` : null,
-    parsed.area ? `📐 ${parsed.area}` : null,
-    parsed.contact_name
-      ? `👤 ${parsed.contact_name}${parsed.contact_phone ? ' · ' + parsed.contact_phone : ''}`
-      : null,
-    tagLine,
-  ].filter(Boolean).join('\n')
-
-  await reply(chatId, `${summary}\n\n🔗 https://hwik.kr/property_chat.html?id=${cardId}`, {
-    reply_markup: MAIN_KEYBOARD,
-  })
-
-  // 매물 → auto-match (비동기)
-  const internalHeaders = {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${ANON_KEY}`,
-    'apikey': ANON_KEY,
-    'x-hwik-internal': HWIK_INTERNAL_SECRET,
-    'x-agent-id': agent.id,
-  }
-  fetch(`${SUPABASE_URL}/functions/v1/auto-match`, {
-    method: 'POST',
-    headers: internalHeaders,
-    body: JSON.stringify({ card_id: cardId, agent_id: agent.id }),
-  }).catch(() => {})
-}
-
 // ========== Text handlers ==========
 async function handleText(chatId: number, text: string, agent: any) {
   // 연동 안 됐으면 폰번호로 연결 시도
@@ -708,16 +642,12 @@ async function handleText(chatId: number, text: string, agent: any) {
       await tg('deleteMessage', { chat_id: chatId, message_id: thinkingId }).catch(() => {})
     }
 
-    // ========== 비-flow 매물 단발성 (버튼 안 누르고 바로 타이핑) ==========
-    if (!inAnyFlow && !isClient) {
-      return registerPropertyOneShot(chatId, text, agent, undefined, parsed)
-    }
-
     // ========== 손님 / 매물 채팅 플로우 (공통) ==========
+    // 버튼 안 누르고 바로 타이핑해도 AI 판정대로 flow 시작 — 단발성 경로 제거
     const mergedDraft = mergeDraft(existingDraft?.draft || {}, parsed)
     const skipped = existingDraft?.skipped || []
     const newRaw = combinedRaw
-    const flowType = inPropertyFlow ? 'property' : 'client'
+    const flowType: 'client' | 'property' = isClient ? 'client' : 'property'
 
     const missing = findMissingField(mergedDraft, skipped, flowType)
     if (missing) {
@@ -741,7 +671,7 @@ async function handleText(chatId: number, text: string, agent: any) {
       state: 'confirm',
       draft_type: flowType,
     })
-    const summary = inPropertyFlow
+    const summary = flowType === 'property'
       ? buildPropertySummary(mergedDraft)
       : buildClientSummary(mergedDraft)
     await reply(chatId, summary, { reply_markup: CONFIRM_KEYBOARD })
