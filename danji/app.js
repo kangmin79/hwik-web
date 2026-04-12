@@ -865,24 +865,27 @@ function highlightChartPoint(type) {
 
   const dataset = chart.data.datasets[0];
 
-  // 정확한 날짜 매칭 → 없으면 월(YYYY-MM) 매칭으로 폴백
-  const exactMatch = dataset.data.some(p => String(typeof p === 'object' ? p.x : p) === targetDate);
-  const matchFn = (px) => exactMatch
-    ? String(px) === targetDate
-    : String(px).slice(0, 7) === targetDate.slice(0, 7);
+  // 날짜 + 가격 동시 매칭 (같은 날 여러 거래 중 정확한 1건만 하이라이트)
+  const targetKey = currentPyeong + (currentTab === '전세' ? '_jeonse' : currentTab === '월세' ? '_wolse' : '');
+  const targetData = type === 'recent'
+    ? (d.recent_trade || {})[targetKey]
+    : (d.all_time_high || {})[targetKey];
+  const targetPrice = targetData ? Math.round(targetData.price / 100) / 100 : null;
+
+  const matchFn = (px, py) => {
+    const dateOk = String(px) === targetDate || String(px).slice(0, 7) === targetDate.slice(0, 7);
+    if (!dateOk) return false;
+    if (targetPrice === null) return true;
+    return Math.abs(py - targetPrice) < 0.1; // 1000만원 오차 허용
+  };
 
   const colors = dataset.data.map(p => {
-    const px = typeof p === 'object' ? p.x : p;
-    if (!matchFn(px)) return 'rgba(245,200,66,0.4)';
+    if (!matchFn(p.x, p.y)) return 'rgba(245,200,66,0.4)';
     return type === 'recent' ? '#f5c842' : '#f87171';
   });
-  const radii = dataset.data.map(p => {
-    const px = typeof p === 'object' ? p.x : p;
-    return matchFn(px) ? 10 : 4;
-  });
+  const radii = dataset.data.map(p => matchFn(p.x, p.y) ? 10 : 4);
   const borders = dataset.data.map(p => {
-    const px = typeof p === 'object' ? p.x : p;
-    if (!matchFn(px)) return 'rgba(245,200,66,0.2)';
+    if (!matchFn(p.x, p.y)) return 'rgba(245,200,66,0.2)';
     return type === 'recent' ? '#fff' : '#fca5a5';
   });
 
