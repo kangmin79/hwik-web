@@ -592,7 +592,7 @@ async function handleText(chatId: number, text: string, agent: any) {
     })
     return reply(
       chatId,
-      `🙋 <b>손님 등록</b>\n\n다음 메시지에 손님이 찾는 조건을 알려주세요. 한 번에 다 말해도 되고, 하나씩 알려주셔도 돼요.\n\n<b>예시</b>\n<code>강남 전세 5억 이하 홍길동 010-1234-5678</code>`,
+      `🙋 <b>손님 등록</b>\n\n다음 메시지에 손님이 찾는 조건을 알려주세요. 한 번에 다 말해도 되고, 하나씩 알려주셔도 돼요.\n\n<b>예시</b>\n<code>강남 전세 5억 이하 홍길동 010-1234-5678</code>\n\n💡 매물 등록하려던 거면 🏠 매물 탭하세요`,
       { reply_markup: CLIENT_FLOW_KEYBOARD }
     )
   }
