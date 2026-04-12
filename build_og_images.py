@@ -102,7 +102,7 @@ def fetch_all_danji():
             headers={**SB_HEADERS, "Prefer": ""},
             params={
                 "select": "id,complex_name,location,build_year,total_units,"
-                          "categories,recent_trade,all_time_high,jeonse_rate,builder,updated_at",
+                          "categories,recent_trade,all_time_high,jeonse_rate,builder,pyeongs_map,updated_at",
                 "order": "id",
                 "offset": offset,
                 "limit": 500,
@@ -137,8 +137,10 @@ def extract_og_data(d):
     if not sale_price:
         return None
 
-    area_int = safe_int(bc, 0)
-    ppm = round(sale_price / area_int) if area_int > 0 else None
+    # ㎡당 가격: 공급면적 기준 (없으면 표시 안 함)
+    pm = d.get("pyeongs_map") or {}
+    supply_area = (pm.get(bc) or {}).get("supply")
+    ppm = round(sale_price / supply_area) if supply_area and supply_area > 0 else None
 
     # 최고가 대비 차이
     high_price = high.get("price")
