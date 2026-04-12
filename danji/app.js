@@ -519,14 +519,14 @@ function render() {
     <!-- 핵심 시세 카드 (월세 탭에서는 숨김) -->
     ${currentTab !== '월세' ? `<div class="price-cards">
       <div class="price-card primary">
-        <div class="price-card-label">최근 ${currentTab === '전세' ? '전세가' : '실거래가'}</div>
-        <div class="price-card-value">${recentPrice ? formatPrice(recentPrice) : '-'}${recentData ? kindBadge(recentData.kind || '') : ''}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;"><span class="price-card-label">최근 ${currentTab === '전세' ? '전세가' : '실거래가'}</span>${recentData ? kindBadge(recentData.kind || '') : ''}</div>
+        <div class="price-card-value">${recentPrice ? formatPrice(recentPrice) : '-'}</div>
         <div class="price-card-sub">${recentData && recentData.floor ? recentData.floor + '층' : ''}${recentData && recentData.date ? ' · ' + recentData.date : ''}</div>
         ${changeHtml}
       </div>
       <div class="price-card secondary">
-        <div class="price-card-label">최근 5년 최고${currentTab === '전세' ? ' 전세가' : '가'}</div>
-        <div class="price-card-value">${highPrice ? formatPrice(highPrice) : '-'}${highData ? kindBadge(highData.kind || '') : ''}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;"><span class="price-card-label">최근 5년 최고${currentTab === '전세' ? ' 전세가' : '가'}</span>${highData ? kindBadge(highData.kind || '') : ''}</div>
+        <div class="price-card-value">${highPrice ? formatPrice(highPrice) : '-'}</div>
         <div class="price-card-sub">${highData && highData.floor ? highData.floor + '층' : ''}${highData && highData.date ? ' · ' + highData.date : ''}</div>
       </div>
     </div>` : ''}
