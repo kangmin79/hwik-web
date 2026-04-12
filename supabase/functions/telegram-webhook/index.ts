@@ -569,7 +569,7 @@ async function handleText(chatId: number, text: string, agent: any) {
     })
     return reply(
       chatId,
-      `🙋 <b>손님 등록</b>\n\n다음 메시지에 손님이 찾는 조건을 알려주세요. 한 번에 다 말해도 되고, 하나씩 알려주셔도 돼요.\n\n<b>예시</b>\n<code>강남 전세 5억 이하 홍길동 010-1234-5678</code>\n\n빠진 정보는 제가 이어서 물어볼게요 🙂\n<i>취소: "처음부터" 입력</i>`,
+      `🙋 <b>손님 등록</b>\n\n다음 메시지에 손님이 찾는 조건을 알려주세요. 한 번에 다 말해도 되고, 하나씩 알려주셔도 돼요.\n\n<b>예시</b>\n<code>강남 전세 5억 이하 홍길동 010-1234-5678</code>`,
       { reply_markup: MAIN_KEYBOARD }
     )
   }
