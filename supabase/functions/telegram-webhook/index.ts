@@ -88,6 +88,13 @@ const FLOW_CANCEL_INLINE = {
   ],
 }
 
+// 선택적 단계(한마디/공유방)에서 건너뛰기 버튼
+const SKIP_INLINE = {
+  inline_keyboard: [
+    [{ text: '건너뛰기', callback_data: 'step:skip' }],
+  ],
+}
+
 // ========== 등록 채팅 플로우 상수 (손님/매물 공통) ==========
 // mobile.html _REQUIRED_FIELDS / _FIELD_QUESTIONS / _SKIP_KEYWORDS 의 봇 버전
 const REQUIRED_CLIENT_FIELDS = ['trade', 'location', 'price', 'category', 'contact'] as const
@@ -303,6 +310,49 @@ async function saveDraft(chatId: number, agentId: string, patch: Record<string, 
 
 async function clearDraft(chatId: number) {
   return admin.from('telegram_drafts').delete().eq('chat_id', chatId)
+}
+
+// 중개사가 속한 공유방 목록
+async function fetchAgentRooms(agentId: string) {
+  const { data } = await admin
+    .from('share_room_members')
+    .select('share_rooms(id, name)')
+    .eq('member_id', agentId)
+    .eq('status', 'accepted')
+  return (data || []).map((r: any) => r.share_rooms).filter(Boolean)
+}
+
+// 공유방 선택 화면 (없으면 바로 완료)
+async function askShareOrFinish(chatId: number, agentId: string, draftRow: any) {
+  const rooms = await fetchAgentRooms(agentId)
+  if (!rooms.length) return finishProperty(chatId, draftRow)
+
+  await saveDraft(chatId, agentId, {
+    draft: draftRow.draft,
+    raw_text: draftRow.raw_text || '',
+    skipped: draftRow.skipped || [],
+    missing_field: null,
+    state: 'share_select',
+    draft_type: 'property',
+  })
+
+  const buttons = rooms.slice(0, 8).map((r: any) => [
+    { text: r.name, callback_data: `share:${r.id}` },
+  ])
+  buttons.push([{ text: '건너뛰기', callback_data: 'step:skip' }])
+  return reply(chatId, '공유방에 올릴까요?', { reply_markup: { inline_keyboard: buttons } })
+}
+
+// 매물 등록 최종 완료 메시지
+async function finishProperty(chatId: number, draftRow: any) {
+  const cardId = draftRow.draft?._pending_card_id as string
+  const displayName = draftRow.draft?._display_name as string || '매물'
+  await clearDraft(chatId)
+  return reply(
+    chatId,
+    `<b>${displayName}</b> 등록 완료\nhttps://hwik.kr/property_chat.html?id=${cardId}`,
+    { reply_markup: MAIN_INLINE, disable_web_page_preview: true } as Record<string, unknown>
+  )
 }
 
 // ========== Telegram API helpers ==========
@@ -649,6 +699,19 @@ async function handleText(chatId: number, text: string, agent: any) {
   const inPropertyFlow = draftType === 'property'
   const inAnyFlow = inClientFlow || inPropertyFlow
 
+  // ========== 한마디 입력 (property comment state) ==========
+  if (existingDraft?.state === 'comment' && existingDraft.draft?._pending_card_id) {
+    await admin.from('cards')
+      .update({ agent_comment: text })
+      .eq('id', existingDraft.draft._pending_card_id)
+    return askShareOrFinish(chatId, agent.id, existingDraft)
+  }
+
+  // ========== 공유방 선택 중 텍스트 → 버튼 다시 표시 ==========
+  if (existingDraft?.state === 'share_select') {
+    return askShareOrFinish(chatId, agent.id, existingDraft)
+  }
+
   // ========== 스킵 키워드 (누락 필드 질문 대기 중일 때만) ==========
   if (inAnyFlow && existingDraft.missing_field && SKIP_RE.test(text)) {
     const newSkipped = [...(existingDraft.skipped || []), existingDraft.missing_field]
@@ -978,24 +1041,55 @@ async function handleCallbackQuery(cb: any) {
       return
     }
 
-    // 매물 등록 완료 → 확인 카드 교체 + auto-match 비동기
+    // 매물 등록 완료 → auto-match 비동기 + 한마디 질문으로 이동
     const displayName = parsed.complex || parsed.location || '매물'
-    if (messageId) {
-      await tg('editMessageText', {
-        chat_id: chatId,
-        message_id: messageId,
-        text: `<b>${displayName}</b> 등록 완료\nhttps://hwik.kr/property_chat.html?id=${cardId}`,
-        parse_mode: 'HTML',
-        disable_web_page_preview: true,
-      }).catch(() => {})
-    }
-    await reply(chatId, '취소했어요.', { reply_markup: MAIN_INLINE })
     fetch(`${SUPABASE_URL}/functions/v1/auto-match`, {
       method: 'POST',
       headers: internalHeaders,
       body: JSON.stringify({ card_id: cardId, agent_id: agent.id }),
     }).catch(() => {})
+
+    // 확인 카드 → "등록됨" 으로 교체
+    if (messageId) {
+      await tg('editMessageText', {
+        chat_id: chatId,
+        message_id: messageId,
+        text: `<b>${displayName}</b> 등록됨.`,
+        parse_mode: 'HTML',
+      }).catch(() => {})
+    }
+
+    // draft 에 cardId/displayName 저장 후 한마디 질문
+    await saveDraft(chatId, agent.id, {
+      draft: { ...parsed, _pending_card_id: cardId, _display_name: displayName },
+      raw_text: draftRow.raw_text || '',
+      skipped: [],
+      missing_field: null,
+      state: 'comment',
+      draft_type: 'property',
+    })
+    return reply(chatId, '손님에게 전하는 말이 있으세요?', { reply_markup: SKIP_INLINE })
+  }
+
+  // ========== 한마디/공유방 건너뛰기 ==========
+  if (data === 'step:skip') {
+    if (draftRow.state === 'comment') return askShareOrFinish(chatId, agent.id, draftRow)
+    if (draftRow.state === 'share_select') return finishProperty(chatId, draftRow)
     return
+  }
+
+  // ========== 공유방 선택 ==========
+  if (data.startsWith('share:')) {
+    const roomId = data.slice(6)
+    const cardId = draftRow.draft?._pending_card_id as string
+    if (cardId && roomId) {
+      await admin.from('card_shares').insert({
+        card_id: cardId,
+        room_id: roomId,
+        shared_by: agent.id,
+      }).catch(() => {})
+    }
+    return finishProperty(chatId, draftRow)
   }
 
   // ========== 수정 (기존 draft 유지, 추가 입력 받기) ==========
