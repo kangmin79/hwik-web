@@ -10,7 +10,6 @@ let showSupply = false; // 전용/공급 토글
 // makeSlug → /makeSlug.js (외부 파일)
 let chart = null;
 let volumeChart = null;
-let RANK_INFO = null;
 
 // ── 유틸 ──
 function esc(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
@@ -501,7 +500,6 @@ function render() {
         <div>
           <h1 class="header-name">${esc(d.complex_name)}</h1>
           <div class="header-sub">${esc(d.location)} · ${d.total_units ? d.total_units.toLocaleString()+'세대' : ''} · ${d.build_year || ''}년${d.builder ? ' · '+esc(d.builder) : ''}</div>
-          <div id="rank-badge" style="display:none;margin-top:5px;font-size:11px;padding:2px 9px;background:rgba(245,200,66,0.2);border-radius:20px;color:#f5c842;font-weight:500;width:fit-content;"></div>
         </div>
       </div>
       <div class="tags">${tagHtml}</div>
@@ -660,8 +658,6 @@ function render() {
 
   // 차트
   drawChart();
-  // render() 재호출 시에도 배지 복원
-  renderRankBadge();
 }
 
 // ── 차트 (scatter — 점 하나 = 실거래 1건) ──
@@ -844,47 +840,6 @@ function showError(msg) {
   `;
 }
 
-// ── 구 내 랭킹 배지 ──
-function renderRankBadge() {
-  if (!RANK_INFO) return;
-  const badge = document.getElementById('rank-badge');
-  if (!badge) return;
-  const { rank, total, guName } = RANK_INFO;
-  const medal = rank === 1 ? '🥇 ' : rank === 2 ? '🥈 ' : rank === 3 ? '🥉 ' : '';
-  const topPct = Math.round(rank / total * 100);
-  const topText = topPct <= 10 ? ` · 상위 ${topPct}%` : '';
-  badge.textContent = `${medal}${guName} ${rank}위 / ${total}개 단지${topText}`;
-  badge.style.display = 'block';
-}
-
-async function loadRankInfo() {
-  if (!DATA || !currentPyeong) return;
-  const guName = (DATA.location || '').split(' ')[0];
-  if (!guName) return;
-  try {
-    const { data, error } = await sb.from('danji_pages')
-      .select('id, recent_trade, categories')
-      .ilike('location', guName + ' %');
-    if (error || !data || data.length < 2) return;
-    const curArea = parseInt(currentPyeong);
-    const priceList = data.map(row => {
-      const rt = row.recent_trade || {};
-      const cats = row.categories || [];
-      let bestKey = null, bestDiff = 999;
-      for (const k of cats) {
-        const diff = Math.abs(parseInt(k) - curArea);
-        if (diff < bestDiff && diff <= 20) { bestDiff = diff; bestKey = k; }
-      }
-      const price = bestKey && rt[bestKey] ? rt[bestKey].price : null;
-      return { id: row.id, price };
-    }).filter(r => r.price);
-    priceList.sort((a, b) => b.price - a.price);
-    const idx = priceList.findIndex(r => r.id === DATA.id);
-    if (idx === -1) return;
-    RANK_INFO = { rank: idx + 1, total: priceList.length, guName };
-    renderRankBadge();
-  } catch(e) { /* 랭킹 로드 실패해도 메인 기능에 영향 없음 */ }
-}
 
 // ── JSON-LD 구조화 데이터 (SEO) ──
 function injectJsonLd() {
@@ -945,4 +900,4 @@ function injectJsonLd() {
 }
 
 // ── 실행 ──
-loadData().then(() => { injectJsonLd(); loadRankInfo(); });
+loadData().then(() => { injectJsonLd(); });
