@@ -214,11 +214,11 @@ function render() {
   }
   if (school.length > 0) {
     function schoolColor(type) {
-      if (!type) return '#888';
-      if (type.includes('초등')) return '#4CAF50';
-      if (type.includes('중학')) return '#2196F3';
-      if (type.includes('고등')) return '#9C27B0';
-      return '#888';
+      if (!type) return { bg: '#f3f4f6', text: '#6b7280' };
+      if (type.includes('초등')) return { bg: '#dcfce7', text: '#16a34a' };
+      if (type.includes('중학')) return { bg: '#dbeafe', text: '#2563eb' };
+      if (type.includes('고등')) return { bg: '#ede9fe', text: '#7c3aed' };
+      return { bg: '#f3f4f6', text: '#6b7280' };
     }
     function schoolLabel(type) {
       if (!type) return '학';
@@ -230,7 +230,7 @@ function render() {
     const schoolItems = school.slice(0,3).map(s => {
       const bg = schoolColor(s.type);
       const label = schoolLabel(s.type);
-      return `<span class="station-tag"><span class="line-badge" style="background:${bg}">${label}</span><span class="station-name">${shortSchool(esc(s.name))}</span> <span class="station-time">${walkMin(s.distance)}</span></span>`;
+      return `<span class="station-tag"><span class="line-badge" style="background:${bg.bg};color:${bg.text}">${label}</span><span class="station-name">${shortSchool(esc(s.name))}</span> <span class="station-time">${walkMin(s.distance)}</span></span>`;
     }).join('<span class="tag-sep">·</span>');
     tagHtml += `<div class="tag-line tag-school-line">${schoolItems}</div>`;
   }
