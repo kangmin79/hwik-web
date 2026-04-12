@@ -254,10 +254,10 @@ function render() {
     return `<div class="pyeong-btn${active}" data-cat="${esc(c)}">${esc(label)}</div>`;
   }).join('');
 
-  // 현재 평형 기준 지표
-  const tradeKey = currentPyeong;
-  const jeonseKey = currentPyeong + '_jeonse';
-  const wolseKey = currentPyeong + '_wolse';
+  // 현재 평형 기준 지표 (currentPyeong이 null이면 빈 키로 처리)
+  const tradeKey = currentPyeong || '';
+  const jeonseKey = currentPyeong ? currentPyeong + '_jeonse' : '';
+  const wolseKey = currentPyeong ? currentPyeong + '_wolse' : '';
 
   let recentData, highData;
   if (currentTab === '매매') {

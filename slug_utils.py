@@ -85,11 +85,12 @@ def make_danji_slug(name, location, did, address=""):
             slug_parts.append(clean(d))
 
     # offi-/apt- 형태는 ID에 이미 단지명 포함
-    if did and (did.startswith("offi-") or did.startswith("apt-")):
-        slug_parts.append(did)
+    did_lower = (did or "").lower()
+    if did_lower and (did_lower.startswith("offi-") or did_lower.startswith("apt-")):
+        slug_parts.append(did_lower)
     else:
         slug_parts.append(clean(name))
-        slug_parts.append(did or "")
+        slug_parts.append(did_lower)
 
     return "-".join([clean(p) for p in slug_parts if p])
 

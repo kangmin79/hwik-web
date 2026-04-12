@@ -135,6 +135,8 @@ def fetch_all_danji():
         data = resp.json() if resp.status_code == 200 else []
         if not data:
             break
+        # apt- 구버전 단지 제외
+        data = [d for d in data if not d.get("id", "").startswith("apt-")]
         all_data.extend(data)
         offset += 500
         if len(data) < 500:

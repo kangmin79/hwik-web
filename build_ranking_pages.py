@@ -111,7 +111,7 @@ def process_data(all_danji):
     """전체 데이터를 랭킹용으로 가공"""
     result = []
     for d in all_danji:
-        if d.get("id", "").startswith("offi-"):
+        if d.get("id", "").startswith(("offi-", "apt-")):
             continue
         rt = d.get("recent_trade") or {}
         cats = d.get("categories") or []

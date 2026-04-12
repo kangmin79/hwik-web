@@ -551,7 +551,7 @@ def main():
     # 서울/인천/경기/5대 광역시 모두 지원. 이름 충돌은 (region_key, gu_name) 튜플 키로 해결.
     gu_map = defaultdict(list)  # key: (region_key, gu_name)
     for d in all_danji:
-        if d.get("id", "").startswith("offi-"):
+        if d.get("id", "").startswith(("offi-", "apt-")):
             continue
         # 지역 판정: address → "서울"/"부산"/... → region_key
         region_label = slug_detect_region(d.get("address", ""))

@@ -127,7 +127,7 @@ def fetch_all_danji():
                           "price_history,"
                           "nearby_subway,nearby_school,nearby_complex,"
                           "lat,lng,top_floor,parking,heating,builder,updated_at",
-                "id": "not.like.offi-*",  # 오피스텔 제외 (아파트만 생성)
+                "id": "not.like.offi-*",  # 오피스텔 제외 (apt- 구버전은 아래 Python 필터로 제거)
                 "order": "id",
                 "offset": offset,
                 "limit": 500,
@@ -137,6 +137,8 @@ def fetch_all_danji():
         data = resp.json() if resp.status_code == 200 else []
         if not data:
             break
+        # apt- 구버전 단지 제외
+        data = [d for d in data if not d.get("id", "").startswith("apt-")]
         all_data.extend(data)
         offset += 500
         if len(data) < 500:
