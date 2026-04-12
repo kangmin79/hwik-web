@@ -54,11 +54,11 @@ const MAIN_KEYBOARD = {
 // mobile.html _REQUIRED_FIELDS / _FIELD_QUESTIONS / _SKIP_KEYWORDS 의 봇 버전
 const REQUIRED_CLIENT_FIELDS = ['trade', 'location', 'price', 'category', 'contact'] as const
 const FIELD_QUESTIONS: Record<string, string> = {
-  trade: '손님이 원하는 <b>거래</b>는요?\n<i>매매 / 전세 / 월세 / 반전세</i>\n<i>없으면 "없음"</i>',
-  location: '손님이 원하는 <b>지역</b>은요?\n<i>예) 강남구 역삼동, 마포구, 분당</i>\n<i>없으면 "없음"</i>',
-  price: '손님 <b>예산</b>은 어느 정도인가요?\n<i>예) 5억 이하, 보증금 1000 월 60, 3억대</i>\n<i>없으면 "없음"</i>',
-  category: '손님이 원하는 <b>매물 종류</b>는요?\n<i>아파트 / 오피스텔 / 빌라 / 원룸 / 상가 / 사무실</i>\n<i>없으면 "없음"</i>',
-  contact: '손님 <b>이름이나 연락처</b> 알려주세요.\n<i>예) 홍길동 010-1234-5678</i>\n<i>없으면 "없음"</i>',
+  trade: '손님이 원하는 <b>거래</b>는요?',
+  location: '손님이 원하는 <b>지역</b>은요?\n예) 강남구 역삼동, 마포구, 분당',
+  price: '손님 <b>예산</b>은 어느 정도인가요?\n예) 5억 이하, 보증금 1000 월 60',
+  category: '손님이 원하는 <b>매물 종류</b>는요?',
+  contact: '손님 <b>이름이나 연락처</b> 알려주세요.\n예) 홍길동 010-1234-5678',
 }
 const SKIP_RE = /^(없음|없어|없습니다|스킵|skip|상관없|몰라요?|모름|패스|pass|생략)$/i
 const RESET_RE = /^(처음부터|리셋|취소|초기화)$/
@@ -190,7 +190,7 @@ function buildClientSummary(parsed: any): string {
   const missingLabel = !hasName && !hasPhone ? '이름·연락처' : !hasName ? '이름' : !hasPhone ? '연락처' : ''
   if (missingLabel) {
     lines.push('')
-    lines.push(`⚠️ <i>${missingLabel} 없이 등록됩니다 — 나중에 수정할 수 있어요</i>`)
+    lines.push(`⚠️ ${missingLabel} 없이 등록됩니다 — 나중에 수정할 수 있어요`)
   }
 
   lines.push('')
@@ -537,7 +537,7 @@ async function handleText(chatId: number, text: string, agent: any) {
     await clearDraft(chatId)
     return reply(
       chatId,
-      '처음부터 다시 알려주세요! 🙂\n<i>예) 강남 전세 5억 이하 홍길동 010-1234-5678</i>',
+      '처음부터 다시 알려주세요! 🙂\n예) 강남 전세 5억 이하 홍길동 010-1234-5678',
       { reply_markup: MAIN_KEYBOARD }
     )
   }
@@ -709,7 +709,7 @@ async function handleCallbackQuery(cb: any) {
       await tg('editMessageText', {
         chat_id: chatId,
         message_id: messageId,
-        text: '<i>이미 처리된 요청이에요.</i>',
+        text: '이미 처리된 요청이에요.',
         parse_mode: 'HTML',
       }).catch(() => {})
     }
@@ -854,7 +854,7 @@ async function handleCallbackQuery(cb: any) {
         if (!matches.length) {
           return reply(
             chatId,
-            '지금 당장 맞는 매물이 없네요 😅\n<i>새 매물이 등록되면 알림으로 알려드릴게요</i>',
+            '지금 당장 맞는 매물이 없네요 😅\n새 매물이 등록되면 알림으로 알려드릴게요',
             { reply_markup: MAIN_KEYBOARD }
           )
         }
@@ -891,7 +891,7 @@ async function handleCallbackQuery(cb: any) {
       await tg('editMessageText', {
         chat_id: chatId,
         message_id: messageId,
-        text: '✏️ <b>수정 모드</b>\n추가하거나 바꿀 내용을 알려주세요.\n<i>예) 이름 홍길동\n예) 지역 강남구\n예) 예산 5억 이하\n\n취소: "처음부터" 입력</i>',
+        text: '✏️ <b>수정 모드</b>\n추가하거나 바꿀 내용을 알려주세요.\n예) 이름 홍길동\n예) 지역 강남구\n예) 예산 5억 이하',
         parse_mode: 'HTML',
       }).catch(() => {})
     }
