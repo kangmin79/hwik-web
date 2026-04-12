@@ -330,8 +330,8 @@ function render() {
     return `
     <div class="trade-item">
       <div>
-        <div class="trade-price">${priceDisplay}${kindBadge(t.kind || '')}</div>
-        <div class="trade-detail">${pyLabel}${t.floor ? ' · ' + t.floor + '층' : ''}</div>
+        <div class="trade-price">${priceDisplay}</div>
+        <div class="trade-detail">${pyLabel}${t.floor ? ' · ' + t.floor + '층' : ''}${kindBadge(t.kind || '')}</div>
       </div>
       <div class="trade-date">${esc(t.date || '')}</div>
     </div>`;
