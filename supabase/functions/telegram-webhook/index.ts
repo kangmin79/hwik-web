@@ -73,12 +73,10 @@ const FLOW_KEYBOARD = {
 const MAIN_INLINE = {
   inline_keyboard: [
     [
-      { text: '📋 브리핑', callback_data: 'menu:brief' },
-      { text: '🏠 매물', callback_data: 'menu:property' },
-    ],
-    [
-      { text: '🙋 손님', callback_data: 'menu:client' },
-      { text: 'ⓘ 내 정보', callback_data: 'menu:me' },
+      { text: '브리핑', callback_data: 'menu:brief' },
+      { text: '매물', callback_data: 'menu:property' },
+      { text: '손님', callback_data: 'menu:client' },
+      { text: '내 정보', callback_data: 'menu:me' },
     ],
   ],
 }
@@ -86,7 +84,7 @@ const MAIN_INLINE = {
 // 등록 플로우 중 질문 메시지에 붙이는 버튼 — 취소 하나만 (채팅 공간 최소화)
 const FLOW_CANCEL_INLINE = {
   inline_keyboard: [
-    [{ text: '❌ 등록 취소', callback_data: 'flow:cancel' }],
+    [{ text: '등록 취소', callback_data: 'flow:cancel' }],
   ],
 }
 
@@ -110,9 +108,9 @@ const RESET_RE = /^(처음부터|리셋|취소|초기화)$/
 // 확인 카드 inline keyboard (메시지 하단 버튼)
 const CONFIRM_KEYBOARD = {
   inline_keyboard: [[
-    { text: '✅ 등록하기', callback_data: 'confirm_register' },
-    { text: '✏️ 수정', callback_data: 'confirm_edit' },
-    { text: '❌ 취소', callback_data: 'confirm_cancel' },
+    { text: '등록', callback_data: 'confirm_register' },
+    { text: '수정', callback_data: 'confirm_edit' },
+    { text: '취소', callback_data: 'confirm_cancel' },
   ]],
 }
 
@@ -127,7 +125,7 @@ const TRADE_KEYBOARD = {
       { text: '반전세', callback_data: 'ft:반전세' },
     ],
     [{ text: '없음', callback_data: 'ft:skip' }],
-    [{ text: '❌ 등록 취소', callback_data: 'flow:cancel' }],
+    [{ text: '등록 취소', callback_data: 'flow:cancel' }],
   ],
 }
 
@@ -146,7 +144,7 @@ const CATEGORY_KEYBOARD = {
       { text: '사무실', callback_data: 'fc:office' },
     ],
     [{ text: '없음', callback_data: 'fc:skip' }],
-    [{ text: '❌ 등록 취소', callback_data: 'flow:cancel' }],
+    [{ text: '등록 취소', callback_data: 'flow:cancel' }],
   ],
 }
 
@@ -406,51 +404,41 @@ async function buildBriefing(agentId: string): Promise<string> {
   const newMatches = matchRes.count || 0
 
   const lines: string[] = []
-  const hour = new Date(Date.now() + 9 * 3600 * 1000).getUTCHours()
-  const greet = hour < 6 ? '새벽이에요' : hour < 12 ? '좋은 아침이에요' : hour < 18 ? '좋은 오후에요' : '좋은 저녁이에요'
-  lines.push(`🌅 <b>${greet}</b>`)
-  lines.push('')
-
-  const typeIcon: Record<string, string> = {
-    '방문': '🏠', '전화': '📞', '계약': '📋', '상담': '💬', '매물소개': '📤',
-  }
 
   if (upcoming.length) {
-    lines.push(`📅 <b>오늘 일정 ${upcoming.length}건</b>`)
+    lines.push(`<b>오늘 일정 ${upcoming.length}건</b>`)
     upcoming.slice(0, 10).forEach((a: any) => {
       const ad = new Date(a.alert_date)
       const h = ad.getUTCHours() + 9
       const hh = h >= 24 ? h - 24 : h
       const mm = ad.getUTCMinutes()
       const time = `${hh}시${mm ? mm + '분' : ''}`
-      const icon = typeIcon[a.type] || '📌'
       const content = (a.content || '').replace(/\n/g, ' ').slice(0, 50)
-      lines.push(`${icon} ${time} · ${content}`)
+      lines.push(`${time} · ${content}`)
     })
-    if (upcoming.length > 10) lines.push(`  외 ${upcoming.length - 10}건`)
+    if (upcoming.length > 10) lines.push(`외 ${upcoming.length - 10}건`)
     lines.push('')
   }
 
   if (newMatches > 0) {
-    lines.push(`🎯 <b>새 매칭 ${newMatches}건</b>`)
-    lines.push(`https://hwik.kr/mobile.html 에서 확인`)
+    lines.push(`<b>새 매칭 ${newMatches}건</b>`)
+    lines.push(`https://hwik.kr/mobile.html`)
     lines.push('')
   }
 
   if (overdue.length) {
-    lines.push(`⏰ <b>지연 ${overdue.length}건</b>`)
+    lines.push(`<b>지연 ${overdue.length}건</b>`)
     overdue.slice(0, 5).forEach((a: any) => {
       const dateStr = a.alert_date.slice(5, 10).replace('-', '/')
       const content = (a.content || '').replace(/\n/g, ' ').slice(0, 40)
-      lines.push(`• ${dateStr} · ${content}`)
+      lines.push(`${dateStr} · ${content}`)
     })
-    if (overdue.length > 5) lines.push(`  외 ${overdue.length - 5}건`)
+    if (overdue.length > 5) lines.push(`외 ${overdue.length - 5}건`)
     lines.push('')
   }
 
   if (!upcoming.length && !newMatches && !overdue.length) {
-    lines.push('📭 오늘은 예정된 일정이 없어요.')
-    lines.push('편한 하루 보내세요 🙂')
+    lines.push('오늘 예정된 일정이 없어요.')
   }
 
   return lines.join('\n').trim()
@@ -483,13 +471,13 @@ async function handleCommand(chatId: number, cmd: string, agent: any) {
         const name = agent.agent_name || agent.business_name || '중개사'
         return reply(
           chatId,
-          `안녕하세요, <b>${name}</b>님! 🙂\n\n아래 버튼을 눌러서 시작하세요.\n\n• <b>📋 오늘 브리핑</b> — 지연·오늘 일정·새 매칭 한눈에\n• <b>🏠 매물 등록</b> — 매물 정보 자유롭게 입력\n• <b>🙋 손님 등록</b> — 찾는 손님 조건 입력\n• <b>ⓘ 내 정보</b> — 내 프로필 확인`,
+          `<b>${name}</b>님, 안녕하세요.\n\n브리핑 · 매물 · 손님 · 내 정보`,
           { reply_markup: MAIN_INLINE }
         )
       }
       return reply(
         chatId,
-        `안녕하세요! 휙 봇입니다. 🙂\n\n처음이시네요. 휙에 가입된 <b>전화번호</b>를 입력해주세요.\n\n예: <code>010-1234-5678</code>\n\n아직 가입 안 하셨다면 먼저 https://hwik.kr 에서 가입해주세요.`
+        `휙에 가입된 <b>전화번호</b>를 입력해주세요.`
       )
     }
 
@@ -581,7 +569,7 @@ async function handleText(chatId: number, text: string, agent: any) {
     if (!phone) {
       return reply(
         chatId,
-        '먼저 연동이 필요해요. 휙에 가입된 <b>전화번호</b>를 입력해주세요.\n\n예: <code>010-1234-5678</code>'
+        '휙에 가입된 <b>전화번호</b>를 입력해주세요.'
       )
     }
     const found = await findAgentByPhone(phone)
@@ -601,17 +589,17 @@ async function handleText(chatId: number, text: string, agent: any) {
     const name = found.agent_name || found.business_name || '중개사'
     return reply(
       chatId,
-      `<b>${name}</b>님, 연동 완료! 🎉\n\n아래 버튼을 눌러서 바로 시작하세요 👇`,
+      `<b>${name}</b>님, 연동 완료.`,
       { reply_markup: MAIN_INLINE }
     )
   }
 
   // ========== 리셋 / 취소 키워드 (어느 상태에서든 처음부터) ==========
-  if (RESET_RE.test(text) || text === '❌ 등록 취소') {
+  if (RESET_RE.test(text) || text === '등록 취소') {
     await clearDraft(chatId)
     return reply(
       chatId,
-      '❌ 등록 취소',
+      '취소했어요.',
       { reply_markup: MAIN_INLINE }
     )
   }
@@ -623,7 +611,7 @@ async function handleText(chatId: number, text: string, agent: any) {
       const brief = await buildBriefing(agent.id)
       return reply(chatId, brief, { reply_markup: MAIN_INLINE })
     } catch (e: any) {
-      return reply(chatId, `❌ 브리핑 조회 실패: ${e.message}`, { reply_markup: MAIN_INLINE })
+      return reply(chatId, `브리핑 조회 실패: ${e.message}`, { reply_markup: MAIN_INLINE })
     }
   }
   if (text === '🏠 매물') {
@@ -699,7 +687,7 @@ async function handleText(chatId: number, text: string, agent: any) {
 
   // ========== 파싱 ==========
   await tg('sendChatAction', { chat_id: chatId, action: 'typing' })
-  const thinkingRes = await reply(chatId, '🤖 분석 중...', {
+  const thinkingRes = await reply(chatId, '분석 중...', {
     reply_markup: inAnyFlow ? FLOW_CANCEL_INLINE : MAIN_INLINE,
   })
   const thinkingJson = await thinkingRes.json().catch(() => ({}))
@@ -805,7 +793,7 @@ async function handleCallbackQuery(cb: any) {
   // ========== 등록 취소 (flow 밖에서 눌러도 무해) ==========
   if (data === 'flow:cancel') {
     await clearDraft(chatId)
-    return reply(chatId, '❌ 등록 취소', { reply_markup: MAIN_INLINE })
+    return reply(chatId, '취소했어요.', { reply_markup: MAIN_INLINE })
   }
 
   const draftRow = await getDraftRow(chatId)
@@ -847,7 +835,7 @@ async function handleCallbackQuery(cb: any) {
       await tg('editMessageText', {
         chat_id: chatId,
         message_id: messageId,
-        text: `✅ <b>${field === 'trade' ? '거래' : '종류'}</b>: ${selectedLabel}`,
+        text: `<b>${field === 'trade' ? '거래' : '종류'}</b>: ${selectedLabel}`,
         parse_mode: 'HTML',
         reply_markup: { inline_keyboard: [] },
       }).catch(() => {})
@@ -918,7 +906,7 @@ async function handleCallbackQuery(cb: any) {
         await tg('editMessageText', {
           chat_id: chatId,
           message_id: messageId,
-          text: `❌ 등록 실패: ${error.message}`,
+          text: `등록 실패: ${error.message}`,
           parse_mode: 'HTML',
         }).catch(() => {})
       }
@@ -942,13 +930,13 @@ async function handleCallbackQuery(cb: any) {
         await tg('editMessageText', {
           chat_id: chatId,
           message_id: messageId,
-          text: `✅ <b>${displayName}</b>님 등록 완료\n\n🔗 https://hwik.kr/property_chat.html?id=${cardId}`,
+          text: `<b>${displayName}</b>님 등록 완료\nhttps://hwik.kr/property_chat.html?id=${cardId}`,
           parse_mode: 'HTML',
           disable_web_page_preview: true,
         }).catch(() => {})
       }
 
-      await reply(chatId, '🔍 AI가 딱 맞는 매물 찾고 있어요...', {
+      await reply(chatId, '매칭 매물 찾는 중...', {
         reply_markup: MAIN_INLINE,
       })
       fetch(`${SUPABASE_URL}/functions/v1/match-properties`, {
@@ -967,7 +955,7 @@ async function handleCallbackQuery(cb: any) {
           if (!matches.length) {
             return reply(
               chatId,
-              '지금 당장 맞는 매물이 없네요 😅\n새 매물이 등록되면 알림으로 알려드릴게요',
+              '지금 맞는 매물이 없어요. 새 매물 등록 시 알림 드릴게요.',
               { reply_markup: MAIN_INLINE }
             )
           }
@@ -982,7 +970,7 @@ async function handleCallbackQuery(cb: any) {
             .join('\n')
           return reply(
             chatId,
-            `🎯 <b>매칭 매물 ${matches.length}건</b>\n${lines}`,
+            `<b>매칭 매물 ${matches.length}건</b>\n${lines}`,
             { reply_markup: MAIN_INLINE }
           )
         })
@@ -991,19 +979,17 @@ async function handleCallbackQuery(cb: any) {
     }
 
     // 매물 등록 완료 → 확인 카드 교체 + auto-match 비동기
-    const typeEmoji: Record<string, string> = { '매매': '🏠', '전세': '🔑', '월세': '💰' }
-    const emoji = typeEmoji[parsed.type] || '🏠'
     const displayName = parsed.complex || parsed.location || '매물'
     if (messageId) {
       await tg('editMessageText', {
         chat_id: chatId,
         message_id: messageId,
-        text: `✅ ${emoji} <b>${displayName}</b> 등록 완료\n\n🔗 https://hwik.kr/property_chat.html?id=${cardId}`,
+        text: `<b>${displayName}</b> 등록 완료\nhttps://hwik.kr/property_chat.html?id=${cardId}`,
         parse_mode: 'HTML',
         disable_web_page_preview: true,
       }).catch(() => {})
     }
-    await reply(chatId, '메뉴로 돌아왔어요.', { reply_markup: MAIN_INLINE })
+    await reply(chatId, '취소했어요.', { reply_markup: MAIN_INLINE })
     fetch(`${SUPABASE_URL}/functions/v1/auto-match`, {
       method: 'POST',
       headers: internalHeaders,
@@ -1044,12 +1030,12 @@ async function handleCallbackQuery(cb: any) {
       await tg('editMessageText', {
         chat_id: chatId,
         message_id: messageId,
-        text: '❌ 등록 취소',
+        text: '취소했어요.',
         parse_mode: 'HTML',
       }).catch(() => {})
     }
     // reply_keyboard 를 MAIN_KEYBOARD 로 되돌리기 위해 follow-up
-    await reply(chatId, '메뉴로 돌아왔어요.', { reply_markup: MAIN_INLINE })
+    await reply(chatId, '취소했어요.', { reply_markup: MAIN_INLINE })
     return
   }
 }
@@ -1101,7 +1087,7 @@ Deno.serve(async (req) => {
     }
   } catch (e: any) {
     console.error('handler error:', e)
-    await reply(chatId, `❌ 오류: ${e.message || e}`, {
+    await reply(chatId, `오류: ${e.message || e}`, {
       reply_markup: MAIN_INLINE,
     }).catch(() => {})
   }
