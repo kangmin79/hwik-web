@@ -102,21 +102,6 @@ const DONE_INLINE = {
   ],
 }
 
-// ========== 등록 채팅 플로우 상수 (손님/매물 공통) ==========
-// mobile.html _REQUIRED_FIELDS / _FIELD_QUESTIONS / _SKIP_KEYWORDS 의 봇 버전
-const REQUIRED_CLIENT_FIELDS = ['trade', 'location', 'price', 'category', 'contact'] as const
-const REQUIRED_PROPERTY_FIELDS = ['contact'] as const
-const CLIENT_FIELD_QUESTIONS: Record<string, string> = {
-  trade: '손님이 원하는 <b>거래</b>는요?',
-  location: '손님이 원하는 <b>지역</b>은요?',
-  price: '손님 <b>예산</b>은 얼마예요?',
-  category: '손님이 원하는 <b>매물 종류</b>는요?',
-  contact: '손님 <b>이름이나 연락처</b> 알려주세요.',
-}
-const PROPERTY_FIELD_QUESTIONS: Record<string, string> = {
-  contact: '집주인이나 세입자 <b>이름과 연락처</b> 알려주세요.\n없으면 "없음"',
-}
-const SKIP_RE = /^(없음|없어|없습니다|스킵|skip|상관없|몰라요?|모름|패스|pass|생략)$/i
 const RESET_RE = /^(처음부터|리셋|취소|초기화)$/
 
 // 확인 카드 inline keyboard (메시지 하단 버튼)
@@ -128,87 +113,10 @@ const CONFIRM_KEYBOARD = {
   ]],
 }
 
-// 필드별 inline keyboard — 선택지 뻔한 필드만 (탭 한 번 = 파싱 없이 즉시 주입)
-// 마지막 row 에 등록 취소 — 플로우 중 언제든 빠져나올 수 있게
-const TRADE_KEYBOARD = {
-  inline_keyboard: [
-    [
-      { text: '매매', callback_data: 'ft:매매' },
-      { text: '전세', callback_data: 'ft:전세' },
-      { text: '월세', callback_data: 'ft:월세' },
-      { text: '반전세', callback_data: 'ft:반전세' },
-    ],
-    [{ text: '없음', callback_data: 'ft:skip' }],
-    [{ text: '등록 취소', callback_data: 'flow:cancel' }],
-  ],
-}
-
-const CATEGORY_KEYBOARD = {
-  inline_keyboard: [
-    [
-      { text: '아파트', callback_data: 'fc:apartment' },
-      { text: '오피스텔', callback_data: 'fc:officetel' },
-    ],
-    [
-      { text: '빌라', callback_data: 'fc:villa' },
-      { text: '원룸', callback_data: 'fc:room' },
-    ],
-    [
-      { text: '상가', callback_data: 'fc:commercial' },
-      { text: '사무실', callback_data: 'fc:office' },
-    ],
-    [{ text: '없음', callback_data: 'fc:skip' }],
-    [{ text: '등록 취소', callback_data: 'flow:cancel' }],
-  ],
-}
-
-const FIELD_KEYBOARDS: Record<string, any> = {
-  trade: TRADE_KEYBOARD,
-  category: CATEGORY_KEYBOARD,
-}
-
-// 카테고리 슬러그 → 한국어 라벨 (callback 후 확인 메시지용)
+// 카테고리 슬러그 → 한국어 라벨 (확인 카드용)
 const CATEGORY_KO: Record<string, string> = {
   apartment: '아파트', officetel: '오피스텔', villa: '빌라',
   room: '원룸/빌라', commercial: '상가', office: '사무실', house: '주택',
-}
-
-// 누락 필드 질문 — 선택지 필드는 inline 선택 버튼, 텍스트 필드는 취소+메뉴 inline
-// 모든 플로우 메시지에 inline 버튼 박아서 데스크톱/모바일 어디서든 탈출 가능
-async function askField(chatId: number, field: string, draftType: string) {
-  const kb = FIELD_KEYBOARDS[field]
-  const questions = draftType === 'property' ? PROPERTY_FIELD_QUESTIONS : CLIENT_FIELD_QUESTIONS
-  const text = questions[field] || CLIENT_FIELD_QUESTIONS[field]
-  return reply(chatId, text, {
-    reply_markup: kb || FLOW_CANCEL_INLINE,
-  })
-}
-
-// 파싱 결과에서 특정 필드가 채워졌는지 (skipped 포함)
-function hasField(draft: any, skipped: string[], field: string): boolean {
-  if (skipped.includes(field)) return true
-  const p = draft || {}
-  switch (field) {
-    case 'trade':
-      return !!(p.wanted_trade_type || (p.type && p.type !== '손님' && p.type !== ''))
-    case 'location':
-      return !!(p.location || p.complex)
-    case 'price':
-      return !!(p.price || p.price_number || p.deposit || p.monthly_rent)
-    case 'category':
-      return !!p.category
-    case 'contact':
-      return !!(p.contact_name || p.contact_phone)
-  }
-  return false
-}
-
-function findMissingField(draft: any, skipped: string[], draftType: string): string | null {
-  const list = draftType === 'property' ? REQUIRED_PROPERTY_FIELDS : REQUIRED_CLIENT_FIELDS
-  for (const f of list) {
-    if (!hasField(draft, skipped, f)) return f
-  }
-  return null
 }
 
 // 새 파싱 결과를 기존 draft 에 병합 (non-empty 값이 이김)
@@ -560,9 +468,14 @@ async function handlePhoto(chatId: number, photos: any[], agent: any) {
   )
 }
 
-async function parseProperty(text: string) {
-  // ANON_KEY 로 gateway JWT 체크 통과 + x-hwik-internal 헤더로 함수 내부 bypass 트리거
-  const res = await fetch(`${SUPABASE_URL}/functions/v1/parse-property`, {
+// ========== telegram-agent 호출 ==========
+async function callAgent(payload: {
+  text: string
+  draft: Record<string, unknown>
+  draft_type: 'property' | 'client'
+  mode?: string
+}) {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/telegram-agent`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -570,11 +483,11 @@ async function parseProperty(text: string) {
       'apikey': ANON_KEY,
       'x-hwik-internal': HWIK_INTERNAL_SECRET,
     },
-    body: JSON.stringify({ text }),
+    body: JSON.stringify(payload),
   })
   if (!res.ok) {
     const msg = await res.text()
-    throw new Error(`parse-property ${res.status}: ${msg.slice(0, 200)}`)
+    throw new Error(`telegram-agent ${res.status}: ${msg.slice(0, 100)}`)
   }
   return res.json()
 }
@@ -758,141 +671,105 @@ async function handleText(chatId: number, text: string, agent: any) {
     return handleCommand(chatId, '/me', agent)
   }
 
-  // ========== 현재 draft 상태 로드 ==========
+  // ========== 현재 draft 로드 ==========
   const existingDraft = await getDraftRow(chatId)
-  const draftType = existingDraft?.draft_type as string | undefined
-  const inClientFlow = draftType === 'client'
-  const inPropertyFlow = draftType === 'property'
-  const inAnyFlow = inClientFlow || inPropertyFlow
+  const draftType = (existingDraft?.draft_type || 'property') as 'property' | 'client'
+  const currentDraft = existingDraft?.draft || {}
+  const inAnyFlow = !!(existingDraft?.draft_type)
 
-  // ========== 한마디 입력 (property comment state) ==========
-  if (existingDraft?.state === 'comment' && existingDraft.draft?._pending_card_id) {
-    await admin.from('cards')
-      .update({ agent_comment: text })
-      .eq('id', existingDraft.draft._pending_card_id)
-    return askShareOrFinish(chatId, agent.id, existingDraft)
+  // ========== 등록 후 추가 작업 모드 (post_register) ==========
+  if (existingDraft?.state === 'post_register') {
+    await tg('sendChatAction', { chat_id: chatId, action: 'typing' })
+    try {
+      const result = await callAgent({ text, draft: currentDraft, draft_type: draftType, mode: 'post_register' })
+      const cardId = currentDraft._pending_card_id as string
+
+      if (result.action === 'finish') return finishProperty(chatId, existingDraft)
+      if (result.action === 'photo') return askPhoto(chatId, agent.id, existingDraft)
+      if (result.action === 'share') return askShareOrFinish(chatId, agent.id, existingDraft)
+
+      // 업데이트 있으면 카드에 반영
+      if (cardId && result.updates && Object.keys(result.updates).length > 0) {
+        await admin.from('cards').update(result.updates).eq('id', cardId).catch(() => {})
+      }
+      return reply(chatId, result.reply || '알겠어요.', { reply_markup: DONE_INLINE })
+    } catch {
+      return reply(chatId, '잠시 오류가 났어요. 다시 말씀해 주세요.', { reply_markup: DONE_INLINE })
+    }
   }
 
-  // ========== 공유방 선택 중 텍스트 → 버튼 다시 표시 ==========
-  if (existingDraft?.state === 'share_select') {
-    return askShareOrFinish(chatId, agent.id, existingDraft)
-  }
-
-  // ========== 사진 대기 중 텍스트 → 안내 ==========
+  // ========== 사진 대기 중 ==========
   if (existingDraft?.state === 'photo_wait') {
     return reply(chatId, '사진을 보내주시거나 완료를 눌러주세요.', { reply_markup: SKIP_INLINE })
   }
 
-  // ========== 스킵 키워드 (누락 필드 질문 대기 중일 때만) ==========
-  if (inAnyFlow && existingDraft.missing_field && SKIP_RE.test(text)) {
-    const newSkipped = [...(existingDraft.skipped || []), existingDraft.missing_field]
-    const nextMissing = findMissingField(existingDraft.draft, newSkipped, draftType!)
-    if (nextMissing) {
-      await saveDraft(chatId, agent.id, {
-        draft: existingDraft.draft,
-        raw_text: existingDraft.raw_text,
-        skipped: newSkipped,
-        missing_field: nextMissing,
-        state: 'idle',
-        draft_type: draftType!,
-      })
-      return askField(chatId, nextMissing, draftType!)
-    }
-    // 모두 채워짐 또는 스킵 → 확인 카드
-    await saveDraft(chatId, agent.id, {
-      draft: existingDraft.draft,
-      raw_text: existingDraft.raw_text,
-      skipped: newSkipped,
-      missing_field: null,
-      state: 'confirm',
-      draft_type: draftType!,
-    })
-    const summary = inClientFlow
-      ? buildClientSummary(existingDraft.draft)
-      : buildPropertySummary(existingDraft.draft)
-    await reply(chatId, summary, { reply_markup: CONFIRM_KEYBOARD })
-    return
+  // ========== 공유방 선택 중 ==========
+  if (existingDraft?.state === 'share_select') {
+    return askShareOrFinish(chatId, agent.id, existingDraft)
   }
 
-  // 너무 짧은 입력은 flow 중엔 허용, 그 외엔 거절
-  if (!inAnyFlow && text.trim().length < 10) {
-    return reply(chatId, '매물 정보가 너무 짧아요. 가격·위치·면적 등을 더 적어주세요.', { reply_markup: MAIN_INLINE })
-  }
-
-  // ========== 파싱 ==========
+  // ========== AI 에이전트로 대화 처리 ==========
   await tg('sendChatAction', { chat_id: chatId, action: 'typing' })
-  const thinkingRes = await reply(chatId, '분석 중...', {
+  const thinkingRes = await reply(chatId, '...', {
     reply_markup: inAnyFlow ? FLOW_CANCEL_INLINE : MAIN_INLINE,
   })
-  const thinkingJson = await thinkingRes.json().catch(() => ({}))
-  const thinkingId = thinkingJson?.result?.message_id as number | undefined
+  const thinkingId = (await thinkingRes.json().catch(() => ({}))).result?.message_id as number | undefined
+
+  const deleteThinking = () =>
+    thinkingId
+      ? tg('deleteMessage', { chat_id: chatId, message_id: thinkingId }).catch(() => {})
+      : Promise.resolve()
 
   try {
-    // 누적 raw (flow 중일 때만)
-    const combinedRaw = inAnyFlow
-      ? ((existingDraft.raw_text || '') + ' ' + text).trim()
-      : text
-    // 손님 flow: "손님 " 접두로 parse-property 힌트. 매물 flow: 그대로.
-    const parseInput = inClientFlow ? '손님 ' + combinedRaw : combinedRaw
-    const parsed = await parseProperty(parseInput)
-    const isClient = inClientFlow || (!inPropertyFlow && (parsed.type === '손님' || /손님|찾는/.test(parsed.type || '')))
+    const result = await callAgent({ text, draft: currentDraft, draft_type: draftType })
 
-    if (thinkingId) {
-      await tg('deleteMessage', { chat_id: chatId, message_id: thinkingId }).catch(() => {})
+    await deleteThinking()
+
+    // 부동산 무관 메시지
+    if (result.intent === 'off_topic') {
+      return reply(chatId, '매물이나 손님 등록 정보를 알려주세요.', { reply_markup: MAIN_INLINE })
     }
 
-    // ========== 손님 / 매물 채팅 플로우 (공통) ==========
-    // 버튼 안 누르고 바로 타이핑해도 AI 판정대로 flow 시작 — 단발성 경로 제거
-    const mergedDraft = mergeDraft(existingDraft?.draft || {}, parsed)
-    const skipped = existingDraft?.skipped || []
-    const newRaw = combinedRaw
-    const flowType: 'client' | 'property' = isClient ? 'client' : 'property'
+    // AI가 추출한 필드를 기존 draft에 병합
+    const mergedDraft = mergeDraft(currentDraft, result.updates || {})
 
-    const missing = findMissingField(mergedDraft, skipped, flowType)
-    if (missing) {
+    // intent에서 draft_type 자동 감지 (버튼 없이 바로 타이핑한 경우)
+    const detectedType: 'property' | 'client' =
+      result.intent === 'client_data' ? 'client'
+      : result.intent === 'property_data' ? 'property'
+      : draftType
+
+    if (result.action === 'confirm') {
+      // 필수 정보 다 모임 → 확인 카드
       await saveDraft(chatId, agent.id, {
         draft: mergedDraft,
-        raw_text: newRaw,
-        skipped,
-        missing_field: missing,
-        state: 'idle',
-        draft_type: flowType,
+        raw_text: text,
+        skipped: [],
+        missing_field: null,
+        state: 'confirm',
+        draft_type: detectedType,
       })
-      return askField(chatId, missing, flowType)
+      const summary = detectedType === 'property'
+        ? buildPropertySummary(mergedDraft)
+        : buildClientSummary(mergedDraft)
+      return reply(chatId, summary, { reply_markup: CONFIRM_KEYBOARD })
     }
 
-    // 모두 채워짐 → 확인 카드
+    // 아직 부족 → draft 저장 + AI가 만든 질문 전송
     await saveDraft(chatId, agent.id, {
       draft: mergedDraft,
-      raw_text: newRaw,
-      skipped,
+      raw_text: text,
+      skipped: [],
       missing_field: null,
-      state: 'confirm',
-      draft_type: flowType,
+      state: 'idle',
+      draft_type: detectedType,
     })
-    const summary = flowType === 'property'
-      ? buildPropertySummary(mergedDraft)
-      : buildClientSummary(mergedDraft)
-    await reply(chatId, summary, { reply_markup: CONFIRM_KEYBOARD })
+    const replyText = result.missing_question || result.reply || '조금 더 알려주세요.'
+    return reply(chatId, replyText, { reply_markup: FLOW_CANCEL_INLINE })
+
   } catch (e: any) {
-    // parse-property 가 위치/정보 부족으로 실패한 경우 → 안내 메시지
-    const msg = e.message || ''
-    const isInfoShort = msg.includes('누락') || msg.includes('location') || msg.includes('400') || msg.includes('500')
-    const errMsg = isInfoShort
-      ? '매물·손님 정보를 더 알려주세요.\n예) 지역, 가격, 거래 유형'
-      : `파싱 오류: ${msg.slice(0, 80)}`
-    if (thinkingId) {
-      await tg('editMessageText', {
-        chat_id: chatId,
-        message_id: thinkingId,
-        text: errMsg,
-        reply_markup: MAIN_INLINE,
-      }).catch(() => {
-        return reply(chatId, errMsg, { reply_markup: MAIN_INLINE })
-      })
-    } else {
-      await reply(chatId, errMsg, { reply_markup: MAIN_INLINE })
-    }
+    await deleteThinking()
+    return reply(chatId, '잠시 오류가 났어요. 다시 말씀해 주세요.', { reply_markup: MAIN_INLINE })
   }
 }
 
@@ -946,69 +823,6 @@ async function handleCallbackQuery(cb: any) {
         parse_mode: 'HTML',
       }).catch(() => {})
     }
-    return
-  }
-
-  // ========== 필드 버튼 (거래/종류) ==========
-  if (data.startsWith('ft:') || data.startsWith('fc:')) {
-    const prefix = data.slice(0, 2)
-    const value = data.slice(3)
-    const field = prefix === 'ft' ? 'trade' : 'category'
-
-    let newDraft = { ...(draftRow.draft || {}) }
-    const newSkipped = [...(draftRow.skipped || [])]
-
-    let selectedLabel = ''
-    if (value === 'skip') {
-      if (!newSkipped.includes(field)) newSkipped.push(field)
-      selectedLabel = '없음'
-    } else if (field === 'trade') {
-      newDraft.wanted_trade_type = value
-      selectedLabel = value
-    } else {
-      newDraft.category = value
-      selectedLabel = CATEGORY_KO[value] || value
-    }
-
-    // 현재 질문 메시지 → "✅ 선택 완료" 로 변환 (버튼 제거)
-    if (messageId) {
-      await tg('editMessageText', {
-        chat_id: chatId,
-        message_id: messageId,
-        text: `<b>${field === 'trade' ? '거래' : '종류'}</b>: ${selectedLabel}`,
-        parse_mode: 'HTML',
-        reply_markup: { inline_keyboard: [] },
-      }).catch(() => {})
-    }
-
-    const dt = (draftRow.draft_type as string) || 'client'
-    const nextMissing = findMissingField(newDraft, newSkipped, dt)
-    if (nextMissing) {
-      await saveDraft(chatId, agent.id, {
-        draft: newDraft,
-        raw_text: draftRow.raw_text,
-        skipped: newSkipped,
-        missing_field: nextMissing,
-        state: 'idle',
-        draft_type: dt,
-      })
-      await askField(chatId, nextMissing, dt)
-      return
-    }
-
-    // 모두 채워짐 → 확인 카드
-    await saveDraft(chatId, agent.id, {
-      draft: newDraft,
-      raw_text: draftRow.raw_text,
-      skipped: newSkipped,
-      missing_field: null,
-      state: 'confirm',
-      draft_type: dt,
-    })
-    const summary = dt === 'property'
-      ? buildPropertySummary(newDraft)
-      : buildClientSummary(newDraft)
-    await reply(chatId, summary, { reply_markup: CONFIRM_KEYBOARD })
     return
   }
 
@@ -1136,17 +950,21 @@ async function handleCallbackQuery(cb: any) {
       }).catch(() => {})
     }
 
-    // draft 에 cardId/displayName 저장 후 공유방/사진 단계로
-    const pendingDraft = {
-      draft: { ...parsed, _pending_card_id: cardId, _display_name: displayName },
+    // 등록 완료 → post_register 모드 (AI가 추가 작업 자유롭게 처리)
+    const pendingDraft = { ...parsed, _pending_card_id: cardId, _display_name: displayName }
+    await saveDraft(chatId, agent.id, {
+      draft: pendingDraft,
       raw_text: draftRow.raw_text || '',
       skipped: [],
       missing_field: null,
-      state: 'share_select',
+      state: 'post_register',
       draft_type: 'property',
-    }
-    await saveDraft(chatId, agent.id, pendingDraft)
-    return askShareOrFinish(chatId, agent.id, { ...draftRow, ...pendingDraft, draft: pendingDraft.draft })
+    })
+    return reply(
+      chatId,
+      `<b>${displayName}</b> 등록됐어요.\n사진, 공유방, 메모 등 추가할 게 있으면 말씀해 주세요.`,
+      { reply_markup: DONE_INLINE }
+    )
   }
 
   // ========== 공유방/사진 건너뛰기 ==========
