@@ -73,6 +73,9 @@ const CONFIRM_KEYBOARD = {
 }
 
 // 필드별 inline keyboard — 선택지 뻔한 필드만 (탭 한 번 = 파싱 없이 즉시 주입)
+// 모든 필드 질문에 "❌ 등록 취소" 버튼 붙여서 어디서든 중단 가능
+const CANCEL_ROW = [{ text: '❌ 등록 취소', callback_data: 'field_cancel' }]
+
 const TRADE_KEYBOARD = {
   inline_keyboard: [
     [
@@ -82,6 +85,7 @@ const TRADE_KEYBOARD = {
       { text: '반전세', callback_data: 'ft:반전세' },
     ],
     [{ text: '없음', callback_data: 'ft:skip' }],
+    CANCEL_ROW,
   ],
 }
 
@@ -100,7 +104,13 @@ const CATEGORY_KEYBOARD = {
       { text: '사무실', callback_data: 'fc:office' },
     ],
     [{ text: '없음', callback_data: 'fc:skip' }],
+    CANCEL_ROW,
   ],
+}
+
+// 텍스트 입력 필드(지역/예산/연락처)에는 취소 버튼만
+const TEXT_FIELD_KEYBOARD = {
+  inline_keyboard: [CANCEL_ROW],
 }
 
 const FIELD_KEYBOARDS: Record<string, any> = {
@@ -114,10 +124,10 @@ const CATEGORY_KO: Record<string, string> = {
   room: '원룸/빌라', commercial: '상가', office: '사무실', house: '주택',
 }
 
-// 누락 필드 질문 한 번에 보내기 — 선택지 있으면 inline 버튼, 없으면 타이핑 유도
+// 누락 필드 질문 한 번에 보내기 — 선택지 있으면 inline 버튼 + 취소, 없으면 취소만
 async function askField(chatId: number, field: string) {
-  const kb = FIELD_KEYBOARDS[field]
-  return reply(chatId, FIELD_QUESTIONS[field], kb ? { reply_markup: kb } : {})
+  const kb = FIELD_KEYBOARDS[field] || TEXT_FIELD_KEYBOARD
+  return reply(chatId, FIELD_QUESTIONS[field], { reply_markup: kb })
 }
 
 // 파싱 결과에서 특정 필드가 채워졌는지 (skipped 포함)
@@ -713,6 +723,22 @@ async function handleCallbackQuery(cb: any) {
         parse_mode: 'HTML',
       }).catch(() => {})
     }
+    return
+  }
+
+  // ========== 필드 질문 중 취소 ==========
+  if (data === 'field_cancel') {
+    await clearDraft(chatId)
+    if (messageId) {
+      await tg('editMessageText', {
+        chat_id: chatId,
+        message_id: messageId,
+        text: '❌ 손님 등록 취소',
+        parse_mode: 'HTML',
+        reply_markup: { inline_keyboard: [] },
+      }).catch(() => {})
+    }
+    await reply(chatId, '언제든 아래 버튼으로 다시 시작하세요 🙂', { reply_markup: MAIN_KEYBOARD })
     return
   }
 
