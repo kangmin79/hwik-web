@@ -725,9 +725,9 @@ async function handleText(chatId: number, text: string, agent: any) {
 
     await deleteThinking()
 
-    // 부동산 무관 메시지
+    // 부동산 무관 메시지 — AI가 만든 자연스러운 응답 사용
     if (result.intent === 'off_topic') {
-      return reply(chatId, '매물이나 손님 등록 정보를 알려주세요.', { reply_markup: MAIN_INLINE })
+      return reply(chatId, result.reply || '매물이나 손님 등록을 도와드릴 수 있어요.', { reply_markup: MAIN_INLINE })
     }
 
     // AI가 추출한 필드를 기존 draft에 병합
