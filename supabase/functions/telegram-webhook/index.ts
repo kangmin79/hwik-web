@@ -234,21 +234,20 @@ function buildClientSummary(parsed: any): string {
 
   const contactLine = [parsed.contact_name, parsed.contact_phone].filter(Boolean).join(' ')
   const tagLine = Array.isArray(parsed.tags) && parsed.tags.length
-    ? '🏷 ' + parsed.tags.slice(0, 6).map((t: string) => `#${t}`).join(' ')
+    ? parsed.tags.slice(0, 6).map((t: string) => `#${t}`).join(' ')
     : null
 
-  const lines: string[] = ['정리해드릴게요 ✨', '']
-  if (sumParts.length) lines.push(`📋 ${sumParts.join(' ')}`)
-  if (contactLine) lines.push(`👤 <b>${contactLine}</b> 손님`)
+  const lines: string[] = []
+  if (sumParts.length) lines.push(sumParts.join(' '))
+  if (contactLine) lines.push(`<b>${contactLine}</b> 손님`)
   if (tagLine) lines.push(tagLine)
 
-  // 누락 경고 (이름/연락처는 경고만, mobile.html 과 동일)
   const hasName = !!parsed.contact_name
   const hasPhone = !!parsed.contact_phone
   const missingLabel = !hasName && !hasPhone ? '이름·연락처' : !hasName ? '이름' : !hasPhone ? '연락처' : ''
   if (missingLabel) {
     lines.push('')
-    lines.push(`⚠️ ${missingLabel} 없이 등록됩니다 — 나중에 수정할 수 있어요`)
+    lines.push(`${missingLabel} 없이 등록됩니다`)
   }
 
   lines.push('')
@@ -258,30 +257,24 @@ function buildClientSummary(parsed: any): string {
 
 // 매물 확인 카드 본문 생성
 function buildPropertySummary(parsed: any): string {
-  const typeEmoji: Record<string, string> = {
-    '매매': '🏠', '전세': '🔑', '월세': '💰',
-  }
-  const emoji = typeEmoji[parsed.type] || '🏠'
   const tagLine = Array.isArray(parsed.tags) && parsed.tags.length
-    ? '🏷 ' + parsed.tags.slice(0, 8).map((t: string) => `#${t}`).join(' ')
+    ? parsed.tags.slice(0, 8).map((t: string) => `#${t}`).join(' ')
     : null
 
-  const lines: string[] = [`${emoji} <b>${parsed.type || '매물'} 등록 준비</b>`, '']
-  if (parsed.price) lines.push(`💵 ${parsed.price}`)
-  if (parsed.complex) lines.push(`🏢 ${parsed.complex}`)
-  if (parsed.location) lines.push(`📍 ${parsed.location}`)
-  if (parsed.area) lines.push(`📐 ${parsed.area}`)
-  if (parsed.floor) lines.push(`🏗 ${parsed.floor}`)
+  const lines: string[] = [`<b>${parsed.type || '매물'} 등록 준비</b>`, '']
+  if (parsed.price) lines.push(parsed.price)
+  if (parsed.complex) lines.push(parsed.complex)
+  if (parsed.location) lines.push(parsed.location)
+  if (parsed.area) lines.push(parsed.area)
+  if (parsed.floor) lines.push(parsed.floor)
   if (parsed.contact_name || parsed.contact_phone) {
-    const c = [parsed.contact_name, parsed.contact_phone].filter(Boolean).join(' · ')
-    lines.push(`👤 ${c}`)
+    lines.push([parsed.contact_name, parsed.contact_phone].filter(Boolean).join(' · '))
   }
   if (tagLine) lines.push(tagLine)
 
-  const hasContact = !!(parsed.contact_name || parsed.contact_phone)
-  if (!hasContact) {
+  if (!(parsed.contact_name || parsed.contact_phone)) {
     lines.push('')
-    lines.push('⚠️ 연락처 없이 등록됩니다 — 나중에 수정할 수 있어요')
+    lines.push('연락처 없이 등록됩니다')
   }
 
   lines.push('')
