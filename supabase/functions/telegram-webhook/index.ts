@@ -492,8 +492,62 @@ async function handleCommand(chatId: number, cmd: string, agent: any) {
         reply_markup: { remove_keyboard: true },
       })
     }
+
+    // ========== 주요 기능 명령어 (하단 키보드 대체 접근 경로) ==========
+    // 텔레그램 데스크톱에서 reply_keyboard 가 사라지는 이슈 대응
+    case '/brief':
+    case '/briefing': {
+      if (!agent) return reply(chatId, '아직 연동이 안 됐어요. /start 로 시작해주세요.')
+      return handleText(chatId, '📋 브리핑', agent)
+    }
+    case '/property':
+    case '/add_property': {
+      if (!agent) return reply(chatId, '아직 연동이 안 됐어요. /start 로 시작해주세요.')
+      return handleText(chatId, '🏠 매물', agent)
+    }
+    case '/client':
+    case '/add_client': {
+      if (!agent) return reply(chatId, '아직 연동이 안 됐어요. /start 로 시작해주세요.')
+      return handleText(chatId, '🙋 손님', agent)
+    }
+    case '/cancel': {
+      if (!agent) return reply(chatId, '아직 연동이 안 됐어요. /start 로 시작해주세요.')
+      return handleText(chatId, '❌ 등록 취소', agent)
+    }
+    case '/menu': {
+      return reply(
+        chatId,
+        '📋 <b>메뉴</b>\n\n• /brief — 오늘 브리핑\n• /property — 매물 등록\n• /client — 손님 등록\n• /me — 내 정보\n• /cancel — 진행 중인 등록 취소',
+        { reply_markup: MAIN_KEYBOARD }
+      )
+    }
+
+    // 봇 명령어 목록을 텔레그램에 등록 (최초 1회만 실행)
+    case '/setup_commands': {
+      const commands = [
+        { command: 'brief', description: '오늘 브리핑 (지연·일정·새 매칭)' },
+        { command: 'property', description: '매물 등록' },
+        { command: 'client', description: '손님 등록' },
+        { command: 'me', description: '내 정보' },
+        { command: 'cancel', description: '진행 중인 등록 취소' },
+        { command: 'menu', description: '메뉴 도움말' },
+        { command: 'start', description: '봇 시작' },
+      ]
+      const res1 = await tg('setMyCommands', { commands })
+      const res2 = await tg('setChatMenuButton', {
+        menu_button: { type: 'commands' },
+      })
+      const ok = res1.ok && res2.ok
+      return reply(
+        chatId,
+        ok
+          ? '✅ 명령어 메뉴 등록 완료 — 이제 하단 왼쪽의 ⋮ 메뉴 버튼이나 / 입력으로 접근 가능합니다.'
+          : `❌ 등록 실패: ${await res1.text().catch(() => '')} / ${await res2.text().catch(() => '')}`,
+        { reply_markup: MAIN_KEYBOARD }
+      )
+    }
   }
-  return reply(chatId, '아래 버튼을 이용해주세요.', { reply_markup: MAIN_KEYBOARD })
+  return reply(chatId, '아래 버튼을 이용해주세요. (/menu 로도 접근 가능)', { reply_markup: MAIN_KEYBOARD })
 }
 
 // ========== Text handlers ==========
