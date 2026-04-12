@@ -863,27 +863,26 @@ function highlightChartPoint(type) {
   }
   if (!targetDate) return;
 
-  // 날짜 앞 7자리(YYYY-MM)로 매칭
-  const targetMonth = targetDate.slice(0, 7);
   const dataset = chart.data.datasets[0];
-  const labels = chart.data.labels || chart.scales.x.ticks.map(t => t.label);
 
-  // 포인트별 색상 재설정
-  const colors = dataset.data.map((p, i) => {
+  // 정확한 날짜 매칭 → 없으면 월(YYYY-MM) 매칭으로 폴백
+  const exactMatch = dataset.data.some(p => String(typeof p === 'object' ? p.x : p) === targetDate);
+  const matchFn = (px) => exactMatch
+    ? String(px) === targetDate
+    : String(px).slice(0, 7) === targetDate.slice(0, 7);
+
+  const colors = dataset.data.map(p => {
     const px = typeof p === 'object' ? p.x : p;
-    const match = String(px).slice(0, 7) === targetMonth;
-    if (!match) return 'rgba(245,200,66,0.5)';
+    if (!matchFn(px)) return 'rgba(245,200,66,0.4)';
     return type === 'recent' ? '#f5c842' : '#f87171';
   });
-  const radii = dataset.data.map((p, i) => {
+  const radii = dataset.data.map(p => {
     const px = typeof p === 'object' ? p.x : p;
-    const match = String(px).slice(0, 7) === targetMonth;
-    return match ? 9 : 4;
+    return matchFn(px) ? 10 : 4;
   });
-  const borders = dataset.data.map((p, i) => {
+  const borders = dataset.data.map(p => {
     const px = typeof p === 'object' ? p.x : p;
-    const match = String(px).slice(0, 7) === targetMonth;
-    if (!match) return 'rgba(245,200,66,0.3)';
+    if (!matchFn(px)) return 'rgba(245,200,66,0.2)';
     return type === 'recent' ? '#fff' : '#fca5a5';
   });
 
