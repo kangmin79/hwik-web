@@ -68,6 +68,39 @@ const FLOW_KEYBOARD = {
   is_persistent: true,
 }
 
+// ========== Idle 메시지용 inline 메뉴 (데스크톱/모바일 공통 영구 버튼) ==========
+// reply_keyboard 가 데스크톱에서 사라지는 이슈 대응 — 메시지 자체에 박는 버튼
+const MAIN_INLINE = {
+  inline_keyboard: [
+    [
+      { text: '📋 브리핑', callback_data: 'menu:brief' },
+      { text: '🏠 매물', callback_data: 'menu:property' },
+    ],
+    [
+      { text: '🙋 손님', callback_data: 'menu:client' },
+      { text: 'ⓘ 내 정보', callback_data: 'menu:me' },
+    ],
+  ],
+}
+
+// 등록 플로우 중 보이는 inline 메뉴 — 취소 + 메인 4개
+// 모든 질문 메시지에 박아둬서 어디서든 빠져나오거나 다른 메뉴로 점프 가능
+const FLOW_CANCEL_INLINE = {
+  inline_keyboard: [
+    [
+      { text: '❌ 등록 취소', callback_data: 'flow:cancel' },
+    ],
+    [
+      { text: '📋 브리핑', callback_data: 'menu:brief' },
+      { text: '🏠 매물', callback_data: 'menu:property' },
+    ],
+    [
+      { text: '🙋 손님', callback_data: 'menu:client' },
+      { text: 'ⓘ 내 정보', callback_data: 'menu:me' },
+    ],
+  ],
+}
+
 // ========== 등록 채팅 플로우 상수 (손님/매물 공통) ==========
 // mobile.html _REQUIRED_FIELDS / _FIELD_QUESTIONS / _SKIP_KEYWORDS 의 봇 버전
 const REQUIRED_CLIENT_FIELDS = ['trade', 'location', 'price', 'category', 'contact'] as const
@@ -95,8 +128,7 @@ const CONFIRM_KEYBOARD = {
 }
 
 // 필드별 inline keyboard — 선택지 뻔한 필드만 (탭 한 번 = 파싱 없이 즉시 주입)
-// 취소는 reply_keyboard (FLOW_KEYBOARD) 에만 두고 여기엔 안 넣음
-// — 이유: 텔레그램 데스크톱 double-tap 좋아요 반응과 충돌 방지
+// 마지막 row 에 등록 취소 — 플로우 중 언제든 빠져나올 수 있게
 const TRADE_KEYBOARD = {
   inline_keyboard: [
     [
@@ -106,6 +138,7 @@ const TRADE_KEYBOARD = {
       { text: '반전세', callback_data: 'ft:반전세' },
     ],
     [{ text: '없음', callback_data: 'ft:skip' }],
+    [{ text: '❌ 등록 취소', callback_data: 'flow:cancel' }],
   ],
 }
 
@@ -124,6 +157,7 @@ const CATEGORY_KEYBOARD = {
       { text: '사무실', callback_data: 'fc:office' },
     ],
     [{ text: '없음', callback_data: 'fc:skip' }],
+    [{ text: '❌ 등록 취소', callback_data: 'flow:cancel' }],
   ],
 }
 
@@ -138,14 +172,14 @@ const CATEGORY_KO: Record<string, string> = {
   room: '원룸/빌라', commercial: '상가', office: '사무실', house: '주택',
 }
 
-// 누락 필드 질문 — 선택지 필드는 inline 버튼, 텍스트 필드는 FLOW_KEYBOARD 재적용
-// (reply_markup 이 inline 이면 reply_keyboard 는 기존 상태 유지)
+// 누락 필드 질문 — 선택지 필드는 inline 선택 버튼, 텍스트 필드는 취소+메뉴 inline
+// 모든 플로우 메시지에 inline 버튼 박아서 데스크톱/모바일 어디서든 탈출 가능
 async function askField(chatId: number, field: string, draftType: string) {
   const kb = FIELD_KEYBOARDS[field]
   const questions = draftType === 'property' ? PROPERTY_FIELD_QUESTIONS : CLIENT_FIELD_QUESTIONS
   const text = questions[field] || CLIENT_FIELD_QUESTIONS[field]
   return reply(chatId, text, {
-    reply_markup: kb || FLOW_KEYBOARD,
+    reply_markup: kb || FLOW_CANCEL_INLINE,
   })
 }
 
@@ -461,7 +495,7 @@ async function handleCommand(chatId: number, cmd: string, agent: any) {
         return reply(
           chatId,
           `안녕하세요, <b>${name}</b>님! 🙂\n\n아래 버튼을 눌러서 시작하세요.\n\n• <b>📋 오늘 브리핑</b> — 지연·오늘 일정·새 매칭 한눈에\n• <b>🏠 매물 등록</b> — 매물 정보 자유롭게 입력\n• <b>🙋 손님 등록</b> — 찾는 손님 조건 입력\n• <b>ⓘ 내 정보</b> — 내 프로필 확인`,
-          { reply_markup: MAIN_KEYBOARD }
+          { reply_markup: MAIN_INLINE }
         )
       }
       return reply(
@@ -478,7 +512,7 @@ async function handleCommand(chatId: number, cmd: string, agent: any) {
       return reply(
         chatId,
         `<b>${agent.agent_name || '(이름없음)'}</b>\n${agent.business_name || ''}\n${agent.phone || ''}\n\n연동일: ${linkedDate}`,
-        { reply_markup: MAIN_KEYBOARD }
+        { reply_markup: MAIN_INLINE }
       )
     }
 
@@ -518,7 +552,7 @@ async function handleCommand(chatId: number, cmd: string, agent: any) {
       return reply(
         chatId,
         '📋 <b>메뉴</b>\n\n• /brief — 오늘 브리핑\n• /property — 매물 등록\n• /client — 손님 등록\n• /me — 내 정보\n• /cancel — 진행 중인 등록 취소',
-        { reply_markup: MAIN_KEYBOARD }
+        { reply_markup: MAIN_INLINE }
       )
     }
 
@@ -543,11 +577,11 @@ async function handleCommand(chatId: number, cmd: string, agent: any) {
         ok
           ? '✅ 명령어 메뉴 등록 완료 — 이제 하단 왼쪽의 ⋮ 메뉴 버튼이나 / 입력으로 접근 가능합니다.'
           : `❌ 등록 실패: ${await res1.text().catch(() => '')} / ${await res2.text().catch(() => '')}`,
-        { reply_markup: MAIN_KEYBOARD }
+        { reply_markup: MAIN_INLINE }
       )
     }
   }
-  return reply(chatId, '아래 버튼을 이용해주세요. (/menu 로도 접근 가능)', { reply_markup: MAIN_KEYBOARD })
+  return reply(chatId, '아래 버튼을 이용해주세요. (/menu 로도 접근 가능)', { reply_markup: MAIN_INLINE })
 }
 
 // ========== Text handlers ==========
@@ -579,7 +613,7 @@ async function handleText(chatId: number, text: string, agent: any) {
     return reply(
       chatId,
       `<b>${name}</b>님, 연동 완료! 🎉\n\n아래 버튼을 눌러서 바로 시작하세요 👇`,
-      { reply_markup: MAIN_KEYBOARD }
+      { reply_markup: MAIN_INLINE }
     )
   }
 
@@ -589,7 +623,7 @@ async function handleText(chatId: number, text: string, agent: any) {
     return reply(
       chatId,
       '❌ 등록 취소',
-      { reply_markup: MAIN_KEYBOARD }
+      { reply_markup: MAIN_INLINE }
     )
   }
 
@@ -598,9 +632,9 @@ async function handleText(chatId: number, text: string, agent: any) {
     await tg('sendChatAction', { chat_id: chatId, action: 'typing' })
     try {
       const brief = await buildBriefing(agent.id)
-      return reply(chatId, brief, { reply_markup: MAIN_KEYBOARD })
+      return reply(chatId, brief, { reply_markup: MAIN_INLINE })
     } catch (e: any) {
-      return reply(chatId, `❌ 브리핑 조회 실패: ${e.message}`, { reply_markup: MAIN_KEYBOARD })
+      return reply(chatId, `❌ 브리핑 조회 실패: ${e.message}`, { reply_markup: MAIN_INLINE })
     }
   }
   if (text === '🏠 매물') {
@@ -612,7 +646,7 @@ async function handleText(chatId: number, text: string, agent: any) {
     return reply(
       chatId,
       `🏠 <b>매물 등록</b>\n\n다음 메시지에 매물 정보를 자유롭게 입력해주세요. 한 번에 다 말해도 되고, 하나씩 알려주셔도 돼요.\n\n<b>예시</b>\n<code>래미안 32평 15억 남향 고층 깨끗해 박사장 010-9999-8888</code>\n\n💡 손님 조건이면 🙋 손님 탭하세요`,
-      { reply_markup: FLOW_KEYBOARD }
+      { reply_markup: FLOW_CANCEL_INLINE }
     )
   }
   if (text === '🙋 손님') {
@@ -624,7 +658,7 @@ async function handleText(chatId: number, text: string, agent: any) {
     return reply(
       chatId,
       `🙋 <b>손님 등록</b>\n\n다음 메시지에 손님이 찾는 조건을 알려주세요. 한 번에 다 말해도 되고, 하나씩 알려주셔도 돼요.\n\n<b>예시</b>\n<code>강남 전세 5억 이하 홍길동 010-1234-5678</code>\n\n💡 매물 등록하려던 거면 🏠 매물 탭하세요`,
-      { reply_markup: FLOW_KEYBOARD }
+      { reply_markup: FLOW_CANCEL_INLINE }
     )
   }
   if (text === 'ⓘ 내 정보') {
@@ -671,13 +705,13 @@ async function handleText(chatId: number, text: string, agent: any) {
 
   // 너무 짧은 입력은 flow 중엔 허용, 그 외엔 거절
   if (!inAnyFlow && text.trim().length < 10) {
-    return reply(chatId, '매물 정보가 너무 짧아요. 가격·위치·면적 등을 더 적어주세요.', { reply_markup: MAIN_KEYBOARD })
+    return reply(chatId, '매물 정보가 너무 짧아요. 가격·위치·면적 등을 더 적어주세요.', { reply_markup: MAIN_INLINE })
   }
 
   // ========== 파싱 ==========
   await tg('sendChatAction', { chat_id: chatId, action: 'typing' })
   const thinkingRes = await reply(chatId, '🤖 분석 중...', {
-    reply_markup: inAnyFlow ? FLOW_KEYBOARD : MAIN_KEYBOARD,
+    reply_markup: inAnyFlow ? FLOW_CANCEL_INLINE : MAIN_INLINE,
   })
   const thinkingJson = await thinkingRes.json().catch(() => ({}))
   const thinkingId = thinkingJson?.result?.message_id as number | undefined
@@ -737,10 +771,10 @@ async function handleText(chatId: number, text: string, agent: any) {
         message_id: thinkingId,
         text: errMsg,
       }).catch(() => {
-        return reply(chatId, errMsg, { reply_markup: MAIN_KEYBOARD })
+        return reply(chatId, errMsg, { reply_markup: MAIN_INLINE })
       })
     } else {
-      await reply(chatId, errMsg, { reply_markup: MAIN_KEYBOARD })
+      await reply(chatId, errMsg, { reply_markup: MAIN_INLINE })
     }
   }
 }
@@ -760,6 +794,29 @@ async function handleCallbackQuery(cb: any) {
   const agent = await findAgentByChatId(chatId)
   if (!agent) {
     return reply(chatId, '연동이 해제되었어요. /start 로 다시 시작해주세요.')
+  }
+
+  // ========== 메뉴 버튼 (draft 유무와 무관하게 동작) ==========
+  // 모든 메시지에 박힌 MAIN_INLINE / FLOW_CANCEL_INLINE 에서 트리거
+  if (data.startsWith('menu:')) {
+    const target = data.slice(5)
+    const textMap: Record<string, string> = {
+      brief: '📋 브리핑',
+      property: '🏠 매물',
+      client: '🙋 손님',
+      me: 'ⓘ 내 정보',
+    }
+    const buttonText = textMap[target]
+    if (buttonText) {
+      return handleText(chatId, buttonText, agent)
+    }
+    return
+  }
+
+  // ========== 등록 취소 (flow 밖에서 눌러도 무해) ==========
+  if (data === 'flow:cancel') {
+    await clearDraft(chatId)
+    return reply(chatId, '❌ 등록 취소', { reply_markup: MAIN_INLINE })
   }
 
   const draftRow = await getDraftRow(chatId)
@@ -807,7 +864,8 @@ async function handleCallbackQuery(cb: any) {
       }).catch(() => {})
     }
 
-    const nextMissing = findMissingField(newDraft, newSkipped, 'client')
+    const dt = (draftRow.draft_type as string) || 'client'
+    const nextMissing = findMissingField(newDraft, newSkipped, dt)
     if (nextMissing) {
       await saveDraft(chatId, agent.id, {
         draft: newDraft,
@@ -815,9 +873,9 @@ async function handleCallbackQuery(cb: any) {
         skipped: newSkipped,
         missing_field: nextMissing,
         state: 'idle',
-        draft_type: 'client',
+        draft_type: dt,
       })
-      await askField(chatId, nextMissing, 'client')
+      await askField(chatId, nextMissing, dt)
       return
     }
 
@@ -828,11 +886,12 @@ async function handleCallbackQuery(cb: any) {
       skipped: newSkipped,
       missing_field: null,
       state: 'confirm',
-      draft_type: 'client',
+      draft_type: dt,
     })
-    await reply(chatId, buildClientSummary(newDraft), {
-      reply_markup: CONFIRM_KEYBOARD,
-    })
+    const summary = dt === 'property'
+      ? buildPropertySummary(newDraft)
+      : buildClientSummary(newDraft)
+    await reply(chatId, summary, { reply_markup: CONFIRM_KEYBOARD })
     return
   }
 
@@ -901,7 +960,7 @@ async function handleCallbackQuery(cb: any) {
       }
 
       await reply(chatId, '🔍 AI가 딱 맞는 매물 찾고 있어요...', {
-        reply_markup: MAIN_KEYBOARD,
+        reply_markup: MAIN_INLINE,
       })
       fetch(`${SUPABASE_URL}/functions/v1/match-properties`, {
         method: 'POST',
@@ -920,7 +979,7 @@ async function handleCallbackQuery(cb: any) {
             return reply(
               chatId,
               '지금 당장 맞는 매물이 없네요 😅\n새 매물이 등록되면 알림으로 알려드릴게요',
-              { reply_markup: MAIN_KEYBOARD }
+              { reply_markup: MAIN_INLINE }
             )
           }
           const lines = matches
@@ -935,7 +994,7 @@ async function handleCallbackQuery(cb: any) {
           return reply(
             chatId,
             `🎯 <b>매칭 매물 ${matches.length}건</b>\n${lines}`,
-            { reply_markup: MAIN_KEYBOARD }
+            { reply_markup: MAIN_INLINE }
           )
         })
         .catch(() => {})
@@ -955,7 +1014,7 @@ async function handleCallbackQuery(cb: any) {
         disable_web_page_preview: true,
       }).catch(() => {})
     }
-    await reply(chatId, '메뉴로 돌아왔어요.', { reply_markup: MAIN_KEYBOARD })
+    await reply(chatId, '메뉴로 돌아왔어요.', { reply_markup: MAIN_INLINE })
     fetch(`${SUPABASE_URL}/functions/v1/auto-match`, {
       method: 'POST',
       headers: internalHeaders,
@@ -1001,7 +1060,7 @@ async function handleCallbackQuery(cb: any) {
       }).catch(() => {})
     }
     // reply_keyboard 를 MAIN_KEYBOARD 로 되돌리기 위해 follow-up
-    await reply(chatId, '메뉴로 돌아왔어요.', { reply_markup: MAIN_KEYBOARD })
+    await reply(chatId, '메뉴로 돌아왔어요.', { reply_markup: MAIN_INLINE })
     return
   }
 }
@@ -1054,7 +1113,7 @@ Deno.serve(async (req) => {
   } catch (e: any) {
     console.error('handler error:', e)
     await reply(chatId, `❌ 오류: ${e.message || e}`, {
-      reply_markup: MAIN_KEYBOARD,
+      reply_markup: MAIN_INLINE,
     }).catch(() => {})
   }
 
