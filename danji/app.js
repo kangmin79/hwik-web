@@ -282,7 +282,7 @@ function render() {
     jeonseRate = Math.round(jeonseData.price / saleData.price * 1000) / 10;
   }
 
-  // 지표 변화량 (최근 3년 최고 대비 금액 + %)
+  // 지표 변화량 (최근 5년 최고 대비 금액 + %)
   // 최근 거래가 직거래면 시장가 왜곡 가능성이 커서 하락률 대신 주의 문구만 표시
   let changeHtml = '';
   if (recentPrice && highPrice) {
@@ -440,7 +440,7 @@ function render() {
     seoParts.push(priceText);
   }
   if (highPrice && highData) {
-    seoParts.push('최근 3년 최고가는 ' + formatPrice(highPrice) + (highData.date ? ' (' + highData.date + ')' : '') + '입니다.');
+    seoParts.push('최근 5년 최고가는 ' + formatPrice(highPrice) + (highData.date ? ' (' + highData.date + ')' : '') + '입니다.');
   }
   if (jeonseRate) {
     seoParts.push('전세가율은 ' + jeonseRate + '%입니다.');
@@ -469,7 +469,7 @@ function render() {
       if (_supplyArea > 0) faqItems.push({ q: `${d.complex_name} ㎡당 가격은?`, a: `${d.complex_name} ㎡당 가격은 공급면적(${Math.round(_supplyArea)}㎡) 기준 ${formatPrice(Math.round(recentPrice / _supplyArea))}입니다.` });
     }
     if (jeonseRate) faqItems.push({ q: `${d.complex_name} 전세가율은?`, a: `${d.complex_name}의 전세가율은 ${jeonseRate}%입니다.` });
-    if (highPrice) faqItems.push({ q: `${d.complex_name} 최근 3년 최고가는?`, a: `최근 3년 최고가는 ${formatPrice(highPrice)}입니다.${highData && highData.date ? ' ('+highData.date+')' : ''}` });
+    if (highPrice) faqItems.push({ q: `${d.complex_name} 최근 5년 최고가는?`, a: `최근 5년 최고가는 ${formatPrice(highPrice)}입니다.${highData && highData.date ? ' ('+highData.date+')' : ''}` });
   }
   // 매매/전세/월세 공통 FAQ
   if (subway.length > 0) faqItems.push({ q: `${d.complex_name} 근처 지하철역은?`, a: subway.map(s => `<span style="color:${lineColor(s.line)};font-weight:500;">${esc(s.name)}</span>(${esc(shortLine(s.line))}) 도보 ${walkMin(s.distance)}`).join(', '), html: true });
@@ -525,7 +525,7 @@ function render() {
         ${changeHtml}
       </div>
       <div class="price-card secondary">
-        <div class="price-card-label">최근 3년 최고${currentTab === '전세' ? ' 전세가' : '가'}</div>
+        <div class="price-card-label">최근 5년 최고${currentTab === '전세' ? ' 전세가' : '가'}</div>
         <div class="price-card-value">${highPrice ? formatPrice(highPrice) : '-'}${highData ? kindBadge(highData.kind || '') : ''}</div>
         <div class="price-card-sub">${highData && highData.floor ? highData.floor + '층' : ''}${highData && highData.date ? ' · ' + highData.date : ''}</div>
       </div>
@@ -860,7 +860,7 @@ function injectJsonLd() {
     { q: `${d.complex_name} 최근 실거래가는?`, a: recentFirst ? `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentFirst.price)}입니다.${recentFirst.date ? ' ('+recentFirst.date+' 기준)' : ''}` : '최근 거래 내역을 확인 중입니다.' },
     { q: `${d.complex_name} 전세가율은?`, a: jr ? `${d.complex_name}의 전세가율은 약 ${jr}%입니다.` : '전세가율 정보를 확인 중입니다.' },
     { q: `${d.complex_name} 근처 지하철역은?`, a: subway.length > 0 ? subway.map(s => `${s.name}(${s.line || ''}) 도보 ${walkMin(s.distance)}`).join(', ') : '주변 지하철 정보를 확인 중입니다.' },
-    { q: `${d.complex_name} 최근 3년 최고가는?`, a: highFirst ? `${d.complex_name} 최근 3년 최고가는 ${formatPrice(highFirst.price)}입니다.${highFirst.date ? ' ('+highFirst.date+')' : ''}` : '최근 3년 최고가 정보를 확인 중입니다.' },
+    { q: `${d.complex_name} 최근 5년 최고가는?`, a: highFirst ? `${d.complex_name} 최근 5년 최고가는 ${formatPrice(highFirst.price)}입니다.${highFirst.date ? ' ('+highFirst.date+')' : ''}` : '최근 5년 최고가 정보를 확인 중입니다.' },
   ];
 
   const ld = {
