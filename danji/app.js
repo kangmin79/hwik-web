@@ -518,13 +518,13 @@ function render() {
 
     <!-- 핵심 시세 카드 (월세 탭에서는 숨김) -->
     ${currentTab !== '월세' ? `<div class="price-cards">
-      <div class="price-card primary">
+      <div class="price-card primary" onclick="highlightChartPoint('recent')" style="cursor:pointer;transition:transform .15s;active:scale(.97);" ontouchstart="this.style.transform='scale(.97)'" ontouchend="this.style.transform=''">
         <div style="display:flex;justify-content:space-between;align-items:center;"><span class="price-card-label">최근 ${currentTab === '전세' ? '전세가' : '실거래가'}</span>${recentData ? kindBadge(recentData.kind || '') : ''}</div>
         <div class="price-card-value">${recentPrice ? formatPrice(recentPrice) : '-'}</div>
         <div class="price-card-sub">${recentData && recentData.floor ? recentData.floor + '층' : ''}${recentData && recentData.date ? ' · ' + recentData.date : ''}</div>
         ${changeHtml}
       </div>
-      <div class="price-card secondary">
+      <div class="price-card secondary" onclick="highlightChartPoint('high')" style="cursor:pointer;transition:transform .15s;" ontouchstart="this.style.transform='scale(.97)'" ontouchend="this.style.transform=''">
         <div style="display:flex;justify-content:space-between;align-items:center;"><span class="price-card-label">최근 5년 최고${currentTab === '전세' ? ' 전세가' : '가'}</span>${highData ? kindBadge(highData.kind || '') : ''}</div>
         <div class="price-card-value">${highPrice ? formatPrice(highPrice) : '-'}</div>
         <div class="price-card-sub">${highData && highData.floor ? highData.floor + '층' : ''}${highData && highData.date ? ' · ' + highData.date : ''}</div>
@@ -841,6 +841,59 @@ function showError(msg) {
   `;
 }
 
+
+// ── 차트 포인트 하이라이트 ──
+function highlightChartPoint(type) {
+  if (!chart || !DATA) return;
+
+  const d = DATA;
+  const suffix = currentTab === '전세' ? '_jeonse' : (currentTab === '월세' ? '_wolse' : '');
+  const key = currentPyeong + (suffix || '');
+  const rt = d.recent_trade || {};
+  const high = d.all_time_high || {};
+
+  let targetDate = null;
+  if (type === 'recent') {
+    targetDate = (rt[key] || {}).date;
+  } else {
+    targetDate = (high[key] || {}).date;
+  }
+  if (!targetDate) return;
+
+  // 날짜 앞 7자리(YYYY-MM)로 매칭
+  const targetMonth = targetDate.slice(0, 7);
+  const dataset = chart.data.datasets[0];
+  const labels = chart.data.labels || chart.scales.x.ticks.map(t => t.label);
+
+  // 포인트별 색상 재설정
+  const colors = dataset.data.map((p, i) => {
+    const px = typeof p === 'object' ? p.x : p;
+    const match = String(px).slice(0, 7) === targetMonth;
+    if (!match) return 'rgba(245,200,66,0.5)';
+    return type === 'recent' ? '#f5c842' : '#f87171';
+  });
+  const radii = dataset.data.map((p, i) => {
+    const px = typeof p === 'object' ? p.x : p;
+    const match = String(px).slice(0, 7) === targetMonth;
+    return match ? 9 : 4;
+  });
+  const borders = dataset.data.map((p, i) => {
+    const px = typeof p === 'object' ? p.x : p;
+    const match = String(px).slice(0, 7) === targetMonth;
+    if (!match) return 'rgba(245,200,66,0.3)';
+    return type === 'recent' ? '#fff' : '#fca5a5';
+  });
+
+  dataset.backgroundColor = colors;
+  dataset.borderColor = borders;
+  dataset.pointRadius = radii;
+  dataset.borderWidth = radii.map(r => r > 4 ? 2 : 1);
+  chart.update('none');
+
+  // 차트 섹션으로 부드럽게 스크롤
+  const chartEl = document.getElementById('priceChart');
+  if (chartEl) chartEl.closest('.chart-section')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
 
 // ── JSON-LD 구조화 데이터 (SEO) ──
 function injectJsonLd() {
