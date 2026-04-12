@@ -88,10 +88,17 @@ const FLOW_CANCEL_INLINE = {
   ],
 }
 
-// 선택적 단계(한마디/공유방)에서 건너뛰기 버튼
+// 선택적 단계(한마디/공유방/사진)에서 건너뛰기 버튼
 const SKIP_INLINE = {
   inline_keyboard: [
     [{ text: '건너뛰기', callback_data: 'step:skip' }],
+  ],
+}
+
+// 사진 추가 후 완료 버튼
+const DONE_INLINE = {
+  inline_keyboard: [
+    [{ text: '완료', callback_data: 'step:skip' }],
   ],
 }
 
@@ -315,10 +322,23 @@ async function fetchAgentRooms(agentId: string) {
   return (data || []).map((r: any) => r.share_rooms).filter(Boolean)
 }
 
-// 공유방 선택 화면 (없으면 바로 완료)
+// 사진 업로드 대기 상태로 전환
+async function askPhoto(chatId: number, agentId: string, draftRow: any) {
+  await saveDraft(chatId, agentId, {
+    draft: draftRow.draft,
+    raw_text: draftRow.raw_text || '',
+    skipped: draftRow.skipped || [],
+    missing_field: null,
+    state: 'photo_wait',
+    draft_type: 'property',
+  })
+  return reply(chatId, '사진이 있으면 보내주세요.', { reply_markup: SKIP_INLINE })
+}
+
+// 공유방 선택 화면 (없으면 사진 단계로)
 async function askShareOrFinish(chatId: number, agentId: string, draftRow: any) {
   const rooms = await fetchAgentRooms(agentId)
-  if (!rooms.length) return finishProperty(chatId, draftRow)
+  if (!rooms.length) return askPhoto(chatId, agentId, draftRow)
 
   await saveDraft(chatId, agentId, {
     draft: draftRow.draft,
@@ -485,6 +505,59 @@ async function buildBriefing(agentId: string): Promise<string> {
   }
 
   return lines.join('\n').trim()
+}
+
+// ========== 사진 업로드 처리 ==========
+async function handlePhoto(chatId: number, photos: any[], agent: any) {
+  const draftRow = await getDraftRow(chatId)
+  if (!draftRow || draftRow.state !== 'photo_wait') return
+
+  const cardId = draftRow.draft?._pending_card_id as string
+  if (!cardId) return
+
+  // 가장 큰 사이즈 선택
+  const photo = photos[photos.length - 1]
+
+  // 텔레그램에서 파일 경로 취득
+  const fileRes = await tg('getFile', { file_id: photo.file_id })
+  const fileJson = await fileRes.json()
+  const filePath = fileJson?.result?.file_path
+  if (!filePath) {
+    return reply(chatId, '사진 다운로드 실패. 다시 시도해주세요.', { reply_markup: DONE_INLINE })
+  }
+
+  // 파일 다운로드
+  const imgRes = await fetch(`https://api.telegram.org/file/bot${BOT_TOKEN}/${filePath}`)
+  if (!imgRes.ok) {
+    return reply(chatId, '사진 다운로드 실패. 다시 시도해주세요.', { reply_markup: DONE_INLINE })
+  }
+  const imgBytes = await imgRes.arrayBuffer()
+
+  // Supabase Storage 업로드
+  const ext = filePath.split('.').pop() || 'jpg'
+  const storagePath = `${cardId}/${Date.now()}.${ext}`
+  const { error: upErr } = await admin.storage.from('photos').upload(storagePath, imgBytes, {
+    contentType: 'image/jpeg',
+    upsert: false,
+  })
+  if (upErr) {
+    return reply(chatId, `사진 업로드 실패: ${upErr.message}`, { reply_markup: DONE_INLINE })
+  }
+
+  // 공개 URL
+  const { data: urlData } = admin.storage.from('photos').getPublicUrl(storagePath)
+  const publicUrl = urlData.publicUrl
+
+  // cards.photos 배열에 추가
+  const { data: card } = await admin.from('cards').select('photos').eq('id', cardId).single()
+  const existingPhotos: string[] = (card?.photos || []).filter((p: any) => typeof p === 'string')
+  await admin.from('cards').update({ photos: [...existingPhotos, publicUrl], style: 'memo' }).eq('id', cardId)
+
+  return reply(
+    chatId,
+    `사진 ${existingPhotos.length + 1}장 추가됐어요. 더 보내주시면 추가할게요.`,
+    { reply_markup: DONE_INLINE }
+  )
 }
 
 async function parseProperty(text: string) {
@@ -703,6 +776,11 @@ async function handleText(chatId: number, text: string, agent: any) {
   // ========== 공유방 선택 중 텍스트 → 버튼 다시 표시 ==========
   if (existingDraft?.state === 'share_select') {
     return askShareOrFinish(chatId, agent.id, existingDraft)
+  }
+
+  // ========== 사진 대기 중 텍스트 → 안내 ==========
+  if (existingDraft?.state === 'photo_wait') {
+    return reply(chatId, '사진을 보내주시거나 완료를 눌러주세요.', { reply_markup: SKIP_INLINE })
   }
 
   // ========== 스킵 키워드 (누락 필드 질문 대기 중일 때만) ==========
@@ -1067,7 +1145,8 @@ async function handleCallbackQuery(cb: any) {
   // ========== 한마디/공유방 건너뛰기 ==========
   if (data === 'step:skip') {
     if (draftRow.state === 'comment') return askShareOrFinish(chatId, agent.id, draftRow)
-    if (draftRow.state === 'share_select') return finishProperty(chatId, draftRow)
+    if (draftRow.state === 'share_select') return askPhoto(chatId, agent.id, draftRow)
+    if (draftRow.state === 'photo_wait') return finishProperty(chatId, draftRow)
     return
   }
 
@@ -1082,7 +1161,7 @@ async function handleCallbackQuery(cb: any) {
         shared_by: agent.id,
       }).catch(() => {})
     }
-    return finishProperty(chatId, draftRow)
+    return askPhoto(chatId, agent.id, draftRow)
   }
 
   // ========== 수정 (기존 draft 유지, 추가 입력 받기) ==========
@@ -1160,6 +1239,18 @@ Deno.serve(async (req) => {
   if (!msg?.chat?.id) return new Response('ok')
 
   const chatId = msg.chat.id as number
+
+  // ========== 사진 메시지 ==========
+  if (msg.photo) {
+    try {
+      const agent = await findAgentByChatId(chatId)
+      if (agent) await handlePhoto(chatId, msg.photo, agent)
+    } catch (e: any) {
+      console.error('photo error:', e)
+    }
+    return new Response('ok')
+  }
+
   const text = (msg.text || '').trim()
   if (!text) return new Response('ok')
 
