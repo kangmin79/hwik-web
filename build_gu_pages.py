@@ -202,9 +202,14 @@ def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None)
     for d in danji_list:
         rt = d.get("recent_trade") or {}
         cats = d.get("categories") or []
-        max_price = max((rt[c].get("price", 0) for c in cats if rt.get(c) and rt[c].get("price")), default=0)
-        if max_price > 0:
-            price_top.append((d, max_price))
+        best_c, best_p = None, 0
+        for c in cats:
+            p = rt[c].get("price", 0) if rt.get(c) else 0
+            if p > best_p:
+                best_p = p
+                best_c = c
+        if best_p > 0:
+            price_top.append((d, best_p, best_c))
     price_top.sort(key=lambda x: x[1], reverse=True)
     price_top = price_top[:3]
 
@@ -243,10 +248,11 @@ def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None)
     if price_top:
         lines.append(f'<div class="section"><div class="section-title">매매가 높은 단지</div>')
         lines.append(f'<div style="display:flex;flex-direction:column;gap:8px;">')
-        for i, (d, mp) in enumerate(price_top):
+        for i, (d, mp, area) in enumerate(price_top):
             slug_d = make_danji_slug(d["complex_name"], d.get("location", ""), d["id"], d.get("address", ""))
+            area_txt = f'전용 {area}㎡' if area else ''
             lines.append(f'<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/{url_quote(slug_d, safe="-")}">')
-            lines.append(f'  <div><div class="danji-name">{i+1}. {esc(d["complex_name"])}</div><div class="danji-sub">{esc(d.get("location",""))}</div></div>')
+            lines.append(f'  <div><div class="danji-name">{i+1}. {esc(d["complex_name"])}</div><div class="danji-sub">{esc(d.get("location",""))}{(" · " + area_txt) if area_txt else ""}</div></div>')
             lines.append(f'  <div><div class="danji-price">{format_price(mp)}</div><div class="danji-rate">최고가 기준</div></div>')
             lines.append(f'</a>')
         lines.append(f'</div></div><div class="divider"></div>')
@@ -257,8 +263,12 @@ def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None)
         lines.append(f'<div style="display:flex;flex-direction:column;gap:8px;">')
         for i, d in enumerate(jr_top):
             slug_d = make_danji_slug(d["complex_name"], d.get("location", ""), d["id"], d.get("address", ""))
+            rt = d.get("recent_trade") or {}
+            cats = d.get("categories") or []
+            best_c = next((c for c in cats if rt.get(c) and rt[c].get("price")), None)
+            area_txt = f'전용 {best_c}㎡' if best_c else ''
             lines.append(f'<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/{url_quote(slug_d, safe="-")}">')
-            lines.append(f'  <div><div class="danji-name">{i+1}. {esc(d["complex_name"])}</div><div class="danji-sub">{esc(d.get("location",""))}</div></div>')
+            lines.append(f'  <div><div class="danji-name">{i+1}. {esc(d["complex_name"])}</div><div class="danji-sub">{esc(d.get("location",""))}{(" · " + area_txt) if area_txt else ""}</div></div>')
             lines.append(f'  <div><div class="danji-price">{d["jeonse_rate"]}%</div><div class="danji-rate">전세가율</div></div>')
             lines.append(f'</a>')
         lines.append(f'</div></div>')
