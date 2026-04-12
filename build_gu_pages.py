@@ -246,7 +246,7 @@ def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None)
 
     # 매매가 높은 단지 TOP 3
     if price_top:
-        lines.append(f'<div class="section"><div class="section-title">매매가 높은 단지</div>')
+        lines.append(f'<div class="section"><h2 class="section-title">매매가 높은 단지</h2>')
         lines.append(f'<div style="display:flex;flex-direction:column;gap:8px;">')
         for i, (d, mp, area) in enumerate(price_top):
             slug_d = make_danji_slug(d["complex_name"], d.get("location", ""), d["id"], d.get("address", ""))
@@ -259,7 +259,7 @@ def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None)
 
     # 전세가율 높은 단지 TOP 3
     if jr_top:
-        lines.append(f'<div class="section"><div class="section-title">전세가율 높은 단지</div>')
+        lines.append(f'<div class="section"><h2 class="section-title">전세가율 높은 단지</h2>')
         lines.append(f'<div style="display:flex;flex-direction:column;gap:8px;">')
         for i, d in enumerate(jr_top):
             slug_d = make_danji_slug(d["complex_name"], d.get("location", ""), d["id"], d.get("address", ""))
@@ -277,7 +277,7 @@ def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None)
 
     # 동별 단지 (실제 생성된 dong 페이지만 링크)
     if dong_list:
-        lines.append(f'<div class="section"><div class="section-title">동별 단지</div>')
+        lines.append(f'<div class="section"><h2 class="section-title">동별 단지</h2>')
         lines.append(f'<div class="dong-grid">')
         for dong, info in dong_list:
             avg_p = format_price(round(sum(info["prices"]) / len(info["prices"]))) if info["prices"] else ""
@@ -300,7 +300,7 @@ def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None)
 
     # ㎡당 가격 TOP 10
     if sqm_list:
-        lines.append(f'<div class="section"><div class="section-title">㎡당 가격 TOP 10 <span style="font-size:10px;color:var(--muted);font-weight:400;">(전용면적 기준)</span></div>')
+        lines.append(f'<div class="section"><h2 class="section-title">㎡당 가격 TOP 10 <span style="font-size:10px;color:var(--muted);font-weight:400;">(전용면적 기준)</span></h2>')
         lines.append(f'<div style="display:flex;flex-direction:column;gap:8px;">')
         for i, d in enumerate(sqm_list[:10]):
             slug_d = make_danji_slug(d["name"], d["location"], d["id"], d["address"])
@@ -313,7 +313,7 @@ def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None)
 
     # 최근 거래
     if trades:
-        lines.append(f'<div class="section"><div class="section-title">최근 거래</div>')
+        lines.append(f'<div class="section"><h2 class="section-title">최근 거래</h2>')
         lines.append(f'<div style="display:flex;flex-direction:column;gap:8px;">')
         for t in trades[:10]:
             slug_d = make_danji_slug(t["name"], t.get("location", ""), t["id"], t["address"])
@@ -327,7 +327,7 @@ def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None)
 
     # 같은 지역의 다른 구 (상호 링크)
     if sibling_gus:
-        lines.append(f'<div class="section"><div class="section-title">{esc(region_label)}의 다른 구/시</div>')
+        lines.append(f'<div class="section"><h2 class="section-title">{esc(region_label)}의 다른 구/시</h2>')
         lines.append(f'<div class="gu-grid">')
         for sib_name, sib_slug in sibling_gus:
             lines.append(f'<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/{url_quote(sib_slug, safe="-")}">')
@@ -337,7 +337,7 @@ def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None)
         lines.append(f'<div class="divider"></div>')
 
     # FAQ
-    lines.append(f'<div class="faq-section"><div class="section-title">자주 묻는 질문</div>')
+    lines.append(f'<div class="faq-section"><h2 class="section-title">자주 묻는 질문</h2>')
     lines.append(f'<div class="faq-item"><div class="faq-q">{esc(gu_name)} 아파트 평균 시세는?</div>')
     lines.append(f'<div class="faq-a">{esc(gu_name)} {len(danji_list)}개 단지 평균 매매가는 {format_price(avg_price) if avg_price else "정보 확인 중"}입니다.</div></div>')
     if avg_jr:
@@ -424,7 +424,7 @@ def build_gu_index_html():
         visible = [(g, gu_filename(key, g)) for g in r["list"] if gu_filename(key, g) in GU_SLUG_SET]
         if not visible:
             continue
-        lines.append(f'<div class="section"><div class="section-title">{esc(r["label"])} {esc(r["sub"])}</div>')
+        lines.append(f'<div class="section"><h2 class="section-title">{esc(r["label"])} {esc(r["sub"])}</h2>')
         lines.append(f'<div class="gu-grid">')
         for g, g_slug in visible:
             lines.append(f'<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/{url_quote(g_slug, safe="-")}">')

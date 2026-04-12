@@ -289,6 +289,9 @@ def build_fallback_html(d):
     bc = best_price_cat(d)
     lines = []
 
+    # H2: 실거래가 섹션 (SEO — 구글봇이 콘텐츠 구조 파악)
+    lines.append(f'<h2 style="font-size:16px;font-weight:700;margin-bottom:8px;">{name} 실거래가 시세</h2>')
+
     # 기본 정보
     info = f"{loc}"
     if units:
@@ -546,7 +549,8 @@ def build_fallback_html(d):
     seo.append(f"모든 데이터는 국토교통부 실거래가 공개시스템 기반입니다. 최종 데이터 확인: {_today}.")
     seo_text = " ".join(s for s in seo if s)
     if seo_text:
-        lines.append(f'<p style="font-size:11px;color:#6b7280;line-height:1.7;margin-top:16px;">{esc(seo_text)}</p>')
+        lines.append(f'<h2 style="font-size:13px;font-weight:600;margin-top:20px;margin-bottom:6px;color:#374151;">{name} 단지 정보</h2>')
+        lines.append(f'<p style="font-size:11px;color:#6b7280;line-height:1.7;">{esc(seo_text)}</p>')
 
     lines.append(f'<p style="font-size:10px;color:#6b7280;margin-top:8px;">실거래가 출처: 국토교통부 · 최종 데이터 확인: {_today}</p>')
 
@@ -793,7 +797,7 @@ def generate_page(d):
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{name} 실거래가 시세{title_loc} - 휙</title>
+<title>{name} 실거래가 시세 | 휙</title>
 <meta name="description" content="{esc(desc)}">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
 <link rel="icon" href="/favicon.ico">
@@ -801,7 +805,7 @@ def generate_page(d):
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="휙">
 <meta property="og:locale" content="ko_KR">
-<meta property="og:title" id="og-title" content="{name} 실거래가 시세{title_loc} - 휙">
+<meta property="og:title" id="og-title" content="{name} 실거래가 시세 | 휙">
 <meta property="og:description" id="og-desc" content="{esc(desc)}">
 <meta property="og:image" content="https://jqaxejgzkchxbfzgzyzi.supabase.co/storage/v1/object/public/og-images/danji/{hashlib.md5(did.encode('utf-8')).hexdigest()}.png">
 <meta property="og:image:width" content="1200">
@@ -813,7 +817,7 @@ def generate_page(d):
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){{dataLayer.push(arguments);}}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" id="tw-title" content="{name} 실거래가 시세{title_loc} - 휙">
+<meta name="twitter:title" id="tw-title" content="{name} 실거래가 시세 | 휙">
 <meta name="twitter:description" id="tw-desc" content="{esc(desc)}">
 <script type="application/ld+json">{jsonld}</script>
 <link rel="stylesheet" href="style.css">
