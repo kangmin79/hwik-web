@@ -50,9 +50,9 @@ const MAIN_KEYBOARD = {
   is_persistent: true,
 }
 
-// 손님 등록 진행 중 키보드 — 하단에 "❌ 등록 취소" 추가
+// 등록 진행 중 키보드 — 하단에 "❌ 등록 취소" 추가 (손님/매물 공통)
 // reply_keyboard 는 메시지 바깥 영역이라 double-tap 좋아요 반응과 충돌 X
-const CLIENT_FLOW_KEYBOARD = {
+const FLOW_KEYBOARD = {
   keyboard: [
     [
       { text: '📋 브리핑' },
@@ -68,15 +68,19 @@ const CLIENT_FLOW_KEYBOARD = {
   is_persistent: true,
 }
 
-// ========== 손님 등록 채팅 플로우 상수 ==========
+// ========== 등록 채팅 플로우 상수 (손님/매물 공통) ==========
 // mobile.html _REQUIRED_FIELDS / _FIELD_QUESTIONS / _SKIP_KEYWORDS 의 봇 버전
 const REQUIRED_CLIENT_FIELDS = ['trade', 'location', 'price', 'category', 'contact'] as const
-const FIELD_QUESTIONS: Record<string, string> = {
+const REQUIRED_PROPERTY_FIELDS = ['contact'] as const
+const CLIENT_FIELD_QUESTIONS: Record<string, string> = {
   trade: '손님이 원하는 <b>거래</b>는요?',
   location: '손님이 원하는 <b>지역</b>은요?\n예) 강남구 역삼동, 마포구, 분당',
   price: '손님 <b>예산</b>은 어느 정도인가요?\n예) 5억 이하, 보증금 1000 월 60',
   category: '손님이 원하는 <b>매물 종류</b>는요?',
   contact: '손님 <b>이름이나 연락처</b> 알려주세요.\n예) 홍길동 010-1234-5678',
+}
+const PROPERTY_FIELD_QUESTIONS: Record<string, string> = {
+  contact: '집주인이나 세입자 <b>이름과 연락처</b> 알려주세요.\n예) 박사장 010-1234-5678\n\n없으면 "없음" 이라고 적어주세요.',
 }
 const SKIP_RE = /^(없음|없어|없습니다|스킵|skip|상관없|몰라요?|모름|패스|pass|생략)$/i
 const RESET_RE = /^(처음부터|리셋|취소|초기화)$/
@@ -91,7 +95,7 @@ const CONFIRM_KEYBOARD = {
 }
 
 // 필드별 inline keyboard — 선택지 뻔한 필드만 (탭 한 번 = 파싱 없이 즉시 주입)
-// 취소는 reply_keyboard (CLIENT_FLOW_KEYBOARD) 에만 두고 여기엔 안 넣음
+// 취소는 reply_keyboard (FLOW_KEYBOARD) 에만 두고 여기엔 안 넣음
 // — 이유: 텔레그램 데스크톱 double-tap 좋아요 반응과 충돌 방지
 const TRADE_KEYBOARD = {
   inline_keyboard: [
@@ -134,12 +138,14 @@ const CATEGORY_KO: Record<string, string> = {
   room: '원룸/빌라', commercial: '상가', office: '사무실', house: '주택',
 }
 
-// 누락 필드 질문 — 선택지 필드는 inline 버튼, 텍스트 필드는 CLIENT_FLOW_KEYBOARD 재적용
+// 누락 필드 질문 — 선택지 필드는 inline 버튼, 텍스트 필드는 FLOW_KEYBOARD 재적용
 // (reply_markup 이 inline 이면 reply_keyboard 는 기존 상태 유지)
-async function askField(chatId: number, field: string) {
+async function askField(chatId: number, field: string, draftType: string) {
   const kb = FIELD_KEYBOARDS[field]
-  return reply(chatId, FIELD_QUESTIONS[field], {
-    reply_markup: kb || CLIENT_FLOW_KEYBOARD,
+  const questions = draftType === 'property' ? PROPERTY_FIELD_QUESTIONS : CLIENT_FIELD_QUESTIONS
+  const text = questions[field] || CLIENT_FIELD_QUESTIONS[field]
+  return reply(chatId, text, {
+    reply_markup: kb || FLOW_KEYBOARD,
   })
 }
 
@@ -162,8 +168,9 @@ function hasField(draft: any, skipped: string[], field: string): boolean {
   return false
 }
 
-function findMissingField(draft: any, skipped: string[]): string | null {
-  for (const f of REQUIRED_CLIENT_FIELDS) {
+function findMissingField(draft: any, skipped: string[], draftType: string): string | null {
+  const list = draftType === 'property' ? REQUIRED_PROPERTY_FIELDS : REQUIRED_CLIENT_FIELDS
+  for (const f of list) {
     if (!hasField(draft, skipped, f)) return f
   }
   return null
@@ -214,6 +221,39 @@ function buildClientSummary(parsed: any): string {
   if (missingLabel) {
     lines.push('')
     lines.push(`⚠️ ${missingLabel} 없이 등록됩니다 — 나중에 수정할 수 있어요`)
+  }
+
+  lines.push('')
+  lines.push('이대로 <b>등록할까요?</b>')
+  return lines.join('\n')
+}
+
+// 매물 확인 카드 본문 생성
+function buildPropertySummary(parsed: any): string {
+  const typeEmoji: Record<string, string> = {
+    '매매': '🏠', '전세': '🔑', '월세': '💰',
+  }
+  const emoji = typeEmoji[parsed.type] || '🏠'
+  const tagLine = Array.isArray(parsed.tags) && parsed.tags.length
+    ? '🏷 ' + parsed.tags.slice(0, 8).map((t: string) => `#${t}`).join(' ')
+    : null
+
+  const lines: string[] = [`${emoji} <b>${parsed.type || '매물'} 등록 준비</b>`, '']
+  if (parsed.price) lines.push(`💵 ${parsed.price}`)
+  if (parsed.complex) lines.push(`🏢 ${parsed.complex}`)
+  if (parsed.location) lines.push(`📍 ${parsed.location}`)
+  if (parsed.area) lines.push(`📐 ${parsed.area}`)
+  if (parsed.floor) lines.push(`🏗 ${parsed.floor}`)
+  if (parsed.contact_name || parsed.contact_phone) {
+    const c = [parsed.contact_name, parsed.contact_phone].filter(Boolean).join(' · ')
+    lines.push(`👤 ${c}`)
+  }
+  if (tagLine) lines.push(tagLine)
+
+  const hasContact = !!(parsed.contact_name || parsed.contact_phone)
+  if (!hasContact) {
+    lines.push('')
+    lines.push('⚠️ 연락처 없이 등록됩니다 — 나중에 수정할 수 있어요')
   }
 
   lines.push('')
@@ -560,7 +600,7 @@ async function handleText(chatId: number, text: string, agent: any) {
     await clearDraft(chatId)
     return reply(
       chatId,
-      '❌ 손님 등록 취소',
+      '❌ 등록 취소',
       { reply_markup: MAIN_KEYBOARD }
     )
   }
@@ -576,12 +616,15 @@ async function handleText(chatId: number, text: string, agent: any) {
     }
   }
   if (text === '🏠 매물') {
-    // 매물 모드로 전환 — 진행 중 손님 draft 있으면 초기화
-    await clearDraft(chatId)
+    // 매물 모드 초기화 — 빈 draft 생성 (이후 첫 메시지부터 채팅 플로우)
+    await saveDraft(chatId, agent.id, {
+      draft: {}, raw_text: '', skipped: [],
+      missing_field: null, state: 'idle', draft_type: 'property',
+    })
     return reply(
       chatId,
-      `🏠 <b>매물 등록</b>\n\n다음 메시지에 매물 정보를 자유롭게 입력해주세요. AI 가 알아서 분석합니다.\n\n<b>예시</b>\n<code>래미안 32평 15억 남향 고층 깨끗해 010-9999-8888 박사장</code>\n\n가격·위치·면적·층·특징·연락처 등 아는 것만 적으면 돼요.`,
-      { reply_markup: MAIN_KEYBOARD }
+      `🏠 <b>매물 등록</b>\n\n다음 메시지에 매물 정보를 자유롭게 입력해주세요. 한 번에 다 말해도 되고, 하나씩 알려주셔도 돼요.\n\n<b>예시</b>\n<code>래미안 32평 15억 남향 고층 깨끗해 박사장 010-9999-8888</code>\n\n💡 손님 조건이면 🙋 손님 탭하세요`,
+      { reply_markup: FLOW_KEYBOARD }
     )
   }
   if (text === '🙋 손님') {
@@ -593,7 +636,7 @@ async function handleText(chatId: number, text: string, agent: any) {
     return reply(
       chatId,
       `🙋 <b>손님 등록</b>\n\n다음 메시지에 손님이 찾는 조건을 알려주세요. 한 번에 다 말해도 되고, 하나씩 알려주셔도 돼요.\n\n<b>예시</b>\n<code>강남 전세 5억 이하 홍길동 010-1234-5678</code>\n\n💡 매물 등록하려던 거면 🏠 매물 탭하세요`,
-      { reply_markup: CLIENT_FLOW_KEYBOARD }
+      { reply_markup: FLOW_KEYBOARD }
     )
   }
   if (text === 'ⓘ 내 정보') {
@@ -602,12 +645,15 @@ async function handleText(chatId: number, text: string, agent: any) {
 
   // ========== 현재 draft 상태 로드 ==========
   const existingDraft = await getDraftRow(chatId)
-  const inClientFlow = existingDraft?.draft_type === 'client'
+  const draftType = existingDraft?.draft_type as string | undefined
+  const inClientFlow = draftType === 'client'
+  const inPropertyFlow = draftType === 'property'
+  const inAnyFlow = inClientFlow || inPropertyFlow
 
   // ========== 스킵 키워드 (누락 필드 질문 대기 중일 때만) ==========
-  if (inClientFlow && existingDraft.missing_field && SKIP_RE.test(text)) {
+  if (inAnyFlow && existingDraft.missing_field && SKIP_RE.test(text)) {
     const newSkipped = [...(existingDraft.skipped || []), existingDraft.missing_field]
-    const nextMissing = findMissingField(existingDraft.draft, newSkipped)
+    const nextMissing = findMissingField(existingDraft.draft, newSkipped, draftType!)
     if (nextMissing) {
       await saveDraft(chatId, agent.id, {
         draft: existingDraft.draft,
@@ -615,9 +661,9 @@ async function handleText(chatId: number, text: string, agent: any) {
         skipped: newSkipped,
         missing_field: nextMissing,
         state: 'idle',
-        draft_type: 'client',
+        draft_type: draftType!,
       })
-      return askField(chatId, nextMissing)
+      return askField(chatId, nextMissing, draftType!)
     }
     // 모두 채워짐 또는 스킵 → 확인 카드
     await saveDraft(chatId, agent.id, {
@@ -626,51 +672,54 @@ async function handleText(chatId: number, text: string, agent: any) {
       skipped: newSkipped,
       missing_field: null,
       state: 'confirm',
-      draft_type: 'client',
+      draft_type: draftType!,
     })
-    await reply(chatId, buildClientSummary(existingDraft.draft), {
-      reply_markup: CONFIRM_KEYBOARD,
-    })
+    const summary = inClientFlow
+      ? buildClientSummary(existingDraft.draft)
+      : buildPropertySummary(existingDraft.draft)
+    await reply(chatId, summary, { reply_markup: CONFIRM_KEYBOARD })
     return
   }
 
-  // 너무 짧은 입력은 손님 flow 중엔 허용, 그 외엔 거절
-  if (!inClientFlow && text.trim().length < 10) {
+  // 너무 짧은 입력은 flow 중엔 허용, 그 외엔 거절
+  if (!inAnyFlow && text.trim().length < 10) {
     return reply(chatId, '매물 정보가 너무 짧아요. 가격·위치·면적 등을 더 적어주세요.', { reply_markup: MAIN_KEYBOARD })
   }
 
   // ========== 파싱 ==========
   await tg('sendChatAction', { chat_id: chatId, action: 'typing' })
   const thinkingRes = await reply(chatId, '🤖 분석 중...', {
-    reply_markup: inClientFlow ? CLIENT_FLOW_KEYBOARD : MAIN_KEYBOARD,
+    reply_markup: inAnyFlow ? FLOW_KEYBOARD : MAIN_KEYBOARD,
   })
   const thinkingJson = await thinkingRes.json().catch(() => ({}))
   const thinkingId = thinkingJson?.result?.message_id as number | undefined
 
   try {
-    // 손님 flow 중이면 누적 text + "손님 " 접두 (parse-property 가 type='손님' 로 일관되게 응답하도록)
-    const combinedRaw = inClientFlow
+    // 누적 raw (flow 중일 때만)
+    const combinedRaw = inAnyFlow
       ? ((existingDraft.raw_text || '') + ' ' + text).trim()
       : text
-    const parseInput = inClientFlow ? '손님 ' + combinedRaw : text
+    // 손님 flow: "손님 " 접두로 parse-property 힌트. 매물 flow: 그대로.
+    const parseInput = inClientFlow ? '손님 ' + combinedRaw : combinedRaw
     const parsed = await parseProperty(parseInput)
-    const isClient = inClientFlow || parsed.type === '손님' || /손님|찾는/.test(parsed.type || '')
+    const isClient = inClientFlow || (!inPropertyFlow && (parsed.type === '손님' || /손님|찾는/.test(parsed.type || '')))
 
     if (thinkingId) {
       await tg('deleteMessage', { chat_id: chatId, message_id: thinkingId }).catch(() => {})
     }
 
-    if (!isClient) {
-      // 매물 — 기존 단발성 플로우
+    // ========== 비-flow 매물 단발성 (버튼 안 누르고 바로 타이핑) ==========
+    if (!inAnyFlow && !isClient) {
       return registerPropertyOneShot(chatId, text, agent, undefined, parsed)
     }
 
-    // ========== 손님 채팅 플로우 ==========
+    // ========== 손님 / 매물 채팅 플로우 (공통) ==========
     const mergedDraft = mergeDraft(existingDraft?.draft || {}, parsed)
     const skipped = existingDraft?.skipped || []
     const newRaw = combinedRaw
+    const flowType = inPropertyFlow ? 'property' : 'client'
 
-    const missing = findMissingField(mergedDraft, skipped)
+    const missing = findMissingField(mergedDraft, skipped, flowType)
     if (missing) {
       await saveDraft(chatId, agent.id, {
         draft: mergedDraft,
@@ -678,9 +727,9 @@ async function handleText(chatId: number, text: string, agent: any) {
         skipped,
         missing_field: missing,
         state: 'idle',
-        draft_type: 'client',
+        draft_type: flowType,
       })
-      return askField(chatId, missing)
+      return askField(chatId, missing, flowType)
     }
 
     // 모두 채워짐 → 확인 카드
@@ -690,11 +739,12 @@ async function handleText(chatId: number, text: string, agent: any) {
       skipped,
       missing_field: null,
       state: 'confirm',
-      draft_type: 'client',
+      draft_type: flowType,
     })
-    await reply(chatId, buildClientSummary(mergedDraft), {
-      reply_markup: CONFIRM_KEYBOARD,
-    })
+    const summary = inPropertyFlow
+      ? buildPropertySummary(mergedDraft)
+      : buildClientSummary(mergedDraft)
+    await reply(chatId, summary, { reply_markup: CONFIRM_KEYBOARD })
   } catch (e: any) {
     const errMsg = `❌ 등록 실패: ${e.message || e}`
     if (thinkingId) {
@@ -773,7 +823,7 @@ async function handleCallbackQuery(cb: any) {
       }).catch(() => {})
     }
 
-    const nextMissing = findMissingField(newDraft, newSkipped)
+    const nextMissing = findMissingField(newDraft, newSkipped, 'client')
     if (nextMissing) {
       await saveDraft(chatId, agent.id, {
         draft: newDraft,
@@ -783,7 +833,7 @@ async function handleCallbackQuery(cb: any) {
         state: 'idle',
         draft_type: 'client',
       })
-      await askField(chatId, nextMissing)
+      await askField(chatId, nextMissing, 'client')
       return
     }
 
@@ -806,16 +856,18 @@ async function handleCallbackQuery(cb: any) {
   if (data === 'confirm_register') {
     const parsed = draftRow.draft || {}
     const rawText = draftRow.raw_text || ''
+    const isClientDraft = draftRow.draft_type === 'client'
     const cardId = crypto.randomUUID().replace(/-/g, '').slice(0, 12)
 
     const cardData: Record<string, unknown> = {
       id: cardId,
       agent_id: agent.id,
-      property: { ...parsed, type: '손님', rawText },
+      property: isClientDraft
+        ? { ...parsed, type: '손님', rawText }
+        : { ...parsed, rawText },
       style: 'noimg',
       color: 'blue',
       trade_status: '계약가능',
-      client_status: '탐색중',
       search_text: parsed.search_text || rawText,
       search_text_private: parsed.search_text_private || null,
       embedding: parsed.embedding || null,
@@ -826,6 +878,7 @@ async function handleCallbackQuery(cb: any) {
       contact_phone: parsed.contact_phone || null,
       tags: parsed.tags || [],
     }
+    if (isClientDraft) cardData.client_status = '탐색중'
 
     const { error } = await admin.from('cards').insert(cardData)
     if (error) {
@@ -842,22 +895,6 @@ async function handleCallbackQuery(cb: any) {
 
     await clearDraft(chatId)
 
-    // 확인 카드 → 완료 메시지로 교체 (inline 버튼 제거)
-    const displayName = parsed.contact_name || '손님'
-    if (messageId) {
-      await tg('editMessageText', {
-        chat_id: chatId,
-        message_id: messageId,
-        text: `✅ <b>${displayName}</b>님 등록 완료\n\n🔗 https://hwik.kr/property_chat.html?id=${cardId}`,
-        parse_mode: 'HTML',
-        disable_web_page_preview: true,
-      }).catch(() => {})
-    }
-
-    // 매칭 진행
-    await reply(chatId, '🔍 AI가 딱 맞는 매물 찾고 있어요...', {
-      reply_markup: MAIN_KEYBOARD,
-    })
     const internalHeaders = {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${ANON_KEY}`,
@@ -865,60 +902,103 @@ async function handleCallbackQuery(cb: any) {
       'x-hwik-internal': HWIK_INTERNAL_SECRET,
       'x-agent-id': agent.id,
     }
-    fetch(`${SUPABASE_URL}/functions/v1/match-properties`, {
-      method: 'POST',
-      headers: internalHeaders,
-      body: JSON.stringify({
-        client_card_id: cardId,
-        agent_id: agent.id,
-        limit: 3,
-        threshold: 0.15,
-      }),
-    })
-      .then((r) => r.json())
-      .then((m) => {
-        const matches = m?.results || []
-        if (!matches.length) {
+
+    if (isClientDraft) {
+      // 손님 등록 완료 → 확인 카드 교체 + 매칭 진행
+      const displayName = parsed.contact_name || '손님'
+      if (messageId) {
+        await tg('editMessageText', {
+          chat_id: chatId,
+          message_id: messageId,
+          text: `✅ <b>${displayName}</b>님 등록 완료\n\n🔗 https://hwik.kr/property_chat.html?id=${cardId}`,
+          parse_mode: 'HTML',
+          disable_web_page_preview: true,
+        }).catch(() => {})
+      }
+
+      await reply(chatId, '🔍 AI가 딱 맞는 매물 찾고 있어요...', {
+        reply_markup: MAIN_KEYBOARD,
+      })
+      fetch(`${SUPABASE_URL}/functions/v1/match-properties`, {
+        method: 'POST',
+        headers: internalHeaders,
+        body: JSON.stringify({
+          client_card_id: cardId,
+          agent_id: agent.id,
+          limit: 3,
+          threshold: 0.15,
+        }),
+      })
+        .then((r) => r.json())
+        .then((m) => {
+          const matches = m?.results || []
+          if (!matches.length) {
+            return reply(
+              chatId,
+              '지금 당장 맞는 매물이 없네요 😅\n새 매물이 등록되면 알림으로 알려드릴게요',
+              { reply_markup: MAIN_KEYBOARD }
+            )
+          }
+          const lines = matches
+            .slice(0, 3)
+            .map((x: any) => {
+              const p = x.property || {}
+              const head = `• ${p.type || ''} ${p.price || ''} — ${p.complex || p.location || ''}`
+              const tags = Array.isArray(x.tags) ? x.tags.slice(0, 3) : []
+              return tags.length ? `${head}\n   ${tags.map((t: string) => `#${t}`).join(' ')}` : head
+            })
+            .join('\n')
           return reply(
             chatId,
-            '지금 당장 맞는 매물이 없네요 😅\n새 매물이 등록되면 알림으로 알려드릴게요',
+            `🎯 <b>매칭 매물 ${matches.length}건</b>\n${lines}`,
             { reply_markup: MAIN_KEYBOARD }
           )
-        }
-        const lines = matches
-          .slice(0, 3)
-          .map((x: any) => {
-            const p = x.property || {}
-            const head = `• ${p.type || ''} ${p.price || ''} — ${p.complex || p.location || ''}`
-            const tags = Array.isArray(x.tags) ? x.tags.slice(0, 3) : []
-            return tags.length ? `${head}\n   ${tags.map((t: string) => `#${t}`).join(' ')}` : head
-          })
-          .join('\n')
-        return reply(
-          chatId,
-          `🎯 <b>매칭 매물 ${matches.length}건</b>\n${lines}`,
-          { reply_markup: MAIN_KEYBOARD }
-        )
-      })
-      .catch(() => {})
+        })
+        .catch(() => {})
+      return
+    }
+
+    // 매물 등록 완료 → 확인 카드 교체 + auto-match 비동기
+    const typeEmoji: Record<string, string> = { '매매': '🏠', '전세': '🔑', '월세': '💰' }
+    const emoji = typeEmoji[parsed.type] || '🏠'
+    const displayName = parsed.complex || parsed.location || '매물'
+    if (messageId) {
+      await tg('editMessageText', {
+        chat_id: chatId,
+        message_id: messageId,
+        text: `✅ ${emoji} <b>${displayName}</b> 등록 완료\n\n🔗 https://hwik.kr/property_chat.html?id=${cardId}`,
+        parse_mode: 'HTML',
+        disable_web_page_preview: true,
+      }).catch(() => {})
+    }
+    await reply(chatId, '메뉴로 돌아왔어요.', { reply_markup: MAIN_KEYBOARD })
+    fetch(`${SUPABASE_URL}/functions/v1/auto-match`, {
+      method: 'POST',
+      headers: internalHeaders,
+      body: JSON.stringify({ card_id: cardId, agent_id: agent.id }),
+    }).catch(() => {})
     return
   }
 
   // ========== 수정 (기존 draft 유지, 추가 입력 받기) ==========
   if (data === 'confirm_edit') {
+    const dt = (draftRow.draft_type as string) || 'client'
     await saveDraft(chatId, agent.id, {
       draft: draftRow.draft,
       raw_text: draftRow.raw_text,
       skipped: draftRow.skipped || [],
       missing_field: null,
       state: 'idle',
-      draft_type: 'client',
+      draft_type: dt,
     })
     if (messageId) {
+      const editText = dt === 'property'
+        ? '✏️ <b>수정 모드</b>\n추가하거나 바꿀 내용을 알려주세요.\n예) 박사장 010-1234-5678\n예) 15억\n예) 남향 고층'
+        : '✏️ <b>수정 모드</b>\n추가하거나 바꿀 내용을 알려주세요.\n예) 이름 홍길동\n예) 지역 강남구\n예) 예산 5억 이하'
       await tg('editMessageText', {
         chat_id: chatId,
         message_id: messageId,
-        text: '✏️ <b>수정 모드</b>\n추가하거나 바꿀 내용을 알려주세요.\n예) 이름 홍길동\n예) 지역 강남구\n예) 예산 5억 이하',
+        text: editText,
         parse_mode: 'HTML',
       }).catch(() => {})
     }
@@ -932,7 +1012,7 @@ async function handleCallbackQuery(cb: any) {
       await tg('editMessageText', {
         chat_id: chatId,
         message_id: messageId,
-        text: '❌ 손님 등록 취소',
+        text: '❌ 등록 취소',
         parse_mode: 'HTML',
       }).catch(() => {})
     }
