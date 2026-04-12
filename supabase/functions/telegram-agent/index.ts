@@ -60,10 +60,13 @@ ${draftJson}
   reply는 메시지 내용을 자연스럽게 인정하되 봇 기능 짧게 안내
   예) "내일 3시 방문 예정이군요. 저는 매물·손님 등록을 도와드릴 수 있어요."
 - 이미 파악된 정보는 다시 묻지 말 것
-- contact 정보가 있거나 생략 의사를 밝히면 → action: confirm
-- 질문은 짧게, 한 번에 하나만
+- confirm 조건: contact(이름 또는 전화번호) 있거나 "없음" 의사 밝히면 → action: confirm
+  (location이 없어도 contact 있으면 confirm 가능 — 위치는 나중에 수정 가능)
+- 월세이고 monthly_rent 있으면 보증금 따로 묻지 말 것 (없으면 그냥 진행)
+- 질문은 짧게, 한 번에 하나만. 층수/단지명 같은 선택적 정보는 묻지 말 것
 - 가격 숫자 변환: 7억→700000000, 3억5천→350000000
   월세: 보증금1000 월50 → deposit:10000000, monthly_rent:50000
+  월세만 있을 때: 250만→monthly_rent:2500000 (보증금 묻지 말 것)
 - category: 아파트→apartment, 오피스텔→officetel, 빌라→villa,
             원룸→room, 상가→commercial, 사무실→office, 주택→house
 
@@ -109,8 +112,11 @@ ${draftJson}
 규칙:
 - 부동산 손님 조건과 무관한 메시지 → intent: off_topic
   reply는 메시지 내용을 자연스럽게 인정하되 봇 기능 짧게 안내
+- "찾아요", "원해요", "원하는", "구해요", "살고 싶어", "가능" 등 수요 표현 → intent: client_data
 - 이미 파악된 필드는 다시 묻지 말 것
-- 5가지 모두 채워지면 → action: confirm
+- confirm 조건: trade(거래유형) + location(지역) + price(가격/예산) + contact(이름 또는 전화번호) 4개 모두 있으면 반드시 confirm
+  category 없어도 confirm 가능. 층수/단지명/면적 없어도 confirm 가능.
+  이미 draft에 있는 필드는 채워진 것으로 간주할 것
 - 질문은 자연스럽게, 한 번에 1~2개까지
 - 가격 숫자 변환: 5억→500000000, 보증금1000 월60→deposit:10000000,monthly_rent:60000
 - category: 아파트→apartment, 오피스텔→officetel, 빌라→villa,
