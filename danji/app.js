@@ -543,7 +543,8 @@ function render() {
       }
       if (d.top_floor) cells.push({label:'최고층', value:d.top_floor+'층'});
       if (cells.length === 0) return '';
-      return '<div class="metrics">' + cells.map(c => {
+      const gridStyle = cells.length !== 3 ? ` style="grid-template-columns:repeat(${cells.length},1fr)"` : '';
+      return `<div class="metrics"${gridStyle}>` + cells.map(c => {
         const fontSize = (c.value && c.value.length > 6) ? ' style="font-size:13px"' : '';
         return '<div class="metric"><div class="metric-label">'+esc(c.label)+'</div><div class="metric-value"'+fontSize+'>'+esc(c.value)+'</div>'+(c.sub ? '<div class="metric-change neutral">'+esc(c.sub)+'</div>' : '')+'</div>';
       }).join('') + '</div>';
