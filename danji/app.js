@@ -465,8 +465,9 @@ function render() {
     // 매매/전세: 가격 관련 FAQ
     if (recentPrice) {
       faqItems.push({ q: `${d.complex_name} 최근 실거래가는?`, a: `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentPrice)}입니다.${recentData && recentData.date ? ' ('+recentData.date+' 기준)' : ''}` });
-      const _areaNum = currentPyeong ? parseFloat(currentPyeong) : 0;
-      if (_areaNum > 0) faqItems.push({ q: `${d.complex_name} ㎡당 가격은?`, a: `전용 ${currentPyeong}㎡ 기준 ㎡당 ${formatPrice(Math.round(recentPrice / _areaNum))}입니다.` });
+      const _supplyInfo = pm && currentPyeong && pm[currentPyeong];
+      const _supplyArea = _supplyInfo && _supplyInfo.supply && _supplyInfo.supply > 0 ? _supplyInfo.supply : 0;
+      if (_supplyArea > 0) faqItems.push({ q: `${d.complex_name} ㎡당 가격은?`, a: `${d.complex_name} ㎡당 가격은 공급면적(${Math.round(_supplyArea)}㎡) 기준 ${formatPrice(Math.round(recentPrice / _supplyArea))}입니다.` });
     }
     if (jeonseRate) faqItems.push({ q: `${d.complex_name} 전세가율은?`, a: `${d.complex_name}의 전세가율은 ${jeonseRate}%입니다.` });
     if (highPrice) faqItems.push({ q: `${d.complex_name} 최근 3년 최고가는?`, a: `최근 3년 최고가는 ${formatPrice(highPrice)}입니다.${highData && highData.date ? ' ('+highData.date+')' : ''}` });
