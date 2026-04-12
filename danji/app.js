@@ -518,13 +518,13 @@ function render() {
 
     <!-- 핵심 시세 카드 (월세 탭에서는 숨김) -->
     ${currentTab !== '월세' ? `<div class="price-cards">
-      <div class="price-card primary" onclick="highlightChartPoint('recent')" style="cursor:pointer;transition:transform .15s;active:scale(.97);" ontouchstart="this.style.transform='scale(.97)'" ontouchend="this.style.transform=''">
+      <div class="price-card primary" onclick="highlightChartPoint('recent')" style="cursor:pointer;transition:transform .15s,background .15s;" ontouchstart="this.style.transform='scale(.97)';this.style.background='#dbeafe';" ontouchend="this.style.transform='';this.style.background='';">
         <div style="display:flex;justify-content:space-between;align-items:center;"><span class="price-card-label">최근 ${currentTab === '전세' ? '전세가' : '실거래가'}</span>${recentData ? kindBadge(recentData.kind || '') : ''}</div>
         <div class="price-card-value">${recentPrice ? formatPrice(recentPrice) : '-'}</div>
         <div class="price-card-sub">${recentData && recentData.floor ? recentData.floor + '층' : ''}${recentData && recentData.date ? ' · ' + recentData.date : ''}</div>
         ${changeHtml}
       </div>
-      <div class="price-card secondary" onclick="highlightChartPoint('high')" style="cursor:pointer;transition:transform .15s;" ontouchstart="this.style.transform='scale(.97)'" ontouchend="this.style.transform=''">
+      <div class="price-card secondary" onclick="highlightChartPoint('high')" style="cursor:pointer;transition:transform .15s,background .15s,border-color .15s;" ontouchstart="this.style.transform='scale(.97)';this.style.background='#fef2f2';this.style.borderColor='#f87171';" ontouchend="this.style.transform='';this.style.background='';this.style.borderColor='';">
         <div style="display:flex;justify-content:space-between;align-items:center;"><span class="price-card-label">최근 5년 최고${currentTab === '전세' ? ' 전세가' : '가'}</span>${highData ? kindBadge(highData.kind || '') : ''}</div>
         <div class="price-card-value">${highPrice ? formatPrice(highPrice) : '-'}</div>
         <div class="price-card-sub">${highData && highData.floor ? highData.floor + '층' : ''}${highData && highData.date ? ' · ' + highData.date : ''}</div>
@@ -636,6 +636,9 @@ function render() {
         </div>
       </details>
       <div class="seo-source" style="margin-top:8px;">실거래가 출처: 국토교통부 · 최종 데이터 확인: ${d.updated_at ? d.updated_at.slice(0,10) : new Date().toISOString().slice(0,10)}</div>
+      <div style="margin-top:14px;text-align:center;">
+        <button onclick="openReportModal()" style="background:none;border:none;color:var(--sub);font-size:12px;cursor:pointer;text-decoration:underline;padding:4px 8px;">데이터 오류 신고</button>
+      </div>
     </div>
   `;
 
@@ -951,6 +954,104 @@ function injectJsonLd() {
   script.type = 'application/ld+json';
   script.textContent = JSON.stringify(ld);
   document.head.appendChild(script);
+}
+
+// ── 데이터 오류 신고 ──
+function openReportModal() {
+  if (document.getElementById('reportModal')) return;
+
+  const overlay = document.createElement('div');
+  overlay.id = 'reportModal';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+
+  const types = ['가격 오류', '면적 오류', '단지 정보 오류', '기타'];
+
+  overlay.innerHTML = `
+    <div style="background:var(--bg, #fff);border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:480px;box-shadow:0 -4px 20px rgba(0,0,0,0.15);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+        <span style="font-size:16px;font-weight:700;color:var(--text, #1a1a2e);">데이터 오류 신고</span>
+        <button onclick="closeReportModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--sub, #9ca3af);line-height:1;">×</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
+        ${types.map(t => `
+          <button onclick="selectReportType(this,'${t}')" data-type="${t}"
+            style="padding:10px;border:1.5px solid var(--border, #e5e7eb);border-radius:10px;background:var(--card, #f8f9fa);font-size:14px;cursor:pointer;color:var(--text, #374151);transition:all .15s;">
+            ${t}
+          </button>`).join('')}
+      </div>
+      <textarea id="reportMemo" placeholder="추가 내용 (선택사항)" rows="3"
+        style="width:100%;border:1.5px solid var(--border, #e5e7eb);border-radius:10px;padding:10px 12px;font-size:14px;background:var(--bg, #fff);color:var(--text, #374151);resize:none;box-sizing:border-box;"></textarea>
+      <button id="reportSubmitBtn" onclick="submitReport()" disabled
+        style="width:100%;margin-top:12px;padding:13px;border:none;border-radius:12px;background:#d1d5db;color:#9ca3af;font-size:15px;font-weight:700;cursor:not-allowed;transition:all .2s;">
+        신고하기
+      </button>
+      <p id="reportMsg" style="text-align:center;font-size:13px;margin-top:10px;min-height:18px;"></p>
+    </div>`;
+
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeReportModal(); });
+  document.body.appendChild(overlay);
+}
+
+function closeReportModal() {
+  const el = document.getElementById('reportModal');
+  if (el) el.remove();
+}
+
+function selectReportType(btn, type) {
+  document.querySelectorAll('#reportModal [data-type]').forEach(b => {
+    b.style.background = 'var(--card, #f8f9fa)';
+    b.style.borderColor = 'var(--border, #e5e7eb)';
+    b.style.color = 'var(--text, #374151)';
+    b.style.fontWeight = '400';
+  });
+  btn.style.background = '#ede9fe';
+  btn.style.borderColor = '#7c3aed';
+  btn.style.color = '#7c3aed';
+  btn.style.fontWeight = '700';
+
+  const submitBtn = document.getElementById('reportSubmitBtn');
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.style.background = '#7c3aed';
+    submitBtn.style.color = '#fff';
+    submitBtn.style.cursor = 'pointer';
+  }
+  window._reportType = type;
+}
+
+async function submitReport() {
+  const type = window._reportType;
+  if (!type || !DATA) return;
+
+  const memo = (document.getElementById('reportMemo')?.value || '').trim();
+  const btn = document.getElementById('reportSubmitBtn');
+  const msg = document.getElementById('reportMsg');
+
+  if (btn) { btn.disabled = true; btn.textContent = '전송 중...'; }
+
+  try {
+    const res = await fetch('https://jqaxejgzkchxbfzgzyzi.supabase.co/functions/v1/report-danji', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        danji_id: DATA.id,
+        danji_name: DATA.complex_name,
+        report_type: type,
+        memo: memo || null,
+        page_url: location.href,
+      }),
+    });
+
+    if (res.ok) {
+      if (msg) { msg.style.color = '#16a34a'; msg.textContent = '신고가 접수됐습니다. 감사합니다 🙏'; }
+      setTimeout(closeReportModal, 1800);
+    } else {
+      throw new Error('서버 오류');
+    }
+  } catch (e) {
+    if (msg) { msg.style.color = '#dc2626'; msg.textContent = '전송 실패. 잠시 후 다시 시도해주세요.'; }
+    if (btn) { btn.disabled = false; btn.textContent = '신고하기'; }
+  }
 }
 
 // ── 실행 ──
