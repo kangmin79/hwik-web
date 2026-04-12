@@ -96,13 +96,13 @@ const REQUIRED_CLIENT_FIELDS = ['trade', 'location', 'price', 'category', 'conta
 const REQUIRED_PROPERTY_FIELDS = ['contact'] as const
 const CLIENT_FIELD_QUESTIONS: Record<string, string> = {
   trade: '손님이 원하는 <b>거래</b>는요?',
-  location: '손님이 원하는 <b>지역</b>은요?\n예) 강남구 역삼동, 마포구, 분당',
-  price: '손님 <b>예산</b>은 어느 정도인가요?\n예) 5억 이하, 보증금 1000 월 60',
+  location: '손님이 원하는 <b>지역</b>은요?',
+  price: '손님 <b>예산</b>은 얼마예요?',
   category: '손님이 원하는 <b>매물 종류</b>는요?',
-  contact: '손님 <b>이름이나 연락처</b> 알려주세요.\n예) 홍길동 010-1234-5678',
+  contact: '손님 <b>이름이나 연락처</b> 알려주세요.',
 }
 const PROPERTY_FIELD_QUESTIONS: Record<string, string> = {
-  contact: '집주인이나 세입자 <b>이름과 연락처</b> 알려주세요.\n예) 박사장 010-1234-5678\n\n없으면 "없음" 이라고 적어주세요.',
+  contact: '집주인이나 세입자 <b>이름과 연락처</b> 알려주세요.\n없으면 "없음"',
 }
 const SKIP_RE = /^(없음|없어|없습니다|스킵|skip|상관없|몰라요?|모름|패스|pass|생략)$/i
 const RESET_RE = /^(처음부터|리셋|취소|초기화)$/
@@ -634,7 +634,7 @@ async function handleText(chatId: number, text: string, agent: any) {
     })
     return reply(
       chatId,
-      `🏠 <b>매물 등록</b>\n\n다음 메시지에 매물 정보를 자유롭게 입력해주세요. 한 번에 다 말해도 되고, 하나씩 알려주셔도 돼요.\n\n<b>예시</b>\n<code>래미안 32평 15억 남향 고층 깨끗해 박사장 010-9999-8888</code>\n\n💡 손님 조건이면 🙋 손님 탭하세요`,
+      `🏠 <b>매물 등록</b>\n\n매물 정보를 자유롭게 입력해주세요.`,
       { reply_markup: FLOW_CANCEL_INLINE }
     )
   }
@@ -646,7 +646,7 @@ async function handleText(chatId: number, text: string, agent: any) {
     })
     return reply(
       chatId,
-      `🙋 <b>손님 등록</b>\n\n다음 메시지에 손님이 찾는 조건을 알려주세요. 한 번에 다 말해도 되고, 하나씩 알려주셔도 돼요.\n\n<b>예시</b>\n<code>강남 전세 5억 이하 홍길동 010-1234-5678</code>\n\n💡 매물 등록하려던 거면 🏠 매물 탭하세요`,
+      `🙋 <b>손님 등록</b>\n\n손님이 찾는 조건을 알려주세요.`,
       { reply_markup: FLOW_CANCEL_INLINE }
     )
   }
@@ -1025,8 +1025,8 @@ async function handleCallbackQuery(cb: any) {
     })
     if (messageId) {
       const editText = dt === 'property'
-        ? '✏️ <b>수정 모드</b>\n추가하거나 바꿀 내용을 알려주세요.\n예) 박사장 010-1234-5678\n예) 15억\n예) 남향 고층'
-        : '✏️ <b>수정 모드</b>\n추가하거나 바꿀 내용을 알려주세요.\n예) 이름 홍길동\n예) 지역 강남구\n예) 예산 5억 이하'
+        ? '✏️ <b>수정 모드</b>\n추가하거나 바꿀 내용을 알려주세요.'
+        : '✏️ <b>수정 모드</b>\n추가하거나 바꿀 내용을 알려주세요.'
       await tg('editMessageText', {
         chat_id: chatId,
         message_id: messageId,
