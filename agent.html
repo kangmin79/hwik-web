@@ -379,16 +379,14 @@ function openSheet(cardId) {
         dotEls.forEach((d,i) => d.classList.toggle('active', i===cur));
       }
 
-      track.parentElement.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, {passive:true});
+      // 사진 탭 이벤트 (상위 드래그 핸들러에서 발생)
+      track.addEventListener('phototap', () => goTo(cur + 1));
+      // 좌우 스와이프
+      let _sx = 0;
+      track.parentElement.addEventListener('touchstart', e => { _sx = e.touches[0].clientX; }, {passive:true});
       track.parentElement.addEventListener('touchend', e => {
-        const diff = startX - e.changedTouches[0].clientX;
-        if (Math.abs(diff) < 10) {
-          // 탭 → 다음 슬라이드
-          goTo(cur + 1);
-        } else if (Math.abs(diff) >= 40) {
-          // 스와이프
-          goTo(diff > 0 ? cur + 1 : cur - 1);
-        }
+        const diff = _sx - e.changedTouches[0].clientX;
+        if (Math.abs(diff) >= 40) goTo(diff > 0 ? cur + 1 : cur - 1);
       }, {passive:true});
     }
   } else {
@@ -446,40 +444,54 @@ function openKakao() {
 // ESC 닫기
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
 
-// 배경 스크롤 완전 차단 (시트 열려있을 때)
+// 배경 스크롤 완전 차단
 document.addEventListener('touchmove', e => {
   const sheet = document.getElementById('sheet');
   if (!sheet.classList.contains('show')) return;
-  // sheet-scroll 안쪽 스크롤만 허용
   if (e.target.closest('.sheet-scroll')) return;
   e.preventDefault();
 }, { passive: false });
 
-// 핸들 드래그로 닫기 (핸들 영역만 — 사진/스크롤 충돌 없음)
+// 시트 전체 드래그로 닫기 + 사진 탭/스와이프 구분
 (function() {
   const sheet = document.getElementById('sheet');
-  const handle = sheet.querySelector('.sheet-handle');
-  let startY = 0, lastY = 0, isDragging = false;
+  const scroll = sheet.querySelector('.sheet-scroll');
+  let startX = 0, startY = 0, lastY = 0;
+  let touchStartTime = 0;
+  let isDragging = false;
 
-  handle.addEventListener('touchstart', e => {
+  sheet.addEventListener('touchstart', e => {
+    if (!sheet.classList.contains('show')) return;
+    startX = e.touches[0].clientX;
     startY = lastY = e.touches[0].clientY;
-    isDragging = true;
+    touchStartTime = Date.now();
+    isDragging = false;
     sheet.style.transition = 'none';
   }, { passive: true });
 
-  document.addEventListener('touchmove', e => {
-    if (!isDragging) return;
-    lastY = e.touches[0].clientY;
-    const dy = lastY - startY;
-    if (dy > 0) sheet.style.transform = `translateX(-50%) translateY(${dy}px)`;
+  sheet.addEventListener('touchmove', e => {
+    if (!sheet.classList.contains('show')) return;
+    // sheet-scroll 내부는 스크롤 허용
+    if (e.target.closest('.sheet-scroll') && scroll.scrollTop > 0) return;
+    const dy = e.touches[0].clientY - startY;
+    const dx = Math.abs(e.touches[0].clientX - startX);
+    // 세로 드래그이고 아래 방향이면 시트 이동
+    if (dy > 10 && dy > dx) {
+      isDragging = true;
+      lastY = e.touches[0].clientY;
+      sheet.style.transform = `translateX(-50%) translateY(${dy}px)`;
+    }
   }, { passive: true });
 
-  document.addEventListener('touchend', e => {
-    if (!isDragging) return;
-    isDragging = false;
+  sheet.addEventListener('touchend', e => {
+    if (!sheet.classList.contains('show')) return;
     const dy = lastY - startY;
-    if (dy > 10) {
-      // 아래로 조금이라도 내리면 → 쭉 내려가서 닫힘
+    const elapsed = Date.now() - touchStartTime;
+    const isPhotoArea = e.target.closest('.sheet-photos');
+
+    if (isDragging && dy > 10) {
+      // 드래그로 닫기
+      isDragging = false;
       sheet.style.transition = 'transform .25s ease-in';
       sheet.style.transform = 'translateX(-50%) translateY(100%)';
       setTimeout(() => {
@@ -487,11 +499,20 @@ document.addEventListener('touchmove', e => {
         sheet.style.transition = '';
         closeSheet();
       }, 250);
+    } else if (!isDragging && isPhotoArea) {
+      // 사진 탭 — 드래그 아니면 사진 넘기기
+      isDragging = false;
+      sheet.style.transition = '';
+      sheet.style.transform = '';
+      const photoTrack = document.getElementById('photoTrack');
+      if (photoTrack) photoTrack.dispatchEvent(new CustomEvent('phototap'));
     } else {
+      // 원위치
+      isDragging = false;
       sheet.style.transition = 'transform .3s cubic-bezier(0.16,1,0.3,1)';
       sheet.style.transform = 'translateX(-50%) translateY(0)';
     }
-  });
+  }, { passive: true });
 })();
 
 function formatPhone(p) {
