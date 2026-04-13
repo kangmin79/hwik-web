@@ -68,6 +68,7 @@ p {
   margin-left: 8px;
 }
 .btn-secondary:hover { background: #f0f0ff; }
+#redirect-msg { display: none; color: #6c757d; font-size: 14px; margin-bottom: 16px; }
 </style>
 </head>
 <body>
@@ -75,9 +76,41 @@ p {
   <div class="logo">휙</div>
   <h1>404</h1>
   <h2>페이지를 찾을 수 없습니다</h2>
-  <p>요청하신 단지 정보를 찾을 수 없습니다.<br>주소가 변경되었거나 삭제되었을 수 있습니다.</p>
+  <p id="redirect-msg">URL이 변경되었습니다. 새 페이지로 이동 중...</p>
+  <p id="default-msg">요청하신 단지 정보를 찾을 수 없습니다.<br>주소가 변경되었거나 삭제되었을 수 있습니다.</p>
   <a href="/" class="btn">홈으로</a>
   <a href="/gu.html" class="btn btn-secondary">구별 시세</a>
 </div>
+<script>
+// 구버전 apt- URL → 신버전 자동 리다이렉트
+// 구버전 패턴: /danji/{region}-{gu}-{dong}-apt-{num}-{name}
+(function() {
+  var path = location.pathname;
+  if (!path.startsWith('/danji/')) return;
+
+  var slug = path.replace('/danji/', '').replace(/\.html$/, '');
+  if (slug.indexOf('-apt-') === -1) return;
+
+  document.getElementById('redirect-msg').style.display = 'block';
+  document.getElementById('default-msg').style.display  = 'none';
+
+  // 리다이렉트 맵에서 새 URL 검색
+  fetch('/danji/apt-redirect.json')
+    .then(function(r) { return r.json(); })
+    .then(function(map) {
+      var newSlug = map[slug];
+      if (newSlug) {
+        location.replace('/danji/' + newSlug);
+      } else {
+        document.getElementById('redirect-msg').textContent = '단지 URL이 변경되었으나 새 주소를 찾을 수 없습니다.';
+        document.getElementById('default-msg').style.display = 'block';
+      }
+    })
+    .catch(function() {
+      document.getElementById('redirect-msg').style.display = 'none';
+      document.getElementById('default-msg').style.display = 'block';
+    });
+})();
+</script>
 </body>
 </html>
