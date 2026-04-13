@@ -101,6 +101,7 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
 /* 시트 내용 */
 .sheet-body { padding:16px; }
 .sheet-badges { display:flex; gap:6px; margin-bottom:10px; }
+.sheet-complex { font-size:13px; color:var(--sub); margin-bottom:2px; }
 .sheet-price { font-size:24px; font-weight:700; color:var(--text); margin-bottom:6px; }
 .sheet-loc { font-size:14px; color:var(--sub); margin-bottom:14px; line-height:1.5; }
 .sheet-tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:20px; }
@@ -220,6 +221,7 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
           <div class="sheet-minimap-label">지도</div>
         </div>
       </div>
+      <div class="sheet-complex" id="sheetComplex"></div>
       <div class="sheet-price" id="sheetPrice"></div>
       <div class="sheet-loc" id="sheetLoc"></div>
       <div class="sheet-tags" id="sheetTags"></div>
@@ -545,6 +547,11 @@ function openSheet(cardId) {
   document.getElementById('sheetBadges').innerHTML =
     `<span class="badge b-${esc(type)}" style="font-size:12px;padding:3px 10px">${esc(type)}</span>
      <span class="badge b-${esc(status)}" style="font-size:12px;padding:3px 10px">${esc(status)}</span>`;
+
+  // 단지명 (아파트/오피스텔만)
+  const complexEl = document.getElementById('sheetComplex');
+  const isAptType = ['apartment','officetel','아파트','오피스텔'].includes(p.category || '');
+  complexEl.textContent = (complex && isAptType) ? complex : '';
 
   // 가격, 위치, 태그
   document.getElementById('sheetPrice').textContent = price;
