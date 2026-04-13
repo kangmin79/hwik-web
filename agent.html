@@ -29,19 +29,14 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
 .breadcrumb span { margin:0 4px; }
 
 /* 헤더 */
-.header { background:var(--dark); padding:16px; }
-.header-top { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
-.logo { width:48px; height:48px; background:var(--yellow); border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:20px; color:var(--dark); flex-shrink:0; overflow:hidden; }
-.logo img { width:100%; height:100%; object-fit:cover; border-radius:10px; }
-.header-info { flex:1; min-width:0; }
-.header-name { font-size:17px; font-weight:500; color:#fff; }
-.header-sub { font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px; }
-.header-actions { display:flex; gap:8px; margin-top:12px; }
-.btn-call { flex:1; padding:11px 14px; background:var(--yellow); border:none; border-radius:8px; font-size:14px; font-weight:700; color:var(--dark); cursor:pointer; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:7px; letter-spacing:0.5px; }
+.header { background:var(--dark); padding:36px 24px 28px; text-align:center; }
+.logo { width:72px; height:72px; background:var(--yellow); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:28px; color:var(--dark); margin:0 auto 16px; overflow:hidden; }
+.logo img { width:100%; height:100%; object-fit:cover; }
+.header-name { font-size:22px; font-weight:600; color:#fff; letter-spacing:-0.5px; margin-bottom:4px; }
+.header-sub { font-size:13px; color:rgba(255,255,255,0.45); }
+.header-actions { margin-top:24px; }
+.btn-call { width:100%; padding:14px; background:var(--yellow); border:none; border-radius:12px; font-size:15px; font-weight:700; color:var(--dark); cursor:pointer; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px; letter-spacing:0.3px; }
 .btn-call svg { flex-shrink:0; }
-.btn-hwik { padding:11px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; font-size:13px; font-weight:400; color:rgba(255,255,255,0.75); cursor:pointer; text-decoration:none; text-align:center; display:block; white-space:nowrap; }
-.stat-row { display:flex; gap:8px; margin-top:10px; }
-.stat-badge { font-size:11px; padding:3px 10px; background:rgba(255,255,255,0.1); border-radius:20px; color:rgba(255,255,255,0.8); }
 
 /* 구분선 */
 .divider { height:8px; background:var(--card); }
@@ -125,20 +120,14 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
     <span id="navName">중개사</span>
   </div>
   <div class="header">
-    <div class="header-top">
-      <div class="logo" id="profileLogo">휙</div>
-      <div class="header-info">
-        <div class="header-name" id="profileName">불러오는 중...</div>
-        <div class="header-sub" id="profileSub"></div>
-      </div>
-    </div>
-    <div class="stat-row" id="statRow"></div>
+    <div class="logo" id="profileLogo">휙</div>
+    <div class="header-name" id="profileName">불러오는 중...</div>
+    <div class="header-sub" id="profileSub"></div>
     <div class="header-actions" id="headerActions" style="display:none">
       <a class="btn-call" id="btnCall" href="#">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.64 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.55 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.64 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.55 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
         <span id="btnCallText">전화 상담</span>
       </a>
-      <a class="btn-hwik" href="/mobile.html">휙 검색</a>
     </div>
   </div>
   <div class="divider"></div>
@@ -243,8 +232,7 @@ function renderProfile(p, count) {
   document.getElementById('navName').textContent = name;
   document.getElementById('profileName').textContent = name;
 
-  const sub = [p.business_name !== name ? p.business_name : '', p.address].filter(Boolean).join(' · ');
-  document.getElementById('profileSub').textContent = sub;
+  document.getElementById('profileSub').textContent = p.business_name || '';
 
   const logo = document.getElementById('profileLogo');
   if (p.profile_photo_url) {
@@ -252,12 +240,6 @@ function renderProfile(p, count) {
   } else {
     logo.textContent = name[0] || '중';
   }
-
-  const statRow = document.getElementById('statRow');
-  const parts = [];
-  if (p.address) parts.push('📍 ' + p.address.split(' ').slice(0,2).join(' '));
-  if (count > 0) parts.push(`매물 ${count}건`);
-  statRow.innerHTML = parts.map(t => `<span class="stat-badge">${esc(t)}</span>`).join('');
 
   if (p.phone) {
     agentPhone = p.phone;
