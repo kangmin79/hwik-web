@@ -235,15 +235,17 @@ function render() {
 
   // 전용/공급 토글 + 면적 버튼
   const pm = d.pyeongs_map || {};
-  // 실제 매핑된 항목(exclu ±5㎡ 이내)이 하나라도 있을 때만 공급 토글 표시
-  const toggleRowHtml = '';
+  const hasSupplyData = cats.some(c => pm[c] && pm[c].supply && pm[c].supply > 0 && Math.abs((pm[c].exclu || 0) - parseFloat(c)) <= 10);
+  const toggleRowHtml = hasSupplyData
+    ? `<div style="font-size:11px;color:var(--sub);padding:6px 16px 0;">공급면적 기준</div>`
+    : `<div style="font-size:11px;color:var(--sub);padding:6px 16px 0;">전용면적 기준</div>`;
   const pyeongHtml = cats.map(c => {
     const active = c === currentPyeong ? ' active' : '';
     let label;
     if (pm[c] && pm[c].supply && pm[c].supply > 0 && Math.abs((pm[c].exclu || 0) - parseFloat(c)) <= 10) {
-      label = '공급 ' + pm[c].supply.toFixed(1) + '㎡';
+      label = pm[c].supply.toFixed(1) + '㎡';
     } else {
-      label = '전용 ' + c + '㎡';
+      label = c + '㎡';
     }
     return `<div class="pyeong-btn${active}" data-cat="${esc(c)}">${esc(label)}</div>`;
   }).join('');
