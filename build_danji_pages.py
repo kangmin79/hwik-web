@@ -45,6 +45,17 @@ DONG_DIR = os.path.join(BASE_DIR, "dong")
 # 동 페이지 slug 목록 (빌드 시 로드 — 동 파일 없는 곳은 링크 생략)
 DONG_SLUGS = set()
 
+# OG 이미지 manifest (빌드 시 로드)
+OG_MANIFEST = {}
+OG_DEFAULT = "https://hwik.kr/og-image.png"
+OG_STORAGE = "https://jqaxejgzkchxbfzgzyzi.supabase.co/storage/v1/object/public/og-images/danji"
+
+def get_og_image_url(did: str) -> str:
+    """manifest에 등록된 경우 전용 이미지, 아니면 기본 이미지 반환"""
+    if did in OG_MANIFEST:
+        return f"{OG_STORAGE}/{hashlib.md5(did.encode('utf-8')).hexdigest()}.png"
+    return OG_DEFAULT
+
 # /gu/ 페이지가 존재하는 지역
 GU_PAGE_REGIONS = {"서울", "인천", "경기", "부산", "대구", "광주", "대전", "울산"}
 
@@ -807,7 +818,7 @@ def generate_page(d):
 <meta property="og:locale" content="ko_KR">
 <meta property="og:title" id="og-title" content="{name} 실거래가 시세 | 휙">
 <meta property="og:description" id="og-desc" content="{esc(desc)}">
-<meta property="og:image" content="https://jqaxejgzkchxbfzgzyzi.supabase.co/storage/v1/object/public/og-images/danji/{hashlib.md5(did.encode('utf-8')).hexdigest()}.png">
+<meta property="og:image" content="{get_og_image_url(did)}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:url" id="og-url" content="{canonical}">
@@ -856,6 +867,18 @@ def main():
         sys.stdout = open(sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1)
 
     os.makedirs(DANJI_DIR, exist_ok=True)
+
+    # OG 이미지 manifest 로드 (실제 생성된 이미지 ID 목록)
+    global OG_MANIFEST
+    manifest_path = os.path.join(DANJI_DIR, "og-manifest.json")
+    OG_MANIFEST = {}
+    if os.path.exists(manifest_path):
+        try:
+            with open(manifest_path, encoding="utf-8") as f:
+                OG_MANIFEST = json.load(f)
+        except Exception:
+            pass
+    print(f"OG 이미지 manifest: {len(OG_MANIFEST)}개")
 
     # 동 페이지 slug 목록 로드 (동 파일 없으면 링크 생략)
     global DONG_SLUGS
