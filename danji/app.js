@@ -578,7 +578,7 @@ function render() {
     <!-- 주변 단지 -->
     <div class="section">
       <div class="section-title">${esc(dongDisplay)} 주변 단지</div>
-      <div style="font-size:11px;color:var(--sub);margin-bottom:12px;margin-top:-6px;">${currentTab === '월세' ? '매매가 기준 · ' : ''}${showSupply && pm[currentPyeong] && pm[currentPyeong].supply && Math.abs((pm[currentPyeong].exclu||0)-parseFloat(currentPyeong))<=10 ? '공급 '+Math.round(pm[currentPyeong].supply)+'㎡' : '전용 '+(currentPyeong||'84')+'㎡'} ±10㎡ 기준</div>
+      <div style="font-size:11px;color:var(--sub);margin-bottom:12px;margin-top:-6px;">${currentTab === '월세' ? '매매가 기준 · ' : ''}전용 ${currentPyeong||'84'}㎡ ±10㎡ 기준</div>
       <div style="display:flex;flex-direction:column;gap:8px;">${nearbyHtml || '<div style="font-size:12px;color:var(--sub);">주변 단지 정보가 없습니다</div>'}</div>
     </div>
 
