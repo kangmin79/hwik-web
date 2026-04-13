@@ -411,12 +411,16 @@ function openSheet(cardId) {
   document.getElementById('sheetOverlay').classList.add('show');
   document.getElementById('sheet').classList.add('show');
   document.body.style.overflow = 'hidden';
+  document.body.style.position = 'fixed';
+  document.body.style.width = '100%';
 }
 
 function closeSheet() {
   document.getElementById('sheetOverlay').classList.remove('show');
   document.getElementById('sheet').classList.remove('show');
   document.body.style.overflow = '';
+  document.body.style.position = '';
+  document.body.style.width = '';
 }
 
 function openKakao() {
