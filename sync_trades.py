@@ -1113,6 +1113,12 @@ def generate_sitemap(danji_list: list):
                 if td and td > dong_latest_date.get(key, ""):
                     dong_latest_date[key] = td
 
+    # 실제 dong HTML 파일 목록 (파일 없는 URL은 sitemap에서 제외)
+    dong_html_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dong")
+    existing_dong_slugs = set()
+    if os.path.isdir(dong_html_dir):
+        existing_dong_slugs = {f[:-5] for f in os.listdir(dong_html_dir) if f.endswith(".html")}
+
     dong_count = 0
     seen_dong_slugs = set()  # 동일 URL 중복 방지
     for (region, gu, dong), cnt in sorted(dong_trade_count.items()):
@@ -1122,6 +1128,9 @@ def generate_sitemap(danji_list: list):
         dong_slug = _make_dong_slug(gu, dong, addr)
         safe_dong_slug = _quote(dong_slug, safe="-")
         if safe_dong_slug in seen_dong_slugs:
+            continue
+        # 실제 HTML 파일 없으면 sitemap 제외
+        if existing_dong_slugs and dong_slug not in existing_dong_slugs:
             continue
         seen_dong_slugs.add(safe_dong_slug)
         dong_lastmod = dong_latest_date.get((region, gu, dong), today)[:10]
