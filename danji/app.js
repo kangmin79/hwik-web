@@ -448,8 +448,13 @@ function render() {
   const dong = locationParts.length >= 2 ? locationParts.slice(1).join(' ') : d.location;
   const dongDisplay = locationParts[locationParts.length - 1] || d.location;
 
-  // breadcrumb
+  // breadcrumb — 지역명 추출 (서울/경기/인천/부산/대구/광주/대전/울산)
   const guName = locationParts[0] || '';
+  const _addrCity = (d.address || '').split(' ')[0] || '';
+  const _cityMap = {'서울특별시':'서울','인천광역시':'인천','경기도':'경기','부산광역시':'부산','대구광역시':'대구','광주광역시':'광주','대전광역시':'대전','울산광역시':'울산'};
+  const _cityLabel = _cityMap[_addrCity] || '서울';
+  const _metroSet = new Set(['부산','대구','광주','대전','울산']);
+  const _guUrlSlug = _metroSet.has(_cityLabel) ? (_cityLabel + '-' + guName) : guName;
 
   // FAQ 데이터
   const faqItems = [];
@@ -483,7 +488,7 @@ function render() {
   $('#app').innerHTML = `
     <!-- Breadcrumb -->
     <nav class="breadcrumb" aria-label="breadcrumb">
-      <a href="/">휙</a><span>&gt;</span><a href="/gu.html?name=${encodeURIComponent(guName)}">서울 ${esc(guName)}</a><span>&gt;</span>${esc(d.complex_name)}
+      <a href="/">휙</a><span>&gt;</span><a href="/gu/${encodeURIComponent(_guUrlSlug)}">${esc(_cityLabel)} ${esc(guName)}</a><span>&gt;</span>${esc(d.complex_name)}
     </nav>
 
     <!-- 헤더 -->
@@ -932,7 +937,7 @@ function injectJsonLd() {
         "@type": "BreadcrumbList",
         "itemListElement": [
           { "@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr" },
-          { "@type": "ListItem", "position": 2, "name": `서울 ${guName}`, "item": `https://hwik.kr/gu.html?name=${encodeURIComponent(guName)}` },
+          { "@type": "ListItem", "position": 2, "name": `${_cityLabel} ${guName}`, "item": `https://hwik.kr/gu/${encodeURIComponent(_guUrlSlug)}` },
           { "@type": "ListItem", "position": 3, "name": d.complex_name, "item": canonUrl },
         ]
       },
