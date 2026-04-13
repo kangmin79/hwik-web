@@ -1041,14 +1041,19 @@ def generate_sitemap(danji_list: list):
                 urls.append(f'  <url><loc>{base}/ranking/{slug}</loc><lastmod>{today}</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>')
 
     # 단지 페이지 (거래 데이터 있는 단지만 — Google 신뢰도 향상)
+    # 실제 HTML 파일 목록 (파일 없는 URL은 sitemap에서 제외 — 크롤링 예산 낭비 방지)
+    danji_html_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "danji")
+    existing_slugs = set()
+    if os.path.isdir(danji_html_dir):
+        existing_slugs = {f[:-5] for f in os.listdir(danji_html_dir) if f.endswith(".html")}
     included = 0
     excluded = 0
     for d in all_danji:
         did = d.get("id", "")
         if not did:
             continue
-        # 오피스텔 제외 (아파트만 노출)
-        if did.startswith("offi-"):
+        # 오피스텔/구버전 apt- 제외 (아파트 신버전만)
+        if did.startswith("offi-") or did.startswith("apt-"):
             excluded += 1
             continue
         # 거래 데이터 있는지 확인
@@ -1060,6 +1065,10 @@ def generate_sitemap(danji_list: list):
             continue
         slug = _make_slug(d.get("complex_name", ""), d.get("location", ""), did, d.get("address", ""))
         safe_slug = _quote(slug, safe="-")
+        # 실제 HTML 파일 없으면 sitemap 제외 (404 URL 방지)
+        if existing_slugs and slug not in existing_slugs:
+            excluded += 1
+            continue
         # lastmod: 최신 거래일 기반 (없으면 updated_at, 그것도 없으면 today)
         latest_trade_date = ""
         for c in cats:

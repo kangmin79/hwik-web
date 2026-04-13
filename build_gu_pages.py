@@ -219,8 +219,12 @@ def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None)
         key=lambda x: x["jeonse_rate"], reverse=True
     )[:3]
 
-    title = f"{gu_name} 아파트 실거래가 시세 - 휙"
-    desc = f"{region_label} {gu_name} 아파트 {len(danji_list)}개 단지 실거래가, 전세가, 시세 추이를 한눈에 확인하세요."
+    title = f"{region_label} {gu_name} 아파트 실거래가 시세 - 휙"
+    # desc: 평균 매매가 + 단지 수 포함 (클릭 유도)
+    avg_str = f"평균 매매가 {format_price(avg_price)}, " if avg_price else ""
+    top_name = price_top[0][0].get("complex_name", "") if price_top else ""
+    top_str = f" 최고가 단지 {top_name}." if top_name else ""
+    desc = f"{region_label} {gu_name} 아파트 {len(danji_list)}개 단지 실거래가·전세가 시세. {avg_str}국토교통부 데이터 기반 면적별 가격 바로 확인.{top_str}"
 
     # ── HTML 생성 ──
     lines = []

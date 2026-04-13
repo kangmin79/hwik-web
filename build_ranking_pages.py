@@ -172,7 +172,8 @@ def build_ranking_html(region, rank_type, data):
 
     top50 = sorted_data[:50]
     title = f"{area_label} 아파트 {type_label} 순위 TOP 50 - 휙"
-    desc = f"{area_label} 아파트 {type_label} 순위 TOP 50. 국토교통부 실거래가 기반."
+    top1_str = f" 1위 {top50[0]['name']} {format_price(top50[0]['price'])}." if top50 else ""
+    desc = f"{area_label} 아파트 {type_label} 순위 TOP 50.{top1_str} 국토교통부 실거래가 기반 최신 데이터."
 
     lines = []
 
@@ -200,6 +201,18 @@ def build_ranking_html(region, rank_type, data):
         short_label = tl.replace(" 높은", "↑").replace(" 낮은", "↓")
         lines.append(f'<a class="tab{active}" style="text-decoration:none;color:inherit;" href="/ranking/{region}-{tk}">{esc(short_label)}</a>')
     lines.append(f'</div>')
+
+    # 도입 텍스트 (SEO 콘텐츠)
+    if top50:
+        intro_parts = [f"{area_label} 아파트 {type_label} 순위입니다."]
+        intro_parts.append(f"국토교통부 실거래가 공개시스템 기반으로 최신 데이터를 반영합니다.")
+        if rank_type == "price":
+            intro_parts.append(f"1위는 {top50[0]['name']}({top50[0]['location']})으로 {format_price(top50[0]['price'])}입니다.")
+        elif rank_type == "sqm" and top50[0].get("sqm_price"):
+            intro_parts.append(f"㎡당 가격 1위는 {top50[0]['name']}으로 {format_price(top50[0]['sqm_price'])}/㎡입니다.")
+        elif rank_type in ("jeonse", "jeonse_low"):
+            intro_parts.append(f"전세가율 1위는 {top50[0]['name']}({top50[0].get('jr', 0)}%)입니다.")
+        lines.append(f'<p style="font-size:13px;color:var(--sub);padding:8px 16px 0;line-height:1.6;">{" ".join(intro_parts)}</p>')
 
     # 랭킹 목록
     lines.append(f'<div class="section"><div class="section-title">{esc(area_label)} {esc(type_label)} TOP 50</div>')
@@ -230,7 +243,15 @@ def build_ranking_html(region, rank_type, data):
     lines.append(f'<div class="faq-section"><div class="section-title">자주 묻는 질문</div>')
     if top50:
         lines.append(f'<div class="faq-item"><div class="faq-q">{esc(area_label)}에서 가장 비싼 아파트는?</div>')
-        lines.append(f'<div class="faq-a">{esc(top50[0]["name"])} ({esc(top50[0]["location"])})이 {format_price(top50[0]["price"])}으로 1위입니다.</div></div>')
+        lines.append(f'<div class="faq-a">{esc(top50[0]["name"])} ({esc(top50[0]["location"])})이 {format_price(top50[0]["price"])}으로 1위입니다. 국토교통부 최신 실거래가 기준입니다.</div></div>')
+        # 2위
+        if len(top50) >= 2:
+            lines.append(f'<div class="faq-item"><div class="faq-q">{esc(area_label)} 아파트 매매가 2위는?</div>')
+            lines.append(f'<div class="faq-a">2위는 {esc(top50[1]["name"])} ({esc(top50[1]["location"])})으로 {format_price(top50[1]["price"])}입니다.</div></div>')
+        # 3위
+        if len(top50) >= 3:
+            lines.append(f'<div class="faq-item"><div class="faq-q">{esc(area_label)} 아파트 매매가 3위는?</div>')
+            lines.append(f'<div class="faq-a">3위는 {esc(top50[2]["name"])} ({esc(top50[2]["location"])})으로 {format_price(top50[2]["price"])}입니다.</div></div>')
         if rank_type == "sqm":
             lines.append(f'<div class="faq-item"><div class="faq-q">{esc(area_label)} ㎡당 가격 1위는?</div>')
             lines.append(f'<div class="faq-a">{esc(top50[0]["name"])}이 전용면적 기준 {format_price(top50[0]["sqm_price"])}/㎡으로 1위입니다.</div></div>')
