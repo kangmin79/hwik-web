@@ -473,9 +473,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet()
     const velocity = lastY - e.changedTouches[0].clientY;
     // 30px 이상 내리거나, 빠르게 아래로 스와이프하면 닫기
     if (dy > 30) {
-      sheet.style.transition = 'transform .3s cubic-bezier(0.16,1,0.3,1)';
-      sheet.style.transform = 'translateX(-50%) translateY(100%)';
-      setTimeout(closeSheet, 300);
+      closeSheet(); // 즉시 상태 초기화 (타이머 없음)
     } else {
       sheet.style.transition = 'transform .3s cubic-bezier(0.16,1,0.3,1)';
       sheet.style.transform = 'translateX(-50%) translateY(0)';
