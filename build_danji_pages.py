@@ -134,14 +134,14 @@ def fetch_all_danji():
             },
             timeout=30,
         )
-        data = resp.json() if resp.status_code == 200 else []
-        if not data:
+        raw = resp.json() if resp.status_code == 200 else []
+        if not raw:
             break
         # apt- 구버전 단지 제외
-        data = [d for d in data if not d.get("id", "").startswith("apt-")]
+        data = [d for d in raw if not d.get("id", "").startswith("apt-")]
         all_data.extend(data)
         offset += 500
-        if len(data) < 500:
+        if len(raw) < 500:  # raw 기준으로 종료 판단 (필터 후 길이로 하면 조기 종료 버그)
             break
         time.sleep(0.2)
     return all_data
