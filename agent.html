@@ -477,9 +477,15 @@ document.addEventListener('touchmove', e => {
     if (!isDragging) return;
     isDragging = false;
     const dy = lastY - startY;
-    if (dy > 40) {
-      sheet.style.transform = '';
-      closeSheet();
+    if (dy > 10) {
+      // 아래로 조금이라도 내리면 → 쭉 내려가서 닫힘
+      sheet.style.transition = 'transform .25s ease-in';
+      sheet.style.transform = 'translateX(-50%) translateY(100%)';
+      setTimeout(() => {
+        sheet.style.transform = '';
+        sheet.style.transition = '';
+        closeSheet();
+      }, 250);
     } else {
       sheet.style.transition = 'transform .3s cubic-bezier(0.16,1,0.3,1)';
       sheet.style.transform = 'translateX(-50%) translateY(0)';
