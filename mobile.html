@@ -1157,6 +1157,15 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { clockSkewInSeconds: 300 }
 });
 
+// ── 토큰 캐시 (매 요청마다 getSession() 호출 방지) ──
+let _cachedToken = null;
+async function getToken() {
+  if (_cachedToken) return _cachedToken;
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  _cachedToken = session?.access_token || SUPABASE_KEY;
+  return _cachedToken;
+}
+
 function ensureKakao() {
   if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
     Kakao.init(HWIK_CONFIG.KAKAO_JS_KEY);
@@ -1197,6 +1206,7 @@ supabaseClient.auth.getSession().then(({ data: { session } }) => {
   }
 });
 supabaseClient.auth.onAuthStateChange((event, session) => {
+  _cachedToken = session?.access_token || null; // 토큰 캐시 갱신
   if (session?.user) { currentUser = session.user; onLoggedIn(); }
   else { currentUser = null; onLoggedOut(); }
 });
@@ -1433,7 +1443,7 @@ async function doSearch() {
     const searchMode = currentUser ? 'my' : 'shared';
     const agentId = currentUser ? currentUser.id : '';
 
-    const _searchToken = currentUser ? ((await supabaseClient.auth.getSession()).data.session?.access_token || SUPABASE_KEY) : SUPABASE_KEY;
+    const _searchToken = currentUser ? await getToken() : SUPABASE_KEY;
     const res = await fetch(`${SUPABASE_URL}/functions/v1/search-property`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _searchToken, 'apikey': SUPABASE_KEY },
@@ -1904,7 +1914,7 @@ async function _processChatBuffer() {
     if (!document.getElementById('chatTyping')) addTyping();
 
     try {
-      const token = (await supabaseClient.auth.getSession()).data.session?.access_token || '';
+      const token = await getToken();
       const parseRes = await fetch(`${SUPABASE_URL}/functions/v1/parse-property`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_KEY },
@@ -2705,7 +2715,7 @@ async function briefSend() {
     _lastSender = '';
     addAlertBubble('손님 조건을 분석하고 있어요...');
     try {
-      const token = (await supabaseClient.auth.getSession()).data.session?.access_token || '';
+      const token = await getToken();
       const res = await fetch(`${SUPABASE_URL}/functions/v1/parse-property`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_KEY },
