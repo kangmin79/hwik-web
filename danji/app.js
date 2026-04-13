@@ -149,10 +149,11 @@ async function loadData() {
   }
 
   render();
-  initMap();
+  setupMapLazyLoad();
 }
 
-// ── 카카오 정적 지도 초기화 ──
+// ── 카카오 지도 lazy load (Intersection Observer) ──
+// 사용자가 지도 영역에 스크롤했을 때만 SDK 400KB 로드
 function _doInitMap() {
   const el = document.getElementById('danji-map');
   if (!el || !DATA.lat || !DATA.lng) return;
@@ -162,13 +163,25 @@ function _doInitMap() {
   map.setDraggable(false);
   map.setZoomable(false);
 }
-function initMap() {
-  if (!DATA || !DATA.lat || !DATA.lng) return;
+function _loadMapSdk() {
   if (window.kakao && window.kakao.maps) { kakao.maps.load(_doInitMap); return; }
   const s = document.createElement('script');
   s.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${HWIK_CONFIG.KAKAO_JS_KEY}&autoload=false`;
   s.onload = () => kakao.maps.load(_doInitMap);
   document.head.appendChild(s);
+}
+function setupMapLazyLoad() {
+  if (!DATA || !DATA.lat || !DATA.lng) return;
+  const el = document.getElementById('danji-map');
+  if (!el) return;
+  if (!('IntersectionObserver' in window)) { _loadMapSdk(); return; } // 구형 브라우저 fallback
+  const obs = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) {
+      obs.disconnect();
+      _loadMapSdk();
+    }
+  }, { rootMargin: '200px' }); // 200px 전에 미리 로드
+  obs.observe(el);
 }
 
 // ── 렌더링 ──
