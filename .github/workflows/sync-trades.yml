@@ -220,7 +220,7 @@ jobs:
       - name: Playwright 브라우저 설치
         run: python -m playwright install chromium --with-deps
       - name: sitemap 재생성
-        run: python sync_trades.py --aggregate-only
+        run: python sync_trades.py --sitemap-only
       - name: danji_pages DB 집계 (trade_raw_v2 → danji_pages)
         run: python build_danji_from_v2.py --region all
       - name: 단지 정적 HTML 빌드 (danji_pages → HTML)
