@@ -86,7 +86,7 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
 .sheet-overlay.show { opacity:1; pointer-events:auto; }
 .sheet { position:fixed; bottom:0; left:50%; transform:translateX(-50%) translateY(100%); width:100%; max-width:430px; background:#fff; border-radius:20px 20px 0 0; z-index:101; transition:transform .3s cubic-bezier(0.16,1,0.3,1); height:75vh; display:flex; flex-direction:column; }
 .sheet.show { transform:translateX(-50%) translateY(0); }
-.sheet-handle { width:36px; height:4px; background:#e5e7eb; border-radius:2px; margin:12px auto 0; flex-shrink:0; }
+.sheet-handle { width:36px; height:4px; background:#e5e7eb; border-radius:2px; margin:12px auto 0; flex-shrink:0; padding:12px 40px; background-clip:content-box; cursor:grab; }
 .sheet-scroll { overflow-y:auto; flex:1; }
 
 /* 시트 사진 */
@@ -445,35 +445,41 @@ function openKakao() {
 // ESC 닫기
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
 
-// 시트 드래그로 닫기
+// 배경 스크롤 완전 차단 (시트 열려있을 때)
+document.addEventListener('touchmove', e => {
+  const sheet = document.getElementById('sheet');
+  if (!sheet.classList.contains('show')) return;
+  // sheet-scroll 안쪽 스크롤만 허용
+  if (e.target.closest('.sheet-scroll')) return;
+  e.preventDefault();
+}, { passive: false });
+
+// 핸들 드래그로 닫기 (핸들 영역만 — 사진/스크롤 충돌 없음)
 (function() {
   const sheet = document.getElementById('sheet');
-  const scroll = sheet.querySelector('.sheet-scroll');
+  const handle = sheet.querySelector('.sheet-handle');
   let startY = 0, lastY = 0, isDragging = false;
 
-  sheet.addEventListener('touchstart', e => {
-    if (!sheet.classList.contains('show')) return; // 시트 닫혀있으면 무시
-    if (scroll.scrollTop > 0) return;
+  handle.addEventListener('touchstart', e => {
     startY = lastY = e.touches[0].clientY;
     isDragging = true;
     sheet.style.transition = 'none';
   }, { passive: true });
 
-  sheet.addEventListener('touchmove', e => {
+  document.addEventListener('touchmove', e => {
     if (!isDragging) return;
     lastY = e.touches[0].clientY;
     const dy = lastY - startY;
     if (dy > 0) sheet.style.transform = `translateX(-50%) translateY(${dy}px)`;
   }, { passive: true });
 
-  sheet.addEventListener('touchend', e => {
+  document.addEventListener('touchend', e => {
     if (!isDragging) return;
     isDragging = false;
     const dy = lastY - startY;
-    const velocity = lastY - e.changedTouches[0].clientY;
-    // 30px 이상 내리거나, 빠르게 아래로 스와이프하면 닫기
-    if (dy > 30) {
-      closeSheet(); // 즉시 상태 초기화 (타이머 없음)
+    if (dy > 40) {
+      sheet.style.transform = '';
+      closeSheet();
     } else {
       sheet.style.transition = 'transform .3s cubic-bezier(0.16,1,0.3,1)';
       sheet.style.transform = 'translateX(-50%) translateY(0)';
