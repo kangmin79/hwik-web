@@ -273,6 +273,7 @@ function renderProfile(p, count) {
   // 전화 버튼
   if (p.phone) {
     document.getElementById('btnCall').href = `tel:${esc(p.phone)}`;
+    document.getElementById('btnCall').textContent = `📞 ${esc(p.phone)}`;
     document.getElementById('headerActions').style.display = 'flex';
   }
 }
