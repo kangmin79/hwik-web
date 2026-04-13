@@ -531,7 +531,7 @@ function render() {
     </header>
 
     <!-- 단지 대표 이미지 (구글 검색 썸네일용) -->
-    ${(() => { const u = document.querySelector('meta[property="og:image"]')?.content; return u ? `<img src="${u}" alt="${esc(d.complex_name)} 실거래가 시세" width="1200" height="630" loading="lazy" style="width:100%;border-radius:8px;margin-bottom:12px;display:block;">` : ''; })()}
+    ${(() => { const u = document.querySelector('meta[property="og:image"]')?.content; return u ? `<img src="${u}" alt="${esc(d.complex_name)} 실거래가 시세" loading="lazy" style="width:100%;height:auto;border-radius:8px;margin-bottom:12px;display:block;" onerror="this.style.display='none'">` : ''; })()}
 
     <!-- 탭 -->
     <div class="tabs">
