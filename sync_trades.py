@@ -1114,12 +1114,16 @@ def generate_sitemap(danji_list: list):
                     dong_latest_date[key] = td
 
     dong_count = 0
+    seen_dong_slugs = set()  # 동일 URL 중복 방지
     for (region, gu, dong), cnt in sorted(dong_trade_count.items()):
         if cnt < 3:
             continue
         addr = dong_addr_cache.get((region, gu, dong), "")
         dong_slug = _make_dong_slug(gu, dong, addr)
         safe_dong_slug = _quote(dong_slug, safe="-")
+        if safe_dong_slug in seen_dong_slugs:
+            continue
+        seen_dong_slugs.add(safe_dong_slug)
         dong_lastmod = dong_latest_date.get((region, gu, dong), today)[:10]
         urls.append(f'  <url><loc>{base}/dong/{safe_dong_slug}</loc><lastmod>{dong_lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>')
         dong_count += 1
