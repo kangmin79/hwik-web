@@ -30,6 +30,15 @@ on:
           - gwangju
           - daejeon
           - ulsan
+          - sejong
+          - chungbuk
+          - chungnam
+          - jeonbuk
+          - jeonnam
+          - gyeongbuk
+          - gyeongnam
+          - gangwon
+          - jeju
 
 permissions:
   contents: write
@@ -204,12 +213,193 @@ jobs:
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
           python collect_trades_v2.py --region ulsan $FLAG
 
-  # ── sitemap + 정적 페이지 빌드 (8개 job 완료 후) ────────
+  # ── 세종 ──────────────────────────────────────────────
+  sync-sejong:
+    name: 수집 (세종)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'sejong'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - name: 세종 수집 (v2)
+        run: |
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          python collect_trades_v2.py --region sejong $FLAG
+
+  # ── 충북 ──────────────────────────────────────────────
+  sync-chungbuk:
+    name: 수집 (충북)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'chungbuk'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - name: 충북 수집 (v2)
+        run: |
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          python collect_trades_v2.py --region chungbuk $FLAG
+
+  # ── 충남 ──────────────────────────────────────────────
+  sync-chungnam:
+    name: 수집 (충남)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'chungnam'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - name: 충남 수집 (v2)
+        run: |
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          python collect_trades_v2.py --region chungnam $FLAG
+
+  # ── 전북 ──────────────────────────────────────────────
+  sync-jeonbuk:
+    name: 수집 (전북)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'jeonbuk'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - name: 전북 수집 (v2)
+        run: |
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          python collect_trades_v2.py --region jeonbuk $FLAG
+
+  # ── 전남 ──────────────────────────────────────────────
+  sync-jeonnam:
+    name: 수집 (전남)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'jeonnam'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - name: 전남 수집 (v2)
+        run: |
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          python collect_trades_v2.py --region jeonnam $FLAG
+
+  # ── 경북 ──────────────────────────────────────────────
+  sync-gyeongbuk:
+    name: 수집 (경북)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'gyeongbuk'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - name: 경북 수집 (v2)
+        run: |
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          python collect_trades_v2.py --region gyeongbuk $FLAG
+
+  # ── 경남 ──────────────────────────────────────────────
+  sync-gyeongnam:
+    name: 수집 (경남)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'gyeongnam'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - name: 경남 수집 (v2)
+        run: |
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          python collect_trades_v2.py --region gyeongnam $FLAG
+
+  # ── 강원 ──────────────────────────────────────────────
+  sync-gangwon:
+    name: 수집 (강원)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'gangwon'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - name: 강원 수집 (v2)
+        run: |
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          python collect_trades_v2.py --region gangwon $FLAG
+
+  # ── 제주 ──────────────────────────────────────────────
+  sync-jeju:
+    name: 수집 (제주)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'jeju'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - name: 제주 수집 (v2)
+        run: |
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          python collect_trades_v2.py --region jeju $FLAG
+
+  # ── sitemap + 정적 페이지 빌드 (17개 job 완료 후) ────────
   build:
     name: sitemap + 정적 페이지 빌드
     runs-on: ubuntu-latest
     timeout-minutes: 180
-    needs: [sync-seoul, sync-incheon, sync-gyeonggi, sync-busan, sync-daegu, sync-gwangju, sync-daejeon, sync-ulsan]
+    needs: [sync-seoul, sync-incheon, sync-gyeonggi, sync-busan, sync-daegu, sync-gwangju, sync-daejeon, sync-ulsan,
+            sync-sejong, sync-chungbuk, sync-chungnam, sync-jeonbuk, sync-jeonnam, sync-gyeongbuk, sync-gyeongnam, sync-gangwon, sync-jeju]
     if: ${{ !cancelled() && contains(needs.*.result, 'success') }}
     steps:
       - uses: actions/checkout@v4

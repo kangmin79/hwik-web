@@ -99,39 +99,47 @@ def gu_url_slug(region_label, gu_name):
     """구 페이지 URL 슬러그 생성 — build_gu_pages.py의 gu_filename()과 동일 규칙.
 
     - 서울/경기: gu_name 그대로 (공백은 하이픈)
-    - 인천: 기본 gu_name, 단 '중구'는 '인천-중구' (서울 중구와 충돌 방지)
-    - 5대 광역시(부산/대구/광주/대전/울산): '{label}-{gu}' (이름 충돌 방지)
+    - 인천: gu_name 그대로, 단 '중구'는 '인천-중구' (서울 중구와 충돌 방지)
+    - 그 외 모두(광역시+도 단위): '{label}-{gu}' (이름 충돌 방지)
+      → 고성군이 경남/강원 둘 다 있는 등 도 단위 간 충돌 방지
     """
     if not gu_name:
         return ""
     slug = gu_name.replace(" ", "-")
-    metro = {"부산", "대구", "광주", "대전", "울산"}
-    if region_label in metro:
-        return f"{region_label}-{slug}"
-    if region_label == "인천" and gu_name == "중구":
-        return "인천-중구"
-    return slug
+    no_prefix = {"서울", "경기"}
+    if region_label in no_prefix:
+        return slug
+    if region_label == "인천":
+        return "인천-중구" if gu_name == "중구" else slug
+    return f"{region_label}-{slug}"
 
 
 def extract_gu_from_address(address, two_token_gu_set=None):
     """도로명주소에서 정확한 '구/시' 이름을 추출.
 
     - 서울/광역시: "서울특별시 강남구 ..." → "강남구"
-    - 경기 2토큰: "경기도 수원시 장안구 ..." → "수원시 장안구" (2토큰 세트에 있을 때)
-    - 경기 1토큰: "경기도 의정부시 ..." → "의정부시"
+    - 세종: "세종특별자치시 ..." → "세종특별자치시" (시군구 단계 없음)
+    - 2토큰: "경기도 수원시 장안구 ..." → "수원시 장안구"
+             "경상남도 창원시 의창구 ..." → "창원시 의창구"
+    - 1토큰: "경기도 의정부시 ..." → "의정부시"
     - 추출 실패: "" 반환
 
-    two_token_gu_set 미지정 시 regions.GYEONGGI_TWO_TOKEN_GU 를 기본값으로 사용.
+    two_token_gu_set 미지정 시 regions.ALL_TWO_TOKEN_GU 를 기본값으로 사용.
     """
     if two_token_gu_set is None:
         try:
-            from regions import GYEONGGI_TWO_TOKEN_GU
-            two_token_gu_set = GYEONGGI_TWO_TOKEN_GU
+            from regions import ALL_TWO_TOKEN_GU
+            two_token_gu_set = ALL_TWO_TOKEN_GU
         except ImportError:
             two_token_gu_set = None
     if not address:
         return ""
     addr_parts = address.split()
+    if not addr_parts:
+        return ""
+    # 세종: 시군구 단계 없음 → 첫 토큰 자체가 lawd 단위
+    if addr_parts[0] == "세종특별자치시":
+        return "세종특별자치시"
     if len(addr_parts) < 2:
         return ""
     # 첫 번째 토큰은 지역명(서울특별시/경기도 등), 두 번째부터 행정구역
@@ -141,7 +149,6 @@ def extract_gu_from_address(address, two_token_gu_set=None):
     # words[1] 이 "시" 이고 words[2] 가 "구" → 2토큰 gu 가능성
     if len(addr_parts) >= 3 and addr_parts[1].endswith("시") and addr_parts[2].endswith("구"):
         candidate = f"{addr_parts[1]} {addr_parts[2]}"
-        # two_token_gu_set 이 주어지면 해당 세트에 있을 때만 2토큰으로 인정
         if two_token_gu_set is None or candidate in two_token_gu_set:
             return candidate
         return addr_parts[1]

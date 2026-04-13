@@ -85,17 +85,15 @@ sb_session = requests.Session()
 
 
 # ── 지역 코드 ─────────────────────────────────────────────
-from regions import SEOUL_GU, INCHEON_GU, GYEONGGI_SI, BUSAN_GU, DAEGU_GU, GWANGJU_GU, DAEJEON_GU, ULSAN_GU
+from regions import (
+    SEOUL_GU, INCHEON_GU, GYEONGGI_SI,
+    BUSAN_GU, DAEGU_GU, GWANGJU_GU, DAEJEON_GU, ULSAN_GU,
+    SEJONG_SI, CHUNGBUK_SI, CHUNGNAM_SI,
+    JEONBUK_SI, JEONNAM_SI, GYEONGBUK_SI, GYEONGNAM_SI,
+    GANGWON_SI, JEJU_SI, ALL_REGIONS,
+)
 
-ALL_LAWD = {}
-ALL_LAWD.update(SEOUL_GU)
-ALL_LAWD.update(INCHEON_GU)
-ALL_LAWD.update(GYEONGGI_SI)
-ALL_LAWD.update(BUSAN_GU)
-ALL_LAWD.update(DAEGU_GU)
-ALL_LAWD.update(GWANGJU_GU)
-ALL_LAWD.update(DAEJEON_GU)
-ALL_LAWD.update(ULSAN_GU)
+ALL_LAWD = dict(ALL_REGIONS)
 
 
 # ── 국토부 API 엔드포인트 ─────────────────────────────────
@@ -177,9 +175,9 @@ def _parse_row(item: dict, lawd_cd: str, year_month: str, prop_type: str, is_ren
         price = _int(item.get("dealAmount"), 0) or None
         monthly_rent = None
 
-    # 도로명 주소 숫자 파싱
-    road_nm_bonbun = _int(item.get("roadNmBonbun"))
-    road_nm_bubun  = _int(item.get("roadNmBubun"))
+    # 도로명 주소 숫자 파싱 (매매=camelCase, 전세/월세=lowercase)
+    road_nm_bonbun = _int(item.get("roadNmBonbun") or item.get("roadnmbonbun"))
+    road_nm_bubun  = _int(item.get("roadNmBubun")  or item.get("roadnmbubun"))
 
     # 단지명: 아파트는 aptNm, 오피스텔은 offiNm
     apt_nm = _str(item.get("aptNm") or item.get("offiNm"))
@@ -201,7 +199,7 @@ def _parse_row(item: dict, lawd_cd: str, year_month: str, prop_type: str, is_ren
         "umd_nm":         _str(item.get("umdNm")),
         "umd_cd":         _str(item.get("umdCd")),
         "jibun":          _str(item.get("jibun")),
-        "road_nm":        _str(item.get("roadNm")),
+        "road_nm":        _str(item.get("roadNm") or item.get("roadnm")),
         "road_nm_bonbun": road_nm_bonbun if road_nm_bonbun else None,
         "road_nm_bubun":  road_nm_bubun if road_nm_bubun else 0,
         "build_year":     _int(item.get("buildYear")) or None,
@@ -292,18 +290,17 @@ def main():
     parser.add_argument("--months", type=int, default=2, help="최근 N개월 수집 (기본 2)")
     parser.add_argument("--lawd",   type=str, default=None, help="특정 구 lawd_cd (테스트용)")
     parser.add_argument("--region", type=str, default=None,
-                        help="지역 (seoul/incheon/gyeonggi/busan/daegu/gwangju/daejeon/ulsan/all)")
+                        help="지역 (seoul/incheon/gyeonggi/busan/daegu/gwangju/daejeon/ulsan/sejong/chungbuk/chungnam/jeonbuk/jeonnam/gyeongbuk/gyeongnam/gangwon/jeju/all)")
     args = parser.parse_args()
 
     REGION_MAP = {
-        "seoul":    SEOUL_GU,
-        "incheon":  INCHEON_GU,
-        "gyeonggi": GYEONGGI_SI,
-        "busan":    BUSAN_GU,
-        "daegu":    DAEGU_GU,
-        "gwangju":  GWANGJU_GU,
-        "daejeon":  DAEJEON_GU,
-        "ulsan":    ULSAN_GU,
+        "seoul":     SEOUL_GU,    "incheon":   INCHEON_GU,  "gyeonggi":  GYEONGGI_SI,
+        "busan":     BUSAN_GU,    "daegu":     DAEGU_GU,    "gwangju":   GWANGJU_GU,
+        "daejeon":   DAEJEON_GU,  "ulsan":     ULSAN_GU,    "sejong":    SEJONG_SI,
+        "chungbuk":  CHUNGBUK_SI, "chungnam":  CHUNGNAM_SI,
+        "jeonbuk":   JEONBUK_SI,  "jeonnam":   JEONNAM_SI,
+        "gyeongbuk": GYEONGBUK_SI, "gyeongnam": GYEONGNAM_SI,
+        "gangwon":   GANGWON_SI,  "jeju":      JEJU_SI,
     }
 
     now = datetime.now()

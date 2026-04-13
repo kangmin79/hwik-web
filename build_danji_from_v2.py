@@ -286,17 +286,23 @@ def aggregate(apt: dict, trades: list) -> dict | None:
 
 
 # ── 지역 코드 ─────────────────────────────────────────────
-from regions import (SEOUL_GU, INCHEON_GU, GYEONGGI_SI,
-                     BUSAN_GU, DAEGU_GU, GWANGJU_GU, DAEJEON_GU, ULSAN_GU)
+from regions import (
+    SEOUL_GU, INCHEON_GU, GYEONGGI_SI,
+    BUSAN_GU, DAEGU_GU, GWANGJU_GU, DAEJEON_GU, ULSAN_GU,
+    SEJONG_SI, CHUNGBUK_SI, CHUNGNAM_SI,
+    JEONBUK_SI, JEONNAM_SI, GYEONGBUK_SI, GYEONGNAM_SI,
+    GANGWON_SI, JEJU_SI, ALL_REGIONS,
+)
 
 REGION_MAP = {
-    "seoul":    SEOUL_GU,    "incheon":  INCHEON_GU,
-    "gyeonggi": GYEONGGI_SI, "busan":    BUSAN_GU,
-    "daegu":    DAEGU_GU,    "gwangju":  GWANGJU_GU,
-    "daejeon":  DAEJEON_GU,  "ulsan":    ULSAN_GU,
+    "seoul":     SEOUL_GU,    "incheon":   INCHEON_GU,  "gyeonggi":  GYEONGGI_SI,
+    "busan":     BUSAN_GU,    "daegu":     DAEGU_GU,    "gwangju":   GWANGJU_GU,
+    "daejeon":   DAEJEON_GU,  "ulsan":     ULSAN_GU,    "sejong":    SEJONG_SI,
+    "chungbuk":  CHUNGBUK_SI, "chungnam":  CHUNGNAM_SI,
+    "jeonbuk":   JEONBUK_SI,  "jeonnam":   JEONNAM_SI,
+    "gyeongbuk": GYEONGBUK_SI, "gyeongnam": GYEONGNAM_SI,
+    "gangwon":   GANGWON_SI,  "jeju":      JEJU_SI,
 }
-ALL_REGIONS = {**SEOUL_GU, **INCHEON_GU, **GYEONGGI_SI,
-               **BUSAN_GU, **DAEGU_GU, **GWANGJU_GU, **DAEJEON_GU, **ULSAN_GU}
 
 
 # ── 구 단위 처리 ──────────────────────────────────────────
@@ -444,9 +450,7 @@ def main():
         for code in codes:
             targets.append((code, ALL_REGIONS.get(code, code)))
     elif args.region == "all":
-        for d in [SEOUL_GU, INCHEON_GU, GYEONGGI_SI,
-                  BUSAN_GU, DAEGU_GU, GWANGJU_GU, DAEJEON_GU, ULSAN_GU]:
-            targets.extend(d.items())
+        targets.extend(ALL_REGIONS.items())
     else:
         targets.extend(REGION_MAP[args.region].items())
 

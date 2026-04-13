@@ -91,13 +91,33 @@ KAKAO_KEYWORD_URL = "https://dapi.kakao.com/v2/local/search/keyword.json"
 
 
 # ── 지역 코드 ─────────────────────────────────────────────
-from regions import SEOUL_GU, INCHEON_GU, GYEONGGI_SI
+from regions import (
+    SEOUL_GU, INCHEON_GU, GYEONGGI_SI,
+    BUSAN_GU, DAEGU_GU, GWANGJU_GU, DAEJEON_GU, ULSAN_GU,
+    SEJONG_SI, CHUNGBUK_SI, CHUNGNAM_SI,
+    JEONBUK_SI, JEONNAM_SI, GYEONGBUK_SI, GYEONGNAM_SI,
+    GANGWON_SI, JEJU_SI,
+)
 from slug_utils import make_danji_slug
 
 REGION_MAP = {
-    "seoul":    SEOUL_GU,
-    "incheon":  INCHEON_GU,
-    "gyeonggi": GYEONGGI_SI,
+    "seoul":     SEOUL_GU,
+    "incheon":   INCHEON_GU,
+    "gyeonggi":  GYEONGGI_SI,
+    "busan":     BUSAN_GU,
+    "daegu":     DAEGU_GU,
+    "gwangju":   GWANGJU_GU,
+    "daejeon":   DAEJEON_GU,
+    "ulsan":     ULSAN_GU,
+    "sejong":    SEJONG_SI,
+    "chungbuk":  CHUNGBUK_SI,
+    "chungnam":  CHUNGNAM_SI,
+    "jeonbuk":   JEONBUK_SI,
+    "jeonnam":   JEONNAM_SI,
+    "gyeongbuk": GYEONGBUK_SI,
+    "gyeongnam": GYEONGNAM_SI,
+    "gangwon":   GANGWON_SI,
+    "jeju":      JEJU_SI,
 }
 
 
@@ -105,7 +125,9 @@ REGION_MAP = {
 def _int(s, default=None):
     try:
         v = str(s).replace(",", "").strip()
-        return int(v) if v else default
+        if not v:
+            return default
+        return int(float(v))  # float 먼저 변환 (225.0 같은 값 처리)
     except (ValueError, TypeError):
         return default
 
@@ -259,11 +281,15 @@ def build_row(list_item: dict, bass: dict, dtl: dict, sigungu_code: str) -> dict
     codeAptNm 이 허용 유형이 아니면 None 반환.
     허용: 아파트 / 주상복합 / 도시형 생활주택(아파트)
     """
-    ALLOWED_TYPES = {"아파트", "주상복합", "도시형 생활주택(아파트)"}
+    ALLOWED_TYPES = {"아파트", "주상복합", "도시형 생활주택(아파트)", "도시형 생활주택(주상복합)"}
     # 건물 종류 필터
+    # - 빈값(미등록): K-apt에 유형 미등록 단지 → 제외
+    # - 도시형 생활주택(주상복합), 연립주택 등 → 제외
     prop_type = _str(bass.get("codeAptNm")) or ""
+    if not prop_type:
+        return None  # K-apt 유형 미등록
     if prop_type not in ALLOWED_TYPES:
-        return None
+        return None  # 허용 유형 외 (연립, 도시형주상복합 등)
 
     kapt_code = _str(list_item.get("kaptCode"))
     if not kapt_code:
@@ -289,8 +315,27 @@ def build_row(list_item: dict, bass: dict, dtl: dict, sigungu_code: str) -> dict
     bjd_code = _str(bass.get("bjdCode")) or _str(list_item.get("bjdCode"))
     lawd_cd  = bjd_code[:5] if bjd_code and len(bjd_code) >= 5 else sigungu_code
 
-    # apt_seq: K-apt aptSeq (trade_raw_v2 연결 키)
-    apt_seq = _str(bass.get("aptSeq")) or _str(list_item.get("aptSeq"))
+    # apt_seq: K-apt aptSeq (trade_raw_v2 연결 키) — K-apt API에 없음, match_apt_seq.py로 채움
+    apt_seq = None
+
+    # jibun: kaptAddr에서 추출 (trade_raw_v2.jibun 매칭용)
+    # kaptAddr 형식: "서울특별시 중랑구 묵동 171-4 묵동공감대아파트"
+    jibun = None
+    kapt_addr_raw = _str(bass.get("kaptAddr"))
+    if kapt_addr_raw:
+        parts = kapt_addr_raw.split()
+        dong_idx = None
+        for i, p in enumerate(parts):
+            if p.endswith("동") or p.endswith("리"):
+                dong_idx = i
+            if dong_idx is not None and i > dong_idx:
+                import re as _re
+                m = _re.match(r"^(\d+)(?:-(\d*))?$", p)
+                if m:
+                    bun = m.group(1)
+                    ji_raw = m.group(2) or ""
+                    jibun = f"{bun}-{ji_raw}" if ji_raw else bun
+                    break
 
     # 최고층: ktownFlrNo (kaptTopFloor는 오류 있음 — 사용 금지)
     top_floor = _int(bass.get("ktownFlrNo"))
@@ -311,10 +356,24 @@ def build_row(list_item: dict, bass: dict, dtl: dict, sigungu_code: str) -> dict
     use_date  = _str(bass.get("kaptUsedate")) or ""
     build_year = int(use_date[:4]) if len(use_date) >= 4 and use_date[:4].isdigit() else None
 
+    # 추가 기본정보
+    heat_type  = _str(bass.get("codeHeatNm")) or None   # 난방방식
+    hall_type  = _str(bass.get("codeHallNm")) or None   # 복도유형(계단식/복도식)
+    mgr_type   = _str(bass.get("codeMgrNm"))  or None   # 관리방식
+    ho_cnt     = _int(bass.get("hoCnt"))                # 호수
+    base_floor = _int(bass.get("kaptBaseFloor"))        # 지하층수
+    builder    = _str(bass.get("kaptBcompany")) or None # 시공사
+    developer  = _str(bass.get("kaptAcompany")) or None # 시행사
+    mparea60   = _int(bass.get("kaptMparea60"))         # 60㎡ 이하 세대수
+    mparea85   = _int(bass.get("kaptMparea85"))         # 60~85㎡ 세대수
+    mparea135  = _int(bass.get("kaptMparea135"))        # 85~135㎡ 세대수
+    mparea136  = _int(bass.get("kaptMparea136"))        # 135㎡ 초과 세대수
+
     # 엘리베이터 / 주차
     elevator_count    = _int(dtl.get("kaptdEcnt"))
     parking_ground    = _int(dtl.get("kaptdPcnt"))
     parking_underground = _int(dtl.get("kaptdPcntu"))
+
 
     # 좌표: doroJuso 지오코딩 → kaptAddr 지오코딩 → 키워드 검색 순으로 폴백
     jibun_addr = _str(bass.get("kaptAddr"))
@@ -324,9 +383,9 @@ def build_row(list_item: dict, bass: dict, dtl: dict, sigungu_code: str) -> dict
     if lat is None:
         lat, lon = keyword_geocode(kapt_name, f"{sgg} {umd_nm}" if sgg else umd_nm)
 
-    # slug 생성: make_danji_slug(name, "{sgg} {umd_nm}", kapt_code, doro_juso)
+    # slug 생성: kapt_code 소문자로 → 기존 danji_pages ID(소문자)와 URL 일치
     location = f"{sgg} {umd_nm}" if sgg else umd_nm
-    slug = make_danji_slug(kapt_name, location, kapt_code, doro_juso or "")
+    slug = make_danji_slug(kapt_name, location, kapt_code.lower(), doro_juso or "")
 
     row = {
         "kapt_code":           kapt_code,
@@ -342,13 +401,25 @@ def build_row(list_item: dict, bass: dict, dtl: dict, sigungu_code: str) -> dict
         "total_dong":          total_dong,
         "land_area":           land_area,
         "trade_type":          trade_type,
-        "elevator_count":      elevator_count,
-        "parking_ground":      parking_ground,
-        "parking_underground": parking_underground,
         "top_floor":           top_floor,
-        "lat":                 lat,   # None이어도 포함 (PGRST102 방지)
+        "lat":                 lat,
         "lon":                 lon,
         "apt_seq":             apt_seq or None,
+        "jibun":               jibun or None,
+        "heat_type":           heat_type,
+        "hall_type":           hall_type,
+        "mgr_type":            mgr_type,
+        "ho_cnt":              ho_cnt or None,
+        "base_floor":          base_floor or None,
+        "builder":             builder,
+        "developer":           developer,
+        "mparea60":            mparea60 or None,
+        "mparea85":            mparea85 or None,
+        "mparea135":           mparea135 or None,
+        "mparea136":           mparea136 or None,
+        "elevator_count":      elevator_count or None,
+        "parking_ground":      parking_ground or None,
+        "parking_underground": parking_underground or None,
     }
     return row
 
@@ -417,10 +488,10 @@ def process_sigungu(sigungu_code: str, sigungu_name: str, dry: bool) -> tuple[in
             skip_count += 1
             continue
 
-        # 허용 유형 아닌 건물 건너뜀
-        ALLOWED_TYPES = {"아파트", "주상복합", "도시형 생활주택(아파트)"}
+        # 유형 필터: 미등록(빈값) 및 허용 외 유형 건너뜀
+        ALLOWED_TYPES = {"아파트", "주상복합", "도시형 생활주택(아파트)", "도시형 생활주택(주상복합)"}
         prop_type = (bass.get("codeAptNm") or "").strip()
-        if prop_type not in ALLOWED_TYPES:
+        if not prop_type or prop_type not in ALLOWED_TYPES:
             skip_count += 1
             continue
 
@@ -466,7 +537,7 @@ def main():
     parser.add_argument("--sigungu", type=str, default=None,
                         help="특정 구 코드 (예: 11260 = 중랑구)")
     parser.add_argument("--region",  type=str, default=None,
-                        choices=["seoul", "incheon", "gyeonggi", "all"],
+                        choices=["seoul", "incheon", "gyeonggi", "busan", "daegu", "gwangju", "daejeon", "ulsan", "all"],
                         help="지역 전체 수집")
     parser.add_argument("--dry",     action="store_true",
                         help="저장 안 하고 첫 결과만 출력")
@@ -480,12 +551,16 @@ def main():
     targets: list[tuple[str, str]] = []
 
     if args.sigungu:
-        # 지역 맵에서 이름 찾기
         from regions import ALL_REGIONS
-        name = ALL_REGIONS.get(args.sigungu, args.sigungu)
-        targets = [(args.sigungu, name)]
+        # 쉼표 구분 복수 코드 지원 (예: --sigungu 11260,11710)
+        codes = [c.strip() for c in args.sigungu.split(",")]
+        for code in codes:
+            name = ALL_REGIONS.get(code, code)
+            targets.append((code, name))
     elif args.region == "all":
-        for region_dict in [SEOUL_GU, INCHEON_GU, GYEONGGI_SI]:
+        for region_dict in [SEOUL_GU, INCHEON_GU, GYEONGGI_SI, BUSAN_GU, DAEGU_GU, GWANGJU_GU, DAEJEON_GU, ULSAN_GU,
+                            SEJONG_SI, CHUNGBUK_SI, CHUNGNAM_SI, JEONBUK_SI, JEONNAM_SI,
+                            GYEONGBUK_SI, GYEONGNAM_SI, GANGWON_SI, JEJU_SI]:
             targets.extend(region_dict.items())
     else:
         targets.extend(REGION_MAP[args.region].items())
