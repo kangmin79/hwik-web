@@ -218,7 +218,7 @@ async function load() {
       .select('id,property,trade_status,photos,tags,price_number,agent_comment')
       .eq('agent_id', agentId)
       .neq('property->>type', '손님')
-      .neq('trade_status', '완료')
+      .eq('trade_status', '계약가능')
       .order('created_at', { ascending: false })
       .limit(30),
   ]);
