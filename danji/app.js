@@ -248,8 +248,7 @@ function render() {
     // fallback 매핑(exclu가 실제 면적과 5㎡ 이상 차이)은 공급 라벨 표시 안 함
     if (showSupply && pm[c] && pm[c].supply && Math.abs((pm[c].exclu || 0) - parseFloat(c)) <= 10) {
       const supplyVal = Math.round(pm[c].supply);
-      const pyeong = Math.round(supplyVal / 3.3058);
-      label = pyeong + '평(' + supplyVal + '㎡)';
+      label = '공급 ' + supplyVal + '㎡';
     }
     return `<div class="pyeong-btn${active}" data-cat="${esc(c)}">${esc(label)}</div>`;
   }).join('');
@@ -304,7 +303,7 @@ function render() {
   if (currentPyeong) {
     if (showSupply && pm[currentPyeong] && pm[currentPyeong].supply && Math.abs((pm[currentPyeong].exclu || 0) - parseFloat(currentPyeong)) <= 10) {
       const sv = Math.round(pm[currentPyeong].supply);
-      pyLabel = '공급 ' + sv + '㎡(' + Math.round(sv/3.3058) + '평)';
+      pyLabel = '공급 ' + sv + '㎡';
     } else {
       pyLabel = '전용 ' + currentPyeong + '㎡';
     }
