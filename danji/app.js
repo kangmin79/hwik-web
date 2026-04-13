@@ -149,6 +149,26 @@ async function loadData() {
   }
 
   render();
+  initMap();
+}
+
+// ── 카카오 정적 지도 초기화 ──
+function _doInitMap() {
+  const el = document.getElementById('danji-map');
+  if (!el || !DATA.lat || !DATA.lng) return;
+  const center = new kakao.maps.LatLng(DATA.lat, DATA.lng);
+  const map = new kakao.maps.Map(el, { center, level: 4 });
+  new kakao.maps.Marker({ map, position: center });
+  map.setDraggable(false);
+  map.setZoomable(false);
+}
+function initMap() {
+  if (!DATA || !DATA.lat || !DATA.lng) return;
+  if (window.kakao && window.kakao.maps) { kakao.maps.load(_doInitMap); return; }
+  const s = document.createElement('script');
+  s.src = `//dapi.kakao.com/v2/maps/sdk.js?appkey=${HWIK_CONFIG.KAKAO_JS_KEY}&autoload=false`;
+  s.onload = () => kakao.maps.load(_doInitMap);
+  document.head.appendChild(s);
 }
 
 // ── 렌더링 ──
@@ -466,7 +486,12 @@ function render() {
       faqItems.push({ q: `${d.complex_name} 최근 실거래가는?`, a: `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentPrice)}입니다.${recentData && recentData.date ? ' ('+recentData.date+' 기준)' : ''}` });
       const _supplyInfo = pm && currentPyeong && pm[currentPyeong];
       const _supplyArea = _supplyInfo && _supplyInfo.supply && _supplyInfo.supply > 0 ? _supplyInfo.supply : 0;
-      if (_supplyArea > 0) faqItems.push({ q: `${d.complex_name} ㎡당 가격은?`, a: `${d.complex_name} ㎡당 가격은 공급면적(${Math.round(_supplyArea)}㎡) 기준 ${formatPrice(Math.round(recentPrice / _supplyArea))}입니다.` });
+      const _excluArea = parseFloat(currentPyeong) || 0;
+      if (_supplyArea > 0) {
+        faqItems.push({ q: `${d.complex_name} ㎡당 가격은?`, a: `${d.complex_name} ㎡당 가격은 공급면적(${Math.round(_supplyArea)}㎡) 기준 ${formatPrice(Math.round(recentPrice / _supplyArea))}입니다.` });
+      } else if (_excluArea > 0) {
+        faqItems.push({ q: `${d.complex_name} ㎡당 가격은?`, a: `${d.complex_name} ㎡당 가격은 전용면적(${Math.round(_excluArea)}㎡) 기준 ${formatPrice(Math.round(recentPrice / _excluArea))}입니다.` });
+      }
     }
     if (jeonseRate) faqItems.push({ q: `${d.complex_name} 전세가율은?`, a: `${d.complex_name}의 전세가율은 ${jeonseRate}%입니다.` });
     if (highPrice) faqItems.push({ q: `${d.complex_name} 최근 5년 최고가는?`, a: `최근 5년 최고가는 ${formatPrice(highPrice)}입니다.${highData && highData.date ? ' ('+highData.date+')' : ''}` });
@@ -596,6 +621,14 @@ function render() {
     </div>
 
     <div class="divider"></div>
+
+    <!-- 위치 지도 -->
+    ${d.lat && d.lng ? `<div class="section" id="map-section">
+      <div class="section-title">${esc(d.complex_name)} 위치</div>
+      <div id="danji-map" style="width:100%;height:200px;border-radius:8px;overflow:hidden;background:#e5e7eb;"></div>
+      <a href="https://map.kakao.com/link/map/${encodeURIComponent(d.complex_name)},${d.lat},${d.lng}" target="_blank" rel="noopener" style="display:block;text-align:right;font-size:12px;color:var(--sub);margin-top:6px;text-decoration:none;">카카오맵에서 보기 →</a>
+    </div>
+    <div class="divider"></div>` : ''}
 
     <!-- 내부 링크 (SEO) -->
     <div class="section">
