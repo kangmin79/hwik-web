@@ -1,37 +1,16 @@
-# 다음 세션 할 일 (2026-04-12 저장)
+# 다음 세션 (2026-04-13 오후~)
 
-## 1. GitHub Actions 시크릿 등록 (필수 — 안 하면 루프 안 돌아감)
-- https://github.com/kangmin79/hwik-web/settings/secrets/actions
-- Name: `HWIK_INTERNAL_SECRET` / Value: `hwik-internal-2026`
-- 등록 후 Actions 탭에서 agent-improve-loop 첫 실행 확인
+## 남은 작업 (우선순위 순)
+1. GitHub Actions `sync-trades.yml` 신버전 교체 (5개 광역시 추가, build_danji_from_v2.py 사용)
+2. GSC에서 sitemap 재제출 (12,358→12,661 변경)
+3. danji_pages apt- 구버전 5,137개 DB 정리
+4. app.js FAQ: 공급면적 없으면 전용면적으로 fallback 추가
+5. 카카오 정적 지도 추가 (danji 페이지)
 
-## 2. 자동 루프 모니터링
-```sql
--- 점수 추이 (agent_prompts 버전별)
-SELECT version, score, pass_count, total_count, notes, created_at
-FROM agent_prompts ORDER BY created_at DESC;
-
--- eval 실행 현황
-SELECT run_id, pass_count, total_count, single_accuracy, improved, created_at
-FROM eval_runs ORDER BY created_at DESC LIMIT 20;
-
--- 자주 실패하는 케이스 TOP 10
-SELECT message, expected_action, actual_action, count(*)
-FROM eval_cases WHERE pass=false
-GROUP BY message, expected_action, actual_action
-ORDER BY count DESC LIMIT 10;
-```
-
-## 3. 점수 정체 시 할 것
-- webhook에 deterministic 안전망 추가
-  (AI가 continue 반환해도 필수필드 다 있으면 confirm으로 override)
-- 또는 telegram-agent 모델을 Haiku → Sonnet 교체
-
-## 4. 텔레그램 봇 남은 기능
-- 사진 업로드 end-to-end 테스트
-- 손님 등록 전체 플로우 테스트  
-- telegram_chat_logs 구현 (대화 전체 저장 — 이미 설계 완료, 착수 예정)
-
-## 변경된 값들
-- HWIK_INTERNAL_SECRET = `hwik-internal-2026` (이번 세션에서 변경)
-- HWIK_ANON_KEY 시크릿 새로 추가됨 (anon key 명시적 등록)
+## 오늘 완료
+- limit 버그 수정 → 전세 데이터 누락 해결 + 전체 재집계
+- 면적 버튼 공급 소수점1자리, 토글 제거
+- 주변 단지 fallback 5개 채우기
+- 브레드크럼 도시명 하드코딩 수정 (대구/부산 등)
+- SEO 4종: title중복/description/랭킹FAQ/sitemap 404 제거
+- showSupply 잔존 참조 긴급 수정
