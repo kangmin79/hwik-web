@@ -444,6 +444,7 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet()
   let startY = 0, lastY = 0, isDragging = false;
 
   sheet.addEventListener('touchstart', e => {
+    if (!sheet.classList.contains('show')) return; // 시트 닫혀있으면 무시
     if (scroll.scrollTop > 0) return;
     startY = lastY = e.touches[0].clientY;
     isDragging = true;
