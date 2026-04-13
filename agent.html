@@ -114,7 +114,7 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
 .sheet-btn-kakao.hidden { display:none; }
 
 /* 미니맵 */
-.sheet-minimap { width:100%; height:140px; position:relative; cursor:pointer; overflow:hidden; }
+.sheet-minimap { width:calc(100% - 32px); height:110px; margin:0 16px 16px; border-radius:10px; position:relative; cursor:pointer; overflow:hidden; border:1px solid var(--border); }
 .sheet-minimap-container { width:100%; height:100%; }
 .sheet-minimap-overlay { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0); transition:background .2s; }
 .sheet-minimap:active .sheet-minimap-overlay { background:rgba(0,0,0,0.1); }
