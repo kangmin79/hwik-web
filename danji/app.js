@@ -581,10 +581,10 @@ function render() {
     <div class="divider"></div>
 
     <!-- 주변 단지 -->
-    <div class="section">
+    <div class="section" id="nearby-section">
       <div class="section-title">${esc(dongDisplay)} 주변 단지</div>
-      <div style="font-size:11px;color:var(--sub);margin-bottom:12px;margin-top:-6px;">${currentTab === '월세' ? '매매가 기준 · ' : ''}전용 ${currentPyeong||'84'}㎡ ±10㎡ 기준</div>
-      <div style="display:flex;flex-direction:column;gap:8px;">${nearbyHtml || '<div style="font-size:12px;color:var(--sub);">주변 단지 정보가 없습니다</div>'}</div>
+      <div style="font-size:11px;color:var(--sub);margin-bottom:12px;margin-top:-6px;" id="nearby-label">${currentTab === '월세' ? '매매가 기준 · ' : ''}전용 ${currentPyeong||'84'}㎡ ±10㎡ 기준</div>
+      <div style="display:flex;flex-direction:column;gap:8px;" id="nearby-list">${nearbyHtml || ''}</div>
     </div>
 
     <!-- FAQ -->
@@ -661,6 +661,75 @@ function render() {
 
   // 차트
   drawChart();
+
+  // 주변 단지 부족하면 라이브 쿼리로 채우기
+  fillNearbyIfNeeded();
+}
+
+// ── 주변 단지 부족 시 위치 기반으로 채우기 ──
+async function fillNearbyIfNeeded() {
+  const listEl = document.getElementById('nearby-list');
+  const labelEl = document.getElementById('nearby-label');
+  if (!listEl || !DATA) return;
+  const existing = listEl.querySelectorAll('a').length;
+  const need = 5 - existing;
+  if (need <= 0) return;
+
+  const lat = DATA.lat, lng = DATA.lng;
+  if (!lat || !lng) return;
+
+  const R = 0.05; // ~5km 반경 (위도 기준)
+  const existingIds = new Set((DATA.nearby_complex || []).map(n => n.id));
+  existingIds.add(DATA.id);
+
+  try {
+    const res = await sb.from('danji_pages')
+      .select('id,complex_name,location,lat,lng,recent_trade,categories')
+      .gte('lat', lat - R).lte('lat', lat + R)
+      .gte('lng', lng - R * 1.3).lte('lng', lng + R * 1.3)
+      .not('id', 'like', 'apt-%').not('id', 'like', 'offi-%')
+      .limit(30);
+
+    if (!res.data || !res.data.length) return;
+
+    // 거리 계산 후 정렬, 기존 항목 제외
+    const candidates = res.data
+      .filter(n => !existingIds.has(n.id) && n.lat && n.lng)
+      .map(n => {
+        const dlat = n.lat - lat, dlng = (n.lng - lng) * Math.cos(lat * Math.PI / 180);
+        return { ...n, dist: Math.sqrt(dlat*dlat + dlng*dlng) * 111 };
+      })
+      .sort((a, b) => a.dist - b.dist)
+      .slice(0, need);
+
+    if (!candidates.length) {
+      if (!existing) listEl.innerHTML = '<div style="font-size:12px;color:var(--sub);">주변 단지 정보가 없습니다</div>';
+      return;
+    }
+
+    const parentMetro = (DATA.address || '').split(/\s+/)[0] || '';
+    const html = candidates.map(n => {
+      const rt = n.recent_trade || {};
+      const cats = n.categories || [];
+      // 가격: 어떤 면적이든 가장 최근 매매가
+      let price = null, area = null;
+      for (const c of cats) {
+        if (rt[c] && rt[c].price) { price = rt[c].price; area = c; break; }
+      }
+      const distKm = n.dist < 1 ? Math.round(n.dist * 1000) + 'm' : n.dist.toFixed(1) + 'km';
+      return `<a class="nearby-item" href="/danji/${encodeURIComponent(makeSlug(n.complex_name, n.location, n.id, parentMetro && n.location ? (parentMetro + ' ' + n.location) : ''))}" style="text-decoration:none;color:inherit;">
+        <div>
+          <div class="nearby-name">${esc(n.complex_name)}</div>
+          <div class="nearby-sub">${esc(n.location)} · ${distKm}${area ? ' · 전용 '+area+'㎡' : ''}</div>
+        </div>
+        <div style="text-align:right"><div class="nearby-price">${price ? formatPrice(price) : '-'}</div></div>
+      </a>`;
+    }).join('');
+
+    listEl.insertAdjacentHTML('beforeend', html);
+    if (labelEl && !existing) labelEl.textContent = '거리순 (면적 무관)';
+    else if (labelEl && existing) labelEl.textContent += ' + 거리순';
+  } catch(e) {}
 }
 
 // ── 차트 (scatter — 점 하나 = 실거래 1건) ──
