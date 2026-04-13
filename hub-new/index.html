@@ -4341,6 +4341,9 @@ const App = {
     // ?edit=id 파라미터 처리
     const editId=new URLSearchParams(location.search).get('edit');
     if(editId){Hub.openPanel('my');setTimeout(()=>PanelCards.edit(editId),500);}
+    // ?client=id 파라미터 처리 (텔레그램 매칭 결과 링크)
+    const clientId=new URLSearchParams(location.search).get('client');
+    if(clientId){setTimeout(async()=>{await Data.loadClientCards();Hub.enterClient(clientId);setTimeout(()=>Hub.openSub('cl_match'),600);},800);}
     // 검색 학습 점수 로드
     Search.loadScores();
     // 스플래시 숨기기
@@ -4503,7 +4506,7 @@ App.installPwa=async function(){if(!_pwaEvent)return;_pwaEvent.prompt();const r=
 // 이탈 방지
 window.addEventListener('beforeunload',e=>{const b=document.getElementById('leaveBanner');if(b&&b.style.display==='block'){e.preventDefault();e.returnValue='';}});
 // 모바일 리다이렉트
-if(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)&&!location.search.includes('desktop'))location.href='../mobile-v6.html';
+if(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)&&!location.search.includes('desktop'))location.href='../mobile-v6.html'+location.search;
 
 // 리사이즈 시 허브 재배치
 let _resizeTimer;window.addEventListener('resize',()=>{clearTimeout(_resizeTimer);_resizeTimer=setTimeout(()=>{if(Hub.activePanel)Hub.adjustLayout();else Hub.render();},200);});
