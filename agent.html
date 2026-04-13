@@ -114,7 +114,6 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
 .sheet-btn-call { flex:1; padding:14px; background:var(--yellow); border:none; border-radius:10px; font-size:14px; font-weight:700; color:var(--dark); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; text-decoration:none; }
 .sheet-btn-kakao { flex:1; padding:14px; background:#FEE500; border:none; border-radius:10px; font-size:14px; font-weight:700; color:#3C1E1E; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
 .sheet-btn-kakao.hidden { display:none; }
-.sheet-btn-detail { width:100%; padding:12px; background:transparent; border:1px solid var(--border); border-radius:10px; font-size:13px; color:var(--sub); cursor:pointer; text-align:center; text-decoration:none; display:block; }
 </style>
 </head>
 <body>
@@ -188,7 +187,6 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
         💬 카카오톡 문의
       </button>
     </div>
-    <a class="sheet-btn-detail" id="sheetBtnDetail" href="#" target="_blank">상세보기</a>
   </div>
 </div>
 
@@ -347,8 +345,6 @@ function openSheet(cardId) {
   const photo = photos[0]?.url || (typeof photos[0] === 'string' ? photos[0] : null);
   const loc = [complex, location, area, floor ? floor + '층' : ''].filter(Boolean).join('\n');
 
-  // 상세보기 링크
-  document.getElementById('sheetBtnDetail').href = `/property_chat.html?id=${cardId}`;
 
   // 슬라이드 구성: 사진1 → 한마디 → 사진2, 3, ...
   const photoList = photos.map(ph => ph?.url || (typeof ph === 'string' ? ph : null)).filter(Boolean);
