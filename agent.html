@@ -407,9 +407,15 @@ function openSheet(cardId) {
     `<span class="sheet-tag">${esc(t)}</span>`
   ).join('');
 
-  // 오픈
+  // 오픈 (인라인 transform 초기화 후 열기)
+  const sheet = document.getElementById('sheet');
+  sheet.style.transition = 'none';
+  sheet.style.transform = '';
+  requestAnimationFrame(() => {
+    sheet.style.transition = '';
+    sheet.classList.add('show');
+  });
   document.getElementById('sheetOverlay').classList.add('show');
-  document.getElementById('sheet').classList.add('show');
   document.body.style.overflow = 'hidden';
   document.body.style.position = 'fixed';
   document.body.style.width = '100%';
