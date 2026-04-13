@@ -5,7 +5,6 @@ const $$ = s => document.querySelectorAll(s);
 let DATA = null;
 let currentTab = '매매';
 let currentPyeong = null;
-let showSupply = false; // 전용/공급 토글
 
 // makeSlug → /makeSlug.js (외부 파일)
 let chart = null;
@@ -237,19 +236,10 @@ function render() {
   // 전용/공급 토글 + 면적 버튼
   const pm = d.pyeongs_map || {};
   // 실제 매핑된 항목(exclu ±5㎡ 이내)이 하나라도 있을 때만 공급 토글 표시
-  const hasSupply = cats.some(c => pm[c] && pm[c].supply && Math.abs((pm[c].exclu || 0) - parseFloat(c)) <= 10);
-  const toggleRowHtml = hasSupply ? `<div style="display:flex;align-items:center;padding:8px 16px 0;gap:8px;">
-    <div onclick="showSupply=false;render();" style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:5px 12px;border-radius:16px;font-size:12px;font-weight:500;${!showSupply?'background:var(--dark);color:#fff;':'background:var(--card);color:var(--sub);'}">${!showSupply?'●':'○'} 전용</div>
-    <div onclick="showSupply=true;render();" style="display:flex;align-items:center;gap:4px;cursor:pointer;padding:5px 12px;border-radius:16px;font-size:12px;font-weight:500;${showSupply?'background:#3b82f6;color:#fff;':'background:var(--card);color:var(--sub);'}">${showSupply?'●':'○'} 공급</div>
-  </div>` : '';
+  const toggleRowHtml = '';
   const pyeongHtml = cats.map(c => {
     const active = c === currentPyeong ? ' active' : '';
-    let label = c + '㎡';
-    // fallback 매핑(exclu가 실제 면적과 5㎡ 이상 차이)은 공급 라벨 표시 안 함
-    if (showSupply && pm[c] && pm[c].supply && Math.abs((pm[c].exclu || 0) - parseFloat(c)) <= 10) {
-      const supplyVal = Math.round(pm[c].supply);
-      label = '공급 ' + supplyVal + '㎡';
-    }
+    const label = c + '㎡';
     return `<div class="pyeong-btn${active}" data-cat="${esc(c)}">${esc(label)}</div>`;
   }).join('');
 
@@ -301,12 +291,7 @@ function render() {
   const ph = (d.price_history || {})[tradeKeyFull] || [];
   let pyLabel = '';
   if (currentPyeong) {
-    if (showSupply && pm[currentPyeong] && pm[currentPyeong].supply && Math.abs((pm[currentPyeong].exclu || 0) - parseFloat(currentPyeong)) <= 10) {
-      const sv = Math.round(pm[currentPyeong].supply);
-      pyLabel = '공급 ' + sv + '㎡';
-    } else {
-      pyLabel = '전용 ' + currentPyeong + '㎡';
-    }
+    pyLabel = '전용 ' + currentPyeong + '㎡';
   }
 
   // price_history에 개별 거래가 있으면 그걸 사용
@@ -373,8 +358,7 @@ function render() {
     // 면적 표시 (전용/공급 토글 반영)
     let areaLabel = '';
     if (bestKey) {
-      if (showSupply && bestSupply) areaLabel = '공급 ' + Math.round(bestSupply) + '㎡';
-      else areaLabel = '전용 ' + bestExclu + '㎡';
+      areaLabel = '전용 ' + bestExclu + '㎡';
     }
     return `
     <a class="nearby-item" href="${STATIC_NEARBY_HREF[n.id] || ('/danji/' + encodeURIComponent(makeSlug(n.name, n.location, n.id, parentMetro && n.location ? (parentMetro + ' ' + n.location) : '')))}" style="text-decoration:none;color:inherit;">
