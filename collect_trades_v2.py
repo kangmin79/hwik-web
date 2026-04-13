@@ -85,12 +85,17 @@ sb_session = requests.Session()
 
 
 # ── 지역 코드 ─────────────────────────────────────────────
-from regions import SEOUL_GU, INCHEON_GU, GYEONGGI_SI
+from regions import SEOUL_GU, INCHEON_GU, GYEONGGI_SI, BUSAN_GU, DAEGU_GU, GWANGJU_GU, DAEJEON_GU, ULSAN_GU
 
 ALL_LAWD = {}
 ALL_LAWD.update(SEOUL_GU)
 ALL_LAWD.update(INCHEON_GU)
 ALL_LAWD.update(GYEONGGI_SI)
+ALL_LAWD.update(BUSAN_GU)
+ALL_LAWD.update(DAEGU_GU)
+ALL_LAWD.update(GWANGJU_GU)
+ALL_LAWD.update(DAEJEON_GU)
+ALL_LAWD.update(ULSAN_GU)
 
 
 # ── 국토부 API 엔드포인트 ─────────────────────────────────
@@ -286,7 +291,20 @@ def main():
     parser.add_argument("--init",   action="store_true", help="최근 60개월(5년) 전체 수집")
     parser.add_argument("--months", type=int, default=2, help="최근 N개월 수집 (기본 2)")
     parser.add_argument("--lawd",   type=str, default=None, help="특정 구 lawd_cd (테스트용)")
+    parser.add_argument("--region", type=str, default=None,
+                        help="지역 (seoul/incheon/gyeonggi/busan/daegu/gwangju/daejeon/ulsan/all)")
     args = parser.parse_args()
+
+    REGION_MAP = {
+        "seoul":    SEOUL_GU,
+        "incheon":  INCHEON_GU,
+        "gyeonggi": GYEONGGI_SI,
+        "busan":    BUSAN_GU,
+        "daegu":    DAEGU_GU,
+        "gwangju":  GWANGJU_GU,
+        "daejeon":  DAEJEON_GU,
+        "ulsan":    ULSAN_GU,
+    }
 
     now = datetime.now()
 
@@ -303,6 +321,11 @@ def main():
     if args.lawd:
         lawd_codes = [args.lawd]
         print(f"▶ 테스트 모드: lawd_cd={args.lawd}, {len(months)}개월")
+    elif args.region and args.region != "all":
+        if args.region not in REGION_MAP:
+            sys.exit(f"❌ 알 수 없는 region: {args.region}. 가능한 값: {list(REGION_MAP.keys())}")
+        lawd_codes = list(REGION_MAP[args.region].keys())
+        print(f"▶ {args.region} {len(lawd_codes)}개 구, {len(months)}개월")
     else:
         lawd_codes = list(ALL_LAWD.keys())
         print(f"▶ 전체 {len(lawd_codes)}개 구, {len(months)}개월")
