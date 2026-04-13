@@ -367,7 +367,7 @@ function openSheet(cardId) {
       track.parentElement.addEventListener('touchend', e => {
         const diff = startX - e.changedTouches[0].clientX;
         if (Math.abs(diff) < 40) return;
-        cur = diff > 0 ? Math.min(cur+1, photoList.length-1) : Math.max(cur-1, 0);
+        cur = diff > 0 ? (cur+1) % photoList.length : (cur-1+photoList.length) % photoList.length;
         track.style.transform = `translateX(-${cur*100}%)`;
         dotEls.forEach((d,i) => d.classList.toggle('active', i===cur));
       }, {passive:true});
