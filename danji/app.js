@@ -239,7 +239,12 @@ function render() {
   const toggleRowHtml = '';
   const pyeongHtml = cats.map(c => {
     const active = c === currentPyeong ? ' active' : '';
-    const label = c + '㎡';
+    let label;
+    if (pm[c] && pm[c].supply && pm[c].supply > 0 && Math.abs((pm[c].exclu || 0) - parseFloat(c)) <= 10) {
+      label = '공급 ' + pm[c].supply.toFixed(1) + '㎡';
+    } else {
+      label = '전용 ' + c + '㎡';
+    }
     return `<div class="pyeong-btn${active}" data-cat="${esc(c)}">${esc(label)}</div>`;
   }).join('');
 
@@ -291,7 +296,12 @@ function render() {
   const ph = (d.price_history || {})[tradeKeyFull] || [];
   let pyLabel = '';
   if (currentPyeong) {
-    pyLabel = '전용 ' + currentPyeong + '㎡';
+    const _pm = pm[currentPyeong];
+    if (_pm && _pm.supply && _pm.supply > 0 && Math.abs((_pm.exclu || 0) - parseFloat(currentPyeong)) <= 10) {
+      pyLabel = '공급 ' + _pm.supply.toFixed(1) + '㎡';
+    } else {
+      pyLabel = '전용 ' + currentPyeong + '㎡';
+    }
   }
 
   // price_history에 개별 거래가 있으면 그걸 사용
