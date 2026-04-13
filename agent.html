@@ -93,6 +93,8 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
 .sheet-photos { width:100%; height:200px; background:var(--card); overflow:hidden; position:relative; }
 .sheet-photos-track { display:flex; height:100%; transition:transform .3s ease; }
 .sheet-photos-track img { width:100%; height:200px; object-fit:cover; flex-shrink:0; }
+.sheet-comment-slide { width:100%; height:200px; flex-shrink:0; background:linear-gradient(135deg,#1a1a2e,#2d2d4e); display:flex; align-items:center; justify-content:center; padding:24px; }
+.sheet-comment-text { color:#fff; font-size:15px; line-height:1.7; text-align:center; word-break:keep-all; }
 .sheet-photo-empty { width:100%; height:200px; background:linear-gradient(135deg,#1a1a2e,#2d2d4e); display:flex; align-items:center; justify-content:center; font-size:48px; }
 .sheet-photo-dots { position:absolute; bottom:8px; left:50%; transform:translateX(-50%); display:flex; gap:5px; }
 .sheet-photo-dot { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,0.5); transition:background .2s; }
@@ -215,7 +217,7 @@ async function load() {
       .eq('id', agentId)
       .maybeSingle(),
     sb.from('cards')
-      .select('id,property,trade_status,photos,tags,price_number')
+      .select('id,property,trade_status,photos,tags,price_number,agent_comment')
       .eq('agent_id', agentId)
       .neq('property->>type', '손님')
       .neq('trade_status', '완료')
@@ -348,17 +350,27 @@ function openSheet(cardId) {
   // 상세보기 링크
   document.getElementById('sheetBtnDetail').href = `/property_chat.html?id=${cardId}`;
 
-  // 사진 슬라이더
+  // 슬라이드 구성: 사진1 → 한마디 → 사진2, 3, ...
   const photoList = photos.map(ph => ph?.url || (typeof ph === 'string' ? ph : null)).filter(Boolean);
-  if (photoList.length) {
-    const imgs = photoList.map(u => `<img src="${esc(u)}" alt="매물사진" loading="lazy">`).join('');
-    const dots = photoList.length > 1
-      ? `<div class="sheet-photo-dots">${photoList.map((_,i) => `<div class="sheet-photo-dot${i===0?' active':''}"></div>`).join('')}</div>`
+  const comment = card.agent_comment || '';
+  const slides = [];
+  if (photoList.length) slides.push({ type: 'photo', url: photoList[0] });
+  if (comment) slides.push({ type: 'comment', text: comment });
+  photoList.slice(1).forEach(u => slides.push({ type: 'photo', url: u }));
+
+  if (slides.length) {
+    const slideHtml = slides.map(s =>
+      s.type === 'photo'
+        ? `<img src="${esc(s.url)}" alt="매물사진" loading="lazy">`
+        : `<div class="sheet-comment-slide"><div class="sheet-comment-text">${esc(s.text)}</div></div>`
+    ).join('');
+    const dots = slides.length > 1
+      ? `<div class="sheet-photo-dots">${slides.map((_,i) => `<div class="sheet-photo-dot${i===0?' active':''}"></div>`).join('')}</div>`
       : '';
     document.getElementById('sheetPhoto').innerHTML =
-      `<div class="sheet-photos"><div class="sheet-photos-track" id="photoTrack">${imgs}</div>${dots}</div>`;
+      `<div class="sheet-photos"><div class="sheet-photos-track" id="photoTrack">${slideHtml}</div>${dots}</div>`;
 
-    if (photoList.length > 1) {
+    if (slides.length > 1) {
       let cur = 0;
       const track = document.getElementById('photoTrack');
       const dotEls = document.querySelectorAll('.sheet-photo-dot');
@@ -367,7 +379,7 @@ function openSheet(cardId) {
       track.parentElement.addEventListener('touchend', e => {
         const diff = startX - e.changedTouches[0].clientX;
         if (Math.abs(diff) < 40) return;
-        cur = diff > 0 ? (cur+1) % photoList.length : (cur-1+photoList.length) % photoList.length;
+        cur = diff > 0 ? (cur+1) % slides.length : (cur-1+slides.length) % slides.length;
         track.style.transform = `translateX(-${cur*100}%)`;
         dotEls.forEach((d,i) => d.classList.toggle('active', i===cur));
       }, {passive:true});
