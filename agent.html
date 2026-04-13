@@ -110,6 +110,20 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
 .sheet-btn-call { flex:1; padding:14px; background:var(--yellow); border:none; border-radius:10px; font-size:14px; font-weight:700; color:var(--dark); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; text-decoration:none; }
 .sheet-btn-kakao { flex:1; padding:14px; background:#FEE500; border:none; border-radius:10px; font-size:14px; font-weight:700; color:#3C1E1E; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
 .sheet-btn-kakao.hidden { display:none; }
+
+/* 더보기 배너 */
+.more-banner { margin:16px 16px 0; padding:14px 16px; background:var(--dark); border-radius:var(--radius); display:flex; align-items:center; justify-content:space-between; text-decoration:none; }
+.more-banner-text { font-size:13px; color:rgba(255,255,255,0.8); }
+.more-banner-arrow { font-size:13px; color:var(--yellow); font-weight:600; }
+
+/* 주변 단지 */
+.nearby-section { padding:16px; }
+.nearby-item { display:flex; justify-content:space-between; align-items:center; padding:12px 14px; background:var(--surface); border-radius:var(--radius); cursor:pointer; border:1px solid var(--border); margin-bottom:8px; text-decoration:none; color:inherit; }
+.nearby-item:active { background:var(--card); }
+.nearby-name { font-size:13px; font-weight:600; color:var(--text); }
+.nearby-sub { font-size:11px; color:var(--sub); margin-top:2px; }
+.nearby-price { font-size:14px; font-weight:700; color:var(--text); text-align:right; }
+.nearby-dist { font-size:11px; color:var(--sub); text-align:right; margin-top:2px; }
 </style>
 </head>
 <body>
@@ -134,6 +148,7 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
   <div class="section">
     <div class="section-title">등록 매물 <small id="cardCount"></small></div>
     <div class="trade-list" id="cardList">
+
       <div class="skel-item">
         <div class="skel" style="width:56px;height:56px;border-radius:8px;flex-shrink:0"></div>
         <div style="flex:1">
@@ -151,6 +166,18 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- 더보기 배너 (단지에서 유입 시) -->
+  <a class="more-banner" id="moreBanner" href="#" style="display:none">
+    <span class="more-banner-text">다른 중개사 매물 더보기</span>
+    <span class="more-banner-arrow">전체 보기 →</span>
+  </a>
+
+  <!-- 주변 단지 -->
+  <div class="nearby-section" id="nearbySection" style="display:none">
+    <div class="section-title">주변 단지 시세</div>
+    <div id="nearbyList"></div>
   </div>
 </div>
 
@@ -186,10 +213,22 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
 const sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_KEY);
 const params = new URLSearchParams(location.search);
 const agentId = params.get('id');
+const filterLat = parseFloat(params.get('lat') || '');
+const filterLng = parseFloat(params.get('lng') || '');
+const isFilterMode = !isNaN(filterLat) && !isNaN(filterLng);
 
 let agentPhone = '';
 let agentKakaoUrl = '';
 let selectedCardId = '';
+
+// 거리 계산 (km)
+function distKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
 
 if (!agentId) {
   document.getElementById('profileName').textContent = '잘못된 주소입니다.';
@@ -199,22 +238,23 @@ if (!agentId) {
 }
 
 async function load() {
+  const limit = isFilterMode ? 50 : 30;
   const [profileRes, cardsRes] = await Promise.all([
     sb.from('profiles')
       .select('id,agent_name,business_name,phone,address,profile_photo_url,kakao_chat_url')
       .eq('id', agentId)
       .maybeSingle(),
     sb.from('cards')
-      .select('id,property,trade_status,photos,tags,price_number,agent_comment')
+      .select('id,property,trade_status,photos,tags,price_number,agent_comment,lat,lng')
       .eq('agent_id', agentId)
       .neq('property->>type', '손님')
       .eq('trade_status', '계약가능')
       .order('created_at', { ascending: false })
-      .limit(30),
+      .limit(limit),
   ]);
 
   const p = profileRes.data;
-  const cards = cardsRes.data || [];
+  let cards = cardsRes.data || [];
 
   if (!p) {
     document.getElementById('profileName').textContent = '존재하지 않는 중개사입니다.';
@@ -222,8 +262,90 @@ async function load() {
     return;
   }
 
+  // 단지 유입 모드: 좌표 기반 5개 필터링
+  if (isFilterMode) {
+    // 1순위: 200m 이내 (같은 단지)
+    const sameComplex = cards.filter(c => c.lat && c.lng && distKm(filterLat, filterLng, c.lat, c.lng) <= 0.2);
+    // 2순위: 1km 이내
+    const nearby1km = cards.filter(c => c.lat && c.lng && distKm(filterLat, filterLng, c.lat, c.lng) > 0.2 && distKm(filterLat, filterLng, c.lat, c.lng) <= 1.0);
+    // 합쳐서 최대 5개
+    cards = [...sameComplex, ...nearby1km].slice(0, 5);
+
+    // 더보기 배너
+    const banner = document.getElementById('moreBanner');
+    banner.href = `/agent.html?id=${agentId}`;
+    banner.style.display = 'flex';
+
+    // 주변 단지 로드
+    loadNearby();
+  }
+
   renderProfile(p, cards.length);
   renderCards(cards);
+}
+
+async function loadNearby() {
+  const delta = 0.02; // ~2km
+  const { data: apts } = await sb.from('apartments')
+    .select('kapt_code,kapt_name,slug,lat,lon')
+    .gte('lat', filterLat - delta).lte('lat', filterLat + delta)
+    .gte('lon', filterLng - delta).lte('lon', filterLng + delta)
+    .limit(30);
+
+  if (!apts?.length) return;
+
+  // 거리순 정렬 후 5개
+  const sorted = apts
+    .map(a => ({ ...a, dist: distKm(filterLat, filterLng, a.lat, a.lon) }))
+    .sort((a, b) => a.dist - b.dist)
+    .slice(0, 5);
+
+  // 각 단지 최근 실거래가 조회
+  const codes = sorted.map(a => a.kapt_code);
+  const { data: trades } = await sb.from('trades')
+    .select('kapt_code,price,trade_type')
+    .in('kapt_code', codes)
+    .eq('trade_type', '매매')
+    .order('year', { ascending: false })
+    .order('month', { ascending: false })
+    .limit(50);
+
+  // 단지별 최근 거래가 매핑
+  const tradeMap = {};
+  (trades || []).forEach(t => {
+    if (!tradeMap[t.kapt_code]) tradeMap[t.kapt_code] = t.price;
+  });
+
+  const section = document.getElementById('nearbySection');
+  const list = document.getElementById('nearbyList');
+
+  list.innerHTML = sorted.map(a => {
+    const price = tradeMap[a.kapt_code];
+    const priceStr = price ? formatPrice(price) : '-';
+    const distStr = a.dist < 1 ? `${Math.round(a.dist * 1000)}m` : `${a.dist.toFixed(1)}km`;
+    return `<a class="nearby-item" href="/danji/${esc(a.slug)}" target="_blank">
+      <div>
+        <div class="nearby-name">${esc(a.kapt_name)}</div>
+        <div class="nearby-sub">${distStr}</div>
+      </div>
+      <div>
+        <div class="nearby-price">${priceStr}</div>
+        <div class="nearby-dist">매매 최근가</div>
+      </div>
+    </a>`;
+  }).join('');
+
+  section.style.display = 'block';
+}
+
+function formatPrice(manwon) {
+  if (!manwon) return '-';
+  const uk = Math.floor(manwon / 10000);
+  const rem = manwon % 10000;
+  const chun = Math.floor(rem / 1000);
+  if (uk > 0 && chun > 0) return `${uk}억 ${chun}천`;
+  if (uk > 0) return `${uk}억`;
+  return `${manwon.toLocaleString()}만`;
 }
 
 function renderProfile(p, count) {
