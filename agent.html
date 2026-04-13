@@ -84,7 +84,7 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
 /* ── 바텀 시트 ── */
 .sheet-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; opacity:0; pointer-events:none; transition:opacity .25s; }
 .sheet-overlay.show { opacity:1; pointer-events:auto; }
-.sheet { position:fixed; bottom:0; left:50%; transform:translateX(-50%) translateY(100%); width:100%; max-width:430px; background:#fff; border-radius:20px 20px 0 0; z-index:101; transition:transform .3s cubic-bezier(0.16,1,0.3,1); max-height:88vh; display:flex; flex-direction:column; }
+.sheet { position:fixed; bottom:0; left:50%; transform:translateX(-50%) translateY(100%); width:100%; max-width:430px; background:#fff; border-radius:20px 20px 0 0; z-index:101; transition:transform .3s cubic-bezier(0.16,1,0.3,1); height:75vh; display:flex; flex-direction:column; }
 .sheet.show { transform:translateX(-50%) translateY(0); }
 .sheet-handle { width:36px; height:4px; background:#e5e7eb; border-radius:2px; margin:12px auto 0; flex-shrink:0; }
 .sheet-scroll { overflow-y:auto; flex:1; }
@@ -414,6 +414,37 @@ function openKakao() {
 
 // ESC 닫기
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+
+// 핸들 드래그로 닫기
+(function() {
+  const sheet = document.getElementById('sheet');
+  const handle = sheet.querySelector('.sheet-handle');
+  let startY = 0, isDragging = false;
+
+  handle.addEventListener('touchstart', e => {
+    startY = e.touches[0].clientY;
+    isDragging = true;
+    sheet.style.transition = 'none';
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if (!isDragging) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy > 0) sheet.style.transform = `translateX(-50%) translateY(${dy}px)`;
+  }, { passive: true });
+
+  document.addEventListener('touchend', e => {
+    if (!isDragging) return;
+    isDragging = false;
+    sheet.style.transition = '';
+    const dy = e.changedTouches[0].clientY - startY;
+    if (dy > 80) {
+      closeSheet();
+    } else {
+      sheet.style.transform = 'translateX(-50%) translateY(0)';
+    }
+  });
+})();
 
 function formatPhone(p) {
   const d = (p||'').replace(/\D/g,'');
