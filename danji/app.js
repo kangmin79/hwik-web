@@ -186,6 +186,7 @@ function setupMapLazyLoad() {
 
 // ── 렌더링 ──
 function render() {
+  window._danjiHighlight = null; // 탭/평형 변경 시 하이라이트 초기화
   const d = DATA;
   if (!d) return;
 
@@ -842,6 +843,20 @@ function drawChart() {
   const min = Math.floor(Math.min(...yValues) * 0.92);
   const max = Math.ceil(Math.max(...yValues) * 1.05);
 
+  // 하이라이트 상태 유지 플러그인 (hover re-render 시 색상 초기화 방지)
+  const highlightKeeperPlugin = {
+    id: 'highlightKeeper',
+    beforeDatasetsDraw(ch) {
+      const h = window._danjiHighlight;
+      if (!h) return;
+      const ds = ch.data.datasets[0];
+      ds.backgroundColor = h.colors;
+      ds.borderColor = h.borders;
+      ds.pointRadius = h.radii;
+      ds.borderWidth = h.widths;
+    }
+  };
+
   chart = new Chart(canvas, {
     type: 'scatter',
     data: {
@@ -855,6 +870,7 @@ function drawChart() {
         pointHoverBackgroundColor: '#f5c842',
       }]
     },
+    plugins: [highlightKeeperPlugin],
     options: {
       responsive: true,
       maintainAspectRatio: false,
@@ -1008,10 +1024,13 @@ function highlightChartPoint(type) {
     return type === 'recent' ? '#fff' : '#fca5a5';
   });
 
+  const widths = radii.map(r => r > 4 ? 2 : 1);
+  // 전역에 하이라이트 상태 저장 → highlightKeeperPlugin이 hover re-render에서 재적용
+  window._danjiHighlight = { colors, borders, radii, widths };
   dataset.backgroundColor = colors;
   dataset.borderColor = borders;
   dataset.pointRadius = radii;
-  dataset.borderWidth = radii.map(r => r > 4 ? 2 : 1);
+  dataset.borderWidth = widths;
   chart.update('none');
 
   // 차트 섹션으로 부드럽게 스크롤
