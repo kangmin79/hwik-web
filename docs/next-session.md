@@ -1,25 +1,41 @@
-# 다음 세션 할 일 (2026-04-13 저장)
+# 다음 세션 할 일 (2026-04-13 저녁 저장)
 
-## 1. GitHub Secret 추가 (가장 먼저)
-- GitHub 저장소 → Settings → Secrets → Actions → New secret
-- Name: `TELEGRAM_BOT_TOKEN` / Value: 봇 토큰
-- 없으면 schedule-alerts.yml 알림 발송 안 됨
+## 1. 전국 확장 단지 수집 이어서 (collect_complexes.py)
+완료: 세종 211 + 충북 789 + 충남 989 + 전북 881 + 전남 782 = **3,652개**
+남은 것:
+- `python collect_complexes.py --region gyeongbuk`
+- `python collect_complexes.py --region gyeongnam`
+- `python collect_complexes.py --region gangwon`
+- `python collect_complexes.py --region jeju`
 
-## 2. 테스트
-- 손님 등록 → 매칭 → "전체 결과 보기" 버튼 탭 → 모바일 휙 열리는지
-- 일정 저장 → 15분 후 텔레그램 알림 오는지
-- mobile-v6에서 ?client=ID로 CRM 뷰 열리는지 + 완료/삭제 버튼
+## 2. collect_pyeongs_v2.py (공급면적 수집)
+단지 수집 완료 후:
+`python collect_pyeongs_v2.py --region all`
 
-## 3. 버튼 확인
-- /start 다시 보내서 브리핑/손님/휙허브 3개 버튼 뜨는지
+## 3. GitHub Actions --init 실행
+실거래 첫 수집 (새 지역 9개):
+Actions → 실거래가 동기화 → mode: init, region: 비워두기
 
-## 오늘 바뀐 것들
-- 텔레그램 아키텍처 재설계: 브리핑+손님등록+알림 수신만
-- 버튼: 브리핑/매물/손님/내정보 → 브리핑/손님/휙허브
-- 손님 등록 후 SQL 기반 자동 매칭 (JWT 문제 우회)
-- 매칭 결과 URL 버튼 (hub-new/?client=ID)
-- hub-new: ?client=ID 파라미터로 손님카드+매칭탭 바로 열림
-- mobile-v6: ?client=ID 파라미터 + CRM 일정 완료/삭제 버튼
-- GitHub Actions schedule-alerts.yml: 15분마다 일정 알림 텔레그램 푸시
-- auto-improve: Anthropic 직접 호출로 교체 (function-to-function 401 수정)
-- search_text 없는 카드 1,549개 배치 채움
+## 4. match_apt_seq.py (apt_seq 매칭)
+실거래 수집 완료 후:
+`python match_apt_seq.py --region all`
+
+## 5. build_danji_from_v2.py (전체 재집계)
+Actions 완료 후:
+`python build_danji_from_v2.py --region all`
+
+## 6. HTML 빌드 + sitemap + deploy
+`python build_danji_pages.py`
+`python build_dong_pages.py`
+`python build_gu_pages.py`
+`python sync_trades.py --sitemap-only`
+`git push`
+
+## 오늘 완료한 것들
+- regions.py 9개 지역 추가 (세종~제주)
+- 전체 스크립트 REGION_MAP 업데이트 (collect_complexes/trades/pyeongs_v2/match_apt_seq/build_danji_from_v2)
+- sync_trades.py 구 파이프라인 완전 삭제 (price_history 덮어쓰기 버그 원천 차단)
+- slug_utils.py gu_url_slug 충돌 방지, extract_gu_from_address 세종/2토큰 수정
+- sync-trades.yml 9개 지역 job 추가
+- OG 이미지 12,502/12,661개 완료
+- 단지 수집: 세종~전남 3,652개 완료
