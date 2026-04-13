@@ -88,7 +88,7 @@ p {
   var path = location.pathname;
   if (!path.startsWith('/danji/')) return;
 
-  var slug = path.replace('/danji/', '').replace(/\.html$/, '');
+  var slug = decodeURIComponent(path.replace('/danji/', '').replace(/\.html$/, ''));
   if (slug.indexOf('-apt-') === -1) return;
 
   document.getElementById('redirect-msg').style.display = 'block';
