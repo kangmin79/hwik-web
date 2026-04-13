@@ -18,152 +18,104 @@
   --border: #e5e7eb;
   --text: #1a1a2e;
   --sub: #6b7280;
-  --muted: #6b7280;
   --radius: 10px;
 }
 html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif; background:var(--dark); color:var(--text); -webkit-font-smoothing:antialiased; letter-spacing:-0.02em; line-height:1.6; }
 .wrap { max-width:430px; margin:0 auto; background:var(--surface); min-height:100vh; box-shadow:0 0 40px rgba(0,0,0,0.3); }
 
 /* 브레드크럼 */
-.breadcrumb { padding:10px 16px; font-size:11px; color:var(--muted); }
+.breadcrumb { padding:10px 16px; font-size:11px; color:var(--sub); }
 .breadcrumb a { color:var(--sub); text-decoration:none; }
 .breadcrumb span { margin:0 4px; }
 
-/* 헤더 — 단지 페이지와 동일 */
+/* 헤더 */
 .header { background:var(--dark); padding:16px; }
 .header-top { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
-.logo {
-  width:48px; height:48px;
-  background:var(--yellow);
-  border-radius:10px;
-  display:flex; align-items:center; justify-content:center;
-  font-weight:700; font-size:20px; color:var(--dark);
-  flex-shrink:0; overflow:hidden;
-}
+.logo { width:48px; height:48px; background:var(--yellow); border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:20px; color:var(--dark); flex-shrink:0; overflow:hidden; }
 .logo img { width:100%; height:100%; object-fit:cover; border-radius:10px; }
 .header-info { flex:1; min-width:0; }
 .header-name { font-size:17px; font-weight:500; color:#fff; }
 .header-sub { font-size:12px; color:rgba(255,255,255,0.6); margin-top:2px; }
 .header-actions { display:flex; gap:8px; margin-top:12px; }
-.btn-call {
-  flex:1; padding:11px 14px;
-  background:var(--yellow); border:none; border-radius:8px;
-  font-size:14px; font-weight:700; color:var(--dark);
-  cursor:pointer; text-decoration:none;
-  display:flex; align-items:center; justify-content:center; gap:7px;
-  letter-spacing:0.5px;
-}
+.btn-call { flex:1; padding:11px 14px; background:var(--yellow); border:none; border-radius:8px; font-size:14px; font-weight:700; color:var(--dark); cursor:pointer; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:7px; letter-spacing:0.5px; }
 .btn-call svg { flex-shrink:0; }
-.btn-hwik {
-  padding:11px 14px;
-  background:rgba(255,255,255,0.08);
-  border:1px solid rgba(255,255,255,0.15);
-  border-radius:8px;
-  font-size:13px; font-weight:400; color:rgba(255,255,255,0.75);
-  cursor:pointer; text-decoration:none; text-align:center; display:block;
-  white-space:nowrap;
-}
-
-/* 통계 뱃지 */
+.btn-hwik { padding:11px 14px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); border-radius:8px; font-size:13px; font-weight:400; color:rgba(255,255,255,0.75); cursor:pointer; text-decoration:none; text-align:center; display:block; white-space:nowrap; }
 .stat-row { display:flex; gap:8px; margin-top:10px; }
-.stat-badge {
-  font-size:11px; padding:3px 10px;
-  background:rgba(255,255,255,0.1);
-  border-radius:20px; color:rgba(255,255,255,0.8);
-}
+.stat-badge { font-size:11px; padding:3px 10px; background:rgba(255,255,255,0.1); border-radius:20px; color:rgba(255,255,255,0.8); }
 
 /* 구분선 */
 .divider { height:8px; background:var(--card); }
 
 /* 섹션 */
 .section { padding:16px; }
-.section-title {
-  font-size:14px; font-weight:600; margin-bottom:12px;
-  display:flex; align-items:center; gap:6px;
-}
-.section-title::before {
-  content:''; display:inline-block;
-  width:3px; height:14px;
-  background:var(--yellow); border-radius:2px;
-}
+.section-title { font-size:14px; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+.section-title::before { content:''; display:inline-block; width:3px; height:14px; background:var(--yellow); border-radius:2px; }
 .section-title small { font-size:12px; font-weight:400; color:var(--sub); }
 
-/* 매물 카드 — listing-item 스타일 */
+/* 매물 카드 */
 .trade-list { display:flex; flex-direction:column; gap:8px; }
-.listing-item {
-  display:flex; gap:12px; align-items:flex-start;
-  padding:14px;
-  border:1.5px solid var(--yellow);
-  border-radius:var(--radius);
-  background:var(--yellow-bg);
-  cursor:pointer;
-  box-shadow:0 1px 4px rgba(245,200,66,0.15);
-  transition:all .15s;
-  text-decoration:none; color:inherit;
-}
+.listing-item { display:flex; gap:12px; align-items:flex-start; padding:14px; border:1.5px solid var(--yellow); border-radius:var(--radius); background:var(--yellow-bg); cursor:pointer; box-shadow:0 1px 4px rgba(245,200,66,0.15); transition:all .15s; }
 .listing-item:hover { box-shadow:0 3px 10px rgba(245,200,66,0.25); transform:translateY(-1px); }
-.listing-item:active { transform:scale(0.98); background:rgba(245,200,66,0.12); }
-
-/* 썸네일 */
-.thumb {
-  width:56px; height:56px;
-  border-radius:8px;
-  background:var(--card);
-  flex-shrink:0; overflow:hidden;
-  display:flex; align-items:center; justify-content:center;
-  font-size:20px;
-}
+.listing-item:active { transform:scale(0.98); }
+.thumb { width:56px; height:56px; border-radius:8px; background:var(--card); flex-shrink:0; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:20px; }
 .thumb img { width:100%; height:100%; object-fit:cover; }
-
-/* 카드 내용 */
 .card-body { flex:1; min-width:0; }
 .badges { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:4px; }
-.badge {
-  font-size:10px; font-weight:600;
-  padding:2px 7px; border-radius:4px;
-}
+.badge { font-size:10px; font-weight:600; padding:2px 7px; border-radius:4px; }
 .b-매매 { background:#fff3ed; color:#ea580c; }
 .b-전세 { background:#eef2ff; color:#4f46e5; }
 .b-월세 { background:#f5f3ff; color:#7c3aed; }
 .b-반전세 { background:#fdf4ff; color:#a21caf; }
 .b-계약가능 { background:#f0fdf4; color:#16a34a; }
-.b-계약중  { background:#eff6ff; color:#2563eb; }
+.b-계약중 { background:#eff6ff; color:#2563eb; }
 .card-price { font-size:16px; font-weight:700; color:var(--text); margin-bottom:2px; }
 .card-loc { font-size:12px; color:var(--sub); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:4px; }
 .card-tags { display:flex; flex-wrap:wrap; gap:3px; }
-.card-tag {
-  font-size:10px; color:var(--sub);
-  background:rgba(0,0,0,0.04);
-  border-radius:4px; padding:1px 6px;
-}
+.card-tag { font-size:10px; color:var(--sub); background:rgba(0,0,0,0.04); border-radius:4px; padding:1px 6px; }
 .listing-link { font-size:11px; color:#ba7517; align-self:center; font-weight:500; white-space:nowrap; }
-
-/* 빈 상태 */
-.listing-empty {
-  text-align:center; padding:20px 16px;
-  border:1.5px dashed var(--yellow);
-  border-radius:var(--radius);
-  background:var(--yellow-bg);
-}
-.listing-empty-text { font-size:13px; color:var(--sub); margin-bottom:8px; }
+.listing-empty { text-align:center; padding:20px 16px; border:1.5px dashed var(--yellow); border-radius:var(--radius); background:var(--yellow-bg); }
+.listing-empty-text { font-size:13px; color:var(--sub); }
 
 /* 스켈레톤 */
 .skel { background:linear-gradient(90deg,#f0f0f4 25%,#e8e8ec 50%,#f0f0f4 75%); background-size:200% 100%; animation:shimmer 1.2s infinite; border-radius:6px; }
 @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 .skel-item { display:flex; gap:12px; padding:14px; border:1.5px solid #f0eedf; border-radius:var(--radius); background:#fffdf0; margin-bottom:8px; }
+
+/* ── 바텀 시트 ── */
+.sheet-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; opacity:0; pointer-events:none; transition:opacity .25s; }
+.sheet-overlay.show { opacity:1; pointer-events:auto; }
+.sheet { position:fixed; bottom:0; left:50%; transform:translateX(-50%) translateY(100%); width:100%; max-width:430px; background:#fff; border-radius:20px 20px 0 0; z-index:101; transition:transform .3s cubic-bezier(0.16,1,0.3,1); max-height:88vh; display:flex; flex-direction:column; }
+.sheet.show { transform:translateX(-50%) translateY(0); }
+.sheet-handle { width:36px; height:4px; background:#e5e7eb; border-radius:2px; margin:12px auto 0; flex-shrink:0; }
+.sheet-scroll { overflow-y:auto; flex:1; }
+
+/* 시트 사진 */
+.sheet-photos { width:100%; height:200px; background:var(--card); overflow:hidden; position:relative; }
+.sheet-photos img { width:100%; height:100%; object-fit:cover; }
+.sheet-photo-empty { width:100%; height:200px; background:linear-gradient(135deg,#1a1a2e,#2d2d4e); display:flex; align-items:center; justify-content:center; font-size:48px; }
+
+/* 시트 내용 */
+.sheet-body { padding:16px; }
+.sheet-badges { display:flex; gap:6px; margin-bottom:10px; }
+.sheet-price { font-size:24px; font-weight:700; color:var(--text); margin-bottom:6px; }
+.sheet-loc { font-size:14px; color:var(--sub); margin-bottom:14px; line-height:1.5; }
+.sheet-tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:20px; }
+.sheet-tag { font-size:12px; color:var(--sub); background:var(--card); border-radius:20px; padding:4px 10px; }
+
+/* 시트 액션 버튼 */
+.sheet-actions { padding:12px 16px 24px; display:flex; gap:8px; border-top:1px solid var(--border); flex-shrink:0; }
+.sheet-btn-call { flex:1; padding:14px; background:var(--yellow); border:none; border-radius:10px; font-size:14px; font-weight:700; color:var(--dark); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; text-decoration:none; }
+.sheet-btn-kakao { flex:1; padding:14px; background:#FEE500; border:none; border-radius:10px; font-size:14px; font-weight:700; color:#3C1E1E; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
+.sheet-btn-kakao.hidden { display:none; }
 </style>
 </head>
 <body>
 <div class="wrap">
-
-  <!-- 브레드크럼 -->
   <div class="breadcrumb">
     <a href="/">휙</a><span>›</span>
     <a href="/gu.html">지역</a><span>›</span>
     <span id="navName">중개사</span>
   </div>
-
-  <!-- 헤더 -->
   <div class="header">
     <div class="header-top">
       <div class="logo" id="profileLogo">휙</div>
@@ -174,18 +126,16 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
     </div>
     <div class="stat-row" id="statRow"></div>
     <div class="header-actions" id="headerActions" style="display:none">
-      <a class="btn-call" id="btnCall" href="#">📞 전화 상담</a>
+      <a class="btn-call" id="btnCall" href="#">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.64 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.55 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        <span id="btnCallText">전화 상담</span>
+      </a>
       <a class="btn-hwik" href="/mobile.html">휙 검색</a>
     </div>
   </div>
-
   <div class="divider"></div>
-
-  <!-- 매물 목록 -->
   <div class="section">
-    <div class="section-title">
-      등록 매물 <small id="cardCount"></small>
-    </div>
+    <div class="section-title">등록 매물 <small id="cardCount"></small></div>
     <div class="trade-list" id="cardList">
       <div class="skel-item">
         <div class="skel" style="width:56px;height:56px;border-radius:8px;flex-shrink:0"></div>
@@ -205,7 +155,30 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
       </div>
     </div>
   </div>
+</div>
 
+<!-- 바텀 시트 -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-scroll">
+    <div id="sheetPhoto"></div>
+    <div class="sheet-body">
+      <div class="sheet-badges" id="sheetBadges"></div>
+      <div class="sheet-price" id="sheetPrice"></div>
+      <div class="sheet-loc" id="sheetLoc"></div>
+      <div class="sheet-tags" id="sheetTags"></div>
+    </div>
+  </div>
+  <div class="sheet-actions">
+    <a class="sheet-btn-call" id="sheetBtnCall" href="#">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.64 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.55 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+      전화 상담
+    </a>
+    <button class="sheet-btn-kakao hidden" id="sheetBtnKakao" onclick="openKakao()">
+      💬 카카오톡 문의
+    </button>
+  </div>
 </div>
 
 <script src="config.js"></script>
@@ -214,6 +187,10 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
 const sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_KEY);
 const params = new URLSearchParams(location.search);
 const agentId = params.get('id');
+
+let agentPhone = '';
+let agentKakaoUrl = '';
+let selectedCardId = '';
 
 if (!agentId) {
   document.getElementById('profileName').textContent = '잘못된 주소입니다.';
@@ -225,7 +202,7 @@ if (!agentId) {
 async function load() {
   const [profileRes, cardsRes] = await Promise.all([
     sb.from('profiles')
-      .select('id,agent_name,business_name,phone,address,profile_photo_url')
+      .select('id,agent_name,business_name,phone,address,profile_photo_url,kakao_chat_url')
       .eq('id', agentId)
       .maybeSingle(),
     sb.from('cards')
@@ -259,7 +236,6 @@ function renderProfile(p, count) {
   const sub = [p.business_name !== name ? p.business_name : '', p.address].filter(Boolean).join(' · ');
   document.getElementById('profileSub').textContent = sub;
 
-  // 로고 (프로필 사진 or 이름 첫 글자)
   const logo = document.getElementById('profileLogo');
   if (p.profile_photo_url) {
     logo.innerHTML = `<img src="${esc(p.profile_photo_url)}" alt="${esc(name)}">`;
@@ -267,19 +243,24 @@ function renderProfile(p, count) {
     logo.textContent = name[0] || '중';
   }
 
-  // 통계 뱃지
   const statRow = document.getElementById('statRow');
   const parts = [];
   if (p.address) parts.push('📍 ' + p.address.split(' ').slice(0,2).join(' '));
   if (count > 0) parts.push(`매물 ${count}건`);
   statRow.innerHTML = parts.map(t => `<span class="stat-badge">${esc(t)}</span>`).join('');
 
-  // 전화 버튼
   if (p.phone) {
+    agentPhone = p.phone;
     const formatted = formatPhone(p.phone);
     document.getElementById('btnCall').href = `tel:${esc(p.phone)}`;
-    document.getElementById('btnCall').innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.64 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.55 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.91a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>${formatted}`;
+    document.getElementById('btnCallText').textContent = formatted;
     document.getElementById('headerActions').style.display = 'flex';
+    document.getElementById('sheetBtnCall').href = `tel:${esc(p.phone)}`;
+  }
+
+  if (p.kakao_chat_url) {
+    agentKakaoUrl = p.kakao_chat_url;
+    document.getElementById('sheetBtnKakao').classList.remove('hidden');
   }
 }
 
@@ -289,7 +270,6 @@ function renderCards(cards) {
 
   if (!cards.length) {
     listEl.innerHTML = `<div class="listing-empty"><div class="listing-empty-text">등록된 매물이 없습니다</div></div>`;
-    countEl.textContent = '';
     return;
   }
 
@@ -315,7 +295,10 @@ function renderCards(cards) {
       ? `<div class="card-tags">${tags.map(t=>`<span class="card-tag">${esc(t)}</span>`).join('')}</div>`
       : '';
 
-    return `<a class="listing-item" href="/property_chat.html?id=${esc(card.id)}" target="_blank">
+    // card 데이터를 data 속성으로 저장
+    const cardData = esc(JSON.stringify({ id:card.id, type, price, complex, location, area, floor, status, tags:card.tags||[], photos }));
+
+    return `<div class="listing-item" onclick="openSheet(${esc(JSON.stringify(card.id))}, this)">
       ${thumbHtml}
       <div class="card-body">
         <div class="badges">
@@ -327,14 +310,79 @@ function renderCards(cards) {
         ${tagsHtml}
       </div>
       <span class="listing-link">보기 →</span>
-    </a>`;
+    </div>`;
   }).join('');
+
+  // cards 데이터 저장
+  window._cardsData = {};
+  cards.forEach(c => { window._cardsData[c.id] = c; });
 }
 
+function openSheet(cardId) {
+  const card = window._cardsData?.[cardId];
+  if (!card) return;
+
+  selectedCardId = cardId;
+  const p = card.property || {};
+  const type = p.type || '';
+  const price = p.price || '';
+  const complex = p.complex || '';
+  const location = p.location || '';
+  const area = p.area || '';
+  const floor = p.floor || '';
+  const status = card.trade_status || '계약가능';
+  const tags = card.tags || [];
+  const photos = card.photos || [];
+  const photo = photos[0]?.url || (typeof photos[0] === 'string' ? photos[0] : null);
+  const loc = [complex, location, area, floor ? floor + '층' : ''].filter(Boolean).join('\n');
+
+  // 사진
+  document.getElementById('sheetPhoto').innerHTML = photo
+    ? `<div class="sheet-photos"><img src="${esc(photo)}" alt="매물사진"></div>`
+    : `<div class="sheet-photo-empty">${{매매:'🏠',전세:'🔑',월세:'💰',반전세:'🏡'}[type]||'🏠'}</div>`;
+
+  // 뱃지
+  document.getElementById('sheetBadges').innerHTML =
+    `<span class="badge b-${esc(type)}" style="font-size:12px;padding:3px 10px">${esc(type)}</span>
+     <span class="badge b-${esc(status)}" style="font-size:12px;padding:3px 10px">${esc(status)}</span>`;
+
+  // 가격, 위치, 태그
+  document.getElementById('sheetPrice').textContent = price;
+  document.getElementById('sheetLoc').textContent = loc;
+  document.getElementById('sheetTags').innerHTML = tags.slice(0,8).map(t =>
+    `<span class="sheet-tag">${esc(t)}</span>`
+  ).join('');
+
+  // 오픈
+  document.getElementById('sheetOverlay').classList.add('show');
+  document.getElementById('sheet').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSheet() {
+  document.getElementById('sheetOverlay').classList.remove('show');
+  document.getElementById('sheet').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+function openKakao() {
+  if (!agentKakaoUrl) return;
+  const card = window._cardsData?.[selectedCardId];
+  if (card) {
+    const p = card.property || {};
+    const text = `[휙 매물 문의]\n${p.type||''} ${p.price||''}\n${[p.complex,p.location,p.area].filter(Boolean).join(' · ')}\nhttps://hwik.kr/property_chat.html?id=${selectedCardId}`;
+    try { navigator.clipboard.writeText(text); } catch(e) {}
+  }
+  window.open(agentKakaoUrl, '_blank');
+}
+
+// ESC 닫기
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+
 function formatPhone(p) {
-  const d = (p || '').replace(/\D/g, '');
-  if (d.length === 11) return `${d.slice(0,3)}-${d.slice(3,7)}-${d.slice(7)}`;
-  if (d.length === 10) return `${d.slice(0,3)}-${d.slice(3,6)}-${d.slice(6)}`;
+  const d = (p||'').replace(/\D/g,'');
+  if (d.length===11) return `${d.slice(0,3)}-${d.slice(3,7)}-${d.slice(7)}`;
+  if (d.length===10) return `${d.slice(0,3)}-${d.slice(3,6)}-${d.slice(6)}`;
   return p;
 }
 
