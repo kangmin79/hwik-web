@@ -208,7 +208,7 @@ jobs:
   build:
     name: sitemap + 정적 페이지 빌드
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 180
     needs: [sync-seoul, sync-incheon, sync-gyeonggi, sync-busan, sync-daegu, sync-gwangju, sync-daejeon, sync-ulsan]
     if: ${{ !cancelled() && contains(needs.*.result, 'success') }}
     steps:
@@ -226,8 +226,12 @@ jobs:
       - name: 단지 정적 HTML 빌드 (danji_pages → HTML)
         run: python build_danji_pages.py
       - name: 단지 OG 이미지 생성 (변경분만)
+        timeout-minutes: 50
+        continue-on-error: true
         run: python build_og_images.py
       - name: 동 OG 이미지 생성 (변경분만)
+        timeout-minutes: 10
+        continue-on-error: true
         run: python build_og_images_dong.py
       - name: 동 정적 페이지 빌드
         run: python build_dong_pages.py
