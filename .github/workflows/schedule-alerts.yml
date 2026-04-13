@@ -1,0 +1,77 @@
+name: 일정 알림 푸시
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'   # 15분마다
+  workflow_dispatch:           # 수동 실행 가능
+
+jobs:
+  send-alerts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 일정 알림 전송
+        run: |
+          node -e "
+          const SUPABASE_URL = '${{ secrets.SUPABASE_URL }}';
+          const SERVICE_KEY  = '${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}';
+          const BOT_TOKEN    = '${{ secrets.TELEGRAM_BOT_TOKEN }}';
+
+          async function main() {
+            const now = new Date();
+            const from = new Date(now - 16 * 60 * 1000).toISOString(); // 16분 전
+            const to   = new Date(now + 1  * 60 * 1000).toISOString(); // 1분 후
+
+            // 이번 15분 창에 해당하는 미완료 일정 조회
+            const alertRes = await fetch(
+              SUPABASE_URL + '/rest/v1/client_notes?select=id,agent_id,client_card_id,content,type,alert_date&alert_done=eq.false&alert_date=gte.' + from + '&alert_date=lte.' + to,
+              { headers: { 'apikey': SERVICE_KEY, 'Authorization': 'Bearer ' + SERVICE_KEY } }
+            );
+            const alerts = await alertRes.json();
+            if (!alerts?.length) { console.log('발송할 알림 없음'); return; }
+
+            // agent_id → telegram_chat_id 조회
+            const agentIds = [...new Set(alerts.map(a => a.agent_id))];
+            const profileRes = await fetch(
+              SUPABASE_URL + '/rest/v1/profiles?select=id,telegram_chat_id,agent_name&id=in.(' + agentIds.join(',') + ')',
+              { headers: { 'apikey': SERVICE_KEY, 'Authorization': 'Bearer ' + SERVICE_KEY } }
+            );
+            const profiles = await profileRes.json();
+            const profileMap = {};
+            profiles.forEach(p => { profileMap[p.id] = p; });
+
+            let sent = 0;
+            for (const alert of alerts) {
+              const profile = profileMap[alert.agent_id];
+              if (!profile?.telegram_chat_id) continue;
+
+              const d = new Date(alert.alert_date);
+              const timeStr = (d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0'));
+              const typeEmoji = { '방문':'🚶', '상담':'💬', '계약':'📝', '전화':'📞' }[alert.type] || '📅';
+              const text = typeEmoji + ' ' + (alert.content || '일정') + '\n🕐 오늘 ' + timeStr;
+
+              const url = alert.client_card_id
+                ? 'https://hwik.kr/mobile-v6.html?client=' + alert.client_card_id
+                : 'https://hwik.kr/mobile-v6.html';
+
+              await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/sendMessage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  chat_id: profile.telegram_chat_id,
+                  text: text,
+                  parse_mode: 'HTML',
+                  reply_markup: {
+                    inline_keyboard: [[
+                      { text: '확인하기 →', url: url }
+                    ]]
+                  }
+                })
+              });
+              sent++;
+              console.log('알림 발송:', profile.agent_name, alert.content);
+            }
+            console.log('총', sent, '건 발송 완료');
+          }
+
+          main().catch(e => { console.error(e); process.exit(1); });
+          "
