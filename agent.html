@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>중개사 홈페이지 — 휙</title>
+<meta name="description" content="휙 등록 중개사 매물 목록">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Noto Sans KR', -apple-system, sans-serif; background: #f4f5f7; color: #1a1a2e; }
+
+/* ── 헤더 ── */
+.top-bar {
+  background: #fff;
+  border-bottom: 1px solid #e8e8ec;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.top-bar a { text-decoration: none; color: #6b7280; font-size: 13px; }
+.top-bar span { color: #d1d5db; font-size: 13px; }
+
+/* ── 프로필 카드 ── */
+.profile-card {
+  background: #1a1a2e;
+  color: #fff;
+  padding: 28px 20px 24px;
+}
+.profile-inner {
+  max-width: 680px;
+  margin: 0 auto;
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+.profile-photo {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #2d2d4e;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 700;
+  color: #FFD43B;
+  overflow: hidden;
+}
+.profile-photo img { width: 100%; height: 100%; object-fit: cover; }
+.profile-info { flex: 1; min-width: 0; }
+.profile-name {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.profile-office {
+  font-size: 14px;
+  color: #94a3b8;
+  margin-bottom: 12px;
+}
+.profile-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.profile-tag {
+  background: rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: #cbd5e1;
+}
+.profile-actions {
+  display: flex;
+  gap: 8px;
+}
+.btn-call {
+  flex: 1;
+  background: #FFD43B;
+  color: #1a1a2e;
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  display: block;
+}
+.btn-hwik {
+  flex: 1;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  text-align: center;
+  display: block;
+}
+
+/* ── 매물 목록 ── */
+.section {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 20px 16px;
+}
+.section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #374151;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.section-title span {
+  color: #9ca3af;
+  font-weight: 400;
+  font-size: 13px;
+}
+
+/* ── 매물 카드 ── */
+.card-list { display: flex; flex-direction: column; gap: 0; }
+.card-item {
+  background: #fff;
+  border-radius: 0;
+  border-bottom: 1px solid #f0f0f4;
+  padding: 14px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  cursor: pointer;
+  transition: background 0.15s;
+  text-decoration: none;
+  color: inherit;
+}
+.card-item:first-child { border-radius: 12px 12px 0 0; }
+.card-item:last-child { border-radius: 0 0 12px 12px; border-bottom: none; }
+.card-item:only-child { border-radius: 12px; }
+.card-item:hover { background: #fafafa; }
+.card-thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #f3f4f6;
+  flex-shrink: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+.card-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.card-body { flex: 1; min-width: 0; }
+.card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 4px;
+  align-items: center;
+}
+.badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+.badge-type-매매 { background: #fff3ed; color: #ea580c; }
+.badge-type-전세 { background: #eef2ff; color: #4f46e5; }
+.badge-type-월세 { background: #f5f3ff; color: #7c3aed; }
+.badge-type-반전세 { background: #fdf4ff; color: #a21caf; }
+.badge-status-계약가능 { background: #f0fdf4; color: #16a34a; }
+.badge-status-계약중 { background: #eff6ff; color: #2563eb; }
+.card-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 3px;
+}
+.card-location {
+  font-size: 12px;
+  color: #6b7280;
+  margin-bottom: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.card-tag {
+  font-size: 11px;
+  color: #9ca3af;
+  background: #f9fafb;
+  border: 1px solid #f0f0f4;
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+/* ── 빈 상태 ── */
+.empty {
+  text-align: center;
+  padding: 48px 20px;
+  background: #fff;
+  border-radius: 12px;
+  color: #9ca3af;
+  font-size: 14px;
+}
+
+/* ── 스켈레톤 ── */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f4 25%, #e8e8ec 50%, #f0f0f4 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+  border-radius: 6px;
+}
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+/* ── 로딩 카드 ── */
+.card-skeleton {
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  gap: 12px;
+  margin-bottom: 1px;
+}
+
+/* ── 반응형 ── */
+@media (min-width: 720px) {
+  .profile-card { padding: 36px 24px 32px; }
+  .profile-inner { gap: 24px; }
+  .profile-photo { width: 88px; height: 88px; }
+  .section { padding: 24px 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- 상단 네비 -->
+<div class="top-bar">
+  <a href="/">휙</a>
+  <span>›</span>
+  <span id="navName" style="color:#374151">중개사</span>
+</div>
+
+<!-- 프로필 -->
+<div class="profile-card">
+  <div class="profile-inner">
+    <div class="profile-photo" id="profilePhoto">?</div>
+    <div class="profile-info">
+      <div class="profile-name" id="profileName">불러오는 중...</div>
+      <div class="profile-office" id="profileOffice"></div>
+      <div class="profile-tags" id="profileTags"></div>
+      <div class="profile-actions" id="profileActions" style="display:none">
+        <a class="btn-call" id="btnCall" href="#">📞 전화 상담</a>
+        <a class="btn-hwik" href="/mobile.html">휙 검색</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 매물 목록 -->
+<div class="section">
+  <div class="section-title">등록 매물 <span id="cardCount"></span></div>
+  <div class="card-list" id="cardList">
+    <!-- 스켈레톤 -->
+    <div class="card-skeleton">
+      <div class="skeleton" style="width:64px;height:64px;border-radius:8px;flex-shrink:0"></div>
+      <div style="flex:1">
+        <div class="skeleton" style="height:14px;width:60%;margin-bottom:8px"></div>
+        <div class="skeleton" style="height:18px;width:40%;margin-bottom:8px"></div>
+        <div class="skeleton" style="height:12px;width:80%"></div>
+      </div>
+    </div>
+    <div class="card-skeleton" style="border-radius:0">
+      <div class="skeleton" style="width:64px;height:64px;border-radius:8px;flex-shrink:0"></div>
+      <div style="flex:1">
+        <div class="skeleton" style="height:14px;width:50%;margin-bottom:8px"></div>
+        <div class="skeleton" style="height:18px;width:35%;margin-bottom:8px"></div>
+        <div class="skeleton" style="height:12px;width:70%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const SUPABASE_URL = HWIK_CONFIG.SUPABASE_URL;
+const SUPABASE_KEY = HWIK_CONFIG.SUPABASE_KEY;
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// URL에서 agent id 파싱
+const params = new URLSearchParams(location.search);
+const agentId = params.get('id');
+
+if (!agentId) {
+  document.getElementById('profileName').textContent = '잘못된 주소입니다.';
+  document.getElementById('cardList').innerHTML = '';
+} else {
+  loadAgent();
+}
+
+async function loadAgent() {
+  const [profileRes, cardsRes] = await Promise.all([
+    sb.from('profiles')
+      .select('id, agent_name, business_name, phone, address, profile_photo_url, naver_map_url')
+      .eq('id', agentId)
+      .maybeSingle(),
+    sb.from('cards')
+      .select('id, property, trade_status, photos, tags, price_number, contact_name')
+      .eq('agent_id', agentId)
+      .neq('property->>type', '손님')
+      .neq('trade_status', '완료')
+      .order('created_at', { ascending: false })
+      .limit(30),
+  ]);
+
+  const profile = profileRes.data;
+  const cards = cardsRes.data || [];
+
+  if (!profile) {
+    document.getElementById('profileName').textContent = '존재하지 않는 중개사입니다.';
+    document.getElementById('cardList').innerHTML = '';
+    return;
+  }
+
+  renderProfile(profile);
+  renderCards(cards);
+}
+
+function renderProfile(p) {
+  const name = p.agent_name || p.business_name || '중개사';
+  document.title = `${name} — 휙`;
+  document.getElementById('navName').textContent = name;
+  document.getElementById('profileName').textContent = name;
+
+  const officeEl = document.getElementById('profileOffice');
+  const parts = [p.business_name, p.address].filter(Boolean);
+  officeEl.textContent = parts.join(' · ');
+
+  // 프로필 사진
+  const photoEl = document.getElementById('profilePhoto');
+  if (p.profile_photo_url) {
+    photoEl.innerHTML = `<img src="${esc(p.profile_photo_url)}" alt="${esc(name)}">`;
+  } else {
+    photoEl.textContent = name[0] || '중';
+  }
+
+  // 태그 (지역 기반)
+  if (p.address) {
+    const tagsEl = document.getElementById('profileTags');
+    const region = p.address.split(' ').slice(0, 2).join(' ');
+    tagsEl.innerHTML = `<span class="profile-tag">📍 ${esc(region)}</span>`;
+  }
+
+  // 액션 버튼
+  if (p.phone) {
+    document.getElementById('btnCall').href = `tel:${esc(p.phone)}`;
+    document.getElementById('profileActions').style.display = 'flex';
+  }
+}
+
+function renderCards(cards) {
+  const listEl = document.getElementById('cardList');
+  const countEl = document.getElementById('cardCount');
+
+  if (!cards.length) {
+    listEl.innerHTML = `<div class="empty">등록된 매물이 없습니다</div>`;
+    countEl.textContent = '';
+    return;
+  }
+
+  countEl.textContent = `${cards.length}건`;
+
+  listEl.innerHTML = cards.map(card => {
+    const p = card.property || {};
+    const type = p.type || '';
+    const price = p.price || '';
+    const complex = p.complex || '';
+    const location = p.location || '';
+    const area = p.area || '';
+    const floor = p.floor || '';
+    const status = card.trade_status || '계약가능';
+    const tags = (card.tags || []).slice(0, 4);
+
+    const locationStr = [complex, location, area, floor ? floor + '층' : ''].filter(Boolean).join(' · ');
+
+    // 썸네일
+    const photos = card.photos || [];
+    const thumb = photos[0]?.url || photos[0];
+    const thumbHtml = thumb
+      ? `<div class="card-thumb"><img src="${esc(thumb)}" alt="매물사진" loading="lazy"></div>`
+      : `<div class="card-thumb">${typeEmoji(type)}</div>`;
+
+    const tagsHtml = tags.length
+      ? `<div class="card-tags">${tags.map(t => `<span class="card-tag">${esc(t)}</span>`).join('')}</div>`
+      : '';
+
+    return `<a class="card-item" href="/property_chat.html?id=${esc(card.id)}" target="_blank">
+      ${thumbHtml}
+      <div class="card-body">
+        <div class="card-badges">
+          <span class="badge badge-type-${esc(type)}">${esc(type)}</span>
+          <span class="badge badge-status-${esc(status)}">${esc(status)}</span>
+        </div>
+        <div class="card-price">${esc(price)}</div>
+        <div class="card-location">${esc(locationStr)}</div>
+        ${tagsHtml}
+      </div>
+    </a>`;
+  }).join('');
+}
+
+function typeEmoji(type) {
+  return { '매매': '🏠', '전세': '🔑', '월세': '💰', '반전세': '🏡' }[type] || '🏠';
+}
+</script>
+</body>
+</html>
