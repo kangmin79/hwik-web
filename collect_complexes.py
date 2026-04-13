@@ -537,7 +537,9 @@ def main():
     parser.add_argument("--sigungu", type=str, default=None,
                         help="특정 구 코드 (예: 11260 = 중랑구)")
     parser.add_argument("--region",  type=str, default=None,
-                        choices=["seoul", "incheon", "gyeonggi", "busan", "daegu", "gwangju", "daejeon", "ulsan", "all"],
+                        choices=["seoul", "incheon", "gyeonggi", "busan", "daegu", "gwangju", "daejeon", "ulsan",
+                                 "sejong", "chungbuk", "chungnam", "jeonbuk", "jeonnam",
+                                 "gyeongbuk", "gyeongnam", "gangwon", "jeju", "all"],
                         help="지역 전체 수집")
     parser.add_argument("--dry",     action="store_true",
                         help="저장 안 하고 첫 결과만 출력")

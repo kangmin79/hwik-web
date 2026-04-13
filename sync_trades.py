@@ -1,40 +1,32 @@
 # -*- coding: utf-8 -*-
 """
-실거래가 일일 동기화
-- 초기: --init 플래그로 최근 36개월 전체 수집
-- 이후: 당월 + 전월만 수집 (늦은 신고 반영)
-- 수집 후 danji_pages 집계 업데이트
+sync_trades.py — sitemap 재생성 + 주변 단지/시설 업데이트
+
+구 파이프라인(trade_cache 기반) 완전 제거 — 2026-04-13
+  - 실거래 수집: collect_trades_v2.py → trade_raw_v2
+  - 집계:        build_danji_from_v2.py → danji_pages
+
+이 파일이 하는 일:
+  1. sitemap.xml 재생성  (--sitemap-only, GitHub Actions에서 사용)
+  2. 주변 단지/시설 업데이트  (--nearby-only, 필요 시 수동 실행)
 
 사용법:
-  python sync_trades.py --init          # 최초 3년치 수집
-  python sync_trades.py                 # 일일 동기화 (당월+전월)
-  python sync_trades.py --months 6      # 최근 6개월 수집
-
-GitHub Actions에서 매일 새벽 3시 실행
+  python sync_trades.py --sitemap-only     # sitemap만 재생성
+  python sync_trades.py --nearby-only      # 주변 단지/지하철/학교 업데이트
 """
 
 import os
 import sys
-import json
 import time
-import math
 import argparse
-import ssl
-import urllib3
-import xml.etree.ElementTree as ET
 from datetime import datetime
-from dateutil.relativedelta import relativedelta
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from collections import defaultdict
 
 import requests
-from requests.adapters import HTTPAdapter
 
 # UTF-8
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout = open(sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1)
-
-urllib3.disable_warnings()
 
 
 # ── 환경변수 로드 ──────────────────────────────────────
@@ -52,14 +44,10 @@ def _load_env():
 
 _load_env()
 
-GOV_SERVICE_KEY = os.environ.get("GOV_SERVICE_KEY", "")
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://api.hwik.kr")
 SUPABASE_URL_FALLBACK = "https://jqaxejgzkchxbfzgzyzi.supabase.co"
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 
-if not GOV_SERVICE_KEY:
-    print("❌ GOV_SERVICE_KEY 없음")
-    sys.exit(1)
 if not SUPABASE_KEY:
     print("❌ SUPABASE_SERVICE_ROLE_KEY 없음")
     sys.exit(1)
@@ -71,167 +59,13 @@ SB_HEADERS = {
     "Prefer": "resolution=merge-duplicates",
 }
 
-
-# ── SSL 우회 (정부 API) ────────────────────────────────
-class TLSAdapter(HTTPAdapter):
-    def init_poolmanager(self, *args, **kwargs):
-        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-        ctx.set_ciphers("DEFAULT@SECLEVEL=1")
-        ctx.check_hostname = False
-        ctx.verify_mode = ssl.CERT_NONE
-        kwargs["ssl_context"] = ctx
-        return super().init_poolmanager(*args, **kwargs)
-
-gov_session = requests.Session()
-gov_session.mount("https://", TLSAdapter())
-gov_session.verify = False
-
 sb_session = requests.Session()
 
-
-# ── 법정동코드 매핑 (regions.py가 단일 소스) ─────────────
-from regions import (
-    SEOUL_GU, INCHEON_GU, GYEONGGI_SI,
-    BUSAN_GU, DAEGU_GU, GWANGJU_GU, DAEJEON_GU, ULSAN_GU,
-    ALL_REGIONS,
-)
-
-# ── API URL ─────────────────────────────────────────────
-APT_TRADE_URL = "http://apis.data.go.kr/1613000/RTMSDataSvcAptTradeDev/getRTMSDataSvcAptTradeDev"
-APT_RENT_URL  = "http://apis.data.go.kr/1613000/RTMSDataSvcAptRent/getRTMSDataSvcAptRent"
-OFFI_TRADE_URL = "https://apis.data.go.kr/1613000/RTMSDataSvcOffiTrade/getRTMSDataSvcOffiTrade"
-OFFI_RENT_URL  = "https://apis.data.go.kr/1613000/RTMSDataSvcOffiRent/getRTMSDataSvcOffiRent"
+from regions import ALL_REGIONS
 
 
 # ========================================================
-# 1단계: 정부 API에서 실거래 수집
-# ========================================================
-def fetch_trades(lawd_cd: str, year_month: str, api_url: str, deal_type: str) -> list:
-    """특정 구+월의 거래 데이터 수집"""
-    try:
-        resp = gov_session.get(api_url, params={
-            "serviceKey": GOV_SERVICE_KEY,
-            "LAWD_CD": lawd_cd,
-            "DEAL_YMD": year_month,
-            "pageNo": "1",
-            "numOfRows": "9999",
-        }, headers={"Accept": "application/xml"}, timeout=60)
-
-        if resp.status_code != 200:
-            return []
-
-        root = ET.fromstring(resp.content)
-        items = []
-        for item in root.findall(".//item"):
-            row = {c.tag: (c.text.strip() if c.text else "") for c in item}
-            row["_lawd_cd"] = lawd_cd
-            row["_year_month"] = year_month
-
-            # 전월세 API: monthlyRent(월세금) > 0이면 월세, 아니면 전세
-            if deal_type == "전세":
-                monthly = row.get("monthlyRent") or row.get("monthlyAmount") or "0"
-                try:
-                    monthly_val = int(str(monthly).replace(",", "").strip() or "0")
-                except:
-                    monthly_val = 0
-                row["_deal_type"] = "월세" if monthly_val > 0 else "전세"
-            else:
-                row["_deal_type"] = deal_type
-
-            items.append(row)
-        return items
-
-    except Exception as e:
-        print(f"  ⚠️ {lawd_cd}/{year_month}/{deal_type}: {e}")
-        return []
-
-
-def fetch_all_for_month(year_month: str, lawd_codes: list = None) -> dict:
-    """
-    특정 월의 서울 전체 실거래 수집
-    반환: { "11110_매매_apt": [...], "11110_전세_apt": [...], ... }
-    """
-    codes = lawd_codes or list(ALL_REGIONS.keys())
-    apis = [
-        (APT_TRADE_URL,  "매매", "apt"),
-        (APT_RENT_URL,   "전세", "apt"),
-        (OFFI_TRADE_URL, "매매", "offi"),
-        (OFFI_RENT_URL,  "전세", "offi"),
-    ]
-
-    results = {}
-    tasks = []
-
-    with ThreadPoolExecutor(max_workers=6) as pool:
-        for code in codes:
-            for api_url, deal_type, prop_type in apis:
-                key = f"{code}_{deal_type}_{prop_type}"
-                future = pool.submit(fetch_trades, code, year_month, api_url, deal_type)
-                tasks.append((key, future))
-
-        for key, future in tasks:
-            try:
-                data = future.result()
-                if data:
-                    results[key] = data
-            except Exception as e:
-                print(f"  ⚠️ {key}: {e}")
-
-    total = sum(len(v) for v in results.values())
-    print(f"  {year_month}: {total}건 수집 ({len(results)}개 구/유형)")
-    return results
-
-
-# ========================================================
-# 2단계: trade_cache에 upsert
-# ========================================================
-def upsert_trade_cache(year_month: str, all_data: dict):
-    """수집한 데이터를 trade_cache 테이블에 upsert"""
-    rows = []
-    for key, items in all_data.items():
-        parts = key.split("_")
-        lawd_cd = parts[0]
-        deal_type = parts[1]
-        prop_type = parts[2]
-
-        rows.append({
-            "kapt_code": f"{lawd_cd}_{prop_type}",
-            "deal_type": deal_type,
-            "year_month": year_month,
-            "data": items,
-        })
-
-    if not rows:
-        return 0
-
-    # 1건씩 upsert (data 필드가 크므로)
-    total = 0
-    for row in rows:
-        for attempt in range(3):
-            try:
-                resp = sb_session.post(
-                    f"{SUPABASE_URL}/rest/v1/trade_cache",
-                    headers=SB_HEADERS,
-                    json=[row],
-                    timeout=60,
-                )
-                if resp.status_code in (200, 201):
-                    total += 1
-                    break
-                else:
-                    if attempt < 2:
-                        time.sleep(1)
-            except Exception as e:
-                if attempt < 2:
-                    time.sleep(2)
-                else:
-                    print(f"  ⚠️ upsert 실패: {row['kapt_code']}/{row['year_month']} — {e}")
-
-    return total
-
-
-# ========================================================
-# 3단계: danji_pages 집계 업데이트
+# apartments 로드
 # ========================================================
 def load_apartments():
     """apartments 테이블에서 단지 목록 로드"""
@@ -271,442 +105,13 @@ def load_apartments():
     return all_apts
 
 
-def load_trade_cache_for_gu(lawd_cd: str) -> list:
-    """특정 구의 trade_cache 전체 로드"""
-    all_rows = []
-    offset = 0
-    limit = 500
-    while True:
-        for attempt in range(3):
-            try:
-                resp = sb_session.get(
-                    f"{SUPABASE_URL}/rest/v1/trade_cache",
-                    headers={"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"},
-                    params={
-                        "select": "*",
-                        "kapt_code": f"like.{lawd_cd}_%",
-                        "limit": str(limit),
-                        "offset": str(offset),
-                        "order": "year_month.desc",
-                    },
-                    timeout=90,
-                )
-                break
-            except Exception as e:
-                if attempt < 2:
-                    time.sleep(3)
-                else:
-                    print(f"  ⚠️ trade_cache 로드 실패: {lawd_cd} offset={offset}")
-                    return all_rows
-        if resp.status_code != 200:
-            break
-        data = resp.json()
-        if not data:
-            break
-        all_rows.extend(data)
-        offset += limit
-        if len(data) < limit:
-            break
-    return all_rows
-
-
-def match_trades_to_complex(apt: dict, trade_rows: list) -> list:
-    """특정 단지에 해당하는 거래 필터링 (단지명 매칭)"""
-    kapt_name = (apt.get("kapt_name") or "").replace(" ", "")
-    slug = (apt.get("slug") or "").replace(" ", "")
-    if not kapt_name:
-        return []
-
-    # 키워드 추출 (숫자태그 분리)
-    import re
-    name_clean = re.sub(r'\d+차|\d+단지|\d+블록', '', kapt_name)
-    num_match = re.search(r'(\d+차|\d+단지|\d+블록)', kapt_name)
-    num_tag = num_match.group(1) if num_match else ""
-    # 짧은 이름(3글자 이하)은 완전 일치만 — "용인","하남","남양" 등 오매칭 방지
-    short_name = len(kapt_name) <= 3
-
-    # kapt_code가 'A'로 시작하면 아파트 → offi 거래 제외
-    is_apt = (apt.get("kapt_code") or "").upper().startswith("A")
-
-    matched = []
-    for row in trade_rows:
-        # 아파트 단지면 offi 캐시 제외 (오피스텔 거래 혼입 방지)
-        row_kapt = row.get("kapt_code") or ""
-        if is_apt and row_kapt.endswith("_offi"):
-            continue
-
-        items = row.get("data") or []
-        for item in items:
-            # 아파트 단지 → aptNm만 매칭 (offiNm 무시)
-            if is_apt:
-                apt_nm = (item.get("aptNm") or "").replace(" ", "")
-            else:
-                apt_nm = (item.get("aptNm") or item.get("offiNm") or "").replace(" ", "")
-            if not apt_nm:
-                continue
-
-            # 매칭 로직
-            hit = False
-            matched_via_clean = False  # name_clean 경유 매칭 여부
-            if short_name:
-                # 3글자 이하: 완전 일치만 (예: "용인" ≠ "용인드마크데시앙")
-                if kapt_name == apt_nm:
-                    hit = True
-            else:
-                # 4글자 이상: 포함 관계 허용하되 짧은 쪽이 4글자 이상이어야 함
-                if kapt_name == apt_nm:
-                    hit = True
-                elif kapt_name in apt_nm and len(kapt_name) >= 4:
-                    hit = True
-                elif apt_nm in kapt_name and len(apt_nm) >= 4:
-                    hit = True
-                elif name_clean and len(name_clean) >= 4 and (name_clean in apt_nm or apt_nm in name_clean):
-                    hit = True
-                    matched_via_clean = True
-
-            # 숫자 태그 확인 (2차, 3차 구분)
-            # name_clean 경유 매칭은 이미 숫자를 제거한 상태이므로 건너뜀
-            # (예: "대치1차현대아파트" → name_clean "대치현대아파트" → API "대치현대" 매칭)
-            if hit and num_tag and not matched_via_clean:
-                if num_tag not in apt_nm and apt_nm not in kapt_name:
-                    hit = False
-
-            if hit:
-                # item에 이미 _deal_type이 있으면 유지 (전세/월세 분리됨)
-                if "_deal_type" not in item:
-                    item["_deal_type"] = row.get("deal_type", "")
-                if "_year_month" not in item:
-                    item["_year_month"] = row.get("year_month", "")
-                matched.append(item)
-
-    return matched
-
-
-def aggregate_danji(apt: dict, trades: list) -> dict | None:
-    """단지별 거래 데이터를 danji_pages 포맷으로 집계"""
-    if not trades:
-        return None
-
-    pyeongs = apt.get("pyeongs") or []
-    # 공급면적 매핑 테이블 (전용→공급)
-    pyeongs_map = {}  # {"39": {"exclu": 39, "supply": 91}}
-    for p in pyeongs:
-        exclu = p.get("exclu", 0)
-        supply = p.get("supply", 0)
-        if exclu <= 0:
-            continue
-        cat = str(round(exclu))
-        pyeongs_map[cat] = {"exclu": round(exclu, 1), "supply": round(supply, 1)}
-
-    # categories: pyeongs_map이 있으면 공식 면적으로 직접 매핑 (상가/중복 방지)
-    pm_keys = sorted([float(k) for k in pyeongs_map.keys()]) if pyeongs_map else []
-
-    def _match_official(area_val):
-        """실거래 면적 → 가장 가까운 공식 면적 키 (±5㎡ 이내만)"""
-        if not pm_keys:
-            return str(round(area_val))
-        best_k, best_d = None, 999
-        for pk in pm_keys:
-            d = abs(area_val - pk)
-            if d < best_d:
-                best_k, best_d = pk, d
-        return str(round(best_k)) if best_d <= 5 else None
-
-    areas = set()
-    for t in trades:
-        try:
-            area = float(t.get("excluUseAr") or t.get("exclusiveArea") or 0)
-            if area > 0:
-                matched = _match_official(area)
-                if matched:
-                    areas.add(matched)
-        except:
-            pass
-    categories = sorted(areas, key=lambda x: float(x))
-
-    # pyeongs_map 없는 경우 fallback: round(area) 그대로 사용 (위에서 처리됨)
-
-    # 거래를 평형별로 분류
-    def get_cat(trade_item):
-        try:
-            area = float(trade_item.get("excluUseAr") or trade_item.get("exclusiveArea") or 0)
-        except:
-            return None
-        if area <= 0:
-            return None
-        return _match_official(area)
-
-    def parse_price(t):
-        """만원 단위 가격 파싱"""
-        raw = t.get("dealAmount") or t.get("deposit") or t.get("보증금액") or ""
-        try:
-            return int(str(raw).replace(",", "").replace(" ", ""))
-        except:
-            return 0
-
-    def parse_date(t):
-        y = t.get("dealYear") or t.get("년") or ""
-        m = t.get("dealMonth") or t.get("월") or ""
-        d = t.get("dealDay") or t.get("일") or ""
-        if y and m:
-            return f"{y}-{str(m).zfill(2)}" + (f"-{str(d).zfill(2)}" if d else "")
-        return t.get("_year_month", "")
-
-    def parse_floor(t):
-        try:
-            return int(t.get("floor") or t.get("층") or 0)
-        except:
-            return 0
-
-    def parse_kind(t):
-        # 국토부 매매 API의 거래유형(dealingGbn): "중개거래" | "직거래" | ""
-        # 전월세 API는 해당 필드 없음
-        raw = (t.get("dealingGbn") or "").strip()
-        if raw in ("중개거래", "직거래"):
-            return raw
-        return ""
-
-    # 분류
-    recent_trade = {}
-    all_time_high = {}
-    price_history = defaultdict(list)  # {cat: [{date, price, floor, kind}, ...]}
-
-    for t in trades:
-        cat = get_cat(t)
-        if not cat:
-            continue
-        price = parse_price(t)
-        if price <= 0:
-            continue
-        deal_type = t.get("_deal_type", "매매")
-        date_str = parse_date(t)
-        floor = parse_floor(t)
-        kind = parse_kind(t)
-
-        if deal_type == "매매":
-            suffix = ""
-        elif deal_type == "전세":
-            suffix = "_jeonse"
-        elif deal_type == "월세":
-            suffix = "_wolse"
-        else:
-            suffix = ""
-        key = cat + suffix
-
-        # 개별 거래 기록
-        record = {"date": date_str, "price": price, "floor": floor}
-        if kind:
-            record["kind"] = kind
-        # 월세는 월세금도 저장
-        if deal_type == "월세":
-            monthly_raw = t.get("monthlyRent") or t.get("monthlyAmount") or "0"
-            try:
-                record["monthly"] = int(str(monthly_raw).replace(",", "").strip() or "0")
-            except:
-                record["monthly"] = 0
-        price_history[key].append(record)
-
-        # 최근 거래
-        if key not in recent_trade or date_str > (recent_trade[key].get("date") or ""):
-            recent_trade[key] = {
-                "price": price,
-                "floor": floor,
-                "date": date_str,
-                "type": deal_type,
-                "kind": kind,
-            }
-
-        # 3년 내 최고 (매매 + 전세)
-        if deal_type in ("매매", "전세"):
-            high_key = cat if deal_type == "매매" else cat + "_jeonse"
-            if high_key not in all_time_high or price > all_time_high[high_key].get("price", 0):
-                all_time_high[high_key] = {
-                    "price": price,
-                    "date": date_str,
-                    "kind": kind,
-                }
-
-    if not recent_trade:
-        return None
-
-    # 거래 3건 미만 제외 (thin content — Google SEO)
-    total_trade_count = sum(len(v) for v in price_history.values())
-    if total_trade_count < 3:
-        return None
-
-    # 전세가율 계산 (첫 번째 평형 기준)
-    jeonse_rate = None
-    if categories:
-        sale_key = categories[0]
-        jeonse_key = categories[0] + "_jeonse"
-        if sale_key in recent_trade and jeonse_key in recent_trade:
-            sp = recent_trade[sale_key]["price"]
-            jp = recent_trade[jeonse_key]["price"]
-            if sp > 0:
-                jeonse_rate = round(jp / sp * 100, 1)
-
-    # price_history: 중복 제거 + 날짜순 정렬
-    ph = {}
-    for key, items in price_history.items():
-        seen = set()
-        deduped = []
-        for it in items:
-            sig = (it.get("date",""), it.get("price",0), it.get("floor",0), it.get("monthly",0), it.get("kind",""))
-            if sig not in seen:
-                seen.add(sig)
-                deduped.append(it)
-        ph[key] = sorted(deduped, key=lambda x: x.get("date", ""))
-
-    # 위치 정보 (없으면 제외)
-    sgg = apt.get("sgg") or ""
-    umd = apt.get("umd_nm") or ""
-    location = f"{sgg} {umd}".strip() if sgg else ""
-    if not location:
-        return None
-
-    build_year = None
-    use_date = apt.get("use_date") or ""
-    if use_date and len(use_date) >= 4:
-        try:
-            build_year = int(use_date[:4])
-        except:
-            pass
-
-    households = None
-    try:
-        households = int(apt.get("households") or 0) or None
-    except:
-        pass
-
-    # ★ ID = kapt_code 기반 (해시 없음, 어디서 실행해도 동일)
-    import re as _re
-    kapt_code = apt.get("kapt_code") or ""
-    if kapt_code.startswith("A"):
-        # 아파트: A10021652 → a10021652
-        danji_id = kapt_code.lower()
-    else:
-        # 오피스텔: offi-11500-킹덤하이너스 → 정리
-        cleaned = kapt_code.replace("/", "").replace(" ", "").lower()
-        # 한글+영문+숫자+하이픈만 유지
-        danji_id = _re.sub(r'[^a-z0-9가-힣\-]', '', cleaned)
-        # 로마자 → 숫자
-        _roman_map = {'ⅰ':'1','ⅱ':'2','ⅲ':'3','ⅳ':'4','ⅴ':'5',
-                      'Ⅰ':'1','Ⅱ':'2','Ⅲ':'3','Ⅳ':'4','Ⅴ':'5'}
-        for roman, num in _roman_map.items():
-            danji_id = danji_id.replace(roman, num)
-    if not danji_id:
-        danji_id = "unknown-" + str(abs(id(apt)) % 10000)
-
-    top_floor = None
-    try:
-        top_floor = int(apt.get("top_floor") or 0) or None
-    except:
-        pass
-
-    parking = None
-    try:
-        parking = int(apt.get("parking") or 0) or None
-    except:
-        pass
-
-    mgmt_fee = None
-    try:
-        mgmt_fee = int(apt.get("mgmt_fee") or 0) or None
-    except:
-        pass
-
-    return {
-        "id": danji_id,
-        "complex_name": apt.get("kapt_name") or "",
-        "location": location,
-        "address": apt.get("doro_juso") or "",
-        "lat": apt.get("lat"),
-        "lng": apt.get("lon"),
-        "total_units": households,
-        "build_year": build_year,
-        "top_floor": top_floor,
-        "parking": parking,
-        "heating": apt.get("heating") or None,
-        "builder": apt.get("builder") or None,
-        "mgmt_fee": mgmt_fee,
-        "categories": categories,
-        "pyeongs_map": pyeongs_map or None,
-        "recent_trade": recent_trade,
-        "all_time_high": all_time_high,
-        "jeonse_rate": jeonse_rate,
-        "price_history": ph,
-        "seo_text": "",
-        "updated_at": datetime.now().isoformat(),
-    }
-
-
-def update_danji_pages(danji_list: list):
-    """danji_pages 테이블 upsert"""
-    if not danji_list:
-        return 0
-
-    # 같은 ID 중복 제거 (마지막 것 유지)
-    seen = {}
-    for d in danji_list:
-        seen[d["id"]] = d
-    danji_list = list(seen.values())
-
-    # nearby 필드가 비어있으면 키 제거 → 기존 DB 값 보존
-    for d in danji_list:
-        for key in ("nearby_subway", "nearby_school", "nearby_complex"):
-            if key in d and not d[key]:
-                del d[key]
-
-    # PostgREST는 배치 내 모든 행의 키가 동일해야 함(PGRST102).
-    # nearby_* 키 유무가 행마다 다를 수 있으므로 스키마 시그니처별로 그룹핑.
-    by_schema: dict[tuple, list] = {}
-    for d in danji_list:
-        sig = tuple(sorted(d.keys()))
-        by_schema.setdefault(sig, []).append(d)
-
-    batch_size = 50
-    total = 0
-    for sig, rows in by_schema.items():
-        for i in range(0, len(rows), batch_size):
-            batch = rows[i:i + batch_size]
-            for attempt in range(3):
-                try:
-                    resp = sb_session.post(
-                        f"{SUPABASE_URL}/rest/v1/danji_pages",
-                        headers=SB_HEADERS,
-                        json=batch,
-                        timeout=90,
-                    )
-                    if resp.status_code in (200, 201):
-                        total += len(batch)
-                    else:
-                        print(f"  ⚠️ danji_pages upsert: {resp.status_code} {resp.text[:200]}")
-                    break
-                except Exception as e:
-                    if attempt < 2:
-                        time.sleep(3)
-                    else:
-                        print(f"  ⚠️ danji_pages upsert 실패: {e}")
-
-    return total
-
-
 # ========================================================
 # 주변 단지 매칭
 # ========================================================
 def fill_nearby_complex(danji_list: list, apartments: list):
-    """같은 property_type + 좌표 가까운 단지 3개를 nearby_complex에 채움"""
+    """같은 property_type + 좌표 가까운 단지 5개를 nearby_complex에 채움"""
     import math
 
-    # danji_list를 id로 인덱싱
-    danji_map = {d["id"]: d for d in danji_list}
-
-    # apartments를 kapt_code로 인덱싱 (property_type 확인용)
-    apt_map = {}
-    for apt in apartments:
-        apt_map[apt.get("kapt_code", "")] = apt
-
-    # danji → property_type 매핑
     name_to_type = {}
     for apt in apartments:
         name_to_type[apt.get("kapt_name", "")] = apt.get("property_type", "apt")
@@ -714,7 +119,6 @@ def fill_nearby_complex(danji_list: list, apartments: list):
     def get_prop_type(danji):
         return name_to_type.get(danji.get("complex_name", ""), "apt")
 
-    # 거리 계산
     def haversine(lat1, lon1, lat2, lon2):
         if not all([lat1, lon1, lat2, lon2]):
             return 99999
@@ -723,7 +127,6 @@ def fill_nearby_complex(danji_list: list, apartments: list):
         a = 0.5 - math.cos((lat2-lat1)*p)/2 + math.cos(lat1*p)*math.cos(lat2*p)*(1-math.cos((lon2-lon1)*p))/2
         return R * 2 * math.asin(math.sqrt(a))
 
-    # property_type별 그룹
     type_groups = defaultdict(list)
     for d in danji_list:
         pt = get_prop_type(d)
@@ -736,17 +139,15 @@ def fill_nearby_complex(danji_list: list, apartments: list):
         if not lat1 or not lon1:
             continue
 
-        # 같은 타입에서 거리순 정렬 (자기 자신 제외)
         candidates = []
         for other in type_groups[pt]:
             if other["id"] == d["id"]:
                 continue
             dist = haversine(lat1, lon1, other.get("lat"), other.get("lng"))
-            if dist < 2000:  # 2km 이내
-                # 주변 단지의 매매 가격을 평형별로 저장
+            if dist < 2000:
                 rt = other.get("recent_trade") or {}
                 other_pm = other.get("pyeongs_map") or {}
-                prices = {}  # {"85": {"price":180000, "supply":172}, ...}
+                prices = {}
                 for k, v in rt.items():
                     if "_" not in k and k.isdigit():
                         area = int(k)
@@ -761,7 +162,6 @@ def fill_nearby_complex(danji_list: list, apartments: list):
                         }
                 if not prices:
                     continue
-
                 candidates.append({
                     "id": other["id"],
                     "name": other["complex_name"],
@@ -793,7 +193,6 @@ def fill_nearby_facilities(danji_list: list):
         a = 0.5 - math.cos((lat2-lat1)*p)/2 + math.cos(lat1*p)*math.cos(lat2*p)*(1-math.cos((lon2-lon1)*p))/2
         return R * 2 * math.asin(math.sqrt(a))
 
-    # 지하철역 전체 로드 (1282개)
     print("  지하철역 로드 중...")
     stations = []
     offset = 0
@@ -812,7 +211,6 @@ def fill_nearby_facilities(danji_list: list):
             break
     print(f"  → {len(stations)}개 역 로드")
 
-    # 학교 전체 로드 — 수도권 범위 (경기 남단 평택 36.99 ~ 경기 북단 연천 38.1)
     print("  학교 로드 중...")
     schools = []
     offset = 0
@@ -829,7 +227,6 @@ def fill_nearby_facilities(danji_list: list):
         offset += 1000
         if len(data) < 1000:
             break
-    # 수도권 범위 필터 (평택~연천, 인천 서해안 포함)
     schools = [s for s in schools if s.get("lat") and 36.9 < s["lat"] < 38.3 and 126.3 < s.get("lon", 0) < 127.9]
     print(f"  → {len(schools)}개 학교 로드 (수도권)")
 
@@ -840,29 +237,19 @@ def fill_nearby_facilities(danji_list: list):
         if not lat1 or not lon1:
             continue
 
-        # 지하철: 1km 이내 (도보 13분), 가까운 순 3개
         nearby_st = []
         for s in stations:
             dist = haversine(lat1, lon1, s.get("lat"), s.get("lon"))
             if dist < 1000:
-                nearby_st.append({
-                    "name": s["name"],
-                    "line": s.get("line", ""),
-                    "distance": round(dist),
-                })
+                nearby_st.append({"name": s["name"], "line": s.get("line", ""), "distance": round(dist)})
         nearby_st.sort(key=lambda x: x["distance"])
         d["nearby_subway"] = nearby_st[:3]
 
-        # 학교: 1.5km 이내, 초/중/고 각 1개씩 (가장 가까운)
         school_candidates = []
         for s in schools:
             dist = haversine(lat1, lon1, s.get("lat"), s.get("lon"))
             if dist < 1500:
-                school_candidates.append({
-                    "name": s["name"],
-                    "type": s.get("type", ""),
-                    "distance": round(dist),
-                })
+                school_candidates.append({"name": s["name"], "type": s.get("type", ""), "distance": round(dist)})
         school_candidates.sort(key=lambda x: x["distance"])
         nearby_sc = []
         picked = set()
@@ -883,114 +270,58 @@ def fill_nearby_facilities(danji_list: list):
 
 
 # ========================================================
-# 변동사항 보고서 이메일 발송
+# danji_pages nearby 필드 업데이트
 # ========================================================
-def send_report(total_trades, total_cached, danji_count, danji_list, elapsed, is_init=False):
-    """동기화 결과 보고서를 이메일로 발송"""
-    import smtplib
-    from email.mime.text import MIMEText
+def update_nearby(danji_list: list):
+    """nearby_subway, nearby_school, nearby_complex만 danji_pages에 upsert"""
+    if not danji_list:
+        return 0
 
-    smtp_user = os.environ.get("SMTP_USER", "")
-    smtp_pass = os.environ.get("SMTP_PASS", "")
-    report_to = os.environ.get("REPORT_EMAIL", "bgtrfvcdewsx77@gmail.com")
-
-    if not smtp_user or not smtp_pass:
-        print("📧 이메일 설정 없음 (SMTP_USER/SMTP_PASS) → 보고서 건너뜀")
-        return
-
-    today = datetime.now().strftime("%Y-%m-%d")
-    mode = "초기 수집 (36개월)" if is_init else "일일 동기화"
-    minutes = round(elapsed / 60, 1)
-
-    # 구별 집계
-    gu_stats = defaultdict(lambda: {"count": 0, "new_trades": 0})
+    rows = []
     for d in danji_list:
-        loc = d.get("location", "")
-        gu = loc.split(" ")[0] if loc else "기타"
-        gu_stats[gu]["count"] += 1
-        # 최근 거래 날짜가 이번달/전월이면 새 거래
-        rt = d.get("recent_trade") or {}
-        for k, v in rt.items():
-            if isinstance(v, dict) and v.get("date", "").startswith(today[:7]):
-                gu_stats[gu]["new_trades"] += 1
+        row = {"id": d["id"]}
+        if d.get("nearby_subway") is not None:
+            row["nearby_subway"] = d["nearby_subway"]
+        if d.get("nearby_school") is not None:
+            row["nearby_school"] = d["nearby_school"]
+        if d.get("nearby_complex") is not None:
+            row["nearby_complex"] = d["nearby_complex"]
+        if len(row) > 1:
+            rows.append(row)
 
-    # 최고가 거래 TOP 5
-    top_trades = []
-    for d in danji_list:
-        rt = d.get("recent_trade") or {}
-        cats = d.get("categories") or []
-        for c in cats:
-            t = rt.get(c)
-            if t and t.get("price") and t.get("date", "").startswith(today[:7]):
-                top_trades.append({
-                    "name": d.get("complex_name", ""),
-                    "location": d.get("location", ""),
-                    "price": t["price"],
-                    "date": t["date"],
-                    "area": c,
-                })
+    total = 0
+    batch_size = 50
+    for i in range(0, len(rows), batch_size):
+        batch = rows[i:i+batch_size]
+        for attempt in range(3):
+            try:
+                resp = sb_session.post(
+                    f"{SUPABASE_URL}/rest/v1/danji_pages?on_conflict=id",
+                    headers=SB_HEADERS,
+                    json=batch,
+                    timeout=60,
+                )
+                if resp.status_code in (200, 201):
+                    total += len(batch)
+                else:
+                    print(f"  ⚠️ nearby upsert 실패: {resp.status_code} {resp.text[:200]}")
                 break
-    top_trades.sort(key=lambda x: -x["price"])
-
-    # 보고서 본문
-    body = f"""휙 실거래가 동기화 보고서 ({today})
-{'='*50}
-
-모드: {mode}
-소요시간: {minutes}분
-수집 거래: {total_trades:,}건
-캐시 저장: {total_cached}행
-집계 단지: {danji_count:,}개
-
-구별 집계:
-"""
-    for gu in sorted(gu_stats.keys()):
-        s = gu_stats[gu]
-        body += f"  {gu}: {s['count']}개 단지"
-        if s["new_trades"] > 0:
-            body += f" (이번달 새 거래 {s['new_trades']}건)"
-        body += "\n"
-
-    if top_trades:
-        body += f"\n이번달 고가 거래 TOP 5:\n"
-        for i, t in enumerate(top_trades[:5]):
-            price_uk = t["price"] // 10000
-            price_rest = t["price"] % 10000
-            price_str = f"{price_uk}억" if price_uk > 0 else ""
-            if price_rest > 0:
-                price_str += f" {price_rest:,}"
-            body += f"  {i+1}. {t['name']} ({t['location']}) — {price_str}만원 ({t['area']}㎡, {t['date']})\n"
-
-    body += f"""
-{'='*50}
-자동 생성 보고서 — hwik.kr
-"""
-
-    # 이메일 발송
-    try:
-        msg = MIMEText(body, "plain", "utf-8")
-        msg["Subject"] = f"[휙] 실거래가 동기화 완료 — {today} ({danji_count:,}개 단지, {total_trades:,}건)"
-        msg["From"] = smtp_user
-        msg["To"] = report_to
-
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(smtp_user, smtp_pass)
-            server.sendmail(smtp_user, report_to, msg.as_string())
-
-        print(f"📧 보고서 이메일 발송 완료 → {report_to}")
-    except Exception as e:
-        print(f"⚠️ 이메일 발송 실패: {e}")
+            except Exception as e:
+                if attempt < 2:
+                    time.sleep(3)
+                else:
+                    print(f"  ⚠️ nearby upsert 예외: {e}")
+    return total
 
 
 # ========================================================
-# sitemap.xml 자동 생성
+# sitemap 생성
 # ========================================================
 def generate_sitemap(danji_list: list):
-    """DB 전체 danji_pages 기반 sitemap.xml 생성 (--gu 옵션에도 전체 반영)"""
+    """DB 전체 danji_pages 기반 sitemap.xml 생성"""
     base = "https://hwik.kr"
     today = datetime.now().strftime("%Y-%m-%d")
 
-    # DB에서 전체 danji_pages ID를 가져옴 (특정 구만 집계해도 sitemap은 전체)
     all_danji = []
     offset = 0
     while True:
@@ -1013,7 +344,6 @@ def generate_sitemap(danji_list: list):
     from slug_utils import make_danji_slug as _make_slug, make_dong_slug as _make_dong_slug
 
     urls = []
-    # 정적 페이지
     static_pages = [
         ('/', 'daily', '1.0'),
         ('/about.html', 'monthly', '0.3'),
@@ -1021,17 +351,15 @@ def generate_sitemap(danji_list: list):
     for path, freq, pri in static_pages:
         urls.append(f'  <url><loc>{base}{path}</loc><lastmod>{today}</lastmod><changefreq>{freq}</changefreq><priority>{pri}</priority></url>')
 
-    # 구/시 정적 페이지 (gu/ 폴더)
     gu_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "gu")
     if os.path.isdir(gu_dir):
         urls.append(f'  <url><loc>{base}/gu/</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>')
         for fname in sorted(os.listdir(gu_dir)):
             if fname.endswith(".html") and fname != "index.html":
-                slug = fname[:-5]  # .html 제거
+                slug = fname[:-5]
                 safe = _quote(slug, safe='-')
                 urls.append(f'  <url><loc>{base}/gu/{safe}</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>')
 
-    # 랭킹 정적 페이지 (ranking/ 폴더)
     rank_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ranking")
     if os.path.isdir(rank_dir):
         urls.append(f'  <url><loc>{base}/ranking/</loc><lastmod>{today}</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>')
@@ -1040,8 +368,6 @@ def generate_sitemap(danji_list: list):
                 slug = fname[:-5]
                 urls.append(f'  <url><loc>{base}/ranking/{slug}</loc><lastmod>{today}</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>')
 
-    # 단지 페이지 (거래 데이터 있는 단지만 — Google 신뢰도 향상)
-    # 실제 HTML 파일 목록 (파일 없는 URL은 sitemap에서 제외 — 크롤링 예산 낭비 방지)
     danji_html_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "danji")
     existing_slugs = set()
     if os.path.isdir(danji_html_dir):
@@ -1052,11 +378,9 @@ def generate_sitemap(danji_list: list):
         did = d.get("id", "")
         if not did:
             continue
-        # 오피스텔/구버전 apt- 제외 (아파트 신버전만)
         if did.startswith("offi-") or did.startswith("apt-"):
             excluded += 1
             continue
-        # 거래 데이터 있는지 확인
         rt = d.get("recent_trade") or {}
         cats = d.get("categories") or []
         has_trade = any(rt.get(c) for c in cats)
@@ -1065,11 +389,9 @@ def generate_sitemap(danji_list: list):
             continue
         slug = _make_slug(d.get("complex_name", ""), d.get("location", ""), did, d.get("address", ""))
         safe_slug = _quote(slug, safe="-")
-        # 실제 HTML 파일 없으면 sitemap 제외 (404 URL 방지)
         if existing_slugs and slug not in existing_slugs:
             excluded += 1
             continue
-        # lastmod: 최신 거래일 기반 (없으면 updated_at, 그것도 없으면 today)
         latest_trade_date = ""
         for c in cats:
             td = (rt.get(c) or {}).get("date", "")
@@ -1079,15 +401,12 @@ def generate_sitemap(danji_list: list):
         urls.append(f'  <url><loc>{base}/danji/{safe_slug}</loc><lastmod>{lastmod}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>')
         included += 1
 
-    # 동 페이지 (거래 있는 단지 3개 이상인 동만)
-    # key에 region 포함 → 지역 충돌 방지 (예: 대전 서구 둔산동 vs 전북 익산 둔산동)
     from collections import defaultdict as _defaultdict
     from slug_utils import detect_region as _detect_region
-    dong_trade_count = _defaultdict(int)  # (region, gu, dong) → 거래 있는 단지 수
-    dong_addr_cache = {}  # (region, gu, dong) → 첫 번째 non-empty address
-    dong_latest_date = {}  # (region, gu, dong) → 최신 거래일
+    dong_trade_count = _defaultdict(int)
+    dong_addr_cache = {}
+    dong_latest_date = {}
     for d in all_danji:
-        # 오피스텔 제외 (dong 집계에서도)
         if (d.get("id") or "").startswith("offi-"):
             continue
         loc = d.get("location", "")
@@ -1107,20 +426,18 @@ def generate_sitemap(danji_list: list):
             addr_val = d.get("address", "") or ""
             if addr_val and (key not in dong_addr_cache or not dong_addr_cache[key]):
                 dong_addr_cache[key] = addr_val
-            # 동 내 최신 거래일 추적
             for c in cats:
                 td = (rt.get(c) or {}).get("date", "")
                 if td and td > dong_latest_date.get(key, ""):
                     dong_latest_date[key] = td
 
-    # 실제 dong HTML 파일 목록 (파일 없는 URL은 sitemap에서 제외)
     dong_html_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dong")
     existing_dong_slugs = set()
     if os.path.isdir(dong_html_dir):
         existing_dong_slugs = {f[:-5] for f in os.listdir(dong_html_dir) if f.endswith(".html")}
 
     dong_count = 0
-    seen_dong_slugs = set()  # 동일 URL 중복 방지
+    seen_dong_slugs = set()
     for (region, gu, dong), cnt in sorted(dong_trade_count.items()):
         if cnt < 3:
             continue
@@ -1129,7 +446,6 @@ def generate_sitemap(danji_list: list):
         safe_dong_slug = _quote(dong_slug, safe="-")
         if safe_dong_slug in seen_dong_slugs:
             continue
-        # 실제 HTML 파일 없으면 sitemap 제외
         if existing_dong_slugs and dong_slug not in existing_dong_slugs:
             continue
         seen_dong_slugs.add(safe_dong_slug)
@@ -1142,37 +458,20 @@ def generate_sitemap(danji_list: list):
     xml += '\n'.join(urls)
     xml += '\n</urlset>\n'
 
-    # 스크립트와 같은 폴더의 sitemap.xml에 저장
     sitemap_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sitemap.xml")
     with open(sitemap_path, "w", encoding="utf-8") as f:
         f.write(xml)
-    print(f"\n🗺️  sitemap.xml 생성: 단지 {included}개 + 동 {dong_count}개 포함, {excluded}개 제외 (거래 없음)")
+    print(f"\n🗺️  sitemap.xml 생성: 단지 {included}개 + 동 {dong_count}개 포함, {excluded}개 제외")
 
 
 # ========================================================
 # 메인
 # ========================================================
 def main():
-    parser = argparse.ArgumentParser(description="실거래가 동기화")
-    parser.add_argument("--init", action="store_true", help="초기 36개월 전체 수집")
-    parser.add_argument("--months", type=int, default=2, help="수집할 월 수 (기본: 2 = 당월+전월)")
-    parser.add_argument("--skip-aggregate", action="store_true", help="집계 건너뛰기 (수집만)")
-    parser.add_argument("--aggregate-only", action="store_true", help="집계만 (수집 건너뛰기)")
-    parser.add_argument("--sitemap-only", action="store_true", help="sitemap만 재생성 (DB danji_pages 기반)")
-    parser.add_argument("--gu", default=None, help="특정 구/시만 (예: 11440=마포구, 28185=연수구, 41135=분당구)")
-    parser.add_argument("--seoul", action="store_true", help="서울 전체만 처리")
-    parser.add_argument("--gyeonggi", action="store_true", help="경기도 전체만 처리")
-    parser.add_argument("--incheon", action="store_true", help="인천 전체만 처리")
-    parser.add_argument("--busan", action="store_true", help="부산 전체만 처리")
-    parser.add_argument("--daegu", action="store_true", help="대구 전체만 처리")
-    parser.add_argument("--gwangju", action="store_true", help="광주 전체만 처리")
-    parser.add_argument("--daejeon", action="store_true", help="대전 전체만 처리")
-    parser.add_argument("--ulsan", action="store_true", help="울산 전체만 처리")
-    parser.add_argument("--reset-danji", action="store_true", help="danji_pages 전체 삭제 후 재생성")
+    parser = argparse.ArgumentParser(description="sitemap 재생성 / 주변 단지·시설 업데이트")
+    parser.add_argument("--sitemap-only", action="store_true", help="sitemap.xml 재생성")
+    parser.add_argument("--nearby-only",  action="store_true", help="주변 단지/지하철/학교 업데이트")
     args = parser.parse_args()
-
-    months = 36 if args.init else args.months
-    now = datetime.now()
 
     # DB 연결 테스트 + fallback
     global SUPABASE_URL
@@ -1190,163 +489,51 @@ def main():
         except Exception:
             pass
     else:
-        print("❌ DB 연결 실패 (메인 + fallback 모두)")
+        print("❌ DB 연결 실패")
         sys.exit(1)
 
-    # --sitemap-only: DB에서 danji_pages만 읽어 sitemap 재생성 후 종료
     if args.sitemap_only:
-        print("🗺️  sitemap만 재생성 (--sitemap-only)")
-        generate_sitemap([])  # all_danji는 내부에서 DB 조회
+        print("🗺️  sitemap 재생성 중...")
+        generate_sitemap([])
         return
 
-    print(f"{'='*50}")
-    print(f"🔄 실거래가 동기화")
-    print(f"   모드: {'초기 수집 (36개월)' if args.init else f'일일 동기화 ({months}개월)'}")
-    print(f"   시각: {now.strftime('%Y-%m-%d %H:%M')}")
-    print(f"{'='*50}\n")
+    if args.nearby_only:
+        print("🏘️  주변 단지/시설 업데이트 중...")
+        apartments = load_apartments()
 
-    if args.gu:
-        lawd_codes = [args.gu]
-    elif args.seoul:
-        lawd_codes = list(SEOUL_GU.keys())
-    elif args.gyeonggi:
-        lawd_codes = list(GYEONGGI_SI.keys())
-    elif args.incheon:
-        lawd_codes = list(INCHEON_GU.keys())
-    elif args.busan:
-        lawd_codes = list(BUSAN_GU.keys())
-    elif args.daegu:
-        lawd_codes = list(DAEGU_GU.keys())
-    elif args.gwangju:
-        lawd_codes = list(GWANGJU_GU.keys())
-    elif args.daejeon:
-        lawd_codes = list(DAEJEON_GU.keys())
-    elif args.ulsan:
-        lawd_codes = list(ULSAN_GU.keys())
-    else:
-        lawd_codes = list(ALL_REGIONS.keys())
-
-    # 1단계: 수집 + 저장 (--aggregate-only면 건너뜀)
-    total_trades = 0
-    total_cached = 0
-    if not args.aggregate_only:
-        ym_list = [(now - relativedelta(months=i)).strftime("%Y%m") for i in range(months)]
-        print(f"📅 수집 대상: {ym_list[0]} ~ {ym_list[-1]} ({len(ym_list)}개월)")
-        for ym in ym_list:
-            print(f"\n── {ym} ──")
-            all_data = fetch_all_for_month(ym, lawd_codes)
-            if all_data:
-                cached = upsert_trade_cache(ym, all_data)
-                total_cached += cached
-                total_trades += sum(len(v) for v in all_data.values())
-            time.sleep(0.5)  # API 부하 방지
-        print(f"\n✅ 수집 완료: {total_trades}건 → trade_cache {total_cached}행 저장")
-    else:
-        print("⏭️  수집 건너뜀 (--aggregate-only)")
-
-    # 2단계: 집계
-    if args.skip_aggregate:
-        print("⏭️  집계 건너뜀 (--skip-aggregate)")
-        return
-
-    # --reset-danji: 기존 danji_pages 전체 삭제
-    if args.reset_danji:
-        print(f"\n🗑️  danji_pages 전체 삭제 중...")
-        del_count = 0
+        # danji_pages에서 lat/lng/id/complex_name/recent_trade/pyeongs_map 로드
+        danji_list = []
+        offset = 0
         while True:
             resp = sb_session.get(
-                f"{SUPABASE_URL}/rest/v1/danji_pages?select=id&limit=500",
+                f"{SUPABASE_URL}/rest/v1/danji_pages",
                 headers={**SB_HEADERS, "Prefer": ""},
+                params={"select": "id,complex_name,location,lat,lng,recent_trade,pyeongs_map",
+                        "order": "id", "offset": offset, "limit": 500},
                 timeout=30,
             )
-            ids = [r["id"] for r in resp.json()] if resp.status_code == 200 else []
-            if not ids:
+            data = resp.json() if resp.status_code == 200 else []
+            if not data:
                 break
-            for batch_start in range(0, len(ids), 50):
-                batch_ids = ids[batch_start:batch_start + 50]
-                id_filter = ",".join(f'"{i}"' for i in batch_ids)
-                sb_session.delete(
-                    f"{SUPABASE_URL}/rest/v1/danji_pages?id=in.({id_filter})",
-                    headers={**SB_HEADERS, "Prefer": ""},
-                    timeout=30,
-                )
-                del_count += len(batch_ids)
-            print(f"  삭제 {del_count}건...")
-        print(f"✅ danji_pages 전체 삭제 완료: {del_count}건")
+            danji_list.extend(data)
+            offset += 500
+            if len(data) < 500:
+                break
+        print(f"📦 danji_pages: {len(danji_list)}개 로드")
 
-    print(f"\n{'='*50}")
-    print(f"📊 danji_pages 집계 시작")
-    print(f"{'='*50}\n")
-
-    apartments = load_apartments()
-    if not apartments:
-        print("❌ apartments 테이블 비어있음")
+        fill_nearby_complex(danji_list, apartments)
+        fill_nearby_facilities(danji_list)
+        updated = update_nearby(danji_list)
+        print(f"✅ {updated}개 nearby 업데이트 완료")
         return
 
-    # 구별로 처리 (서울+인천+경기)
-    gu_apts = defaultdict(list)
-    for apt in apartments:
-        code = apt.get("lawd_cd") or ""
-        if code in ALL_REGIONS:
-            gu_apts[code].append(apt)
-
-    danji_list = []
-    for code in lawd_codes:
-        if code not in gu_apts:
-            continue
-        gu_name = ALL_REGIONS.get(code, code)
-        apts = gu_apts[code]
-        print(f"\n  {gu_name}: {len(apts)}개 단지")
-
-        # 이 구의 trade_cache 로드
-        cache_rows = load_trade_cache_for_gu(code)
-        if not cache_rows:
-            print(f"    ⚠️ trade_cache 없음")
-            continue
-
-        for apt in apts:
-            trades = match_trades_to_complex(apt, cache_rows)
-            if not trades:
-                continue
-            danji = aggregate_danji(apt, trades)
-            if danji:
-                danji_list.append(danji)
-
-        gu_count = sum(1 for d in danji_list if d.get('location','').startswith(gu_name))
-        print(f"    → {gu_count}개 집계")
-
-    # 주변 단지 매칭 (같은 property_type끼리)
-    print(f"\n🏘️  주변 단지 매칭 중...")
-    fill_nearby_complex(danji_list, apartments)
-
-    # 주변 지하철/학교 매칭
-    print(f"\n🚇 주변 지하철/학교 매칭 중...")
-    fill_nearby_facilities(danji_list)
-
-    print(f"\n📦 danji_pages 업데이트: {len(danji_list)}개 단지")
-    if danji_list:
-        updated = update_danji_pages(danji_list)
-        print(f"✅ {updated}개 upsert 완료")
-
-    # sitemap.xml 자동 생성
-    generate_sitemap(danji_list)
-
-    # 변동사항 보고서 생성 + 이메일 발송
-    elapsed = (datetime.now() - now).total_seconds()
-    send_report(
-        total_trades=total_trades,
-        total_cached=total_cached,
-        danji_count=len(danji_list),
-        danji_list=danji_list,
-        elapsed=elapsed,
-        is_init=args.init,
-    )
-
-    print(f"\n{'='*50}")
-    print(f"🏁 동기화 완료")
-    print(f"   거래: {total_trades}건")
-    print(f"   단지: {len(danji_list)}개")
-    print(f"{'='*50}")
+    print("사용법:")
+    print("  python sync_trades.py --sitemap-only   # sitemap 재생성")
+    print("  python sync_trades.py --nearby-only    # 주변 단지/시설 업데이트")
+    print()
+    print("실거래 수집/집계는 새 파이프라인 사용:")
+    print("  python collect_trades_v2.py --region all  # 실거래 수집")
+    print("  python build_danji_from_v2.py --region all  # 집계")
 
 
 if __name__ == "__main__":
