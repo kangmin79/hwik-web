@@ -43,10 +43,8 @@ def norm(u):
         path = path[:-1]
     return path
 
-import time as _time
-
 # 매일 다른 샘플 (하루 단위 시드)
-_DAILY_SEED = int(_time.time() // 86400)
+_DAILY_SEED = int(time.time() // 86400)
 
 def sample_from_folder(folder, count):
     path = os.path.join(BASE, folder)
@@ -279,7 +277,7 @@ def main():
 
         # PASS 3: danji 페이지의 주변 단지 런타임 href 오염 검사 (depth-2 클릭 포함)
         # 정적 HTML의 href 와 JS 실행 후 DOM의 href 가 다르면 런타임 덮어쓰기 버그
-        danji_sample = sample_from_folder("danji", 20)
+        danji_sample = sample_danji_by_region(1)  # 지역별 균등 (17개 지역 × 1개)
         print(f"\n--- PASS 3: danji {len(danji_sample)}개 페이지의 주변 단지 런타임 href 검사 ---")
         pass3_issues = []
         for url in danji_sample:
