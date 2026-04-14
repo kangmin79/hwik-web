@@ -70,11 +70,15 @@ jobs:
       - name: 서울 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
+          ok=0
           for attempt in 1 2 3; do
-            python collect_trades_v2.py --region seoul $FLAG && break
+            if python collect_trades_v2.py --region seoul $FLAG; then
+              ok=1; break
+            fi
             echo "[$attempt/3] 실패, 30초 후 재시도..."
             [ $attempt -lt 3 ] && sleep 30
           done
+          [ $ok -eq 1 ]  # 3회 모두 실패 시 명시적 exit 1
 
   # ── 인천 ──────────────────────────────────────────────
   sync-incheon:
@@ -94,11 +98,15 @@ jobs:
       - name: 인천 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
+          ok=0
           for attempt in 1 2 3; do
-            python collect_trades_v2.py --region incheon $FLAG && break
+            if python collect_trades_v2.py --region incheon $FLAG; then
+              ok=1; break
+            fi
             echo "[$attempt/3] 실패, 30초 후 재시도..."
             [ $attempt -lt 3 ] && sleep 30
           done
+          [ $ok -eq 1 ]  # 3회 모두 실패 시 명시적 exit 1
 
   # ── 경기 ──────────────────────────────────────────────
   sync-gyeonggi:
@@ -118,11 +126,15 @@ jobs:
       - name: 경기 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
+          ok=0
           for attempt in 1 2 3; do
-            python collect_trades_v2.py --region gyeonggi $FLAG && break
+            if python collect_trades_v2.py --region gyeonggi $FLAG; then
+              ok=1; break
+            fi
             echo "[$attempt/3] 실패, 30초 후 재시도..."
             [ $attempt -lt 3 ] && sleep 30
           done
+          [ $ok -eq 1 ]  # 3회 모두 실패 시 명시적 exit 1
 
   # ── 부산 ──────────────────────────────────────────────
   sync-busan:
@@ -142,11 +154,15 @@ jobs:
       - name: 부산 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
+          ok=0
           for attempt in 1 2 3; do
-            python collect_trades_v2.py --region busan $FLAG && break
+            if python collect_trades_v2.py --region busan $FLAG; then
+              ok=1; break
+            fi
             echo "[$attempt/3] 실패, 30초 후 재시도..."
             [ $attempt -lt 3 ] && sleep 30
           done
+          [ $ok -eq 1 ]  # 3회 모두 실패 시 명시적 exit 1
 
   # ── 대구 ──────────────────────────────────────────────
   sync-daegu:
@@ -166,11 +182,15 @@ jobs:
       - name: 대구 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
+          ok=0
           for attempt in 1 2 3; do
-            python collect_trades_v2.py --region daegu $FLAG && break
+            if python collect_trades_v2.py --region daegu $FLAG; then
+              ok=1; break
+            fi
             echo "[$attempt/3] 실패, 30초 후 재시도..."
             [ $attempt -lt 3 ] && sleep 30
           done
+          [ $ok -eq 1 ]  # 3회 모두 실패 시 명시적 exit 1
 
   # ── 광주 ──────────────────────────────────────────────
   sync-gwangju:
@@ -190,11 +210,15 @@ jobs:
       - name: 광주 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
+          ok=0
           for attempt in 1 2 3; do
-            python collect_trades_v2.py --region gwangju $FLAG && break
+            if python collect_trades_v2.py --region gwangju $FLAG; then
+              ok=1; break
+            fi
             echo "[$attempt/3] 실패, 30초 후 재시도..."
             [ $attempt -lt 3 ] && sleep 30
           done
+          [ $ok -eq 1 ]  # 3회 모두 실패 시 명시적 exit 1
 
   # ── 대전 ──────────────────────────────────────────────
   sync-daejeon:
@@ -214,11 +238,15 @@ jobs:
       - name: 대전 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
+          ok=0
           for attempt in 1 2 3; do
-            python collect_trades_v2.py --region daejeon $FLAG && break
+            if python collect_trades_v2.py --region daejeon $FLAG; then
+              ok=1; break
+            fi
             echo "[$attempt/3] 실패, 30초 후 재시도..."
             [ $attempt -lt 3 ] && sleep 30
           done
+          [ $ok -eq 1 ]  # 3회 모두 실패 시 명시적 exit 1
 
   # ── 울산 ──────────────────────────────────────────────
   sync-ulsan:
@@ -238,11 +266,15 @@ jobs:
       - name: 울산 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
+          ok=0
           for attempt in 1 2 3; do
-            python collect_trades_v2.py --region ulsan $FLAG && break
+            if python collect_trades_v2.py --region ulsan $FLAG; then
+              ok=1; break
+            fi
             echo "[$attempt/3] 실패, 30초 후 재시도..."
             [ $attempt -lt 3 ] && sleep 30
           done
+          [ $ok -eq 1 ]  # 3회 모두 실패 시 명시적 exit 1
 
   # ── 세종 ──────────────────────────────────────────────
   sync-sejong:
@@ -262,11 +294,15 @@ jobs:
       - name: 세종 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
+          ok=0
           for attempt in 1 2 3; do
-            python collect_trades_v2.py --region sejong $FLAG && break
+            if python collect_trades_v2.py --region sejong $FLAG; then
+              ok=1; break
+            fi
             echo "[$attempt/3] 실패, 30초 후 재시도..."
             [ $attempt -lt 3 ] && sleep 30
           done
+          [ $ok -eq 1 ]  # 3회 모두 실패 시 명시적 exit 1
 
   # ── 충북 ──────────────────────────────────────────────
   sync-chungbuk:
@@ -286,11 +322,15 @@ jobs:
       - name: 충북 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
+          ok=0
           for attempt in 1 2 3; do
-            python collect_trades_v2.py --region chungbuk $FLAG && break
+            if python collect_trades_v2.py --region chungbuk $FLAG; then
+              ok=1; break
+            fi
             echo "[$attempt/3] 실패, 30초 후 재시도..."
             [ $attempt -lt 3 ] && sleep 30
           done
+          [ $ok -eq 1 ]  # 3회 모두 실패 시 명시적 exit 1
 
   # ── 충남 ──────────────────────────────────────────────
   sync-chungnam:
@@ -310,11 +350,15 @@ jobs:
       - name: 충남 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
+          ok=0
           for attempt in 1 2 3; do
-            python collect_trades_v2.py --region chungnam $FLAG && break
+            if python collect_trades_v2.py --region chungnam $FLAG; then
+              ok=1; break
+            fi
             echo "[$attempt/3] 실패, 30초 후 재시도..."
             [ $attempt -lt 3 ] && sleep 30
           done
+          [ $ok -eq 1 ]  # 3회 모두 실패 시 명시적 exit 1
 
   # ── 전북 ──────────────────────────────────────────────
   sync-jeonbuk:
@@ -334,11 +378,15 @@ jobs:
       - name: 전북 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
+          ok=0
           for attempt in 1 2 3; do
-            python collect_trades_v2.py --region jeonbuk $FLAG && break
+            if python collect_trades_v2.py --region jeonbuk $FLAG; then
+              ok=1; break
+            fi
             echo "[$attempt/3] 실패, 30초 후 재시도..."
             [ $attempt -lt 3 ] && sleep 30
           done
+          [ $ok -eq 1 ]  # 3회 모두 실패 시 명시적 exit 1
 
   # ── 전남 ──────────────────────────────────────────────
   sync-jeonnam:
@@ -358,11 +406,15 @@ jobs:
       - name: 전남 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
+          ok=0
           for attempt in 1 2 3; do
-            python collect_trades_v2.py --region jeonnam $FLAG && break
+            if python collect_trades_v2.py --region jeonnam $FLAG; then
+              ok=1; break
+            fi
             echo "[$attempt/3] 실패, 30초 후 재시도..."
             [ $attempt -lt 3 ] && sleep 30
           done
+          [ $ok -eq 1 ]  # 3회 모두 실패 시 명시적 exit 1
 
   # ── 경북 ──────────────────────────────────────────────
   sync-gyeongbuk:
@@ -382,11 +434,15 @@ jobs:
       - name: 경북 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
+          ok=0
           for attempt in 1 2 3; do
-            python collect_trades_v2.py --region gyeongbuk $FLAG && break
+            if python collect_trades_v2.py --region gyeongbuk $FLAG; then
+              ok=1; break
+            fi
             echo "[$attempt/3] 실패, 30초 후 재시도..."
             [ $attempt -lt 3 ] && sleep 30
           done
+          [ $ok -eq 1 ]  # 3회 모두 실패 시 명시적 exit 1
 
   # ── 경남 ──────────────────────────────────────────────
   sync-gyeongnam:
@@ -406,11 +462,15 @@ jobs:
       - name: 경남 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
+          ok=0
           for attempt in 1 2 3; do
-            python collect_trades_v2.py --region gyeongnam $FLAG && break
+            if python collect_trades_v2.py --region gyeongnam $FLAG; then
+              ok=1; break
+            fi
             echo "[$attempt/3] 실패, 30초 후 재시도..."
             [ $attempt -lt 3 ] && sleep 30
           done
+          [ $ok -eq 1 ]  # 3회 모두 실패 시 명시적 exit 1
 
   # ── 강원 ──────────────────────────────────────────────
   sync-gangwon:
@@ -430,11 +490,15 @@ jobs:
       - name: 강원 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
+          ok=0
           for attempt in 1 2 3; do
-            python collect_trades_v2.py --region gangwon $FLAG && break
+            if python collect_trades_v2.py --region gangwon $FLAG; then
+              ok=1; break
+            fi
             echo "[$attempt/3] 실패, 30초 후 재시도..."
             [ $attempt -lt 3 ] && sleep 30
           done
+          [ $ok -eq 1 ]  # 3회 모두 실패 시 명시적 exit 1
 
   # ── 제주 ──────────────────────────────────────────────
   sync-jeju:
@@ -454,11 +518,15 @@ jobs:
       - name: 제주 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
+          ok=0
           for attempt in 1 2 3; do
-            python collect_trades_v2.py --region jeju $FLAG && break
+            if python collect_trades_v2.py --region jeju $FLAG; then
+              ok=1; break
+            fi
             echo "[$attempt/3] 실패, 30초 후 재시도..."
             [ $attempt -lt 3 ] && sleep 30
           done
+          [ $ok -eq 1 ]  # 3회 모두 실패 시 명시적 exit 1
 
   # ── sitemap + 정적 페이지 빌드 (17개 job 완료 후) ────────
   build:
@@ -525,7 +593,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add sitemap.xml danji/ dong/ gu/ ranking/
+          git add -A sitemap.xml danji/ dong/ gu/ ranking/
           if git diff --cached --quiet; then
             echo "변경 없음"
           else
