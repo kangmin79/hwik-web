@@ -204,7 +204,7 @@ def main():
         targets.append(("gu", url, None))
     for url in sample_from_folder("dong", 6):
         targets.append(("dong", url, None))
-    for url in sample_danji_by_region(1):   # 지역별 균등 샘플 (17개 지역 × 1개)
+    for url in sample_danji_by_region(3):   # 지역별 균등 샘플 (17개 지역 × 3개)
         targets.append(("danji", url, None))
     for url in sample_from_folder("ranking", 6):
         targets.append(("ranking", url, None))
