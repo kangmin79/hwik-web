@@ -265,8 +265,17 @@ def fetch_complex_type_map():
 
 
 def get_prop_type(did):
-    """ID에서 건물 유형 판별: offi- → 오피스텔, 그 외 → 아파트"""
-    return "오피스텔" if did.startswith("offi-") else "아파트"
+    """건물 유형 반환. COMPLEX_TYPE_MAP 로드 후에는 실제 유형 반환.
+    미로드 시(빌드 초기)에는 '아파트'로 fallback — 안전.
+    """
+    if did.startswith("offi-"):
+        return "오피스텔"
+    ctype = COMPLEX_TYPE_MAP.get(did.lower(), "")
+    if ctype in ("주상복합", "도시형 생활주택(주상복합)"):
+        return "주상복합"
+    if ctype == "도시형 생활주택(아파트)":
+        return "도시형 생활주택"
+    return "아파트"
 
 
 def get_complex_type_tag(did):
@@ -284,6 +293,14 @@ def get_complex_type_tag(did):
     )
 
 
+def _pt_ro(pt):
+    """'아파트로' / '주상복합으로' — 받침 유무에 따라 로/으로 결정."""
+    last = pt.rstrip()[-1]
+    code = ord(last) - 0xAC00
+    batchim = code % 28
+    return pt + ("으로" if batchim not in (0, 8) else "로")  # ㄹ받침(8)도 '로'
+
+
 def build_intro_sentence(name, addr, year, units, builder, bc, rt, jr, prop_type="아파트"):
     """데이터 특성에 따라 다른 서두 문장 생성 — 콘텐츠 다양화"""
     from datetime import datetime as _dt
@@ -293,6 +310,7 @@ def build_intro_sentence(name, addr, year, units, builder, bc, rt, jr, prop_type
     price = safe_int(rt[bc].get("price"), 0) if bc and rt.get(bc) else 0
 
     pt = prop_type
+    pt_ro = _pt_ro(pt)  # 받침 고려한 '로/으로'
     # 신축 대단지
     if age is not None and age <= 5 and unit_count >= 1000:
         return f"{name}{josa(name,'은/는')} {year}년 준공된 {unit_count:,}세대 규모의 신축 대단지로, {addr}에 있습니다."
@@ -301,7 +319,7 @@ def build_intro_sentence(name, addr, year, units, builder, bc, rt, jr, prop_type
         return f"{addr}에 위치한 {name}{josa(name,'은/는')} {year}년 준공된 신축 {pt}입니다."
     # 대단지
     if unit_count >= 1000 and year:
-        return f"{name}{josa(name,'은/는')} {addr}의 {unit_count:,}세대 대단지 {pt}로, {year}년에 준공되었습니다."
+        return f"{name}{josa(name,'은/는')} {addr}의 {unit_count:,}세대 대단지 {pt_ro}, {year}년에 준공되었습니다."
     if unit_count >= 1000:
         return f"{name}{josa(name,'은/는')} {addr}의 {unit_count:,}세대 대단지 {pt}입니다."
     # 전세 수요 높음
@@ -318,8 +336,8 @@ def build_intro_sentence(name, addr, year, units, builder, bc, rt, jr, prop_type
     major = ["삼성물산", "현대건설", "대우건설", "GS건설", "포스코건설", "대림산업", "롯데건설", "HDC현대산업개발"]
     if builder and any(b in builder for b in major):
         if year:
-            return f"{name}{josa(name,'은/는')} {builder} 시공의 {pt}로, {addr}에 위치하며 {year}년 준공되었습니다."
-        return f"{name}{josa(name,'은/는')} {builder} 시공의 {pt}로, {addr}에 위치합니다."
+            return f"{name}{josa(name,'은/는')} {builder} 시공의 {pt_ro}, {addr}에 위치하며 {year}년 준공되었습니다."
+        return f"{name}{josa(name,'은/는')} {builder} 시공의 {pt_ro}, {addr}에 위치합니다."
     # 구축
     if age is not None and age >= 30:
         return f"{year}년 준공된 {name}{josa(name,'은/는')} {addr}에 위치한 {pt}입니다."
