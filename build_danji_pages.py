@@ -1002,11 +1002,11 @@ def main():
         print("❌ 데이터 0건 — 중단 (기존 페이지 유지)")
         sys.exit(1)
 
-    # 급감 가드: 기존 파일 수 대비 80% 미만이면 중단
+    # 급감 가드: 기존 파일 수 대비 99% 미만이면 중단
     # (Supabase 네트워크 오류로 일부만 받은 경우 전체 HTML 삭제 방지)
-    if existing_html_count > 1000 and len(all_danji) < existing_html_count * 0.9:
+    if existing_html_count > 1000 and len(all_danji) < existing_html_count * 0.99:
         print(f"❌ 급감 감지 — DB {len(all_danji)}건 vs 기존 HTML {existing_html_count}개 "
-              f"(비율 {len(all_danji)/existing_html_count:.1%}, 90% 미만) — 중단 (기존 페이지 유지)")
+              f"(비율 {len(all_danji)/existing_html_count:.1%}, 99% 미만) — 중단 (기존 페이지 유지)")
         sys.exit(1)
 
     print(f"{len(all_danji)}개 단지 로드 (기존 대비 {len(all_danji)/existing_html_count:.1%})" if existing_html_count else f"{len(all_danji)}개 단지 로드")
