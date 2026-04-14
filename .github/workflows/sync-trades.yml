@@ -557,7 +557,7 @@ jobs:
         continue-on-error: true
         run: python build_og_images.py 2>&1 | tee /tmp/log_og.txt
       - name: 동 OG 이미지 생성 (변경분만)
-        timeout-minutes: 10
+        timeout-minutes: 50
         continue-on-error: true
         run: python build_og_images_dong.py 2>&1 | tee /tmp/log_og_dong.txt
       - name: 랭킹 정적 페이지 빌드
@@ -598,6 +598,7 @@ jobs:
             echo "변경 없음"
           else
             git commit -m "자동 빌드: sitemap + 단지 페이지 ($(date -u +%Y-%m-%d))"
+            git pull --rebase origin main
             git push
           fi
 
