@@ -43,15 +43,23 @@ RANK_DIR = os.path.join(BASE_DIR, "ranking")
 BUILD_TIME = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S+00:00")
 
 REGION_LABELS = {
+    "all": "전체",
     "seoul": "서울", "incheon": "인천", "gyeonggi": "경기",
     "busan": "부산", "daegu": "대구", "gwangju": "광주", "daejeon": "대전", "ulsan": "울산",
-    "all": "전체",
+    "chungbuk": "충북", "chungnam": "충남",
+    "jeonbuk": "전북", "jeonnam": "전남",
+    "gyeongbuk": "경북", "gyeongnam": "경남",
+    "gangwon": "강원", "jeju": "제주", "sejong": "세종",
 }
 # slug_utils.detect_region() 반환 라벨 → region_key
 REGION_LABEL_TO_KEY = {
     "서울": "seoul", "인천": "incheon", "경기": "gyeonggi",
     "부산": "busan", "대구": "daegu", "광주": "gwangju",
     "대전": "daejeon", "울산": "ulsan",
+    "충북": "chungbuk", "충남": "chungnam",
+    "전북": "jeonbuk", "전남": "jeonnam",
+    "경북": "gyeongbuk", "경남": "gyeongnam",
+    "강원": "gangwon", "제주": "jeju", "세종": "sejong",
 }
 TYPE_LABELS = {"price": "매매가", "sqm": "㎡당 가격", "jeonse": "전세가율 높은", "jeonse_low": "전세가율 낮은"}
 
@@ -129,9 +137,7 @@ def process_data(all_danji):
 
         # address 기반 지역 판정 (광역시 구 이름 충돌 방지)
         region_label = slug_detect_region(d.get("address", ""))
-        region_key = REGION_LABEL_TO_KEY.get(region_label, "etc")
-        if region_key == "etc":
-            region_key = "all"  # 도 단위(충북·충남 등)는 전체 랭킹에만 포함
+        region_key = REGION_LABEL_TO_KEY.get(region_label, "all")
 
         result.append({
             "id": d["id"], "name": d["complex_name"],
@@ -354,25 +360,30 @@ def wrap_html(title, desc, canonical, body, jsonld_str):
 def build_hub_html():
     """/ranking/ 허브 페이지 — self-canonical, 9개 지역 × 4개 타입 전체 링크.
     중복 콘텐츠 방지를 위해 seoul-price.html 과 다른 본문/메타 사용."""
-    title = "전국 아파트 순위 - 서울·인천·경기·5대 광역시 | 휙"
-    desc = "서울·인천·경기·부산·대구·광주·대전·울산 아파트 매매가·㎡당·전세가율 순위 TOP 50. 국토교통부 실거래가 기반."
+    title = "전국 아파트 순위 - 서울·경기·부산·충청·경상·전라·강원·제주 | 휙"
+    desc = "서울·인천·경기·부산·대구·광주·대전·울산·충북·충남·전북·전남·경북·경남·강원·제주·세종 아파트 매매가·㎡당·전세가율 순위 TOP 50. 국토교통부 실거래가 기반."
     canonical = "https://hwik.kr/ranking/"
 
     # 본문
     lines = []
     lines.append('<header class="header"><div class="header-top">')
     lines.append('  <a class="logo" href="/" style="text-decoration:none;">휙</a>')
-    lines.append('  <div><div class="header-name">전국 아파트 순위</div><div class="header-sub">서울·인천·경기·5대 광역시</div></div>')
+    lines.append('  <div><div class="header-name">전국 아파트 순위</div><div class="header-sub">서울·경기·인천·부산·충청·경상·전라·강원·제주</div></div>')
     lines.append('</div></header>')
     lines.append('<nav class="breadcrumb"><a href="/">휙</a><span>&gt;</span>순위</nav>')
 
     # 스토리텔링용 H2 섹션 (얇은 콘텐츠 방지)
     lines.append('<div class="section"><h2 style="font-size:16px;margin:8px 0 12px;">무엇을 볼 수 있나요?</h2>')
-    lines.append('<p style="font-size:13px;color:var(--sub);line-height:1.7;">국토교통부 실거래가 공개시스템을 기반으로 서울·인천·경기 및 5대 광역시의 아파트 매매가·㎡당 가격·전세가율 순위를 지역별로 확인할 수 있습니다. 각 지역별로 최근 실거래가 있는 아파트만 집계하며, 매일 새벽 자동 갱신됩니다.</p>')
+    lines.append('<p style="font-size:13px;color:var(--sub);line-height:1.7;">국토교통부 실거래가 공개시스템을 기반으로 전국 17개 시도 아파트 매매가·㎡당 가격·전세가율 순위를 지역별로 확인할 수 있습니다. 각 지역별로 최근 실거래가 있는 아파트만 집계하며, 매일 새벽 자동 갱신됩니다.</p>')
     lines.append('</div>')
 
     # 지역 × 타입 링크 그리드
-    region_order = ["all", "seoul", "incheon", "gyeonggi", "busan", "daegu", "gwangju", "daejeon", "ulsan"]
+    region_order = [
+        "all", "seoul", "incheon", "gyeonggi",
+        "busan", "daegu", "gwangju", "daejeon", "ulsan",
+        "chungbuk", "chungnam", "jeonbuk", "jeonnam",
+        "gyeongbuk", "gyeongnam", "gangwon", "jeju", "sejong",
+    ]
     type_order = [("price", "매매가"), ("sqm", "㎡당 가격"), ("jeonse", "전세가율 높은"), ("jeonse_low", "전세가율 낮은")]
 
     for region in region_order:
