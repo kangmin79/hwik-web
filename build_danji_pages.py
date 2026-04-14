@@ -972,11 +972,24 @@ def main():
 
     # ── 데이터 먼저 확보 (실패 시 기존 파일 보존) ──
     print("danji_pages 조회 중...")
+
+    # 기존 HTML 수 미리 파악 (급감 가드용)
+    existing_html_count = len([f for f in os.listdir(DANJI_DIR) if f.endswith(".html")])
+    print(f"기존 HTML {existing_html_count}개 확인")
+
     all_danji = fetch_all_danji()
     if not all_danji:
         print("❌ 데이터 0건 — 중단 (기존 페이지 유지)")
         sys.exit(1)
-    print(f"{len(all_danji)}개 단지 로드")
+
+    # 급감 가드: 기존 파일 수 대비 80% 미만이면 중단
+    # (Supabase 네트워크 오류로 일부만 받은 경우 전체 HTML 삭제 방지)
+    if existing_html_count > 1000 and len(all_danji) < existing_html_count * 0.8:
+        print(f"❌ 급감 감지 — DB {len(all_danji)}건 vs 기존 HTML {existing_html_count}개 "
+              f"(비율 {len(all_danji)/existing_html_count:.1%}, 80% 미만) — 중단 (기존 페이지 유지)")
+        sys.exit(1)
+
+    print(f"{len(all_danji)}개 단지 로드 (기존 대비 {len(all_danji)/existing_html_count:.1%})" if existing_html_count else f"{len(all_danji)}개 단지 로드")
 
     # ── 데이터 확보 후 기존 HTML 삭제 ──
     old_count = 0

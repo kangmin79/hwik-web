@@ -43,16 +43,41 @@ def norm(u):
         path = path[:-1]
     return path
 
+import time as _time
+
+# 매일 다른 샘플 (하루 단위 시드)
+_DAILY_SEED = int(_time.time() // 86400)
+
 def sample_from_folder(folder, count):
     path = os.path.join(BASE, folder)
     if not os.path.isdir(path):
         return []
     files = [f for f in os.listdir(path)
              if f.endswith(".html") and f != "index.html"]
-    random.seed(42)
+    random.seed(_DAILY_SEED)
     if count and len(files) > count:
         files = random.sample(files, count)
     return [f"{HOST}/{folder}/{f[:-5]}" for f in files]
+
+def sample_danji_by_region(count_per_region=1):
+    """지역별 균등 샘플링 — 특정 지역만 깨지는 버그도 잡기 위해"""
+    path = os.path.join(BASE, "danji")
+    if not os.path.isdir(path):
+        return []
+    # 파일명 첫 토큰(지역)별로 그룹핑
+    from collections import defaultdict
+    groups = defaultdict(list)
+    for f in os.listdir(path):
+        if not f.endswith(".html") or f == "index.html":
+            continue
+        region = f.split("-")[0]  # 서울/경기/부산/강원 등
+        groups[region].append(f)
+    random.seed(_DAILY_SEED)
+    result = []
+    for region, files in sorted(groups.items()):
+        sample = random.sample(files, min(count_per_region, len(files)))
+        result.extend([f"{HOST}/danji/{f[:-5]}" for f in sample])
+    return result
 
 def is_404_page(page):
     """페이지가 404.html 로 튕겼거나 '찾을 수 없습니다' 타이틀이면 True."""
@@ -181,7 +206,7 @@ def main():
         targets.append(("gu", url, None))
     for url in sample_from_folder("dong", 6):
         targets.append(("dong", url, None))
-    for url in sample_from_folder("danji", 12):   # 이번 버그 영역
+    for url in sample_danji_by_region(1):   # 지역별 균등 샘플 (17개 지역 × 1개)
         targets.append(("danji", url, None))
     for url in sample_from_folder("ranking", 6):
         targets.append(("ranking", url, None))
