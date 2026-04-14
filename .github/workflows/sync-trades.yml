@@ -409,25 +409,25 @@ jobs:
       - name: Playwright 브라우저 설치
         run: python -m playwright install chromium --with-deps
       - name: danji_pages DB 집계 (변경된 단지만)
-        run: python build_danji_from_v2.py --changed-only --hours 24
+        run: python build_danji_from_v2.py --changed-only --hours 24 2>&1 | tee /tmp/log_danji_v2.txt; exit ${PIPESTATUS[0]}
       - name: 동 정적 페이지 빌드
         run: python build_dong_pages.py
       - name: 구 정적 페이지 빌드
         run: python build_gu_pages.py
       - name: 단지 정적 HTML 빌드 (dong/gu 슬러그 완비 후)
-        run: python build_danji_pages.py
+        run: python build_danji_pages.py 2>&1 | tee /tmp/log_danji_pages.txt; exit ${PIPESTATUS[0]}
       - name: 단지 OG 이미지 생성 (변경분만)
         timeout-minutes: 50
         continue-on-error: true
-        run: python build_og_images.py
+        run: python build_og_images.py 2>&1 | tee /tmp/log_og.txt
       - name: 동 OG 이미지 생성 (변경분만)
         timeout-minutes: 10
         continue-on-error: true
-        run: python build_og_images_dong.py
+        run: python build_og_images_dong.py 2>&1 | tee /tmp/log_og_dong.txt
       - name: 랭킹 정적 페이지 빌드
         run: python build_ranking_pages.py
       - name: sitemap 재생성 (모든 HTML 빌드 완료 후)
-        run: python sync_trades.py --sitemap-only
+        run: python sync_trades.py --sitemap-only 2>&1 | tee /tmp/log_sitemap.txt; exit ${PIPESTATUS[0]}
 
       # ── pre-push 브라우저 검증 게이트 ──────────────────────
       # 빌드 결과를 runner-local http.server 로 서빙해서 Chromium 으로 열고
@@ -504,36 +504,82 @@ jobs:
           print(f"게이트 실패 이메일 발송 → {os.environ['REPORT_EMAIL']}")
           PYEOF
 
-      - name: SEO + 데이터 검증 + 이메일 발송
+      - name: SEO + 데이터 검증 + 빌드 요약 이메일 발송
         run: |
           python verify_seo.py > seo_result.txt 2>&1 || true
           cat seo_result.txt
           python verify_data.py > data_result.txt 2>&1 || true
           cat data_result.txt
           python - <<'PYEOF'
-          import smtplib, os
+          import smtplib, os, re, requests
           from email.mime.text import MIMEText
 
+          today = os.popen("date +%Y-%m-%d").read().strip()
+          run_url = f"https://github.com/{os.environ.get('GITHUB_REPOSITORY','')}/actions/runs/{os.environ.get('GITHUB_RUN_ID','')}"
+
+          # ── 로그 파일에서 핵심 줄 추출 ──
+          def last_line(path, keyword):
+              try:
+                  with open(path, encoding="utf-8") as f:
+                      lines = [l.strip() for l in f if keyword in l]
+                  return lines[-1] if lines else "-"
+              except:
+                  return "-"
+
+          danji_v2  = last_line("/tmp/log_danji_v2.txt", "완료:")
+          danji_pg  = last_line("/tmp/log_danji_pages.txt", "페이지 생성")
+          og_danji  = last_line("/tmp/log_og.txt", "OG 이미지")
+          og_dong   = last_line("/tmp/log_og_dong.txt", "OG 이미지")
+          sitemap   = last_line("/tmp/log_sitemap.txt", "sitemap.xml 생성")
+
+          # ── 오늘 새로 수집된 거래 건수 (DB 직접 조회) ──
+          trade_count = "-"
+          try:
+              sb_url = os.environ.get("SUPABASE_URL", "https://jqaxejgzkchxbfzgzyzi.supabase.co")
+              sb_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
+              resp = requests.get(
+                  f"{sb_url}/rest/v1/trade_raw_v2",
+                  headers={"apikey": sb_key, "Authorization": f"Bearer {sb_key}",
+                           "Prefer": "count=exact", "Range": "0-0"},
+                  params={"select": "id", "created_at": f"gte.{today}T00:00:00"},
+                  timeout=10,
+              )
+              if resp.status_code in (200, 206):
+                  m = re.search(r"/(\d+)", resp.headers.get("Content-Range", ""))
+                  trade_count = f"{int(m.group(1)):,}건" if m else "-"
+          except:
+              pass
+
+          # ── SEO / 데이터 검증 결과 ──
           with open("seo_result.txt", encoding="utf-8") as f:
               seo = f.read()
           with open("data_result.txt", encoding="utf-8") as f:
               data = f.read()
 
-          body = seo + "\n\n" + "=" * 70 + "\n\n" + data
-          today = os.popen("date -u +%Y-%m-%d").read().strip()
-
-          seo_ok = "모든 검증 통과" in seo
+          seo_ok  = "모든 검증 통과" in seo
           data_ok = "모든 데이터 정합성 검증 통과" in data
           if seo_ok and data_ok:
               status = "ALL PASS ✓"
           else:
               parts = []
-              if not seo_ok: parts.append("SEO")
+              if not seo_ok:  parts.append("SEO")
               if not data_ok: parts.append("DATA")
               status = ", ".join(parts) + " FAIL ✗"
 
+          build_summary = f"""━━━ 빌드 요약 ({today}) ━━━
+실거래 신규 수집 : {trade_count}
+단지 집계        : {danji_v2}
+단지 HTML        : {danji_pg}
+OG 이미지 (단지) : {og_danji}
+OG 이미지 (동)   : {og_dong}
+sitemap          : {sitemap}
+Actions 로그     : {run_url}
+"""
+
+          body = build_summary + "\n" + "=" * 60 + "\n\n" + seo + "\n\n" + "=" * 60 + "\n\n" + data
+
           msg = MIMEText(body, "plain", "utf-8")
-          msg["Subject"] = f"[휙] {today} 검증: {status}"
+          msg["Subject"] = f"[휙] {today} 자동 빌드 완료 — {status}"
           msg["From"] = os.environ["SMTP_USER"]
           msg["To"] = os.environ["REPORT_EMAIL"]
 
