@@ -580,7 +580,7 @@ function render() {
         <div class="price-card-value">${highPrice ? formatPrice(highPrice) : '-'}</div>
         <div class="price-card-sub">${highData && highData.floor ? highData.floor + '층' : ''}${highData && highData.date ? ' · ' + highData.date : ''}</div>
       </div>
-    </div>` : '') : ''}
+    </div>` : ''}
     ${hasCurData && currentTab !== '월세' ? (() => {
       const cells = [];
       if (jeonseRate) cells.push({label:'전세가율', value:jeonseRate+'%'});
