@@ -221,7 +221,7 @@ def build_ranking_html(region, rank_type, data):
         lines.append(f'<p style="font-size:13px;color:var(--sub);padding:8px 16px 0;line-height:1.6;">{" ".join(intro_parts)}</p>')
 
     # 랭킹 목록
-    lines.append(f'<div class="section"><div class="section-title">{esc(area_label)} {esc(type_label)} TOP 50</div>')
+    lines.append(f'<div class="section"><h2 class="section-title">{esc(area_label)} {esc(type_label)} TOP 50</h2>')
     lines.append(f'<div style="display:flex;flex-direction:column;gap:8px;">')
     for i, d in enumerate(top50):
         slug_d = make_danji_slug(d["name"], d["location"], d["id"], d["address"])
@@ -246,7 +246,7 @@ def build_ranking_html(region, rank_type, data):
     lines.append(f'<div class="divider"></div>')
 
     # FAQ
-    lines.append(f'<div class="faq-section"><div class="section-title">자주 묻는 질문</div>')
+    lines.append(f'<div class="faq-section"><h2 class="section-title">자주 묻는 질문</h2>')
     if top50:
         lines.append(f'<div class="faq-item"><div class="faq-q">{esc(area_label)}에서 가장 비싼 아파트는?</div>')
         lines.append(f'<div class="faq-a">{esc(top50[0]["name"])} ({esc(top50[0]["location"])})이 {format_price(top50[0]["price"])}으로 1위입니다. 국토교통부 최신 실거래가 기준입니다.</div></div>')
