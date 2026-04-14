@@ -1,41 +1,27 @@
-# 다음 세션 할 일 (2026-04-13 저녁 저장)
+# 다음 세션 할 일 (2026-04-14 저장)
 
-## 1. 전국 확장 단지 수집 이어서 (collect_complexes.py)
-완료: 세종 211 + 충북 789 + 충남 989 + 전북 881 + 전남 782 = **3,652개**
-남은 것:
-- `python collect_complexes.py --region gyeongbuk`
-- `python collect_complexes.py --region gyeongnam`
-- `python collect_complexes.py --region gangwon`
-- `python collect_complexes.py --region jeju`
+## 1. agent.html — 단지 페이지 연결
+- danji/app.js에서 "휙 등록 매물" 섹션 → 중개사 있으면 agent.html 링크 추가
+- URL: `/agent.html?id=AGENT_ID&lat=LAT&lng=LNG`
 
-## 2. collect_pyeongs_v2.py (공급면적 수집)
-단지 수집 완료 후:
-`python collect_pyeongs_v2.py --region all`
+## 2. SEO 페이지 안정화
+- danji/gu/dong/ranking 페이지 점검
+- Google Search Console 확인
 
-## 3. GitHub Actions --init 실행
-실거래 첫 수집 (새 지역 9개):
-Actions → 실거래가 동기화 → mode: init, region: 비워두기
+## 3. agent.html 헤더 디자인
+- SEO 안정화 후 마무리 예정 (지금 보류)
 
-## 4. match_apt_seq.py (apt_seq 매칭)
-실거래 수집 완료 후:
-`python match_apt_seq.py --region all`
+## 4. 전국 확장 단지 수집 (이전 세션 미완)
+- gyeongbuk / gyeongnam / gangwon / jeju 수집
+- collect_pyeongs_v2.py → match_apt_seq.py → build_danji_from_v2.py
 
-## 5. build_danji_from_v2.py (전체 재집계)
-Actions 완료 후:
-`python build_danji_from_v2.py --region all`
-
-## 6. HTML 빌드 + sitemap + deploy
-`python build_danji_pages.py`
-`python build_dong_pages.py`
-`python build_gu_pages.py`
-`python sync_trades.py --sitemap-only`
-`git push`
-
-## 오늘 완료한 것들
-- regions.py 9개 지역 추가 (세종~제주)
-- 전체 스크립트 REGION_MAP 업데이트 (collect_complexes/trades/pyeongs_v2/match_apt_seq/build_danji_from_v2)
-- sync_trades.py 구 파이프라인 완전 삭제 (price_history 덮어쓰기 버그 원천 차단)
-- slug_utils.py gu_url_slug 충돌 방지, extract_gu_from_address 세종/2토큰 수정
-- sync-trades.yml 9개 지역 job 추가
-- OG 이미지 12,502/12,661개 완료
-- 단지 수집: 세종~전남 3,652개 완료
+## 오늘 만든 것들
+- **agent.html** 중개사 홈페이지 전체 완성
+  - 프로필 헤더 (이름/사무소/주소/전화)
+  - 매물 리스트 (계약가능만, 노란 카드)
+  - 바텀 시트: 사진 스와이프 + 손님에게 한마디 + 미니맵 + 풀스크린 지도
+  - 카카오 오픈채팅 문의 버튼 (profiles.kakao_chat_url)
+  - 단지 유입 모드 (?lat=&lng=): 200m→1km 우선순위 5개 + 더보기 배너 + 주변 단지 시세
+- **sw.js** cache-first 전략 (mobile.html 캐시)
+- **mobile.html** getToken() 캐시로 속도 개선
+- **telegram-webhook** 손님 등록 완료 후 MAIN_INLINE 버튼 추가
