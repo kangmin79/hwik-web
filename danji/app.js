@@ -269,19 +269,26 @@ function render() {
 
   // 전용/공급 토글 + 면적 버튼
   const pm = d.pyeongs_map || {};
-  const hasSupplyData = cats.some(c => pm[c] && pm[c].supply && pm[c].supply > 0 && Math.abs((pm[c].exclu || 0) - parseFloat(c)) <= 10);
+  const catsSet = new Set(cats);
+  // pm 전체 키를 exclu 기준으로 정렬 (거래 없는 면적도 탭 표시)
+  const allPmCats = Object.keys(pm).sort((a, b) => (pm[a].exclu || parseFloat(a)) - (pm[b].exclu || parseFloat(b)));
+  const tabCats = allPmCats.length > 0 ? allPmCats : cats;
+  const hasCurData = catsSet.has(currentPyeong);
+  const hasSupplyData = tabCats.some(c => pm[c] && pm[c].supply && pm[c].supply > 0 && Math.abs((pm[c].exclu || 0) - parseFloat(c)) <= 10);
   const toggleRowHtml = hasSupplyData
     ? `<div style="font-size:11px;color:var(--sub);padding:6px 16px 0;">공급면적 기준</div>`
     : `<div style="font-size:11px;color:var(--sub);padding:6px 16px 0;">전용면적 기준</div>`;
-  const pyeongHtml = cats.map(c => {
+  const pyeongHtml = tabCats.map(c => {
     const active = c === currentPyeong ? ' active' : '';
+    const hasData = catsSet.has(c);
     let label;
     if (pm[c] && pm[c].supply && pm[c].supply > 0 && Math.abs((pm[c].exclu || 0) - parseFloat(c)) <= 10) {
       label = pm[c].supply.toFixed(1) + '㎡';
     } else {
       label = c + '㎡';
     }
-    return `<div class="pyeong-btn${active}" data-cat="${esc(c)}">${esc(label)}</div>`;
+    const dimStyle = !hasData ? ' style="opacity:0.4;"' : '';
+    return `<div class="pyeong-btn${active}" data-cat="${esc(c)}"${dimStyle}>${esc(label)}</div>`;
   }).join('');
 
   // 현재 평형 기준 지표 (currentPyeong이 null이면 빈 키로 처리)
@@ -556,7 +563,12 @@ function render() {
     <div class="pyeong-wrap"><div class="pyeong-row">${pyeongHtml}</div></div>
 
     <!-- 핵심 시세 카드 (월세 탭에서는 숨김) -->
-    ${currentTab !== '월세' ? `<div class="price-cards">
+    ${!hasCurData ? `<div style="margin:20px 16px;padding:20px;background:var(--card-bg);border-radius:12px;text-align:center;color:var(--sub);font-size:14px;line-height:1.6;">
+      <div style="font-size:22px;margin-bottom:8px;">📭</div>
+      <div style="font-weight:600;color:var(--text);margin-bottom:4px;">최근 5년 거래 내역 없음</div>
+      <div>이 면적은 최근 5년간 실거래 데이터가 없습니다.</div>
+    </div>` : ''}
+    ${!hasCurData ? '' : currentTab !== '월세' ? `<div class="price-cards">
       <div class="price-card primary" onclick="highlightChartPoint('recent')" style="cursor:pointer;transition:transform .15s,background .15s;" ontouchstart="this.style.transform='scale(.97)';this.style.background='#dbeafe';" ontouchend="this.style.transform='';this.style.background='';">
         <div style="display:flex;justify-content:space-between;align-items:center;"><span class="price-card-label">최근 ${currentTab === '전세' ? '전세가' : '실거래가'}</span>${recentData ? kindBadge(recentData.kind || '') : ''}</div>
         <div class="price-card-value">${recentPrice ? formatPrice(recentPrice) : '-'}</div>
@@ -568,8 +580,8 @@ function render() {
         <div class="price-card-value">${highPrice ? formatPrice(highPrice) : '-'}</div>
         <div class="price-card-sub">${highData && highData.floor ? highData.floor + '층' : ''}${highData && highData.date ? ' · ' + highData.date : ''}</div>
       </div>
-    </div>` : ''}
-    ${currentTab !== '월세' ? (() => {
+    </div>` : '') : ''}
+    ${hasCurData && currentTab !== '월세' ? (() => {
       const cells = [];
       if (jeonseRate) cells.push({label:'전세가율', value:jeonseRate+'%'});
       const supplyInfo = pm[currentPyeong];
@@ -589,8 +601,8 @@ function render() {
       }).join('') + '</div>';
     })() : ''}
 
-    <!-- 거래량 + 그래프 (월세 탭에서는 숨김) -->
-    ${currentTab !== '월세' ? `
+    <!-- 거래량 + 그래프 (월세 탭 또는 데이터 없는 면적에서는 숨김) -->
+    ${hasCurData && currentTab !== '월세' ? `
     <div class="chart-section">
       <div class="chart-title">거래량</div>
       <div style="height:40px;position:relative;"><canvas id="volumeChart"></canvas></div>
@@ -600,10 +612,10 @@ function render() {
     ` : ''}
 
     <!-- 최근 실거래 -->
-    <div class="section">
+    ${hasCurData ? `<div class="section">
       <div class="section-title">${currentTab === '월세' ? '최근 월세 거래' : '최근 실거래'}</div>
       <div class="trade-list">${tradeListHtml || '<div style="font-size:12px;color:var(--sub);padding:8px 0;">거래 내역이 없습니다</div>'}</div>
-    </div>
+    </div>` : ''}
 
     <div class="divider"></div>
 
