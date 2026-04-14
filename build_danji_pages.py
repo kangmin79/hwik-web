@@ -233,9 +233,55 @@ def find_year_ago_trade(d, cat):
         return None
 
 
+# kapt_code(소문자) → complex_type 맵 (빌드 시 로드)
+COMPLEX_TYPE_MAP: dict = {}
+
+
+def fetch_complex_type_map():
+    """apartments 테이블에서 kapt_code → complex_type 맵 로드.
+    danji_pages 뷰에 complex_type이 없어서 별도 조회.
+    """
+    result = {}
+    offset = 0
+    while True:
+        resp = requests.get(
+            f"{SUPABASE_URL}/rest/v1/apartments",
+            headers={**SB_HEADERS, "Prefer": ""},
+            params={"select": "kapt_code,complex_type", "limit": 1000, "offset": offset},
+            timeout=30,
+        )
+        batch = resp.json() if resp.status_code == 200 else []
+        if not isinstance(batch, list) or not batch:
+            break
+        for row in batch:
+            code = (row.get("kapt_code") or "").lower()
+            ctype = row.get("complex_type")
+            if code and ctype:
+                result[code] = ctype
+        offset += 1000
+        if len(batch) < 1000:
+            break
+    return result
+
+
 def get_prop_type(did):
     """ID에서 건물 유형 판별: offi- → 오피스텔, 그 외 → 아파트"""
     return "오피스텔" if did.startswith("offi-") else "아파트"
+
+
+def get_complex_type_tag(did):
+    """주상복합·도시형 생활주택에만 태그 HTML 반환. 일반 아파트는 빈 문자열."""
+    ctype = COMPLEX_TYPE_MAP.get(did.lower(), "")
+    if not ctype or ctype == "아파트":
+        return ""
+    # 표시 텍스트 정리
+    label = ctype.replace("도시형 생활주택(주상복합)", "도시형·주상복합") \
+                 .replace("도시형 생활주택(아파트)", "도시형 생활주택")
+    return (
+        f'<span style="display:inline-block;background:#ede9fe;color:#5b21b6;'
+        f'font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;'
+        f'margin-left:6px;vertical-align:middle;">{label}</span>'
+    )
 
 
 def build_intro_sentence(name, addr, year, units, builder, bc, rt, jr, prop_type="아파트"):
@@ -312,7 +358,8 @@ def build_fallback_html(d):
     lines = []
 
     # H2: 실거래가 섹션 (SEO — 구글봇이 콘텐츠 구조 파악)
-    lines.append(f'<h2 style="font-size:16px;font-weight:700;margin-bottom:8px;">{name} 실거래가 시세</h2>')
+    ctype_tag = get_complex_type_tag(did)
+    lines.append(f'<h2 style="font-size:16px;font-weight:700;margin-bottom:8px;">{name} 실거래가 시세{ctype_tag}</h2>')
 
     # 기본 정보
     info = f"{loc}"
@@ -891,6 +938,11 @@ def main():
             pass
     print(f"OG 이미지 manifest: {len(OG_MANIFEST)}개")
 
+    # complex_type 맵 로드 (주상복합·도시형 태그용)
+    global COMPLEX_TYPE_MAP
+    COMPLEX_TYPE_MAP = fetch_complex_type_map()
+    print(f"complex_type 맵 {len(COMPLEX_TYPE_MAP)}개 로드 (주상복합·도시형 포함)")
+
     # 동/구 페이지 slug 목록 로드 (파일 없으면 링크 생략 — 404 방지)
     global DONG_SLUGS, GU_SLUGS
     if os.path.isdir(DONG_DIR):
@@ -910,12 +962,16 @@ def main():
 
     # ── 데이터 확보 후 기존 HTML 삭제 ──
     old_count = 0
+    skip_count = 0
     for f in os.listdir(DANJI_DIR):
         if f.endswith(".html"):
-            os.remove(os.path.join(DANJI_DIR, f))
-            old_count += 1
+            try:
+                os.remove(os.path.join(DANJI_DIR, f))
+                old_count += 1
+            except PermissionError:
+                skip_count += 1  # VS Code 등이 파일 잠금 중 — 덮어쓰기로 처리됨
     if old_count:
-        print(f"기존 {old_count}개 HTML 삭제")
+        print(f"기존 {old_count}개 HTML 삭제" + (f" ({skip_count}개 잠금으로 스킵)" if skip_count else ""))
 
     # app.js 캐시 해시 (디스크의 수동 관리 파일 기준으로 계산)
     global app_js_hash
