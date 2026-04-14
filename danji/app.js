@@ -379,13 +379,16 @@ function render() {
   listings.forEach(l => { listingCount[l.type] = (listingCount[l.type]||0) + 1; });
   const listingBadge = Object.entries(listingCount).map(([k,v]) => `${k} ${v}`).join(' · ');
   const listingHtml = listings.slice(0,3).map(l => `
-    <a class="listing-item" href="/property_view.html?id=${encodeURIComponent(l.id)}" style="text-decoration:none;color:inherit;">
-      <div>
-        <div class="trade-price">${esc(l.type)} ${formatPrice(l.price)}</div>
-        <div class="trade-detail">${l.floor ? l.floor+'층' : ''} ${l.area ? '· '+l.area+'㎡' : ''} ${l.move_in ? '· '+esc(l.move_in) : ''}</div>
-      </div>
-      <div class="listing-link">상세보기</div>
-    </a>
+    <div class="listing-item" style="display:flex;flex-direction:column;gap:6px;">
+      <a href="/property_view.html?id=${encodeURIComponent(l.id)}" style="text-decoration:none;color:inherit;display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div class="trade-price">${esc(l.type)} ${formatPrice(l.price)}</div>
+          <div class="trade-detail">${l.floor ? l.floor+'층' : ''} ${l.area ? '· '+l.area+'㎡' : ''} ${l.move_in ? '· '+esc(l.move_in) : ''}</div>
+        </div>
+        <div class="listing-link">상세보기</div>
+      </a>
+      ${l.agent_id ? `<a href="/agent.html?id=${encodeURIComponent(l.agent_id)}" style="font-size:11px;color:var(--sub);text-decoration:none;display:flex;align-items:center;gap:4px;">${l.agent_name ? '담당: '+esc(l.agent_name) : '담당 중개사 보기'} →</a>` : ''}
+    </div>
   `).join('');
 
   // 주변 단지 (현재 선택 평형 기준으로 비교)

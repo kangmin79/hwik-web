@@ -1,0 +1,396 @@
+name: 신규 단지 수집 (월 1회)
+
+on:
+  schedule:
+    # 매월 1일 오전 9시 (KST) = UTC 00:00
+    - cron: '0 0 1 * *'
+  workflow_dispatch:
+    inputs:
+      region:
+        description: '지역 (비우면 전체 병렬 실행)'
+        required: false
+        default: ''
+        type: choice
+        options:
+          - ''
+          - seoul
+          - incheon
+          - gyeonggi
+          - busan
+          - daegu
+          - gwangju
+          - daejeon
+          - ulsan
+          - sejong
+          - chungbuk
+          - chungnam
+          - jeonbuk
+          - jeonnam
+          - gyeongbuk
+          - gyeongnam
+          - gangwon
+          - jeju
+
+permissions:
+  contents: write
+
+env:
+  GOV_SERVICE_KEY: ${{ secrets.GOV_SERVICE_KEY }}
+  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+  KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
+  SMTP_USER: ${{ secrets.SMTP_USER }}
+  SMTP_PASS: ${{ secrets.SMTP_PASS }}
+  REPORT_EMAIL: bgtrfvcdewsx77@gmail.com
+
+# ── 공통 pip 설치 스텝 ──
+x-pip-install: &pip-install
+  run: pip install requests python-dateutil urllib3
+
+jobs:
+  # ── 단계 1: collect_complexes (지역별 병렬) ─────────────────
+  collect-seoul:
+    name: 단지 수집 (서울)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'seoul'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - run: python collect_complexes.py --region seoul
+
+  collect-incheon:
+    name: 단지 수집 (인천)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'incheon'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - run: python collect_complexes.py --region incheon
+
+  collect-gyeonggi:
+    name: 단지 수집 (경기)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'gyeonggi'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - run: python collect_complexes.py --region gyeonggi
+
+  collect-busan:
+    name: 단지 수집 (부산)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'busan'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - run: python collect_complexes.py --region busan
+
+  collect-daegu:
+    name: 단지 수집 (대구)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'daegu'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - run: python collect_complexes.py --region daegu
+
+  collect-gwangju:
+    name: 단지 수집 (광주)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'gwangju'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - run: python collect_complexes.py --region gwangju
+
+  collect-daejeon:
+    name: 단지 수집 (대전)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'daejeon'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - run: python collect_complexes.py --region daejeon
+
+  collect-ulsan:
+    name: 단지 수집 (울산)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'ulsan'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - run: python collect_complexes.py --region ulsan
+
+  collect-sejong:
+    name: 단지 수집 (세종)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'sejong'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - run: python collect_complexes.py --region sejong
+
+  collect-chungbuk:
+    name: 단지 수집 (충북)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'chungbuk'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - run: python collect_complexes.py --region chungbuk
+
+  collect-chungnam:
+    name: 단지 수집 (충남)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'chungnam'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - run: python collect_complexes.py --region chungnam
+
+  collect-jeonbuk:
+    name: 단지 수집 (전북)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'jeonbuk'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - run: python collect_complexes.py --region jeonbuk
+
+  collect-jeonnam:
+    name: 단지 수집 (전남)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'jeonnam'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - run: python collect_complexes.py --region jeonnam
+
+  collect-gyeongbuk:
+    name: 단지 수집 (경북)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'gyeongbuk'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - run: python collect_complexes.py --region gyeongbuk
+
+  collect-gyeongnam:
+    name: 단지 수집 (경남)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'gyeongnam'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - run: python collect_complexes.py --region gyeongnam
+
+  collect-gangwon:
+    name: 단지 수집 (강원)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'gangwon'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - run: python collect_complexes.py --region gangwon
+
+  collect-jeju:
+    name: 단지 수집 (제주)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: |
+      github.event_name == 'schedule' ||
+      github.event.inputs.region == '' ||
+      github.event.inputs.region == 'jeju'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+      - run: python collect_complexes.py --region jeju
+
+  # ── 단계 2: pyeongs + match_apt_seq (collect 완료 후 순차) ──
+  post-collect:
+    name: 평형 수집 + aptSeq 매칭
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    needs:
+      - collect-seoul
+      - collect-incheon
+      - collect-gyeonggi
+      - collect-busan
+      - collect-daegu
+      - collect-gwangju
+      - collect-daejeon
+      - collect-ulsan
+      - collect-sejong
+      - collect-chungbuk
+      - collect-chungnam
+      - collect-jeonbuk
+      - collect-jeonnam
+      - collect-gyeongbuk
+      - collect-gyeongnam
+      - collect-gangwon
+      - collect-jeju
+    if: ${{ !cancelled() && contains(needs.*.result, 'success') }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install requests python-dateutil urllib3
+
+      - name: 평형 수집 (pyeongs 비어있는 신규 단지)
+        run: |
+          REGION="${{ github.event.inputs.region }}"
+          if [ -z "$REGION" ]; then
+            python collect_pyeongs_v2.py --region all
+          else
+            python collect_pyeongs_v2.py --region "$REGION"
+          fi
+
+      - name: aptSeq 매칭 (신규 단지)
+        run: |
+          REGION="${{ github.event.inputs.region }}"
+          if [ -z "$REGION" ]; then
+            python match_apt_seq.py --region all
+          else
+            python match_apt_seq.py --region "$REGION"
+          fi
+
+      - name: 완료 이메일
+        if: always()
+        run: |
+          python - <<'PYEOF'
+          import smtplib, os
+          from email.mime.text import MIMEText
+
+          today = os.popen("date -u +%Y-%m-%d").read().strip()
+          run_url = f"https://github.com/{os.environ.get('GITHUB_REPOSITORY','')}/actions/runs/{os.environ.get('GITHUB_RUN_ID','')}"
+          body = (
+              f"[휙] {today} 월별 신규 단지 수집 완료\n\n"
+              f"워크플로 로그: {run_url}\n\n"
+              "collect_complexes → collect_pyeongs_v2 → match_apt_seq 순서로 실행됨.\n"
+              "다음 단계: sync-trades.yml 수동 실행(init 모드)으로 신규 단지 실거래가 수집 가능.\n"
+          )
+          msg = MIMEText(body, "plain", "utf-8")
+          msg["Subject"] = f"[휙] {today} 월별 단지 수집 완료"
+          msg["From"] = os.environ["SMTP_USER"]
+          msg["To"] = os.environ["REPORT_EMAIL"]
+          with smtplib.SMTP_SSL("smtp.gmail.com", 465) as s:
+              s.login(os.environ["SMTP_USER"], os.environ["SMTP_PASS"])
+              s.send_message(msg)
+          print(f"완료 이메일 → {os.environ['REPORT_EMAIL']}")
+          PYEOF
