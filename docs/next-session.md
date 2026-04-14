@@ -1,27 +1,30 @@
-# 다음 세션 할 일 (2026-04-14 저장)
+# 다음 세션 할 일 (2026-04-14 오후 저장)
 
-## 1. agent.html — 단지 페이지 연결
-- danji/app.js에서 "휙 등록 매물" 섹션 → 중개사 있으면 agent.html 링크 추가
-- URL: `/agent.html?id=AGENT_ID&lat=LAT&lng=LNG`
+## 오늘 완료한 것
+- 전국 SEO 페이지 링크 전수 검사 (18,891 danji / 1,534 dong / 232 gu / 37 ranking)
+- **버그 수정**: GU_SLUGS 실파일 검증 추가 → gu 404 링크 24개 제거
+- **버그 수정**: 강원/충청/전라/경상/제주/세종 6,100개 단지 dong 링크 복원 (빌드 순서 문제)
+- **기능 추가**: 주상복합·도시형 생활주택 보라색 태그 (H2 옆)
+- **기능 추가**: get_prop_type() → COMPLEX_TYPE_MAP 기반 정확한 유형 표기
+- **버그 수정**: build_intro_sentence 조사 오류 `주상복합로` → `주상복합으로`
+- 전체 재빌드 배포 완료 (55c4d228e3)
 
-## 2. SEO 페이지 안정화
-- danji/gu/dong/ranking 페이지 점검
-- Google Search Console 확인
+## 현재 페이지 수
+- danji 18,891 / dong 1,534 / gu 232 / ranking 37
 
-## 3. agent.html 헤더 디자인
-- SEO 안정화 후 마무리 예정 (지금 보류)
+## 다음에 할 일
 
-## 4. 전국 확장 단지 수집 (이전 세션 미완)
-- gyeongbuk / gyeongnam / gangwon / jeju 수집
-- collect_pyeongs_v2.py → match_apt_seq.py → build_danji_from_v2.py
+### 1. OG 이미지 생성 (신규 지역분)
+```
+python build_og_images.py
+```
+증분 빌드 — 변경분만 생성
 
-## 오늘 만든 것들
-- **agent.html** 중개사 홈페이지 전체 완성
-  - 프로필 헤더 (이름/사무소/주소/전화)
-  - 매물 리스트 (계약가능만, 노란 카드)
-  - 바텀 시트: 사진 스와이프 + 손님에게 한마디 + 미니맵 + 풀스크린 지도
-  - 카카오 오픈채팅 문의 버튼 (profiles.kakao_chat_url)
-  - 단지 유입 모드 (?lat=&lng=): 200m→1km 우선순위 5개 + 더보기 배너 + 주변 단지 시세
-- **sw.js** cache-first 전략 (mobile.html 캐시)
-- **mobile.html** getToken() 캐시로 속도 개선
-- **telegram-webhook** 손님 등록 완료 후 MAIN_INLINE 버튼 추가
+### 2. 월별 신규 단지 수집 자동화
+Actions job (월 1회): collect_complexes → pyeongs → match_apt_seq
+
+### 3. 랭킹 도 단위 탭 추가 여부 결정
+현재 충북/충남 등은 전체(all) 탭에만 포함됨
+
+### 4. agent.html — 단지 페이지 연결 (미완)
+danji/app.js "휙 등록 매물" 섹션 → 중개사 있으면 agent.html 링크 추가
