@@ -41,9 +41,11 @@ SB_HEADERS = {
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DANJI_DIR = os.path.join(BASE_DIR, "danji")
 DONG_DIR = os.path.join(BASE_DIR, "dong")
+GU_DIR = os.path.join(BASE_DIR, "gu")
 
-# 동 페이지 slug 목록 (빌드 시 로드 — 동 파일 없는 곳은 링크 생략)
+# 동/구 페이지 slug 목록 (빌드 시 로드 — 파일 없는 곳은 링크 생략)
 DONG_SLUGS = set()
+GU_SLUGS = set()  # 실제 생성된 gu 파일 목록 — 지역 라벨만 체크하면 404 발생
 
 # OG 이미지 manifest (빌드 시 로드)
 OG_MANIFEST = {}
@@ -61,9 +63,17 @@ from regions import REGION_LABEL_TO_KEY as _RLTK
 GU_PAGE_REGIONS = set(_RLTK.keys())  # "서울","충남","경상북도" 등 모든 형태 포함
 
 
-def _has_gu_page(address):
-    """해당 주소가 /gu/ 페이지가 있는 지역인지 확인"""
-    return detect_region(address or "") in GU_PAGE_REGIONS
+def _has_gu_page(address, gu_url=None):
+    """해당 주소의 /gu/ 페이지가 실제로 존재하는지 확인.
+
+    GU_SLUGS(빌드 시 로드된 실제 파일 목록)로 검증한다.
+    gu_url 미지정 시 지역 라벨만 체크 (하위 호환, 빌드 초기에만 사용).
+    """
+    if not (detect_region(address or "") in GU_PAGE_REGIONS):
+        return False
+    if gu_url and GU_SLUGS:
+        return gu_url in GU_SLUGS
+    return True
 
 
 # ── 유틸 ──────────────────────────────────────────────────
@@ -576,9 +586,9 @@ def build_fallback_html(d):
     lines.append('<div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">')
     if dong_name and dong_slug_str and dong_slug_str in DONG_SLUGS:
         lines.append(f'<a href="/dong/{url_quote(dong_slug_str, safe="-")}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{esc(dong_name)} 다른 단지 시세 →</a>')
-    if _has_gu_page(d.get("address", "")):
-        _region_label = detect_region(d.get("address", "") or "")
-        _gu_url = gu_url_slug(_region_label, gu_raw)
+    _region_label = detect_region(d.get("address", "") or "")
+    _gu_url = gu_url_slug(_region_label, gu_raw)
+    if _has_gu_page(d.get("address", ""), _gu_url):
         lines.append(f'<a href="/gu/{url_quote(_gu_url, safe="-")}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{gu} 전체 시세 →</a>')
         lines.append('<a href="/ranking/" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">아파트 순위 →</a>')
     lines.append("</div>")
@@ -597,15 +607,15 @@ def build_jsonld(d):
     dong_slug_str = make_dong_slug(gu, dong_name, d.get("address", "")) if dong_name else ""
     slug = make_slug(name, d.get("location", ""), did, d.get("address", ""))
 
-    has_gu = _has_gu_page(d.get("address", ""))
+    _gu_region_label = detect_region(d.get("address", "") or "")
+    _gu_url_str = gu_url_slug(_gu_region_label, gu)
+    has_gu = _has_gu_page(d.get("address", ""), _gu_url_str)
     has_dong = dong_name and dong_slug_str and dong_slug_str in DONG_SLUGS
 
     breadcrumb_items = [{"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"}]
     pos = 2
     if has_gu:
-        _region_label = detect_region(d.get("address", "") or "")
-        _gu_url = gu_url_slug(_region_label, gu)
-        breadcrumb_items.append({"@type": "ListItem", "position": pos, "name": f"{gu}", "item": f"https://hwik.kr/gu/{url_quote(_gu_url, safe='-')}"})
+        breadcrumb_items.append({"@type": "ListItem", "position": pos, "name": f"{gu}", "item": f"https://hwik.kr/gu/{url_quote(_gu_url_str, safe='-')}"})
         pos += 1
     elif gu:
         breadcrumb_items.append({"@type": "ListItem", "position": pos, "name": f"{gu}"})
@@ -766,9 +776,9 @@ def generate_page(d):
     dong_raw = loc_parts[1] if len(loc_parts) >= 2 else ""
     dong_slug_nav = make_dong_slug(gu_raw, dong_raw, d.get("address", "")) if dong_raw else ""
     dong_nav = f'<a href="/dong/{url_quote(dong_slug_nav, safe="-")}" style="color:#6b7280;text-decoration:none;">{esc(dong_raw)}</a> &gt;\n      ' if dong_raw and dong_slug_nav and dong_slug_nav in DONG_SLUGS else ""
-    _has_gu = _has_gu_page(d.get("address", ""))
     _region_label_nav = detect_region(d.get("address", "") or "")
-    _gu_url_nav = gu_url_slug(_region_label_nav, gu_raw) if _has_gu else ""
+    _gu_url_nav = gu_url_slug(_region_label_nav, gu_raw)
+    _has_gu = _has_gu_page(d.get("address", ""), _gu_url_nav)
     gu_nav = (
         f'<a href="/gu/{url_quote(_gu_url_nav, safe="-")}" style="color:#6b7280;text-decoration:none;">{gu}</a> &gt;'
         if _has_gu and gu else (f'<span style="color:#6b7280;">{gu}</span> &gt;' if gu else "")
@@ -881,11 +891,14 @@ def main():
             pass
     print(f"OG 이미지 manifest: {len(OG_MANIFEST)}개")
 
-    # 동 페이지 slug 목록 로드 (동 파일 없으면 링크 생략)
-    global DONG_SLUGS
+    # 동/구 페이지 slug 목록 로드 (파일 없으면 링크 생략 — 404 방지)
+    global DONG_SLUGS, GU_SLUGS
     if os.path.isdir(DONG_DIR):
         DONG_SLUGS = {os.path.splitext(f)[0] for f in os.listdir(DONG_DIR) if f.endswith(".html")}
     print(f"동 페이지 {len(DONG_SLUGS)}개 인식")
+    if os.path.isdir(GU_DIR):
+        GU_SLUGS = {os.path.splitext(f)[0] for f in os.listdir(GU_DIR) if f.endswith(".html")}
+    print(f"구 페이지 {len(GU_SLUGS)}개 인식")
 
     # ── 데이터 먼저 확보 (실패 시 기존 파일 보존) ──
     print("danji_pages 조회 중...")
