@@ -80,7 +80,7 @@
 - profile_photo_url (text), design_version (text), is_admin (bool)
 - naver_map_url, office_lat, office_lon
 
-### apartments (아파트 단지 마스터 — 13,418개: 서울+인천+경기)
+### apartments (아파트 단지 마스터 — 30,999개: 전국 17개 시도)
 - kapt_code, kapt_name, doro_juso, umd_nm, sgg, lat, lon, slug, pyeongs
 
 ### trades (실거래 내역)
@@ -230,7 +230,7 @@
 - 실거래가: GitHub Actions 매일 새벽 1시(KST) 자동 동기화 (서울·인천·경기 병렬)
 
 ## 컨텍스트 자동 저장 규칙
-- 대화 컨텍스트가 70%를 넘으면 **즉시** 두 파일에 나눠 저장한다
+- 대화 컨텍스트가 80%를 넘으면 **즉시** 두 파일에 나눠 저장한다
 
 ### docs/next-session.md (10줄 이내)
 - 다음 세션에서 할 일만 간단히 기록
@@ -242,5 +242,5 @@
 - 발견된 버그, 결정 사항, 참고할 맥락
 - 파일명: `docs/2026-04-06.md` 형식 (오늘 날짜)
 
-- 저장 후 사용자에게 "컨텍스트 70% 도달 — next-session.md + docs/YYYY-MM-DD.md 저장 완료" 라고 알린다
+- 저장 후 사용자에게 "컨텍스트 80% 도달 — next-session.md + docs/YYYY-MM-DD.md 저장 완료. **지금 새 세션을 열어서 'docs/next-session.md 보고 이어서 해줘'로 시작하세요.**" 라고 알린다
 - 이 규칙은 사용자가 요청하지 않아도 자동으로 실행한다
