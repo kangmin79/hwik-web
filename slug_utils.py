@@ -173,8 +173,10 @@ def make_dong_slug(gu, dong, address=""):
             if len(addr_parts) > 2 and addr_parts[2].endswith("구"):
                 parts.append(addr_parts[2])
         else:
-            # 광역시/세종: 구/군 (군 suffix 제거)
-            if gu.endswith("군"):
+            # 광역시: 구/군 (군 suffix 제거) / 세종: 구 없으므로 생략
+            if region == "세종":
+                pass  # 세종-{동} 형태 (세종특별자치시 중복 방지)
+            elif gu.endswith("군"):
                 parts.append(re.sub(r'군$', '', gu))
             else:
                 parts.append(gu)

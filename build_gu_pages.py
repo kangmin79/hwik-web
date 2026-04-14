@@ -15,7 +15,7 @@ from urllib.parse import quote as url_quote
 import requests
 from collections import defaultdict
 from slug_utils import make_danji_slug, make_dong_slug, detect_region as slug_detect_region, extract_gu_from_address, gu_url_slug
-from regions import REGIONS, METRO_KEYS, REGION_LABEL_TO_KEY, GYEONGGI_TWO_TOKEN_GU
+from regions import REGIONS, METRO_KEYS, REGION_LABEL_TO_KEY, ALL_TWO_TOKEN_GU
 
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout = open(sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1)
@@ -548,8 +548,8 @@ def main():
         if f.endswith(".html"):
             os.remove(os.path.join(GU_DIR, f))
 
-    # 2토큰 구/시 목록 (경기도 하위 구 분할 시/군) — regions.py 단일 소스
-    two_token_gu = GYEONGGI_TWO_TOKEN_GU
+    # 2토큰 구/시 목록 (경기+충북+충남+전북+경북+경남 하위 구) — regions.py 단일 소스
+    two_token_gu = ALL_TWO_TOKEN_GU
 
     # 구별 분류 (실제 생성된 danji 페이지가 있는 단지만 포함)
     # 서울/인천/경기/5대 광역시 모두 지원. 이름 충돌은 (region_key, gu_name) 튜플 키로 해결.

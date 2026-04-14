@@ -19,6 +19,8 @@ from slug_utils import (
     detect_region, make_danji_slug, make_dong_slug,
     extract_gu_from_address, gu_url_slug,
 )
+from regions import REGION_LABEL_TO_KEY as _RLTK
+_GU_PAGE_REGIONS = set(_RLTK.keys())  # 전국 17개 광역시도
 
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout = open(sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1)
@@ -189,8 +191,8 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
     slug = make_dong_slug(gu, dong, first_addr)
     canonical = f"https://hwik.kr/dong/{url_quote(slug, safe='-')}"
 
-    # /gu/ 페이지 존재 여부: 서울/인천/경기 + 5대 광역시
-    has_gu_page = region in ("서울", "인천", "경기", "부산", "대구", "광주", "대전", "울산")
+    # /gu/ 페이지 존재 여부: 전국 17개 광역시도
+    has_gu_page = region in _GU_PAGE_REGIONS
     gu_page_slug = gu_url_slug(region, gu) if has_gu_page else ""
 
     # 거래 있는 단지만 필터 + 가격순 정렬

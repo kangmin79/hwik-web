@@ -203,7 +203,6 @@ def _parse_row(item: dict, lawd_cd: str, year_month: str, prop_type: str, is_ren
         "road_nm_bonbun": road_nm_bonbun if road_nm_bonbun else None,
         "road_nm_bubun":  road_nm_bubun if road_nm_bubun else 0,
         "build_year":     _int(item.get("buildYear")) or None,
-        "raw":            item,
     }
 
 

@@ -131,7 +131,7 @@ def process_data(all_danji):
         region_label = slug_detect_region(d.get("address", ""))
         region_key = REGION_LABEL_TO_KEY.get(region_label, "etc")
         if region_key == "etc":
-            continue  # 지원 지역 외
+            region_key = "all"  # 도 단위(충북·충남 등)는 전체 랭킹에만 포함
 
         result.append({
             "id": d["id"], "name": d["complex_name"],

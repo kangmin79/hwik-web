@@ -2,9 +2,8 @@ name: 실거래가 동기화
 
 on:
   schedule:
-    # 매일 새벽 3시 (KST) = UTC 18:00 전일
-    # 사용자가 5시에 기상해서 수집·빌드·검증·이메일을 한 번에 확인할 수 있도록 02:00→03:00 으로 2시간 미룸 (2026-04-12).
-    - cron: '0 18 * * *'
+    # 매일 새벽 1시 (KST) = UTC 16:00 전일
+    - cron: '0 16 * * *'
   workflow_dispatch:
     inputs:
       mode:
@@ -70,7 +69,7 @@ jobs:
       - run: pip install requests python-dateutil urllib3
       - name: 서울 수집 (v2)
         run: |
-          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
           python collect_trades_v2.py --region seoul $FLAG
 
   # ── 인천 ──────────────────────────────────────────────
@@ -90,7 +89,7 @@ jobs:
       - run: pip install requests python-dateutil urllib3
       - name: 인천 수집 (v2)
         run: |
-          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
           python collect_trades_v2.py --region incheon $FLAG
 
   # ── 경기 ──────────────────────────────────────────────
@@ -110,7 +109,7 @@ jobs:
       - run: pip install requests python-dateutil urllib3
       - name: 경기 수집 (v2)
         run: |
-          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
           python collect_trades_v2.py --region gyeonggi $FLAG
 
   # ── 부산 ──────────────────────────────────────────────
@@ -130,7 +129,7 @@ jobs:
       - run: pip install requests python-dateutil urllib3
       - name: 부산 수집 (v2)
         run: |
-          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
           python collect_trades_v2.py --region busan $FLAG
 
   # ── 대구 ──────────────────────────────────────────────
@@ -150,7 +149,7 @@ jobs:
       - run: pip install requests python-dateutil urllib3
       - name: 대구 수집 (v2)
         run: |
-          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
           python collect_trades_v2.py --region daegu $FLAG
 
   # ── 광주 ──────────────────────────────────────────────
@@ -170,7 +169,7 @@ jobs:
       - run: pip install requests python-dateutil urllib3
       - name: 광주 수집 (v2)
         run: |
-          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
           python collect_trades_v2.py --region gwangju $FLAG
 
   # ── 대전 ──────────────────────────────────────────────
@@ -190,7 +189,7 @@ jobs:
       - run: pip install requests python-dateutil urllib3
       - name: 대전 수집 (v2)
         run: |
-          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
           python collect_trades_v2.py --region daejeon $FLAG
 
   # ── 울산 ──────────────────────────────────────────────
@@ -210,7 +209,7 @@ jobs:
       - run: pip install requests python-dateutil urllib3
       - name: 울산 수집 (v2)
         run: |
-          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
           python collect_trades_v2.py --region ulsan $FLAG
 
   # ── 세종 ──────────────────────────────────────────────
@@ -230,7 +229,7 @@ jobs:
       - run: pip install requests python-dateutil urllib3
       - name: 세종 수집 (v2)
         run: |
-          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
           python collect_trades_v2.py --region sejong $FLAG
 
   # ── 충북 ──────────────────────────────────────────────
@@ -250,7 +249,7 @@ jobs:
       - run: pip install requests python-dateutil urllib3
       - name: 충북 수집 (v2)
         run: |
-          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
           python collect_trades_v2.py --region chungbuk $FLAG
 
   # ── 충남 ──────────────────────────────────────────────
@@ -270,7 +269,7 @@ jobs:
       - run: pip install requests python-dateutil urllib3
       - name: 충남 수집 (v2)
         run: |
-          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
           python collect_trades_v2.py --region chungnam $FLAG
 
   # ── 전북 ──────────────────────────────────────────────
@@ -290,7 +289,7 @@ jobs:
       - run: pip install requests python-dateutil urllib3
       - name: 전북 수집 (v2)
         run: |
-          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
           python collect_trades_v2.py --region jeonbuk $FLAG
 
   # ── 전남 ──────────────────────────────────────────────
@@ -310,7 +309,7 @@ jobs:
       - run: pip install requests python-dateutil urllib3
       - name: 전남 수집 (v2)
         run: |
-          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
           python collect_trades_v2.py --region jeonnam $FLAG
 
   # ── 경북 ──────────────────────────────────────────────
@@ -330,7 +329,7 @@ jobs:
       - run: pip install requests python-dateutil urllib3
       - name: 경북 수집 (v2)
         run: |
-          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
           python collect_trades_v2.py --region gyeongbuk $FLAG
 
   # ── 경남 ──────────────────────────────────────────────
@@ -350,7 +349,7 @@ jobs:
       - run: pip install requests python-dateutil urllib3
       - name: 경남 수집 (v2)
         run: |
-          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
           python collect_trades_v2.py --region gyeongnam $FLAG
 
   # ── 강원 ──────────────────────────────────────────────
@@ -370,7 +369,7 @@ jobs:
       - run: pip install requests python-dateutil urllib3
       - name: 강원 수집 (v2)
         run: |
-          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
           python collect_trades_v2.py --region gangwon $FLAG
 
   # ── 제주 ──────────────────────────────────────────────
@@ -390,7 +389,7 @@ jobs:
       - run: pip install requests python-dateutil urllib3
       - name: 제주 수집 (v2)
         run: |
-          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "" )
+          FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
           python collect_trades_v2.py --region jeju $FLAG
 
   # ── sitemap + 정적 페이지 빌드 (17개 job 완료 후) ────────
@@ -411,8 +410,8 @@ jobs:
         run: python -m playwright install chromium --with-deps
       - name: sitemap 재생성
         run: python sync_trades.py --sitemap-only
-      - name: danji_pages DB 집계 (trade_raw_v2 → danji_pages)
-        run: python build_danji_from_v2.py --region all
+      - name: danji_pages DB 집계 (변경된 단지만)
+        run: python build_danji_from_v2.py --changed-only --hours 24
       - name: 단지 정적 HTML 빌드 (danji_pages → HTML)
         run: python build_danji_pages.py
       - name: 단지 OG 이미지 생성 (변경분만)

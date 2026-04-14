@@ -795,8 +795,8 @@ function drawChart() {
 
   let points = [];
 
-  if (ph.length > 0 && ph[0].date) {
-    points = ph.map(p => ({
+  if (ph.length > 0 && ph.some(p => p.date)) {
+    points = ph.filter(p => p.date).map(p => ({
       x: p.date,
       y: Math.round(p.price / 100) / 100,
       floor: p.floor || '',

@@ -227,6 +227,7 @@ def main():
             "select": "kapt_code,kapt_name,doro_juso,umd_nm,jibun,sgg",
             "lawd_cd": f"eq.{code}",
             "kapt_code": "like.A*",
+            "apt_seq": "is.null",   # 이미 매칭된 단지는 건너뜀 (기존 매칭 보호)
             "limit": "2000"
         })
         if not apts: continue

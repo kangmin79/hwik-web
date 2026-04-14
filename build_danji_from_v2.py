@@ -19,7 +19,7 @@ apartments.apt_seq 기준으로 trade_raw_v2를 조회해 집계.
 """
 
 import os, sys, re, json, argparse, time
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from collections import defaultdict
 import requests
 
@@ -105,7 +105,10 @@ def build_pyeongs_map(pyeongs: list) -> dict:
 
 
 def match_official(area_val: float, pm_keys: list) -> str | None:
-    """실거래 전용면적 → 공식 평형 키 (±5㎡ 이내)"""
+    """실거래 전용면적 → 공식 평형 키 (±2㎡ 이내)
+    ±2㎡로 제한: 같은 타입의 면적 소수점 차이(예: 84.96 vs 84.97)는 허용하되
+    다른 면적 타입이 같은 카테고리에 섞이는 것 방지
+    """
     if not pm_keys:
         return str(round(area_val))
     best_k, best_d = None, 999
@@ -113,7 +116,7 @@ def match_official(area_val: float, pm_keys: list) -> str | None:
         d = abs(area_val - pk)
         if d < best_d:
             best_k, best_d = pk, d
-    return str(round(best_k)) if best_d <= 5 else None
+    return str(round(best_k)) if best_d <= 2 else None
 
 
 # ── 핵심: trade_raw_v2 행 → 집계 ─────────────────────────
@@ -128,7 +131,12 @@ def aggregate(apt: dict, trades: list) -> dict | None:
         return None
 
     pyeongs_map = build_pyeongs_map(apt.get("pyeongs"))
-    pm_keys = sorted([float(k) for k in pyeongs_map.keys()]) if pyeongs_map else []
+    # pm_keys: round된 정수 키가 아닌 실제 exclu 소수값 사용
+    # → 18.8㎡와 19.5㎡처럼 1㎡ 미만 간격 타입도 정확히 구분
+    pm_keys = sorted([
+        p["exclu"] for p in (apt.get("pyeongs") or [])
+        if p.get("exclu", 0) > 0
+    ]) if pyeongs_map else []
 
     # ── 1. 평형별 분류 ────────────────────────────────────
     areas = set()
@@ -274,7 +282,6 @@ def aggregate(apt: dict, trades: list) -> dict | None:
         "heating":      apt.get("heat_type") or None,
         "builder":      apt.get("builder") or None,
         "parking":      apt.get("parking_ground") or None,
-        "seo_text":     "",
         "categories":   categories,
         "pyeongs_map":  pyeongs_map or None,
         "recent_trade": recent_trade,
@@ -303,6 +310,70 @@ REGION_MAP = {
     "gyeongbuk": GYEONGBUK_SI, "gyeongnam": GYEONGNAM_SI,
     "gangwon":   GANGWON_SI,  "jeju":      JEJU_SI,
 }
+
+
+# ── 증분 집계: 최근 N시간 내 신규 거래가 있는 단지만 처리 ──────
+def get_changed_apts(hours: int) -> list[dict]:
+    """최근 N시간 내 trade_raw_v2에 새로 추가된 apt_seq → apartments 행 반환"""
+    since = (datetime.utcnow() - timedelta(hours=hours)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    rows = sb_get("trade_raw_v2", {
+        "select": "apt_seq",
+        "created_at": f"gte.{since}",
+        "prop_type": "eq.apt",
+        "order": "id.asc",
+    }, limit=5000)
+    apt_seqs = list(set(r["apt_seq"] for r in rows if r.get("apt_seq")))
+    if not apt_seqs:
+        return []
+
+    # apt_seq → apartments 조회 (200개씩 배치)
+    apts = []
+    for i in range(0, len(apt_seqs), 200):
+        chunk = apt_seqs[i:i+200]
+        seq_filter = ",".join(chunk)
+        batch = sb_get("apartments", {
+            "select": "kapt_code,kapt_name,apt_seq,sgg,umd_nm,doro_juso,"
+                      "lat,lon,build_year,households,top_floor,heat_type,builder,pyeongs,parking_ground",
+            "apt_seq": f"in.({seq_filter})",
+            "kapt_code": "like.A*",
+        })
+        apts.extend(batch)
+    return apts
+
+
+def process_apt_list(apts: list[dict], dry: bool) -> tuple[int, int, int]:
+    """특정 단지 목록만 집계. (처리, 성공, 건너뜀) 반환"""
+    total = len(apts)
+    ok = skip = 0
+    danji_rows = []
+
+    for apt in apts:
+        apt_seq = apt.get("apt_seq")
+        if not apt_seq:
+            skip += 1; continue
+
+        trades = sb_get("trade_raw_v2", {
+            "select": "deal_type,excl_use_ar,price,monthly_rent,"
+                      "deal_year,deal_month,deal_day,floor,dealing_gbn",
+            "apt_seq": f"eq.{apt_seq}",
+            "prop_type": "eq.apt",
+            "order": "id.asc",
+        }, limit=1000)
+
+        result = aggregate(apt, trades)
+        if result is None:
+            skip += 1; continue
+
+        danji_rows.append(result)
+        ok += 1
+
+    print(f"  변경 단지 집계: {total}개 → 성공 {ok} / 건너뜀 {skip}")
+
+    if dry or not danji_rows:
+        return total, ok, skip
+
+    saved = sb_upsert("danji_pages", danji_rows)
+    return total, saved, skip
 
 
 # ── 구 단위 처리 ──────────────────────────────────────────
@@ -336,6 +407,7 @@ def process_lawd(lawd_cd: str, sgg_name: str, dry: bool) -> tuple[int, int, int]
                       "deal_year,deal_month,deal_day,floor,dealing_gbn",
             "apt_seq": f"eq.{apt_seq}",
             "prop_type": "eq.apt",
+            "order": "id.asc",
         }, limit=1000)
 
         # 3. 집계
@@ -368,13 +440,7 @@ def process_lawd(lawd_cd: str, sgg_name: str, dry: bool) -> tuple[int, int, int]
                 print(f"    {key}㎡ 거래 {len(ph)}건, 최신: {ph[-1] if ph else '-'}")
         return total, ok, skip
 
-    # 5. nearby_* 필드 제거 → 기존 DB 값 보존 (upsert 시 덮어쓰지 않음)
-    for d in danji_rows:
-        for key in ("nearby_subway", "nearby_school", "nearby_complex"):
-            if key in d and not d[key]:
-                del d[key]
-
-    # 6. upsert
+    # 5. upsert
     saved = sb_upsert("danji_pages", danji_rows)
     return total, saved, skip
 
@@ -382,14 +448,33 @@ def process_lawd(lawd_cd: str, sgg_name: str, dry: bool) -> tuple[int, int, int]
 # ── 메인 ─────────────────────────────────────────────────
 def main():
     parser = argparse.ArgumentParser(description="trade_raw_v2 → danji_pages 집계")
-    parser.add_argument("--region",  type=str, help="seoul/incheon/gyeonggi/busan/daegu/gwangju/daejeon/ulsan/all")
-    parser.add_argument("--sigungu", type=str, help="특정 구 코드 (예: 11260,11710)")
-    parser.add_argument("--kapt",    type=str, help="단지 1개 kapt_code (예: A13120403)")
-    parser.add_argument("--dry",     action="store_true", help="저장 안 하고 출력만")
+    parser.add_argument("--region",       type=str, help="seoul/incheon/gyeonggi/.../all")
+    parser.add_argument("--sigungu",      type=str, help="특정 구 코드 (예: 11260,11710)")
+    parser.add_argument("--kapt",         type=str, help="단지 1개 kapt_code (예: A13120403)")
+    parser.add_argument("--changed-only", action="store_true",
+                        help="최근 N시간 내 신규 거래가 있는 단지만 집계 (매일 증분용)")
+    parser.add_argument("--hours",        type=int, default=6,
+                        help="--changed-only 시 lookback 시간 (기본 6)")
+    parser.add_argument("--dry",          action="store_true", help="저장 안 하고 출력만")
     args = parser.parse_args()
 
-    if not any([args.region, args.sigungu, args.kapt]):
+    if not any([args.region, args.sigungu, args.kapt, args.changed_only]):
         parser.print_help(); sys.exit(1)
+
+    # ── 증분 모드: 최근 N시간 내 변경된 단지만 집계 ─────────
+    if args.changed_only:
+        print(f"[증분 모드] 최근 {args.hours}시간 내 신규 거래가 있는 단지만 집계")
+        apts = get_changed_apts(args.hours)
+        if not apts:
+            print("변경된 단지 없음 — 종료")
+            return
+        print(f"변경 단지: {len(apts)}개")
+        start = time.time()
+        total, ok, skip = process_apt_list(apts, args.dry)
+        elapsed = time.time() - start
+        print(f"\n{'='*50}")
+        print(f"완료: {total}개 처리 / {ok}개 저장 / {skip}개 건너뜀 ({elapsed:.0f}초)")
+        return
 
     # 대상 목록 구성
     targets = []  # [(lawd_cd, name)]

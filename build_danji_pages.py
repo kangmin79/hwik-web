@@ -56,8 +56,9 @@ def get_og_image_url(did: str) -> str:
         return f"{OG_STORAGE}/{hashlib.md5(did.encode('utf-8')).hexdigest()}.png"
     return OG_DEFAULT
 
-# /gu/ 페이지가 존재하는 지역
-GU_PAGE_REGIONS = {"서울", "인천", "경기", "부산", "대구", "광주", "대전", "울산"}
+# /gu/ 페이지가 존재하는 지역 (전국 17개 광역시도 모두 생성)
+from regions import REGION_LABEL_TO_KEY as _RLTK
+GU_PAGE_REGIONS = set(_RLTK.keys())  # "서울","충남","경상북도" 등 모든 형태 포함
 
 
 def _has_gu_page(address):
