@@ -854,14 +854,27 @@ def generate_page(d):
     dong_short = dong_raw.split(" ")[0] if dong_raw else ""
     title_loc = f" ({gu} {esc(dong_short)})" if gu and dong_short else (f" ({gu})" if gu else "")
 
-    desc_parts = [raw_name, raw_loc]
-    if units:
-        desc_parts.append(f"{units}세대")
-    if year:
-        desc_parts.append(f"{year}년")
     prop_type = get_prop_type(did)
-    desc_parts.append(f"{prop_type} 실거래가, 전세가, 시세 추이")
-    desc = " ".join(desc_parts)
+    # 데이터 기반 메타 디스크립션 — 실제 수치로 클릭 유도
+    # 데이터 없는 경우 기존 방식으로 fallback
+    _bc_price = (rt.get(bc) or {}).get("price") if bc else None
+    if _bc_price:
+        _dp = [raw_name]
+        _sale_date = (rt.get(bc) or {}).get("date", "")
+        _dp.append(f"최근 매매가 {format_price(_bc_price)}" + (f" ({_sale_date})" if _sale_date else ""))
+        if jr:
+            _dp.append(f"전세가율 {jr}%")
+        if total_recent_trades >= 1:
+            _dp.append(f"최근 1년 {total_recent_trades}건 거래")
+        desc = " · ".join(_dp)
+    else:
+        desc_parts = [raw_name, raw_loc]
+        if units:
+            desc_parts.append(f"{units}세대")
+        if year:
+            desc_parts.append(f"{year}년")
+        desc_parts.append(f"{prop_type} 실거래가, 전세가, 시세 추이")
+        desc = " ".join(desc_parts)
 
     canonical = f"https://hwik.kr/danji/{url_quote(slug, safe='-')}"
     jsonld = build_jsonld(d)
