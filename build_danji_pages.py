@@ -855,17 +855,24 @@ def generate_page(d):
     title_loc = f" ({gu} {esc(dong_short)})" if gu and dong_short else (f" ({gu})" if gu else "")
 
     prop_type = get_prop_type(did)
-    # 데이터 기반 메타 디스크립션 — 실제 수치로 클릭 유도
-    # 데이터 없는 경우 기존 방식으로 fallback
-    _bc_price = (rt.get(bc) or {}).get("price") if bc else None
+    # 데이터 기반 메타 디스크립션 (generate_page 스코프 전용 변수로 계산)
+    _rt  = d.get("recent_trade") or {}
+    _jr  = d.get("jeonse_rate")
+    _bc  = best_price_cat(d)
+    _bc_price = (_rt.get(_bc) or {}).get("price") if _bc else None
     if _bc_price:
         _dp = [raw_name]
-        _sale_date = (rt.get(bc) or {}).get("date", "")
+        _sale_date = (_rt.get(_bc) or {}).get("date", "")
         _dp.append(f"최근 매매가 {format_price(_bc_price)}" + (f" ({_sale_date})" if _sale_date else ""))
-        if jr:
-            _dp.append(f"전세가율 {jr}%")
-        if total_recent_trades >= 1:
-            _dp.append(f"최근 1년 {total_recent_trades}건 거래")
+        if _jr:
+            _dp.append(f"전세가율 {_jr}%")
+        from datetime import date as _d2, timedelta as _td2
+        _one_yr = (_d2.today() - _td2(days=365)).strftime("%Y-%m")
+        _ph2 = d.get("price_history") or {}
+        _cnt = sum(1 for _tl in _ph2.values() if isinstance(_tl, list)
+                   for _t in _tl if (_t.get("date", ""))[:7] >= _one_yr)
+        if _cnt >= 1:
+            _dp.append(f"최근 1년 {_cnt}건 거래")
         desc = " · ".join(_dp)
     else:
         desc_parts = [raw_name, raw_loc]
