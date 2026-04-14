@@ -648,30 +648,30 @@ jobs:
               if log != "(로그 없음)":
                   log_section += f"[{name}]\n{log}\n\n"
 
-          body = f"""[휙] {today} 자동 빌드 실패 — production은 이전 상태 그대로
-
-━━━ 자동으로 한 것 ━━━
-- 빌드 중단 (문제 발견 시점에서 즉시 멈춤)
-- GitHub push 안 함 → hwik.kr 영향 없음
-- 실거래 DB 수집은 이미 완료됐을 수 있음 (HTML만 미반영)
-{guard_msg}
-━━━ 실패 원인 로그 ━━━
-{log_section}
-━━━ 브라우저 검증 결과 ━━━
-{verify_out}
-
-━━━ 지금 해야 할 것 ━━━
-1) 아래 Actions 로그에서 빨간 스텝 확인
-   {run_url}
-2) 내일 새벽 1시 자동 재실행 예정
-   (--hours 36 설정으로 오늘 누락 데이터도 내일 보충)
-3) 급하면 GitHub Actions → sync-trades → "Run workflow" 수동 실행
-
-━━━ 흔한 원인 ━━━
-- 국토부 API 일시 오류 (내일 자동 해결)
-- 급감 가드 발동 (Supabase 조회 오류, 내일 재시도)
-- danji/app.js 또는 style.css 회귀 (코드 확인 필요)
-"""
+          body = "\n".join([
+              f"[휙] {today} 자동 빌드 실패 - production은 이전 상태 그대로",
+              "",
+              "[자동으로 한 것]",
+              "- 빌드 중단 (문제 발견 시점에서 즉시 멈춤)",
+              "- GitHub push 안 함 -> hwik.kr 영향 없음",
+              "- 실거래 DB 수집은 이미 완료됐을 수 있음 (HTML만 미반영)",
+              guard_msg,
+              "[실패 원인 로그]",
+              log_section,
+              "[브라우저 검증 결과]",
+              verify_out,
+              "",
+              "[지금 해야 할 것]",
+              f"1) Actions 로그에서 빨간 스텝 확인: {run_url}",
+              "2) 내일 새벽 1시 자동 재실행 예정",
+              "   (--hours 36으로 오늘 누락 데이터도 내일 보충)",
+              "3) 급하면 GitHub Actions -> sync-trades -> Run workflow 수동 실행",
+              "",
+              "[흔한 원인]",
+              "- 국토부 API 일시 오류 (내일 자동 해결)",
+              "- 급감 가드 발동 (Supabase 조회 오류, 내일 재시도)",
+              "- danji/app.js 또는 style.css 회귀 (코드 확인 필요)",
+          ])
 
           msg = MIMEText(body, "plain", "utf-8")
           msg["Subject"] = f"[휙][FAIL] {today} 자동 빌드 실패 — production 영향 없음"
@@ -745,15 +745,17 @@ jobs:
               if not data_ok: parts.append("DATA")
               status = ", ".join(parts) + " FAIL ✗"
 
-          build_summary = f"""━━━ 빌드 요약 ({today}) ━━━
-실거래 신규 수집 : {trade_count}
-단지 집계        : {danji_v2}
-단지 HTML        : {danji_pg}
-OG 이미지 (단지) : {og_danji}
-OG 이미지 (동)   : {og_dong}
-sitemap          : {sitemap}
-Actions 로그     : {run_url}
-"""
+          build_summary = "\n".join([
+              f"[빌드 요약 ({today})]",
+              f"실거래 신규 수집 : {trade_count}",
+              f"단지 집계        : {danji_v2}",
+              f"단지 HTML        : {danji_pg}",
+              f"OG 이미지 (단지) : {og_danji}",
+              f"OG 이미지 (동)   : {og_dong}",
+              f"sitemap          : {sitemap}",
+              f"Actions 로그     : {run_url}",
+              "",
+          ])
 
           body = build_summary + "\n" + "=" * 60 + "\n\n" + seo + "\n\n" + "=" * 60 + "\n\n" + data
 
