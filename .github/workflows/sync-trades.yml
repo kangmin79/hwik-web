@@ -70,7 +70,11 @@ jobs:
       - name: 서울 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
-          python collect_trades_v2.py --region seoul $FLAG
+          for attempt in 1 2 3; do
+            python collect_trades_v2.py --region seoul $FLAG && break
+            echo "[$attempt/3] 실패, 30초 후 재시도..."
+            [ $attempt -lt 3 ] && sleep 30
+          done
 
   # ── 인천 ──────────────────────────────────────────────
   sync-incheon:
@@ -90,7 +94,11 @@ jobs:
       - name: 인천 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
-          python collect_trades_v2.py --region incheon $FLAG
+          for attempt in 1 2 3; do
+            python collect_trades_v2.py --region incheon $FLAG && break
+            echo "[$attempt/3] 실패, 30초 후 재시도..."
+            [ $attempt -lt 3 ] && sleep 30
+          done
 
   # ── 경기 ──────────────────────────────────────────────
   sync-gyeonggi:
@@ -110,7 +118,11 @@ jobs:
       - name: 경기 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
-          python collect_trades_v2.py --region gyeonggi $FLAG
+          for attempt in 1 2 3; do
+            python collect_trades_v2.py --region gyeonggi $FLAG && break
+            echo "[$attempt/3] 실패, 30초 후 재시도..."
+            [ $attempt -lt 3 ] && sleep 30
+          done
 
   # ── 부산 ──────────────────────────────────────────────
   sync-busan:
@@ -130,7 +142,11 @@ jobs:
       - name: 부산 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
-          python collect_trades_v2.py --region busan $FLAG
+          for attempt in 1 2 3; do
+            python collect_trades_v2.py --region busan $FLAG && break
+            echo "[$attempt/3] 실패, 30초 후 재시도..."
+            [ $attempt -lt 3 ] && sleep 30
+          done
 
   # ── 대구 ──────────────────────────────────────────────
   sync-daegu:
@@ -150,7 +166,11 @@ jobs:
       - name: 대구 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
-          python collect_trades_v2.py --region daegu $FLAG
+          for attempt in 1 2 3; do
+            python collect_trades_v2.py --region daegu $FLAG && break
+            echo "[$attempt/3] 실패, 30초 후 재시도..."
+            [ $attempt -lt 3 ] && sleep 30
+          done
 
   # ── 광주 ──────────────────────────────────────────────
   sync-gwangju:
@@ -170,7 +190,11 @@ jobs:
       - name: 광주 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
-          python collect_trades_v2.py --region gwangju $FLAG
+          for attempt in 1 2 3; do
+            python collect_trades_v2.py --region gwangju $FLAG && break
+            echo "[$attempt/3] 실패, 30초 후 재시도..."
+            [ $attempt -lt 3 ] && sleep 30
+          done
 
   # ── 대전 ──────────────────────────────────────────────
   sync-daejeon:
@@ -190,7 +214,11 @@ jobs:
       - name: 대전 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
-          python collect_trades_v2.py --region daejeon $FLAG
+          for attempt in 1 2 3; do
+            python collect_trades_v2.py --region daejeon $FLAG && break
+            echo "[$attempt/3] 실패, 30초 후 재시도..."
+            [ $attempt -lt 3 ] && sleep 30
+          done
 
   # ── 울산 ──────────────────────────────────────────────
   sync-ulsan:
@@ -210,7 +238,11 @@ jobs:
       - name: 울산 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
-          python collect_trades_v2.py --region ulsan $FLAG
+          for attempt in 1 2 3; do
+            python collect_trades_v2.py --region ulsan $FLAG && break
+            echo "[$attempt/3] 실패, 30초 후 재시도..."
+            [ $attempt -lt 3 ] && sleep 30
+          done
 
   # ── 세종 ──────────────────────────────────────────────
   sync-sejong:
@@ -230,7 +262,11 @@ jobs:
       - name: 세종 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
-          python collect_trades_v2.py --region sejong $FLAG
+          for attempt in 1 2 3; do
+            python collect_trades_v2.py --region sejong $FLAG && break
+            echo "[$attempt/3] 실패, 30초 후 재시도..."
+            [ $attempt -lt 3 ] && sleep 30
+          done
 
   # ── 충북 ──────────────────────────────────────────────
   sync-chungbuk:
@@ -250,7 +286,11 @@ jobs:
       - name: 충북 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
-          python collect_trades_v2.py --region chungbuk $FLAG
+          for attempt in 1 2 3; do
+            python collect_trades_v2.py --region chungbuk $FLAG && break
+            echo "[$attempt/3] 실패, 30초 후 재시도..."
+            [ $attempt -lt 3 ] && sleep 30
+          done
 
   # ── 충남 ──────────────────────────────────────────────
   sync-chungnam:
@@ -270,7 +310,11 @@ jobs:
       - name: 충남 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
-          python collect_trades_v2.py --region chungnam $FLAG
+          for attempt in 1 2 3; do
+            python collect_trades_v2.py --region chungnam $FLAG && break
+            echo "[$attempt/3] 실패, 30초 후 재시도..."
+            [ $attempt -lt 3 ] && sleep 30
+          done
 
   # ── 전북 ──────────────────────────────────────────────
   sync-jeonbuk:
@@ -290,7 +334,11 @@ jobs:
       - name: 전북 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
-          python collect_trades_v2.py --region jeonbuk $FLAG
+          for attempt in 1 2 3; do
+            python collect_trades_v2.py --region jeonbuk $FLAG && break
+            echo "[$attempt/3] 실패, 30초 후 재시도..."
+            [ $attempt -lt 3 ] && sleep 30
+          done
 
   # ── 전남 ──────────────────────────────────────────────
   sync-jeonnam:
@@ -310,7 +358,11 @@ jobs:
       - name: 전남 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
-          python collect_trades_v2.py --region jeonnam $FLAG
+          for attempt in 1 2 3; do
+            python collect_trades_v2.py --region jeonnam $FLAG && break
+            echo "[$attempt/3] 실패, 30초 후 재시도..."
+            [ $attempt -lt 3 ] && sleep 30
+          done
 
   # ── 경북 ──────────────────────────────────────────────
   sync-gyeongbuk:
@@ -330,7 +382,11 @@ jobs:
       - name: 경북 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
-          python collect_trades_v2.py --region gyeongbuk $FLAG
+          for attempt in 1 2 3; do
+            python collect_trades_v2.py --region gyeongbuk $FLAG && break
+            echo "[$attempt/3] 실패, 30초 후 재시도..."
+            [ $attempt -lt 3 ] && sleep 30
+          done
 
   # ── 경남 ──────────────────────────────────────────────
   sync-gyeongnam:
@@ -350,7 +406,11 @@ jobs:
       - name: 경남 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
-          python collect_trades_v2.py --region gyeongnam $FLAG
+          for attempt in 1 2 3; do
+            python collect_trades_v2.py --region gyeongnam $FLAG && break
+            echo "[$attempt/3] 실패, 30초 후 재시도..."
+            [ $attempt -lt 3 ] && sleep 30
+          done
 
   # ── 강원 ──────────────────────────────────────────────
   sync-gangwon:
@@ -370,7 +430,11 @@ jobs:
       - name: 강원 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
-          python collect_trades_v2.py --region gangwon $FLAG
+          for attempt in 1 2 3; do
+            python collect_trades_v2.py --region gangwon $FLAG && break
+            echo "[$attempt/3] 실패, 30초 후 재시도..."
+            [ $attempt -lt 3 ] && sleep 30
+          done
 
   # ── 제주 ──────────────────────────────────────────────
   sync-jeju:
@@ -390,7 +454,11 @@ jobs:
       - name: 제주 수집 (v2)
         run: |
           FLAG=$( [ "${{ github.event.inputs.mode }}" = "init" ] && echo "--init" || echo "--months 3" )
-          python collect_trades_v2.py --region jeju $FLAG
+          for attempt in 1 2 3; do
+            python collect_trades_v2.py --region jeju $FLAG && break
+            echo "[$attempt/3] 실패, 30초 후 재시도..."
+            [ $attempt -lt 3 ] && sleep 30
+          done
 
   # ── sitemap + 정적 페이지 빌드 (17개 job 완료 후) ────────
   build:
@@ -409,7 +477,7 @@ jobs:
       - name: Playwright 브라우저 설치
         run: python -m playwright install chromium --with-deps
       - name: danji_pages DB 집계 (변경된 단지만)
-        run: python build_danji_from_v2.py --changed-only --hours 24 2>&1 | tee /tmp/log_danji_v2.txt; exit ${PIPESTATUS[0]}
+        run: python build_danji_from_v2.py --changed-only --hours 36 2>&1 | tee /tmp/log_danji_v2.txt; exit ${PIPESTATUS[0]}
       - name: 동 정적 페이지 빌드
         run: python build_dong_pages.py
       - name: 구 정적 페이지 빌드
