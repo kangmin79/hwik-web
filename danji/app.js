@@ -494,13 +494,27 @@ function render() {
   const dong = locationParts.length >= 2 ? locationParts.slice(1).join(' ') : d.location;
   const dongDisplay = locationParts[locationParts.length - 1] || d.location;
 
-  // breadcrumb — 지역명 추출 (서울/경기/인천/부산/대구/광주/대전/울산)
+  // breadcrumb — 지역명 추출 (전국 17개 시도)
   const guName = locationParts[0] || '';
   const _addrCity = (d.address || '').split(' ')[0] || '';
-  const _cityMap = {'서울특별시':'서울','인천광역시':'인천','경기도':'경기','부산광역시':'부산','대구광역시':'대구','광주광역시':'광주','대전광역시':'대전','울산광역시':'울산'};
+  const _cityMap = {
+    '서울특별시':'서울','인천광역시':'인천','경기도':'경기',
+    '부산광역시':'부산','대구광역시':'대구','광주광역시':'광주','대전광역시':'대전','울산광역시':'울산',
+    '세종특별자치시':'세종',
+    '충청북도':'충북','충청남도':'충남',
+    '전라북도':'전북','전라남도':'전남',
+    '경상북도':'경북','경상남도':'경남',
+    '강원특별자치도':'강원','강원도':'강원',
+    '제주특별자치도':'제주','제주도':'제주',
+  };
   const _cityLabel = _cityMap[_addrCity] || '서울';
-  const _metroSet = new Set(['부산','대구','광주','대전','울산']);
-  const _guUrlSlug = _metroSet.has(_cityLabel) ? (_cityLabel + '-' + guName) : guName;
+  // slug 규칙: 서울/경기=접두사 없음, 인천=중구만 예외, 나머지 전체={지역}-{구}
+  const _noPrefixSet = new Set(['서울','경기']);
+  const _guSlugBase = guName.replace(/ /g, '-');
+  const _guUrlSlug = _noPrefixSet.has(_cityLabel) ? _guSlugBase
+    : (_cityLabel === '인천' && guName === '중구') ? '인천-중구'
+    : _cityLabel === '인천' ? _guSlugBase
+    : (_cityLabel + '-' + _guSlugBase);
 
   // FAQ 데이터
   const faqItems = [];
