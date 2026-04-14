@@ -408,11 +408,13 @@ jobs:
       - run: pip install requests python-dateutil playwright
       - name: Playwright 브라우저 설치
         run: python -m playwright install chromium --with-deps
-      - name: sitemap 재생성
-        run: python sync_trades.py --sitemap-only
       - name: danji_pages DB 집계 (변경된 단지만)
         run: python build_danji_from_v2.py --changed-only --hours 24
-      - name: 단지 정적 HTML 빌드 (danji_pages → HTML)
+      - name: 동 정적 페이지 빌드
+        run: python build_dong_pages.py
+      - name: 구 정적 페이지 빌드
+        run: python build_gu_pages.py
+      - name: 단지 정적 HTML 빌드 (dong/gu 슬러그 완비 후)
         run: python build_danji_pages.py
       - name: 단지 OG 이미지 생성 (변경분만)
         timeout-minutes: 50
@@ -422,12 +424,10 @@ jobs:
         timeout-minutes: 10
         continue-on-error: true
         run: python build_og_images_dong.py
-      - name: 동 정적 페이지 빌드
-        run: python build_dong_pages.py
-      - name: 구 정적 페이지 빌드
-        run: python build_gu_pages.py
       - name: 랭킹 정적 페이지 빌드
         run: python build_ranking_pages.py
+      - name: sitemap 재생성 (모든 HTML 빌드 완료 후)
+        run: python sync_trades.py --sitemap-only
 
       # ── pre-push 브라우저 검증 게이트 ──────────────────────
       # 빌드 결과를 runner-local http.server 로 서빙해서 Chromium 으로 열고
