@@ -39,6 +39,10 @@ on:
           - gangwon
           - jeju
 
+concurrency:
+  group: sync-trades
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
