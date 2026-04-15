@@ -533,6 +533,18 @@ def build_fallback_html(d):
             )
         lines.append("</ul>")
 
+    # 요약 문단 (FAQ 위 — 구글 스니펫 + 본문 텍스트 신호)
+    _intro = build_intro_sentence(
+        d.get("complex_name", ""), d.get("address", ""),
+        year, units, d.get("builder", ""),
+        bc, rt, jr, get_prop_type(did)
+    )
+    if _intro:
+        lines.append(
+            f'<p style="font-size:12px;color:#6b7280;line-height:1.8;margin:16px 0 12px;">'
+            f'{esc(_intro)}</p>'
+        )
+
     # FAQ
     faq = []
     if bc and rt.get(bc):
