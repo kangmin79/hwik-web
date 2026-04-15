@@ -1,39 +1,42 @@
 # 다음 세션 할 일 (2026-04-15 오후)
 
-## 오늘 완료한 것
-- trade_raw_v2 인덱스 추가 (created_at, prop_type) — 빌드 타임아웃 해결
-- OG 이미지 잔재 정리 (build_danji_pages.py img 태그, 빌드 이메일 로그)
-- 빌드 실패 자동 수정 에이전트 구현
-  - auto_fix.py — Claude Haiku로 로그 분석 → Python 스크립트 자동 수정
-  - sync-trades.yml — failure() 시 auto_fix.py 실행 → commit+push+재실행
-  - GitHub Secret ANTHROPIC_API_KEY 등록 완료
-- sync-trades.yml 개선
-  - build job if 조건 완화 (1개 지역 실패해도 빌드 진행)
-  - retry_count 입력 파라미터 추가
-  - 동/구/랭킹 스텝 tee 로그 캡처 추가
-- 빌드 검증 오류 수정
-  - verify_data.py 공급/전용 비율 0.95~2.0으로 완화
-  - sync_trades.py sitemap에 dong/index + 소규모 동 페이지 추가
+## 오늘 완료한 것 (SEO 집중 작업)
+- danji 날짜 표시 KST 오늘날짜로 수정
+- 주변 단지 가격 없는 항목 + 오피스텔(offi-) 404 필터
+- sitemap lastmod → 오늘날짜, 4개 지역 분리 (seoul/metro/cities/pages)
+- GSC sitemap 재제출 완료 (20,726페이지 인식)
+- Twitter Card summary → summary_large_image 전체 수정
+- ranking FAQPage 1→5개, gu ItemList 20→50개
+- index.html SearchAction 제거 (URL 불일치)
+- 충북-청주청원구 근본 원인 수정 (LOCATION_GU_FIX 35개 패턴)
+- 단지 title에 위치 추가 (브라이튼여의도 실거래가 시세 · 영등포구 여의도동 | 휙)
+- FAQ 위 요약 문단 추가 (build_danji_pages.py + app.js 둘 다)
+- 워크플로우 git add에 서브 sitemap 파일 추가
+- verify_seo.py sitemapindex 포맷 지원 + 이메일 파싱 키워드 수정
 
-## 빌드 현황 (2026-04-15 수동 실행)
-- 실거래 844건 수집
-- HTML 18,891개 정상 생성
-- SEO 검증: 내부링크/회귀방지 PASS, PageSpeed FAIL (root 도구파일 — 무관)
-- 데이터 검증: HTML 대조 PASS, 비율 임계값 오류는 오늘 수정됨
+## 빌드 현황
+- HTML 18,891개 정상, sitemap 4개 파일 커밋 확인
+- 내부링크 0건, 회귀방지 PASS
+- 이메일 sitemap: - → 다음 빌드부터 정상 출력 예정
 
 ## 다음에 할 것
 
-### 1. 내일 새벽 빌드 결과 확인
-- 자동 수정 에이전트가 첫 실패 시 제대로 동작하는지 확인
-- SEO 검증 전체 PASS 여부 확인
+### 1. 최근 실거래 클릭 → 상단 업데이트 기능
+- 단지 페이지 최근 실거래 리스트 행 클릭 시 상단 가격/층수/날짜 업데이트
+- 체류시간 증가 목적 (구글 긍정 신호)
+- app.js 약 20줄 수정
 
-### 2. 단지 페이지 배너 (buildUrlWithTab 연결)
-- danji/app.js에 buildUrlWithTab() 이미 추가됨
-- 단지 페이지에서 거래유형(매매/전세/월세) 탭 → 중개사 페이지 링크 연결
-- type 파라미터로 탭 자동 선택
+### 2. dong/index.html FAQPage 누락 수정
+- 검증 FAIL 항목, 간단히 수정 가능
 
-### 3. 매물 등록 시 kapt_code 매칭
-- 중개사 매물 등록 시 단지명 + 좌표로 apartments 테이블 kapt_code 정확히 매칭
+### 3. GSC 순위 모니터링 (1~2주 후)
+- 평균 게재순위 10.4 → 개선 여부 확인
+- 노출수 225 → 증가 추이 확인
+
+### 4. 백링크 확보 (데이터 안정화 후)
+- 네이버 블로그 hwik.kr 링크 글 작성
+- 노출 중인 단지 위주: 브라이튼여의도, 돈암삼성, 일성파크
 
 ## 나중에 할 것
-- telegram_chat_logs 테이블 구현 (텔레그램 대화 전부 저장)
+- telegram_chat_logs 테이블 구현
+- 매물 등록 시 kapt_code 매칭
