@@ -418,8 +418,9 @@ function render() {
         bestDate = prices[k].date || null;
       }
     }
+    // 오피스텔(offi-)·비아파트(apt-) = 페이지 미생성 → 스킵 (404 방지)
+    if (n.id && (n.id.startsWith('offi-') || n.id.startsWith('apt-'))) return '';
     // 거래 없는 단지 = 페이지 미생성 → 스킵 (404 방지)
-    // build_danji_pages.py 의 DANJI_SLUG_MAP 과 동일 기준 (recent_trade 있는 단지만)
     if (!bestPrice) return '';
     // 면적 표시 (전용/공급 토글 반영)
     let areaLabel = '';
