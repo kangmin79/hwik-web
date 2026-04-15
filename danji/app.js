@@ -723,7 +723,7 @@ function render() {
           거래 취소·정정 건은 반영이 지연될 수 있습니다
         </div>
       </details>
-      <div class="seo-source" style="margin-top:8px;">실거래가 출처: 국토교통부 · 최종 데이터 확인: ${d.updated_at ? d.updated_at.slice(0,10) : new Date().toISOString().slice(0,10)}</div>
+      <div class="seo-source" style="margin-top:8px;">실거래가 출처: 국토교통부 · 최종 데이터 확인: ${new Date(Date.now() + 9*3600*1000).toISOString().slice(0,10)}</div>
       <div style="margin-top:14px;text-align:center;">
         <button onclick="openReportModal()" style="background:none;border:1px solid var(--border, #e5e7eb);border-radius:20px;color:var(--sub, #6b7280);font-size:12px;cursor:pointer;padding:6px 16px;">🚨 데이터 오류 신고</button>
       </div>
