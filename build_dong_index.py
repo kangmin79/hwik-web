@@ -112,7 +112,7 @@ def build_index():
     lines.append(f'<meta property="og:description" content="{e(desc)}">')
     lines.append('<meta property="og:image" content="https://hwik.kr/og-image.png">')
     lines.append('<meta property="og:url" content="https://hwik.kr/dong/">')
-    lines.append('<meta name="twitter:card" content="summary">')
+    lines.append('<meta name="twitter:card" content="summary_large_image">')
     lines.append(f'<meta name="twitter:title" content="{e(title)}">')
     lines.append(f'<meta name="twitter:description" content="{e(desc)}">')
     lines.append('<meta name="google-site-verification" content="R2ye41AVVTRs8BxEXyEafFSTqMSiHKdb9zgTklrktSI">')

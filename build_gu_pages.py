@@ -473,7 +473,7 @@ def wrap_html(title, desc, canonical, body, jsonld_str):
 <meta property="og:description" content="{esc(desc)}">
 <meta property="og:image" content="https://hwik.kr/og-image.png">
 <meta property="og:url" content="{canonical}">
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{esc(title)}">
 <meta name="twitter:description" content="{esc(desc)}">
 <meta name="google-site-verification" content="R2ye41AVVTRs8BxEXyEafFSTqMSiHKdb9zgTklrktSI">
