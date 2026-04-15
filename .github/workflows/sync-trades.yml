@@ -536,7 +536,7 @@ jobs:
   build:
     name: sitemap + 정적 페이지 빌드
     runs-on: ubuntu-latest
-    timeout-minutes: 400
+    timeout-minutes: 480
     needs: [sync-seoul, sync-incheon, sync-gyeonggi, sync-busan, sync-daegu, sync-gwangju, sync-daejeon, sync-ulsan,
             sync-sejong, sync-chungbuk, sync-chungnam, sync-jeonbuk, sync-jeonnam, sync-gyeongbuk, sync-gyeongnam, sync-gangwon, sync-jeju]
     if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') && !contains(needs.*.result, 'skipped') }}
