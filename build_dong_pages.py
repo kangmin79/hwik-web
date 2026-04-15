@@ -590,7 +590,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
 <meta property="og:locale" content="ko_KR">
 <meta property="og:title" content="{esc(title)}">
 <meta property="og:description" content="{esc(desc)}">
-<meta property="og:image" content="https://jqaxejgzkchxbfzgzyzi.supabase.co/storage/v1/object/public/og-images/dong/{hashlib.md5(slug.encode('utf-8')).hexdigest()}.png">
+<meta property="og:image" content="https://hwik.kr/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:url" content="{canonical}">

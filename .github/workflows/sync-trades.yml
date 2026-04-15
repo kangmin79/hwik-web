@@ -556,14 +556,6 @@ jobs:
         run: python build_gu_pages.py
       - name: 단지 정적 HTML 빌드 (dong/gu 슬러그 완비 후)
         run: python build_danji_pages.py 2>&1 | tee /tmp/log_danji_pages.txt; exit ${PIPESTATUS[0]}
-      - name: 단지 OG 이미지 생성 (변경분만)
-        timeout-minutes: 300
-        continue-on-error: true
-        run: python build_og_images.py 2>&1 | tee /tmp/log_og.txt
-      - name: 동 OG 이미지 생성 (변경분만)
-        timeout-minutes: 50
-        continue-on-error: true
-        run: python build_og_images_dong.py 2>&1 | tee /tmp/log_og_dong.txt
       - name: 랭킹 정적 페이지 빌드
         run: python build_ranking_pages.py
       - name: sitemap 재생성 (모든 HTML 빌드 완료 후)

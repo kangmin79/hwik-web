@@ -53,10 +53,8 @@ OG_DEFAULT = "https://hwik.kr/og-image.png"
 OG_STORAGE = "https://jqaxejgzkchxbfzgzyzi.supabase.co/storage/v1/object/public/og-images/danji"
 
 def get_og_image_url(did: str) -> str:
-    """manifest에 등록된 경우 전용 이미지, 아니면 기본 이미지 반환"""
-    if did in OG_MANIFEST:
-        return f"{OG_STORAGE}/{hashlib.md5(did.encode('utf-8')).hexdigest()}.png"
-    return OG_DEFAULT
+    """공통 OG 이미지 반환"""
+    return "https://hwik.kr/og-image.png"
 
 # /gu/ 페이지가 존재하는 지역 (전국 17개 광역시도 모두 생성)
 from regions import REGION_LABEL_TO_KEY as _RLTK
