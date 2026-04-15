@@ -109,7 +109,7 @@ async function loadData() {
 
   // apartments 쿼리는 실패해도 페이지 렌더링에 영향 없도록 별도 처리
   try {
-    const aptRes = await sb.from('apartments').select('complex_type').eq('kapt_code', id).maybeSingle();
+    const aptRes = await sb.from('apartments').select('complex_type').eq('kapt_code', id.toUpperCase()).maybeSingle();
     const ct = aptRes.data?.complex_type || '';
     if (ct === '주상복합' || ct === '도시형 생활주택(주상복합)') complexType = '주상복합';
     else if (ct === '도시형 생활주택(아파트)') complexType = '도시형 생활주택';
