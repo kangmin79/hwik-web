@@ -844,6 +844,8 @@ def generate_page(d):
     # title용 위치 (중복 타이틀 방지 — 구+동)
     dong_short = dong_raw.split(" ")[0] if dong_raw else ""
     title_loc = f" ({gu} {esc(dong_short)})" if gu and dong_short else (f" ({gu})" if gu else "")
+    # SEO title용 위치 접미어: " · 여의도동" 또는 " · 영통구 망포동"
+    title_loc_seo = f" · {gu} {esc(dong_short)}" if gu and dong_short else (f" · {gu}" if gu else "")
 
     prop_type = get_prop_type(did)
     # 데이터 기반 메타 디스크립션 (generate_page 스코프 전용 변수로 계산)
@@ -895,7 +897,7 @@ def generate_page(d):
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{name} 실거래가 시세 | 휙</title>
+<title>{name} 실거래가 시세{title_loc_seo} | 휙</title>
 <meta name="description" content="{esc(desc)}">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
 <link rel="icon" href="/favicon.ico">
@@ -903,7 +905,7 @@ def generate_page(d):
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="휙">
 <meta property="og:locale" content="ko_KR">
-<meta property="og:title" id="og-title" content="{name} 실거래가 시세 | 휙">
+<meta property="og:title" id="og-title" content="{name} 실거래가 시세{title_loc_seo} | 휙">
 <meta property="og:description" id="og-desc" content="{esc(desc)}">
 <meta property="og:image" content="{OG_IMAGE_URL}">
 <meta property="og:image:width" content="1200">
