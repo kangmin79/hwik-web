@@ -376,6 +376,26 @@ def check_pagespeed(category, fname, html, errors):
 
 
 # ── 검증 4: sitemap.xml ↔ 실제 파일 ───────────────────────
+def _collect_url_elements(sitemap_path, ns):
+    """sitemapindex 또는 urlset에서 모든 url 요소를 수집 (재귀)"""
+    url_elements = []
+    if not sitemap_path.is_file():
+        return url_elements
+    tree = ET.parse(sitemap_path)
+    root = tree.getroot()
+    # sitemapindex: 하위 sitemap 파일들을 재귀적으로 읽음
+    for sm_elem in root.findall('sm:sitemap', ns):
+        loc = sm_elem.find('sm:loc', ns)
+        if loc is not None and loc.text:
+            sub_name = loc.text.strip().split('/')[-1]
+            sub_path = sitemap_path.parent / sub_name
+            url_elements.extend(_collect_url_elements(sub_path, ns))
+    # urlset: url 요소 직접 수집
+    for url_elem in root.findall('sm:url', ns):
+        url_elements.append(url_elem)
+    return url_elements
+
+
 def verify_sitemap(root_files, danji_slugs, dong_slugs, gu_slugs=None, ranking_slugs=None):
     if gu_slugs is None:
         gu_slugs = set()
@@ -388,9 +408,8 @@ def verify_sitemap(root_files, danji_slugs, dong_slugs, gu_slugs=None, ranking_s
         errors["sitemap_missing"].append("sitemap.xml 없음")
         return errors, 0
 
-    tree = ET.parse(sitemap_path)
-    root = tree.getroot()
     ns = {'sm': 'http://www.sitemaps.org/schemas/sitemap/0.9'}
+    all_url_elems = _collect_url_elements(sitemap_path, ns)
 
     sitemap_danji = set()
     sitemap_dong = set()
@@ -398,7 +417,7 @@ def verify_sitemap(root_files, danji_slugs, dong_slugs, gu_slugs=None, ranking_s
     sitemap_ranking = set()
     url_count = 0
 
-    for url_elem in root.findall('sm:url', ns):
+    for url_elem in all_url_elems:
         loc = url_elem.find('sm:loc', ns)
         lastmod = url_elem.find('sm:lastmod', ns)
 

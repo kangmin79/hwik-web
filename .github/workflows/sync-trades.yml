@@ -780,7 +780,7 @@ jobs:
 
           danji_v2  = last_line("/tmp/log_danji_v2.txt", "완료:")
           danji_pg  = last_line("/tmp/log_danji_pages.txt", "페이지 생성")
-          sitemap   = last_line("/tmp/log_sitemap.txt", "sitemap.xml 생성")
+          sitemap   = last_line("/tmp/log_sitemap.txt", "sitemap 생성 완료")
 
           # ── 오늘 새로 수집된 거래 건수 (DB 직접 조회) ──
           trade_count = "-"
