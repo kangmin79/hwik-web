@@ -154,6 +154,11 @@ def aggregate(apt: dict, trades: list) -> dict | None:
     if not categories:
         return None
 
+    # pyeongs_map을 실거래 categories에 매칭되는 항목만 남김
+    # → 상가/기타 면적 혼입 차단, 공급면적도 실거래 전용면적 기준으로만 표시
+    if pyeongs_map:
+        pyeongs_map = {k: v for k, v in pyeongs_map.items() if k in categories}
+
     # ── 2. 거래별 집계 ────────────────────────────────────
     recent_trade  = {}
     all_time_high = {}
