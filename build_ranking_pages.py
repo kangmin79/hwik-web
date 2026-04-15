@@ -283,6 +283,19 @@ def build_ranking_html(region, rank_type, data):
     if top50:
         faq_items.append({"@type": "Question", "name": f"{area_label}에서 가장 비싼 아파트는?",
                           "acceptedAnswer": {"@type": "Answer", "text": f"{top50[0]['name']} ({top50[0]['location']})이 {format_price(top50[0]['price'])}으로 1위입니다."}})
+        if len(top50) >= 2:
+            faq_items.append({"@type": "Question", "name": f"{area_label} 아파트 매매가 2위는?",
+                              "acceptedAnswer": {"@type": "Answer", "text": f"2위는 {top50[1]['name']} ({top50[1]['location']})으로 {format_price(top50[1]['price'])}입니다."}})
+        if len(top50) >= 3:
+            faq_items.append({"@type": "Question", "name": f"{area_label} 아파트 매매가 3위는?",
+                              "acceptedAnswer": {"@type": "Answer", "text": f"3위는 {top50[2]['name']} ({top50[2]['location']})으로 {format_price(top50[2]['price'])}입니다."}})
+        if rank_type == "sqm":
+            faq_items.append({"@type": "Question", "name": f"{area_label} ㎡당 가격 1위는?",
+                              "acceptedAnswer": {"@type": "Answer", "text": f"{top50[0]['name']}이 전용면적 기준 {format_price(top50[0]['sqm_price'])}/㎡으로 1위입니다."}})
+        if rank_type in ("jeonse", "jeonse_low"):
+            direction = "높은" if rank_type == "jeonse" else "낮은"
+            faq_items.append({"@type": "Question", "name": f"{area_label} 전세가율 순위는?",
+                              "acceptedAnswer": {"@type": "Answer", "text": f"전세가율 {direction} 1위는 {top50[0]['name']} ({top50[0].get('jr',0)}%)입니다."}})
 
     jsonld = {
         "@context": "https://schema.org",
@@ -297,7 +310,7 @@ def build_ranking_html(region, rank_type, data):
              "itemListElement": [
                  {"@type": "ListItem", "position": i+1, "name": d["name"],
                   "url": f"https://hwik.kr/danji/{url_quote(make_danji_slug(d['name'], d['location'], d['id'], d['address']), safe='-')}"}
-                 for i, d in enumerate(top50[:20])
+                 for i, d in enumerate(top50)
              ]}
         ]
     }

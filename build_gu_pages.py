@@ -401,7 +401,7 @@ def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None)
                 "itemListElement": [
                     {"@type": "ListItem", "position": i+1, "name": d["complex_name"],
                      "url": f"https://hwik.kr/danji/{url_quote(make_danji_slug(d['complex_name'], d.get('location',''), d['id'], d.get('address','')), safe='-')}"}
-                    for i, d in enumerate(danji_list[:20])
+                    for i, d in enumerate(danji_list[:50])
                 ]
             }
         ]
