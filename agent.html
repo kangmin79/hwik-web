@@ -341,8 +341,13 @@ async function load() {
   let cards = cardsRes.data || [];
 
   if (!p) {
-    document.getElementById('profileName').textContent = '존재하지 않는 중개사입니다.';
-    document.getElementById('cardList').innerHTML = '';
+    const errMsg = profileRes.error ? profileRes.error.message : 'data null';
+    document.getElementById('profileName').textContent = `오류(${errMsg})`;
+    document.getElementById('cardList').innerHTML = `<div style="padding:16px;font-size:11px;color:#666;word-break:break-all;">
+      profileErr: ${JSON.stringify(profileRes.error)}<br>
+      cardsErr: ${JSON.stringify(cardsRes.error)}<br>
+      UA: ${navigator.userAgent}
+    </div>`;
     return;
   }
 
