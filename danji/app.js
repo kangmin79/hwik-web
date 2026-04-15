@@ -5,6 +5,8 @@ const $$ = s => document.querySelectorAll(s);
 let DATA = null;
 let currentTab = '매매';
 let currentPyeong = null;
+let _guUrlSlug = '';
+let _cityLabel = '';
 
 // 현재 탭(매매/전세/월세)을 URL 파라미터로 반환
 // 배너/링크에서 사용: buildUrlWithTab('https://hwik.kr/agent/홍길동')
@@ -526,12 +528,12 @@ function render() {
     '강원특별자치도':'강원','강원도':'강원',
     '제주특별자치도':'제주','제주도':'제주',
   };
-  const _cityLabel = _cityMap[_addrCity] || '';
+  _cityLabel = _cityMap[_addrCity] || '';
   // slug 규칙: 서울/경기=접두사 없음, 인천=중구만 예외, 나머지 전체={지역}-{구}
   // _cityLabel 미인식 시 guName만 사용 (서울/경기와 동일 동작, 안전한 fallback)
   const _noPrefixSet = new Set(['서울','경기']);
   const _guSlugBase = guName.replace(/ /g, '-');
-  const _guUrlSlug = (!_cityLabel || _noPrefixSet.has(_cityLabel)) ? _guSlugBase
+  _guUrlSlug = (!_cityLabel || _noPrefixSet.has(_cityLabel)) ? _guSlugBase
     : (_cityLabel === '인천' && guName === '중구') ? '인천-중구'
     : _cityLabel === '인천' ? _guSlugBase
     : (_cityLabel + '-' + _guSlugBase);
