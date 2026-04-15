@@ -38,6 +38,11 @@ on:
           - gyeongnam
           - gangwon
           - jeju
+      retry_count:
+        description: '자동 수정 재시도 횟수 (내부용, 직접 설정 불필요)'
+        required: false
+        default: '0'
+        type: string
 
 concurrency:
   group: sync-trades
@@ -45,6 +50,7 @@ concurrency:
 
 permissions:
   contents: write
+  actions: write
 
 # ── 공통 환경변수 ──────────────────────────────────────
 env:
@@ -539,7 +545,9 @@ jobs:
     timeout-minutes: 90
     needs: [sync-seoul, sync-incheon, sync-gyeonggi, sync-busan, sync-daegu, sync-gwangju, sync-daejeon, sync-ulsan,
             sync-sejong, sync-chungbuk, sync-chungnam, sync-jeonbuk, sync-jeonnam, sync-gyeongbuk, sync-gyeongnam, sync-gangwon, sync-jeju]
-    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') && !contains(needs.*.result, 'skipped') }}
+    if: ${{ !cancelled() && !contains(needs.*.result, 'cancelled') }}
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -551,13 +559,13 @@ jobs:
       - name: danji_pages DB 집계 (변경된 단지만)
         run: python build_danji_from_v2.py --changed-only --hours 36 2>&1 | tee /tmp/log_danji_v2.txt; exit ${PIPESTATUS[0]}
       - name: 동 정적 페이지 빌드
-        run: python build_dong_pages.py
+        run: python build_dong_pages.py 2>&1 | tee /tmp/log_dong.txt; exit ${PIPESTATUS[0]}
       - name: 구 정적 페이지 빌드
-        run: python build_gu_pages.py
+        run: python build_gu_pages.py 2>&1 | tee /tmp/log_gu.txt; exit ${PIPESTATUS[0]}
       - name: 단지 정적 HTML 빌드 (dong/gu 슬러그 완비 후)
         run: python build_danji_pages.py 2>&1 | tee /tmp/log_danji_pages.txt; exit ${PIPESTATUS[0]}
       - name: 랭킹 정적 페이지 빌드
-        run: python build_ranking_pages.py
+        run: python build_ranking_pages.py 2>&1 | tee /tmp/log_ranking.txt; exit ${PIPESTATUS[0]}
       - name: sitemap 재생성 (모든 HTML 빌드 완료 후)
         run: python sync_trades.py --sitemap-only 2>&1 | tee /tmp/log_sitemap.txt; exit ${PIPESTATUS[0]}
 
@@ -598,6 +606,56 @@ jobs:
             git push
           fi
 
+      # ── 빌드 실패 시 자동 수정 에이전트 ──────────────────────
+      # 실패 로그를 Claude API로 분석 → Python 스크립트 버그면 자동 수정 후 커밋·푸시
+      # 외부 API 장애·네트워크 오류는 수정 불가로 분류 → 기존 실패 이메일로 진행
+      # 안전 장치: danji/app.js, style.css, workflows/ 는 절대 수정 안 함
+      # 최대 2회 자동 재시도 (retry_count 파라미터)
+      - name: 자동 수정 에이전트
+        id: autofix
+        if: failure() && (github.event.inputs.retry_count == '' || fromJSON(github.event.inputs.retry_count || '0') < 2)
+        continue-on-error: true
+        run: |
+          # 모든 로그 합치기
+          cat /tmp/log_*.txt > /tmp/build_fail.txt 2>/dev/null || true
+
+          # auto_fix.py 실행
+          python auto_fix.py --log /tmp/build_fail.txt
+          FIX_EXIT=$?
+
+          if [ $FIX_EXIT -eq 0 ]; then
+            echo "fix_result=fixed" >> $GITHUB_OUTPUT
+
+            # 수정된 Python 파일만 커밋
+            git config user.name  "hwik-autofix[bot]"
+            git config user.email "autofix@hwik.kr"
+            git add -A *.py
+            if ! git diff --cached --quiet; then
+              RETRY_NUM="${{ github.event.inputs.retry_count || '0' }}"
+              git commit -m "fix(auto): 빌드 실패 자동 수정 retry=${RETRY_NUM}"
+              git pull --rebase origin main
+              git push
+              echo "✅ 수정 커밋 푸시 완료"
+
+              # 다음 retry_count로 워크플로우 재실행 시도
+              NEXT=$(( RETRY_NUM + 1 ))
+              gh workflow run sync-trades.yml \
+                --field mode=daily \
+                --field retry_count=$NEXT \
+                && echo "🔄 재실행 예약 (retry $NEXT/2)" \
+                || echo "⚠️  재실행 예약 실패 (내일 새벽 1시 자동 실행)"
+            else
+              echo "⚠️  커밋할 변경 없음"
+              echo "fix_result=no_change" >> $GITHUB_OUTPUT
+            fi
+          elif [ $FIX_EXIT -eq 2 ]; then
+            echo "fix_result=not_fixable" >> $GITHUB_OUTPUT
+          else
+            echo "fix_result=error" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       # ── 빌드 실패 시 알림 이메일 ──
       - name: 실패 이메일
         if: failure()
@@ -626,7 +684,6 @@ jobs:
           }
 
           # 브라우저 검증 결과
-          verify_log = read_log("/tmp/http_server.log", 3)
           try:
               with open("verify_result.txt", encoding="utf-8") as f:
                   verify_out = f.read()[-1500:]
@@ -637,7 +694,21 @@ jobs:
           danji_log = read_log("/tmp/log_danji_pages.txt", 10)
           guard_msg = ""
           if "급감 감지" in danji_log:
-              guard_msg = "⚠️  급감 가드 발동 — DB 데이터가 기존 HTML 수의 90% 미만\n"
+              guard_msg = "⚠️  급감 가드 발동 — DB 데이터가 기존 HTML 수의 99% 미만\n"
+
+          # 자동 수정 에이전트 결과
+          autofix_status = ""
+          try:
+              with open("/tmp/autofix_status.txt", encoding="utf-8") as f:
+                  status = f.read().strip()
+              if status.startswith("fixed:"):
+                  autofix_status = f"🤖 자동 수정 적용됨: {status.split(':',1)[1]} — 재실행 예약됨\n"
+              elif status.startswith("not_fixable:"):
+                  autofix_status = f"🤖 자동 수정 불가: {status.split(':',1)[1]}\n"
+              else:
+                  autofix_status = f"🤖 자동 수정 실패: {status}\n"
+          except:
+              autofix_status = "🤖 자동 수정 미실행\n"
 
           log_section = ""
           for name, log in logs.items():
@@ -647,10 +718,11 @@ jobs:
           body = "\n".join([
               f"[휙] {today} 자동 빌드 실패 - production은 이전 상태 그대로",
               "",
+              "[자동 수정 결과]",
+              autofix_status,
               "[자동으로 한 것]",
               "- 빌드 중단 (문제 발견 시점에서 즉시 멈춤)",
               "- GitHub push 안 함 -> hwik.kr 영향 없음",
-              "- 실거래 DB 수집은 이미 완료됐을 수 있음 (HTML만 미반영)",
               guard_msg,
               "[실패 원인 로그]",
               log_section,
@@ -659,9 +731,8 @@ jobs:
               "",
               "[지금 해야 할 것]",
               f"1) Actions 로그에서 빨간 스텝 확인: {run_url}",
-              "2) 내일 새벽 1시 자동 재실행 예정",
-              "   (--hours 36으로 오늘 누락 데이터도 내일 보충)",
-              "3) 급하면 GitHub Actions -> sync-trades -> Run workflow 수동 실행",
+              "2) 자동 수정됐으면 → 재실행 예약됨 (또는 수동 실행)",
+              "3) 수동 수정 필요하면 → GitHub Actions -> sync-trades -> Run workflow",
               "",
               "[흔한 원인]",
               "- 국토부 API 일시 오류 (내일 자동 해결)",
@@ -669,14 +740,20 @@ jobs:
               "- danji/app.js 또는 style.css 회귀 (코드 확인 필요)",
           ])
 
+          # 자동 수정 적용됐으면 제목에 표시
+          if "자동 수정 적용됨" in autofix_status:
+              subject = f"[휙][AUTO-FIXED] {today} 빌드 실패 → 자동 수정 완료"
+          else:
+              subject = f"[휙][FAIL] {today} 자동 빌드 실패 — production 영향 없음"
+
           msg = MIMEText(body, "plain", "utf-8")
-          msg["Subject"] = f"[휙][FAIL] {today} 자동 빌드 실패 — production 영향 없음"
+          msg["Subject"] = subject
           msg["From"] = os.environ["SMTP_USER"]
           msg["To"] = os.environ["REPORT_EMAIL"]
           with smtplib.SMTP_SSL("smtp.gmail.com", 465) as s:
               s.login(os.environ["SMTP_USER"], os.environ["SMTP_PASS"])
               s.send_message(msg)
-          print(f"실패 이메일 발송 → {os.environ['REPORT_EMAIL']}")
+          print(f"이메일 발송 → {os.environ['REPORT_EMAIL']}")
           PYEOF
 
       - name: SEO + 데이터 검증 + 빌드 요약 이메일 발송
