@@ -307,9 +307,9 @@ function render() {
   // 전용/공급 토글 + 면적 버튼
   const pm = d.pyeongs_map || {};
   const catsSet = new Set(cats);
-  // pm 전체 키를 exclu 기준으로 정렬 (거래 없는 면적도 탭 표시)
-  const allPmCats = Object.keys(pm).sort((a, b) => (pm[a].exclu || parseFloat(a)) - (pm[b].exclu || parseFloat(b)));
-  const tabCats = allPmCats.length > 0 ? allPmCats : cats;
+  // 실거래 있는 평형(categories)만 버튼으로 표시
+  // 최근 5년 내 매매·전세·월세 거래가 없는 면적은 표시하지 않음
+  const tabCats = cats; // categories = 실거래 존재하는 평형만
   const hasCurData = catsSet.has(currentPyeong);
   const hasSupplyData = tabCats.some(c => pm[c] && pm[c].supply && pm[c].supply > 0 && Math.abs((pm[c].exclu || 0) - parseFloat(c)) <= 10);
   const toggleRowHtml = hasSupplyData
@@ -317,15 +317,13 @@ function render() {
     : `<div style="font-size:11px;color:var(--sub);padding:6px 16px 0;">전용면적 기준</div>`;
   const pyeongHtml = tabCats.map(c => {
     const active = c === currentPyeong ? ' active' : '';
-    const hasData = catsSet.has(c);
     let label;
     if (pm[c] && pm[c].supply && pm[c].supply > 0 && Math.abs((pm[c].exclu || 0) - parseFloat(c)) <= 10) {
       label = pm[c].supply.toFixed(1) + '㎡';
     } else {
       label = c + '㎡';
     }
-    const dimStyle = !hasData ? ' style="opacity:0.4;"' : '';
-    return `<div class="pyeong-btn${active}" data-cat="${esc(c)}"${dimStyle}>${esc(label)}</div>`;
+    return `<div class="pyeong-btn${active}" data-cat="${esc(c)}">${esc(label)}</div>`;
   }).join('');
 
   // 현재 평형 기준 지표 (currentPyeong이 null이면 빈 키로 처리)
@@ -625,6 +623,7 @@ function render() {
     <!-- 평형 -->
     ${toggleRowHtml}
     <div class="pyeong-wrap"><div class="pyeong-row">${pyeongHtml}</div></div>
+    <div style="font-size:10px;color:var(--sub);padding:4px 16px 0;">최근 5년 내 매매·전세·월세 거래가 없는 면적은 표시하지 않습니다.</div>
 
     <!-- 핵심 시세 카드 (월세 탭에서는 숨김) -->
     ${!hasCurData ? `<div style="margin:20px 16px;padding:20px;background:var(--card-bg);border-radius:12px;text-align:center;color:var(--sub);font-size:14px;line-height:1.6;">
