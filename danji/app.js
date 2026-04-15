@@ -6,6 +6,13 @@ let DATA = null;
 let currentTab = '매매';
 let currentPyeong = null;
 
+// 현재 탭(매매/전세/월세)을 URL 파라미터로 반환
+// 배너/링크에서 사용: buildUrlWithTab('https://hwik.kr/agent/홍길동')
+// → 'https://hwik.kr/agent/홍길동?type=전세'
+function buildUrlWithTab(baseUrl) {
+  return `${baseUrl}?type=${encodeURIComponent(currentTab)}`;
+}
+
 // makeSlug → /makeSlug.js (외부 파일)
 let chart = null;
 let volumeChart = null;
