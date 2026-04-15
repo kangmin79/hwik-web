@@ -1,5 +1,5 @@
 // 휙 서비스워커 — cache first (앱 셸) + network first (API)
-const CACHE_VERSION = 'hwik-v4';
+const CACHE_VERSION = 'hwik-v5';
 
 const CACHE_FILES = [
   'mobile.html',
@@ -52,7 +52,8 @@ self.addEventListener('fetch', (e) => {
       caches.match(e.request).then(cached => {
         const networkFetch = fetch(e.request).then(response => {
           if (response && response.status === 200) {
-            caches.open(CACHE_VERSION).then(cache => cache.put(e.request, response.clone()));
+            const clone = response.clone();
+            caches.open(CACHE_VERSION).then(cache => cache.put(e.request, clone));
           }
           return response;
         }).catch(() => null);
@@ -69,7 +70,8 @@ self.addEventListener('fetch', (e) => {
     fetch(e.request)
       .then(response => {
         if (response && response.status === 200) {
-          caches.open(CACHE_VERSION).then(cache => cache.put(e.request, response.clone()));
+          const clone = response.clone();
+          caches.open(CACHE_VERSION).then(cache => cache.put(e.request, clone));
         }
         return response;
       })
