@@ -1262,4 +1262,4 @@ async function submitReport() {
 }
 
 // ── 실행 ──
-loadData().then(() => { injectJsonLd(); });
+loadData().then(() => { injectJsonLd(); }).catch(() => { showError('일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'); });
