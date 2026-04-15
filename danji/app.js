@@ -6,6 +6,7 @@ let DATA = null;
 let currentTab = '매매';
 let currentPyeong = null;
 let complexType = '';
+let nearbyComplexTypes = {};
 let _guUrlSlug = '';
 let _cityLabel = '';
 
@@ -166,6 +167,23 @@ async function loadData() {
     cats.forEach(c => { const d = Math.abs(parseInt(c) - 84); if (d < bestDiff) { bestDiff = d; best = c; } });
     currentPyeong = best;
   }
+
+  // 주변 단지 complex_type 배치 조회 (주상복합·도시형 태그용)
+  nearbyComplexTypes = {};
+  try {
+    const nearbyList = data.nearby_complex || [];
+    const ncIds = nearbyList
+      .filter(function(n) { return n.id && !n.id.startsWith('offi-') && !n.id.startsWith('apt-'); })
+      .map(function(n) { return n.id.toUpperCase(); });
+    if (ncIds.length > 0) {
+      const ncRes = await sb.from('apartments').select('kapt_code,complex_type').in('kapt_code', ncIds);
+      (ncRes.data || []).forEach(function(row) {
+        if (row.kapt_code && row.complex_type) {
+          nearbyComplexTypes[row.kapt_code.toUpperCase()] = row.complex_type;
+        }
+      });
+    }
+  } catch (e) { /* 태그 없이 정상 렌더링 */ }
 
   render();
   setupMapLazyLoad();
@@ -439,10 +457,15 @@ function render() {
     if (bestKey) {
       areaLabel = '전용 ' + bestExclu + '㎡';
     }
+    const _nct = nearbyComplexTypes[n.id ? n.id.toUpperCase() : ''] || '';
+    let _nctLabel = '';
+    if (_nct === '주상복합' || _nct === '도시형 생활주택(주상복합)') _nctLabel = '주상복합';
+    else if (_nct === '도시형 생활주택(아파트)') _nctLabel = '도시형';
+    const _nctTag = _nctLabel ? `<span style="display:inline-block;background:#ede9fe;color:#5b21b6;font-size:10px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:4px;vertical-align:middle;">${_nctLabel}</span>` : '';
     return `
     <a class="nearby-item" href="${STATIC_NEARBY_HREF[n.id] || ('/danji/' + encodeURIComponent(makeSlug(n.name, n.location, n.id, parentMetro && n.location ? (parentMetro + ' ' + n.location) : '')))}" style="text-decoration:none;color:inherit;">
       <div>
-        <div class="nearby-name">${esc(n.name)}</div>
+        <div class="nearby-name">${esc(n.name)}${_nctTag}</div>
         <div class="nearby-sub">${esc(n.location)} ${n.distance ? '· '+distText(n.distance) : ''}${areaLabel ? ' · '+areaLabel : ''}</div>
       </div>
       <div style="text-align:right">
