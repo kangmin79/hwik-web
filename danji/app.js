@@ -371,9 +371,8 @@ function render() {
     } else {
       priceDisplay = formatPrice(t.price);
     }
-    const td = {price: t.price, floor: t.floor||'', date: t.date||'', kind: t.kind||''};
     return `
-    <div class="trade-item" onclick="selectTrade(this,${JSON.stringify(td)})" style="cursor:pointer;">
+    <div class="trade-item" data-price="${t.price||''}" data-floor="${esc(String(t.floor||''))}" data-date="${esc(t.date||'')}" data-kind="${esc(t.kind||'')}" onclick="selectTrade(this)" style="cursor:pointer;">
       <div>
         <div class="trade-price">${priceDisplay}</div>
         <div class="trade-detail">${pyLabel}${t.floor ? ' · ' + t.floor + '층' : ''}${kindBadge(t.kind || '')}</div>
@@ -1041,14 +1040,18 @@ function showError(msg) {
 
 
 // ── 실거래 행 클릭 → 상단 카드 업데이트 ──
-function selectTrade(el, t) {
+function selectTrade(el) {
+  const price = parseInt(el.dataset.price) || 0;
+  const floor = el.dataset.floor || '';
+  const date = el.dataset.date || '';
+  const kind = el.dataset.kind || '';
   const valEl = document.getElementById('pc-recent-value');
   const subEl = document.getElementById('pc-recent-sub');
   const badgeEl = document.getElementById('pc-recent-badge');
   if (!valEl) return;
-  valEl.textContent = t.price ? formatPrice(t.price) : '-';
-  subEl.textContent = (t.floor ? t.floor + '층' : '') + (t.date ? ' · ' + t.date : '');
-  if (badgeEl) badgeEl.innerHTML = kindBadge(t.kind || '');
+  valEl.textContent = price ? formatPrice(price) : '-';
+  subEl.textContent = (floor ? floor + '층' : '') + (date ? ' · ' + date : '');
+  if (badgeEl) badgeEl.innerHTML = kindBadge(kind);
   // 선택된 행 하이라이트
   document.querySelectorAll('.trade-item').forEach(r => r.style.background = '');
   el.style.background = 'var(--hover, rgba(99,102,241,0.08))';
