@@ -597,7 +597,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A sitemap.xml danji/ dong/ gu/ ranking/
+          git add -A sitemap.xml sitemap_seoul.xml sitemap_metro.xml sitemap_cities.xml sitemap_pages.xml danji/ dong/ gu/ ranking/
           if git diff --cached --quiet; then
             echo "변경 없음"
           else
