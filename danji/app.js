@@ -669,6 +669,26 @@ function render() {
       <div style="display:flex;flex-direction:column;gap:8px;" id="nearby-list">${nearbyHtml || ''}</div>
     </div>
 
+    <!-- 요약 문단 (구글 스니펫용 + 사용자 정보) -->
+    ${(() => {
+      const parts = [];
+      const addr = d.address || '';
+      const nm = d.complex_name || '';
+      const yr = d.build_year ? d.build_year + '년 준공' : '';
+      const ut = d.total_units ? d.total_units.toLocaleString() + '세대' : '';
+      const loc = addr || d.location || '';
+      if (loc) parts.push(`${esc(nm)}은(는) ${esc(loc)}에 위치한 아파트입니다.`);
+      if (yr && ut) parts.push(`${yr}, 총 ${ut} 규모입니다.`);
+      else if (yr) parts.push(`${yr} 준공되었습니다.`);
+      else if (ut) parts.push(`총 ${ut} 규모입니다.`);
+      if (recentPrice && currentPyeong) parts.push(`전용 ${currentPyeong}㎡ 최근 매매가는 ${formatPrice(recentPrice)}입니다.`);
+      if (jeonseRate) parts.push(`전세가율은 ${jeonseRate}%입니다.`);
+      parts.push('모든 데이터는 국토교통부 실거래가 공개시스템 기반입니다.');
+      return parts.length > 1
+        ? `<p style="font-size:12px;color:var(--sub);line-height:1.8;margin:0 16px 16px;">${parts.join(' ')}</p>`
+        : '';
+    })()}
+
     <!-- FAQ -->
     <div class="faq-section">
       <div class="section-title">자주 묻는 질문</div>
