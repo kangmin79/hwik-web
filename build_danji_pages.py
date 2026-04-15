@@ -940,7 +940,7 @@ def generate_page(d):
     <div class="loading-spinner"></div>
     <div class="loading-text">단지 정보 불러오는 중...</div>
   </div>
-  <div id="fallback-content" style="padding:20px;">
+  <div id="fallback-content" style="display:none;padding:20px;">
     <nav style="font-size:11px;color:#6b7280;margin-bottom:12px;">
       <a href="/" style="color:#6b7280;text-decoration:none;">휙</a> &gt;
       {gu_nav}
