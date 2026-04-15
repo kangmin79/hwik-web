@@ -402,7 +402,7 @@ def generate_sitemap(danji_list: list):
             td = (rt.get(c) or {}).get("date", "")
             if td and td > latest_trade_date:
                 latest_trade_date = td
-        lastmod = latest_trade_date[:10] if latest_trade_date else (d.get("updated_at") or today)[:10]
+        lastmod = today  # 매일 빌드로 갱신되므로 오늘 날짜 사용
         urls.append(f'  <url><loc>{base}/danji/{safe_slug}</loc><lastmod>{lastmod}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>')
         included += 1
 
