@@ -622,7 +622,6 @@ jobs:
           logs = {
               "단지 집계"   : read_log("/tmp/log_danji_v2.txt"),
               "단지 HTML"   : read_log("/tmp/log_danji_pages.txt"),
-              "OG 이미지"   : read_log("/tmp/log_og.txt"),
               "sitemap"     : read_log("/tmp/log_sitemap.txt"),
           }
 
@@ -704,8 +703,6 @@ jobs:
 
           danji_v2  = last_line("/tmp/log_danji_v2.txt", "완료:")
           danji_pg  = last_line("/tmp/log_danji_pages.txt", "페이지 생성")
-          og_danji  = last_line("/tmp/log_og.txt", "OG 이미지")
-          og_dong   = last_line("/tmp/log_og_dong.txt", "OG 이미지")
           sitemap   = last_line("/tmp/log_sitemap.txt", "sitemap.xml 생성")
 
           # ── 오늘 새로 수집된 거래 건수 (DB 직접 조회) ──
@@ -747,8 +744,6 @@ jobs:
               f"실거래 신규 수집 : {trade_count}",
               f"단지 집계        : {danji_v2}",
               f"단지 HTML        : {danji_pg}",
-              f"OG 이미지 (단지) : {og_danji}",
-              f"OG 이미지 (동)   : {og_dong}",
               f"sitemap          : {sitemap}",
               f"Actions 로그     : {run_url}",
               "",

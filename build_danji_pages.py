@@ -933,7 +933,7 @@ def generate_page(d):
       {dong_nav}
       {name}
     </nav>
-    <img src="https://jqaxejgzkchxbfzgzyzi.supabase.co/storage/v1/object/public/og-images/danji/{hashlib.md5(did.encode('utf-8')).hexdigest()}.png" alt="{name} 실거래가 시세" width="600" height="315" loading="lazy" style="width:100%;border-radius:8px;margin-bottom:12px;">
+    <img src="/og-image.png" alt="{name} 실거래가 시세" width="600" height="315" loading="lazy" style="width:100%;border-radius:8px;margin-bottom:12px;">
     <h1 style="font-size:18px;font-weight:700;margin-bottom:8px;">{name} 실거래가</h1>
     {fallback}
   </div>
