@@ -1003,11 +1003,11 @@ def main():
     if old_count:
         print(f"기존 {old_count}개 HTML 삭제" + (f" ({skip_count}개 잠금으로 스킵)" if skip_count else ""))
 
-    # app.js 캐시 해시 (디스크의 수동 관리 파일 기준으로 계산)
+    # app.js 캐시 버전 — 오늘 날짜(KST) 기준으로 매일 자동 갱신
     global app_js_hash
-    app_js_path = os.path.join(DANJI_DIR, "app.js")
-    with open(app_js_path, "rb") as f:
-        app_js_hash = hashlib.md5(f.read()).hexdigest()[:8]
+    from datetime import timezone, timedelta
+    kst = datetime.now(timezone(timedelta(hours=9)))
+    app_js_hash = kst.strftime("%Y%m%d")
 
     # id → slug 맵 (주변 단지 링크용 — 거래 있는 단지만)
     global DANJI_SLUG_MAP
