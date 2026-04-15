@@ -244,8 +244,8 @@ Deno.serve(async (req) => {
         if (aptMatches?.length) {
           const best = aptMatches[0];
           // 신뢰도: score 40 이상이면 자동 확정
-          if (best.score >= 40) {
-            kaptCode = best.kapt_code;
+          if (best.score >= 80 && best.kapt_code?.toLowerCase().startsWith('a')) {
+            kaptCode = best.kapt_code.toLowerCase();
             kaptName = best.kapt_name;
             // 좌표가 없으면 단지 좌표로 보강
             if (!finalLat && !finalLng && best.lat && best.lon) {

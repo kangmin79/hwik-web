@@ -135,6 +135,10 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
 .map-fullscreen-close { background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.15); color:#fff; font-size:16px; width:40px; height:40px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-left:12px; }
 #mapFullscreen { flex:1; width:calc(100% - 28px); margin:14px auto; border-radius:20px; overflow:hidden; box-shadow:0 6px 24px rgba(0,0,0,0.4); border:3px solid rgba(255,255,255,0.15); }
 
+/* 더보기 버튼 */
+.load-more-btn { display:block; width:calc(100% - 32px); margin:12px 16px 0; padding:12px; background:var(--yellow-bg); border:1.5px solid var(--yellow); border-radius:var(--radius); font-size:13px; font-weight:600; color:#9a7a00; cursor:pointer; text-align:center; }
+.load-more-btn:active { background:var(--yellow-dim); }
+
 /* 더보기 배너 */
 .more-banner { margin:16px 16px 0; padding:14px 16px; background:var(--dark); border-radius:var(--radius); display:flex; align-items:center; justify-content:space-between; text-decoration:none; }
 .more-banner-text { font-size:13px; color:rgba(255,255,255,0.8); }
@@ -263,9 +267,11 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
 const sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_KEY);
 const params = new URLSearchParams(location.search);
 const agentId = params.get('id');
+const filterKaptCode = params.get('kapt_code') || '';
 const filterLat = parseFloat(params.get('lat') || '');
 const filterLng = parseFloat(params.get('lng') || '');
-const isFilterMode = !isNaN(filterLat) && !isNaN(filterLng);
+const isDanjiMode = !!filterKaptCode;
+const isFilterMode = !isDanjiMode && !isNaN(filterLat) && !isNaN(filterLng);
 
 let agentPhone = '';
 let agentKakaoUrl = '';
@@ -288,19 +294,28 @@ if (!agentId) {
 }
 
 async function load() {
-  const limit = isFilterMode ? 50 : 30;
+  let cardsQuery = sb.from('cards')
+    .select('id,property,trade_status,photos,tags,price_number,agent_comment,lat,lng,kapt_code')
+    .eq('agent_id', agentId)
+    .neq('property->>type', '손님')
+    .eq('trade_status', '계약가능')
+    .order('created_at', { ascending: false });
+
+  // 단지 유입 모드: kapt_code 일치 + 아파트만
+  if (isDanjiMode) {
+    cardsQuery = cardsQuery
+      .eq('kapt_code', filterKaptCode)
+      .eq('property->>category', 'apartment');
+  } else {
+    cardsQuery = cardsQuery.limit(isFilterMode ? 50 : 100);
+  }
+
   const [profileRes, cardsRes] = await Promise.all([
     sb.from('profiles')
       .select('id,agent_name,business_name,phone,address,profile_photo_url,kakao_chat_url,naver_map_url')
       .eq('id', agentId)
       .maybeSingle(),
-    sb.from('cards')
-      .select('id,property,trade_status,photos,tags,price_number,agent_comment,lat,lng')
-      .eq('agent_id', agentId)
-      .neq('property->>type', '손님')
-      .eq('trade_status', '계약가능')
-      .order('created_at', { ascending: false })
-      .limit(limit),
+    cardsQuery,
   ]);
 
   const p = profileRes.data;
@@ -312,26 +327,31 @@ async function load() {
     return;
   }
 
-  // 단지 유입 모드: 좌표 기반 5개 필터링
-  if (isFilterMode) {
-    // 1순위: 200m 이내 (같은 단지)
-    const sameComplex = cards.filter(c => c.lat && c.lng && distKm(filterLat, filterLng, c.lat, c.lng) <= 0.2);
-    // 2순위: 1km 이내
-    const nearby1km = cards.filter(c => c.lat && c.lng && distKm(filterLat, filterLng, c.lat, c.lng) > 0.2 && distKm(filterLat, filterLng, c.lat, c.lng) <= 1.0);
-    // 합쳐서 최대 5개
-    cards = [...sameComplex, ...nearby1km].slice(0, 5);
+  // 단지 유입 모드: 거래유형 → 면적순 그룹핑
+  if (isDanjiMode) {
+    renderProfile(p, cards.length);
+    renderCardsDanji(cards);
+    return;
+  }
 
-    // 더보기 배너
+  // 좌표 필터 모드 (레거시)
+  if (isFilterMode) {
+    const sameComplex = cards.filter(c => c.lat && c.lng && distKm(filterLat, filterLng, c.lat, c.lng) <= 0.2);
+    const others = cards
+      .filter(c => c.lat && c.lng && distKm(filterLat, filterLng, c.lat, c.lng) > 0.2)
+      .sort((a, b) => distKm(filterLat, filterLng, a.lat, a.lng) - distKm(filterLat, filterLng, b.lat, b.lng));
+    cards = [...sameComplex, ...others].slice(0, 5);
+    window._allCards = cards;
     const banner = document.getElementById('moreBanner');
     banner.href = `/agent.html?id=${agentId}`;
     banner.style.display = 'flex';
-
-    // 주변 단지 로드
     loadNearby();
   }
 
+  // 일반 모드: 최신순 10개 + 더보기
   renderProfile(p, cards.length);
-  renderCards(cards);
+  window._allCards = cards;
+  renderCards(cards.slice(0, 10), cards.length);
 }
 
 async function loadNearby() {
@@ -436,7 +456,95 @@ function renderProfile(p, count) {
   }
 }
 
-function renderCards(cards) {
+let _shownCount = 10;
+
+// 단지 유입 모드: 거래유형 → 면적순 그룹핑
+function renderCardsDanji(cards) {
+  const listEl = document.getElementById('cardList');
+  const countEl = document.getElementById('cardCount');
+
+  if (!cards.length) {
+    listEl.innerHTML = `<div class="listing-empty"><div class="listing-empty-text">이 단지에 등록된 매물이 없습니다</div></div>`;
+    return;
+  }
+
+  countEl.textContent = `${cards.length}건`;
+  window._cardsData = {};
+  cards.forEach(c => { window._cardsData[c.id] = c; });
+
+  // 거래유형 순서
+  const typeOrder = ['매매', '전세', '월세', '반전세'];
+
+  // 거래유형별 그룹핑
+  const groups = {};
+  cards.forEach(card => {
+    const type = card.property?.type || '기타';
+    if (!groups[type]) groups[type] = [];
+    groups[type].push(card);
+  });
+
+  // 각 그룹 내 면적순 정렬
+  Object.keys(groups).forEach(type => {
+    groups[type].sort((a, b) => {
+      const aArea = parseFloat(a.property?.area || '0');
+      const bArea = parseFloat(b.property?.area || '0');
+      return aArea - bArea;
+    });
+  });
+
+  let html = '';
+  typeOrder.forEach(type => {
+    if (!groups[type]) return;
+    html += `<div style="margin-bottom:4px;padding:8px 0 4px;font-size:12px;font-weight:700;color:var(--sub);border-bottom:1px solid var(--border);">${esc(type)}</div>`;
+    groups[type].forEach(card => {
+      html += cardItemHtml(card);
+    });
+  });
+  // typeOrder에 없는 타입
+  Object.keys(groups).forEach(type => {
+    if (typeOrder.includes(type)) return;
+    html += `<div style="margin-bottom:4px;padding:8px 0 4px;font-size:12px;font-weight:700;color:var(--sub);border-bottom:1px solid var(--border);">${esc(type)}</div>`;
+    groups[type].forEach(card => { html += cardItemHtml(card); });
+  });
+
+  listEl.innerHTML = html;
+}
+
+function cardItemHtml(card) {
+  const p = card.property || {};
+  const type = p.type || '';
+  const price = p.price || '';
+  const complex = p.complex || '';
+  const location = p.location || '';
+  const area = p.area || '';
+  const floor = p.floor || '';
+  const status = card.trade_status || '계약가능';
+  const tags = (card.tags || []).slice(0, 4);
+  const loc = [complex, location, area, floor ? floor + '층' : ''].filter(Boolean).join(' · ');
+  const photos = card.photos || [];
+  const thumb = photos[0]?.url || (typeof photos[0] === 'string' ? photos[0] : null);
+  const thumbHtml = thumb
+    ? `<div class="thumb"><img src="${esc(thumb)}" alt="매물" loading="lazy"></div>`
+    : `<div class="thumb">${{매매:'🏠',전세:'🔑',월세:'💰',반전세:'🏡'}[type]||'🏠'}</div>`;
+  const tagsHtml = tags.length
+    ? `<div class="card-tags">${tags.map(t=>`<span class="card-tag">${esc(t)}</span>`).join('')}</div>`
+    : '';
+  return `<div class="listing-item" onclick="openSheet(${esc(JSON.stringify(card.id))}, this)">
+    ${thumbHtml}
+    <div class="card-body">
+      <div class="badges">
+        <span class="badge b-${esc(type)}">${esc(type)}</span>
+        <span class="badge b-${esc(status)}">${esc(status)}</span>
+      </div>
+      <div class="card-price">${esc(price)}</div>
+      <div class="card-loc">${esc(loc)}</div>
+      ${tagsHtml}
+    </div>
+    <span class="listing-link">보기 →</span>
+  </div>`;
+}
+
+function renderCards(cards, totalCount) {
   const listEl = document.getElementById('cardList');
   const countEl = document.getElementById('cardCount');
 
@@ -445,49 +553,48 @@ function renderCards(cards) {
     return;
   }
 
-  countEl.textContent = `${cards.length}건`;
+  countEl.textContent = `${totalCount}건`;
 
-  listEl.innerHTML = cards.map(card => {
-    const p = card.property || {};
-    const type = p.type || '';
-    const price = p.price || '';
-    const complex = p.complex || '';
-    const location = p.location || '';
-    const area = p.area || '';
-    const floor = p.floor || '';
-    const status = card.trade_status || '계약가능';
-    const tags = (card.tags || []).slice(0, 4);
-    const loc = [complex, location, area, floor ? floor + '층' : ''].filter(Boolean).join(' · ');
-    const photos = card.photos || [];
-    const thumb = photos[0]?.url || (typeof photos[0] === 'string' ? photos[0] : null);
-    const thumbHtml = thumb
-      ? `<div class="thumb"><img src="${esc(thumb)}" alt="매물" loading="lazy"></div>`
-      : `<div class="thumb">${{매매:'🏠',전세:'🔑',월세:'💰',반전세:'🏡'}[type]||'🏠'}</div>`;
-    const tagsHtml = tags.length
-      ? `<div class="card-tags">${tags.map(t=>`<span class="card-tag">${esc(t)}</span>`).join('')}</div>`
-      : '';
-
-    // card 데이터를 data 속성으로 저장
-    const cardData = esc(JSON.stringify({ id:card.id, type, price, complex, location, area, floor, status, tags:card.tags||[], photos }));
-
-    return `<div class="listing-item" onclick="openSheet(${esc(JSON.stringify(card.id))}, this)">
-      ${thumbHtml}
-      <div class="card-body">
-        <div class="badges">
-          <span class="badge b-${esc(type)}">${esc(type)}</span>
-          <span class="badge b-${esc(status)}">${esc(status)}</span>
-        </div>
-        <div class="card-price">${esc(price)}</div>
-        <div class="card-loc">${esc(loc)}</div>
-        ${tagsHtml}
-      </div>
-      <span class="listing-link">보기 →</span>
-    </div>`;
-  }).join('');
+  listEl.innerHTML = cards.map(card => cardItemHtml(card)).join('');
 
   // cards 데이터 저장
-  window._cardsData = {};
+  if (!window._cardsData) window._cardsData = {};
   cards.forEach(c => { window._cardsData[c.id] = c; });
+
+  // 더보기 버튼
+  const all = window._allCards || [];
+  const existing = document.getElementById('loadMoreBtn');
+  if (existing) existing.remove();
+  if (_shownCount < all.length) {
+    const btn = document.createElement('button');
+    btn.id = 'loadMoreBtn';
+    btn.className = 'load-more-btn';
+    btn.textContent = `더보기 (${all.length - _shownCount}건 남음)`;
+    btn.onclick = loadMore;
+    listEl.after(btn);
+  }
+}
+
+function loadMore() {
+  const all = window._allCards || [];
+  const next = all.slice(_shownCount, _shownCount + 10);
+  _shownCount += next.length;
+
+  // 기존 리스트에 append
+  const listEl = document.getElementById('cardList');
+  const frag = document.createElement('div');
+  frag.innerHTML = next.map(card => cardItemHtml(card)).join('');
+  while (frag.firstChild) listEl.appendChild(frag.firstChild);
+
+  next.forEach(c => { window._cardsData[c.id] = c; });
+
+  // 버튼 갱신
+  const btn = document.getElementById('loadMoreBtn');
+  if (_shownCount >= all.length) {
+    if (btn) btn.remove();
+  } else {
+    if (btn) btn.textContent = `더보기 (${all.length - _shownCount}건 남음)`;
+  }
 }
 
 function openSheet(cardId) {
