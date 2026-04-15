@@ -474,15 +474,66 @@ def generate_sitemap(danji_list: list):
         urls.append(f'  <url><loc>{base}/dong/{safe_slug}</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>')
         dong_count += 1
 
-    xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
-    xml += '\n'.join(urls)
-    xml += '\n</urlset>\n'
+    # ── URL을 4개 그룹으로 분리 ──
+    # pages: static + gu + ranking + dong
+    # danji_seoul / danji_metro / danji_cities 는 danji URL만
+    pages_urls = []
+    danji_seoul_urls = []
+    danji_metro_urls = []
+    danji_cities_urls = []
 
-    sitemap_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sitemap.xml")
-    with open(sitemap_path, "w", encoding="utf-8") as f:
-        f.write(xml)
-    print(f"\n🗺️  sitemap.xml 생성: 단지 {included}개 + 동 {dong_count}개 포함, {excluded}개 제외")
+    for line in urls:
+        if '/danji/' not in line:
+            pages_urls.append(line)
+        else:
+            # address 기반 지역 분류는 위 루프에서 이미 처리됐으므로
+            # URL 자체에서 시도 추출 (percent-decode 후 첫 단어)
+            import urllib.parse as _ul
+            try:
+                decoded = _ul.unquote(line)
+                slug_part = decoded.split('/danji/')[1].split('<')[0]
+                first_word = slug_part.split('-')[0]
+            except Exception:
+                first_word = ''
+            if first_word == '서울':
+                danji_seoul_urls.append(line)
+            elif first_word in ('경기', '인천'):
+                danji_metro_urls.append(line)
+            else:
+                danji_cities_urls.append(line)
+
+    def write_urlset(path, url_lines):
+        content = '<?xml version="1.0" encoding="UTF-8"?>\n'
+        content += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+        content += '\n'.join(url_lines)
+        content += '\n</urlset>\n'
+        with open(path, 'w', encoding='utf-8') as f:
+            f.write(content)
+
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    write_urlset(os.path.join(base_dir, 'sitemap_seoul.xml'), danji_seoul_urls)
+    write_urlset(os.path.join(base_dir, 'sitemap_metro.xml'), danji_metro_urls)
+    write_urlset(os.path.join(base_dir, 'sitemap_cities.xml'), danji_cities_urls)
+    write_urlset(os.path.join(base_dir, 'sitemap_pages.xml'), pages_urls)
+
+    # sitemap.xml → 인덱스 파일
+    index_xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
+    index_xml += '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    for name in ['sitemap_seoul.xml', 'sitemap_metro.xml', 'sitemap_cities.xml', 'sitemap_pages.xml']:
+        index_xml += f'  <sitemap><loc>https://hwik.kr/{name}</loc><lastmod>{today}</lastmod></sitemap>\n'
+    index_xml += '</sitemapindex>\n'
+
+    sitemap_path = os.path.join(base_dir, 'sitemap.xml')
+    with open(sitemap_path, 'w', encoding='utf-8') as f:
+        f.write(index_xml)
+
+    print(f"\n sitemap 생성 완료:")
+    print(f"  sitemap_seoul.xml  : {len(danji_seoul_urls)}개")
+    print(f"  sitemap_metro.xml  : {len(danji_metro_urls)}개")
+    print(f"  sitemap_cities.xml : {len(danji_cities_urls)}개")
+    print(f"  sitemap_pages.xml  : {len(pages_urls)}개")
+    print(f"  sitemap.xml        : 인덱스 (4개 참조)")
+    print(f"  (단지 {included}개 포함, {excluded}개 제외)")
 
 
 # ========================================================
