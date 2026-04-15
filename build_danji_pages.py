@@ -47,14 +47,7 @@ GU_DIR = os.path.join(BASE_DIR, "gu")
 DONG_SLUGS = set()
 GU_SLUGS = set()  # 실제 생성된 gu 파일 목록 — 지역 라벨만 체크하면 404 발생
 
-# OG 이미지 manifest (빌드 시 로드)
-OG_MANIFEST = {}
-OG_DEFAULT = "https://hwik.kr/og-image.png"
-OG_STORAGE = "https://jqaxejgzkchxbfzgzyzi.supabase.co/storage/v1/object/public/og-images/danji"
-
-def get_og_image_url(did: str) -> str:
-    """공통 OG 이미지 반환"""
-    return "https://hwik.kr/og-image.png"
+OG_IMAGE_URL = "https://hwik.kr/og-image.png"
 
 # /gu/ 페이지가 존재하는 지역 (전국 17개 광역시도 모두 생성)
 from regions import REGION_LABEL_TO_KEY as _RLTK
@@ -912,7 +905,7 @@ def generate_page(d):
 <meta property="og:locale" content="ko_KR">
 <meta property="og:title" id="og-title" content="{name} 실거래가 시세 | 휙">
 <meta property="og:description" id="og-desc" content="{esc(desc)}">
-<meta property="og:image" content="{get_og_image_url(did)}">
+<meta property="og:image" content="{OG_IMAGE_URL}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:url" id="og-url" content="{canonical}">
@@ -961,18 +954,6 @@ def main():
         sys.stdout = open(sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1)
 
     os.makedirs(DANJI_DIR, exist_ok=True)
-
-    # OG 이미지 manifest 로드 (실제 생성된 이미지 ID 목록)
-    global OG_MANIFEST
-    manifest_path = os.path.join(DANJI_DIR, "og-manifest.json")
-    OG_MANIFEST = {}
-    if os.path.exists(manifest_path):
-        try:
-            with open(manifest_path, encoding="utf-8") as f:
-                OG_MANIFEST = json.load(f)
-        except Exception:
-            pass
-    print(f"OG 이미지 manifest: {len(OG_MANIFEST)}개")
 
     # complex_type 맵 로드 (주상복합·도시형 태그용)
     global COMPLEX_TYPE_MAP
