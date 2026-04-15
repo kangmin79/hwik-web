@@ -264,6 +264,21 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=124cd68b3419bde24e03efa4f1ca2830&autoload=false&libraries=services"></script>
 <script>
+// 카카오톡 인앱 브라우저 감지 → 외부 브라우저로 유도
+(function() {
+  const ua = navigator.userAgent || '';
+  const isKakao = /KAKAOTALK/i.test(ua);
+  if (isKakao) {
+    document.addEventListener('DOMContentLoaded', function() {
+      const banner = document.createElement('div');
+      banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#1a1a2e;color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;';
+      banner.innerHTML = `<span style="flex:1;line-height:1.4;">카카오톡에서는 일부 기능이 제한됩니다</span>
+        <a href="${location.href}" target="_blank" style="background:#f5c842;color:#1a1a2e;font-weight:700;font-size:12px;padding:8px 14px;border-radius:8px;text-decoration:none;white-space:nowrap;">브라우저로 열기</a>`;
+      document.body.prepend(banner);
+    });
+  }
+})();
+
 const sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_KEY);
 const params = new URLSearchParams(location.search);
 const agentId = params.get('id');
