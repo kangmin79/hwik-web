@@ -306,7 +306,10 @@ if (!agentId) {
   document.getElementById('profileName').textContent = '잘못된 주소입니다.';
   document.getElementById('cardList').innerHTML = '';
 } else {
-  load();
+  load().catch(e => {
+    document.getElementById('profileName').textContent = '오류: ' + e.message;
+    document.getElementById('cardList').innerHTML = '<div style="padding:16px;font-size:12px;color:#666;">UA: ' + navigator.userAgent + '</div>';
+  });
 }
 
 async function load() {
