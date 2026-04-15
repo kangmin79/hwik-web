@@ -264,20 +264,6 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=124cd68b3419bde24e03efa4f1ca2830&autoload=false&libraries=services"></script>
 <script>
-// 카카오톡 인앱 브라우저 감지 → 외부 브라우저로 유도
-(function() {
-  const ua = navigator.userAgent || '';
-  const isKakao = /KAKAOTALK/i.test(ua);
-  if (isKakao) {
-    document.addEventListener('DOMContentLoaded', function() {
-      const banner = document.createElement('div');
-      banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#1a1a2e;color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13px;';
-      banner.innerHTML = `<span style="flex:1;line-height:1.4;">카카오톡에서는 일부 기능이 제한됩니다</span>
-        <a href="${location.href}" target="_blank" style="background:#f5c842;color:#1a1a2e;font-weight:700;font-size:12px;padding:8px 14px;border-radius:8px;text-decoration:none;white-space:nowrap;">브라우저로 열기</a>`;
-      document.body.prepend(banner);
-    });
-  }
-})();
 
 const sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_KEY);
 const params = new URLSearchParams(location.search);
@@ -341,25 +327,8 @@ async function load() {
   let cards = cardsRes.data || [];
 
   if (!p) {
-    const errMsg = profileRes.error ? profileRes.error.message : 'data null';
-    document.getElementById('profileName').textContent = `오류(${errMsg})`;
-    // 추가 raw fetch 테스트
-    let rawResult = '(pending)';
-    try {
-      const rawUrl = `${HWIK_CONFIG.SUPABASE_URL}/rest/v1/profiles?id=eq.${encodeURIComponent(agentId)}&select=id,agent_name&limit=1`;
-      const rawResp = await fetch(rawUrl, {
-        headers: { apikey: HWIK_CONFIG.SUPABASE_KEY, Authorization: 'Bearer ' + HWIK_CONFIG.SUPABASE_KEY }
-      });
-      const rawJson = await rawResp.json();
-      rawResult = `status=${rawResp.status} body=${JSON.stringify(rawJson)}`;
-    } catch(ex) { rawResult = 'fetch err: ' + ex.message; }
-    document.getElementById('cardList').innerHTML = `<div style="padding:16px;font-size:11px;color:#666;word-break:break-all;">
-      agentId: ${agentId}<br>
-      profileErr: ${JSON.stringify(profileRes.error)}<br>
-      cardsErr: ${JSON.stringify(cardsRes.error)}<br>
-      rawFetch: ${rawResult}<br>
-      UA: ${navigator.userAgent}
-    </div>`;
+    document.getElementById('profileName').textContent = '존재하지 않는 중개사입니다.';
+    document.getElementById('cardList').innerHTML = '';
     return;
   }
 
