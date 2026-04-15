@@ -151,13 +151,14 @@ def verify_aggregation():
                             f"{name}: DB {jr}% vs 계산 {expected}%"
                         )
 
-        # 7. pyeongs_map 비율 검증 (공급/전용 1.0~1.65)
+        # 7. pyeongs_map 비율 검증 (공급/전용 0.95~2.0)
+        # 일반 아파트: 1.3~1.8 / 도시형 생활주택: 1.0~1.2 / 이상값: <0.95 or >2.0
         for cat, pval in pm.items():
             exclu = pval.get("exclu", 0)
             supply = pval.get("supply", 0)
             if exclu > 0 and supply > 0:
                 ratio = supply / exclu
-                if ratio < 1.0 or ratio > 1.65:
+                if ratio < 0.95 or ratio > 2.0:
                     errors["pyeongs_ratio_bad"].append(
                         f"{name}: {cat}㎡ 전용{exclu}→공급{supply} (비율{ratio:.2f})"
                     )

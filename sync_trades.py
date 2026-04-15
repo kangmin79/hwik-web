@@ -351,6 +351,11 @@ def generate_sitemap(danji_list: list):
     for path, freq, pri in static_pages:
         urls.append(f'  <url><loc>{base}{path}</loc><lastmod>{today}</lastmod><changefreq>{freq}</changefreq><priority>{pri}</priority></url>')
 
+    # dong 인덱스 페이지
+    dong_index_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dong", "index.html")
+    if os.path.isfile(dong_index_path):
+        urls.append(f'  <url><loc>{base}/dong/</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>')
+
     gu_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "gu")
     if os.path.isdir(gu_dir):
         urls.append(f'  <url><loc>{base}/gu/</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>')
@@ -434,10 +439,20 @@ def generate_sitemap(danji_list: list):
     dong_html_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "dong")
     existing_dong_slugs = set()
     if os.path.isdir(dong_html_dir):
-        existing_dong_slugs = {f[:-5] for f in os.listdir(dong_html_dir) if f.endswith(".html")}
+        # index.html 제외하고 실제 동 슬러그만 수집
+        existing_dong_slugs = {
+            f[:-5] for f in os.listdir(dong_html_dir)
+            if f.endswith(".html") and f != "index.html"
+        }
 
     dong_count = 0
     seen_dong_slugs = set()
+    # trade 기반 slug set (cnt>=1 이면 포함 — HTML이 존재하면 sitemap에 등록)
+    trade_based_slugs = set()
+    for (region, gu, dong), cnt in dong_trade_count.items():
+        addr = dong_addr_cache.get((region, gu, dong), "")
+        trade_based_slugs.add(_make_dong_slug(gu, dong, addr))
+
     for (region, gu, dong), cnt in sorted(dong_trade_count.items()):
         if cnt < 3:
             continue
@@ -451,6 +466,12 @@ def generate_sitemap(danji_list: list):
         seen_dong_slugs.add(safe_dong_slug)
         dong_lastmod = dong_latest_date.get((region, gu, dong), today)[:10]
         urls.append(f'  <url><loc>{base}/dong/{safe_dong_slug}</loc><lastmod>{dong_lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>')
+        dong_count += 1
+
+    # cnt < 3 이지만 HTML 파일이 존재하는 동 페이지도 sitemap에 등록 (priority 낮춤)
+    for slug in sorted(existing_dong_slugs - seen_dong_slugs):
+        safe_slug = _quote(slug, safe="-")
+        urls.append(f'  <url><loc>{base}/dong/{safe_slug}</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>')
         dong_count += 1
 
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
