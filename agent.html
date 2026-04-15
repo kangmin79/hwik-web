@@ -268,6 +268,7 @@ const sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_
 const params = new URLSearchParams(location.search);
 const agentId = params.get('id');
 const filterKaptCode = params.get('kapt_code') || '';
+const filterType = params.get('type') || '';
 const filterLat = parseFloat(params.get('lat') || '');
 const filterLng = parseFloat(params.get('lng') || '');
 const isDanjiMode = !!filterKaptCode;
@@ -473,7 +474,11 @@ function renderCardsDanji(cards) {
   cards.forEach(c => { window._cardsData[c.id] = c; });
 
   // 거래유형 순서
-  const typeOrder = ['매매', '전세', '월세', '반전세'];
+  // type 파라미터 있으면 해당 거래유형 최상단
+  const baseOrder = ['매매', '전세', '월세', '반전세'];
+  const typeOrder = filterType
+    ? [filterType, ...baseOrder.filter(t => t !== filterType)]
+    : baseOrder;
 
   // 거래유형별 그룹핑
   const groups = {};

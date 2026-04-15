@@ -209,9 +209,12 @@ Deno.serve(async (req) => {
 
     if (complex && complex.length >= 2) {
       try {
-        // 위치 힌트: 구/동 추출
-        const guMatch = fullText.match(/(강남|서초|송파|마포|용산|성동|광진|영등포|강동|동작|관악|종로|중구|강서|양천|구로|노원|서대문|은평|중랑|도봉|동대문|성북|금천|강북|남동|부평|연수|미추홀|계양|서|동|중|남|인천|수원|성남|고양|용인|안양|안산|부천|화성|의정부|시흥|파주|광명|하남|김포|광주|구리|양주|오산|군포|의왕|과천|포천|여주|이천|가평|양평)/)
-        const sggHint = guMatch ? guMatch[1] : null;
+        // 위치 힌트: location 필드에서 구/시 추출 (예: "서울 강남구 대치동" → "강남구")
+        const location = p.location || '';
+        const sggMatch = location.match(/([가-힣]+(?:구|시|군))/) || fullText.match(/([가-힣]+(?:구|시|군))/);
+        const umdMatch = location.match(/([가-힣]+(?:동|읍|면|리))\b/) || fullText.match(/([가-힣]+(?:동|읍|면|리))\b/);
+        const sggHint = sggMatch ? sggMatch[1] : null;
+        const umdHint = umdMatch ? umdMatch[1] : null;
 
         // 좌표 힌트: 카드 좌표 → 없으면 중개사 기존 매물 평균 좌표
         let hintLat = finalLat;
@@ -232,10 +235,11 @@ Deno.serve(async (req) => {
           }
         }
 
-        // match_apartment RPC 호출
+        // match_apartment RPC 호출 (단지명 + 주소 + 좌표 같이)
         const { data: aptMatches } = await supabase.rpc('match_apartment', {
           p_complex: complex,
           p_sgg: sggHint,
+          p_umd: umdHint,
           p_lat: hintLat,
           p_lng: hintLng,
           p_radius_km: 10.0,
@@ -244,7 +248,7 @@ Deno.serve(async (req) => {
         if (aptMatches?.length) {
           const best = aptMatches[0];
           // 신뢰도: score 40 이상이면 자동 확정
-          if (best.score >= 80 && best.kapt_code?.toLowerCase().startsWith('a')) {
+          if (best.score >= 80 && /^a\d/i.test(best.kapt_code || '')) {
             kaptCode = best.kapt_code.toLowerCase();
             kaptName = best.kapt_name;
             // 좌표가 없으면 단지 좌표로 보강
