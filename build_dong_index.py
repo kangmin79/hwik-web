@@ -10,7 +10,7 @@ gu/index.html 과 동일한 스타일·구조.
 
 빌드 파이프라인에서 build_dong_pages.py 완료 후 호출해도 됨.
 """
-import os, sys, html as html_mod
+import os, sys, html as html_mod, json
 from urllib.parse import quote as url_quote
 from collections import defaultdict
 from datetime import datetime, timezone
@@ -129,8 +129,42 @@ def build_index():
     lines.append('.region-heading { font-size:16px; font-weight:700; margin:24px 0 12px; padding-bottom:6px; border-bottom:2px solid var(--yellow); }')
     lines.append('</style>')
 
-    # 구조화 데이터 (BreadcrumbList)
-    lines.append('<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"휙","item":"https://hwik.kr"},{"@type":"ListItem","position":2,"name":"동별 시세"}]}</script>')
+    # 구조화 데이터 (BreadcrumbList + FAQPage + ItemList)
+    # ItemList: 상위 20개 동 (서울 강남구 우선)
+    il_items = []
+    pos = 1
+    for _r in REGION_ORDER:
+        if _r not in buckets: continue
+        for _g in sorted(buckets[_r].keys()):
+            for _d, _s in sorted(buckets[_r][_g], key=lambda x: x[0]):
+                il_items.append({"@type": "ListItem", "position": pos,
+                                 "name": f"{_g} {_d}",
+                                 "url": f"https://hwik.kr/dong/{url_quote(_s, safe='')}"})
+                pos += 1
+                if pos > 20: break
+            if pos > 20: break
+        if pos > 20: break
+    schema = {"@context": "https://schema.org", "@graph": [
+        {"@type": "BreadcrumbList", "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"},
+            {"@type": "ListItem", "position": 2, "name": "동별 시세"}
+        ]},
+        {"@type": "FAQPage", "mainEntity": [
+            {"@type": "Question", "name": "전국 동별 아파트 시세를 어디서 확인할 수 있나요?",
+             "acceptedAnswer": {"@type": "Answer", "text": f"휙(hwik.kr/dong/)에서 서울·인천·경기·5대 광역시·지방 주요 도시 총 {total_dong}개 동의 아파트 실거래가 시세를 동별로 확인할 수 있습니다. 국토교통부 실거래가 공개시스템 데이터를 기반으로 합니다."}},
+            {"@type": "Question", "name": "서울 동별 아파트 시세는 몇 개 동을 제공하나요?",
+             "acceptedAnswer": {"@type": "Answer", "text": "서울은 강남구·강동구·강북구·강서구·관악구 등 25개 구, 192개 동의 아파트 시세를 제공합니다."}},
+            {"@type": "Question", "name": "인천·경기 동별 아파트 시세도 볼 수 있나요?",
+             "acceptedAnswer": {"@type": "Answer", "text": "네, 인천(연수구·남동구·부평구 등)과 경기도(수원·성남·고양·용인·화성 등) 전 지역의 동별 아파트 시세를 확인할 수 있습니다."}},
+            {"@type": "Question", "name": "동별 아파트 시세 데이터는 얼마나 자주 업데이트되나요?",
+             "acceptedAnswer": {"@type": "Answer", "text": "국토교통부 실거래가 공개시스템에서 매일 자동 동기화합니다. 최신 실거래 데이터를 반영합니다."}},
+            {"@type": "Question", "name": "5대 광역시 동별 아파트 시세도 제공하나요?",
+             "acceptedAnswer": {"@type": "Answer", "text": "부산·대구·광주·대전·울산 5대 광역시의 주요 동별 아파트 시세도 제공합니다."}}
+        ]},
+        {"@type": "ItemList", "name": f"전국 {total_dong}개 동별 아파트 시세",
+         "numberOfItems": total_dong, "itemListElement": il_items}
+    ]}
+    lines.append(f'<script type="application/ld+json">{json.dumps(schema, ensure_ascii=False)}</script>')
 
     lines.append('</head>')
     lines.append('<body>')
