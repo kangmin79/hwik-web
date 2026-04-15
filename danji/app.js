@@ -805,13 +805,14 @@ async function fillNearbyIfNeeded() {
       for (const c of cats) {
         if (rt[c] && rt[c].price) { price = rt[c].price; area = c; break; }
       }
+      if (!price) return '';
       const distKm = n.dist < 1 ? Math.round(n.dist * 1000) + 'm' : n.dist.toFixed(1) + 'km';
       return `<a class="nearby-item" href="/danji/${encodeURIComponent(makeSlug(n.complex_name, n.location, n.id, parentMetro && n.location ? (parentMetro + ' ' + n.location) : ''))}" style="text-decoration:none;color:inherit;">
         <div>
           <div class="nearby-name">${esc(n.complex_name)}</div>
           <div class="nearby-sub">${esc(n.location)} · ${distKm}${area ? ' · 전용 '+area+'㎡' : ''}</div>
         </div>
-        <div style="text-align:right"><div class="nearby-price">${price ? formatPrice(price) : '-'}</div></div>
+        <div style="text-align:right"><div class="nearby-price">${formatPrice(price)}</div></div>
       </a>`;
     }).join('');
 
