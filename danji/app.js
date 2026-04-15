@@ -5,6 +5,7 @@ const $$ = s => document.querySelectorAll(s);
 let DATA = null;
 let currentTab = '매매';
 let currentPyeong = null;
+let complexType = '';
 let _guUrlSlug = '';
 let _cityLabel = '';
 
@@ -99,6 +100,7 @@ async function loadData() {
   if (!id) { markAsNotFound(); return; }
 
   let data, error;
+  complexType = '';
   try {
     const res = await sb.from('danji_pages').select('id,complex_name,location,address,build_year,total_units,categories,recent_trade,all_time_high,jeonse_rate,price_history,nearby_subway,nearby_school,nearby_complex,active_listings,lat,lng,top_floor,parking,heating,builder,mgmt_fee,pyeongs_map,seo_text,updated_at').eq('id', id).single();
     data = res.data;
@@ -108,6 +110,14 @@ async function loadData() {
     showError('일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
     return;
   }
+
+  // apartments 쿼리는 실패해도 페이지 렌더링에 영향 없도록 별도 처리
+  try {
+    const aptRes = await sb.from('apartments').select('complex_type').eq('kapt_code', id.toUpperCase()).maybeSingle();
+    const ct = aptRes.data?.complex_type || '';
+    if (ct === '주상복합' || ct === '도시형 생활주택(주상복합)') complexType = '주상복합';
+    else if (ct === '도시형 생활주택(아파트)') complexType = '도시형 생활주택';
+  } catch (e) { /* 주상복합/도시형 태그 없이 정상 렌더링 */ }
 
   // PGRST116 = "no rows returned" (진짜 없음) → 404
   if (error && error.code === 'PGRST116') { markAsNotFound(); return; }
@@ -575,7 +585,7 @@ function render() {
       <div class="header-top">
         <div class="logo">휙</div>
         <div>
-          <h1 class="header-name">${esc(d.complex_name)}</h1>
+          <h1 class="header-name">${esc(d.complex_name)}${complexType ? `<span style="display:inline-block;background:#ede9fe;color:#5b21b6;font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px;margin-left:6px;vertical-align:middle;">${complexType}</span>` : ''}</h1>
           <div class="header-sub">${esc(d.location)} · ${d.total_units ? d.total_units.toLocaleString()+'세대' : ''} · ${d.build_year || ''}년${d.builder ? ' · '+esc(d.builder) : ''}</div>
         </div>
       </div>
