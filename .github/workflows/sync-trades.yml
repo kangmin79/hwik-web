@@ -536,7 +536,7 @@ jobs:
   build:
     name: sitemap + 정적 페이지 빌드
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 400
     needs: [sync-seoul, sync-incheon, sync-gyeonggi, sync-busan, sync-daegu, sync-gwangju, sync-daejeon, sync-ulsan,
             sync-sejong, sync-chungbuk, sync-chungnam, sync-jeonbuk, sync-jeonnam, sync-gyeongbuk, sync-gyeongnam, sync-gangwon, sync-jeju]
     if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') && !contains(needs.*.result, 'skipped') }}
@@ -557,7 +557,7 @@ jobs:
       - name: 단지 정적 HTML 빌드 (dong/gu 슬러그 완비 후)
         run: python build_danji_pages.py 2>&1 | tee /tmp/log_danji_pages.txt; exit ${PIPESTATUS[0]}
       - name: 단지 OG 이미지 생성 (변경분만)
-        timeout-minutes: 50
+        timeout-minutes: 300
         continue-on-error: true
         run: python build_og_images.py 2>&1 | tee /tmp/log_og.txt
       - name: 동 OG 이미지 생성 (변경분만)
