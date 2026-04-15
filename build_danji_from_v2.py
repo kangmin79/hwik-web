@@ -99,7 +99,9 @@ def build_pyeongs_map(pyeongs: list) -> dict:
         entry = {"exclu": round(exclu, 1)}
         supply = p.get("supply")
         if supply and supply > 0:
-            entry["supply"] = round(supply, 1)
+            # ratio > 1.9이고 exclu > 40㎡이면 상가/기타공용 포함 의심 → 공급면적 숨김
+            if not (exclu > 40 and (supply / exclu) > 1.9):
+                entry["supply"] = round(supply, 1)
         pm[cat] = entry
     return pm
 
