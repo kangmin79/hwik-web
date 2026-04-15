@@ -372,7 +372,7 @@ function render() {
       priceDisplay = formatPrice(t.price);
     }
     return `
-    <div class="trade-item" data-price="${t.price||''}" data-floor="${esc(String(t.floor||''))}" data-date="${esc(t.date||'')}" data-kind="${esc(t.kind||'')}" onclick="selectTrade(this)" style="cursor:pointer;">
+    <div class="trade-item">
       <div>
         <div class="trade-price">${priceDisplay}</div>
         <div class="trade-detail">${pyLabel}${t.floor ? ' · ' + t.floor + '층' : ''}${kindBadge(t.kind || '')}</div>
@@ -599,9 +599,9 @@ function render() {
     </div>` : ''}
     ${!hasCurData ? '' : currentTab !== '월세' ? `<div class="price-cards">
       <div class="price-card primary" onclick="highlightChartPoint('recent')" style="cursor:pointer;transition:transform .15s,background .15s;" ontouchstart="this.style.transform='scale(.97)';this.style.background='#dbeafe';" ontouchend="this.style.transform='';this.style.background='';">
-        <div style="display:flex;justify-content:space-between;align-items:center;"><span class="price-card-label">최근 ${currentTab === '전세' ? '전세가' : '실거래가'}</span><span id="pc-recent-badge">${recentData ? kindBadge(recentData.kind || '') : ''}</span></div>
-        <div class="price-card-value" id="pc-recent-value">${recentPrice ? formatPrice(recentPrice) : '-'}</div>
-        <div class="price-card-sub" id="pc-recent-sub">${recentData && recentData.floor ? recentData.floor + '층' : ''}${recentData && recentData.date ? ' · ' + recentData.date : ''}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;"><span class="price-card-label">최근 ${currentTab === '전세' ? '전세가' : '실거래가'}</span>${recentData ? kindBadge(recentData.kind || '') : ''}</div>
+        <div class="price-card-value">${recentPrice ? formatPrice(recentPrice) : '-'}</div>
+        <div class="price-card-sub">${recentData && recentData.floor ? recentData.floor + '층' : ''}${recentData && recentData.date ? ' · ' + recentData.date : ''}</div>
         ${changeHtml}
       </div>
       <div class="price-card secondary" onclick="highlightChartPoint('high')" style="cursor:pointer;transition:transform .15s,background .15s,border-color .15s;" ontouchstart="this.style.transform='scale(.97)';this.style.background='#fef2f2';this.style.borderColor='#f87171';" ontouchend="this.style.transform='';this.style.background='';this.style.borderColor='';">
@@ -1038,24 +1038,6 @@ function showError(msg) {
   `;
 }
 
-
-// ── 실거래 행 클릭 → 상단 카드 업데이트 ──
-function selectTrade(el) {
-  const price = parseInt(el.dataset.price) || 0;
-  const floor = el.dataset.floor || '';
-  const date = el.dataset.date || '';
-  const kind = el.dataset.kind || '';
-  const valEl = document.getElementById('pc-recent-value');
-  const subEl = document.getElementById('pc-recent-sub');
-  const badgeEl = document.getElementById('pc-recent-badge');
-  if (!valEl) return;
-  valEl.textContent = price ? formatPrice(price) : '-';
-  subEl.textContent = (floor ? floor + '층' : '') + (date ? ' · ' + date : '');
-  if (badgeEl) badgeEl.innerHTML = kindBadge(kind);
-  // 선택된 행 하이라이트
-  document.querySelectorAll('.trade-item').forEach(r => r.style.background = '');
-  el.style.background = 'var(--hover, rgba(99,102,241,0.08))';
-}
 
 // ── 차트 포인트 하이라이트 ──
 function highlightChartPoint(type) {
