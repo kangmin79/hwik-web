@@ -424,6 +424,11 @@ async function loadNearby() {
   section.style.display = 'block';
 }
 
+// 검색용 범위 태그 필터 (가격범위: 5천-1억, 평형범위: 15-20평 등)
+function filterDisplayTags(tags) {
+  return (tags || []).filter(t => !/^\d+[천만억]?[-~]\d+[천만억평㎡]?$/.test(t));
+}
+
 function formatPrice(manwon) {
   if (!manwon) return '-';
   const uk = Math.floor(manwon / 10000);
@@ -541,7 +546,7 @@ function cardItemHtml(card) {
   const area = p.area || '';
   const floor = p.floor || '';
   const status = card.trade_status || '계약가능';
-  const tags = (card.tags || []).slice(0, 4);
+  const tags = filterDisplayTags(card.tags).slice(0, 4);
   const loc = [complex, location, area, floor ? floor + '층' : ''].filter(Boolean).join(' · ');
   const photos = card.photos || [];
   const thumb = photos[0]?.url || (typeof photos[0] === 'string' ? photos[0] : null);
@@ -700,7 +705,7 @@ function openSheet(cardId) {
   // 가격, 위치, 태그
   document.getElementById('sheetPrice').textContent = price;
   document.getElementById('sheetLoc').textContent = loc;
-  document.getElementById('sheetTags').innerHTML = tags.slice(0,8).map(t =>
+  document.getElementById('sheetTags').innerHTML = filterDisplayTags(tags).slice(0,8).map(t =>
     `<span class="sheet-tag">${esc(t)}</span>`
   ).join('');
 
