@@ -789,6 +789,7 @@ document.addEventListener('touchmove', e => {
 
   sheet.addEventListener('touchstart', e => {
     if (!sheet.classList.contains('show')) return;
+    if (e.target.closest('.sheet-actions')) return; // 버튼 영역은 드래그 시작 무시
     startX = e.touches[0].clientX;
     startY = lastY = e.touches[0].clientY;
     touchStartTime = Date.now();
@@ -799,8 +800,9 @@ document.addEventListener('touchmove', e => {
 
   sheet.addEventListener('touchmove', e => {
     if (!sheet.classList.contains('show')) return;
+    // 버튼 영역은 드래그 불가 (꾹 누르고 드래그 시 sheet 내려가는 문제 방지)
+    if (e.target.closest('.sheet-actions')) return;
     // 제스처 시작 시점에 스크롤이 내려가 있었으면 전체 제스처를 스크롤로 처리
-    // (scrollTop이 도중에 0이 돼도 sheet 드래그로 전환 안 됨)
     if (e.target.closest('.sheet-scroll') && gestureStartScrollTop > 0) return;
     const dy = e.touches[0].clientY - startY;
     const dx = Math.abs(e.touches[0].clientX - startX);
