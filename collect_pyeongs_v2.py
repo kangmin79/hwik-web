@@ -19,11 +19,12 @@ collect_pyeongs_v2.py — 건축물대장 전유공용면적 조회로 단지별
   5. 고유 전용면적 타입별 공급면적 계산 (중앙값)
   6. apartments.pyeongs 업데이트
 """
-import os, sys, re, ssl, json, time, argparse
+import os, sys, re, ssl, json, time, argparse, threading
 import urllib.request, urllib.parse
 import urllib3, requests
 from requests.adapters import HTTPAdapter
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     sys.stdout = open(sys.stdout.fileno(), mode="w", encoding="utf-8", buffering=1)
@@ -57,9 +58,24 @@ class TLSAdapter(HTTPAdapter):
         kwargs["ssl_context"] = ctx
         return super().init_poolmanager(*args, **kwargs)
 
-session = requests.Session()
-session.mount("https://", TLSAdapter())
-session.verify = False
+def _make_session():
+    s = requests.Session()
+    s.mount("https://", TLSAdapter())
+    s.verify = False
+    return s
+
+# 메인 스레드용 세션 (단일 실행 시 호환)
+session = _make_session()
+
+# 스레드 로컬 세션 (병렬 실행 시 스레드마다 독립 세션)
+_thread_local = threading.local()
+
+def get_session():
+    if not hasattr(_thread_local, "session"):
+        _thread_local.session = _make_session()
+    return _thread_local.session
+
+_print_lock = threading.Lock()
 
 BASS_URL   = "https://apis.data.go.kr/1613000/AptBasisInfoServiceV4/getAphusBassInfoV4"
 EXPOS_URL  = "https://apis.data.go.kr/1613000/BldRgstHubService/getBrExposPubuseAreaInfo"
@@ -71,9 +87,10 @@ def _float(v):
     except: return None
 
 def kapt_get(url, params, retries=3):
+    s = get_session()
     for i in range(retries):
         try:
-            r = session.get(url, params=params, timeout=15)
+            r = s.get(url, params=params, timeout=15)
             body = r.json().get("response", {}).get("body", {})
             return body
         except Exception as e:
@@ -332,6 +349,7 @@ def main():
     parser.add_argument("--sigungu", type=str, help="쉼표 구분 구 코드 (예: 11260,11710)")
     parser.add_argument("--region",  type=str, help="seoul/incheon/gyeonggi/busan/.../all")
     parser.add_argument("--dry",     action="store_true", help="DB 저장 안 하고 출력만")
+    parser.add_argument("--workers", type=int, default=8, help="병렬 워커 수 (기본 8)")
     args = parser.parse_args()
 
     if not args.sigungu and not args.region:
@@ -368,21 +386,34 @@ def main():
         })
         apts.extend(rows)
 
-    print(f"처리 대상: {len(apts)}개 단지")
+    total_apts = len(apts)
+    print(f"처리 대상: {total_apts}개 단지 (워커 {args.workers}개 병렬)")
     if args.dry:
         print("(dry 모드 — DB 저장 안 함)")
 
-    ok, fail, skip = 0, 0, 0
-    for i, apt in enumerate(apts, 1):
-        name = apt.get("kapt_name", "")
+    ok, fail = 0, 0
+    counter = {"done": 0}
+    counter_lock = threading.Lock()
+
+    def _run(idx_apt):
+        idx, apt = idx_apt
+        time.sleep(0.05)  # API 과부하 방지 (워커당)
         result = process_apt(apt, dry=args.dry)
-        status = "✅" if result.startswith("✅") else "⚠️"
-        print(f"  [{i}/{len(apts)}] {apt.get('sgg','')} {name}: {result}")
-        if result.startswith("✅"):
-            ok += 1
-        else:
-            fail += 1
-        time.sleep(0.1)  # API 과부하 방지
+        with counter_lock:
+            counter["done"] += 1
+            done = counter["done"]
+        with _print_lock:
+            print(f"  [{done}/{total_apts}] {apt.get('sgg','')} {apt.get('kapt_name','')}: {result}")
+        return result
+
+    with ThreadPoolExecutor(max_workers=args.workers) as executor:
+        futures = {executor.submit(_run, (i, apt)): apt for i, apt in enumerate(apts, 1)}
+        for future in as_completed(futures):
+            result = future.result()
+            if result.startswith("✅"):
+                ok += 1
+            else:
+                fail += 1
 
     print(f"\n{'='*50}")
     print(f"완료: 성공 {ok}개 / 실패 {fail}개")

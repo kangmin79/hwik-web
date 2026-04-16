@@ -47,6 +47,9 @@ GU_DIR = os.path.join(BASE_DIR, "gu")
 DONG_SLUGS = set()
 GU_SLUGS = set()  # 실제 생성된 gu 파일 목록 — 지역 라벨만 체크하면 404 발생
 
+# apartments.slug — DB에 저장된 고정 slug (URL 안정성 보장)
+APT_SLUG_MAP: dict = {}
+
 OG_IMAGE_URL = "https://hwik.kr/og-image.png"
 
 # /gu/ 페이지가 존재하는 지역 (전국 17개 광역시도 모두 생성)
@@ -673,7 +676,7 @@ def build_jsonld(d):
     gu = extract_gu_from_address(d.get("address", "")) or (loc_parts[0] if loc_parts else "")
     dong_name = loc_parts[1] if len(loc_parts) >= 2 else ""
     dong_slug_str = make_dong_slug(gu, dong_name, d.get("address", "")) if dong_name else ""
-    slug = make_slug(name, d.get("location", ""), did, d.get("address", ""))
+    slug = APT_SLUG_MAP.get(did) or make_slug(name, d.get("location", ""), did, d.get("address", ""))
 
     _gu_region_label = detect_region(d.get("address", "") or "")
     _gu_url_str = gu_url_slug(_gu_region_label, gu)
@@ -834,7 +837,7 @@ def generate_page(d):
     did = d.get("id", "")
     raw_name = d.get("complex_name", "")
     raw_loc = d.get("location", "")
-    slug = make_slug(raw_name, raw_loc, did, d.get("address", ""))
+    slug = APT_SLUG_MAP.get(did) or make_slug(raw_name, raw_loc, did, d.get("address", ""))
     name = esc(raw_name)
     loc = esc(raw_loc)
     loc_parts = raw_loc.split(" ", 1)
@@ -974,6 +977,28 @@ def main():
     COMPLEX_TYPE_MAP = fetch_complex_type_map()
     print(f"complex_type 맵 {len(COMPLEX_TYPE_MAP)}개 로드 (주상복합·도시형 포함)")
 
+    # apartments.slug 로드 — DB 고정 slug 우선 사용 (URL 안정성)
+    global APT_SLUG_MAP
+    APT_SLUG_MAP = {}
+    apt_offset = 0
+    while True:
+        resp = requests.get(
+            f"{SUPABASE_URL}/rest/v1/apartments",
+            headers=SB_HEADERS,
+            params={"select": "kapt_code,slug", "slug": "not.is.null", "order": "kapt_code", "offset": apt_offset, "limit": 1000},
+            timeout=30,
+        )
+        rows = resp.json() if resp.status_code == 200 else []
+        if not rows:
+            break
+        for r in rows:
+            if r.get("kapt_code") and r.get("slug"):
+                APT_SLUG_MAP[r["kapt_code"]] = r["slug"]
+        apt_offset += 1000
+        if len(rows) < 1000:
+            break
+    print(f"apartments.slug 맵 {len(APT_SLUG_MAP)}개 로드")
+
     # 동/구 페이지 slug 목록 로드 (파일 없으면 링크 생략 — 404 방지)
     global DONG_SLUGS, GU_SLUGS
     if os.path.isdir(DONG_DIR):
@@ -1033,7 +1058,7 @@ def main():
         rt = d.get("recent_trade") or {}
         cats = d.get("categories") or []
         if any(rt.get(c) for c in cats):
-            DANJI_SLUG_MAP[did] = make_slug(d.get("complex_name", ""), d.get("location", ""), did, d.get("address", ""))
+            DANJI_SLUG_MAP[did] = APT_SLUG_MAP.get(did) or make_slug(d.get("complex_name", ""), d.get("location", ""), did, d.get("address", ""))
     print(f"slug 맵: {len(DANJI_SLUG_MAP)}개 (거래 있는 단지만)")
 
     count = 0
