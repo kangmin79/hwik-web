@@ -742,14 +742,24 @@ const isKakaoInApp = /KAKAOTALK/i.test(navigator.userAgent);
 function openKakao() {
   // ?cards= 모드 + 카카오 인앱: 대화창으로 바로 돌아가기
   if (isCardsMode && isKakaoInApp) {
-    // pagehide 이벤트가 발생하면 back()이 성공한 것
-    let didLeave = false;
-    window.addEventListener('pagehide', () => { didLeave = true; }, { once: true });
-    history.back();
-    // 500ms 후에도 페이지가 그대로면 수동 안내
+    const btn = document.getElementById('sheetBtnKakao');
+    btn.textContent = '돌아가는 중...';
+    let closed = false;
+    window.addEventListener('pagehide', () => { closed = true; }, { once: true });
+    window.addEventListener('blur', () => { closed = true; }, { once: true });
+    // 1. window.close (JS로 열린 창이면 동작)
+    window.close();
+    // 2. history.back (히스토리 있으면 동작)
+    setTimeout(() => { if (!closed) history.back(); }, 150);
+    // 3. kakaotalk:// 앱 스킴 (WebView가 인터셉트해서 앱으로 돌아감)
+    setTimeout(() => { if (!closed) { window.location.href = 'kakaotalk://'; } }, 350);
+    // 4. 최후 수단: 안내 토스트
     setTimeout(() => {
-      if (!didLeave) showToast('왼쪽 상단 × 버튼을 눌러 대화로 돌아가세요');
-    }, 500);
+      if (!closed) {
+        btn.innerHTML = '✕ 닫기';
+        showToast('왼쪽 상단 × 버튼을 눌러 대화로 돌아가세요');
+      }
+    }, 800);
     return;
   }
   if (!agentKakaoUrl) return;
@@ -790,13 +800,13 @@ document.addEventListener('touchmove', e => {
 
   sheet.addEventListener('touchstart', e => {
     if (!sheet.classList.contains('show')) return;
-    isDragging = false; // 항상 먼저 초기화 (버튼 탭 후 touchend 오작동 방지)
+    isDragging = false;
+    sheet.style.transition = 'none'; // 항상 초기화 (버튼 영역 포함)
     if (e.target.closest('.sheet-actions')) return; // 버튼 영역은 드래그 시작 무시
     startX = e.touches[0].clientX;
     startY = lastY = e.touches[0].clientY;
     touchStartTime = Date.now();
     gestureStartScrollTop = scroll.scrollTop;
-    sheet.style.transition = 'none';
   }, { passive: true });
 
   sheet.addEventListener('touchmove', e => {
