@@ -468,7 +468,7 @@ function renderProfile(p, count) {
   if (p.kakao_chat_url || (isCardsMode && isKakaoInApp)) {
     agentKakaoUrl = p.kakao_chat_url || '';
     const btn = document.getElementById('sheetBtnKakao');
-    btn.innerHTML = (isCardsMode && isKakaoInApp) ? '💬 대화로 돌아가기' : '💬 카카오톡 문의';
+    btn.innerHTML = (isCardsMode && isKakaoInApp) ? '✕ 닫기' : '💬 카카오톡 문의';
     btn.classList.remove('hidden');
   }
 }
@@ -742,7 +742,14 @@ const isKakaoInApp = /KAKAOTALK/i.test(navigator.userAgent);
 function openKakao() {
   // ?cards= 모드 + 카카오 인앱: 대화창으로 바로 돌아가기
   if (isCardsMode && isKakaoInApp) {
+    // pagehide 이벤트가 발생하면 back()이 성공한 것
+    let didLeave = false;
+    window.addEventListener('pagehide', () => { didLeave = true; }, { once: true });
     history.back();
+    // 500ms 후에도 페이지가 그대로면 수동 안내
+    setTimeout(() => {
+      if (!didLeave) showToast('왼쪽 상단 × 버튼을 눌러 대화로 돌아가세요');
+    }, 500);
     return;
   }
   if (!agentKakaoUrl) return;
