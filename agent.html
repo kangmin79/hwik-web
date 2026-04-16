@@ -278,8 +278,10 @@ const filterKaptCode = params.get('kapt_code') || '';
 const filterType = params.get('type') || '';
 const filterLat = parseFloat(params.get('lat') || '');
 const filterLng = parseFloat(params.get('lng') || '');
+const filterCards = params.get('cards') ? params.get('cards').split(',').filter(Boolean) : [];
 const isDanjiMode = !!filterKaptCode;
-const isFilterMode = !isDanjiMode && !isNaN(filterLat) && !isNaN(filterLng);
+const isCardsMode = filterCards.length > 0;
+const isFilterMode = !isDanjiMode && !isCardsMode && !isNaN(filterLat) && !isNaN(filterLng);
 
 let agentPhone = '';
 let agentKakaoUrl = '';
@@ -312,8 +314,11 @@ async function load() {
     .eq('trade_status', '계약가능')
     .order('created_at', { ascending: false });
 
+  // 선택 카드 모드: 특정 카드 ID만
+  if (isCardsMode) {
+    cardsQuery = cardsQuery.in('id', filterCards);
   // 단지 유입 모드: kapt_code 일치 + 아파트만
-  if (isDanjiMode) {
+  } else if (isDanjiMode) {
     cardsQuery = cardsQuery
       .eq('kapt_code', filterKaptCode)
       .eq('property->>category', 'apartment');
