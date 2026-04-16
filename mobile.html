@@ -4,9 +4,12 @@
 <meta charset="UTF-8">
 <meta name="google-site-verification" content="R2ye41AVVTRs8BxEXyEafFSTqMSiHKdb9zgTklrktSI" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>휙</title>
-<meta name="description" content="AI가 찾아주는 내 조건에 딱 맞는 매물">
-
+<title>아파트 실거래가 검색 · 휙</title>
+<meta name="description" content="아파트 실거래가 이제 휙 확인하세요. 전국 아파트 매매·전세·월세 실거래가를 빠르게 검색하세요.">
+<meta property="og:title" content="아파트 실거래가 이제 휙 확인하세요">
+<meta property="og:description" content="단지명이나 지역을 입력하면 최신 실거래가를 바로 확인할 수 있어요.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://hwik.kr/mobile.html">
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#facc15">
@@ -15,8 +18,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="휙">
 <link rel="apple-touch-icon" href="icon-180.png">
-<link rel="apple-touch-icon" sizes="152x152" href="icon-152.png">
-<link rel="apple-touch-icon" sizes="120x120" href="icon-120.png">
 <!-- GA4 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
@@ -24,2962 +25,411 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://jqaxejgzkchxbfzgzyzi.supabase.co" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet"></noscript>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet"></noscript>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 
-  :root {
-    --hwik-dark: #1a1a2e;
-    --hwik-dark-light: #242442;
-    --hwik-yellow: #FFD43B;
-    --hwik-yellow-hover: #FFC800;
-    --bg: #f8f8fa;
-    --white: #ffffff;
-    --gray-100: #f0f0f3;
-    --gray-200: #e2e2e8;
-    --gray-400: #8e8e9a;
-    --gray-600: #5a5a6e;
-    --text: #1a1a2e;
-  }
+:root {
+  --dark: #1a1a2e;
+  --yellow: #FFD43B;
+  --bg: #f8f8fa;
+  --white: #ffffff;
+  --border: #e2e8f0;
+  --sub: #94a3b8;
+  --text: #1a1a2e;
+  --sell: #ea580c;
+  --lease: #4f46e5;
+  --monthly: #7c3aed;
+}
 
-  html, body {
-    height: 100%;
-    font-family: 'Noto Sans KR', -apple-system, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    overflow: hidden;
-    overscroll-behavior-y: contain; /* pull-to-refresh 방지 */
-  }
-  /* 내부 스크롤 컨테이너도 막기 */
-  .panel, .chat-messages, .chat-area {
-    overscroll-behavior-y: contain;
-  }
+html, body {
+  height: 100%;
+  font-family: 'Noto Sans KR', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
 
-  /* ── 레이아웃 ── */
-  .container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    padding: 0 24px;
-    padding-bottom: 18%;
-    transition: justify-content 0.4s ease;
-  }
+/* ── 중개사 버튼 ── */
+.btn-agent {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 100;
+  padding: 7px 14px;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #5a5a6e;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  transition: all 0.2s;
+}
+.btn-agent:hover { border-color: #94a3b8; color: var(--text); }
 
-  .container.active {
-    justify-content: flex-start;
-    padding: 0;
-  }
+/* ── 메인 레이아웃 ── */
+.page {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-  /* ── 로고 ── */
-  .logo {
-    margin-bottom: 48px;
-    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    cursor: pointer;
-    user-select: none;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+  padding-bottom: 10%;
+  transition: padding 0.4s ease;
+  width: 100%;
+  min-height: 100vh;
+}
 
-  .logo-text {
-    font-size: 68px;
-    font-weight: 900;
-    letter-spacing: -3px;
-    color: var(--hwik-dark);
-    transition: all 0.3s ease;
-  }
+.hero.has-results {
+  min-height: auto;
+  padding-top: 60px;
+  padding-bottom: 24px;
+  justify-content: flex-start;
+}
 
-  .logo-dot {
-    width: 12px;
-    height: 12px;
-    background: var(--hwik-yellow);
-    border-radius: 50%;
-    margin-top: 28px;
-    transition: all 0.3s ease;
-  }
+/* ── 로고 ── */
+.logo {
+  margin-bottom: 48px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: default;
+  user-select: none;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.logo-text {
+  font-size: 68px;
+  font-weight: 900;
+  letter-spacing: -3px;
+  color: var(--dark);
+  transition: all 0.3s ease;
+}
+.logo-dot {
+  width: 12px;
+  height: 12px;
+  background: var(--yellow);
+  border-radius: 50%;
+  margin-top: 28px;
+  transition: all 0.3s ease;
+}
+.hero.has-results .logo { margin-bottom: 12px; }
+.hero.has-results .logo-text { font-size: 36px; }
+.hero.has-results .logo-dot { width: 8px; height: 8px; margin-top: 16px; }
 
-  .logo:hover .logo-text { color: var(--hwik-dark-light); }
-  .logo:hover .logo-dot { transform: scale(1.3); background: var(--hwik-yellow-hover); }
+/* ── 태그라인 ── */
+.tagline {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--sub);
+  margin-top: -36px;
+  margin-bottom: 40px;
+  letter-spacing: 0.3px;
+  transition: all 0.4s ease;
+  text-align: center;
+}
+.hero.has-results .tagline { display: none; }
 
-  .container.active .logo { margin-bottom: 8px; }
-  .container.active .logo-text { font-size: 32px; }
-  .container.active .logo-dot { width: 8px; height: 8px; margin-top: 14px; }
+/* ── 검색창 ── */
+.search-wrap {
+  width: 100%;
+  max-width: 540px;
+  position: relative;
+}
+.search-input {
+  width: 100%;
+  padding: 18px 56px 18px 22px;
+  font-size: 17px;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 400;
+  border: 1.5px solid var(--border);
+  border-radius: 28px;
+  outline: none;
+  background: var(--white);
+  color: var(--text);
+  transition: all 0.25s ease;
+  -webkit-appearance: none;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+.search-input::placeholder { color: var(--sub); font-weight: 300; }
+.search-input:focus {
+  border-color: #0ea5e9;
+  box-shadow: 0 4px 20px rgba(14,165,233,0.12), 0 0 0 3px rgba(14,165,233,0.08);
+}
+.search-btn {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: var(--yellow);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.search-btn:hover { background: #FFC800; transform: translateY(-50%) scale(1.05); }
 
-  .tagline {
-    font-size: 14px;
-    font-weight: 400;
-    color: #94a3b8;
-    margin-top: -36px;
-    margin-bottom: 40px;
-    letter-spacing: 0.5px;
-    transition: all 0.4s ease;
-  }
+/* ── 결과 ── */
+.results-wrap {
+  width: 100%;
+  max-width: 540px;
+  margin-top: 12px;
+  padding: 0 24px 40px;
+}
 
-  .container.active .tagline { display: none; }
+.results-count {
+  font-size: 12px;
+  color: var(--sub);
+  margin-bottom: 10px;
+  padding: 0 4px;
+}
 
-  /* ── 검색 영역 ── */
-  .search-wrap {
-    width: 100%;
-    max-width: 540px;
-    position: relative;
-  }
+.result-item {
+  background: var(--white);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+  border: 1px solid var(--border);
+  transition: all 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.result-item:hover { border-color: #94a3b8; box-shadow: 0 4px 16px rgba(0,0,0,0.08); transform: translateY(-1px); }
 
-  .search-box {
-    position: relative;
-    width: 100%;
-  }
+.result-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 3px;
+}
+.result-loc {
+  font-size: 12px;
+  color: var(--sub);
+  margin-bottom: 10px;
+}
+.result-trades {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.trade-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #f8f8fa;
+  border-radius: 8px;
+  padding: 5px 9px;
+  font-size: 12px;
+}
+.trade-type {
+  font-weight: 700;
+  font-size: 11px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: #fff;
+}
+.type-매매 { background: var(--sell); }
+.type-전세 { background: var(--lease); }
+.type-월세 { background: var(--monthly); }
+.trade-price { font-weight: 600; color: var(--text); }
+.trade-date { color: var(--sub); font-size: 11px; }
+.trade-pyeong { color: #64748b; font-size: 11px; }
 
-  .search-input {
-    width: 100%;
-    padding: 18px 56px 18px 22px;
-    font-size: 17px;
-    font-family: 'Noto Sans KR', sans-serif;
-    font-weight: 400;
-    border: 1.5px solid #e2e8f0;
-    border-radius: 28px;
-    outline: none;
-    background: #ffffff;
-    color: var(--text);
-    transition: all 0.25s ease;
-    -webkit-appearance: none;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.02);
-  }
+.empty-msg {
+  text-align: center;
+  color: var(--sub);
+  font-size: 14px;
+  padding: 40px 0;
+}
 
-  .search-input::placeholder { color: #94a3b8; font-weight: 300; }
-  .search-input:focus {
-    border-color: #0ea5e9;
-    box-shadow: 0 4px 20px rgba(14,165,233,0.12), 0 0 0 3px rgba(14,165,233,0.08);
-  }
+.loading-msg {
+  text-align: center;
+  color: var(--sub);
+  font-size: 14px;
+  padding: 30px 0;
+}
 
-  .search-input.dropdown-open {
-    border-radius: 28px 28px 0 0;
-    border-bottom-color: var(--gray-100);
-  }
-
-  .btn-right {
-    position: absolute;
-    right: 6px;
-    top: 50%;
-    transform: translateY(-50%);
-  }
-
-  .icon-btn {
-    width: 44px;
-    height: 44px;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-  }
-
-  .icon-btn:active { transform: scale(0.9); }
-  .icon-btn svg { width: 20px; height: 20px; stroke-width: 2.5; fill: none; }
-
-  .btn-search { background: var(--hwik-yellow); }
-  .btn-search:hover { background: var(--hwik-yellow-hover); }
-  .btn-search svg { stroke: var(--hwik-dark); }
-
-  /* ── 추천 드롭다운 ── */
-  .suggest-dropdown {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0; right: 0;
-    background: var(--white);
-    border: 2px solid var(--hwik-dark);
-    border-top: 1px solid var(--gray-100);
-    border-radius: 0 0 20px 20px;
-    padding: 4px 0 8px;
-    z-index: 50;
-    box-shadow: 0 8px 24px rgba(26,26,46,0.1);
-    max-height: 60vh;
-    overflow-y: auto;
-  }
-  .suggest-dropdown.show { display: block; }
-
-  .suggest-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 20px;
-    cursor: pointer;
-    transition: background 0.1s ease;
-    font-size: 15px;
-    color: var(--text);
-    font-weight: 400;
-  }
-  .suggest-item:hover { background: var(--gray-100); }
-  .suggest-item:active { background: var(--gray-200); }
-
-  .suggest-icon {
-    width: 20px; height: 20px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
-  .suggest-icon svg { width: 16px; height: 16px; stroke: var(--gray-400); stroke-width: 2; fill: none; }
-
-  .suggest-label {
-    font-size: 11px;
-    color: var(--gray-400);
-    font-weight: 300;
-    padding: 10px 20px 4px;
-  }
-
-  .recent-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px 4px;
-  }
-  .recent-title { font-size: 12px; font-weight: 600; color: var(--gray-600); }
-  .recent-clear { background: none; border: none; font-size: 11px; color: var(--gray-400); cursor: pointer; font-family: inherit; }
-  .recent-item-del { background: none; border: none; font-size: 18px; color: var(--gray-400); cursor: pointer; padding: 0 4px; line-height: 1; }
-
-  /* ── 결과 ── */
-  .results {
-    display: none;
-    width: 100%;
-    max-width: 540px;
-    margin-top: 16px;
-    overflow-y: auto;
-    max-height: calc(100vh - 240px);
-    padding-bottom: 90px;
-    -webkit-overflow-scrolling: touch;
-  }
-  .container.active .results { display: block; }
-  .results::-webkit-scrollbar { display: none; }
-  .results { scrollbar-width: none; }
-
-  .results-status {
-    font-size: 14px;
-    color: var(--gray-400);
-    font-weight: 300;
-    margin-bottom: 16px;
-    padding-left: 4px;
-  }
-  .results-status strong { color: var(--hwik-dark); font-weight: 700; }
-
-  /* ── 결과 아이템 ── */
-  .li {
-    background: var(--white);
-    border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    cursor: pointer;
-    transition: all 0.15s ease;
-    border: 2px solid transparent;
-    overflow: hidden;
-  }
-  .li:active { transform: scale(0.98); }
-
-  .li-row1 {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-    min-width: 0;
-  }
-
-  .li-type {
-    font-size: 11px;
-    font-weight: 700;
-    padding: 3px 10px;
-    border-radius: 20px;
-    flex-shrink: 0;
-  }
-  .type-sale { background: rgba(234,88,12,0.1); color: #ea580c; }
-  .type-jeonse { background: rgba(79,70,229,0.1); color: #4f46e5; }
-  .type-rent { background: rgba(124,58,237,0.1); color: #7c3aed; }
-
-  .li-price {
-    font-size: 17px;
-    font-weight: 800;
-    color: var(--hwik-dark);
-    letter-spacing: -0.5px;
-    min-width: 0;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-
-  .li-trade {
-    font-size: 10px;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 4px;
-    flex-shrink: 0;
-  }
-  .trade-available { background: #dcfce7; color: #16a34a; }
-  .trade-ongoing { background: #fef3c7; color: #d97706; }
-  .trade-done { background: #f3f4f6; color: #6b7280; }
-
-  .li-row2 { padding-left: 2px; min-width: 0; }
-  .li-name {
-    font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px;
-    white-space: nowrap; overflow: hidden;
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
-    mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
-  }
-  .li-detail {
-    font-size: 12px; color: var(--gray-400);
-    white-space: nowrap; overflow: hidden;
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
-    mask-image: linear-gradient(to right, #000 calc(100% - 24px), transparent);
-  }
-
-  .li-btn-detail {
-    padding: 5px 12px;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-    background: var(--white);
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--gray-600);
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-
-  /* ── 매칭 카드 (손님-매물 매칭 리스트) ── */
-  .match-card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 11px 12px;
-    margin: 0 0 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    border: 1.5px solid #f1f5f9;
-    cursor: pointer;
-    transition: transform 0.15s ease, border-color 0.15s ease;
-    overflow: hidden;
-  }
-  .match-card:active { transform: scale(0.99); }
-  .match-card-inner {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-  }
-  .match-info-col {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
-  .match-row1 {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    min-width: 0;
-  }
-  .match-cat-badge {
-    font-size: 10.5px;
-    font-weight: 700;
-    padding: 3px 9px;
-    border-radius: 999px;
-    background: #eef2ff;
-    color: #4f46e5;
-    border: 1px solid #e0e7ff;
-    flex-shrink: 0;
-    white-space: nowrap;
-  }
-  .match-status-badge {
-    font-size: 10.5px;
-    font-weight: 700;
-    color: #16a34a;
-    flex-shrink: 0;
-    white-space: nowrap;
-  }
-  .match-status-badge.ongoing { color: #d97706; }
-  .match-status-badge.done { color: #9ca3af; }
-  .match-price {
-    font-size: 15px;
-    font-weight: 800;
-    color: var(--hwik-dark);
-    letter-spacing: -0.3px;
-    flex-shrink: 0;
-    white-space: nowrap;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .match-score {
-    font-size: 11px;
-    font-weight: 700;
-    color: #4ecdc4;
-    flex-shrink: 0;
-    white-space: nowrap;
-    margin-left: auto;
-  }
-  .match-row2 {
-    font-size: 12px;
-    color: #64748b;
-    white-space: nowrap;
-    overflow: hidden;
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent);
-    mask-image: linear-gradient(to right, #000 calc(100% - 22px), transparent);
-  }
-  .match-row2 .name { font-weight: 700; color: var(--text); }
-  .match-row3 {
-    display: flex;
-    gap: 4px;
-    flex-wrap: nowrap;
-    overflow: hidden;
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 18px), transparent);
-    mask-image: linear-gradient(to right, #000 calc(100% - 18px), transparent);
-  }
-  .match-tag {
-    font-size: 10px;
-    font-weight: 600;
-    padding: 2px 7px;
-    border-radius: 999px;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .match-tag.c0 { background: #e0f2fe; color: #0369a1; }
-  .match-tag.c1 { background: #dcfce7; color: #15803d; }
-  .match-tag.c2 { background: #fef3c7; color: #a16207; }
-  .match-tag.c3 { background: #f3e8ff; color: #7e22ce; }
-  .match-tag.c4 { background: #fee2e2; color: #b91c1c; }
-  .match-tag-more {
-    font-size: 10px;
-    font-weight: 600;
-    color: #94a3b8;
-    white-space: nowrap;
-    flex-shrink: 0;
-    align-self: center;
-    padding-left: 2px;
-  }
-  .match-source {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    color: #64748b;
-    padding-top: 4px;
-    margin-top: 2px;
-    border-top: 1px dashed #e2e8f0;
-    white-space: nowrap;
-    overflow: hidden;
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 18px), transparent);
-    mask-image: linear-gradient(to right, #000 calc(100% - 18px), transparent);
-  }
-  .match-source .office { font-weight: 700; color: var(--text); }
-  .match-source .room {
-    display: inline-block;
-    padding: 1px 7px;
-    border-radius: 999px;
-    background: #f0fdfa;
-    color: #0d9488;
-    font-weight: 700;
-    font-size: 10px;
-    border: 1px solid #ccfbf1;
-  }
-  .match-source .sep { color: #cbd5e1; }
-  .match-right-col {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-    justify-content: center;
-  }
-  .match-thumb {
-    width: 52px;
-    height: 52px;
-    border-radius: 8px;
-    background-size: cover;
-    background-position: center;
-    background-color: #f1f5f9;
-    position: relative;
-    flex-shrink: 0;
-  }
-  .match-thumb-count {
-    position: absolute;
-    right: 3px;
-    bottom: 3px;
-    background: rgba(0,0,0,0.6);
-    color: #fff;
-    font-size: 9px;
-    font-weight: 700;
-    padding: 1px 5px;
-    border-radius: 4px;
-  }
-  .match-detail-btn {
-    padding: 5px 12px;
-    border-radius: 6px;
-    border: 1px solid #e2e8f0;
-    background: #fff;
-    color: #5a5a6e;
-    font-size: 11px;
-    font-weight: 700;
-    font-family: inherit;
-    cursor: pointer;
-    white-space: nowrap;
-    word-break: keep-all;
-    flex-shrink: 0;
-  }
-  .match-detail-btn:active { background: #f8fafc; }
-
-  /* ── 검색 중 ── */
-  .searching {
-    text-align: center;
-    padding: 40px 0;
-    color: var(--gray-400);
-    font-size: 14px;
-  }
-  .dot-pulse {
-    display: flex;
-    justify-content: center;
-    gap: 6px;
-    margin-bottom: 12px;
-  }
-  .dot-pulse span {
-    width: 8px; height: 8px;
-    background: var(--hwik-yellow);
-    border-radius: 50%;
-    animation: pulse 1.2s ease infinite;
-  }
-  .dot-pulse span:nth-child(2) { animation-delay: 0.2s; }
-  .dot-pulse span:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes pulse { 0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1.1); } }
-
-  /* ── 하단 탭바 ── */
-  .bottom-tab-bar {
-    display: none;
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    height: 60px;
-    background: #ffffff;
-    border-top: 1px solid #e5e7eb;
-    box-shadow: 0 -1px 8px rgba(0,0,0,0.06);
-    z-index: 200;
-    justify-content: space-around;
-    align-items: center;
-    padding: 0 4px;
-    padding-bottom: env(safe-area-inset-bottom);
-  }
-  .bottom-tab-bar.visible { display: flex; }
-
-  .tab-btn {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 3px;
-    padding: 6px 4px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    position: relative;
-    transition: transform 0.15s ease;
-    -webkit-tap-highlight-color: transparent;
-  }
-  .tab-btn:active { transform: scale(0.88); }
-
-  .tab-icon {
-    width: 28px; height: 28px;
-    display: flex; align-items: center; justify-content: center;
-    position: relative;
-  }
-  .tab-icon svg {
-    width: 26px; height: 26px;
-    stroke: #9ca3af;
-    stroke-width: 2;
-    fill: none;
-    transition: all 0.2s ease;
-  }
-  .tab-btn.active .tab-icon svg { stroke: #0ea5e9; stroke-width: 2.2; }
-
-  .tab-label {
-    font-size: 11px;
-    font-weight: 500;
-    color: #9ca3af;
-    transition: color 0.2s ease;
-    letter-spacing: -0.2px;
-  }
-  .tab-btn.active .tab-label { color: #0ea5e9; font-weight: 700; }
-
-  .tab-badge {
-    display: none;
-    position: absolute;
-    top: -2px; right: -6px;
-    min-width: 16px; height: 16px;
-    background: #ef4444;
-    color: #fff;
-    font-size: 9px;
-    font-weight: 700;
-    border-radius: 8px;
-    padding: 0 4px;
-    line-height: 16px;
-    text-align: center;
-  }
-  .tab-badge.show { display: block; }
-
-  /* ── 패널 (알림/손님등록/내정보) ── */
-  .panel {
-    display: none;
-    padding: 0 24px 100px;
-    max-width: 540px;
-    margin: 0 auto;
-    width: 100%;
-    overflow-y: auto;
-    max-height: calc(100vh - 100px);
-    -webkit-overflow-scrolling: touch;
-  }
-  .panel::-webkit-scrollbar { display: none; }
-  .panel { scrollbar-width: none; }
-
-  /* 손님등록/내정보는 세로 가운데 */
-  .panel.panel-center {
-    flex-direction: column;
-    justify-content: flex-start;
-    padding: 8px 6px 80px;
-    max-height: calc(100dvh - 60px);
-    overflow-y: auto;
-  }
-  .panel.panel-center.chat-mode {
-    padding: 0 !important;
-    overflow: hidden;
-  }
-
-  .panel-title {
-    font-size: 22px;
-    font-weight: 900;
-    color: var(--hwik-dark);
-    letter-spacing: -0.5px;
-    padding: 0 0 16px;
-  }
-
-  /* ── 손님 등록 (카톡 채팅 스타일) ── */
-  .chat-area {
-    display: flex; flex-direction: column;
-    width: 100%; height: 100%;
-    background: #B2C7D9;
-    border-radius: 0;
-    overflow: hidden;
-  }
-  /* body 직접 자식일 때 풀스크린 */
-  body > .chat-area {
-    position: fixed;
-    left: 0; right: 0;
-    bottom: calc(60px + env(safe-area-inset-bottom, 0px));
-    top: 0;
-    height: auto;
-    z-index: 199;
-  }
-  /* 키보드 올라올 때 visualViewport 기반 리사이즈 */
-  .chat-messages {
-    flex: 1; overflow-y: auto;
-    padding: 12px 14px 16px;
-    -webkit-overflow-scrolling: touch;
-  }
-  .chat-messages::-webkit-scrollbar { display: none; }
-  .chat-messages { scrollbar-width: none; }
-  /* 날짜 구분 */
-  .chat-date {
-    text-align: center; margin: 8px 0 14px;
-    font-size: 11px; color: rgba(0,0,0,0.35);
-  }
-  .chat-date span {
-    background: rgba(0,0,0,0.08);
-    padding: 4px 12px; border-radius: 12px;
-  }
-  /* 메시지 행 — opacity 1 기본값 (reduce-motion 환경에서도 보임) */
-  .msg {
-    display: flex; gap: 6px; margin-bottom: 4px;
-    align-items: flex-start;
-    opacity: 1;
-    animation: msgIn 0.3s ease;
-  }
-  .msg.first-in-group { margin-top: 10px; }
-  @keyframes msgIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-  @media (prefers-reduced-motion: reduce) {
-    .msg { animation: none; }
-  }
-  /* 아바타 */
-  .msg .avatar {
-    width: 36px; height: 36px; border-radius: 14px;
-    background: linear-gradient(135deg, #1a1a2e, #242442);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 900; color: var(--hwik-yellow);
-    flex-shrink: 0;
-  }
-  .msg .avatar-spacer { width: 36px; flex-shrink: 0; }
-  .msg .sender-name {
-    font-size: 11px; color: rgba(0,0,0,0.45);
-    margin-bottom: 3px; margin-left: 2px;
-  }
-  /* 버블 */
-  .msg .bubble-wrap { display: flex; flex-direction: column; max-width: calc(100% - 60px); }
-  .msg .bubble {
-    padding: 9px 13px;
-    border-radius: 4px 16px 16px 16px;
-    background: #fff;
-    font-size: 14px; line-height: 1.55;
-    color: #222; word-break: keep-all;
-    box-shadow: 0 1px 1px rgba(0,0,0,0.04);
-  }
-  /* 사용자 메시지 (오른쪽) */
-  .msg.user-msg {
-    justify-content: flex-end;
-  }
-  .msg.user-msg .bubble {
-    background: var(--hwik-yellow);
-    border-radius: 16px 4px 16px 16px;
-    color: #1a1a2e; font-weight: 500;
-  }
-  /* 확인 카드 (카톡 스타일) */
-  .chat-confirm-card {
-    background: #fff; border-radius: 12px;
-    border: 1px solid #e5e8eb; overflow: hidden; margin: 4px 0;
-  }
-  .chat-confirm-card .cc-header {
-    padding: 14px 16px 10px; border-bottom: 1px solid #f0f0f3;
-  }
-  .chat-confirm-card .cc-type {
-    display: inline-block; padding: 2px 8px;
-    border-radius: 4px; font-size: 11px; font-weight: 700;
-  }
-  .chat-confirm-card .cc-price { font-size: 18px; font-weight: 900; color: #1a1a2e; letter-spacing: -0.5px; margin-top: 6px; }
-  .chat-confirm-card .cc-body { padding: 10px 16px 12px; }
-  .chat-confirm-card .cc-row {
-    display: flex; align-items: center; gap: 6px;
-    font-size: 13px; color: #5a5a6e; padding: 3px 0;
-  }
-  .chat-confirm-card .cc-row .cc-label { color: #94a3b8; min-width: 40px; }
-  .chat-confirm-card .cc-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
-  .chat-confirm-card .cc-tag {
-    padding: 2px 8px; border-radius: 4px;
-    background: #f0f4ff; color: #4f46e5;
-    font-size: 11px; font-weight: 600;
-  }
-  .chat-confirm-card .cc-contact {
-    padding: 10px 16px; background: #f8f9fa; border-top: 1px solid #f0f0f3;
-    font-size: 13px; color: #1a1a2e; font-weight: 600;
-  }
-  .chat-confirm-card .cc-warning {
-    padding: 8px 16px; background: #fef3c7; border-top: 1px solid #fde68a;
-    font-size: 12px; color: #92400e; font-weight: 600;
-  }
-  .chat-confirm-btns {
-    display: flex; border-top: 1px solid #e5e8eb;
-  }
-  .chat-confirm-btns button {
-    flex: 1; padding: 13px; border: none; background: #fff;
-    font-size: 14px; font-weight: 600; font-family: inherit; cursor: pointer;
-    color: #5a5a6e;
-  }
-  .chat-confirm-btns button + button { border-left: 1px solid #e5e8eb; }
-  .chat-confirm-btns .btn-yes { color: #4f46e5; font-weight: 700; }
-  .chat-confirm-btns .btn-no { color: #94a3b8; }
-  .chat-confirm-btns button:active { background: #f0f0f3; }
-  /* 하단 입력 */
-  .chat-input-wrap {
-    flex-shrink: 0;
-    display: flex; gap: 8px;
-    align-items: flex-end;
-    padding: 8px 12px;
-    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
-    background: #fff;
-    border-top: 1px solid #d5dce4;
-    min-height: 56px;
-  }
-  .chat-input {
-    flex: 1; padding: 10px 14px;
-    border: none; border-radius: 20px;
-    font-size: 14px; font-family: inherit; color: var(--text);
-    outline: none; background: #f0f0f3;
-    min-height: 40px; max-height: 100px;
-    resize: none; line-height: 1.4;
-  }
-  .chat-input:focus { background: #e8e8ee; }
-  .chat-input::placeholder { color: #94a3b8; }
-  .chat-send-btn {
-    width: 40px; height: 40px; border-radius: 50%;
-    background: var(--hwik-dark); border: none; cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; align-self: flex-end;
-  }
-  .chat-send-btn svg { width: 18px; height: 18px; stroke: var(--hwik-yellow); stroke-width: 2.5; fill: none; }
-  .chat-send-btn:active { transform: scale(0.9); }
-  .chat-send-btn:disabled { opacity: 0.4; }
-  /* 타이핑 */
-  .typing-dots { display:flex;gap:4px;padding:4px 0; }
-  .typing-dots span { width:7px;height:7px;border-radius:50%;background:rgba(0,0,0,0.25);animation:typeBounce 1.4s infinite; }
-  .typing-dots span:nth-child(2) { animation-delay:0.2s; }
-  .typing-dots span:nth-child(3) { animation-delay:0.4s; }
-  @keyframes typeBounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-6px)} }
-
-  /* ── 내정보 ── */
-  .profile-card {
-    background: linear-gradient(135deg, #1a1a2e, #242442);
-    border-radius: 20px;
-    padding: 24px 20px;
-    color: #fff;
-  }
-  .profile-name {
-    font-size: 20px;
-    font-weight: 800;
-    margin-bottom: 4px;
-  }
-  .profile-sub {
-    font-size: 13px;
-    color: rgba(255,255,255,0.5);
-  }
-  .profile-logout {
-    margin-top: 20px;
-    padding: 12px;
-    width: 100%;
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 12px;
-    background: none;
-    color: rgba(255,255,255,0.6);
-    font-size: 14px;
-    font-weight: 500;
-    font-family: 'Noto Sans KR', sans-serif;
-    cursor: pointer;
-  }
-  .profile-logout:active { background: rgba(255,255,255,0.05); }
-
-  /* ── 로그인 시트 ── */
-  .overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 300;
-    backdrop-filter: blur(4px);
-  }
-  .overlay.show { display: block; }
-
-  .login-sheet {
-    position: fixed;
-    bottom: -300px;
-    left: 0; right: 0;
-    background: var(--white);
-    border-radius: 24px 24px 0 0;
-    padding: 32px 24px 48px;
-    z-index: 301;
-    transition: bottom 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 -8px 40px rgba(0,0,0,0.15);
-  }
-  .login-sheet.show { bottom: 0; }
-
-  .login-sheet-bar {
-    width: 36px; height: 4px;
-    background: #d1d5db;
-    border-radius: 2px;
-    margin: 0 auto 24px;
-  }
-
-  .kakao-btn {
-    width: 100%;
-    padding: 16px;
-    border-radius: 14px;
-    border: none;
-    background: #FEE500;
-    color: #3C1E1E;
-    font-size: 16px;
-    font-weight: 700;
-    font-family: 'Noto Sans KR', sans-serif;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-  }
-  .kakao-btn:active { background: #e6cf00; }
-  .kakao-btn svg { width: 22px; height: 22px; }
-
-  /* ── 알림 카드 ── */
-  .alert-card {
-    padding: 16px;
-    margin-bottom: 10px;
-    background: #fff;
-    border-radius: 16px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    position: relative;
-    overflow: hidden;
-  }
-  .alert-card.clickable { cursor: pointer; }
-  .alert-card .accent-bar {
-    position: absolute;
-    top: 0; left: 0; bottom: 0;
-    width: 4px;
-    border-radius: 4px 0 0 4px;
-  }
-
-  .alert-section-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 20px 0 12px;
-  }
-
-  .footer {
-    position: fixed;
-    bottom: 70px;
-    left: 0; right: 0;
-    text-align: center;
-    font-size: 11px;
-    color: #c0c0c0;
-    padding: 8px;
-    pointer-events: none;
-  }
-  .footer span { font-weight: 700; }
-  .container.active .footer { display: none; }
-
-  /* ── 내 주변 ── */
-  .nearby-placeholder {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--gray-400);
-  }
-  .nearby-placeholder svg { width: 48px; height: 48px; stroke: #d1d5db; margin-bottom: 12px; }
-
-  /* ── 최근 본 매물 ── */
-  .recent-empty {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--gray-400);
-    font-size: 14px;
-  }
+/* 데이터 출처 */
+.data-source {
+  font-size: 11px;
+  color: #b0b8c8;
+  text-align: center;
+  padding: 8px 0 24px;
+  width: 100%;
+}
 </style>
 </head>
 <body>
 
-<div class="container" id="container">
-  <!-- 로고 -->
-  <div class="logo" onclick="goHome()">
-    <span class="logo-text">휙</span>
-    <span class="logo-dot"></span>
-  </div>
-  <div class="tagline">AI가 찾아주는 내 조건에 딱 맞는 매물</div>
+<a class="btn-agent" href="#">중개사</a>
 
-  <!-- 검색 -->
-  <div class="search-wrap" id="searchWrap">
-    <div class="search-box">
-      <input type="text" class="search-input" id="searchInput" placeholder="아파트, 지역, 가격으로 검색" autocomplete="off" enterkeyhint="search">
-      <div class="btn-right">
-        <button class="icon-btn btn-search" onclick="doSearch()" title="매물 검색">
-          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
-        </button>
-      </div>
-      <!-- 드롭다운 -->
-      <div class="suggest-dropdown" id="dropdown">
-        <div id="recentInDropdown"></div>
-        <div id="suggestStatic">
-          <div class="suggest-label">이렇게 검색해보세요</div>
-          <div class="suggest-item" onclick="pickSuggest(this)">
-            <div class="suggest-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></div>
-            <span class="suggest-text">강남 전세 30평</span>
-          </div>
-          <div class="suggest-item" onclick="pickSuggest(this)">
-            <div class="suggest-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></div>
-            <span class="suggest-text">월세 1000이하</span>
-          </div>
-          <div class="suggest-item" onclick="pickSuggest(this)">
-            <div class="suggest-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></div>
-            <span class="suggest-text">매매 10억</span>
-          </div>
-          <div class="suggest-item" onclick="pickSuggest(this)">
-            <div class="suggest-icon"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></div>
-            <span class="suggest-text">오피스텔 투룸</span>
-          </div>
-        </div>
-      </div>
+<div class="page">
+  <div class="hero" id="hero">
+    <div class="logo">
+      <span class="logo-text">휙</span>
+      <span class="logo-dot"></span>
+    </div>
+    <p class="tagline">아파트 실거래가 이제 휙 확인하세요</p>
+    <div class="search-wrap">
+      <input class="search-input" id="searchInput"
+        type="search"
+        placeholder="단지명, 지역으로 검색"
+        autocomplete="off"
+        autocorrect="off"
+        spellcheck="false"
+        enterkeyhint="search">
+      <button class="search-btn" id="searchBtn" aria-label="검색">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a1a2e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </button>
     </div>
   </div>
 
-  <div class="results" id="results"></div>
-
-  <!-- 알림 패널 -->
-  <div class="panel panel-center" id="alertPanel"></div>
-
-  <!-- 손님 등록 패널 -->
-  <div class="panel panel-center" id="clientPanel"></div>
-
-  <!-- 내주변 패널 -->
-  <div class="panel" id="nearbyPanel"></div>
-
-  <!-- 최근 본 매물 패널 -->
-  <div class="panel" id="recentPanel"></div>
-
-  <!-- 내정보 패널 -->
-  <div class="panel panel-center" id="profilePanel"></div>
-
-  <div class="footer">AI가 찾아주는 매물 · <span>휙</span></div>
-</div>
-
-<!-- 하단 탭바: 비로그인 -->
-<div class="bottom-tab-bar" id="bottomTabBar">
-  <!-- 홈 -->
-  <button class="tab-btn active" id="tabHome" onclick="switchTab('home')">
-    <div class="tab-icon">
-      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    </div>
-    <span class="tab-label">홈</span>
-  </button>
-  <!-- 내주변 -->
-  <button class="tab-btn" id="tabNearby" onclick="switchTab('nearby')">
-    <div class="tab-icon">
-      <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-    </div>
-    <span class="tab-label">내주변</span>
-  </button>
-  <!-- 최근 -->
-  <button class="tab-btn" id="tabRecent" onclick="switchTab('recent')">
-    <div class="tab-icon">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-    </div>
-    <span class="tab-label">최근</span>
-  </button>
-  <!-- 중개사 (비로그인) -->
-  <button class="tab-btn" id="tabAgent" onclick="switchTab('agent')">
-    <div class="tab-icon">
-      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    </div>
-    <span class="tab-label">중개사</span>
-  </button>
-</div>
-
-<!-- 하단 탭바: 로그인 후 (중개사) -->
-<div class="bottom-tab-bar" id="agentTabBar">
-  <!-- 홈 -->
-  <button class="tab-btn active" id="tabHomeAgent" onclick="switchTab('home')">
-    <div class="tab-icon">
-      <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-    </div>
-    <span class="tab-label">홈</span>
-  </button>
-  <!-- 손님등록 (채팅) -->
-  <button class="tab-btn" id="tabClient" onclick="switchTab('client')">
-    <div class="tab-icon">
-      <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-    </div>
-    <span class="tab-label">손님등록</span>
-  </button>
-  <!-- 알림 (브리핑) -->
-  <button class="tab-btn" id="tabAlert" onclick="switchTab('alert')">
-    <div class="tab-icon">
-      <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-      <span class="tab-badge" id="badgeAlert"></span>
-    </div>
-    <span class="tab-label">브리핑</span>
-  </button>
-  <!-- 내정보 -->
-  <button class="tab-btn" id="tabProfile" onclick="switchTab('profile')">
-    <div class="tab-icon">
-      <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    </div>
-    <span class="tab-label">내정보</span>
-  </button>
-</div>
-
-<!-- 로그인 시트 -->
-<div class="overlay" id="overlay" onclick="closeLogin()"></div>
-<div class="login-sheet" id="loginSheet">
-  <div class="login-sheet-bar"></div>
-  <div style="text-align:center;margin-bottom:20px;">
-    <div style="font-size:20px;font-weight:800;color:var(--hwik-dark);margin-bottom:4px;">중개사 로그인</div>
-    <div style="font-size:13px;color:#94a3b8;">매물 관리와 손님 매칭을 시작하세요</div>
+  <div class="results-wrap" id="resultsWrap" style="display:none">
+    <div class="results-count" id="resultsCount"></div>
+    <div id="resultsList"></div>
+    <div class="data-source">출처: 국토교통부 실거래가 공개시스템</div>
   </div>
-  <button class="kakao-btn" onclick="doKakaoLogin()">
-    <svg viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3C6.48 3 2 6.48 2 10.8c0 2.76 1.84 5.18 4.6 6.56-.2.74-.72 2.68-.82 3.1-.14.52.19.51.4.37.16-.1 2.56-1.74 3.6-2.44.7.1 1.44.16 2.22.16 5.52 0 10-3.48 10-7.76S17.52 3 12 3z"/></svg>
-    카카오로 시작하기
-  </button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="config.js"></script>
-<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.4/kakao.min.js" async></script>
 <script>
-// ── 상태 ──
-const container = document.getElementById('container');
-const searchInput = document.getElementById('searchInput');
-const dropdown = document.getElementById('dropdown');
-const results = document.getElementById('results');
+const SUPA_URL = 'https://jqaxejgzkchxbfzgzyzi.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxYXhlamd6a2NoeGJmemd6eXppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDk3MTM5OTksImV4cCI6MjAyNTI4OTk5OX0.hHrKEFCNMBbMTYqDLJWzMT5mcpZAPnJBCFm-CMWUO8k';
+const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
 
-let currentUser = null;
-let currentTab = 'home';
-let searchData = [];
-let searchController = null;
-let appLoading = false;
-
-function haptic(ms = 30) { try { navigator.vibrate?.(ms); } catch(_e) {} }
-
-// ── 알림 소리 (Web Audio, 코드 생성 "띵") ──
-// 기본 OFF, 내정보에서 토글. 첫 사용자 제스처 이후 unlock 됨.
-const SOUND_KEY = 'hwik_sound_enabled';
-function isSoundEnabled() { return localStorage.getItem(SOUND_KEY) === '1'; }
-function setSoundEnabled(v) { localStorage.setItem(SOUND_KEY, v ? '1' : '0'); }
-let _audioCtx = null;
-function _getAudioCtx() {
-  if (_audioCtx) return _audioCtx;
-  try { _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-  catch(_) { return null; }
-  return _audioCtx;
-}
-function playNotifySound() {
-  if (!isSoundEnabled()) return;
-  const ctx = _getAudioCtx();
-  if (!ctx) return;
-  // 브라우저가 첫 제스처 전이면 suspended 상태 — resume 시도
-  if (ctx.state === 'suspended') { try { ctx.resume(); } catch(_) {} }
-  try {
-    const now = ctx.currentTime;
-    // 두 음 "띠링" — 880Hz → 1175Hz, 짧게
-    [{f:880, t:0, d:0.08}, {f:1175, t:0.09, d:0.12}].forEach(({f,t,d}) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = f;
-      gain.gain.setValueAtTime(0, now + t);
-      gain.gain.linearRampToValueAtTime(0.12, now + t + 0.01);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + t + d);
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.start(now + t); osc.stop(now + t + d);
-    });
-  } catch(_) {}
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ── Supabase + Kakao ──
-const SUPABASE_URL = HWIK_CONFIG.SUPABASE_URL;
-const SUPABASE_KEY = HWIK_CONFIG.SUPABASE_KEY;
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-  auth: { clockSkewInSeconds: 300 }
+function formatPrice(manwon) {
+  if (!manwon) return '-';
+  const uk = Math.floor(manwon / 10000);
+  const rem = manwon % 10000;
+  const chun = Math.floor(rem / 1000);
+  if (uk > 0 && chun > 0) return `${uk}억 ${chun}천`;
+  if (uk > 0) return `${uk}억`;
+  return `${manwon.toLocaleString()}만`;
+}
+
+let searchTimer = null;
+let lastQuery = '';
+
+const input = document.getElementById('searchInput');
+const hero = document.getElementById('hero');
+const resultsWrap = document.getElementById('resultsWrap');
+const resultsList = document.getElementById('resultsList');
+const resultsCount = document.getElementById('resultsCount');
+
+input.addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  const q = input.value.trim();
+  if (q.length < 2) {
+    if (q.length === 0) resetView();
+    return;
+  }
+  searchTimer = setTimeout(() => doSearch(q), 300);
 });
 
-// ── 토큰 캐시 (매 요청마다 getSession() 호출 방지) ──
-let _cachedToken = null;
-async function getToken() {
-  if (_cachedToken) return _cachedToken;
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  _cachedToken = session?.access_token || SUPABASE_KEY;
-  return _cachedToken;
-}
-
-function ensureKakao() {
-  if (typeof Kakao !== 'undefined' && !Kakao.isInitialized()) {
-    Kakao.init(HWIK_CONFIG.KAKAO_JS_KEY);
-  }
-}
-
-// ── 인증 ──
-// 빠른 탭바 표시 + currentUser 즉시 복원 (auth.getSession 네트워크 대기 X)
-(function quickTabCheck() {
-  try {
-    const key = Object.keys(localStorage).find(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
-    const cached = key ? JSON.parse(localStorage.getItem(key)) : null;
-    if (cached?.user) {
-      // currentUser를 localStorage에서 즉시 복원 — 네트워크 검증 전이라도 UI 렌더 가능
-      currentUser = cached.user;
-      document.getElementById('agentTabBar').classList.add('visible');
-      // 브리핑 프리페치도 즉시 시작 (getSession 기다리지 않음)
-      setTimeout(() => { try { prefetchBrief(); } catch(_) {} }, 0);
-    } else {
-      document.getElementById('bottomTabBar').classList.add('visible');
-    }
-  } catch(_) {
-    document.getElementById('bottomTabBar').classList.add('visible');
-  }
-})();
-
-supabaseClient.auth.getSession().then(({ data: { session } }) => {
-  if (session?.user) {
-    const wasRestored = !!currentUser;
-    currentUser = session.user;
-    if (!wasRestored) onLoggedIn();
-  }
-  else {
-    // 혹시 빠른 체크가 잘못됐으면 교정
-    currentUser = null;
-    document.getElementById('agentTabBar').classList.remove('visible');
-    document.getElementById('bottomTabBar').classList.add('visible');
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    clearTimeout(searchTimer);
+    const q = input.value.trim();
+    if (q.length >= 2) doSearch(q);
   }
 });
-supabaseClient.auth.onAuthStateChange((event, session) => {
-  _cachedToken = session?.access_token || null; // 토큰 캐시 갱신
-  if (session?.user) { currentUser = session.user; onLoggedIn(); }
-  else { currentUser = null; onLoggedOut(); }
+
+document.getElementById('searchBtn').addEventListener('click', () => {
+  const q = input.value.trim();
+  if (q.length >= 2) doSearch(q);
 });
 
-let _loggedInFired = false;
-function onLoggedIn() {
-  if (_loggedInFired) return; // 중복 호출 방지 (quickTabCheck + getSession + onAuthStateChange)
-  _loggedInFired = true;
-  closeLogin();
-  // 탭바 전환: 비로그인 → 중개사
-  document.getElementById('bottomTabBar').classList.remove('visible');
-  document.getElementById('agentTabBar').classList.add('visible');
-  // 현재 보고 있는 탭 다시 로드 (데이터 연결) — 단, 이미 탭 UI가 렌더링돼 있으면 스킵
-  // (세션 복원 시 onAuthStateChange가 뒤늦게 발생해서 탭이 깜박이던 버그 방지)
-  if (currentTab !== 'home') {
-    const chatExists = !!document.querySelector('body > .chat-area');
-    const panelShown = [...document.querySelectorAll('.panel')].some(p => p.style.display && p.style.display !== 'none');
-    if (!chatExists && !panelShown) switchTab(currentTab);
+function resetView() {
+  hero.classList.remove('has-results');
+  resultsWrap.style.display = 'none';
+  resultsList.innerHTML = '';
+}
+
+async function doSearch(query) {
+  if (query === lastQuery) return;
+  lastQuery = query;
+
+  hero.classList.add('has-results');
+  resultsWrap.style.display = 'block';
+  resultsList.innerHTML = `<div class="loading-msg">검색 중...</div>`;
+  resultsCount.textContent = '';
+
+  // 1. 아파트 단지 검색
+  const { data: apts, error } = await sb.from('apartments')
+    .select('kapt_code,kapt_name,umd_nm,sgg,slug')
+    .or(`kapt_name.ilike.%${query}%,umd_nm.ilike.%${query}%,sgg.ilike.%${query}%`)
+    .limit(20);
+
+  if (error || !apts?.length) {
+    resultsList.innerHTML = `<div class="empty-msg">"${esc(query)}"에 해당하는 단지가 없습니다</div>`;
+    resultsCount.textContent = '';
+    return;
   }
-  updateAlertBadge();
-  // 브리핑 데이터 프리페치 — 사용자가 탭 누르기 전에 백그라운드 로드
-  if (typeof prefetchBrief === 'function') prefetchBrief();
-}
 
-function onLoggedOut() {
-  _loggedInFired = false;
-  document.querySelector('body > .chat-area')?.remove(); // 채팅도 제거
-  document.getElementById('agentTabBar').classList.remove('visible');
-  document.getElementById('bottomTabBar').classList.add('visible');
-  try {
-    localStorage.removeItem('hwik_alert_count');
-    localStorage.removeItem('hwik_brief_cache_v1');
-  } catch(e) {}
-  _setBadgeUI(0);
-  switchTab('home');
-}
+  // 2. 최근 실거래 조회
+  const codes = apts.map(a => a.kapt_code);
+  const { data: trades } = await sb.from('trades')
+    .select('kapt_code,trade_type,price,pyeong,year,month')
+    .in('kapt_code', codes)
+    .order('year', { ascending: false })
+    .order('month', { ascending: false })
+    .limit(200);
 
-// ── 로그인 ──
-function showLogin() {
-  document.getElementById('overlay').classList.add('show');
-  setTimeout(() => document.getElementById('loginSheet').classList.add('show'), 10);
-  history.pushState({ login: true }, '');
-}
-function closeLogin() {
-  document.getElementById('loginSheet').classList.remove('show');
-  setTimeout(() => document.getElementById('overlay').classList.remove('show'), 300);
-}
-async function doKakaoLogin() {
-  try {
-    ensureKakao();
-    const { data, error } = await supabaseClient.auth.signInWithOAuth({
-      provider: 'kakao',
-      options: { redirectTo: 'https://hwik.kr/mobile.html' }
-    });
-    if (error) { alert('로그인 오류: ' + error.message); console.error('Login error:', error); }
-  } catch(e) { alert('로그인 실패: ' + e.message); console.error('Login exception:', e); }
-}
-
-// ── 키보드 대응 (채팅 영역 리사이즈) ──
-if (window.visualViewport) {
-  const TAB_H = 60;
-  window.visualViewport.addEventListener('resize', () => {
-    const chat = document.querySelector('body > .chat-area');
-    if (!chat) return;
-    const vv = window.visualViewport;
-    const kbH = window.innerHeight - vv.height; // 키보드 높이
-    if (kbH > 50) {
-      // 키보드 올라옴 → 탭바 숨기고 채팅을 키보드 위까지
-      chat.style.bottom = kbH + 'px';
-      document.getElementById('bottomTabBar')?.style && (document.getElementById('bottomTabBar').style.display = 'none');
-      document.getElementById('agentTabBar')?.style && (document.getElementById('agentTabBar').style.display = 'none');
-    } else {
-      // 키보드 내려감 → 탭바 복원
-      chat.style.bottom = `calc(${TAB_H}px + env(safe-area-inset-bottom, 0px))`;
-      const barId = currentUser ? 'agentTabBar' : 'bottomTabBar';
-      document.getElementById(barId)?.classList.add('visible');
-      document.getElementById(barId).style.display = '';
-    }
-    // 메시지 영역 스크롤 하단으로
-    const msgs = chat.querySelector('.chat-messages');
-    if (msgs) msgs.scrollTop = msgs.scrollHeight;
+  // 3. 단지별 거래유형별 최신 거래 매핑
+  const tradeMap = {};
+  (trades || []).forEach(t => {
+    const key = `${t.kapt_code}_${t.trade_type}`;
+    if (!tradeMap[key]) tradeMap[key] = t;
   });
-}
 
-// ── 탭 전환 ──
-function switchTab(tab) {
-  // 같은 탭 연속 탭 차단 (브리핑 중복 로드 방지)
-  if (tab === currentTab && tab === 'alert' && document.getElementById('alertChatArea')) return;
-  haptic(15);
-  currentTab = tab;
-
-  // 모든 패널 숨기기 + body에 붙은 채팅 제거 (여러 개 있을 수 있음)
-  document.querySelectorAll('.panel').forEach(p => { p.style.display = 'none'; p.classList.remove('chat-mode'); });
-  document.querySelectorAll('body > .chat-area').forEach(el => el.remove());
-  // 진행 중이던 브리핑 큐 무효화
-  if (typeof _alertGen !== 'undefined') _alertGen++;
-  if (typeof _alertLoading !== 'undefined') _alertLoading = false;
-
-  // 탭 active 처리
-  const isAgent = !!currentUser;
-  const barId = isAgent ? 'agentTabBar' : 'bottomTabBar';
-  document.querySelectorAll(`#${barId} .tab-btn`).forEach(btn => btn.classList.remove('active'));
-
-  // 검색영역/로고/결과 표시 제어
-  const searchWrap = document.getElementById('searchWrap');
-  const logo = document.querySelector('.logo');
-  const tagline = document.querySelector('.tagline');
-
-  if (tab === 'home') {
-    // 홈: 검색 보이기
-    container.classList.remove('active');
-    searchWrap.style.display = '';
-    logo.style.display = '';
-    tagline.style.display = '';
-    results.innerHTML = '';
-    results.style.display = '';
-    searchInput.value = '';
-    searchData = [];
-
-    if (isAgent) document.getElementById('tabHomeAgent').classList.add('active');
-    else document.getElementById('tabHome').classList.add('active');
-
-  } else {
-    // 다른 탭: 검색/로고/결과영역 숨기기 (빈 results가 패딩으로 공간 먹는 문제 방지)
-    container.classList.add('active');
-    searchWrap.style.display = 'none';
-    logo.style.display = 'none';
-    tagline.style.display = 'none';
-    results.innerHTML = '';
-    results.style.display = 'none';
-
-    // 해당 탭 버튼 활성화
-    const btnMap = {
-      nearby: 'tabNearby', recent: 'tabRecent', agent: 'tabAgent',
-      client: 'tabClient', alert: 'tabAlert', profile: 'tabProfile'
-    };
-    const btnId = btnMap[tab];
-    if (btnId) document.getElementById(btnId)?.classList.add('active');
-
-    // 패널 표시
-    if (tab === 'nearby') showNearby();
-    else if (tab === 'recent') showRecent();
-    else if (tab === 'agent') showLogin();
-    else if (tab === 'client') showClientRegister();
-    else if (tab === 'alert') showAlerts();
-    else if (tab === 'profile') showProfile();
-
-    history.pushState({ tab }, '');
-  }
-}
-
-// ── 검색 ──
-searchInput.addEventListener('focus', () => {
-  setTimeout(() => searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
-  openDropdown();
-});
-searchInput.addEventListener('input', () => {
-  if (searchInput.value.trim()) closeDropdown(); else openDropdown();
-});
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.search-wrap')) closeDropdown();
-});
-searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !appLoading) doSearch(); });
-
-function openDropdown() {
-  if (container.classList.contains('active')) return;
-  renderRecentDropdown();
-  dropdown.classList.add('show');
-  searchInput.classList.add('dropdown-open');
-}
-function closeDropdown() {
-  dropdown.classList.remove('show');
-  searchInput.classList.remove('dropdown-open');
-}
-function pickSuggest(el) {
-  searchInput.value = el.querySelector('.suggest-text').textContent;
-  closeDropdown(); doSearch();
-}
-
-// 최근 검색
-let recentSearches = JSON.parse(localStorage.getItem('hwik_recent') || '[]');
-function addRecent(query) {
-  recentSearches = recentSearches.filter(q => q !== query);
-  recentSearches.unshift(query);
-  if (recentSearches.length > 3) recentSearches = recentSearches.slice(0, 3);
-  localStorage.setItem('hwik_recent', JSON.stringify(recentSearches));
-}
-function renderRecentDropdown() {
-  const recentEl = document.getElementById('recentInDropdown');
-  const staticEl = document.getElementById('suggestStatic');
-  if (!recentEl) return;
-  if (!recentSearches.length) { recentEl.innerHTML = ''; if (staticEl) staticEl.style.display = ''; return; }
-  if (staticEl) staticEl.style.display = 'none';
-  recentEl.innerHTML = `
-    <div class="recent-header">
-      <span class="recent-title">최근 검색</span>
-      <button class="recent-clear" onclick="clearAllRecent()">전체 삭제</button>
-    </div>
-    ${recentSearches.map((q, i) => `
-      <div class="suggest-item" onclick="pickRecent(${i})">
-        <div class="suggest-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg></div>
-        <span class="suggest-text">${esc(q)}</span>
-        <button class="recent-item-del" onclick="event.stopPropagation();deleteRecent(${i})">×</button>
-      </div>
-    `).join('')}
-  `;
-}
-function pickRecent(idx) { searchInput.value = recentSearches[idx] || ''; doSearch(); }
-function deleteRecent(idx) { recentSearches.splice(idx, 1); localStorage.setItem('hwik_recent', JSON.stringify(recentSearches)); renderRecentDropdown(); }
-function clearAllRecent() { recentSearches = []; localStorage.removeItem('hwik_recent'); renderRecentDropdown(); }
-
-async function doSearch() {
-  if (appLoading) return;
-  const query = searchInput.value.trim();
-  if (!query) return;
-
-  addRecent(query);
-  closeDropdown();
-  container.classList.add('active');
-  searchInput.blur();
-  if (searchController) searchController.abort();
-  searchController = new AbortController();
-  appLoading = true;
-
-  // 검색 중 표시
-  results.innerHTML = `
-    <div class="searching">
-      <div class="dot-pulse"><span></span><span></span><span></span></div>
-      "${esc(query)}" 검색 중
-    </div>`;
-
-  try {
-    // 일반 이용자: 공유 매물에서 검색
-    const searchMode = currentUser ? 'my' : 'shared';
-    const agentId = currentUser ? currentUser.id : '';
-
-    const _searchToken = currentUser ? await getToken() : SUPABASE_KEY;
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/search-property`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + _searchToken, 'apikey': SUPABASE_KEY },
-      body: JSON.stringify({ query, agent_id: agentId, limit: 30, search_mode: searchMode }),
-      signal: searchController.signal
-    });
-    const data = await res.json();
-    searchData = data.results || [];
-    showSearchResults(searchData);
-  } catch(e) {
-    if (e.name === 'AbortError') return;
-    results.innerHTML = '<div class="results-status" style="text-align:center;padding:32px 0;color:#f87171">검색 오류가 발생했어요</div>';
-  } finally {
-    appLoading = false;
-  }
-}
-
-function showSearchResults(cards) {
-  if (!cards.length) {
-    results.innerHTML = '<div class="results-status" style="text-align:center;padding:32px 0">검색 결과가 없어요</div>';
-    return;
-  }
-  let html = `<div class="results-status"><strong>${cards.length}건</strong></div>`;
-  cards.forEach((item, idx) => {
-    const p = item.property || {};
-    const type = esc(p.type || '');
-    const typeClass = type === '매매' ? 'type-sale' : type === '전세' ? 'type-jeonse' : 'type-rent';
-    const tradeStatus = item.trade_status === '계약중' ? '계약중' : item.trade_status === '완료' ? '완료' : '계약가능';
-    const tradeClass = tradeStatus === '계약가능' ? 'trade-available' : tradeStatus === '계약중' ? 'trade-ongoing' : 'trade-done';
-    const name = esc(p.complex || p.location || '매물');
-    const loc = esc(p.location || '');
-    const detail = [p.area, p.floor].filter(Boolean).map(v => esc(v)).join(' · ');
-    const safeId = esc(item.id);
-
-    html += `
-      <div class="li" onclick="openProperty('${safeId}')">
-        <div class="li-row1">
-          <span class="li-type ${typeClass}">${type}</span>
-          <span class="li-price">${esc(p.price || '')}</span>
-          <span class="li-trade ${tradeClass}">${tradeStatus}</span>
-          <span style="flex:1"></span>
-          <button class="li-btn-detail" onclick="event.stopPropagation(); openProperty('${safeId}')">보기</button>
-        </div>
-        <div class="li-row2">
-          <div class="li-name">${name}${loc && loc !== name ? ' · ' + loc : ''}</div>
-          <div class="li-detail">${detail}</div>
-        </div>
-      </div>`;
-  });
-  results.innerHTML = html;
-
-  // 최근 본 매물에 저장
-  cards.forEach(item => addRecentViewed(item));
-}
-
-// 매물 클릭 → property_chat.html 열기
-function openProperty(cardId) {
-  const agentParam = currentUser ? '&agent=' + currentUser.id : '';
-  window.open('https://hwik.kr/property_chat.html?id=' + cardId + agentParam, '_blank');
-}
-
-// ── 내 주변 ──
-function showNearby() {
-  const panel = document.getElementById('nearbyPanel');
-  panel.style.display = 'block';
-  panel.innerHTML = `
-    <div class="panel-title">내 주변</div>
-    <div class="nearby-placeholder">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
-      </svg>
-      <div style="font-size:15px;font-weight:600;margin-bottom:4px;">위치를 허용하면</div>
-      <div style="font-size:13px;">주변 매물을 찾아드려요</div>
-      <button onclick="requestLocation()" style="margin-top:16px;padding:12px 28px;border-radius:12px;border:none;background:var(--hwik-dark);color:var(--hwik-yellow);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;">위치 허용하기</button>
-    </div>
-  `;
-}
-
-function requestLocation() {
-  if (!navigator.geolocation) {
-    showToast('이 브라우저에서는 위치 기능을 지원하지 않아요');
-    return;
-  }
-  navigator.geolocation.getCurrentPosition(
-    (pos) => {
-      showToast('위치 확인! 주변 매물 검색 중...');
-      // 추후 위치 기반 검색 구현
-      const panel = document.getElementById('nearbyPanel');
-      panel.innerHTML = `
-        <div class="panel-title">내 주변</div>
-        <div style="text-align:center;padding:40px 0;color:var(--gray-400);font-size:14px;">
-          주변 매물 검색 기능은 준비 중이에요
-        </div>
-      `;
-    },
-    () => { showToast('위치를 가져올 수 없어요'); }
-  );
-}
-
-// ── 최근 본 매물 ──
-function getRecentViewed() {
-  return JSON.parse(localStorage.getItem('hwik_recent_viewed') || '[]');
-}
-function addRecentViewed(item) {
-  let list = getRecentViewed();
-  list = list.filter(v => v.id !== item.id);
-  const p = item.property || {};
-  list.unshift({
-    id: item.id,
-    type: p.type || '',
-    price: p.price || '',
-    name: p.complex || p.location || '',
-    location: p.location || '',
-    area: p.area || '',
-    time: Date.now()
-  });
-  if (list.length > 20) list = list.slice(0, 20);
-  localStorage.setItem('hwik_recent_viewed', JSON.stringify(list));
-}
-
-function showRecent() {
-  const panel = document.getElementById('recentPanel');
-  panel.style.display = 'block';
-  const list = getRecentViewed();
-  if (!list.length) {
-    panel.innerHTML = `
-      <div class="panel-title">최근 본 매물</div>
-      <div class="recent-empty">아직 본 매물이 없어요</div>
-    `;
-    return;
-  }
-  let html = `<div class="panel-title">최근 본 매물</div>`;
-  list.forEach(item => {
-    const typeClass = item.type === '매매' ? 'type-sale' : item.type === '전세' ? 'type-jeonse' : 'type-rent';
-    const safeId = esc(item.id);
-    html += `
-      <div class="li" onclick="openProperty('${safeId}')">
-        <div class="li-row1">
-          <span class="li-type ${typeClass}">${esc(item.type)}</span>
-          <span class="li-price">${esc(item.price)}</span>
-          <span style="flex:1"></span>
-        </div>
-        <div class="li-row2">
-          <div class="li-name">${esc(item.name)}</div>
-          <div class="li-detail">${esc(item.area)}</div>
-        </div>
-      </div>`;
-  });
-  panel.innerHTML = html;
-}
-
-// ── KST(한국 표준시) 헬퍼 — 기기 타임존 무관하게 한국 시간 기준 ──
-function _kstNow() {
-  // Intl로 KST 연/월/일/시/분/요일 추출
-  const fmt = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Asia/Seoul',
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', hour12: false, weekday: 'short'
-  });
-  const parts = Object.fromEntries(fmt.formatToParts(new Date()).map(p => [p.type, p.value]));
-  const dayIdx = { Sun:0, Mon:1, Tue:2, Wed:3, Thu:4, Fri:5, Sat:6 }[parts.weekday] ?? 0;
-  return {
-    y: +parts.year, mo: +parts.month, d: +parts.day,
-    h: +parts.hour % 24, m: +parts.minute, day: dayIdx
-  };
-}
-function _kstDateStr() {
-  const k = _kstNow();
-  return `${k.y}년 ${k.mo}월 ${k.d}일 ${'일월화수목금토'[k.day]}요일`;
-}
-function _kstGreeting() {
-  const h = _kstNow().h;
-  if (h < 6)  return '늦은 밤이네요';
-  if (h < 12) return '좋은 아침이에요!';
-  if (h < 14) return '점심 맛있게 드세요';
-  if (h < 18) return '오늘도 수고하세요!';
-  if (h < 22) return '오늘 하루 마무리!';
-  return '늦은 시간까지 수고 많으세요';
-}
-
-// ── 손님 등록 (중개사 전용) ──
-// ── 손님 등록 (채팅 스타일 - 대화형 수집) ──
-let _chatState = 'idle'; // idle | waiting | confirm | done
-let _chatParsed = null;   // 최종 병합 결과 (확인 카드용)
-let _chatDraft = null;    // { rawText, skipped: Set, parsed } — 누적 수집 상태
-let _chatText = '';       // 통합 raw text (레거시, confirm 단계에서 사용)
-let _chatMissing = null;  // 현재 AI가 물어보는 필드
-
-// 필수 필드 + 질문 문구 (우선순위 순)
-const _REQUIRED_FIELDS = ['trade', 'location', 'price', 'category', 'contact'];
-const _FIELD_QUESTIONS = {
-  trade:    '손님이 원하는 거래는요?<br><span style="font-size:12px;color:#94a3b8;">매매 / 전세 / 월세 / 반전세</span>',
-  location: '손님이 원하는 지역은요?<br><span style="font-size:12px;color:#94a3b8;">예) 강남구 역삼동, 마포구, 분당</span>',
-  price:    '손님 예산은 어느 정도인가요?<br><span style="font-size:12px;color:#94a3b8;">예) 5억 이하, 보증금 1000 월 60, 3억대</span>',
-  category: '손님이 원하는 매물 종류는요?<br><span style="font-size:12px;color:#94a3b8;">아파트 / 오피스텔 / 빌라 / 원룸 / 상가 / 사무실</span>',
-  contact:  '손님 이름이나 연락처 알려주세요.<br><span style="font-size:12px;color:#94a3b8;">예) 홍길동 010-1234-5678<br>없으면 "없음" 입력</span>'
-};
-const _SKIP_KEYWORDS = /^(없음|없어|없습니다|스킵|skip|상관없|몰라요?|모름|패스|pass|생략)$/i;
-
-// 파싱 결과에서 특정 필드 존재 여부
-function _hasField(draft, field) {
-  const p = draft?.parsed || {};
-  if (draft?.skipped?.has(field)) return true;
-  switch (field) {
-    case 'trade':    return !!(p.wanted_trade_type || (p.type && p.type !== '손님' && p.type !== ''));
-    case 'location': return !!(p.location || p.complex);
-    case 'price':    return !!(p.price || p.price_number || p.deposit || p.monthly_rent);
-    case 'category': return !!p.category;
-    case 'contact':  return !!(p.contact_name || p.contact_phone);
-  }
-  return false;
-}
-
-// 다음 빠진 필수 필드 찾기 (우선순위 순)
-function _findMissingField(draft) {
-  for (const f of _REQUIRED_FIELDS) {
-    if (!_hasField(draft, f)) return f;
-  }
-  return null;
-}
-
-// 누적 머지 — 새 파싱 결과를 기존 draft에 병합 (non-empty 값이 이김)
-function _mergeDraft(draft, newParsed) {
-  const merged = { ...(draft.parsed || {}) };
-  for (const k in newParsed) {
-    const v = newParsed[k];
-    if (v === null || v === undefined || v === '') continue;
-    if (Array.isArray(v) && v.length === 0) continue;
-    merged[k] = v;
-  }
-  draft.parsed = merged;
-  return draft;
-}
-
-let _chatGreetTimer = null;
-function showClientRegister() {
-  // 이미 열려있으면 재생성 안 함
-  if (document.getElementById('clientChatArea')) return;
-  // 다른 채팅(브리핑) 제거
-  document.querySelector('body > .chat-area')?.remove();
-  if (_chatGreetTimer) { clearTimeout(_chatGreetTimer); _chatGreetTimer = null; }
-
-  _chatState = 'idle';
-  _chatParsed = null;
-  _chatDraft = { rawText: '', skipped: new Set(), parsed: {} };
-  _chatText = '';
-  _chatMissing = null;
-  _chatBuffer = '';
-  if (_chatDebounceTimer) { clearTimeout(_chatDebounceTimer); _chatDebounceTimer = null; }
-  _lastSender = '';
-
-  // 오늘 날짜 (한국 시간 기준)
-  const dateStr = _kstDateStr();
-
-  // body에 직접 추가 (fixed 정상 동작)
-  const chatArea = document.createElement('div');
-  chatArea.className = 'chat-area';
-  chatArea.id = 'clientChatArea';
-  chatArea.innerHTML = `
-      <div class="chat-messages" id="chatMessages">
-        <div class="chat-date"><span>${dateStr}</span></div>
-      </div>
-      <div class="chat-input-wrap">
-        <textarea class="chat-input" id="chatInput" rows="1" placeholder="손님 조건을 입력하세요" enterkeyhint="send"
-          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px';_onChatTyping()"
-          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();chatSend()}"></textarea>
-        <button class="chat-send-btn" id="chatSendBtn" onclick="chatSend()">
-          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        </button>
-      </div>`;
-  document.body.appendChild(chatArea);
-
-  // AI 인사 메시지 (1회만) — 한국 시간 기준 시간대별 인사 + 질문
-  _chatGreetTimer = setTimeout(() => {
-    _chatGreetTimer = null;
-    if (!document.getElementById('clientChatArea')) return;
-    addAiBubble(_kstGreeting(), true);
-    addAiBubble('어떤 손님을 등록하시겠어요?');
-    addAiBubble('<span style="font-size:12px;color:#94a3b8;">손님이 찾는 조건을 한 번에 다 말씀하셔도 되고, 하나씩 알려주셔도 돼요.<br>예) 강남 전세 5억 이하 홍길동 010-1234-5678</span>');
-    document.getElementById('chatInput')?.focus();
-  }, 300);
-}
-
-let _lastSender = ''; // 연속 메시지 아바타 생략용
-
-function addAiBubble(html, isFirst = false) {
-  const msgs = document.getElementById('chatMessages');
-  if (!msgs) return;
-  const showAvatar = _lastSender !== 'ai';
-  const prevSender = _lastSender;
-  _lastSender = 'ai';
-  const d = document.createElement('div');
-  d.className = 'msg' + (showAvatar ? ' first-in-group' : '');
-  d.innerHTML = `
-    ${showAvatar ? '<div class="avatar">휙</div>' : '<div class="avatar-spacer"></div>'}
-    <div class="bubble-wrap">
-      ${showAvatar ? '<div class="sender-name">휙 AI</div>' : ''}
-      <div class="bubble">${html}</div>
-    </div>`;
-  msgs.appendChild(d);
-  msgs.scrollTop = msgs.scrollHeight;
-  // 사용자 메시지 직후 AI 응답이 올 때만 소리 (인삿말/연속 AI는 무음)
-  if (!isFirst && prevSender === 'user') playNotifySound();
-}
-function addUserBubble(text) {
-  const msgs = document.getElementById('chatMessages');
-  if (!msgs) return;
-  _lastSender = 'user';
-  const d = document.createElement('div');
-  d.className = 'msg user-msg';
-  d.innerHTML = `<div class="bubble-wrap"><div class="bubble">${esc(text)}</div></div>`;
-  msgs.appendChild(d);
-  msgs.scrollTop = msgs.scrollHeight;
-}
-let _typingTimer = null;
-function _typingLabelText() {
-  // 실제 파싱 중일 때만 "분석 중" — 아니면 "듣고 있어요"
-  return _chatState === 'waiting' ? '분석 중이에요...' : '듣고 있어요...';
-}
-function _refreshTypingLabel() {
-  const t = document.getElementById('typingText');
-  if (t) t.textContent = _typingLabelText();
-}
-function addTyping() {
-  const msgs = document.getElementById('chatMessages');
-  if (!msgs) return;
-  if (document.getElementById('chatTyping')) { _refreshTypingLabel(); return; }
-  // 타이핑 인디케이터는 일시적 DOM — _lastSender를 영구 변경하지 않음
-  // (제거될 때 다음 AI 버블이 아바타를 새로 띄우도록)
-  const showAvatar = _lastSender !== 'ai';
-  const d = document.createElement('div');
-  d.className = 'msg' + (showAvatar ? ' first-in-group' : '');
-  d.id = 'chatTyping';
-  d.innerHTML = `
-    ${showAvatar ? '<div class="avatar">휙</div>' : '<div class="avatar-spacer"></div>'}
-    <div class="bubble-wrap">
-      ${showAvatar ? '<div class="sender-name">휙 AI</div>' : ''}
-      <div class="bubble">
-        <div class="typing-dots"><span></span><span></span><span></span></div>
-        <div id="typingText" style="font-size:12px;color:rgba(0,0,0,0.4);margin-top:4px;display:none;">${_typingLabelText()}</div>
-      </div>
-    </div>`;
-  msgs.appendChild(d);
-  msgs.scrollTop = msgs.scrollHeight;
-  // 2초 후 라벨 노출 (상태 기반 라벨 갱신)
-  _typingTimer = setTimeout(() => {
-    const t = document.getElementById('typingText');
-    if (t) { t.textContent = _typingLabelText(); t.style.display = 'block'; }
-  }, 2000);
-}
-function removeTyping() {
-  if (_typingTimer) { clearTimeout(_typingTimer); _typingTimer = null; }
-  document.getElementById('chatTyping')?.remove();
-}
-// 타이핑 인디케이터를 그 자리에서 AI 버블로 변환 (DOM 재생성 없이 → 페이드인 플리커 방지)
-// 대체할 #chatTyping이 없으면 일반 addAiBubble로 폴백
-function morphTypingToAiBubble(html) {
-  const node = document.getElementById('chatTyping');
-  if (!node) { addAiBubble(html); return; }
-  if (_typingTimer) { clearTimeout(_typingTimer); _typingTimer = null; }
-  const prevSender = _lastSender;
-  _lastSender = 'ai';
-  const bubble = node.querySelector('.bubble');
-  if (bubble) bubble.innerHTML = html;
-  node.removeAttribute('id'); // 다음 removeTyping이 이걸 지우지 않도록
-  const msgs = document.getElementById('chatMessages');
-  if (msgs) msgs.scrollTop = msgs.scrollHeight;
-  if (prevSender === 'user') playNotifySound();
-}
-
-// ── 카톡 끊어치기 대응: debounce + 타이핑 감지 ──
-let _chatBuffer = '';          // 디바운스 대기 중 누적되는 사용자 입력
-let _chatDebounceTimer = null; // 마지막 활동 후 _CHAT_DEBOUNCE_MS 기다리는 타이머
-const _CHAT_DEBOUNCE_MS = 900; // 0.9초 동안 추가 활동(전송/타이핑) 없으면 파싱 시작
-
-// 타이핑 인디케이터 토글 — 카톡 스타일:
-// 보낸 후 버퍼에 쌓여있거나 실제 파싱 중일 때만 표시 (입력 중엔 안 보임)
-function _updateTypingIndicator() {
-  if (!document.getElementById('clientChatArea')) return; // 손님 등록 화면에서만
-  const shouldShow = !!_chatBuffer || _chatState === 'waiting';
-  const exists = !!document.getElementById('chatTyping');
-  if (shouldShow && !exists) addTyping();
-  else if (!shouldShow && exists) removeTyping();
-}
-
-// 입력창 타이핑 중일 때 호출됨 — 디바운스 타이머만 리셋 (UI 노출 없음)
-function _onChatTyping() {
-  if (_chatDebounceTimer) {
-    clearTimeout(_chatDebounceTimer);
-    _chatDebounceTimer = setTimeout(_checkAndProcessBuffer, _CHAT_DEBOUNCE_MS);
-  }
-}
-
-// 타이머 만료 시 호출 — 입력창에 글이 남아있으면 더 기다림
-function _checkAndProcessBuffer() {
-  _chatDebounceTimer = null;
-  const inp = document.getElementById('chatInput');
-  if (inp && inp.value.trim()) {
-    // 사용자가 아직 입력 중 — 다시 0.9초 기다림 (점3개 계속 유지)
-    _chatDebounceTimer = setTimeout(_checkAndProcessBuffer, _CHAT_DEBOUNCE_MS);
-    return;
-  }
-  _processChatBuffer();
-}
-
-async function chatSend() {
-  const inp = document.getElementById('chatInput');
-  const text = inp?.value?.trim();
-  if (!text) return;
-  if (!currentUser) { showLogin(); return; }
-
-  inp.value = ''; inp.style.height = 'auto';
-  addUserBubble(text);
-
-  // 전체 리셋 키워드 — 어느 상태에서든 처음부터
-  if (/^(처음부터|리셋|취소|초기화)$/.test(text)) {
-    chatReset();
-    return;
-  }
-
-  // 확인 카드 떠있는데 추가 입력 → 자동 수정 모드 진입 (카드 닫고 병합 재파싱)
-  if (_chatState === 'confirm') {
-    _chatState = 'idle';
-    _chatParsed = null;
-    // 기존 확인 카드 버튼 비활성화
-    document.querySelectorAll('.chat-confirm-btns button').forEach(b => { b.disabled = true; b.style.opacity = '0.4'; });
-    // 아래는 일반 흐름으로 이어짐 → 버퍼 누적 + 파싱
-  }
-
-  if (!_chatDraft) _chatDraft = { rawText: '', skipped: new Set(), parsed: {} };
-
-  // 스킵 키워드 — 질문 대기 중이고 버퍼가 비어있을 때만 스킵으로 해석
-  if (_chatMissing && !_chatBuffer && _SKIP_KEYWORDS.test(text)) {
-    _chatDraft.skipped.add(_chatMissing);
-    _chatMissing = null;
-    if (_chatState !== 'waiting') _processChatBuffer(); // 즉시 다음 필드 체크
-    return;
-  }
-
-  // 버퍼에 누적 (카톡처럼 "강남" → "전세" → "5억" 연타해도 합쳐짐)
-  _chatBuffer = (_chatBuffer ? _chatBuffer + ' ' : '') + text;
-
-  // 이미 파싱 중이면 버퍼만 쌓아두고 return — 진행 중인 파싱이 끝나면 while 루프가 재처리
-  if (_chatState === 'waiting') return;
-
-  // 즉시 "타이핑 중" 점 3개 표시 (사용자가 반응을 느끼도록)
-  if (!document.getElementById('chatTyping')) addTyping();
-
-  // 디바운스 타이머 — 0.9초 내 추가 활동(전송/타이핑) 있으면 리셋
-  if (_chatDebounceTimer) { clearTimeout(_chatDebounceTimer); _chatDebounceTimer = null; }
-  _chatDebounceTimer = setTimeout(_checkAndProcessBuffer, _CHAT_DEBOUNCE_MS);
-}
-
-async function _processChatBuffer() {
-  if (_chatState === 'waiting') return;
-  _chatState = 'waiting';
-  _refreshTypingLabel(); // "듣고 있어요" → "분석 중이에요"
-  const btn = document.getElementById('chatSendBtn');
-  if (btn) btn.disabled = true;
-
-  // 버퍼가 비어있지 않은 동안 계속 파싱 (파싱 중 사용자가 추가로 보냈을 수 있음)
-  while (_chatBuffer) {
-    const chunk = _chatBuffer;
-    _chatBuffer = '';
-    _chatDraft.rawText = (_chatDraft.rawText ? _chatDraft.rawText + ' ' : '') + chunk;
-    _chatMissing = null;
-
-    if (!document.getElementById('chatTyping')) addTyping();
-
-    try {
-      const token = await getToken();
-      const parseRes = await fetch(`${SUPABASE_URL}/functions/v1/parse-property`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_KEY },
-        body: JSON.stringify({ text: '손님 ' + _chatDraft.rawText })
-      });
-      if (!parseRes.ok) throw new Error('AI 파싱 실패');
-      const parsed = await parseRes.json();
-      _mergeDraft(_chatDraft, parsed);
-    } catch(e) {
-      removeTyping();
-      addAiBubble('오류가 발생했어요. 다시 입력해주세요.<br><span style="font-size:13px;color:#f87171;">' + esc(e.message) + '</span>');
-      _chatState = 'idle';
-      if (btn) btn.disabled = false;
-      _updateTypingIndicator();
-      return;
-    }
-    // while 루프: 파싱 중 새 버퍼 쌓였으면 이어서 파싱
-  }
-
-  // 누락 필드 체크
-  const nextMissing = _findMissingField(_chatDraft);
-  if (nextMissing) {
-    _chatMissing = nextMissing;
-    morphTypingToAiBubble(_FIELD_QUESTIONS[nextMissing]);
-    _chatState = 'idle';
-    if (btn) btn.disabled = false;
-    document.getElementById('chatInput')?.focus();
-    _updateTypingIndicator(); // 사용자가 이미 입력 중이면 점3개 즉시 재표시
-    return;
-  }
-
-  // 채워진 정보가 전혀 없으면 (스킵만 눌렀을 때 등) 재안내
-  if (!Object.keys(_chatDraft.parsed).length) {
-    morphTypingToAiBubble('아직 정보가 부족해요. 손님 조건을 알려주세요.');
-    _chatState = 'idle';
-    if (btn) btn.disabled = false;
-    _updateTypingIndicator();
-    return;
-  }
-
-  // 확인 카드는 타이핑 인디를 없애고 이어서 요약 버블 여러 개 추가하는 흐름이므로 제거
-  removeTyping();
-
-  // 모두 채워짐 → 확인 카드
-  try {
-    const parsed = _chatDraft.parsed;
-    _chatParsed = parsed;
-    _chatText = _chatDraft.rawText;
-
-    // 중복 손님 체크 (같은 번호로 이미 등록된 손님 카드 찾기)
-    let dupInfo = null;
-    if (parsed.contact_phone) {
-      const phone = parsed.contact_phone;
-      const digits = phone.replace(/\D/g, '');
-      try {
-        const { data: dupes } = await supabaseClient.from('cards')
-          .select('id, contact_name, contact_phone, property, created_at')
-          .eq('agent_id', currentUser.id)
-          .in('contact_phone', [...new Set([phone, digits])])
-          .limit(5);
-        const clientDupe = (dupes||[]).find(c => c.property?.type === '손님');
-        if (clientDupe) {
-          dupInfo = {
-            name: clientDupe.contact_name || '이름없음',
-            when: new Date(clientDupe.created_at).toLocaleDateString('ko-KR')
-          };
-        }
-      } catch(_) { /* 중복 체크 실패는 무시 — 등록은 계속 진행 */ }
-    }
-
-    // 확인 카드 (카톡 스타일)
-    const p = parsed;
-    const typeColors = { '매매':'#ea580c', '전세':'#4f46e5', '월세':'#7c3aed' };
-    const catKo = { apartment:'아파트', officetel:'오피스텔', room:'원룸/빌라', commercial:'상가', office:'사무실', villa:'빌라', house:'주택' };
-    const wantType = p.wanted_trade_type || p.type || '';
-    const tColor = typeColors[wantType] || '#4ecdc4';
-    const catLabel = catKo[p.category] || p.category || '';
-    const features = (p.features || []).map(f => `<span class="cc-tag">${esc(f)}</span>`).join('');
-    const location = [p.location, p.complex].filter(Boolean).join(' ');
-    const detail = [p.area, p.floor, p.room].filter(Boolean).join(' · ');
-
-    // 연락처 누락 경고
-    const hasName = !!p.contact_name;
-    const hasPhone = !!p.contact_phone;
-    const missingLabel = !hasName && !hasPhone ? '이름·연락처' : !hasName ? '이름' : !hasPhone ? '연락처' : '';
-
-    const warnings = [];
-    if (dupInfo) warnings.push(`<div class="cc-warning" style="background:#fee2e2;border-top-color:#fecaca;color:#991b1b;">⚠️ 이미 등록된 손님: <b>${esc(dupInfo.name)}</b> (${esc(dupInfo.when)})<br><span style="font-weight:500;">그래도 등록하려면 아래 버튼을 누르세요</span></div>`);
-    if (missingLabel) warnings.push(`<div class="cc-warning">⚠️ ${missingLabel} 없이 등록됩니다 — 나중에 수정할 수 있어요</div>`);
-
-    // 자연어 요약 한 줄
-    const sumParts = [];
-    if (location) sumParts.push(`<b>${esc(location)}</b>`);
-    if (wantType) sumParts.push(`<b>${esc(wantType)}</b>`);
-    if (p.price) sumParts.push(`<b>${esc(p.price)}</b>`);
-    if (catLabel) sumParts.push(`<b>${esc(catLabel)}</b>`);
-    const criteriaLine = sumParts.join(' ');
-    const contactLine = [p.contact_name, p.contact_phone].filter(Boolean).map(v => esc(v)).join(' ');
-    const summaryBubble = `
-      정리해드릴게요 ✨<br>
-      ${criteriaLine ? `📋 ${criteriaLine}` : ''}
-      ${contactLine ? `<br>👤 <b>${contactLine}</b> 손님` : ''}
-      <br><br>이대로 <b>등록할까요?</b>`;
-    addAiBubble(summaryBubble);
-
-    const cardHtml = `
-      <div class="chat-confirm-card">
-        <div class="cc-header">
-          ${wantType ? `<span class="cc-type" style="background:${tColor}15;color:${tColor};">${esc(wantType)}</span>` : ''}
-          ${catLabel ? `<span class="cc-type" style="background:#f0f0f3;color:#5a5a6e;margin-left:4px;">${esc(catLabel)}</span>` : ''}
-          <div class="cc-price">${esc(p.price || '')}</div>
-        </div>
-        <div class="cc-body">
-          ${location ? `<div class="cc-row"><span class="cc-label">위치</span> ${esc(location)}</div>` : ''}
-          ${detail ? `<div class="cc-row"><span class="cc-label">조건</span> ${esc(detail)}</div>` : ''}
-          ${features ? `<div class="cc-tags">${features}</div>` : ''}
-        </div>
-        ${p.contact_name ? `<div class="cc-contact">👤 ${esc(p.contact_name)}${p.contact_phone ? '  ' + esc(p.contact_phone) : ''}</div>` : ''}
-        ${warnings.join('')}
-        <div class="chat-confirm-btns">
-          <button class="btn-no" onclick="chatEdit()">수정</button>
-          <button class="btn-yes" onclick="chatConfirm()">${dupInfo ? '그래도 등록' : '등록하기'}</button>
-        </div>
-      </div>`;
-    addAiBubble(cardHtml);
-    _chatState = 'confirm';
-
-  } catch(e) {
-    removeTyping();
-    addAiBubble('오류가 발생했어요. 다시 입력해주세요.<br><span style="font-size:13px;color:#f87171;">' + esc(e.message) + '</span>');
-    _chatState = 'idle';
-  }
-  if (btn) btn.disabled = false;
-}
-
-// 수정: 기존 파싱 결과 유지 + 추가 입력 받기 (merge 방식)
-function chatEdit() {
-  _chatState = 'idle';
-  _chatParsed = null; // 확인 카드 닫기 (draft/parsed는 유지)
-  _chatBuffer = '';
-  if (_chatDebounceTimer) { clearTimeout(_chatDebounceTimer); _chatDebounceTimer = null; }
-  // 기존 확인 카드 버튼 비활성화 (재클릭 방지)
-  document.querySelectorAll('.chat-confirm-btns button').forEach(b => { b.disabled = true; b.style.opacity = '0.4'; });
-  removeTyping();
-  addAiBubble('수정할 내용을 알려주세요.<br><span style="font-size:12px;color:#94a3b8;">예) 이름 홍길동<br>예) 지역 강남구<br>예) 예산 5억 이하<br><br>처음부터 다시 하려면 "처음부터" 입력</span>');
-  document.getElementById('chatInput')?.focus();
-}
-
-// 전체 리셋 (키워드 "처음부터"/"취소"/"리셋" 또는 외부 호출)
-function chatReset() {
-  _chatState = 'idle';
-  _chatParsed = null;
-  _chatDraft = { rawText: '', skipped: new Set(), parsed: {} };
-  _chatMissing = null;
-  _chatText = '';
-  _chatBuffer = '';
-  if (_chatDebounceTimer) { clearTimeout(_chatDebounceTimer); _chatDebounceTimer = null; }
-  removeTyping();
-  addAiBubble('처음부터 다시 알려주세요!<br><span style="font-size:12px;color:#94a3b8;">예) 강남 전세 5억 이하 홍길동 010-1234-5678</span>');
-  document.getElementById('chatInput')?.focus();
-}
-
-async function chatConfirm() {
-  if (!_chatParsed || !currentUser) return;
-  _chatState = 'waiting';
-
-  // 버튼 비활성화
-  document.querySelectorAll('.chat-confirm-btns button').forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
-  addTyping();
-
-  try {
-    const parsed = _chatParsed;
-    const text = _chatText;
-    const token = (await supabaseClient.auth.getSession()).data.session?.access_token || '';
-
-    const cardData = {
-      id: crypto.randomUUID().replace(/-/g, '').slice(0, 12),
-      agent_id: currentUser.id,
-      property: { ...parsed, type: '손님', rawText: text },
-      style: 'noimg',
-      color: 'blue',
-      trade_status: '계약가능',
-      client_status: '탐색중',
-      search_text: parsed.search_text || text,
-      search_text_private: parsed.search_text_private || null,
-      embedding: parsed.embedding || null,
-      price_number: parsed.price_number || null,
-      deposit: parsed.deposit || null,
-      monthly_rent: parsed.monthly_rent || null,
-      contact_name: parsed.contact_name || null,
-      contact_phone: parsed.contact_phone || null,
-      tags: parsed.tags || [],
-    };
-
-    const { error } = await supabaseClient.from('cards').insert(cardData);
-    if (error) throw error;
-
-    // 등록 완료 + 매칭 시작 메시지 (채팅 맥락 유지)
-    removeTyping();
-    const clientDisplayName = parsed.contact_name || '손님';
-    addAiBubble(`✅ <b>${esc(clientDisplayName)}</b>님 등록 완료!`);
-    addAiBubble('🔍 AI가 딱 맞는 매물 찾고 있어요...');
-    addTyping(); // 매칭 진행 중 점3개 유지
-
-    // 자동 매칭 + 매칭 결과 동시
-    const [, matchRes] = await Promise.all([
-      fetch(`${SUPABASE_URL}/functions/v1/auto-match`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_KEY },
-        body: JSON.stringify({ card_id: cardData.id })
-      }).catch(() => null),
-      fetch(`${SUPABASE_URL}/functions/v1/match-properties`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_KEY },
-        body: JSON.stringify({ client_card_id: cardData.id, limit: 20, threshold: 0.15 })
-      }).then(r => r.json()).catch(() => ({ results: [] }))
-    ]);
-
-    removeTyping();
-    const matches = matchRes.results || [];
-
-    // 매칭 결과 안내
-    if (matches.length) {
-      addAiBubble(`🎯 매칭 매물 <b>${matches.length}건</b> 찾았어요!<br><span style="font-size:12px;color:#94a3b8;">잠시 후 매물 리스트로 이동합니다</span>`);
-    } else {
-      addAiBubble('지금 당장 맞는 매물이 없네요 😅<br><span style="font-size:12px;color:#94a3b8;">새 매물이 등록되면 알림으로 알려드릴게요</span>');
-    }
-
-    // 채팅 닫고 → 손님 정보 + 매칭 매물 화면으로 전환 (0.9초 후)
-    _matchData = matches;
-    window._mcd = cardData; window._mp = parsed; window._mrt = text;
-    setTimeout(() => showClientMatchResults(cardData, parsed, text, matches), 900);
-
-    _chatState = 'idle';
-    _chatParsed = null;
-    _chatText = '';
-    _chatDraft = { rawText: '', skipped: new Set(), parsed: {} };
-    _chatMissing = null;
-    _chatBuffer = '';
-    if (_chatDebounceTimer) { clearTimeout(_chatDebounceTimer); _chatDebounceTimer = null; }
-
-  } catch(e) {
-    removeTyping();
-    addAiBubble('등록 중 오류가 발생했어요.<br><span style="font-size:13px;color:#f87171;">' + esc(e.message) + '</span><br>다시 입력해주세요.');
-    _chatState = 'idle';
-  }
-}
-
-let _matchData = []; // 매칭 결과 캐시
-let _matchFilter = 'all'; // 현재 필터
-
-function showClientMatchResults(cardData, parsed, rawText, matches) {
-  _matchData = matches;
-  _matchFilter = 'all';
-  _renderMatchPanel(cardData, parsed, rawText);
-}
-
-function _setMatchFilter(filter, cardData, parsed, rawText) {
-  _matchFilter = filter;
-  _renderMatchPanel(cardData, parsed, rawText);
-}
-
-let _selectedMatchIds = new Set();
-
-function _toggleMatchSelect(id, el) {
-  if (_selectedMatchIds.has(id)) {
-    _selectedMatchIds.delete(id);
-    el.style.background = '';
-    el.style.borderColor = el.dataset.mine === '1' ? '#4ecdc4' : '';
-  } else {
-    if (_selectedMatchIds.size >= 10) { showToast('최대 10개까지 선택 가능해요'); return; }
-    _selectedMatchIds.add(id);
-    el.style.background = '#fffbeb';
-    el.style.borderColor = 'var(--hwik-yellow)';
-  }
-  _updateSendBar();
-}
-
-function _updateSendBar() {
-  const bar = document.getElementById('matchSendBar');
-  if (!bar) return;
-  const n = _selectedMatchIds.size;
-  if (n === 0) { bar.style.display = 'none'; return; }
-  bar.style.display = 'flex';
-  bar.querySelector('.send-count').textContent = `${n}개 선택`;
-}
-
-async function _sendMatchesToClient() {
-  if (_selectedMatchIds.size === 0) return;
-  const uid = currentUser?.id || '';
-  const ids = [..._selectedMatchIds].join(',');
-  const url = `https://hwik.kr/property_chat.html?ids=${ids}${uid ? '&agent=' + uid : ''}`;
-  const clientName = window._mcd?.contact_name || '손님';
-  const msg = `[휙] ${clientName}님께 추천드리는 매물 ${_selectedMatchIds.size}건입니다.\n${url}`;
-
-  if (navigator.share) {
-    try {
-      await navigator.share({ title: '휙 매물 추천', text: msg, url });
-      showToast('공유 완료!');
-      return;
-    } catch(e) { /* 사용자 취소 or 실패 → 클립보드로 폴백 */ }
-  }
-  try {
-    await navigator.clipboard.writeText(msg);
-    showToast('링크 복사됨 — 카톡에 붙여넣기 하세요');
-  } catch(e) {
-    prompt('링크를 복사해 카톡에 붙여넣기 하세요:', msg);
-  }
-}
-
-function _renderMatchPanel(cardData, parsed, rawText) {
-  // body에 붙은 채팅 제거
-  document.querySelector('body > .chat-area')?.remove();
-  const panel = document.getElementById('clientPanel');
-  panel.style.display = 'flex';
-  panel.classList.remove('chat-mode');
-  _selectedMatchIds = new Set();
-  const p = cardData.property || parsed || {};
-  const uid = currentUser?.id || '';
-  const clientName = cardData.contact_name || parsed.contact_name || '손님';
-  const clientPhone = cardData.contact_phone || parsed.contact_phone || '';
-
-  const myMatches = _matchData.filter(m => m.agent_id === uid);
-  const sharedMatches = _matchData.filter(m => m.agent_id !== uid);
-  const filtered = _matchFilter === 'my' ? myMatches : _matchFilter === 'shared' ? sharedMatches : _matchData;
-
-  const tabStyle = (active) => `padding:8px 16px;border-radius:20px;border:1.5px solid ${active ? 'var(--hwik-dark)' : '#e2e8f0'};background:${active ? 'var(--hwik-dark)' : '#fff'};color:${active ? '#fff' : 'var(--gray-600)'};font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;`;
-
-  window._mcd = cardData; window._mp = parsed; window._mrt = rawText;
-
-  // 거래유형 색상
-  const typeColors = { '매매':'#ea580c', '전세':'#4f46e5', '월세':'#7c3aed' };
-  const wantType = p.wanted_trade_type || parsed.wanted_trade_type || '';
-  const tColor = typeColors[wantType] || '#4ecdc4';
-  const features = (p.features || parsed.features || []);
-  const condition = [p.price || parsed.price, p.location || parsed.location, p.complex || parsed.complex].filter(Boolean).join(' · ');
-
-  const catKo2 = { apartment:'아파트', officetel:'오피스텔', room:'원룸/빌라', commercial:'상가', office:'사무실', villa:'빌라', house:'주택' };
-  const catLabel2 = catKo2[p.category || parsed.category] || p.category || parsed.category || '';
-  const detail2 = [p.area||parsed.area, p.floor||parsed.floor, p.room||parsed.room].filter(Boolean).join(' · ');
-
-  let html = `<div style="padding:0 0 100px;">
-    <!-- 손님 정보 카드 -->
-    <div style="background:#fff;border-radius:12px;border:1px solid #e5e8eb;overflow:hidden;margin-bottom:16px;">
-      <div style="display:flex;align-items:center;gap:10px;padding:16px 16px 12px;border-bottom:1px solid #f0f0f3;">
-        <div style="width:40px;height:40px;border-radius:50%;background:#f0f4ff;display:flex;align-items:center;justify-content:center;font-size:18px;">👤</div>
-        <div style="flex:1;">
-          <div style="font-size:16px;font-weight:800;color:#1a1a2e;">${esc(clientName)}</div>
-          ${clientPhone ? `<div style="font-size:13px;color:#94a3b8;margin-top:1px;">${esc(clientPhone)}</div>` : ''}
-        </div>
-        <span style="padding:4px 12px;border-radius:20px;background:#f0fdf4;color:#16a34a;font-size:11px;font-weight:700;">탐색중</span>
-      </div>
-      <div style="padding:14px 16px;">
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
-          ${wantType ? `<span style="display:inline-block;padding:2px 8px;border-radius:4px;background:${tColor}15;color:${tColor};font-size:11px;font-weight:700;">${esc(wantType)}</span>` : ''}
-          ${catLabel2 ? `<span style="display:inline-block;padding:2px 8px;border-radius:4px;background:#f0f0f3;color:#5a5a6e;font-size:11px;font-weight:600;">${esc(catLabel2)}</span>` : ''}
-        </div>
-        <div style="font-size:18px;font-weight:900;color:#1a1a2e;letter-spacing:-0.5px;">${esc(p.price || parsed.price || '')}</div>
-        ${condition ? `<div style="font-size:13px;color:#5a5a6e;margin-top:4px;">${esc(condition)}</div>` : ''}
-        ${detail2 ? `<div style="font-size:13px;color:#94a3b8;margin-top:2px;">${esc(detail2)}</div>` : ''}
-        ${features.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px;">${features.map(f=>`<span style="padding:2px 8px;border-radius:4px;background:#f0f4ff;color:#4f46e5;font-size:11px;font-weight:600;">${esc(f)}</span>`).join('')}</div>` : ''}
-      </div>
-      ${clientPhone ? `<a href="tel:${clientPhone.replace(/[-.\s]/g,'')}" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:13px;border-top:1px solid #e5e8eb;color:#4f46e5;font-size:14px;font-weight:700;text-decoration:none;">📞 전화하기</a>` : ''}
-    </div>
-
-    <!-- 매칭 매물 -->
-    <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
-      <span style="font-size:16px;font-weight:800;color:var(--hwik-dark);">매칭 매물</span>
-      <span style="font-size:13px;color:#4ecdc4;font-weight:700;">${_matchData.length}건</span>
-    </div>
-    <div style="font-size:12px;color:#94a3b8;margin-bottom:12px;">탭해서 선택 → 카톡으로 한 번에 보내기</div>
-
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
-      <button onclick="_setMatchFilter('all',window._mcd,window._mp,window._mrt)" style="${tabStyle(_matchFilter==='all')}">전체 ${_matchData.length}</button>
-      <button onclick="_setMatchFilter('my',window._mcd,window._mp,window._mrt)" style="${tabStyle(_matchFilter==='my')}">내 매물 ${myMatches.length}</button>
-      <button onclick="_setMatchFilter('shared',window._mcd,window._mp,window._mrt)" style="${tabStyle(_matchFilter==='shared')}">공유 ${sharedMatches.length}</button>
-    </div>`;
-
-  if (!filtered.length) {
-    const msg = _matchFilter === 'my' ? '내 매물 중 매칭이 없어요' : _matchFilter === 'shared' ? '공유 매물 중 매칭이 없어요' : '아직 매칭 매물이 없어요';
-    html += `<div style="text-align:center;padding:40px 0;color:#94a3b8;font-size:14px;">${msg}<br><span style="font-size:12px;">새 매물이 등록되면 알림으로 알려드릴게요</span></div>`;
-  } else {
-    const CAT_KO = { apartment:'아파트', officetel:'오피스텔', villa:'빌라', room:'원룸', commercial:'상가', office:'사무실' };
-    filtered.forEach(item => {
-      const mp = item.property || {};
-      const type = esc(mp.type || '');
-      const catLabel = CAT_KO[mp.category] || '';
-      const catBadge = [catLabel, type].filter(Boolean).join(' ');
-      const score = item._score || item.similarity || 0;
-      const mName = esc(mp.complex || mp.location || '매물');
-      const locBits = [mp.location, mp.area, mp.floor].filter(Boolean).map(v => esc(v)).join(' · ');
-      const safeId = esc(item.id);
-      const isMine = item.agent_id === uid;
-
-      const tsRaw = item.trade_status || '계약가능';
-      const tsClass = tsRaw === '계약중' ? 'ongoing' : tsRaw === '완료' ? 'done' : '';
-      const tagsArr = (Array.isArray(item.tags) && item.tags.length ? item.tags : (mp.features || [])).filter(Boolean);
-      const tagsShow = tagsArr.slice(0, 3);
-      const tagsRest = tagsArr.length - tagsShow.length;
-      const tagsHtml = tagsShow.length
-        ? `<div class="match-row3">${tagsShow.map((t,i) => `<span class="match-tag c${i%5}">${esc(t)}</span>`).join('')}${tagsRest > 0 ? `<span class="match-tag-more">+${tagsRest}</span>` : ''}</div>`
-        : '';
-
-      const photos = Array.isArray(item.photos) ? item.photos : [];
-      const firstPhoto = photos[0] || '';
-      const thumbHtml = firstPhoto
-        ? `<div class="match-thumb" style="background-image:url('${esc(firstPhoto)}')">${photos.length > 1 ? `<span class="match-thumb-count">${photos.length}</span>` : ''}</div>`
-        : '';
-
-      // 공유 매물 출처 (사무실 · 공유방)
-      let sourceHtml = '';
-      if (!isMine) {
-        const officeName = item._agent?.name ? esc(item._agent.name) : '';
-        const roomName = item._room ? esc(item._room) : '';
-        if (officeName || roomName) {
-          const parts = [];
-          if (officeName) parts.push(`<span class="office">${officeName}</span>`);
-          if (roomName) parts.push(`<span class="room">${roomName}</span>`);
-          sourceHtml = `<div class="match-source">${parts.join('<span class="sep">·</span>')}</div>`;
-        }
-      }
-
-      html += `
-        <div class="match-card match-item" onclick="_toggleMatchSelect('${safeId}',this)" data-mine="${isMine?'1':'0'}" style="${isMine ? 'border-color:#4ecdc4;' : ''}">
-          <div class="match-card-inner">
-            <div class="match-info-col">
-              <div class="match-row1">
-                ${catBadge ? `<span class="match-cat-badge">${esc(catBadge)}</span>` : ''}
-                <span class="match-status-badge ${tsClass}">${esc(tsRaw)}</span>
-                <span class="match-price">${esc(mp.price || '')}</span>
-                ${score > 0 ? `<span class="match-score">${score}점</span>` : ''}
-              </div>
-              <div class="match-row2"><span class="name">${mName}</span>${locBits ? ' · ' + locBits : ''}</div>
-              ${tagsHtml}
-              ${sourceHtml}
-            </div>
-            <div class="match-right-col">
-              ${thumbHtml}
-              <button class="match-detail-btn" onclick="event.stopPropagation();openProperty('${safeId}')">상세</button>
-            </div>
-          </div>
-        </div>`;
-    });
-  }
-
-  html += `
-      <div style="text-align:center;padding:20px 0;">
-        <button onclick="showClientRegister()" style="padding:12px 32px;border-radius:12px;border:1.5px solid var(--hwik-dark);background:transparent;color:var(--hwik-dark);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">+ 다른 손님 등록</button>
-      </div>
-    </div>
-    <!-- 선택 전송 고정바 -->
-    <div id="matchSendBar" style="display:none;position:fixed;left:0;right:0;bottom:calc(60px + env(safe-area-inset-bottom, 0px));padding:12px 16px;background:#fff;border-top:1px solid #e5e8eb;box-shadow:0 -4px 16px rgba(0,0,0,0.08);align-items:center;gap:10px;z-index:150;max-width:540px;margin:0 auto;">
-      <div class="send-count" style="font-size:14px;font-weight:700;color:var(--hwik-dark);">0개 선택</div>
-      <div style="flex:1;"></div>
-      <button onclick="_selectedMatchIds=new Set();_renderMatchPanel(window._mcd,window._mp,window._mrt)" style="padding:10px 14px;border-radius:8px;border:1px solid #e2e8f0;background:#fff;color:#94a3b8;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;">취소</button>
-      <button onclick="_sendMatchesToClient()" style="padding:10px 18px;border-radius:8px;border:none;background:var(--hwik-dark);color:var(--hwik-yellow);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">📤 카톡으로 보내기</button>
-    </div>`;
-
-  panel.innerHTML = html;
-  panel.style.overflow = 'auto';
-}
-
-// ── 알림 (채팅 스타일 브리핑) ──
-let _alertGen = 0; // 호출 세대 — 중복/경쟁 방지
-let _alertLoading = false; // 동시 실행 방지 뮤텍스
-let _briefPromise = null;  // 프리페치 Promise
-const BRIEF_CACHE_KEY = 'hwik_brief_cache_v1';
-
-// 1라운드만: notes + match (cards 조회 없음) — 약 500ms
-async function _fetchBriefBasic() {
-  if (!currentUser) return null;
-  const nowIso = new Date().toISOString();
-  const [matchRes, overdueRes, upcomingRes] = await Promise.all([
-    supabaseClient.from('match_notifications').select('id, card_id, client_card_id, similarity, created_at')
-      .eq('agent_id', currentUser.id).eq('is_read', false).order('created_at', { ascending: false }).limit(20),
-    supabaseClient.from('client_notes').select('id, client_card_id, content, alert_date, type')
-      .eq('agent_id', currentUser.id).eq('alert_done', false).not('alert_date', 'is', null).lt('alert_date', nowIso)
-      .order('alert_date', { ascending: true }).limit(20),
-    supabaseClient.from('client_notes').select('id, client_card_id, content, alert_date, type')
-      .eq('agent_id', currentUser.id).eq('alert_done', false).not('alert_date', 'is', null).gte('alert_date', nowIso)
-      .order('alert_date', { ascending: true }).limit(20),
-  ]);
-  // 에러 로깅 (디버깅용)
-  if (matchRes.error) console.error('[brief match error]', matchRes.error);
-  if (overdueRes.error) console.error('[brief overdue error]', overdueRes.error);
-  if (upcomingRes.error) console.error('[brief upcoming error]', upcomingRes.error);
-  const firstError = matchRes.error || overdueRes.error || upcomingRes.error;
-  return {
-    matches: matchRes.data || [],
-    overdue: overdueRes.data || [],
-    upcoming: upcomingRes.data || [],
-    cardMap: {}, clientMap: {},
-    savedAt: Date.now(),
-    _error: firstError ? (firstError.message || String(firstError)) : null,
-    _agentId: currentUser.id
-  };
-}
-
-// 2라운드: 이름 채우기 (기본 데이터에 cardMap/clientMap 추가) — 백그라운드
-async function _enrichBriefNames(basic) {
-  if (!basic) return basic;
-  const cardIds = [...new Set((basic.matches||[]).map(m=>m.card_id))].filter(Boolean);
-  const clientIds = [...new Set([
-    ...(basic.overdue||[]).map(o=>o.client_card_id),
-    ...(basic.upcoming||[]).map(u=>u.client_card_id),
-    ...(basic.matches||[]).map(m=>m.client_card_id)
-  ])].filter(Boolean);
-  if (!cardIds.length && !clientIds.length) return basic;
-
-  const [cardsRes, clientsRes] = await Promise.all([
-    cardIds.length ? supabaseClient.from('cards').select('id, property, contact_name').in('id', cardIds) : Promise.resolve({ data: [] }),
-    clientIds.length ? supabaseClient.from('cards').select('id, property, contact_name').in('id', clientIds) : Promise.resolve({ data: [] })
-  ]);
-  const cardMap = {}, clientMap = {};
-  (cardsRes.data||[]).forEach(c => { cardMap[c.id] = { ...c.property, _name: c.contact_name }; });
-  (clientsRes.data||[]).forEach(c => { clientMap[c.id] = { ...c.property, _name: c.contact_name }; });
-  return { ...basic, cardMap, clientMap };
-}
-
-// 전체 (하위호환용)
-async function _fetchBriefData() {
-  const basic = await _fetchBriefBasic();
-  return _enrichBriefNames(basic);
-}
-
-// 로그인 직후 프리페치 트리거 — basic(1라운드)만 먼저 로드
-function prefetchBrief() {
-  if (!currentUser) return;
-  if (_briefPromise) return;
-  _briefPromise = _fetchBriefBasic().then(data => {
-    if (data) {
-      try { localStorage.setItem(BRIEF_CACHE_KEY, JSON.stringify(data)); } catch(e) {}
-    }
-    return data;
-  }).catch(e => { console.warn('[brief prefetch]', e); _briefPromise = null; return null; });
-}
-
-// 데이터 → 메시지 큐
-function _buildBriefQueue(data) {
-  const greeting = _kstGreeting();
-  const q = [{ html: greeting, first: true }];
-
-  const { matches = [], overdue = [], upcoming = [], cardMap = {}, clientMap = {} } = data || {};
-  const totalToday = upcoming.length + matches.length;
-
-  if (upcoming.length) {
-    q.push({ html: `오늘 일정 <strong>${upcoming.length}건</strong>이에요` });
-    upcoming.forEach(a => {
-      const cp = clientMap[a.client_card_id] || {};
-      const clientName = cp._name || [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
-      const typeIcon = { '방문':'🏠', '전화':'📞', '계약':'📋', '상담':'💬', '매물소개':'📤' }[a.type] || '📌';
-      const ad = new Date(a.alert_date);
-      const timeStr = `${ad.getHours()}시${ad.getMinutes() ? ad.getMinutes()+'분' : ''}`;
-      q.push({ html: `
-        <div style="margin-bottom:6px;">${typeIcon} <strong>${esc(clientName)}</strong> — ${timeStr} ${esc(a.type||'일정')}</div>
-        <div style="font-size:13px;color:#555;line-height:1.5;">${esc(a.content)}</div>
-        <div style="display:flex;gap:8px;margin-top:10px;">
-          <button onclick="alertDone('${a.id}','${a.client_card_id}',this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--hwik-yellow);color:#1a1a2e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">완료</button>
-          <button onclick="alertPostpone('${a.id}',this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:#e5e7eb;color:#5a5a6e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">내일로</button>
-        </div>` });
-    });
-  }
-
-  if (matches.length) {
-    q.push({ html: `새 매칭 <strong style="color:#4ecdc4;">${matches.length}건</strong> 있어요` });
-    matches.forEach(m => {
-      const p = cardMap[m.card_id] || {};
-      const cp = clientMap[m.client_card_id] || {};
-      const propName = [p.complex, p.location, p.price].filter(Boolean).join(' · ') || '매물';
-      const clientName = cp._name || [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
-      q.push({ html: `
-        <div style="font-size:12px;color:#4ecdc4;font-weight:600;margin-bottom:4px;">매칭</div>
-        <div style="font-size:14px;font-weight:700;">${esc(propName)}</div>
-        <div style="font-size:13px;color:#555;margin-top:2px;">${esc(clientName)} 손님과 매칭</div>` });
-    });
-  }
-
-  if (!totalToday && !overdue.length) {
-    if (data && data._error) {
-      q.push({ html: `일정을 불러오지 못했어요.<br><span style="color:#f87171;font-size:12px;">${esc(data._error)}</span>` });
-    } else {
-      q.push({ html: `오늘은 예정된 일정이 없어요.<br><span style="color:#94a3b8;font-size:12px;">편한 하루 보내세요!</span>` });
-    }
-  }
-
-  if (overdue.length) {
-    q.push({ html: `
-      <div style="font-weight:600;margin-bottom:6px;">바쁘셔서 놓치신 일정이 ${overdue.length}건 있어요</div>
-      <div style="font-size:13px;color:#555;">지금 다시 챙겨드릴까요?</div>
-      <div style="display:flex;gap:8px;margin-top:10px;">
-        <button onclick="showOverdueItems(this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--hwik-dark);color:var(--hwik-yellow);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">챙겨주세요</button>
-        <button onclick="dismissOverdue(this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:#e5e7eb;color:#5a5a6e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">나중에</button>
-      </div>` });
-    window._overdueItems = overdue;
-    window._clientMap = clientMap;
-  }
-
-  return q;
-}
-
-// 큐 → DOM (기존 메시지 클리어 후 렌더)
-function _renderBriefQueue(q) {
-  const msgs = document.getElementById('alertMessages');
-  if (!msgs) return;
-  msgs.querySelectorAll('.msg').forEach(m => m.remove());
-  _lastSender = '';
-  q.forEach(item => addAlertBubble(item.html, item.first));
-}
-
-async function showAlerts() {
-  if (document.getElementById('alertChatArea')) return;
-  if (_alertLoading) return;
-  _alertLoading = true;
-  document.querySelectorAll('body > .chat-area').forEach(el => el.remove());
-  const myGen = ++_alertGen;
-
-  if (!currentUser) {
-    _alertLoading = false;
-    const panel = document.getElementById('alertPanel');
-    panel.style.display = 'flex';
-    panel.innerHTML = '<div style="padding:40px;text-align:center;color:#94a3b8;">로그인이 필요해요</div>';
-    return;
-  }
-
-  // 채팅 영역 생성 (즉시) — 한국 시간 기준
-  const dateStr = _kstDateStr();
-  const chatArea = document.createElement('div');
-  chatArea.className = 'chat-area';
-  chatArea.id = 'alertChatArea';
-  chatArea.innerHTML = `
-      <div class="chat-messages" id="alertMessages">
-        <div class="chat-date"><span>${dateStr}</span></div>
-      </div>
-      <div class="chat-input-wrap">
-        <textarea class="chat-input" id="briefInput" rows="1" placeholder="메모나 손님 조건을 입력하세요" enterkeyhint="send"
-          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px'"
-          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();briefSend()}"></textarea>
-        <button class="chat-send-btn" onclick="briefSend()">
-          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        </button>
-      </div>`;
-  document.body.appendChild(chatArea);
-  _lastSender = '';
-
-  // 0단계: 인사 버블 즉시 표시 (네트워크/캐시 기다리지 않음, 한국 시간 기준)
-  addAlertBubble(_kstGreeting(), true);
-
-  // 1단계: localStorage 캐시 즉시 렌더 (0초)
-  let rendered = false;
-  try {
-    const cached = localStorage.getItem(BRIEF_CACHE_KEY);
-    if (cached) {
-      const data = JSON.parse(cached);
-      _renderBriefQueue(_buildBriefQueue(data));
-      rendered = true;
-    }
-  } catch(e) {}
-
-  // 2단계: basic (1라운드) 데이터 렌더 — 가장 빠름 (~500ms)
-  let basicData = null;
-  try {
-    if (!_briefPromise) _briefPromise = _fetchBriefBasic().then(data => {
-      if (data) { try { localStorage.setItem(BRIEF_CACHE_KEY, JSON.stringify(data)); } catch(e) {} }
-      return data;
-    });
-    basicData = await _briefPromise;
-    _briefPromise = null;
-
-    if (myGen !== _alertGen) { _alertLoading = false; return; }
-    if (basicData) _renderBriefQueue(_buildBriefQueue(basicData));
-  } catch(e) {
-    if (!rendered) addAlertBubble('일정을 불러오지 못했어요.<br><span style="color:#f87171;font-size:13px;">' + esc(e.message||'연결 오류') + '</span>');
-  }
-
-  // 3단계: 이름 채우기 (백그라운드, 사용자에겐 조용히 갱신)
-  if (basicData) {
-    _enrichBriefNames(basicData).then(full => {
-      if (myGen !== _alertGen || !full) return;
-      try { localStorage.setItem(BRIEF_CACHE_KEY, JSON.stringify(full)); } catch(e) {}
-      _renderBriefQueue(_buildBriefQueue(full));
-    }).catch(e => { console.warn('[brief enrich]', e); });
-  }
-
-  _alertLoading = false;
-}
-
-function addAlertBubble(html, isFirst = false) {
-  const msgs = document.getElementById('alertMessages');
-  if (!msgs) return;
-  const showAvatar = _lastSender !== 'alert-ai';
-  _lastSender = 'alert-ai';
-  const d = document.createElement('div');
-  d.className = 'msg' + (showAvatar ? ' first-in-group' : '');
-  d.innerHTML = `
-    ${showAvatar ? '<div class="avatar">휙</div>' : '<div class="avatar-spacer"></div>'}
-    <div class="bubble-wrap">
-      ${showAvatar ? '<div class="sender-name">휙 AI</div>' : ''}
-      <div class="bubble">${html}</div>
-    </div>`;
-  msgs.appendChild(d);
-  msgs.scrollTop = msgs.scrollHeight;
-}
-
-function dismissOverdue(btn) {
-  const btnsDiv = btn.closest('div');
-  if (btnsDiv) btnsDiv.innerHTML = '<span style="font-size:13px;color:#94a3b8">알겠어요, 나중에 다시 알려드릴게요</span>';
-}
-
-function showOverdueItems(btn) {
-  // 버튼 영역 교체
-  if (btn) {
-    const btnsDiv = btn.closest('div');
-    if (btnsDiv) btnsDiv.innerHTML = '<span style="font-size:13px;color:#94a3b8;">확인할게요!</span>';
-  }
-  const overdue = window._overdueItems || [];
-  const clientMap = window._clientMap || {};
-  // 톡톡톡 순차 표시 (300ms 간격)
-  overdue.forEach((a, i) => {
-    setTimeout(() => {
-      const cp = clientMap[a.client_card_id] || {};
-      const clientName = cp._name || [cp.price, cp.location].filter(Boolean).join(' · ') || '손님';
-      const ad = new Date(a.alert_date);
-      const dateStr = `${ad.getMonth()+1}/${ad.getDate()}`;
-      const typeIcon = { '방문':'🏠', '전화':'📞', '계약':'📋', '상담':'💬', '매물소개':'📤' }[a.type] || '📌';
-      addAlertBubble(`
-        <div style="color:#ef4444;font-size:11px;font-weight:600;margin-bottom:4px;">${dateStr}부터 밀린 일정</div>
-        <div style="margin-bottom:4px;">${typeIcon} <strong>${esc(clientName)}</strong> — ${esc(a.type||'일정')}</div>
-        <div style="font-size:13px;color:#555;line-height:1.5;">${esc(a.content)}</div>
-        <div style="display:flex;gap:8px;margin-top:10px;">
-          <button onclick="alertDone('${a.id}','${a.client_card_id}',this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--hwik-yellow);color:#1a1a2e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">완료</button>
-          <button onclick="alertPostpone('${a.id}',this)" style="flex:1;padding:10px;border-radius:8px;border:none;background:#e5e7eb;color:#5a5a6e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">내일로</button>
-        </div>`);
-    }, i * 300);
-  });
-}
-
-// 메시지 전체 페이드아웃 후 제거
-function fadeOutMsg(el, label) {
-  const msg = el.closest('.msg');
-  if (!msg) return;
-  if (label) {
-    msg.querySelector('.bubble').innerHTML = `<span style="color:#94a3b8;font-size:13px;">${label}</span>`;
-  }
-  setTimeout(() => {
-    msg.style.transition = 'opacity 0.4s, max-height 0.4s, margin 0.4s';
-    msg.style.overflow = 'hidden';
-    msg.style.maxHeight = msg.offsetHeight + 'px';
-    requestAnimationFrame(() => {
-      msg.style.opacity = '0';
-      msg.style.maxHeight = '0';
-      msg.style.marginTop = '0';
-      msg.style.marginBottom = '0';
-    });
-    setTimeout(() => msg.remove(), 400);
-  }, label ? 600 : 0);
-}
-
-async function alertDone(noteId, clientCardId, btn) {
-  try {
-    await supabaseClient.from('client_notes').update({ alert_done: true }).eq('id', noteId);
-    fadeOutMsg(btn);
-    updateAlertBadge();
-  } catch(e) { showToast('처리 실패'); }
-}
-
-async function alertPostpone(noteId, btn) {
-  try {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(10, 0, 0, 0);
-    await supabaseClient.from('client_notes').update({ alert_date: tomorrow.toISOString() }).eq('id', noteId);
-    fadeOutMsg(btn, '내일 10시에 다시 알려드릴게요');
-    updateAlertBadge();
-  } catch(e) { showToast('처리 실패'); }
-}
-
-// 브리핑 채팅 입력 처리
-async function briefSend() {
-  const inp = document.getElementById('briefInput');
-  const text = inp?.value?.trim();
-  if (!text || !currentUser) return;
-  inp.value = ''; inp.style.height = 'auto';
-
-  // 사용자 메시지 (오른쪽 노란 버블)
-  const msgs = document.getElementById('alertMessages');
-  _lastSender = 'user';
-  const ud = document.createElement('div');
-  ud.className = 'msg user-msg first-in-group';
-  ud.innerHTML = `<div class="bubble-wrap"><div class="bubble">${esc(text)}</div></div>`;
-  msgs.appendChild(ud);
-  msgs.scrollTop = msgs.scrollHeight;
-
-  // "손님" 키워드 감지 → 손님 등록 플로우
-  const isClient = /손님|찾는\s*분|구합니다|구해|찾아/.test(text);
-
-  if (isClient) {
-    // AI 파싱 → 확인 카드
-    _lastSender = '';
-    addAlertBubble('손님 조건을 분석하고 있어요...');
-    try {
-      const token = await getToken();
-      const res = await fetch(`${SUPABASE_URL}/functions/v1/parse-property`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_KEY },
-        body: JSON.stringify({ text: '손님 ' + text })
-      });
-      if (!res.ok) throw new Error('파싱 실패');
-      const parsed = await res.json();
-      window._briefParsed = parsed;
-      window._briefText = text;
-
-      // 마지막 "분석 중" 버블 제거
-      msgs.lastElementChild?.remove();
-      _lastSender = '';
-
-      const typeColors = { '매매':'#ea580c', '전세':'#4f46e5', '월세':'#7c3aed' };
-      const wt = parsed.wanted_trade_type || parsed.type || '';
-      const tc = typeColors[wt] || '#4ecdc4';
-      const features = (parsed.features || []).map(f => `<span style="padding:2px 8px;border-radius:4px;background:rgba(78,205,196,0.2);color:#4ecdc4;font-size:11px;">${esc(f)}</span>`).join(' ');
-
-      addAlertBubble(`
-        <div style="background:linear-gradient(135deg,#1a1a2e,#242442);border-radius:12px;padding:14px;color:#fff;margin-bottom:8px;">
-          ${wt ? `<span style="display:inline-block;padding:2px 8px;border-radius:4px;background:${tc};color:#fff;font-size:11px;font-weight:700;">${esc(wt)}</span>` : ''}
-          <div style="font-size:18px;font-weight:900;margin-top:6px;">${esc(parsed.price || '')}</div>
-          <div style="font-size:13px;color:rgba(255,255,255,0.7);margin-top:2px;">${esc([parsed.location, parsed.complex].filter(Boolean).join(' · '))}</div>
-          ${parsed.contact_name ? `<div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:6px;">👤 ${esc(parsed.contact_name)}${parsed.contact_phone ? ' ' + esc(parsed.contact_phone) : ''}</div>` : ''}
-          ${features ? `<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;">${features}</div>` : ''}
-        </div>
-        이 내용으로 손님 등록할까요?
-        <div style="display:flex;gap:8px;margin-top:8px;">
-          <button onclick="briefConfirmClient()" style="flex:1;padding:10px;border-radius:8px;border:none;background:var(--hwik-yellow);color:#1a1a2e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">등록</button>
-          <button onclick="this.closest('.bubble').querySelector('div:last-child').innerHTML='<span style=font-size:13px;color:#94a3b8>취소했어요. 다시 입력해주세요!</span>'" style="flex:1;padding:10px;border-radius:8px;border:none;background:#e5e7eb;color:#5a5a6e;font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;">다시 입력</button>
-        </div>`);
-    } catch(e) {
-      msgs.lastElementChild?.remove();
-      _lastSender = '';
-      addAlertBubble('손님 분석에 실패했어요. 다시 입력해주세요.');
-    }
-  } else {
-    // 일반 메모 저장
-    try {
-      await supabaseClient.from('memos').insert({ agent_id: currentUser.id, content: text, is_read: false });
-      _lastSender = '';
-      addAlertBubble('메모 저장했어요!<br><span style="font-size:12px;color:#94a3b8;">PC에서도 확인할 수 있어요</span>');
-    } catch(e) {
-      _lastSender = '';
-      addAlertBubble('저장 실패: ' + esc(e.message));
-    }
-  }
-}
-
-// 브리핑에서 손님 등록 확인
-async function briefConfirmClient() {
-  const parsed = window._briefParsed;
-  const text = window._briefText;
-  if (!parsed || !currentUser) return;
-
-  // 버튼 비활성화
-  document.querySelectorAll('.chat-confirm-btns button, .bubble button').forEach(b => { if (b.textContent === '등록') { b.disabled = true; b.textContent = '등록 중...'; } });
-
-  try {
-    const token = (await supabaseClient.auth.getSession()).data.session?.access_token || '';
-    const cardData = {
-      id: crypto.randomUUID().replace(/-/g, '').slice(0, 12),
-      agent_id: currentUser.id,
-      property: { ...parsed, type: '손님', rawText: text },
-      style: 'noimg', color: 'blue',
-      trade_status: '계약가능', client_status: '탐색중',
-      search_text: parsed.search_text || text,
-      embedding: parsed.embedding || null,
-      price_number: parsed.price_number || null,
-      deposit: parsed.deposit || null,
-      monthly_rent: parsed.monthly_rent || null,
-      contact_name: parsed.contact_name || null,
-      contact_phone: parsed.contact_phone || null,
-      tags: parsed.tags || [],
-    };
-    const { error } = await supabaseClient.from('cards').insert(cardData);
-    if (error) throw error;
-
-    // 매칭
-    const matchRes = await fetch(`${SUPABASE_URL}/functions/v1/match-properties`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_KEY },
-      body: JSON.stringify({ client_card_id: cardData.id, limit: 5, threshold: 0.15 })
-    }).then(r => r.json()).catch(() => ({ results: [] }));
-
-    // 자동매칭도 트리거
-    fetch(`${SUPABASE_URL}/functions/v1/auto-match`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token, 'apikey': SUPABASE_KEY },
-      body: JSON.stringify({ card_id: cardData.id })
-    }).catch(() => {});
-
-    const matches = matchRes.results || [];
-    const clientName = parsed.contact_name || '손님';
-
-    _lastSender = '';
-    if (matches.length) {
-      let mhtml = `<strong>${esc(clientName)}</strong> 등록 완료! 매칭 매물 <strong style="color:#4ecdc4;">${matches.length}건</strong>`;
-      matches.slice(0, 3).forEach(m => {
-        const mp = m.property || {};
-        const tc = { '매매':'#ea580c', '전세':'#4f46e5', '월세':'#7c3aed' }[mp.type] || '#94a3b8';
-        mhtml += `<div style="background:#f8f8fa;border-radius:8px;padding:8px 10px;margin-top:6px;border:1px solid #e5e7eb;">
-          <span style="font-size:11px;font-weight:700;color:${tc};">${esc(mp.type||'')}</span> <span style="font-weight:700;">${esc(mp.price||'')}</span>
-          <div style="font-size:12px;color:#666;margin-top:1px;">${esc(mp.complex || mp.location || '')}</div>
-        </div>`;
-      });
-      addAlertBubble(mhtml);
-    } else {
-      addAlertBubble(`<strong>${esc(clientName)}</strong> 등록 완료!<br><span style="color:#94a3b8;font-size:13px;">매칭 매물이 생기면 알려드릴게요</span>`);
-    }
-
-    window._briefParsed = null;
-    window._briefText = '';
-  } catch(e) {
-    _lastSender = '';
-    addAlertBubble('등록 실패: ' + esc(e.message));
-  }
-}
-
-function _setBadgeUI(count) {
-  const badge = document.getElementById('badgeAlert');
-  if (!badge) return;
-  if (count > 0) { badge.textContent = count > 99 ? '99+' : count; badge.classList.add('show'); }
-  else { badge.textContent = ''; badge.classList.remove('show'); }
-}
-
-// 페이지 로드 직후 캐시된 카운트로 즉시 뱃지 표시 (DB 기다리지 않음)
-function showCachedBadge() {
-  try {
-    const cached = localStorage.getItem('hwik_alert_count');
-    if (cached !== null) _setBadgeUI(parseInt(cached, 10) || 0);
-  } catch(e) {}
-}
-showCachedBadge();
-
-async function updateAlertBadge() {
-  if (!currentUser) return;
-  try {
-    const [matchResult, overdueResult] = await Promise.all([
-      supabaseClient.from('match_notifications').select('id', { count: 'exact', head: true }).eq('agent_id', currentUser.id).eq('is_read', false),
-      supabaseClient.from('client_notes').select('id', { count: 'exact', head: true }).eq('agent_id', currentUser.id).eq('alert_done', false).lt('alert_date', new Date().toISOString())
-    ]);
-    const count = (matchResult.count || 0) + (overdueResult.count || 0);
-    _setBadgeUI(count);
-    try { localStorage.setItem('hwik_alert_count', String(count)); } catch(e) {}
-  } catch(e) {}
-}
-
-// ── 내정보 (중개사 전용) ──
-function renderProfileHTML(name, phone, photoUrl) {
-  const initial = name.charAt(0);
-  return `
-    <div style="display:flex;flex-direction:column;align-items:center;text-align:center;">
-      <div style="width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,#1a1a2e,#2d2b55);display:flex;align-items:center;justify-content:center;margin-bottom:20px;box-shadow:0 8px 32px rgba(26,26,46,0.3);${photoUrl ? `background-image:url('${esc(photoUrl)}');background-size:cover;background-position:center;` : ''}">
-        ${photoUrl ? '' : `<span style="font-size:32px;font-weight:900;color:var(--hwik-yellow);">${esc(initial)}</span>`}
-      </div>
-      <div style="font-size:24px;font-weight:900;color:var(--hwik-dark);letter-spacing:-1px;margin-bottom:6px;">${esc(name)}</div>
-      ${phone ? `<div style="font-size:14px;color:#94a3b8;font-weight:400;letter-spacing:0.5px;">${esc(phone)}</div>` : ''}
-      <div style="width:40px;height:2px;background:var(--hwik-yellow);border-radius:1px;margin:24px 0;"></div>
-      <div style="font-size:13px;color:#c0c0c0;">매물 관리는 PC에서 해주세요</div>
-      <label style="margin-top:24px;display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:12px;background:#f8f8fa;border:1px solid #e5e8eb;cursor:pointer;user-select:none;">
-        <input type="checkbox" id="soundToggle" ${isSoundEnabled() ? 'checked' : ''} onchange="toggleSound(this.checked)" style="width:18px;height:18px;accent-color:var(--hwik-yellow);cursor:pointer;">
-        <span style="font-size:14px;color:var(--hwik-dark);font-weight:600;">알림 소리</span>
-        <span style="font-size:11px;color:#94a3b8;">새 메시지 띠링</span>
-      </label>
-      <button onclick="doLogout()" style="margin-top:20px;padding:12px 40px;border-radius:12px;border:1px solid #e2e8f0;background:none;color:#94a3b8;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;">로그아웃</button>
-    </div>
-  `;
-}
-function toggleSound(v) {
-  setSoundEnabled(v);
-  haptic(10);
-  if (v) { playNotifySound(); showToast('알림 소리 켜짐'); }
-  else showToast('알림 소리 꺼짐');
-}
-
-async function showProfile() {
-  const panel = document.getElementById('profilePanel');
-  panel.style.display = 'flex';
-
-  // 1. 캐시된 프로필 즉시 표시
-  const cached = localStorage.getItem('hwik_profile');
-  if (cached) {
-    try {
-      const c = JSON.parse(cached);
-      panel.innerHTML = renderProfileHTML(c.name, c.phone, c.photo);
-    } catch(_) {}
-  }
-
-  if (!currentUser) return;
-
-  // 2. 백그라운드에서 최신 데이터 가져와서 교체
-  try {
-    const { data: profile } = await supabaseClient.from('profiles')
-      .select('business_name, agent_name, phone, profile_photo')
-      .eq('id', currentUser.id).maybeSingle();
-
-    const name = profile?.business_name || profile?.agent_name || '중개사';
-    const phone = profile?.phone || '';
-    const photoUrl = profile?.profile_photo || '';
-
-    // 캐시 저장
-    localStorage.setItem('hwik_profile', JSON.stringify({ name, phone, photo: photoUrl }));
-
-    panel.innerHTML = renderProfileHTML(name, phone, photoUrl);
-  } catch(e) {
-    if (!cached) panel.innerHTML = '<div style="text-align:center;padding:20px;color:#f87171;">연결 실패</div>';
-  }
-}
-
-async function doLogout() {
-  await supabaseClient.auth.signOut();
-  currentUser = null;
-  localStorage.removeItem('hwik_profile');
-  localStorage.removeItem('hwik_alerts_html');
-  onLoggedOut();
-  showToast('로그아웃 되었어요');
-}
-
-// ── 홈 ──
-function goHome() { switchTab('home'); }
-
-// ── 토스트 ──
-function showToast(msg) {
-  let t = document.getElementById('mobileToast');
-  if (!t) {
-    t = document.createElement('div');
-    t.id = 'mobileToast';
-    t.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:9999;border:1px solid rgba(255,255,255,0.2);white-space:nowrap;transition:opacity 0.3s;';
-    document.body.appendChild(t);
-  }
-  t.textContent = msg; t.style.opacity = '1';
-  setTimeout(() => { t.style.opacity = '0'; }, 2000);
-}
-
-// ── 뒤로가기 처리 ──
-history.replaceState({ hwik: 'home' }, '');
-window.addEventListener('popstate', (e) => {
-  // 로그인 시트
-  if (document.getElementById('loginSheet').classList.contains('show')) {
-    closeLogin(); return;
-  }
-  // 홈이 아닌 탭 → 홈으로
-  if (currentTab !== 'home') {
-    switchTab('home');
-    history.pushState({ hwik: 'home' }, '');
-    return;
-  }
-  // 홈에서 뒤로가기 → 앱 종료 방지
-  history.pushState({ hwik: 'home' }, '');
-});
-</script>
-
-<script>
-// ── 서비스워커 등록 (수동 업데이트) ──
-// 자동 reload 제거 — 작업 중 매칭 결과/채팅이 날아가는 문제 방지
-// 새 버전은 사용자가 완전히 앱을 닫았다 다시 열 때 적용됨
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', async () => {
-    try {
-      await navigator.serviceWorker.register('/sw.js');
-    } catch(e) { console.warn('[휙 SW 등록 실패]', e); }
-  });
+  // 4. 렌더링
+  resultsCount.textContent = `${apts.length}개 단지`;
+  resultsList.innerHTML = apts.map(apt => {
+    const types = ['매매', '전세', '월세'];
+    const badges = types.map(type => {
+      const t = tradeMap[`${apt.kapt_code}_${type}`];
+      if (!t) return '';
+      const pyeongStr = t.pyeong ? `·${t.pyeong}평형` : '';
+      const dateStr = `${t.year}.${String(t.month).padStart(2,'0')}`;
+      return `<span class="trade-badge">
+        <span class="trade-type type-${type}">${type}</span>
+        <span class="trade-price">${formatPrice(t.price)}</span>
+        <span class="trade-pyeong">${pyeongStr}</span>
+        <span class="trade-date">${dateStr}</span>
+      </span>`;
+    }).join('');
+
+    const loc = [apt.sgg, apt.umd_nm].filter(Boolean).join(' ');
+    const link = apt.slug ? `/danji/${esc(apt.slug)}` : '#';
+
+    return `<a class="result-item" href="${link}">
+      <div class="result-name">${esc(apt.kapt_name)}</div>
+      <div class="result-loc">${esc(loc)}</div>
+      <div class="result-trades">${badges || '<span style="font-size:12px;color:#b0b8c8">거래 내역 없음</span>'}</div>
+    </a>`;
+  }).join('');
 }
 </script>
 </body>
