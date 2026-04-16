@@ -466,9 +466,11 @@ function renderProfile(p, count) {
     document.getElementById('sheetBtnCall').href = `tel:${esc(p.phone)}`;
   }
 
-  if (p.kakao_chat_url) {
-    agentKakaoUrl = p.kakao_chat_url;
-    document.getElementById('sheetBtnKakao').classList.remove('hidden');
+  if (p.kakao_chat_url || (isCardsMode && isKakaoInApp)) {
+    agentKakaoUrl = p.kakao_chat_url || '';
+    const btn = document.getElementById('sheetBtnKakao');
+    btn.innerHTML = (isCardsMode && isKakaoInApp) ? '💬 대화로 돌아가기' : '💬 카카오톡 문의';
+    btn.classList.remove('hidden');
   }
 }
 
@@ -736,7 +738,14 @@ function showToast(msg) {
   t._timer = setTimeout(() => t.classList.remove('show'), 2500);
 }
 
+const isKakaoInApp = /KAKAOTALK/i.test(navigator.userAgent);
+
 function openKakao() {
+  // ?cards= 모드 + 카카오 인앱: 대화창으로 바로 돌아가기
+  if (isCardsMode && isKakaoInApp) {
+    window.close();
+    return;
+  }
   if (!agentKakaoUrl) return;
   const card = window._cardsData?.[selectedCardId];
   let copied = false;
@@ -745,13 +754,10 @@ function openKakao() {
     const text = `[휙 매물 문의]\n${p.type||''} ${p.price||''}\n${[p.complex,p.location,p.area].filter(Boolean).join(' · ')}\nhttps://hwik.kr/property_chat.html?id=${selectedCardId}`;
     try { navigator.clipboard.writeText(text); copied = true; } catch(e) {}
   }
-  // 버튼 텍스트 잠깐 변경
   const btn = document.getElementById('sheetBtnKakao');
   btn.textContent = '✓ 복사됨 — 채팅창에 붙여넣기';
   setTimeout(() => { btn.innerHTML = '💬 카카오톡 문의'; }, 2000);
-  // 토스트
   if (copied) showToast('📋 매물 정보 복사됐어요 — 채팅창에 붙여넣기 하세요');
-  // 1.5초 후 오픈채팅 열기
   setTimeout(() => window.open(agentKakaoUrl, '_blank'), 1500);
 }
 
