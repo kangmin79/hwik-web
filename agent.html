@@ -85,7 +85,7 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
 /* ── 바텀 시트 ── */
 .sheet-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:100; opacity:0; pointer-events:none; transition:opacity .25s; }
 .sheet-overlay.show { opacity:1; pointer-events:auto; }
-.sheet { position:fixed; bottom:0; left:50%; transform:translateX(-50%) translateY(100%); width:100%; max-width:430px; background:#fff; border-radius:20px 20px 0 0; z-index:101; transition:transform .3s cubic-bezier(0.16,1,0.3,1); height:75vh; display:flex; flex-direction:column; }
+.sheet { position:fixed; bottom:0; left:50%; transform:translateX(-50%) translateY(100%); width:100%; max-width:430px; background:#fff; border-radius:20px 20px 0 0; z-index:101; transition:transform .3s cubic-bezier(0.16,1,0.3,1); height:var(--sheet-h, 75vh); display:flex; flex-direction:column; }
 .sheet.show { transform:translateX(-50%) translateY(0); }
 .sheet-handle { width:100%; height:44px; display:flex; align-items:center; justify-content:center; flex-shrink:0; cursor:grab; touch-action:none; }
 .sheet-handle::after { content:''; display:block; width:40px; height:4px; background:#d1d5db; border-radius:2px; }
@@ -769,6 +769,14 @@ function openKakao() {
 
 // ESC 닫기
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+
+// 인앱브라우저에서 100vh가 내비게이션 바를 포함해 콘텐츠가 잘리는 문제 수정
+// window.innerHeight = 실제 보이는 높이 (브라우저 UI 제외)
+function updateSheetHeight() {
+  document.documentElement.style.setProperty('--sheet-h', Math.floor(window.innerHeight * 0.75) + 'px');
+}
+updateSheetHeight();
+window.addEventListener('resize', updateSheetHeight);
 
 // 배경 스크롤 완전 차단
 document.addEventListener('touchmove', e => {
