@@ -148,12 +148,9 @@ const CATEGORY_EN = {
                 "@type": "WebSite",
                 "name": "휙",
                 "url": "https://hwik.kr",
-                "description": "서울 아파트 실거래가, 전세가, 시세 추이를 한눈에. 6,000개 단지 데이터 매일 업데이트.",
-                "potentialAction": {
-                    "@type": "SearchAction",
-                    "target": "https://hwik.kr/gu/{search_term_string}",
-                    "query-input": "required name=search_term_string"
-                }
+                "description": "서울 아파트 실거래가, 전세가, 시세 추이를 한눈에. 6,000개 단지 데이터 매일 업데이트."
+                // SearchAction 제거 (2026-04-17): Google 이 2024-11 부터 sitelinks searchbox 지원 중단.
+                // 효과 없이 /gu/{search_term_string} literal URL 이 크롤러에 의해 404 로 잡히기만 함.
             }
         ]
     };
