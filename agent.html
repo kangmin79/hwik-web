@@ -34,14 +34,14 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
 .logo { width:44px; height:44px; background:var(--yellow); border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; color:var(--dark); flex-shrink:0; overflow:hidden; }
 .logo img { width:100%; height:100%; object-fit:cover; border-radius:10px; }
 .header-info { flex:1; min-width:0; }
-.header-name { font-size:17px; font-weight:600; color:#fff; display:flex; align-items:center; gap:6px; }
+.header-name-row { display:flex; align-items:center; justify-content:space-between; gap:6px; }
+.header-name { font-size:17px; font-weight:600; color:#fff; display:flex; align-items:center; gap:6px; min-width:0; }
 .header-badge { font-size:9px; font-weight:700; color:var(--dark); background:var(--yellow); padding:2px 5px; border-radius:3px; flex-shrink:0; letter-spacing:0.3px; }
-.header-sub { font-size:12px; color:rgba(255,255,255,0.55); margin-top:2px; }
-.header-address { font-size:11px; color:rgba(255,255,255,0.3); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.header-contact { display:flex; align-items:center; gap:10px; margin-top:6px; }
-.header-phone { font-size:12px; color:var(--yellow); text-decoration:none; letter-spacing:0.3px; }
+.header-phone { font-size:12px; color:var(--yellow); text-decoration:none; letter-spacing:0.3px; flex-shrink:0; }
 .header-phone:hover { opacity:0.8; }
-.btn-map { font-size:11px; color:rgba(255,255,255,0.4); text-decoration:none; padding:2px 7px; border:1px solid rgba(255,255,255,0.15); border-radius:20px; }
+.header-sub { font-size:12px; color:rgba(255,255,255,0.55); margin-top:3px; }
+.header-address { font-size:11px; color:rgba(255,255,255,0.3); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.btn-map { font-size:11px; color:rgba(255,255,255,0.4); text-decoration:none; padding:2px 7px; border:1px solid rgba(255,255,255,0.15); border-radius:20px; margin-top:4px; display:inline-block; }
 
 /* 구분선 */
 .divider { height:8px; background:var(--card); }
@@ -168,13 +168,13 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
     <div class="header-top">
       <div class="logo" id="profileLogo">휙</div>
       <div class="header-info">
-        <div class="header-name" id="profileName">불러오는 중...<span class="header-badge">공인중개사</span></div>
+        <div class="header-name-row">
+          <div class="header-name" id="profileName">불러오는 중...<span class="header-badge">공인중개사</span></div>
+          <a class="header-phone" id="profilePhone" href="#"></a>
+        </div>
         <div class="header-sub" id="profileSub"></div>
         <div class="header-address" id="profileAddress"></div>
-        <div class="header-contact">
-          <a class="header-phone" id="profilePhone" href="#"></a>
-          <a class="btn-map" id="btnNaver" href="#" target="_blank" style="display:none">🗺 지도</a>
-        </div>
+        <a class="btn-map" id="btnNaver" href="#" target="_blank" style="display:none">🗺 지도</a>
       </div>
     </div>
   </div>
