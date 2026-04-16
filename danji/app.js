@@ -125,29 +125,9 @@ async function loadData() {
 
   DATA = data;
 
-  // SEO 메타 업데이트
-  document.title = `${data.complex_name} 실거래가 시세 - 휙`;
-  const desc = `${data.complex_name} ${data.location} ${data.total_units}세대 ${data.build_year}년 아파트 실거래가, 전세가, 시세 추이`;
-  document.getElementById('og-title').content = document.title;
-  document.getElementById('og-desc').content = desc;
-  document.getElementById('tw-title').content = document.title;
-  document.getElementById('tw-desc').content = desc;
-  document.querySelector('meta[name="description"]').content = desc;
-  // slug 생성은 전역 makeSlug() 사용
-  const danjiSlug = makeSlug(data.complex_name, data.location, id, data.address);
-  const danjiCanonical = `https://hwik.kr/danji/${encodeURIComponent(danjiSlug)}`;
-  // og:url 업데이트
-  const ogUrl = document.getElementById('og-url');
-  if (ogUrl) ogUrl.content = danjiCanonical;
-  // canonical 재확인 (초기 inline script가 이미 주입했지만, 없으면 추가)
-  let canonicalEl = document.getElementById('canonical');
-  if (!canonicalEl) {
-    canonicalEl = document.createElement('link');
-    canonicalEl.rel = 'canonical';
-    canonicalEl.id = 'canonical';
-    document.head.appendChild(canonicalEl);
-  }
-  canonicalEl.href = danjiCanonical;
+  // SEO 메타(title/description/og/twitter/canonical) 및 JSON-LD는 정적 HTML에
+  // build_danji_pages.py가 이미 완전히 주입했음. 런타임에서 덮어쓰면 실거래가
+  // 수치가 날아가고 모든 단지가 같은 템플릿 문구로 색인됨 → SEO 손실.
 
   // 거래 데이터 있는 면적 중 84㎡에 가장 가까운 것 선택
   const cats = data.categories || [];
@@ -1127,64 +1107,6 @@ function highlightChartPoint(type) {
   if (chartEl) chartEl.closest('.chart-section')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-// ── JSON-LD 구조화 데이터 (SEO) ──
-function injectJsonLd() {
-  if (!DATA) return;
-  const d = DATA;
-  const locParts = (d.location || '').split(' ');
-  const guName = locParts[0] || '';
-  const canonUrl = `https://hwik.kr/danji/${encodeURIComponent(new URLSearchParams(location.search).get('id') || DATA.id)}`;
-
-  const subway = d.nearby_subway || [];
-  const recentFirst = d.categories && d.categories[0] ? (d.recent_trade || {})[d.categories[0]] : null;
-  const highFirst = d.categories && d.categories[0] ? (d.all_time_high || {})[d.categories[0]] : null;
-  const jeonseFirst = d.categories && d.categories[0] ? (d.recent_trade || {})[d.categories[0] + '_jeonse'] : null;
-  let jr = d.jeonse_rate;
-  if (jeonseFirst && recentFirst && recentFirst.price > 0) jr = Math.round(jeonseFirst.price / recentFirst.price * 1000) / 10;
-
-  const faq = [
-    { q: `${d.complex_name} 최근 실거래가는?`, a: recentFirst ? `${d.complex_name} 최근 매매 실거래가는 ${formatPrice(recentFirst.price)}입니다.${recentFirst.date ? ' ('+recentFirst.date+' 기준)' : ''}` : '최근 거래 내역을 확인 중입니다.' },
-    { q: `${d.complex_name} 전세가율은?`, a: jr ? `${d.complex_name}의 전세가율은 약 ${jr}%입니다.` : '전세가율 정보를 확인 중입니다.' },
-    { q: `${d.complex_name} 근처 지하철역은?`, a: subway.length > 0 ? subway.map(s => `${s.name}(${s.line || ''}) 도보 ${walkMin(s.distance)}`).join(', ') : '주변 지하철 정보를 확인 중입니다.' },
-    { q: `${d.complex_name} 최근 5년 최고가는?`, a: highFirst ? `${d.complex_name} 최근 5년 최고가는 ${formatPrice(highFirst.price)}입니다.${highFirst.date ? ' ('+highFirst.date+')' : ''}` : '최근 5년 최고가 정보를 확인 중입니다.' },
-  ];
-
-  const ld = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "Residence",
-        "name": d.complex_name,
-        "address": { "@type": "PostalAddress", "addressLocality": d.location, "streetAddress": d.address, "addressRegion": (d.address || '').split(' ')[0] || "서울특별시", "addressCountry": "KR" },
-        "geo": { "@type": "GeoCoordinates", "latitude": d.lat, "longitude": d.lng },
-        "description": d.seo_text || '',
-        "numberOfRooms": d.total_units,
-        "yearBuilt": d.build_year,
-      },
-      {
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr" },
-          { "@type": "ListItem", "position": 2, "name": `${_cityLabel} ${guName}`, "item": `https://hwik.kr/gu/${encodeURIComponent(_guUrlSlug)}` },
-          { "@type": "ListItem", "position": 3, "name": d.complex_name, "item": canonUrl },
-        ]
-      },
-      {
-        "@type": "FAQPage",
-        "mainEntity": faq.map(f => ({
-          "@type": "Question",
-          "name": f.q,
-          "acceptedAnswer": { "@type": "Answer", "text": f.a }
-        }))
-      }
-    ]
-  };
-  const script = document.createElement('script');
-  script.type = 'application/ld+json';
-  script.textContent = JSON.stringify(ld);
-  document.head.appendChild(script);
-}
-
 // ── 데이터 오류 신고 ──
 function openReportModal() {
   if (document.getElementById('reportModal')) return;
@@ -1284,4 +1206,4 @@ async function submitReport() {
 }
 
 // ── 실행 ──
-loadData().then(() => { injectJsonLd(); }).catch(() => { showError('일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'); });
+loadData().catch(() => { showError('일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'); });
