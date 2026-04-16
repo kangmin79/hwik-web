@@ -5,16 +5,31 @@ on:
     - cron: '*/15 * * * *'   # 15분마다
   workflow_dispatch:           # 수동 실행 가능
 
+# 이 워크플로우는 저장소 쓰기가 필요 없음 (Supabase/Telegram API 만 호출)
+permissions:
+  contents: none
+
+# 이전 run 이 밀려도 새 15분 트리거가 기다렸다가 순차 실행
+concurrency:
+  group: schedule-alerts
+  cancel-in-progress: false
+
 jobs:
   send-alerts:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: 일정 알림 전송
+        # secret 은 env 로 주입 (node -e 문자열 직접 보간 금지 — 누출/인젝션 위험)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         run: |
           node -e "
-          const SUPABASE_URL = '${{ secrets.SUPABASE_URL }}';
-          const SERVICE_KEY  = '${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}';
-          const BOT_TOKEN    = '${{ secrets.TELEGRAM_BOT_TOKEN }}';
+          const SUPABASE_URL = process.env.SUPABASE_URL;
+          const SERVICE_KEY  = process.env.SERVICE_KEY;
+          const BOT_TOKEN    = process.env.BOT_TOKEN;
 
           async function main() {
             const now = new Date();

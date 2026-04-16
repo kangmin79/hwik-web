@@ -763,7 +763,10 @@ jobs:
           print(f"이메일 발송 → {os.environ['REPORT_EMAIL']}")
           PYEOF
 
+      # autofix 가 continue-on-error 라 실패를 삼킨 뒤 이 스텝이 돌면
+      # "ALL PASS ✓" 이메일이 잘못 나갈 수 있음 → success() 가드로 차단
       - name: 빌드 요약 이메일 발송
+        if: success()
         run: |
           python - <<'PYEOF'
           import smtplib, os, re, requests
