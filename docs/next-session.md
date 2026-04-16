@@ -1,42 +1,37 @@
-# 다음 세션 할 일 (2026-04-15 오후)
+# 다음 세션 할 일 (2026-04-16 오후)
 
-## 오늘 완료한 것 (SEO 집중 작업)
-- danji 날짜 표시 KST 오늘날짜로 수정
-- 주변 단지 가격 없는 항목 + 오피스텔(offi-) 404 필터
-- sitemap lastmod → 오늘날짜, 4개 지역 분리 (seoul/metro/cities/pages)
-- GSC sitemap 재제출 완료 (20,726페이지 인식)
-- Twitter Card summary → summary_large_image 전체 수정
-- ranking FAQPage 1→5개, gu ItemList 20→50개
-- index.html SearchAction 제거 (URL 불일치)
-- 충북-청주청원구 근본 원인 수정 (LOCATION_GU_FIX 35개 패턴)
-- 단지 title에 위치 추가 (브라이튼여의도 실거래가 시세 · 영등포구 여의도동 | 휙)
-- FAQ 위 요약 문단 추가 (build_danji_pages.py + app.js 둘 다)
-- 워크플로우 git add에 서브 sitemap 파일 추가
-- verify_seo.py sitemapindex 포맷 지원 + 이메일 파싱 키워드 수정
+## 오늘 완료한 것 (agent.html 완성)
+- KakaoTalk 인앱브라우저 RLS 버그 수정 (profiles anon 정책 추가)
+- 배경색 크림/아이보리 (#f5f0e8) 변경
+- 사진없는 카드 바텀시트 빈공간 200px→72px 축소
+- 카카오 1:1 오픈채팅 URL 저장 + 카카오톡 문의 버튼 동작
+- 매물정보 클립보드 복사 + 토스트 알림
+- hub-new 프로필 설정에 카카오 오픈채팅 URL 입력 필드 추가
+- 공유 링크 → agent.html?id=xxx&cards=id1,id2 방식으로 전환
+- ?cards= 모드 + 카카오 인앱 → "대화로 돌아가기" 버튼
+- 가격/평형 범위 태그 (5천-1억, 15-20평) 손님 화면에서 필터링
+- 인앱브라우저 하단바 가림 현상 수정 (safe-area-inset-bottom)
 
-## 빌드 현황
-- HTML 18,891개 정상, sitemap 4개 파일 커밋 확인
-- 내부링크 0건, 회귀방지 PASS
-- 이메일 sitemap: - → 다음 빌드부터 정상 출력 예정
+## 현재 흐름 (완성된 것)
+- 구글 → danji → agent.html?id=xxx&kapt_code=xxx&type=매매 → 1:1 오픈채팅
+- 중개사 직접 전송 → agent.html?id=xxx&cards=id1,id2 → 대화로 돌아가기
 
 ## 다음에 할 것
 
-### 1. 최근 실거래 클릭 → 상단 업데이트 기능
-- 단지 페이지 최근 실거래 리스트 행 클릭 시 상단 가격/층수/날짜 업데이트
-- 체류시간 증가 목적 (구글 긍정 신호)
-- app.js 약 20줄 수정
+### 1. agent.html 태그 짤림 최종 확인
+- 인앱브라우저 하단 패딩 fix 적용됨 → 실제 테스트 필요
 
-### 2. dong/index.html FAQPage 누락 수정
-- 검증 FAIL 항목, 간단히 수정 가능
+### 2. hub-new 내 정보 카카오 오픈채팅 URL 입력 확인
+- 새로 가입하는 중개사가 설정할 수 있는지 테스트
 
-### 3. GSC 순위 모니터링 (1~2주 후)
-- 평균 게재순위 10.4 → 개선 여부 확인
-- 노출수 225 → 증가 추이 확인
+### 3. danji → agent.html 연결 (SEO 안정화 후)
+- danji 페이지 중개사 링크에 ?kapt_code=&type= 파라미터 추가
+- 구독 중인 중개사 매물만 노출 (추후 is_subscribed 컬럼)
 
-### 4. 백링크 확보 (데이터 안정화 후)
-- 네이버 블로그 hwik.kr 링크 글 작성
-- 노출 중인 단지 위주: 브라이튼여의도, 돈암삼성, 일성파크
+### 4. 기존 카드 kapt_code 배치 매칭
+- batch_match_kapt.py 실행 (5076개 카드)
 
-## 나중에 할 것
-- telegram_chat_logs 테이블 구현
-- 매물 등록 시 kapt_code 매칭
+## 비즈니스 방향 정리
+- 수익: 구독료만 (광고비 제로)
+- 구글 유입 시 같은 단지 여러 중개사 → 구독 중인 전체 매물 통합 표시
+- SEO 안정화 → 트래픽 → danji → agent.html 순서 유지
