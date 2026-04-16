@@ -553,7 +553,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - run: pip install requests python-dateutil playwright
+      - run: pip install requests python-dateutil urllib3 playwright
       - name: Playwright 브라우저 설치
         run: python -m playwright install chromium --with-deps
       - name: danji_pages DB 집계 (변경된 단지만)
@@ -569,29 +569,34 @@ jobs:
       - name: sitemap 재생성 (모든 HTML 빌드 완료 후)
         run: python sync_trades.py --sitemap-only 2>&1 | tee /tmp/log_sitemap.txt; exit ${PIPESTATUS[0]}
 
-      # ── pre-push 브라우저 검증 게이트 ──────────────────────
-      # 빌드 결과를 runner-local http.server 로 서빙해서 Chromium 으로 열고
-      # 주요 페이지(허브/gu/dong/danji/ranking/shell/depth-1/depth-2/주변단지)
-      # 를 검증. 하나라도 실패하면 이 스텝이 exit 1 → 이후 "커밋 및 푸시"
-      # 스텝이 실행되지 않아 나쁜 상태가 원격에 올라가지 않는다.
+      # ── pre-push 통합 검증 게이트 ──────────────────────────
+      # verify_all.py — 5가지 Phase 를 localhost 에서 전수 검사
+      #
+      # Phase 1: sitemap ↔ 파일 전수 (로컬)
+      # Phase 2: SEO 검증 — JSON-LD / 내부 링크 / 회귀 방지 (로컬, 전수)
+      # Phase 3: HTTP 응답 전수 — 18,000+ 페이지 HEAD 요청 (localhost, 빠름)
+      # Phase 4: 브라우저 렌더링 — Chromium DOM 검증 (샘플)
+      # Phase 5: DB 데이터 정합성 — Supabase 전수
+      #
+      # 하나라도 FAIL → exit 1 → 커밋/푸시 스텝이 실행되지 않아 production 영향 없음
       #
       # 이 게이트가 왜 존재하는지:
       #   2026-04-11~12 2일 연속 extract_css_js() 회귀로 13,000개 단지 페이지가
       #   자동 빌드에 의해 덮어써져 production 이 터졌다. HEAD 200 OK 만으로는
       #   "서버는 응답 정상, 브라우저에선 리치 UI 비어있음" 상황을 못 잡는다.
-      #   verify_browser.py 로 실제 Chromium DOM 체크를 빌드 직후·push 전에
-      #   실행해 나쁜 상태가 원격에 올라가기 전에 차단한다.
+      #   verify_all.py 는 HTTP 전수 + 브라우저 DOM + DB 정합성을 모두 검사해
+      #   나쁜 상태가 원격에 올라가기 전에 차단한다.
       #
       # 관련 메모: memory/feedback_long_session_regressions.md
-      - name: pre-push 브라우저 검증 게이트
+      - name: pre-push 통합 검증 게이트 (verify_all.py)
         run: |
           set -e
           python -m http.server 8000 &>/tmp/http_server.log &
           SERVER_PID=$!
           trap "kill $SERVER_PID 2>/dev/null || true" EXIT
           sleep 2
-          echo "브라우저 검증 시작 (localhost:8000)"
-          VERIFY_HOST=http://localhost:8000 python verify_browser.py 2>&1 | tee verify_result.txt; exit ${PIPESTATUS[0]}
+          echo "통합 검증 시작 (localhost:8000) — 5-Phase 전수"
+          VERIFY_HOST=http://localhost:8000 python verify_all.py 2>&1 | tee verify_result.txt; exit ${PIPESTATUS[0]}
 
       - name: 커밋 및 푸시
         run: |
@@ -756,12 +761,8 @@ jobs:
           print(f"이메일 발송 → {os.environ['REPORT_EMAIL']}")
           PYEOF
 
-      - name: SEO + 데이터 검증 + 빌드 요약 이메일 발송
+      - name: 빌드 요약 이메일 발송
         run: |
-          python verify_seo.py > seo_result.txt 2>&1 || true
-          cat seo_result.txt
-          python verify_data.py > data_result.txt 2>&1 || true
-          cat data_result.txt
           python - <<'PYEOF'
           import smtplib, os, re, requests
           from email.mime.text import MIMEText
@@ -778,9 +779,9 @@ jobs:
               except:
                   return "-"
 
-          danji_v2  = last_line("/tmp/log_danji_v2.txt", "완료:")
-          danji_pg  = last_line("/tmp/log_danji_pages.txt", "페이지 생성")
-          sitemap   = last_line("/tmp/log_sitemap.txt", "sitemap 생성 완료")
+          danji_v2 = last_line("/tmp/log_danji_v2.txt", "완료:")
+          danji_pg = last_line("/tmp/log_danji_pages.txt", "페이지 생성")
+          sitemap  = last_line("/tmp/log_sitemap.txt", "sitemap 생성 완료")
 
           # ── 오늘 새로 수집된 거래 건수 (DB 직접 조회) ──
           trade_count = "-"
@@ -800,21 +801,18 @@ jobs:
           except:
               pass
 
-          # ── SEO / 데이터 검증 결과 ──
-          with open("seo_result.txt", encoding="utf-8") as f:
-              seo = f.read()
-          with open("data_result.txt", encoding="utf-8") as f:
-              data = f.read()
+          # ── 통합 검증 결과 (verify_result.txt: verify_all.py 출력) ──
+          try:
+              with open("verify_result.txt", encoding="utf-8") as f:
+                  verify_out = f.read()
+          except:
+              verify_out = "(검증 결과 없음)"
 
-          seo_ok  = "모든 검증 통과" in seo
-          data_ok = "모든 데이터 정합성 검증 통과" in data
-          if seo_ok and data_ok:
-              status = "ALL PASS ✓"
-          else:
-              parts = []
-              if not seo_ok:  parts.append("SEO")
-              if not data_ok: parts.append("DATA")
-              status = ", ".join(parts) + " FAIL ✗"
+          verify_pass = "✅ 전체 통과" in verify_out
+          status = "ALL PASS ✓" if verify_pass else "VERIFY FAIL ✗"
+
+          # Phase별 결과 요약 줄 추출
+          phase_lines = [l.strip() for l in verify_out.splitlines() if "Phase" in l and ("PASS" in l or "FAIL" in l)]
 
           build_summary = "\n".join([
               f"[빌드 요약 ({today})]",
@@ -824,9 +822,10 @@ jobs:
               f"sitemap          : {sitemap}",
               f"Actions 로그     : {run_url}",
               "",
-          ])
+              "[검증 게이트 결과 (배포 전 전수 검사)]",
+          ] + phase_lines + [""])
 
-          body = build_summary + "\n" + "=" * 60 + "\n\n" + seo + "\n\n" + "=" * 60 + "\n\n" + data
+          body = build_summary + "\n" + "=" * 60 + "\n\n" + verify_out[-3000:]
 
           msg = MIMEText(body, "plain", "utf-8")
           msg["Subject"] = f"[휙] {today} 자동 빌드 완료 — {status}"

@@ -56,8 +56,7 @@ function walkMin(m) {
 }
 
 // ── 404 처리 (진짜로 DB에 없는 경우만) ──
-// 1) noindex 즉시 주입 (Google 1차 렌더링에서 색인 방지)
-// 2) 404.html로 리다이렉트 (Google 2차 렌더링에서 HTTP 404 확인)
+// 404.html로 리다이렉트 → 브라우저/구글 모두 HTTP 404 확인
 function markAsNotFound() {
   document.title = '페이지를 찾을 수 없습니다 - 휙';
   location.replace('/404.html');
