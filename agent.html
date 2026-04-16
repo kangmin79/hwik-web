@@ -789,12 +789,12 @@ document.addEventListener('touchmove', e => {
 
   sheet.addEventListener('touchstart', e => {
     if (!sheet.classList.contains('show')) return;
+    isDragging = false; // 항상 먼저 초기화 (버튼 탭 후 touchend 오작동 방지)
     if (e.target.closest('.sheet-actions')) return; // 버튼 영역은 드래그 시작 무시
     startX = e.touches[0].clientX;
     startY = lastY = e.touches[0].clientY;
     touchStartTime = Date.now();
-    isDragging = false;
-    gestureStartScrollTop = scroll.scrollTop; // 제스처 시작 시점 scrollTop 기억
+    gestureStartScrollTop = scroll.scrollTop;
     sheet.style.transition = 'none';
   }, { passive: true });
 
