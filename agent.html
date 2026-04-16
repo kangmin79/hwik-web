@@ -748,7 +748,7 @@ const isKakaoInApp = /KAKAOTALK/i.test(navigator.userAgent);
 function openKakao() {
   // ?cards= 모드 + 카카오 인앱: 대화창으로 바로 돌아가기
   if (isCardsMode && isKakaoInApp) {
-    window.close();
+    history.back();
     return;
   }
   if (!agentKakaoUrl) return;
