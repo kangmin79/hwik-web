@@ -770,13 +770,18 @@ function openKakao() {
 // ESC 닫기
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
 
-// 인앱브라우저에서 100vh가 내비게이션 바를 포함해 콘텐츠가 잘리는 문제 수정
-// window.innerHeight = 실제 보이는 높이 (브라우저 UI 제외)
+// 인앱브라우저에서 100vh가 하단 내비바를 포함해 콘텐츠가 잘리는 문제 수정
+// visualViewport.height = 실제 보이는 영역의 정확한 높이 (브라우저 UI 완전 제외)
 function updateSheetHeight() {
-  document.documentElement.style.setProperty('--sheet-h', Math.floor(window.innerHeight * 0.75) + 'px');
+  const h = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+  document.documentElement.style.setProperty('--sheet-h', Math.floor(h * 0.75) + 'px');
 }
 updateSheetHeight();
-window.addEventListener('resize', updateSheetHeight);
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', updateSheetHeight);
+} else {
+  window.addEventListener('resize', updateSheetHeight);
+}
 
 // 배경 스크롤 완전 차단
 document.addEventListener('touchmove', e => {
