@@ -82,14 +82,19 @@ p {
   <a href="/gu.html" class="btn btn-secondary">구별 시세</a>
 </div>
 <script>
-// 구버전 apt- URL → 신버전 자동 리다이렉트
-// 구버전 패턴: /danji/{region}-{gu}-{dong}-apt-{num}-{name}
+// 구버전 URL → 신버전 자동 리다이렉트
+// 1) apt- 패턴: /danji/{region}-{gu}-{dong}-apt-{num}-{name}
+// 2) 슬러그 포맷 변경: 청주청원구 → 청주-청원구 등
 (function() {
   var path = location.pathname;
   if (!path.startsWith('/danji/')) return;
 
   var slug = decodeURIComponent(path.replace('/danji/', '').replace(/\.html$/, ''));
-  if (slug.indexOf('-apt-') === -1) return;
+  // apt- 패턴이거나 리다이렉트 맵에서 찾을 수 있는 슬러그만 처리
+  var isLegacy = slug.indexOf('-apt-') !== -1;
+  var isKaptSlug = /[a-zA-Z]\d{6,}$/.test(slug); // -a36378106 같은 단지코드로 끝남
+
+  if (!isLegacy && !isKaptSlug) return;
 
   document.getElementById('redirect-msg').style.display = 'block';
   document.getElementById('default-msg').style.display  = 'none';
