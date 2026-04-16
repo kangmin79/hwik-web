@@ -59,9 +59,6 @@ function walkMin(m) {
 // 1) noindex 즉시 주입 (Google 1차 렌더링에서 색인 방지)
 // 2) 404.html로 리다이렉트 (Google 2차 렌더링에서 HTTP 404 확인)
 function markAsNotFound() {
-  var robots = document.querySelector('meta[name="robots"]');
-  if (!robots) { robots = document.createElement('meta'); robots.name = 'robots'; document.head.appendChild(robots); }
-  robots.content = 'noindex,nofollow';
   document.title = '페이지를 찾을 수 없습니다 - 휙';
   location.replace('/404.html');
 }

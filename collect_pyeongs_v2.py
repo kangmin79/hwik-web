@@ -114,7 +114,7 @@ def parse_jibun(kapt_addr: str):
     bun, ji = None, "0000"
     dong_idx = None
     for i, p in enumerate(parts):
-        if p.endswith("동") or p.endswith("리"):
+        if p.endswith("동") or p.endswith("리") or re.search(r'동\d+가$|리\d+가$', p):
             dong_idx = i
         if dong_idx is not None and i > dong_idx:
             m = re.match(r"^(\d+)(?:-(\d*))?$", p)
@@ -216,15 +216,19 @@ def extract_pyeongs(items: list, kapt_name: str = "") -> list:
         if len(filtered) >= len(items) * 0.1:
             items = filtered
 
+    # 주거공용 etcPurps 키워드 (복도·계단·대피호 등 — 관리실·전기실·노인정 등 기타공용 제외)
+    RESIDENTIAL_COMMON_KEYWORDS = ("복도", "계단", "통로", "대피", "엘리베이터", "ev홀", "ev실")
+
     # {(pk, ho): {'exclu': float, 'pub': float}}
     units = defaultdict(lambda: {"exclu": 0.0, "pub": 0.0})
 
     for item in items:
-        pk   = item.get("mgmBldrgstPk", "")
-        ho   = item.get("hoNm", "").strip()
-        gb   = str(item.get("exposPubuseGbCd", "")).strip()
-        purp = str(item.get("mainPurpsCd", "")).strip()
-        area = _float(item.get("area")) or 0.0
+        pk      = item.get("mgmBldrgstPk", "")
+        ho      = item.get("hoNm", "").strip()
+        gb      = str(item.get("exposPubuseGbCd", "")).strip()
+        purp    = str(item.get("mainPurpsCd", "")).strip()
+        etc     = str(item.get("etcPurps", "")).strip().lower()
+        area    = _float(item.get("area")) or 0.0
 
         if not pk or not ho or area <= 0:
             continue
@@ -232,8 +236,9 @@ def extract_pyeongs(items: list, kapt_name: str = "") -> list:
         key = (pk, ho)
         if gb == "1" and purp == "02001":   # 전유 + 아파트 용도만
             units[key]["exclu"] += area
-        elif gb == "2":                     # 공용
-            units[key]["pub"] += area
+        elif gb == "2":                     # 공용: etcPurps 키워드로 주거공용만 선별
+            if any(kw in etc for kw in RESIDENTIAL_COMMON_KEYWORDS):
+                units[key]["pub"] += area
 
     if not units:
         return []
