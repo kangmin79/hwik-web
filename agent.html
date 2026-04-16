@@ -135,6 +135,10 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
 .map-fullscreen-close { background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.15); color:#fff; font-size:16px; width:40px; height:40px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; margin-left:12px; }
 #mapFullscreen { flex:1; width:calc(100% - 28px); margin:14px auto; border-radius:20px; overflow:hidden; box-shadow:0 6px 24px rgba(0,0,0,0.4); border:3px solid rgba(255,255,255,0.15); }
 
+/* 토스트 */
+.toast { position:fixed; bottom:90px; left:50%; transform:translateX(-50%) translateY(20px); background:#1a1a2e; color:#fff; font-size:13px; font-weight:500; padding:12px 20px; border-radius:24px; white-space:nowrap; z-index:200; opacity:0; transition:all .25s; pointer-events:none; }
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
 /* 더보기 버튼 */
 .load-more-btn { display:block; width:calc(100% - 32px); margin:12px 16px 0; padding:12px; background:var(--yellow-bg); border:1.5px solid var(--yellow); border-radius:var(--radius); font-size:13px; font-weight:600; color:#9a7a00; cursor:pointer; text-align:center; }
 .load-more-btn:active { background:var(--yellow-dim); }
@@ -259,6 +263,8 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
   </div>
   <div id="mapFullscreen"></div>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -717,15 +723,31 @@ function closeSheet() {
   document.body.style.width = '';
 }
 
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
 function openKakao() {
   if (!agentKakaoUrl) return;
   const card = window._cardsData?.[selectedCardId];
+  let copied = false;
   if (card) {
     const p = card.property || {};
     const text = `[휙 매물 문의]\n${p.type||''} ${p.price||''}\n${[p.complex,p.location,p.area].filter(Boolean).join(' · ')}\nhttps://hwik.kr/property_chat.html?id=${selectedCardId}`;
-    try { navigator.clipboard.writeText(text); } catch(e) {}
+    try { navigator.clipboard.writeText(text); copied = true; } catch(e) {}
   }
-  window.open(agentKakaoUrl, '_blank');
+  // 버튼 텍스트 잠깐 변경
+  const btn = document.getElementById('sheetBtnKakao');
+  btn.textContent = '✓ 복사됨 — 채팅창에 붙여넣기';
+  setTimeout(() => { btn.innerHTML = '💬 카카오톡 문의'; }, 2000);
+  // 토스트
+  if (copied) showToast('📋 매물 정보 복사됐어요 — 채팅창에 붙여넣기 하세요');
+  // 1.5초 후 오픈채팅 열기
+  setTimeout(() => window.open(agentKakaoUrl, '_blank'), 1500);
 }
 
 // ESC 닫기
