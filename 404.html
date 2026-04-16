@@ -82,39 +82,129 @@ p {
   <a href="/gu.html" class="btn btn-secondary">구별 시세</a>
 </div>
 <script>
-// 구버전 URL → 신버전 자동 리다이렉트
-// 1) apt- 패턴: /danji/{region}-{gu}-{dong}-apt-{num}-{name}
-// 2) 슬러그 포맷 변경: 청주청원구 → 청주-청원구 등
+// 404 자동 복구 전략
+// 1) /danji/ : apt-redirect.json 정확 매칭 (기존 동작 유지)
+// 2) /gu/, /dong/, /ranking/ : {folder}-index.json 에서 fuzzy 추측
+//    - 사용자가 축약/오타 URL 로 진입해도 가장 가까운 실제 slug 로 이동
+//    - 과거 색인된 옛 slug 규칙(GSC 404) 자연 복구 기대
 (function() {
   var path = location.pathname;
-  if (!path.startsWith('/danji/')) return;
+  var msg = document.getElementById('redirect-msg');
+  var defMsg = document.getElementById('default-msg');
 
-  var slug = decodeURIComponent(path.replace('/danji/', '').replace(/\.html$/, ''));
-  // apt- 패턴이거나 리다이렉트 맵에서 찾을 수 있는 슬러그만 처리
-  var isLegacy = slug.indexOf('-apt-') !== -1;
-  var isKaptSlug = /[a-zA-Z]\d{6,}$/.test(slug); // -a36378106 같은 단지코드로 끝남
+  // 무한 루프 방지: 이미 한번 리다이렉트 시도했으면 더 안함
+  // (리다이렉트 대상도 404 인 극단 케이스 — race / 삭제됐을 때)
+  try {
+    if (sessionStorage.getItem('_hwik_404_redirected') === path) {
+      sessionStorage.removeItem('_hwik_404_redirected');
+      return; // 기본 404 화면 유지
+    }
+  } catch (e) { /* sessionStorage 미지원 */ }
 
-  if (!isLegacy && !isKaptSlug) return;
+  function showRedirecting() {
+    if (msg) msg.style.display = 'block';
+    if (defMsg) defMsg.style.display = 'none';
+  }
+  function showFailed(text) {
+    if (msg) msg.textContent = text || 'URL이 변경되었으나 새 주소를 찾을 수 없습니다.';
+    if (defMsg) defMsg.style.display = 'block';
+  }
+  function safeRedirect(target) {
+    try { sessionStorage.setItem('_hwik_404_redirected', path); } catch (e) {}
+    location.replace(target);
+  }
 
-  document.getElementById('redirect-msg').style.display = 'block';
-  document.getElementById('default-msg').style.display  = 'none';
+  // ── danji : 기존 정확 매칭 유지 ──────────────────────────
+  if (path.startsWith('/danji/')) {
+    var slug = decodeURIComponent(path.replace('/danji/', '').replace(/\.html$/, ''));
+    var isLegacy = slug.indexOf('-apt-') !== -1;
+    var isKaptSlug = /[a-zA-Z]\d{6,}$/.test(slug);
+    if (!isLegacy && !isKaptSlug) return;
 
-  // 리다이렉트 맵에서 새 URL 검색
-  fetch('/danji/apt-redirect.json')
+    showRedirecting();
+    fetch('/danji/apt-redirect.json')
+      .then(function(r) { return r.json(); })
+      .then(function(map) {
+        var newSlug = map[slug];
+        if (newSlug) safeRedirect('/danji/' + newSlug);
+        else showFailed('단지 URL이 변경되었으나 새 주소를 찾을 수 없습니다.');
+      })
+      .catch(function() { showFailed(); });
+    return;
+  }
+
+  // ── gu / dong / ranking : fuzzy 매칭 ─────────────────────
+  var m = path.match(/^\/(gu|dong|ranking)\/(.+?)(?:\.html)?\/?$/);
+  if (!m) return;
+  var folder = m[1];
+  var requested = decodeURIComponent(m[2]);
+
+  showRedirecting();
+
+  fetch('/' + folder + '-index.json')
     .then(function(r) { return r.json(); })
-    .then(function(map) {
-      var newSlug = map[slug];
-      if (newSlug) {
-        location.replace('/danji/' + newSlug);
+    .then(function(slugs) {
+      var match = fuzzyBestMatch(requested, slugs);
+      if (match) {
+        safeRedirect('/' + folder + '/' + encodeURIComponent(match));
       } else {
-        document.getElementById('redirect-msg').textContent = '단지 URL이 변경되었으나 새 주소를 찾을 수 없습니다.';
-        document.getElementById('default-msg').style.display = 'block';
+        showFailed();
       }
     })
-    .catch(function() {
-      document.getElementById('redirect-msg').style.display = 'none';
-      document.getElementById('default-msg').style.display = 'block';
-    });
+    .catch(function() { showFailed(); });
+
+  // 한글 slug 유사도: character-hit 비율 + 최장 공통 부분 문자열
+  // 임계값 0.7 이상일 때만 리다이렉트 (오동작 방지)
+  function fuzzyBestMatch(target, candidates) {
+    if (!target || !candidates || !candidates.length) return null;
+    var clean = target.replace(/[^가-힣a-zA-Z0-9]/g, '').toLowerCase();
+    if (clean.length < 2) return null;
+
+    var best = null, bestScore = 0;
+    for (var i = 0; i < candidates.length; i++) {
+      var cand = candidates[i];
+      var candClean = cand.replace(/[^가-힣a-zA-Z0-9]/g, '').toLowerCase();
+      var score = similarity(clean, candClean);
+      if (score > bestScore) { bestScore = score; best = cand; }
+    }
+    return bestScore >= 0.7 ? best : null;
+  }
+
+  function similarity(a, b) {
+    if (!a || !b) return 0;
+    // character-hit 비율 (target 의 각 글자가 candidate 에 존재하는 비율)
+    var hits = 0;
+    for (var i = 0; i < a.length; i++) {
+      if (b.indexOf(a[i]) !== -1) hits++;
+    }
+    var hitRatio = hits / a.length;
+    // LCS 길이 / target 길이 (연속 일치 가중치)
+    var lcs = longestCommonSubstring(a, b);
+    var lcsRatio = lcs / a.length;
+    // 두 지표 평균 (연속 일치가 우선)
+    return hitRatio * 0.4 + lcsRatio * 0.6;
+  }
+
+  function longestCommonSubstring(a, b) {
+    var m = a.length, n = b.length, max = 0;
+    if (!m || !n) return 0;
+    var dp = new Array(n + 1);
+    for (var k = 0; k <= n; k++) dp[k] = 0;
+    for (var i = 1; i <= m; i++) {
+      var prev = 0;
+      for (var j = 1; j <= n; j++) {
+        var tmp = dp[j];
+        if (a.charAt(i - 1) === b.charAt(j - 1)) {
+          dp[j] = prev + 1;
+          if (dp[j] > max) max = dp[j];
+        } else {
+          dp[j] = 0;
+        }
+        prev = tmp;
+      }
+    }
+    return max;
+  }
 })();
 </script>
 </body>

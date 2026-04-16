@@ -107,7 +107,11 @@ def build_index():
         if d.is_dir():
             for f in d.iterdir():
                 if f.suffix == ".html":
-                    idx[folder].add(f.stem)
+                    # index.html 은 /{folder}/ 트레일링 슬래시 URL과 동일 페이지 →
+                    # sitemap 에는 /{folder}/ 로 등록되므로 idx 에는 넣지 않음.
+                    # all_paths 에는 유지 (SEO 체크 대상).
+                    if f.stem != "index":
+                        idx[folder].add(f.stem)
                     all_paths.append((folder, f))
     for f in BASE.iterdir():
         if f.is_file() and f.suffix == ".html":

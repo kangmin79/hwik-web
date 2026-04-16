@@ -568,6 +568,8 @@ jobs:
         run: python build_ranking_pages.py 2>&1 | tee /tmp/log_ranking.txt; exit ${PIPESTATUS[0]}
       - name: sitemap 재생성 (모든 HTML 빌드 완료 후)
         run: python sync_trades.py --sitemap-only 2>&1 | tee /tmp/log_sitemap.txt; exit ${PIPESTATUS[0]}
+      - name: slug 인덱스 생성 (404 fuzzy redirect 용)
+        run: python build_slug_index.py 2>&1 | tee /tmp/log_slug_index.txt; exit ${PIPESTATUS[0]}
 
       # ── pre-push 통합 검증 게이트 ──────────────────────────
       # verify_all.py — 5가지 Phase 를 localhost 에서 전수 검사
@@ -602,7 +604,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A sitemap.xml sitemap_seoul.xml sitemap_metro.xml sitemap_cities.xml sitemap_pages.xml danji/ dong/ gu/ ranking/
+          git add -A sitemap.xml sitemap_seoul.xml sitemap_metro.xml sitemap_cities.xml sitemap_pages.xml gu-index.json dong-index.json ranking-index.json danji/ dong/ gu/ ranking/
           if git diff --cached --quiet; then
             echo "변경 없음"
           else
