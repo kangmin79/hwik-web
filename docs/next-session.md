@@ -1,17 +1,16 @@
-# 다음 세션 할 일 (2026-04-17)
+# 다음 세션 할 일 (2026-04-18 이후)
 
-## SEO 현황 — 안정
-- slug 고정 + 리다이렉트 3,809개 → 내부 404 0건 확인
-- 새벽 빌드 정상 (18,895개, sitemap 22,265개 완전 일치)
-- 상세 기록: docs/2026-04-17.md
+## 오늘 배포 4건 — 결과 관찰 먼저
+1. 새벽 1시 sync-trades 정상 완료 이메일 확인
+2. schedule-alerts 15분 주기 녹색 (Actions 탭)
+3. GSC: /gu/ 404 감소, NOINDEX 1,000 → 더 감소, danji 스니펫에 실거래가 수치
+4. hwik.kr/gu/천안동남구 → /gu/충남-천안시-동남구 자동 리다이렉트 확인
 
-## 남은 SEO 작업
-1. GSC "크롤링됨-색인 안 됨" 181개 → 시간 지켜보기 (별도 조치 불필요)
-2. NOINDEX 제외 목록 감소 추이 확인 (dong 페이지 app.js 수정 효과)
-3. `check_links_http.py` 워크플로우 추가 (빌드 후 자동 HTTP 404 감지)
+## 보류된 워크플로우 개선 (관찰 후 점진 착수)
+- C3: sync-trades.yml autofix `git add -A *.py` → 파일명 명시 (리스크 높음, 신중)
+- H1~H7: concurrency cancel, 실패 알림, permissions, rebase 방어 등
+- M1: 17개 지역 matrix strategy 리팩토링 (470줄 → 30줄, 별도 세션)
 
-## 완료된 것 (이번 세션)
-- 전국 공급면적 수집·반영 완료
-- build_danji_pages slug DB 고정 (URL 불변 보장)
-- apt-redirect.json 971→3,809개 확장
-- 새벽 빌드 전수 조사 완료
+## 기타
+- GSC 404 /danji/ 41건 자동 매핑은 **포기** (숫자 토큰 다른 잘못된 매칭 위험) → 60일 자연 정리 대기
+- 상세: docs/2026-04-17.md
