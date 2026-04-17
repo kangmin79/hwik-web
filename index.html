@@ -71,6 +71,20 @@ h2 { font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #374151; }
 .region-tag:hover { background: #f5c842; color: #1a1a2e; }
 footer { text-align: center; color: #9ca3af; font-size: 11px; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
 footer a { color: #6b7280; }
+.search-wrap { position: relative; margin-bottom: 24px; }
+.search-input { width: 100%; box-sizing: border-box; padding: 14px 44px 14px 44px; font-size: 15px; border: 2px solid #e5e7eb; border-radius: 12px; background: #fff; outline: none; transition: border-color 0.15s; }
+.search-input:focus { border-color: #6366f1; }
+.search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #9ca3af; pointer-events: none; }
+.search-clear { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: 0; color: #9ca3af; cursor: pointer; font-size: 18px; padding: 4px; display: none; }
+.search-results { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: #fff; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); max-height: 440px; overflow-y: auto; z-index: 100; }
+.search-section { padding: 4px 0; border-bottom: 1px solid #f0f0f4; }
+.search-section:last-child { border-bottom: 0; }
+.search-section-title { font-size: 11px; color: #9ca3af; padding: 8px 16px 4px; font-weight: 600; letter-spacing: 0.5px; }
+.search-item { display: block; padding: 10px 16px; text-decoration: none; color: #1a1a2e; font-size: 14px; cursor: pointer; }
+.search-item:hover { background: #f3f4f6; }
+.search-item .si-sub { color: #9ca3af; font-size: 12px; margin-left: 6px; }
+.search-item mark { background: #fef3c7; color: #1a1a2e; padding: 0; font-weight: 600; }
+.search-empty { padding: 24px; text-align: center; color: #9ca3af; font-size: 13px; }
 </style>
 <script>
   // 로그인 사용자는 앱으로 리다이렉트
@@ -94,6 +108,13 @@ footer a { color: #6b7280; }
     <div class="stat"><div class="stat-num">31,000+</div><div class="stat-label">아파트 단지</div></div>
     <div class="stat"><div class="stat-num">1,500+</div><div class="stat-label">동네 페이지</div></div>
     <div class="stat"><div class="stat-num">매일</div><div class="stat-label">데이터 갱신</div></div>
+  </div>
+
+  <div class="search-wrap">
+    <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="search" id="q" class="search-input" placeholder="단지명·지역·주소로 검색 (예: 잠실엘스, 강남구, 송파동)" autocomplete="off">
+    <button type="button" class="search-clear" id="qclear" aria-label="지우기">&times;</button>
+    <div class="search-results" id="results" hidden></div>
   </div>
 
   <div class="section">
@@ -145,5 +166,109 @@ footer a { color: #6b7280; }
     <p style="margin-top:4px;">데이터 출처: 국토교통부 실거래가 공개시스템</p>
   </footer>
 </div>
+<script>
+(function(){
+  const qEl = document.getElementById('q');
+  const clearBtn = document.getElementById('qclear');
+  const box = document.getElementById('results');
+  let INDEX = null;
+  let loading = false;
+
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const hl = (text, q) => {
+    if (!q) return esc(text);
+    const i = text.toLowerCase().indexOf(q.toLowerCase());
+    if (i < 0) return esc(text);
+    return esc(text.slice(0,i)) + '<mark>' + esc(text.slice(i, i+q.length)) + '</mark>' + esc(text.slice(i+q.length));
+  };
+
+  async function loadIndex() {
+    if (INDEX || loading) return INDEX;
+    loading = true;
+    try {
+      const r = await fetch('/search_index.json');
+      INDEX = await r.json();
+    } catch(e) { console.error('index load failed', e); }
+    loading = false;
+    return INDEX;
+  }
+
+  function search(qRaw) {
+    const q = (qRaw || '').trim().replace(/\s+/g,'');
+    if (!q || !INDEX) return null;
+    const qL = q.toLowerCase();
+    const MAX = 8;
+    const gu = [], dong = [], apt = [];
+    for (const g of INDEX.g) {
+      if (g.n.includes(q)) gu.push(g);
+      if (gu.length >= MAX) break;
+    }
+    for (const d of INDEX.d) {
+      if (d.n.includes(q) || (d.g||'').includes(q)) dong.push(d);
+      if (dong.length >= MAX) break;
+    }
+    for (const a of INDEX.a) {
+      if (a.n.includes(q) || (a.g||'').includes(q) || (a.d||'').includes(q)) apt.push(a);
+      if (apt.length >= 20) break;
+    }
+    return {gu, dong, apt, q};
+  }
+
+  function render(res) {
+    if (!res || (!res.gu.length && !res.dong.length && !res.apt.length)) {
+      box.innerHTML = '<div class="search-empty">검색 결과가 없습니다</div>';
+      box.hidden = false; return;
+    }
+    let html = '';
+    if (res.gu.length) {
+      html += '<div class="search-section"><div class="search-section-title">구/시</div>';
+      for (const g of res.gu) {
+        html += `<a class="search-item" href="/gu/${encodeURIComponent(g.u)}.html">${hl(g.n, res.q)}</a>`;
+      }
+      html += '</div>';
+    }
+    if (res.dong.length) {
+      html += '<div class="search-section"><div class="search-section-title">동</div>';
+      for (const d of res.dong) {
+        html += `<a class="search-item" href="/dong/${encodeURIComponent(d.u)}.html">${hl(d.n, res.q)}<span class="si-sub">${esc(d.g||'')}</span></a>`;
+      }
+      html += '</div>';
+    }
+    if (res.apt.length) {
+      html += '<div class="search-section"><div class="search-section-title">단지</div>';
+      for (const a of res.apt) {
+        const loc = [a.g, a.d].filter(Boolean).join(' ');
+        html += `<a class="search-item" href="/danji/${encodeURIComponent(a.s)}.html">${hl(a.n, res.q)}<span class="si-sub">${esc(loc)}</span></a>`;
+      }
+      html += '</div>';
+    }
+    box.innerHTML = html;
+    box.hidden = false;
+  }
+
+  let t = null;
+  qEl.addEventListener('input', async () => {
+    const v = qEl.value;
+    clearBtn.style.display = v ? 'block' : 'none';
+    if (!v.trim()) { box.hidden = true; return; }
+    if (!INDEX) { await loadIndex(); }
+    clearTimeout(t);
+    t = setTimeout(() => render(search(v)), 80);
+  });
+  qEl.addEventListener('focus', () => {
+    if (!INDEX) loadIndex();
+    if (qEl.value.trim()) render(search(qEl.value));
+  });
+  clearBtn.addEventListener('click', () => {
+    qEl.value = '';
+    clearBtn.style.display = 'none';
+    box.hidden = true;
+    qEl.focus();
+  });
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-wrap')) box.hidden = true;
+  });
+})();
+</script>
 </body>
 </html>
