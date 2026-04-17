@@ -73,8 +73,10 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
 .card-tags { display:flex; flex-wrap:wrap; gap:3px; }
 .card-tag { font-size:10px; color:var(--sub); background:rgba(0,0,0,0.04); border-radius:4px; padding:1px 6px; }
 .listing-link { font-size:11px; color:#ba7517; align-self:center; font-weight:500; white-space:nowrap; }
-.listing-empty { text-align:center; padding:20px 16px; border:1.5px dashed var(--yellow); border-radius:var(--radius); background:var(--yellow-bg); }
+.listing-empty { text-align:center; padding:24px 16px; border:1.5px dashed var(--yellow); border-radius:var(--radius); background:var(--yellow-bg); }
 .listing-empty-text { font-size:13px; color:var(--sub); }
+.listing-empty-btn { display:inline-block; margin-top:12px; padding:8px 18px; background:var(--yellow); color:var(--dark); font-size:13px; font-weight:700; border-radius:20px; text-decoration:none; }
+.listing-empty-btn:hover { background:#f0bd2e; }
 
 /* 스켈레톤 */
 .skel { background:linear-gradient(90deg,#f0f0f4 25%,#e8e8ec 50%,#f0f0f4 75%); background-size:200% 100%; animation:shimmer 1.2s infinite; border-radius:6px; }
@@ -481,19 +483,29 @@ function renderCardsDanji(cards) {
   const countEl = document.getElementById('cardCount');
 
   if (!cards.length) {
-    listEl.innerHTML = `<div class="listing-empty"><div class="listing-empty-text">이 단지에 등록된 매물이 없습니다</div></div>`;
+    listEl.innerHTML = `<div class="listing-empty"><div class="listing-empty-text">이 단지에 등록된 매물이 없습니다</div><a class="listing-empty-btn" href="/">휙 홈으로 →</a></div>`;
     return;
+  }
+
+  // filterType 있으면 해당 거래유형만 노출 (사용자가 전세 탭에서 들어왔으면 전세만)
+  if (filterType) {
+    const filtered = cards.filter(c => (c.property?.type || '') === filterType);
+    if (!filtered.length) {
+      listEl.innerHTML = `<div class="listing-empty"><div class="listing-empty-text">이 단지의 <b>${esc(filterType)}</b> 매물이 아직 없습니다</div><a class="listing-empty-btn" href="/">휙 홈으로 →</a></div>`;
+      countEl.textContent = '';
+      return;
+    }
+    cards = filtered;
   }
 
   countEl.textContent = `${cards.length}건`;
   window._cardsData = {};
   cards.forEach(c => { window._cardsData[c.id] = c; });
 
-  // 거래유형 순서
-  // type 파라미터 있으면 해당 거래유형 최상단
+  // 거래유형 순서 (filterType이 있을 때는 이미 단일 타입만 남아있음)
   const baseOrder = ['매매', '전세', '월세', '반전세'];
   const typeOrder = filterType
-    ? [filterType, ...baseOrder.filter(t => t !== filterType)]
+    ? [filterType]
     : baseOrder;
 
   // 거래유형별 그룹핑

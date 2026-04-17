@@ -398,7 +398,7 @@ function render() {
         </div>
         <div class="listing-link">상세보기</div>
       </a>
-      ${l.agent_id ? `<a href="/agent.html?id=${encodeURIComponent(l.agent_id)}" style="font-size:11px;color:var(--sub);text-decoration:none;display:flex;align-items:center;gap:4px;">${l.agent_name ? '담당: '+esc(l.agent_name) : '담당 중개사 보기'} →</a>` : ''}
+      ${l.agent_id ? `<a href="/agent.html?id=${encodeURIComponent(l.agent_id)}&kapt_code=${encodeURIComponent(id)}&type=${encodeURIComponent(currentTab)}" style="font-size:11px;color:var(--sub);text-decoration:none;display:flex;align-items:center;gap:4px;">${l.agent_name ? '담당: '+esc(l.agent_name) : '담당 중개사 보기'} →</a>` : ''}
     </div>
   `).join('');
 
