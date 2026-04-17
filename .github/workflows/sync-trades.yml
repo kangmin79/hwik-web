@@ -557,7 +557,7 @@ jobs:
       - name: Playwright 브라우저 설치
         run: python -m playwright install chromium --with-deps
       - name: danji_pages DB 집계 (변경된 단지만)
-        run: python build_danji_from_v2.py --changed-only --hours 36 2>&1 | tee /tmp/log_danji_v2.txt; exit ${PIPESTATUS[0]}
+        run: python build_danji_from_v2.py --changed-only --hours 2160 2>&1 | tee /tmp/log_danji_v2.txt; exit ${PIPESTATUS[0]}
       - name: 동 정적 페이지 빌드
         run: python build_dong_pages.py 2>&1 | tee /tmp/log_dong.txt; exit ${PIPESTATUS[0]}
       - name: 구 정적 페이지 빌드
