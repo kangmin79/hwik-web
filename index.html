@@ -52,10 +52,19 @@
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
 <style>
 body { font-family: 'Noto Sans KR', -apple-system, sans-serif; background: #f8f8fa; margin: 0; color: #1a1a2e; }
-.wrap { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
-h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
-h1 span { color: #f5c842; }
-.subtitle { color: #6b7280; font-size: 15px; line-height: 1.6; margin-bottom: 32px; }
+.wrap { max-width: 600px; margin: 0 auto; padding: 0 20px 40px; }
+.hero { min-height: 85vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 0 48px; text-align: center; }
+.hero-logo { display: inline-flex; align-items: center; gap: 4px; margin: 0 0 28px; line-height: 1; font-weight: 900; }
+.hero-logo-text { font-size: 68px; letter-spacing: -3px; color: #1a1a2e; }
+.hero-logo-dot { width: 12px; height: 12px; background: #facc15; border-radius: 50%; margin-top: 28px; display: inline-block; }
+.hero-tagline { font-size: 14px; color: #6b7280; margin: -12px 0 36px; letter-spacing: 0.3px; }
+.hero-stats { font-size: 13px; color: #9ca3af; margin: 20px 0 18px; letter-spacing: 0.2px; }
+.hero-stats b { color: #6366f1; font-weight: 700; }
+.hero-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; max-width: 540px; }
+.hero-chips-label { font-size: 12px; color: #9ca3af; align-self: center; margin-right: 4px; }
+.hero-chip { padding: 6px 14px; background: #fff; border-radius: 20px; font-size: 13px; color: #374151; text-decoration: none; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: all 0.15s; }
+.hero-chip:hover { background: #facc15; color: #1a1a2e; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 h2 { font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #374151; }
 .section { margin-bottom: 28px; }
 .links { display: flex; flex-direction: column; gap: 10px; }
@@ -101,21 +110,29 @@ footer a { color: #6b7280; }
 </head>
 <body>
 <div class="wrap">
-  <h1><span>휙</span> - AI 부동산 플랫폼</h1>
-  <p class="subtitle">중개사가 손님에게 매물을 '휙' 보내는 AI 매물카드 서비스.<br>전국 17개 시도 아파트 실거래가, 전세가율, 시세 추이를 확인하세요.</p>
-
-  <div class="stats">
-    <div class="stat"><div class="stat-num">31,000+</div><div class="stat-label">아파트 단지</div></div>
-    <div class="stat"><div class="stat-num">1,500+</div><div class="stat-label">동네 페이지</div></div>
-    <div class="stat"><div class="stat-num">매일</div><div class="stat-label">데이터 갱신</div></div>
-  </div>
-
-  <div class="search-wrap">
-    <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input type="search" id="q" class="search-input" placeholder="단지명·지역·주소로 검색 (예: 잠실엘스, 강남구, 송파동)" autocomplete="off">
-    <button type="button" class="search-clear" id="qclear" aria-label="지우기">&times;</button>
-    <div class="search-results" id="results" hidden></div>
-  </div>
+  <section class="hero">
+    <h1 class="hero-logo" aria-label="휙">
+      <span class="hero-logo-text">휙</span>
+      <span class="hero-logo-dot" aria-hidden="true"></span>
+    </h1>
+    <p class="hero-tagline">전국 아파트 실거래가, 한 번에 검색</p>
+    <p class="sr-only">휙은 전국 31,000개 아파트 실거래가·전세가율·시세 추이를 AI로 찾아주는 부동산 플랫폼입니다.</p>
+    <div class="search-wrap" style="width:100%;max-width:540px;">
+      <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="search" id="q" class="search-input" placeholder="단지명·지역·주소로 검색 (예: 잠실엘스, 강남구)" autocomplete="off">
+      <button type="button" class="search-clear" id="qclear" aria-label="지우기">&times;</button>
+      <div class="search-results" id="results" hidden></div>
+    </div>
+    <p class="hero-stats"><b>31,000+</b> 단지 · <b>1,500+</b> 동네 · 매일 갱신</p>
+    <div class="hero-chips">
+      <span class="hero-chips-label">인기 검색</span>
+      <a class="hero-chip" href="/gu/%EA%B0%95%EB%82%A8%EA%B5%AC.html">강남구</a>
+      <a class="hero-chip" href="/gu/%EC%84%9C%EC%B4%88%EA%B5%AC.html">서초구</a>
+      <a class="hero-chip" href="/gu/%EC%86%A1%ED%8C%8C%EA%B5%AC.html">송파구</a>
+      <a class="hero-chip" href="/gu/%EB%A7%88%ED%8F%AC%EA%B5%AC.html">마포구</a>
+      <a class="hero-chip" href="/gu/%EC%84%B1%EB%82%A8%EC%8B%9C-%EB%B6%84%EB%8B%B9%EA%B5%AC.html">분당구</a>
+    </div>
+  </section>
 
   <div class="section">
     <h2>지역별 아파트 시세</h2>
@@ -175,11 +192,35 @@ footer a { color: #6b7280; }
   let loading = false;
 
   const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const hl = (text, q) => {
-    if (!q) return esc(text);
-    const i = text.toLowerCase().indexOf(q.toLowerCase());
-    if (i < 0) return esc(text);
-    return esc(text.slice(0,i)) + '<mark>' + esc(text.slice(i, i+q.length)) + '</mark>' + esc(text.slice(i+q.length));
+  const hl = (text, tokens) => {
+    if (!tokens || !tokens.length) return esc(text);
+    const tl = text.toLowerCase();
+    const ranges = [];
+    for (const tok of tokens) {
+      if (!tok) continue;
+      let i = 0;
+      while ((i = tl.indexOf(tok, i)) !== -1) {
+        ranges.push([i, i + tok.length]);
+        i += tok.length;
+      }
+    }
+    if (!ranges.length) return esc(text);
+    ranges.sort((a,b) => a[0] - b[0]);
+    const merged = [];
+    for (const r of ranges) {
+      if (merged.length && merged[merged.length-1][1] >= r[0]) {
+        merged[merged.length-1][1] = Math.max(merged[merged.length-1][1], r[1]);
+      } else {
+        merged.push([r[0], r[1]]);
+      }
+    }
+    let out = '', last = 0;
+    for (const [s, e] of merged) {
+      out += esc(text.slice(last, s)) + '<mark>' + esc(text.slice(s, e)) + '</mark>';
+      last = e;
+    }
+    out += esc(text.slice(last));
+    return out;
   };
 
   async function loadIndex() {
@@ -188,30 +229,67 @@ footer a { color: #6b7280; }
     try {
       const r = await fetch('/search_index.json');
       INDEX = await r.json();
+      // 각 엔트리에 검색용 소문자 합친 _h, 이름 소문자 _nl 미리 계산 (1회)
+      for (const a of INDEX.a) {
+        a._nl = a.n.toLowerCase();
+        a._h = a._nl + ' ' + (a.g||'').toLowerCase() + ' ' + (a.d||'').toLowerCase();
+      }
+      for (const d of INDEX.d) {
+        d._nl = d.n.toLowerCase();
+        d._h = d._nl + ' ' + (d.g||'').toLowerCase();
+      }
+      for (const g of INDEX.g) {
+        g._nl = g.n.toLowerCase();
+        g._h = g._nl;
+      }
     } catch(e) { console.error('index load failed', e); }
     loading = false;
     return INDEX;
   }
 
   function search(qRaw) {
-    const q = (qRaw || '').trim().replace(/\s+/g,'');
-    if (!q || !INDEX) return null;
-    const qL = q.toLowerCase();
-    const MAX = 8;
+    const qTrim = (qRaw || '').trim();
+    if (!qTrim || !INDEX) return null;
+    const qL = qTrim.toLowerCase();
+    const tokens = qL.split(/\s+/).filter(Boolean);
+    if (!tokens.length) return null;
+
+    const matchAll = (h) => {
+      for (const t of tokens) if (!h.includes(t)) return false;
+      return true;
+    };
+    // 관련도 점수: 완전일치 > 이름 시작 > 이름 포함 > 기타
+    const score = (nl) => {
+      if (nl === qL) return 1000;
+      if (nl.startsWith(qL)) return 500;
+      if (nl.includes(qL)) return 300;
+      const t0 = tokens[0];
+      if (nl.startsWith(t0)) return 200;
+      if (nl.includes(t0)) return 100;
+      return 10;
+    };
+    // 짧은 이름 가산점 (같은 점수면 이름 짧은 단지가 더 정확한 매칭)
+    const rank = (item) => item._score * 1000 - item.n.length;
+
     const gu = [], dong = [], apt = [];
     for (const g of INDEX.g) {
-      if (g.n.includes(q)) gu.push(g);
-      if (gu.length >= MAX) break;
+      if (matchAll(g._h)) { g._score = score(g._nl); gu.push(g); }
     }
     for (const d of INDEX.d) {
-      if (d.n.includes(q) || (d.g||'').includes(q)) dong.push(d);
-      if (dong.length >= MAX) break;
+      if (matchAll(d._h)) { d._score = score(d._nl); dong.push(d); }
     }
     for (const a of INDEX.a) {
-      if (a.n.includes(q) || (a.g||'').includes(q) || (a.d||'').includes(q)) apt.push(a);
-      if (apt.length >= 20) break;
+      if (matchAll(a._h)) { a._score = score(a._nl); apt.push(a); }
     }
-    return {gu, dong, apt, q};
+    gu.sort((a,b) => rank(b) - rank(a));
+    dong.sort((a,b) => rank(b) - rank(a));
+    apt.sort((a,b) => rank(b) - rank(a));
+    return {
+      gu: gu.slice(0, 8),
+      dong: dong.slice(0, 8),
+      apt: apt.slice(0, 20),
+      tokens,
+    };
   }
 
   function render(res) {
@@ -223,14 +301,14 @@ footer a { color: #6b7280; }
     if (res.gu.length) {
       html += '<div class="search-section"><div class="search-section-title">구/시</div>';
       for (const g of res.gu) {
-        html += `<a class="search-item" href="/gu/${encodeURIComponent(g.u)}.html">${hl(g.n, res.q)}</a>`;
+        html += `<a class="search-item" href="/gu/${encodeURIComponent(g.u)}.html">${hl(g.n, res.tokens)}</a>`;
       }
       html += '</div>';
     }
     if (res.dong.length) {
       html += '<div class="search-section"><div class="search-section-title">동</div>';
       for (const d of res.dong) {
-        html += `<a class="search-item" href="/dong/${encodeURIComponent(d.u)}.html">${hl(d.n, res.q)}<span class="si-sub">${esc(d.g||'')}</span></a>`;
+        html += `<a class="search-item" href="/dong/${encodeURIComponent(d.u)}.html">${hl(d.n, res.tokens)}<span class="si-sub">${esc(d.g||'')}</span></a>`;
       }
       html += '</div>';
     }
@@ -238,7 +316,7 @@ footer a { color: #6b7280; }
       html += '<div class="search-section"><div class="search-section-title">단지</div>';
       for (const a of res.apt) {
         const loc = [a.g, a.d].filter(Boolean).join(' ');
-        html += `<a class="search-item" href="/danji/${encodeURIComponent(a.s)}.html">${hl(a.n, res.q)}<span class="si-sub">${esc(loc)}</span></a>`;
+        html += `<a class="search-item" href="/danji/${encodeURIComponent(a.s)}.html">${hl(a.n, res.tokens)}<span class="si-sub">${esc(loc)}</span></a>`;
       }
       html += '</div>';
     }
