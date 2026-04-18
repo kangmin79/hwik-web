@@ -1,32 +1,40 @@
-# 다음 세션 할 일 (2026-04-18 이후)
+# 다음 세션 할 일 (2026-04-19 이후)
 
-## 대기 1순위 — sync-trades 결과 확인
-- 마지막 커밋 `1e98bdc16c7` (robots.txt AI + llms.txt 개정)
-- danji 18,896 canonical/description/내부링크 반영 여부 확인
-- Phase 2 canonical 검증 통과 필수
+## 세션 시작 멘트
+"docs/next-session.md + docs/2026-04-18-agent-home.md 보고 이어서 해줘"
 
-## 남은 작업 (우선순위)
-1. **parse-property 401** — 매물 등록 실패, Auth.getToken() 타이밍 버그 가설
-   - 브라우저 콘솔 `Auth.user`, `await Auth.sb.auth.getSession()` 확인
-   - 해결안: `getToken()` 매번 실시간 세션에서 추출
-2. **관찰 (2~4주)** — GSC 색인 2.19천 → 상승, 404 5.84% → 감소
-3. **danji_pages 레거시 `apt-*`/`offi-*` 11,725개 정리** (선택)
+## 지금 사업 방향 (고정)
+**플라이휠 연결 페이즈 — "새 기능 금지, 있는 것 잇기만"**
+- 휙 = 구글↔중개사 유기적 순환 네트워크
+- 월 19,000원 = 프로그램 사용료 (광고료 X, 성과 보장 의무 X)
+- 결제 도입: WAU 40~50명 또는 일 클릭 100 달성 후 (달력 기준 아님)
+- 메모리: `project_flywheel_connection_phase.md` 참고
 
-## 보류 (사용자 판단 대기)
-- 테스트 HTML 파일 삭제 (test_suite/theme-preview/select_template 등 — mobile-v6 보존) — "아직 삭제 하면 안될꺼 같아"
-- apt-redirect 4,479개 meta-refresh 정적화 — 현재 404로 집계되나 방치 권장
+## 1순위 — 플라이휠 마디 ③ (카드 → 중개사 홈 백링크)
+- `property_view.html`·`property_chat.html` 하단에 "이 매물 담당 중개사 홈 →" 링크 추가
+- 링크 형식: `/agent.html?id={agent_id}&cards={card_id}` (isCardsMode 발동)
+- 이유: 카톡 뿌린 카드가 SEO 자산으로 환류 안 되고 있음 (플라이휠 ④→① 단절)
 
-## 오늘(2026-04-18) 추가 완료
-- ✅ 자동 수정 에이전트 완전 제거
-- ✅ verify_all.py Phase 5 빌드 로직과 정렬 (배포 차단 해소)
-- ✅ Phase 6 내부 링크·리다이렉트 정합성 신설
-- ✅ .gitignore 확장 (115 → 20)
-- ✅ SEO 감사 스크립트 `seo_bot_audit.py` 신설
-- ✅ canonical `.html` 통일 (dong/gu/ranking/danji 빌드 스크립트 전부)
-- ✅ description 확장 (전 카테고리 100~130자)
-- ✅ 내부 링크 `.html` 일관화 (5개 빌드 파일)
-- ✅ danji 지역 랭킹 3종 링크 추가 (내부 링크 7 → 10~11)
-- ✅ robots.txt AI 크롤러 12개 명시
-- ✅ llms.txt 전면 개정
+## 2순위 — 플라이휠 마디 ① 강화 (단지 → 중개사 다중)
+- `danji.html` 하단 "담당 중개사" 섹션을 **해당 단지의 모든 중개사 2~5명** 노출
+- 지금은 1명만 보여 공평성·선택권 부족
+- 배분 규칙 미리 문서화 (지역별 · 선착순 · 활동성 보정 같은 원칙)
 
-상세는 `docs/2026-04-18.md` 10장~20장 참조.
+## 3순위 — 중개사 5~10명 피드백
+- agent.html 홈 새 디자인(사진·인사말·전문지역 배지·CTA 2개) 실제 중개사에게 보여주기
+- "와, 갖고 싶다" 반응 나오는지 관찰
+- 반응 후 다음 단계 결정 (슬러그 URL · 테마 · OG 이미지 등)
+
+## 보류 중
+- 메트릭 3개는 오늘 추가했다가 **제거** (거래 완료 허수·데이터 오염 위험)
+  → 대신 "갖고 싶은 홈" 느낌은 사진·인사말·지역 배지로 달성
+- 슬러그 URL(`hwik.kr/agent/{slug}`) — 중개사 반응 본 후 판단
+- 결제 플로우 — 지표 미달, 착수 금지
+
+## 오늘(2026-04-18) 저녁 세션 결과
+- agent.html 중개사 홈 전면 개선 (14 커밋)
+- hub-new 프로필 편집 버그 3개 수정 (모달 안 닫힘·upsert 에러·phone NULL)
+- index.html 모바일 검색 키보드 UX 수정
+- profiles에 `specialty_regions`, `intro` 컬럼 추가 (둘 다 Supabase 적용 완료)
+
+상세는 `docs/2026-04-18-agent-home.md` 참조.
