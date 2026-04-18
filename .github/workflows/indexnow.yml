@@ -1,0 +1,84 @@
+name: IndexNow 자동 통보
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'danji/**.html'
+      - 'dong/**.html'
+      - 'gu/**.html'
+      - 'ranking/**.html'
+      - 'index.html'
+      - 'sitemap*.xml'
+  workflow_dispatch:
+    inputs:
+      urls:
+        description: '수동 통보할 URL (줄바꿈 구분, 비우면 최근 커밋 변경분)'
+        required: false
+        default: ''
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (전체 히스토리)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: 변경된 페이지 → URL 추출
+        id: collect
+        run: |
+          set -e
+          if [ -n "${{ github.event.inputs.urls }}" ]; then
+            echo "${{ github.event.inputs.urls }}" > urls.txt
+          else
+            git diff --name-only --diff-filter=AM HEAD~1 HEAD \
+              | grep -E '^(danji|dong|gu|ranking)/.+\.html$' \
+              | sed -E 's|^(danji|dong|gu|ranking)/(.+)\.html$|https://hwik.kr/\1/\2|' \
+              > urls.txt || true
+            if git diff --name-only HEAD~1 HEAD | grep -q '^index\.html$'; then
+              echo "https://hwik.kr/" >> urls.txt
+            fi
+          fi
+          # URL 인코딩 + 정렬 + 중복 제거
+          sort -u urls.txt -o urls.txt
+          COUNT=$(wc -l < urls.txt | tr -d ' ')
+          echo "count=$COUNT" >> $GITHUB_OUTPUT
+          echo "변경된 URL: $COUNT개"
+          head -20 urls.txt || true
+
+      - name: IndexNow API 호출
+        if: steps.collect.outputs.count != '0'
+        env:
+          INDEXNOW_KEY: 9f5a9419d6de2267a5952f6302646ed8
+        run: |
+          set -e
+          # 최대 10,000개씩 배치 (IndexNow 제한)
+          split -l 10000 urls.txt batch_
+          for f in batch_*; do
+            python3 - <<PY
+          import json, urllib.request, urllib.parse
+          urls = [l.strip() for l in open("$f") if l.strip()]
+          # URL 인코딩 (한글 슬러그)
+          urls = [urllib.parse.quote(u, safe=':/?#[]@!$&\'()*+,;=') for u in urls]
+          payload = {
+            "host": "hwik.kr",
+            "key": "${INDEXNOW_KEY}",
+            "keyLocation": "https://hwik.kr/${INDEXNOW_KEY}.txt",
+            "urlList": urls
+          }
+          req = urllib.request.Request(
+            "https://api.indexnow.org/IndexNow",
+            data=json.dumps(payload).encode("utf-8"),
+            headers={"Content-Type": "application/json; charset=utf-8"},
+            method="POST"
+          )
+          with urllib.request.urlopen(req) as r:
+            print(f"HTTP {r.status} — {len(urls)} URLs notified")
+          PY
+          done
+
+      - name: 통보할 URL 없음
+        if: steps.collect.outputs.count == '0'
+        run: echo "변경된 SEO 페이지 없음 — IndexNow 호출 생략"
