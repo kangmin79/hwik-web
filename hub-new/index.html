@@ -1946,7 +1946,7 @@ const Hub = (() => {
       <div class="edit-field" style="margin-top:12px;"><label>주소 (선택)</label><input id="sAddr" value="${esc(pr.address||'')}"></div>
       <div class="edit-field" style="margin-top:12px;"><label>카카오 오픈채팅 URL</label><input id="sKakao" value="${esc(pr.kakao_chat_url||'')}" placeholder="https://open.kakao.com/o/..."></div>
       <div class="edit-field" style="margin-top:12px;"><label>전문 지역 (최대 3개)</label><input id="sRegions" value="${esc((pr.specialty_regions||[]).join(', '))}" placeholder="예: 중랑구, 노원구, 성북구"><div style="font-size:11px;color:var(--text-light);margin-top:4px;">쉼표(,)로 구분. 중개사 홈 상단 배지로 노출됩니다.</div></div>
-      <div class="edit-buttons"><button class="btn-cancel" onclick="this.closest('.modal-overlay').classList.remove('show')">취소</button><button class="btn-primary" style="width:auto;padding:10px 24px;" onclick="Hub._saveSettings()">저장하기</button></div>
+      <div class="edit-buttons"><button class="btn-cancel" onclick="this.closest('.modal-overlay').classList.remove('show')">취소</button><button class="btn-primary" onclick="Hub._saveSettings()">저장하기</button></div>
     </div></div>`;m.classList.add('show');
   }
 
@@ -2004,7 +2004,7 @@ const Hub = (() => {
       <div class="edit-field" style="margin-top:12px;"><label>주소</label><input id="miAddr" value="${esc(pr.address||'')}" placeholder="사무소 주소"></div>
       <div class="edit-field" style="margin-top:12px;"><label>카카오 오픈채팅 URL</label><input id="miKakao" value="${esc(pr.kakao_chat_url||'')}" placeholder="https://open.kakao.com/o/..."><div style="font-size:11px;color:var(--text-light);margin-top:4px;">카카오톡 앱 → 오픈채팅 → 1대1 오픈채팅방 만들기 → 링크 복사</div></div>
       <div class="edit-field" style="margin-top:12px;"><label>전문 지역 (최대 3개)</label><input id="miRegions" value="${esc((pr.specialty_regions||[]).join(', '))}" placeholder="예: 중랑구, 노원구, 성북구"><div style="font-size:11px;color:var(--text-light);margin-top:4px;">쉼표(,)로 구분. 중개사 홈 상단 배지로 노출됩니다.</div></div>
-      <div class="edit-buttons"><button class="btn-cancel" onclick="this.closest('.modal-overlay').classList.remove('show')">취소</button><button class="btn-primary" style="width:auto;padding:10px 24px;" onclick="Hub._saveMyInfo()">저장</button></div>
+      <div class="edit-buttons"><button class="btn-cancel" onclick="this.closest('.modal-overlay').classList.remove('show')">취소</button><button class="btn-primary" onclick="Hub._saveMyInfo()">저장</button></div>
     </div></div>`;m.classList.add('show');
   }
 
