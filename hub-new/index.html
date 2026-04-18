@@ -4341,7 +4341,8 @@ const App = {
       else{console.log('[Kakao] 이미 초기화됨');}
     }catch(e){console.error('[Kakao] init 오류:',e);}
     // 최초 사용자 프로필 설정 자동 트리거
-    if(Auth.profile&&!Auth.profile.business_name) Hub._openMyInfo();
+    // profile row 자체가 없는 경우(가입만 하고 이탈)도 포함 — 온보딩 퍼널 이탈 방지
+    if(!Auth.profile||!Auth.profile.business_name) Hub._openMyInfo();
     // ?edit=id 파라미터 처리
     const editId=new URLSearchParams(location.search).get('edit');
     if(editId){Hub.openPanel('my');setTimeout(()=>PanelCards.edit(editId),500);}
