@@ -554,6 +554,10 @@ def run_phase5(with_api=False):
         if dpid.startswith(("apt-", "offi-")):
             continue
 
+        # 거래 없는 단지는 build_danji_pages.py에서 HTML 스킵 → 검증도 스킵
+        if not any(recent.get(c) for c in cats):
+            continue
+
         if not cats:
             errs["no_cats"].append(name); continue
 
@@ -592,7 +596,7 @@ def run_phase5(with_api=False):
 
     for label, key, is_warn in [
         ("categories 없음",         "no_cats",       False),
-        ("평형에 거래 없음",           "cat_no_trade",  False),
+        ("평형에 거래 없음",           "cat_no_trade",  True),  # 단지 전체는 거래 있음 — HTML 생성됨
         ("가격 0 이하",               "zero_price",    False),
         ("날짜 형식 오류",             "bad_date",      False),
         ("최근가 > 최고가",            "recent_gt_high",False),
@@ -618,15 +622,21 @@ def run_phase5(with_api=False):
 
     # 구버전 ID (apt-*, offi-*)는 HTML 빌드 대상이 아니므로 검증 대상에서 제외
     legacy_skipped = 0
+    no_trade_skipped = 0
     for dp in rows:
         dpid  = dp.get("id", "")
         name  = dp.get("complex_name", "")
         recent = dp.get("recent_trade") or {}
+        cats  = dp.get("categories") or []
         if not dpid:
             continue
         # 레거시 prefix(apt-/offi-)는 HTML 안 만드는 게 정상 — 누락 집계에서 제외
         if dpid.startswith(("apt-", "offi-")):
             legacy_skipped += 1
+            continue
+        # 거래 없는 단지는 build_danji_pages.py에서 HTML 스킵 — 누락 집계에서 제외
+        if not any(recent.get(c) for c in cats):
+            no_trade_skipped += 1
             continue
 
         # DB id는 'A33173403' 형태 → 파일명 끝에 '-a33173403' 포함
@@ -659,8 +669,8 @@ def run_phase5(with_api=False):
             except Exception:
                 pass
 
-    check_total = max(len(rows) - legacy_skipped, 1)
-    print(f"  파일 매칭: {matched:,}개  |  HTML 없음: {len(missing_html):,}개  |  레거시 제외: {legacy_skipped:,}개")
+    check_total = max(len(rows) - legacy_skipped - no_trade_skipped, 1)
+    print(f"  파일 매칭: {matched:,}개  |  HTML 없음: {len(missing_html):,}개  |  레거시 제외: {legacy_skipped:,}개  |  거래 없음 제외: {no_trade_skipped:,}개")
     # HTML 없는 단지 수가 검증 대상(레거시 제외) 대비 5% 초과면 FAIL, 이하면 WARN
     missing_rate = len(missing_html) / check_total * 100
     if missing_rate > 5:
