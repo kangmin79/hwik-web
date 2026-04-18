@@ -901,6 +901,18 @@
             }).join('');
             await addMsg(btnsHtml, 'jump-bubble');
         }
+
+        // 마지막 카드면 중개사 홈 백링크
+        if (currentIdx === allCards.length - 1) {
+            const aId = (agentInfo && agentInfo.id) || (allCards[0] && allCards[0].agent_id) || '';
+            if (aId) {
+                await wait(500);
+                const cardsParam = allCards.map(c => c.id).filter(Boolean).join(',');
+                const homeHref = `/agent.html?id=${encodeURIComponent(aId)}${cardsParam ? `&cards=${encodeURIComponent(cardsParam)}` : ''}`;
+                const homeBtn = `<a href="${homeHref}" class="jump-btn" style="display:block;text-decoration:none;color:#6366f1;font-weight:600;">이 중개사 홈 보기 →<br><span style="color:#888;font-size:11px;font-weight:400;">다른 매물·소개·연락처</span></a>`;
+                await addMsg(homeBtn, 'jump-bubble');
+            }
+        }
     }
 
     function showNextProperty() {

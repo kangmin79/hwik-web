@@ -1312,7 +1312,7 @@
         }
 
         function _buildInfoCard(ctx) {
-            const { type, price, name, location, area, floor, room, features, agentName, agentPhone, agentPhoto, photos, agentComment } = ctx;
+            const { type, price, name, location, area, floor, room, features, agentName, agentPhone, agentPhoto, agentId, cardId, photos, agentComment } = ctx;
             const cardNameStr = [location, name].filter(Boolean).join(' · ');
             const specsHtml = _buildSpecsHtml([area, floor, room], features, {type, location, name});
             const hasPhotos = photos && photos.length > 0;
@@ -1365,7 +1365,7 @@
                 window._currentPhotos = photos;
                 window._infoPhotoIdx = 0;
             }
-            _renderFixedBar(agentName, agentPhone, agentPhoto);
+            _renderFixedBar(agentName, agentPhone, agentPhoto, agentId, cardId);
             return cardHtml;
         }
 
@@ -1422,7 +1422,7 @@
         }
 
         // ===== 하단 고정 바 (텔레그램 스타일) =====
-        function _renderFixedBar(agentName, agentPhone, agentPhoto) {
+        function _renderFixedBar(agentName, agentPhone, agentPhoto, agentId, cardId) {
             let bar = document.getElementById('fixedBottomBar');
             if (!bar) {
                 bar = document.createElement('div');
@@ -1435,11 +1435,15 @@
             const avatarInner = agentPhoto
                 ? `<img src="${esc(agentPhoto)}" style="width:100%;height:100%;object-fit:cover;">`
                 : initial;
+            const homeHref = agentId ? `/agent.html?id=${encodeURIComponent(agentId)}${cardId ? `&cards=${encodeURIComponent(cardId)}` : ''}` : '';
+            const subHtml = agentId
+                ? `<a href="${homeHref}" class="agent-sub" style="color:#818cf8;text-decoration:none;">중개사 홈 →</a>`
+                : `<div class="agent-sub">중개사</div>`;
             bar.innerHTML = `
               <div class="bar-agent-row">
                 <div style="width:28px;height:28px;border-radius:50%;background:rgba(99,102,241,0.1);border:1.5px solid #6366f1;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#6366f1;flex-shrink:0;overflow:hidden;">${avatarInner}</div>
                 <div class="agent-name">${esc(agentName)}</div>
-                <div class="agent-sub">중개사</div>
+                ${subHtml}
               </div>
               <div class="bar-btn-row">
                 ${tel ? `<a href="tel:${tel}" class="contact-btn btn-call">
@@ -1544,6 +1548,8 @@
                 agentPhoto: agent?.profile_photo || null,
                 photos: data.photos || [],
                 agentComment: data.agent_comment || '',
+                agentId: agent?.id || data.agent_id || '',
+                cardId: data.id || '',
             };
 
             updateOGTags(data);
