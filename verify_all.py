@@ -393,9 +393,10 @@ def run_phase2(all_paths, root_files, idx):
 def run_phase3(idx, quick=False):
     sec(f"Phase 3: HTTP 응답 전수 (host={VERIFY_HOST})")
 
+    # 정적 파일명(.html)로 검증 — Python http.server 는 확장자 생략 URL 미지원
     urls = []
-    for slug in idx["gu"]:      urls.append(f"/gu/{slug}")
-    for slug in idx["ranking"]: urls.append(f"/ranking/{slug}")
+    for slug in idx["gu"]:      urls.append(f"/gu/{slug}.html")
+    for slug in idx["ranking"]: urls.append(f"/ranking/{slug}.html")
 
     dong_list  = list(idx["dong"])
     danji_list = list(idx["danji"])
@@ -404,8 +405,8 @@ def run_phase3(idx, quick=False):
         dong_list  = random.sample(dong_list,  min(200,  len(dong_list)))
         danji_list = random.sample(danji_list, min(500,  len(danji_list)))
 
-    for slug in dong_list:  urls.append(f"/dong/{slug}")
-    for slug in danji_list: urls.append(f"/danji/{slug}")
+    for slug in dong_list:  urls.append(f"/dong/{slug}.html")
+    for slug in danji_list: urls.append(f"/danji/{slug}.html")
     for u in ["/", "/sitemap.xml", "/robots.txt"]: urls.append(u)
 
     mode = "샘플" if quick else "전수"
@@ -414,11 +415,20 @@ def run_phase3(idx, quick=False):
 
     def check(rel):
         url = VERIFY_HOST + quote(rel, safe="/?=&%")
-        try:
-            r = http_session.head(url, timeout=HTTP_TIMEOUT, allow_redirects=True)
-            return (rel, r.status_code, "")
-        except Exception as e:
-            return (rel, -1, str(e)[:60])
+        last_err = ""
+        for attempt in range(2):   # 일시 네트워크 흔들림 재시도 1회
+            try:
+                r = http_session.head(url, timeout=HTTP_TIMEOUT, allow_redirects=True)
+                # 일부 서버는 HEAD 미지원(405/501) → GET 폴백
+                if r.status_code in (405, 501):
+                    r = http_session.get(url, timeout=HTTP_TIMEOUT, allow_redirects=True, stream=True)
+                    r.close()
+                return (rel, r.status_code, "")
+            except Exception as e:
+                last_err = str(e)[:60]
+                if attempt == 0:
+                    time.sleep(0.3)
+        return (rel, -1, last_err)
 
     t0 = time.time()
     results = []
@@ -499,7 +509,7 @@ def _sb_get(table, params):
         p = {**params, "limit": str(limit), "offset": str(offset)}
         r = http_session.get(
             f"{SUPABASE_URL}/rest/v1/{table}",
-            headers=SB_HEADERS, params=p, timeout=30, verify=False,
+            headers=SB_HEADERS, params=p, timeout=30,
         )
         if r.status_code != 200:
             print(f"  [DB ERROR] {table}: {r.status_code}")
@@ -532,12 +542,17 @@ def run_phase5(with_api=False):
 
     errs = defaultdict(list)
     for dp in rows:
+        dpid   = dp.get("id", "")
         name   = dp.get("complex_name", "")
         cats   = dp.get("categories") or []
         recent = dp.get("recent_trade") or {}
         high   = dp.get("all_time_high") or {}
         jr     = dp.get("jeonse_rate")
         pm     = dp.get("pyeongs_map") or {}
+
+        # 레거시 ID(apt-/offi-)는 HTML 빌드 제외 대상 → 정합성 검증도 스킵
+        if dpid.startswith(("apt-", "offi-")):
+            continue
 
         if not cats:
             errs["no_cats"].append(name); continue
@@ -601,11 +616,17 @@ def run_phase5(with_api=False):
     missing_html = []
     matched = 0
 
+    # 구버전 ID (apt-*, offi-*)는 HTML 빌드 대상이 아니므로 검증 대상에서 제외
+    legacy_skipped = 0
     for dp in rows:
         dpid  = dp.get("id", "")
         name  = dp.get("complex_name", "")
         recent = dp.get("recent_trade") or {}
         if not dpid:
+            continue
+        # 레거시 prefix(apt-/offi-)는 HTML 안 만드는 게 정상 — 누락 집계에서 제외
+        if dpid.startswith(("apt-", "offi-")):
+            legacy_skipped += 1
             continue
 
         # DB id는 'A33173403' 형태 → 파일명 끝에 '-a33173403' 포함
@@ -638,9 +659,10 @@ def run_phase5(with_api=False):
             except Exception:
                 pass
 
-    print(f"  파일 매칭: {matched:,}개  |  HTML 없음: {len(missing_html):,}개")
-    # HTML 없는 단지 수가 DB 전체의 5% 초과면 FAIL (빌드 이상), 이하면 WARN
-    missing_rate = len(missing_html) / len(rows) * 100 if rows else 0
+    check_total = max(len(rows) - legacy_skipped, 1)
+    print(f"  파일 매칭: {matched:,}개  |  HTML 없음: {len(missing_html):,}개  |  레거시 제외: {legacy_skipped:,}개")
+    # HTML 없는 단지 수가 검증 대상(레거시 제외) 대비 5% 초과면 FAIL, 이하면 WARN
+    missing_rate = len(missing_html) / check_total * 100
     if missing_rate > 5:
         fail += show(f"danji_pages 있는데 HTML 없음 ({missing_rate:.1f}% — 빌드 이상)", missing_html)
     else:
