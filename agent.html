@@ -182,7 +182,7 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
   </div>
   <div class="divider"></div>
   <div class="section">
-    <div class="section-title">등록 매물 <small id="cardCount"></small></div>
+    <div class="section-title"><span id="cardSectionLabel">등록 매물</span> <small id="cardCount"></small></div>
     <div class="trade-list" id="cardList">
 
       <div class="skel-item">
@@ -347,7 +347,7 @@ async function load() {
     return;
   }
 
-  // 좌표 필터 모드 (레거시)
+  // 좌표 필터 모드 (레거시): 좌표 주변 매물 5건
   if (isFilterMode) {
     const sameComplex = cards.filter(c => c.lat && c.lng && distKm(filterLat, filterLng, c.lat, c.lng) <= 0.2);
     const others = cards
@@ -357,14 +357,25 @@ async function load() {
     window._allCards = cards;
     const banner = document.getElementById('moreBanner');
     banner.href = `/agent.html?id=${agentId}`;
-    banner.style.display = 'flex';
+    banner.style.display = 'none'; // 전체 인벤토리 유도 배너 제거 (공개 노출 방지)
     loadNearby();
+    renderProfile(p, cards.length);
+    renderCards(cards.slice(0, 10), cards.length);
+    return;
   }
 
-  // 일반 모드: 최신순 10개 + 더보기
-  renderProfile(p, cards.length);
-  window._allCards = cards;
-  renderCards(cards.slice(0, 10), cards.length);
+  // 선택 카드 모드: 명시적으로 공유된 카드 목록만 (그대로 노출)
+  if (isCardsMode) {
+    renderProfile(p, cards.length);
+    window._allCards = cards;
+    renderCards(cards.slice(0, 10), cards.length);
+    return;
+  }
+
+  // 파라미터 없는 일반 모드: 공개 샘플 뷰 (인벤토리 전체 노출 방지)
+  // — 구글/카드 유입이 아닌 직접 방문이므로 거래유형별 대표 1건 + 상담 CTA만 노출
+  renderProfile(p, 0);
+  renderCardsPublic(cards);
 }
 
 async function loadNearby() {
@@ -575,6 +586,51 @@ function cardItemHtml(card) {
     </div>
     <span class="listing-link">보기 →</span>
   </div>`;
+}
+
+// 파라미터 없는 일반 모드: 거래유형별 대표 1건씩 + 상담 CTA
+// (구글 유입은 isDanjiMode, 카드 유입은 isCardsMode로 이미 분기되어 이 함수 호출 안 됨)
+function renderCardsPublic(cards) {
+  const listEl = document.getElementById('cardList');
+  const countEl = document.getElementById('cardCount');
+  const labelEl = document.getElementById('cardSectionLabel');
+  if (labelEl) labelEl.textContent = '주요 매물';
+  if (countEl) countEl.textContent = '';
+
+  if (!cards.length) {
+    listEl.innerHTML = `<div class="listing-empty"><div class="listing-empty-text">등록된 매물이 없습니다</div></div>`;
+    return;
+  }
+
+  const baseOrder = ['매매', '전세', '월세', '반전세'];
+  const seen = {};
+  const picks = [];
+  for (const c of cards) {
+    const t = c.property?.type || '기타';
+    if (seen[t]) continue;
+    seen[t] = true;
+    picks.push(c);
+  }
+  picks.sort((a, b) => {
+    const ai = baseOrder.indexOf(a.property?.type || '');
+    const bi = baseOrder.indexOf(b.property?.type || '');
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+  });
+
+  window._cardsData = {};
+  picks.forEach(c => { window._cardsData[c.id] = c; });
+
+  let html = picks.map(c => cardItemHtml(c)).join('');
+  const ctaBits = [];
+  if (agentPhone) ctaBits.push(`<a href="tel:${esc(agentPhone)}" class="listing-empty-btn" style="margin:0 3px;">📞 전화 문의</a>`);
+  if (agentKakaoUrl) ctaBits.push(`<a href="${esc(agentKakaoUrl)}" target="_blank" rel="noopener" class="listing-empty-btn" style="margin:0 3px;background:#fae100;color:#3c1e1e;">💬 카톡 상담</a>`);
+  if (ctaBits.length) {
+    html += `<div style="margin-top:16px;padding:18px 14px;background:var(--yellow-bg);border:1.5px dashed var(--yellow);border-radius:var(--radius);text-align:center;">
+      <div style="font-size:13px;color:var(--sub);margin-bottom:10px;line-height:1.5;">전체 매물은 중개사에게<br>직접 문의해주세요</div>
+      ${ctaBits.join('')}
+    </div>`;
+  }
+  listEl.innerHTML = html;
 }
 
 function renderCards(cards, totalCount) {
