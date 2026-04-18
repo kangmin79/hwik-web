@@ -134,7 +134,12 @@ def fetch_all_danji():
             },
             timeout=30,
         )
-        raw = resp.json() if resp.status_code == 200 else []
+        try:
+            raw = resp.json() if resp.status_code == 200 else []
+        except requests.exceptions.JSONDecodeError as e:
+            print(f"⚠️ JSON 파싱 오류 (offset={offset}): {e}")
+            print(f"응답 상태: {resp.status_code}, 응답 길이: {len(resp.text)}")
+            raw = []
         if not raw:
             break
         # apt- 구버전 단지 제외 (필터 전 길이로 종료 판정해야 조기 종료 방지)
