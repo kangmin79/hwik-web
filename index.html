@@ -86,6 +86,14 @@ footer a { color: #6b7280; }
 .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #9ca3af; pointer-events: none; }
 .search-clear { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: 0; color: #9ca3af; cursor: pointer; font-size: 18px; padding: 4px; display: none; }
 .search-results { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: #fff; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.12); max-height: 440px; overflow-y: auto; z-index: 100; }
+/* 검색 포커스 시: 모바일 키보드에 가리지 않도록 히어로 축소 & 입력창 상단 고정 */
+body.searching .hero { min-height: auto !important; justify-content: flex-start !important; padding-top: 12px !important; padding-bottom: 0 !important; }
+body.searching .hero-logo,
+body.searching .hero-tagline,
+body.searching .hero-stats,
+body.searching .hero-chips,
+body.searching .sr-only { display: none !important; }
+body.searching .search-results { max-height: 70vh; }
 .search-section { padding: 4px 0; border-bottom: 1px solid #f0f0f4; }
 .search-section:last-child { border-bottom: 0; }
 .search-section-title { font-size: 11px; color: #9ca3af; padding: 8px 16px 4px; font-weight: 600; letter-spacing: 0.5px; }
@@ -336,6 +344,21 @@ footer a { color: #6b7280; }
   qEl.addEventListener('focus', () => {
     if (!INDEX) loadIndex();
     if (qEl.value.trim()) render(search(qEl.value));
+    document.body.classList.add('searching');
+    // 모바일 키보드가 올라오기 전에 입력창을 뷰포트 상단으로 스크롤
+    setTimeout(() => {
+      const wrap = qEl.closest('.search-wrap');
+      if (wrap) {
+        wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        window.scrollBy(0, -12);
+      }
+    }, 150);
+  });
+  qEl.addEventListener('blur', () => {
+    // 결과 클릭으로 떠나는 경우 제외 — 잠깐 유지
+    setTimeout(() => {
+      if (document.activeElement !== qEl) document.body.classList.remove('searching');
+    }, 120);
   });
   clearBtn.addEventListener('click', () => {
     qEl.value = '';
@@ -344,7 +367,10 @@ footer a { color: #6b7280; }
     qEl.focus();
   });
   document.addEventListener('click', (e) => {
-    if (!e.target.closest('.search-wrap')) box.hidden = true;
+    if (!e.target.closest('.search-wrap')) {
+      box.hidden = true;
+      document.body.classList.remove('searching');
+    }
   });
 })();
 </script>
