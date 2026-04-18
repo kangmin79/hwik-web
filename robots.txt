@@ -27,4 +27,57 @@ Disallow: /*.py$
 Disallow: /*.json$
 Disallow: /.env
 
+# ─────────────────────────────────────────────────────────────
+# AI 크롤러 명시적 허용 (학습·실시간 검색 인덱싱)
+# 기본적으로 User-agent: * 에 포함되나, 일부 AI 봇은 자기 UA가
+# 명시되어 있을 때만 크롤링 → 중복 블록으로 안전 확보
+# ─────────────────────────────────────────────────────────────
+
+# OpenAI (ChatGPT 학습)
+User-agent: GPTBot
+Allow: /
+
+# OpenAI (ChatGPT 실시간 웹 검색)
+User-agent: ChatGPT-User
+Allow: /
+
+# OpenAI (브라우징/플러그인)
+User-agent: OAI-SearchBot
+Allow: /
+
+# Anthropic (Claude 학습)
+User-agent: ClaudeBot
+Allow: /
+
+# Anthropic (Claude 실시간)
+User-agent: Claude-Web
+Allow: /
+
+# Google Gemini 학습 (Googlebot과 분리된 별도 UA)
+User-agent: Google-Extended
+Allow: /
+
+# Perplexity
+User-agent: PerplexityBot
+Allow: /
+
+# Apple Intelligence
+User-agent: Applebot-Extended
+Allow: /
+
+# Common Crawl (대부분의 LLM 학습 데이터 원천)
+User-agent: CCBot
+Allow: /
+
+# Amazon Nova
+User-agent: Amazonbot
+Allow: /
+
+# Meta AI
+User-agent: Meta-ExternalAgent
+Allow: /
+
+User-agent: FacebookBot
+Allow: /
+
 Sitemap: https://hwik.kr/sitemap.xml
