@@ -867,37 +867,40 @@ function showToast(msg) {
 
 const isKakaoInApp = /KAKAOTALK/i.test(navigator.userAgent);
 
+function _copyCardInquiry() {
+  const card = window._cardsData?.[selectedCardId];
+  if (!card) return false;
+  const p = card.property || {};
+  const text = `[휙 매물 문의]\n${p.type||''} ${p.price||''}\n${[p.complex,p.location,p.area].filter(Boolean).join(' · ')}\nhttps://hwik.kr/property_chat.html?id=${selectedCardId}`;
+  try { navigator.clipboard.writeText(text); return true; } catch(e) { return false; }
+}
+
 function openKakao() {
   // ?cards= 모드 + 카카오 인앱: 대화창으로 바로 돌아가기
   if (isCardsMode && isKakaoInApp) {
+    const copied = _copyCardInquiry();
     const btn = document.getElementById('sheetBtnKakao');
-    btn.textContent = '돌아가는 중...';
+    btn.textContent = copied ? '✓ 복사됨 — 대화창에 붙여넣기' : '돌아가는 중...';
+    if (copied) showToast('📋 매물 정보 복사됨 — 대화창에서 길게 눌러 붙여넣기');
     let closed = false;
     window.addEventListener('pagehide', () => { closed = true; }, { once: true });
     window.addEventListener('blur', () => { closed = true; }, { once: true });
-    // 1. window.close (JS로 열린 창이면 동작)
-    window.close();
-    // 2. history.back (히스토리 있으면 동작)
-    setTimeout(() => { if (!closed) history.back(); }, 150);
-    // 3. kakaotalk:// 앱 스킴 (WebView가 인터셉트해서 앱으로 돌아감)
-    setTimeout(() => { if (!closed) { window.location.href = 'kakaotalk://'; } }, 350);
-    // 4. 최후 수단: 안내 토스트
+    const delay = copied ? 1200 : 0;
     setTimeout(() => {
-      if (!closed) {
-        btn.innerHTML = '✕ 닫기';
-        showToast('왼쪽 상단 × 버튼을 눌러 대화로 돌아가세요');
-      }
-    }, 800);
+      window.close();
+      setTimeout(() => { if (!closed) history.back(); }, 150);
+      setTimeout(() => { if (!closed) { window.location.href = 'kakaotalk://'; } }, 350);
+      setTimeout(() => {
+        if (!closed) {
+          btn.innerHTML = '✕ 닫기';
+          showToast('왼쪽 상단 × 버튼을 눌러 대화로 돌아가세요');
+        }
+      }, 800);
+    }, delay);
     return;
   }
   if (!agentKakaoUrl) return;
-  const card = window._cardsData?.[selectedCardId];
-  let copied = false;
-  if (card) {
-    const p = card.property || {};
-    const text = `[휙 매물 문의]\n${p.type||''} ${p.price||''}\n${[p.complex,p.location,p.area].filter(Boolean).join(' · ')}\nhttps://hwik.kr/property_chat.html?id=${selectedCardId}`;
-    try { navigator.clipboard.writeText(text); copied = true; } catch(e) {}
-  }
+  const copied = _copyCardInquiry();
   const btn = document.getElementById('sheetBtnKakao');
   btn.textContent = '✓ 복사됨 — 채팅창에 붙여넣기';
   setTimeout(() => { btn.innerHTML = '💬 카카오톡 문의'; }, 2000);
