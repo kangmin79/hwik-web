@@ -116,37 +116,59 @@ def josa(word, particle_pair="은/는"):
 
 
 # ── Supabase 조회 ─────────────────────────────────────────
+# limit 500 → 200 축소 사유: 한 페이지 응답이 9MB 넘으면 프록시에서 JSON 잘림 사고 발생
+PAGE_LIMIT = 200
+
+
+def _get_page(url, params, max_attempts=3):
+    """Supabase GET + JSON 파싱 + 재시도(2s, 4s, 6s). 최종 실패 시 raise."""
+    last_err = None
+    for attempt in range(max_attempts):
+        try:
+            resp = requests.get(
+                url,
+                headers={**SB_HEADERS, "Prefer": ""},
+                params=params,
+                timeout=60,
+            )
+            if resp.status_code != 200:
+                last_err = f"HTTP {resp.status_code}: {resp.text[:200]}"
+            else:
+                return resp.json()
+        except (requests.exceptions.JSONDecodeError,
+                requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout) as e:
+            last_err = f"{type(e).__name__}: {e}"
+        if attempt < max_attempts - 1:
+            wait = 2 * (attempt + 1)
+            print(f"  ⚠️ Supabase 재시도 {attempt+1}/{max_attempts} ({wait}s 대기): {last_err}")
+            time.sleep(wait)
+    raise RuntimeError(f"Supabase fetch 실패 (params={params}): {last_err}")
+
+
 def fetch_all_danji():
     all_data = []
     offset = 0
     while True:
-        resp = requests.get(
+        raw = _get_page(
             f"{SUPABASE_URL}/rest/v1/danji_pages",
-            headers={**SB_HEADERS, "Prefer": ""},
-            params={
+            {
                 "select": "id,complex_name,location,address,build_year,total_units,"
                           "categories,recent_trade,all_time_high,jeonse_rate,"
                           "nearby_subway,nearby_school,lat,lng,price_history,updated_at,builder",
                 "id": "not.like.offi-*",
                 "order": "id",
                 "offset": offset,
-                "limit": 500,
+                "limit": PAGE_LIMIT,
             },
-            timeout=30,
         )
-        try:
-            raw = resp.json() if resp.status_code == 200 else []
-        except requests.exceptions.JSONDecodeError as e:
-            print(f"⚠️ JSON 파싱 오류 (offset={offset}): {e}")
-            print(f"응답 상태: {resp.status_code}, 응답 길이: {len(resp.text)}")
-            raw = []
         if not raw:
             break
         # apt- 구버전 단지 제외 (필터 전 길이로 종료 판정해야 조기 종료 방지)
         data = [d for d in raw if not d.get("id", "").startswith("apt-")]
         all_data.extend(data)
-        offset += 500
-        if len(raw) < 500:   # raw 기준으로 판정
+        offset += PAGE_LIMIT
+        if len(raw) < PAGE_LIMIT:
             break
         time.sleep(0.2)
     return all_data

@@ -88,28 +88,54 @@ def format_price(manwon):
 
 
 # ── Supabase 조회 ─────────────────────────────────────────
+PAGE_LIMIT = 200
+
+
+def _get_page(url, params, max_attempts=3):
+    """Supabase GET + JSON 파싱 + 재시도(2s,4s,6s). 최종 실패 시 raise."""
+    last_err = None
+    for attempt in range(max_attempts):
+        try:
+            resp = requests.get(
+                url,
+                headers={**SB_HEADERS, "Prefer": ""},
+                params=params,
+                timeout=60,
+            )
+            if resp.status_code != 200:
+                last_err = f"HTTP {resp.status_code}: {resp.text[:200]}"
+            else:
+                return resp.json()
+        except (requests.exceptions.JSONDecodeError,
+                requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout) as e:
+            last_err = f"{type(e).__name__}: {e}"
+        if attempt < max_attempts - 1:
+            wait = 2 * (attempt + 1)
+            print(f"  ⚠️ Supabase 재시도 {attempt+1}/{max_attempts} ({wait}s 대기): {last_err}")
+            time.sleep(wait)
+    raise RuntimeError(f"Supabase fetch 실패 (params={params}): {last_err}")
+
+
 def fetch_all_danji():
     all_data = []
     offset = 0
     while True:
-        resp = requests.get(
+        data = _get_page(
             f"{SUPABASE_URL}/rest/v1/danji_pages",
-            headers={**SB_HEADERS, "Prefer": ""},
-            params={
+            {
                 "select": "id,complex_name,location,address,categories,recent_trade,"
                           "jeonse_rate,total_units,build_year",
                 "order": "id",
                 "offset": offset,
-                "limit": 500,
+                "limit": PAGE_LIMIT,
             },
-            timeout=30,
         )
-        data = resp.json() if resp.status_code == 200 else []
         if not data:
             break
         all_data.extend(data)
-        offset += 500
-        if len(data) < 500:
+        offset += PAGE_LIMIT
+        if len(data) < PAGE_LIMIT:
             break
         time.sleep(0.2)
     return all_data

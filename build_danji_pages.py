@@ -130,34 +130,60 @@ def josa(word, particle_pair="은/는"):
 
 
 # ── Supabase 조회 ─────────────────────────────────────────
+PAGE_LIMIT = 200
+
+
+def _get_page(url, params, max_attempts=3):
+    """Supabase GET + JSON 파싱 + 재시도(2s,4s,6s). 최종 실패 시 raise."""
+    last_err = None
+    for attempt in range(max_attempts):
+        try:
+            resp = requests.get(
+                url,
+                headers={**SB_HEADERS, "Prefer": ""},
+                params=params,
+                timeout=60,
+            )
+            if resp.status_code != 200:
+                last_err = f"HTTP {resp.status_code}: {resp.text[:200]}"
+            else:
+                return resp.json()
+        except (requests.exceptions.JSONDecodeError,
+                requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout) as e:
+            last_err = f"{type(e).__name__}: {e}"
+        if attempt < max_attempts - 1:
+            wait = 2 * (attempt + 1)
+            print(f"  ⚠️ Supabase 재시도 {attempt+1}/{max_attempts} ({wait}s 대기): {last_err}")
+            time.sleep(wait)
+    raise RuntimeError(f"Supabase fetch 실패 (params={params}): {last_err}")
+
+
 def fetch_all_danji():
     all_data = []
     offset = 0
     while True:
-        resp = requests.get(
+        raw = _get_page(
             f"{SUPABASE_URL}/rest/v1/danji_pages",
-            headers={**SB_HEADERS, "Prefer": ""},
-            params={
+            {
                 "select": "id,complex_name,location,address,build_year,total_units,"
                           "categories,recent_trade,all_time_high,jeonse_rate,"
                           "price_history,"
                           "nearby_subway,nearby_school,nearby_complex,"
                           "lat,lng,top_floor,parking,heating,builder,updated_at",
-                "id": "not.like.offi-*",  # 오피스텔 제외 (apt- 구버전은 아래 Python 필터로 제거)
+                "id": "not.like.offi-*",
                 "order": "id",
                 "offset": offset,
-                "limit": 500,
+                "limit": PAGE_LIMIT,
             },
-            timeout=30,
         )
-        raw = resp.json() if resp.status_code == 200 else []
         if not raw:
             break
         # apt- 구버전 단지 제외
         data = [d for d in raw if not d.get("id", "").startswith("apt-")]
         all_data.extend(data)
-        offset += 500
-        if len(raw) < 500:  # raw 기준으로 종료 판단 (필터 후 길이로 하면 조기 종료 버그)
+        offset += PAGE_LIMIT
+        if len(raw) < PAGE_LIMIT:
             break
         time.sleep(0.2)
     return all_data
@@ -237,14 +263,12 @@ def fetch_complex_type_map():
     """
     result = {}
     offset = 0
+    BATCH = 500
     while True:
-        resp = requests.get(
+        batch = _get_page(
             f"{SUPABASE_URL}/rest/v1/apartments",
-            headers={**SB_HEADERS, "Prefer": ""},
-            params={"select": "kapt_code,complex_type", "limit": 1000, "offset": offset},
-            timeout=30,
+            {"select": "kapt_code,complex_type", "limit": BATCH, "offset": offset},
         )
-        batch = resp.json() if resp.status_code == 200 else []
         if not isinstance(batch, list) or not batch:
             break
         for row in batch:
@@ -252,8 +276,8 @@ def fetch_complex_type_map():
             ctype = row.get("complex_type")
             if code and ctype:
                 result[code] = ctype
-        offset += 1000
-        if len(batch) < 1000:
+        offset += BATCH
+        if len(batch) < BATCH:
             break
     return result
 
@@ -981,21 +1005,20 @@ def main():
     global APT_SLUG_MAP
     APT_SLUG_MAP = {}
     apt_offset = 0
+    APT_BATCH = 500
     while True:
-        resp = requests.get(
+        rows = _get_page(
             f"{SUPABASE_URL}/rest/v1/apartments",
-            headers=SB_HEADERS,
-            params={"select": "kapt_code,slug", "slug": "not.is.null", "order": "kapt_code", "offset": apt_offset, "limit": 1000},
-            timeout=30,
+            {"select": "kapt_code,slug", "slug": "not.is.null",
+             "order": "kapt_code", "offset": apt_offset, "limit": APT_BATCH},
         )
-        rows = resp.json() if resp.status_code == 200 else []
         if not rows:
             break
         for r in rows:
             if r.get("kapt_code") and r.get("slug"):
                 APT_SLUG_MAP[r["kapt_code"]] = r["slug"]
-        apt_offset += 1000
-        if len(rows) < 1000:
+        apt_offset += APT_BATCH
+        if len(rows) < APT_BATCH:
             break
     print(f"apartments.slug 맵 {len(APT_SLUG_MAP)}개 로드")
 
