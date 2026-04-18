@@ -182,7 +182,7 @@ def build_ranking_html(region, rank_type, data):
     area_label = REGION_LABELS.get(region, "전체")
     type_label = TYPE_LABELS.get(rank_type, "매매가")
     slug = f"{region}-{rank_type}"
-    canonical = f"https://hwik.kr/ranking/{slug}"
+    canonical = f"https://hwik.kr/ranking/{slug}.html"
 
     # 필터
     if region != "all":
@@ -204,8 +204,15 @@ def build_ranking_html(region, rank_type, data):
 
     top50 = sorted_data[:50]
     title = f"{area_label} 아파트 {type_label} 순위 TOP 50 - 휙"
-    top1_str = f" 1위 {top50[0]['name']} {format_price(top50[0]['price'])}." if top50 else ""
-    desc = f"{area_label} 아파트 {type_label} 순위 TOP 50.{top1_str} 국토교통부 실거래가 기반 최신 데이터."
+    _top1  = f"1위 {top50[0]['name']} {format_price(top50[0]['price'])}" if top50 else ""
+    _top2  = f"2위 {top50[1]['name']} {format_price(top50[1]['price'])}" if len(top50) > 1 else ""
+    _top3  = f"3위 {top50[2]['name']} {format_price(top50[2]['price'])}" if len(top50) > 2 else ""
+    _parts = [
+        f"{area_label} 아파트 {type_label} 순위 TOP 50",
+        _top1, _top2, _top3,
+        "국토교통부 공개시스템 실시간 기반",
+    ]
+    desc = ". ".join(p for p in _parts if p) + "."
 
     lines = []
 

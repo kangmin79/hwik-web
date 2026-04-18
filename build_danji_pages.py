@@ -915,7 +915,7 @@ def generate_page(d):
         desc_parts.append(f"{prop_type} 실거래가, 전세가, 시세 추이")
         desc = " ".join(desc_parts)
 
-    canonical = f"https://hwik.kr/danji/{url_quote(slug, safe='-')}"
+    canonical = f"https://hwik.kr/danji/{url_quote(slug, safe='-')}.html"
     jsonld = build_jsonld(d)
     fallback = build_fallback_html(d)
 

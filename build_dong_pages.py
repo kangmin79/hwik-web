@@ -216,7 +216,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
             first_addr = _a
             break
     slug = make_dong_slug(gu, dong, first_addr)
-    canonical = f"https://hwik.kr/dong/{url_quote(slug, safe='-')}"
+    canonical = f"https://hwik.kr/dong/{url_quote(slug, safe='-')}.html"
 
     # /gu/ 페이지 존재 여부: 전국 17개 광역시도
     has_gu_page = region in _GU_PAGE_REGIONS
@@ -280,9 +280,18 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
     title = f"{gu} {dong} 아파트 실거래가 시세 - 휙"
     _prices = [x["_best_trade"].get("price", 0) for x in tradeable if x.get("_best_trade")]
     _valid = [p for p in _prices if p > 0]
-    _price_range = f" {format_price(min(_valid))}~{format_price(max(_valid))}." if len(_valid) >= 2 else ""
     today = datetime.now().strftime('%Y-%m-%d')
-    desc = f"{gu} {dong} 아파트 {len(tradeable)}개 단지 실거래가.{_price_range} 국토교통부 실거래가 공개시스템 기반."
+    _price_range = f"{format_price(min(_valid))}~{format_price(max(_valid))}" if len(_valid) >= 2 else ""
+    _recent_name = most_recent.get("complex_name", "") if most_recent else ""
+    _recent_date = most_recent["_best_trade"].get("date", "") if most_recent else ""
+    _parts = [
+        f"{gu} {dong} 아파트 {len(tradeable)}개 단지 최근 실거래가",
+        _price_range,
+        "매매·전세·월세 최신 거래",
+        f"최근 {_recent_name} {_recent_date} 거래" if _recent_name and _recent_date else "",
+        "국토교통부 공개시스템 실시간 기반",
+    ]
+    desc = ". ".join(p for p in _parts if p) + "."
 
     # ── fallback 콘텐츠 ──
     lines = []

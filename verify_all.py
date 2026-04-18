@@ -267,6 +267,18 @@ def _check_seo(category, fpath, html, root_files, idx, errors):
         if is_int and not exists:
             errors["broken_links"].append((fid, href[:80]))
 
+    # canonical이 자기 자신(경로+.html)을 가리키는지 — 재발 방지 게이트
+    if category in ("danji", "dong", "gu", "ranking"):
+        m = CANONICAL_RE.search(html)
+        if m:
+            got = unquote(m.group(1))
+            if fpath.stem == "index":
+                expected = f"https://hwik.kr/{category}/"
+            else:
+                expected = f"https://hwik.kr/{category}/{fpath.name}"
+            if got != expected:
+                errors["canon_mismatch"].append((fid, f"got={got[:60]} expected={expected[:60]}"))
+
     # ── 2. JSON-LD 유효성 ───────────────────────────────
     blocks = JSONLD_RE.findall(html)
     if not blocks and category in ("danji", "dong"):
@@ -373,6 +385,7 @@ def run_phase2(all_paths, root_files, idx):
     fail += show("Breadcrumb position 오류", errors["bc_position"])
     fail += show("필수 @type 누락", errors["missing_type"])
     fail += show("canonUrl/id=undefined", errors["canon_undef"])
+    fail += show("canonical URL 불일치 (.html 누락 등)", errors["canon_mismatch"])
     fail += show("addressRegion 하드코딩", errors["addr_hardcoded"])
     fail += show("dong 페이지에 오피스텔 포함", errors["officetel_dong"])
     # ─ WARN 항목 (배포 차단 안 함)
