@@ -28,20 +28,29 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
 .breadcrumb a { color:var(--sub); text-decoration:none; }
 .breadcrumb span { margin:0 4px; }
 
-/* 헤더 */
-.header { background:var(--dark); padding:16px; }
-.header-top { display:flex; align-items:center; gap:12px; }
-.logo { width:44px; height:44px; background:var(--yellow); border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:16px; color:var(--dark); flex-shrink:0; overflow:hidden; }
-.logo img { width:100%; height:100%; object-fit:cover; border-radius:10px; }
-.header-info { flex:1; min-width:0; }
-.header-name-row { display:flex; align-items:center; justify-content:space-between; gap:6px; }
-.header-name { font-size:17px; font-weight:600; color:#fff; display:flex; align-items:center; gap:6px; min-width:0; }
-.header-badge { font-size:9px; font-weight:700; color:var(--dark); background:var(--yellow); padding:2px 5px; border-radius:3px; flex-shrink:0; letter-spacing:0.3px; }
-.header-phone { font-size:12px; color:var(--yellow); text-decoration:none; letter-spacing:0.3px; flex-shrink:0; }
-.header-phone:hover { opacity:0.8; }
-.header-sub { font-size:12px; color:rgba(255,255,255,0.55); margin-top:3px; }
-.header-address { font-size:11px; color:rgba(255,255,255,0.3); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.btn-map { font-size:11px; color:rgba(255,255,255,0.4); text-decoration:none; padding:2px 7px; border:1px solid rgba(255,255,255,0.15); border-radius:20px; margin-top:4px; display:inline-block; }
+/* 헤더 (신뢰형 라이트 카드) */
+.header { background:#fff; padding:20px 16px 16px; border-bottom:1px solid var(--border); }
+.header-top { display:flex; align-items:flex-start; gap:14px; margin-bottom:14px; }
+.logo { width:72px; height:72px; background:var(--yellow); border-radius:14px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:30px; color:var(--dark); flex-shrink:0; overflow:hidden; box-shadow:0 2px 10px rgba(245,200,66,0.28); }
+.logo img { width:100%; height:100%; object-fit:cover; border-radius:14px; }
+.header-info { flex:1; min-width:0; padding-top:4px; }
+.header-name-row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px; }
+.header-name { font-size:19px; font-weight:700; color:var(--text); letter-spacing:-0.3px; }
+.header-badge { font-size:10px; font-weight:700; color:var(--dark); background:var(--yellow); padding:3px 7px; border-radius:4px; letter-spacing:0.3px; }
+.header-sub { font-size:13px; color:var(--text); line-height:1.4; margin-bottom:2px; }
+.header-region { font-size:12px; color:var(--sub); }
+.header-actions { display:flex; gap:8px; }
+.action-btn { flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:13px 10px; border-radius:10px; font-size:14px; font-weight:600; text-decoration:none; transition:transform .1s, box-shadow .15s; }
+.action-btn:active { transform:scale(0.98); }
+.action-btn-call { background:var(--dark); color:#fff; }
+.action-btn-call:hover { box-shadow:0 3px 10px rgba(26,26,46,0.22); }
+.action-btn-kakao { background:#fae100; color:#3c1e1e; }
+.action-btn-kakao:hover { box-shadow:0 3px 10px rgba(250,225,0,0.35); }
+.action-btn.disabled { opacity:0.3; pointer-events:none; filter:grayscale(1); }
+.header-meta { margin-top:12px; display:flex; gap:8px; align-items:center; font-size:11px; color:var(--sub); }
+.header-meta a { color:var(--sub); text-decoration:none; padding:3px 8px; border:1px solid var(--border); border-radius:20px; }
+.header-meta a:hover { color:var(--text); border-color:var(--text); }
+.header-address { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:right; }
 
 /* 구분선 */
 .divider { height:8px; background:var(--card); }
@@ -163,7 +172,7 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
 <div class="wrap">
   <div class="breadcrumb">
     <a href="/">휙</a><span>›</span>
-    <a href="/gu.html">지역</a><span>›</span>
+    <a href="/gu.html" id="navRegion">지역</a><span>›</span>
     <span id="navName">중개사</span>
   </div>
   <div class="header">
@@ -171,16 +180,22 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
       <div class="logo" id="profileLogo">휙</div>
       <div class="header-info">
         <div class="header-name-row">
-          <div class="header-name" id="profileName">불러오는 중...<span class="header-badge">공인중개사</span></div>
-          <a class="header-phone" id="profilePhone" href="#"></a>
+          <div class="header-name" id="profileName">불러오는 중...</div>
+          <span class="header-badge">공인중개사</span>
         </div>
         <div class="header-sub" id="profileSub"></div>
-        <div class="header-address" id="profileAddress"></div>
-        <a class="btn-map" id="btnNaver" href="#" target="_blank" style="display:none">🗺 지도</a>
+        <div class="header-region" id="profileRegion"></div>
       </div>
     </div>
+    <div class="header-actions">
+      <a class="action-btn action-btn-call disabled" id="btnCall" href="#">📞 전화 문의</a>
+      <a class="action-btn action-btn-kakao disabled" id="btnKakao" href="#" target="_blank" rel="noopener">💬 카톡 상담</a>
+    </div>
+    <div class="header-meta">
+      <a id="btnNaver" href="#" target="_blank" style="display:none">🗺 지도 보기</a>
+      <span class="header-address" id="profileAddress"></span>
+    </div>
   </div>
-  <div class="divider"></div>
   <div class="section">
     <div class="section-title"><span id="cardSectionLabel">등록 매물</span> <small id="cardCount"></small></div>
     <div class="trade-list" id="cardList">
@@ -447,19 +462,39 @@ function formatPrice(manwon) {
   return `${manwon.toLocaleString()}만`;
 }
 
+function parseRegion(addr) {
+  if (!addr) return '';
+  const parts = addr.trim().split(/\s+/);
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const tok = parts[i];
+    if (/^[가-힣]{2,6}(구|군)$/.test(tok)) return tok;
+  }
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const tok = parts[i];
+    if (/^[가-힣]{2,6}시$/.test(tok) && !/(특별시|광역시|특별자치시)$/.test(tok)) return tok;
+  }
+  return parts[1] || '';
+}
+
 function renderProfile(p, count) {
   const name = p.agent_name || p.business_name || '공인중개사';
   document.title = `${name} — 휙`;
   document.getElementById('navName').textContent = name;
   document.getElementById('profileName').textContent = name;
 
-  document.getElementById('profileSub').textContent = p.business_name || '';
-  document.getElementById('profileAddress').textContent = p.address || '';
+  const biz = p.business_name || '';
+  const addr = p.address || '';
+  const region = parseRegion(addr);
+
+  document.getElementById('profileSub').textContent = biz;
+  document.getElementById('profileRegion').textContent = region ? `${region} 전문` : '';
+  document.getElementById('profileAddress').textContent = addr;
+  if (region) document.getElementById('navRegion').textContent = region;
 
   if (p.naver_map_url) {
     const btnNaver = document.getElementById('btnNaver');
     btnNaver.href = p.naver_map_url;
-    btnNaver.style.display = 'flex';
+    btnNaver.style.display = 'inline-block';
   }
 
   const logo = document.getElementById('profileLogo');
@@ -469,17 +504,23 @@ function renderProfile(p, count) {
     logo.textContent = name[0] || '중';
   }
 
+  const btnCall = document.getElementById('btnCall');
   if (p.phone) {
     agentPhone = p.phone;
-    const formatted = formatPhone(p.phone);
-    const phoneEl = document.getElementById('profilePhone');
-    phoneEl.textContent = formatted;
-    phoneEl.href = `tel:${esc(p.phone)}`;
+    btnCall.href = `tel:${esc(p.phone)}`;
+    btnCall.classList.remove('disabled');
     document.getElementById('sheetBtnCall').href = `tel:${esc(p.phone)}`;
   }
 
+  const btnKakao = document.getElementById('btnKakao');
+  if (p.kakao_chat_url) {
+    agentKakaoUrl = p.kakao_chat_url;
+    btnKakao.href = p.kakao_chat_url;
+    btnKakao.classList.remove('disabled');
+  }
+
   if (p.kakao_chat_url || (isCardsMode && isKakaoInApp)) {
-    agentKakaoUrl = p.kakao_chat_url || '';
+    agentKakaoUrl = p.kakao_chat_url || agentKakaoUrl;
     const btn = document.getElementById('sheetBtnKakao');
     btn.innerHTML = (isCardsMode && isKakaoInApp) ? '✕ 닫기' : '💬 카카오톡 문의';
     btn.classList.remove('hidden');
