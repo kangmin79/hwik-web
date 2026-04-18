@@ -37,8 +37,8 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
 .header-name-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:2px; }
 .header-name { font-size:16px; font-weight:700; color:var(--text); letter-spacing:-0.3px; }
 .header-badge { font-size:9px; font-weight:700; color:var(--dark); background:var(--yellow); padding:2px 6px; border-radius:3px; letter-spacing:0.2px; }
+.header-badge-region { background:var(--yellow-dim); border:1px solid var(--yellow); font-weight:600; }
 .header-sub { font-size:12px; color:var(--text); line-height:1.35; }
-.header-region { font-size:11px; color:var(--sub); margin-top:1px; }
 .header-actions { display:flex; gap:6px; }
 .action-btn { flex:1; display:flex; align-items:center; justify-content:center; gap:5px; padding:10px 8px; border-radius:8px; font-size:13px; font-weight:600; text-decoration:none; transition:transform .1s, background .15s; }
 .action-btn:active { transform:scale(0.98); }
@@ -182,9 +182,9 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
         <div class="header-name-row">
           <div class="header-name" id="profileName">불러오는 중...</div>
           <span class="header-badge">공인중개사</span>
+          <span class="header-badge header-badge-region" id="profileRegionBadge" style="display:none"></span>
         </div>
         <div class="header-sub" id="profileSub"></div>
-        <div class="header-region" id="profileRegion"></div>
         <div class="header-address" id="profileAddress"></div>
       </div>
     </div>
@@ -487,9 +487,13 @@ function renderProfile(p, count) {
   const region = parseRegion(addr);
 
   document.getElementById('profileSub').textContent = biz;
-  document.getElementById('profileRegion').textContent = region ? `${region} 전문` : '';
   document.getElementById('profileAddress').textContent = addr;
-  if (region) document.getElementById('navRegion').textContent = region;
+  if (region) {
+    document.getElementById('navRegion').textContent = region;
+    const rb = document.getElementById('profileRegionBadge');
+    rb.textContent = `${region} 전문`;
+    rb.style.display = 'inline-block';
+  }
 
   if (p.naver_map_url) {
     const btnNaver = document.getElementById('btnNaver');
