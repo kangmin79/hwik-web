@@ -19,3 +19,34 @@ audit_*.py
 clean_*.py
 qa_*.py
 validate_*.py
+
+# pyeongs 실험 데이터 (PC 로컬만)
+pyeongs_test/
+
+# 일회성 디버그·탐사·백업 산출물
+_*.txt
+og_test_*.png
+backup_*.json
+backup_*.py
+probe_*.py
+debug_*.py
+seed_test_*.py
+batch_*.py
+batch_*.js
+check_*.py
+
+# pyeongs 수집/검증 일회성
+run_pyeongs_*.py
+run_metro_pyeongs_*.sh
+collect_pyeongs_*.py
+apply_pyeongs_*.py
+verify_pyeongs*.py
+
+# 일회성 verify (verify_all/browser/data/seo/slug는 추적 유지)
+verify_aptseq_*
+verify_match_*
+verify_all_dong.py
+verify_final.py
+
+# 법정동 CSV (용량 큼)
+국토교통부_법정동코드_*.csv
