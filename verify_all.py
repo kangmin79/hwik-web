@@ -500,6 +500,49 @@ def run_phase4():
 
 
 # ══════════════════════════════════════════════════════════════
+# Phase 6: 내부 링크·리다이렉트 정합성 (파일 시스템)
+# ══════════════════════════════════════════════════════════════
+def run_phase6():
+    sec("Phase 6: 내부 링크·리다이렉트 정합성")
+    fail = 0
+
+    def stems(dirname):
+        d = BASE / dirname
+        return {f.stem for f in d.iterdir() if f.suffix == ".html"} if d.is_dir() else set()
+
+    danji_stems   = stems("danji")
+    dong_stems    = stems("dong")
+    gu_stems      = stems("gu")
+    ranking_stems = stems("ranking")
+
+    def load_json(rel):
+        try:
+            return json.loads((BASE / rel).read_text(encoding="utf-8"))
+        except Exception as e:
+            print(f"  ⚠ {rel} 읽기 실패: {e}")
+            return None
+
+    # 1. apt-redirect.json 타겟이 실제 단지 HTML에 있어야 함 (없으면 404)
+    red = load_json("danji/apt-redirect.json")
+    if isinstance(red, dict):
+        missing = [f"{k} → {v}" for k, v in red.items() if v not in danji_stems]
+        fail += show(f"apt-redirect 타겟 누락 ({len(red):,}개 중)", missing)
+
+    # 2. dong/gu/ranking 인덱스의 slug가 실제 HTML로 존재해야 함
+    for rel, label, pool in [
+        ("dong-index.json",    "dong-index 누락",    dong_stems),
+        ("gu-index.json",      "gu-index 누락",      gu_stems),
+        ("ranking-index.json", "ranking-index 누락", ranking_stems),
+    ]:
+        data = load_json(rel)
+        if isinstance(data, list):
+            missing = [s for s in data if s not in pool]
+            fail += show(f"{label} ({len(data):,}개 중)", missing)
+
+    return fail
+
+
+# ══════════════════════════════════════════════════════════════
 # Phase 5: DB 데이터 정합성 (Supabase)
 # ══════════════════════════════════════════════════════════════
 def _sb_get(table, params):
@@ -758,6 +801,8 @@ def main():
     else:
         results[5] = 0
 
+    results[6] = run_phase6()
+
     # ── 최종 요약 ──────────────────────────────────────────
     total_fail = sum(results.values())
     dt = time.time() - t_start
@@ -768,6 +813,7 @@ def main():
         3: "Phase 3  HTTP 응답",
         4: "Phase 4  브라우저",
         5: "Phase 5  DB 정합성",
+        6: "Phase 6  내부 링크 정합성",
     }
 
     print(f"\n{'=' * 70}")
