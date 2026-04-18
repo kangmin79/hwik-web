@@ -1986,7 +1986,7 @@ const Hub = (() => {
 
     const regionsRaw=document.getElementById('sRegions')?.value||'';
     const regions=regionsRaw.split(/[,·、]/).map(s=>s.trim()).filter(Boolean).slice(0,3);
-    const {error:upErr}=await Auth.sb.from('profiles').upsert({id:Auth.user.id,business_name:office,agent_name:name||'',address:addr||'',profile_photo:photoUrl,specialty_regions:regions.length?regions:null,...(kakao!==undefined&&{kakao_chat_url:kakao||null})});
+    const {error:upErr}=await Auth.sb.from('profiles').upsert({id:Auth.user.id,business_name:office,agent_name:name||'',phone:Auth.profile?.phone||'',address:addr||'',profile_photo:photoUrl,specialty_regions:regions.length?regions:null,...(kakao!==undefined&&{kakao_chat_url:kakao||null})});
     if(upErr){Toast.show('저장 실패: '+(upErr.message||upErr.code||'알 수 없음'));return;}
     await Auth.loadProfile();
     document.getElementById('editModal').classList.remove('show');
