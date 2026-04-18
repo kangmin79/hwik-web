@@ -209,7 +209,7 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
   </div>
   <div class="metrics" id="metrics" style="display:none">
     <div class="metric"><span class="metric-label">📬 매물</span> <span class="metric-num" id="mActive">-</span></div>
-    <div class="metric"><span class="metric-label">✅ 거래</span> <span class="metric-num" id="mDone">-</span></div>
+    <div class="metric"><span class="metric-label">🆕 이번 주</span> <span class="metric-num" id="mNew">-</span></div>
     <div class="metric"><span class="metric-label">🗓 활동</span> <span class="metric-num" id="mMonths">-</span></div>
   </div>
   <div class="section">
@@ -480,21 +480,22 @@ function formatPrice(manwon) {
 
 async function loadMetrics(createdAt) {
   try {
-    const [activeRes, doneRes] = await Promise.all([
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
+    const [activeRes, newRes] = await Promise.all([
       sb.from('cards').select('id', { count: 'exact', head: true })
         .eq('agent_id', agentId).neq('property->>type', '손님').eq('trade_status', '계약가능'),
       sb.from('cards').select('id', { count: 'exact', head: true })
-        .eq('agent_id', agentId).neq('property->>type', '손님').eq('trade_status', '완료'),
+        .eq('agent_id', agentId).neq('property->>type', '손님').gte('created_at', sevenDaysAgo),
     ]);
     const active = activeRes.count ?? 0;
-    const done = doneRes.count ?? 0;
+    const weekNew = newRes.count ?? 0;
     let months = 0;
     if (createdAt) {
       const diff = Date.now() - new Date(createdAt).getTime();
       months = Math.max(1, Math.round(diff / (1000 * 60 * 60 * 24 * 30)));
     }
     document.getElementById('mActive').innerHTML = `${active}<small>건</small>`;
-    document.getElementById('mDone').innerHTML = `${done}<small>건</small>`;
+    document.getElementById('mNew').innerHTML = `${weekNew}<small>건</small>`;
     document.getElementById('mMonths').innerHTML = months
       ? `${months}<small>개월</small>`
       : `<small style="font-size:14px;">신규</small>`;
