@@ -80,4 +80,19 @@ Allow: /
 User-agent: FacebookBot
 Allow: /
 
+# 네이버 (NAVER 검색)
+User-agent: Yeti
+Allow: /
+
+# 다음/카카오 (Daum 검색)
+User-agent: Daum
+Allow: /
+
+User-agent: Daumoa
+Allow: /
+
+# Bing
+User-agent: bingbot
+Allow: /
+
 Sitemap: https://hwik.kr/sitemap.xml
