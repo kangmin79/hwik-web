@@ -221,6 +221,10 @@ def _resolve_link(href, root_files, idx):
         prefix = f"/{folder}/"
         if path.startswith(prefix):
             slug = path[len(prefix):]
+            # idx 에는 stem (확장자 제외) 기준으로 저장됨.
+            # 내부 링크가 .html 포함/제외 양쪽을 허용 (sitemap/canonical 은 .html 포함이 정답).
+            if slug.endswith(".html"):
+                slug = slug[:-5]
             return True, (slug in idx[folder])
 
     if path == "/":

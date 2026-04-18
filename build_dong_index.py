@@ -190,7 +190,7 @@ def build_index():
             lines.append(f'<div class="group-heading">{e(group)} ({len(items)})</div>')
             lines.append('<div class="dong-grid">')
             for dong, slug in items:
-                href = "/dong/" + url_quote(slug, safe="")
+                href = "/dong/" + url_quote(slug, safe="") + ".html"
                 lines.append(f'<a class="dong-item" href="{href}"><div class="dong-name">{e(dong)}</div></a>')
             lines.append('</div>')
 
