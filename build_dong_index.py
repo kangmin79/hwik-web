@@ -139,7 +139,7 @@ def build_index():
             for _d, _s in sorted(buckets[_r][_g], key=lambda x: x[0]):
                 il_items.append({"@type": "ListItem", "position": pos,
                                  "name": f"{_g} {_d}",
-                                 "url": f"https://hwik.kr/dong/{url_quote(_s, safe='')}"})
+                                 "url": f"https://hwik.kr/dong/{url_quote(_s, safe='')}.html"})
                 pos += 1
                 if pos > 20: break
             if pos > 20: break

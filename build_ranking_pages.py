@@ -230,7 +230,7 @@ def build_ranking_html(region, rank_type, data):
     lines.append(f'<div class="tabs" style="border-bottom:2px solid var(--border);">')
     for rk, rl in REGION_LABELS.items():
         active = " active" if rk == region else ""
-        lines.append(f'<a class="tab{active}" style="text-decoration:none;color:inherit;" href="/ranking/{rk}-{rank_type}">{esc(rl)}</a>')
+        lines.append(f'<a class="tab{active}" style="text-decoration:none;color:inherit;" href="/ranking/{rk}-{rank_type}.html">{esc(rl)}</a>')
     lines.append(f'</div>')
 
     # 타입 탭
@@ -238,7 +238,7 @@ def build_ranking_html(region, rank_type, data):
     for tk, tl in TYPE_LABELS.items():
         active = " active" if tk == rank_type else ""
         short_label = tl.replace(" 높은", "↑").replace(" 낮은", "↓")
-        lines.append(f'<a class="tab{active}" style="text-decoration:none;color:inherit;" href="/ranking/{region}-{tk}">{esc(short_label)}</a>')
+        lines.append(f'<a class="tab{active}" style="text-decoration:none;color:inherit;" href="/ranking/{region}-{tk}.html">{esc(short_label)}</a>')
     lines.append(f'</div>')
 
     # 도입 텍스트 (SEO 콘텐츠)
@@ -269,7 +269,7 @@ def build_ranking_html(region, rank_type, data):
             sub_val = f'매매 {format_price(d["price"])}'
 
         top3 = " top3" if i < 3 else ""
-        lines.append(f'<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/{url_quote(slug_d, safe="-")}">')
+        lines.append(f'<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/{url_quote(slug_d, safe="-")}.html">')
         lines.append(f'  <div class="rank-num{top3}">{i+1}</div>')
         lines.append(f'  <div class="rank-info"><div class="rank-name">{esc(d["name"])}</div>')
         lines.append(f'  <div class="rank-sub">{esc(d["location"])}{" · "+str(d["build_year"])+"년" if d.get("build_year") else ""}{" · 전용"+d["area"]+"㎡" if d.get("area") else ""}</div></div>')
@@ -342,7 +342,7 @@ def build_ranking_html(region, rank_type, data):
              "numberOfItems": len(top50),
              "itemListElement": [
                  {"@type": "ListItem", "position": i+1, "name": d["name"],
-                  "url": f"https://hwik.kr/danji/{url_quote(make_danji_slug(d['name'], d['location'], d['id'], d['address']), safe='-')}"}
+                  "url": f"https://hwik.kr/danji/{url_quote(make_danji_slug(d['name'], d['location'], d['id'], d['address']), safe='-')}.html"}
                  for i, d in enumerate(top50)
              ]}
         ]
@@ -473,7 +473,7 @@ def build_hub_html():
              "itemListElement": [
                  {"@type": "ListItem", "position": i + 1,
                   "name": f"{REGION_LABELS[r]} 아파트 순위",
-                  "url": f"https://hwik.kr/ranking/{r}-price"}
+                  "url": f"https://hwik.kr/ranking/{r}-price.html"}
                  for i, r in enumerate([x for x in region_order if x in REGION_LABELS])
              ]}
         ]

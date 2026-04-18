@@ -553,7 +553,7 @@ def build_fallback_html(d):
             nloc = esc(nloc_raw)
             shown += 1
             lines.append(
-                f'<li><a href="/danji/{url_quote(nslug, safe="-")}" style="display:flex;justify-content:space-between;'
+                f'<li><a href="/danji/{url_quote(nslug, safe="-")}.html" style="display:flex;justify-content:space-between;'
                 f'padding:10px 12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">'
                 f'<span>{nname} <span style="color:#6b7280;font-size:11px;">{nloc}</span></span>'
                 f'<span style="font-weight:600;">{p}</span></a></li>'
@@ -680,12 +680,18 @@ def build_fallback_html(d):
         dong_slug_str = make_dong_slug(gu_for_link, dong_name, d.get("address", ""))
     lines.append('<div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">')
     if dong_name and dong_slug_str and dong_slug_str in DONG_SLUGS:
-        lines.append(f'<a href="/dong/{url_quote(dong_slug_str, safe="-")}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{esc(dong_name)} 다른 단지 시세 →</a>')
+        lines.append(f'<a href="/dong/{url_quote(dong_slug_str, safe="-")}.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{esc(dong_name)} 다른 단지 시세 →</a>')
     _region_label = detect_region(d.get("address", "") or "")
     _gu_url = gu_url_slug(_region_label, gu_raw)
     if _has_gu_page(d.get("address", ""), _gu_url):
-        lines.append(f'<a href="/gu/{url_quote(_gu_url, safe="-")}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{gu} 전체 시세 →</a>')
-        lines.append('<a href="/ranking/" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">아파트 순위 →</a>')
+        lines.append(f'<a href="/gu/{url_quote(_gu_url, safe="-")}.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{gu} 전체 시세 →</a>')
+    # 지역별 랭킹 3종 (ranking 슬러그: {region_key}-{type})
+    _region_key = _RLTK.get(_region_label) if _region_label else None
+    if _region_key:
+        _r_label = {"seoul":"서울","incheon":"인천","gyeonggi":"경기","busan":"부산","daegu":"대구","gwangju":"광주","daejeon":"대전","ulsan":"울산","sejong":"세종","chungbuk":"충북","chungnam":"충남","jeonbuk":"전북","jeonnam":"전남","gyeongbuk":"경북","gyeongnam":"경남","gangwon":"강원","jeju":"제주"}.get(_region_key, _region_key)
+        lines.append(f'<a href="/ranking/{_region_key}-price.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{_r_label} 아파트 매매가 순위 TOP 50 →</a>')
+        lines.append(f'<a href="/ranking/{_region_key}-sqm.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{_r_label} ㎡당 가격 순위 TOP 50 →</a>')
+        lines.append(f'<a href="/ranking/{_region_key}-jeonse.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{_r_label} 전세가율 순위 TOP 50 →</a>')
     lines.append("</div>")
 
     return "\n    ".join(lines)
@@ -710,13 +716,13 @@ def build_jsonld(d):
     breadcrumb_items = [{"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"}]
     pos = 2
     if has_gu:
-        breadcrumb_items.append({"@type": "ListItem", "position": pos, "name": f"{gu}", "item": f"https://hwik.kr/gu/{url_quote(_gu_url_str, safe='-')}"})
+        breadcrumb_items.append({"@type": "ListItem", "position": pos, "name": f"{gu}", "item": f"https://hwik.kr/gu/{url_quote(_gu_url_str, safe='-')}.html"})
         pos += 1
     elif gu:
         breadcrumb_items.append({"@type": "ListItem", "position": pos, "name": f"{gu}"})
         pos += 1
     if has_dong:
-        breadcrumb_items.append({"@type": "ListItem", "position": pos, "name": dong_name, "item": f"https://hwik.kr/dong/{url_quote(dong_slug_str, safe='-')}"})
+        breadcrumb_items.append({"@type": "ListItem", "position": pos, "name": dong_name, "item": f"https://hwik.kr/dong/{url_quote(dong_slug_str, safe='-')}.html"})
         pos += 1
     breadcrumb_items.append({"@type": "ListItem", "position": pos, "name": name})
 
@@ -736,7 +742,7 @@ def build_jsonld(d):
             "itemListElement": breadcrumb_items,
         },
     ]
-    graph[0]["url"] = f"https://hwik.kr/danji/{url_quote(slug, safe='-')}"
+    graph[0]["url"] = f"https://hwik.kr/danji/{url_quote(slug, safe='-')}.html"
     if d.get("lat") and d.get("lng"):
         graph[0]["geo"] = {"@type": "GeoCoordinates", "latitude": d["lat"], "longitude": d["lng"]}
     if d.get("build_year"):
@@ -870,12 +876,12 @@ def generate_page(d):
     gu = esc(gu_raw)
     dong_raw = loc_parts[1] if len(loc_parts) >= 2 else ""
     dong_slug_nav = make_dong_slug(gu_raw, dong_raw, d.get("address", "")) if dong_raw else ""
-    dong_nav = f'<a href="/dong/{url_quote(dong_slug_nav, safe="-")}" style="color:#6b7280;text-decoration:none;">{esc(dong_raw)}</a> &gt;\n      ' if dong_raw and dong_slug_nav and dong_slug_nav in DONG_SLUGS else ""
+    dong_nav = f'<a href="/dong/{url_quote(dong_slug_nav, safe="-")}.html" style="color:#6b7280;text-decoration:none;">{esc(dong_raw)}</a> &gt;\n      ' if dong_raw and dong_slug_nav and dong_slug_nav in DONG_SLUGS else ""
     _region_label_nav = detect_region(d.get("address", "") or "")
     _gu_url_nav = gu_url_slug(_region_label_nav, gu_raw)
     _has_gu = _has_gu_page(d.get("address", ""), _gu_url_nav)
     gu_nav = (
-        f'<a href="/gu/{url_quote(_gu_url_nav, safe="-")}" style="color:#6b7280;text-decoration:none;">{gu}</a> &gt;'
+        f'<a href="/gu/{url_quote(_gu_url_nav, safe="-")}.html" style="color:#6b7280;text-decoration:none;">{gu}</a> &gt;'
         if _has_gu and gu else (f'<span style="color:#6b7280;">{gu}</span> &gt;' if gu else "")
     )
     units = d.get("total_units", "")
@@ -887,33 +893,57 @@ def generate_page(d):
     title_loc_seo = f" · {gu} {esc(dong_short)}" if gu and dong_short else (f" · {gu}" if gu else "")
 
     prop_type = get_prop_type(did)
-    # 데이터 기반 메타 디스크립션 (generate_page 스코프 전용 변수로 계산)
+    # 데이터 기반 메타 디스크립션 — 120~160자 타겟 (SERP 키워드 매칭 확대)
     _rt  = d.get("recent_trade") or {}
     _jr  = d.get("jeonse_rate")
     _bc  = best_price_cat(d)
     _bc_price = (_rt.get(_bc) or {}).get("price") if _bc else None
+    # 위치 접두어 (구 동)
+    _dong_first = dong_raw.split(" ")[0] if dong_raw else ""
+    _loc_pref = f"{gu_raw} {_dong_first} " if gu_raw and _dong_first else (f"{gu_raw} " if gu_raw else "")
+    # 면적 범위 (전용)
+    _pm = d.get("pyeongs_map") or {}
+    _exclu_vals = []
+    for _v in _pm.values():
+        if isinstance(_v, dict) and _v.get("exclu"):
+            try: _exclu_vals.append(int(float(_v["exclu"])))
+            except Exception: pass
+    _area_str = ""
+    if _exclu_vals:
+        _mn, _mx = min(_exclu_vals), max(_exclu_vals)
+        _area_str = f"전용 {_mn}㎡" if _mn == _mx else f"전용 {_mn}~{_mx}㎡"
+    # 전세가 (매매 면적과 같은 카테고리)
+    _jeonse_price = None
+    if _bc:
+        _jkey = f"{_bc}_jeonse"
+        _jv = _rt.get(_jkey) or {}
+        _jeonse_price = _jv.get("price")
+
     if _bc_price:
-        _dp = [raw_name]
+        _dp = [f"{_loc_pref}{raw_name}".strip()]
+        _unit_year = []
+        if units: _unit_year.append(f"{units:,}세대" if isinstance(units, int) else f"{units}세대")
+        if year:  _unit_year.append(f"{year}년 입주")
+        if _unit_year: _dp.append(" ".join(_unit_year))
+        if _area_str: _dp.append(_area_str)
         _sale_date = (_rt.get(_bc) or {}).get("date", "")
-        _dp.append(f"최근 매매가 {format_price(_bc_price)}" + (f" ({_sale_date})" if _sale_date else ""))
+        _dp.append(f"최근 매매 {format_price(_bc_price)}" + (f"({_sale_date})" if _sale_date else ""))
+        if _jeonse_price:
+            _dp.append(f"전세 {format_price(_jeonse_price)}")
         if _jr:
             _dp.append(f"전세가율 {_jr}%")
-        from datetime import date as _d2, timedelta as _td2
-        _one_yr = (_d2.today() - _td2(days=365)).strftime("%Y-%m")
-        _ph2 = d.get("price_history") or {}
-        _cnt = sum(1 for _tl in _ph2.values() if isinstance(_tl, list)
-                   for _t in _tl if (_t.get("date", ""))[:7] >= _one_yr)
-        if _cnt >= 1:
-            _dp.append(f"최근 1년 {_cnt}건 거래")
-        desc = " · ".join(_dp)
+        _dp.append("국토교통부 공개시스템 실시간 기반")
+        desc = ". ".join(_dp) + "."
     else:
-        desc_parts = [raw_name, raw_loc]
-        if units:
-            desc_parts.append(f"{units}세대")
-        if year:
-            desc_parts.append(f"{year}년")
-        desc_parts.append(f"{prop_type} 실거래가, 전세가, 시세 추이")
-        desc = " ".join(desc_parts)
+        _dp = [f"{_loc_pref}{raw_name}".strip()]
+        _unit_year = []
+        if units: _unit_year.append(f"{units:,}세대" if isinstance(units, int) else f"{units}세대")
+        if year:  _unit_year.append(f"{year}년 입주")
+        if _unit_year: _dp.append(" ".join(_unit_year))
+        if _area_str: _dp.append(_area_str)
+        _dp.append(f"{prop_type} 실거래가·전세가·시세 추이")
+        _dp.append("국토교통부 공개시스템 기반")
+        desc = ". ".join(_dp) + "."
 
     canonical = f"https://hwik.kr/danji/{url_quote(slug, safe='-')}.html"
     jsonld = build_jsonld(d)

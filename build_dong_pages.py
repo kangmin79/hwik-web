@@ -303,7 +303,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
     lines.append(f'  <a href="/" style="color:#6b7280;text-decoration:none;">휙</a> &gt;')
     if has_gu_page:
         lines.append(f'  <a href="{region_link}" style="color:#6b7280;text-decoration:none;">{esc(region)}</a> &gt;')
-        lines.append(f'  <a href="/gu/{url_quote(gu_page_slug, safe="-")}" style="color:#6b7280;text-decoration:none;">{esc(gu)}</a> &gt;')
+        lines.append(f'  <a href="/gu/{url_quote(gu_page_slug, safe="-")}.html" style="color:#6b7280;text-decoration:none;">{esc(gu)}</a> &gt;')
     else:
         if region:
             lines.append(f'  <span style="color:#6b7280;">{esc(region)}</span> &gt;')
@@ -354,7 +354,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
         sub_info = " · ".join(sub_parts)
 
         lines.append(
-            f'<a href="/danji/{url_quote(danji_slug, safe="-")}" style="display:flex;justify-content:space-between;align-items:center;'
+            f'<a href="/danji/{url_quote(danji_slug, safe="-")}.html" style="display:flex;justify-content:space-between;align-items:center;'
             f'padding:14px;background:#fff;border-radius:10px;text-decoration:none;color:#1a1a2e;'
             f'box-shadow:0 1px 4px rgba(0,0,0,0.05);border-left:3px solid #f5c842;">'
             f'<div><div style="font-size:13px;font-weight:600;">{i+1}. {name}</div>'
@@ -512,7 +512,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
         for od in other_dongs:
             od_slug = (dong_slug_map or {}).get((region, gu, od)) or make_dong_slug(gu, od, first_addr)
             lines.append(
-                f'<a href="/dong/{url_quote(od_slug, safe="-")}" style="padding:8px 12px;background:#f3f4f6;border-radius:8px;'
+                f'<a href="/dong/{url_quote(od_slug, safe="-")}.html" style="padding:8px 12px;background:#f3f4f6;border-radius:8px;'
                 f'text-decoration:none;color:#1a1a2e;font-size:12px;">{esc(od)}</a>'
             )
         lines.append('</div></div>')
@@ -520,7 +520,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
     # 내부 링크
     lines.append('<div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">')
     if has_gu_page:
-        lines.append(f'<a href="/gu/{url_quote(gu_page_slug, safe="-")}" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{esc(gu)} 전체 시세 &rarr;</a>')
+        lines.append(f'<a href="/gu/{url_quote(gu_page_slug, safe="-")}.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{esc(gu)} 전체 시세 &rarr;</a>')
         lines.append('<a href="/ranking/" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">아파트 순위 &rarr;</a>')
     lines.append('</div>')
 
@@ -567,7 +567,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
             "@type": "ListItem",
             "position": i + 1,
             "name": d.get("complex_name", ""),
-            "url": f"https://hwik.kr/danji/{url_quote(danji_slug, safe='-')}",
+            "url": f"https://hwik.kr/danji/{url_quote(danji_slug, safe='-')}.html",
         })
 
     _bc = [{"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"}]
@@ -575,7 +575,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
     if has_gu_page:
         _bc.append({"@type": "ListItem", "position": _pos, "name": region, "item": f"https://hwik.kr{region_link}"})
         _pos += 1
-        _bc.append({"@type": "ListItem", "position": _pos, "name": gu, "item": f"https://hwik.kr/gu/{url_quote(gu_page_slug, safe='-')}"})
+        _bc.append({"@type": "ListItem", "position": _pos, "name": gu, "item": f"https://hwik.kr/gu/{url_quote(gu_page_slug, safe='-')}.html"})
         _pos += 1
     else:
         if region:

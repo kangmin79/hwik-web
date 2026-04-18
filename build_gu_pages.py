@@ -288,7 +288,7 @@ def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None)
         for i, (d, mp, area) in enumerate(price_top):
             slug_d = make_danji_slug(d["complex_name"], d.get("location", ""), d["id"], d.get("address", ""))
             area_txt = f'전용 {area}㎡' if area else ''
-            lines.append(f'<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/{url_quote(slug_d, safe="-")}">')
+            lines.append(f'<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/{url_quote(slug_d, safe="-")}.html">')
             lines.append(f'  <div><div class="danji-name">{i+1}. {esc(d["complex_name"])}</div><div class="danji-sub">{esc(d.get("location",""))}{(" · " + area_txt) if area_txt else ""}</div></div>')
             lines.append(f'  <div><div class="danji-price">{format_price(mp)}</div><div class="danji-rate">최고가 기준</div></div>')
             lines.append(f'</a>')
@@ -304,7 +304,7 @@ def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None)
             cats = d.get("categories") or []
             best_c = next((c for c in cats if rt.get(c) and rt[c].get("price")), None)
             area_txt = f'전용 {best_c}㎡' if best_c else ''
-            lines.append(f'<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/{url_quote(slug_d, safe="-")}">')
+            lines.append(f'<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/{url_quote(slug_d, safe="-")}.html">')
             lines.append(f'  <div><div class="danji-name">{i+1}. {esc(d["complex_name"])}</div><div class="danji-sub">{esc(d.get("location",""))}{(" · " + area_txt) if area_txt else ""}</div></div>')
             lines.append(f'  <div><div class="danji-price">{d["jeonse_rate"]}%</div><div class="danji-rate">전세가율</div></div>')
             lines.append(f'</a>')
@@ -322,7 +322,7 @@ def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None)
             addr = first_d.get("address", "") if first_d else ""
             dong_slug = make_dong_slug(gu_name, dong, addr)
             if dong_slug in DONG_SLUG_SET:
-                lines.append(f'<a class="dong-item" style="text-decoration:none;color:inherit;" href="/dong/{url_quote(dong_slug, safe="-")}">')
+                lines.append(f'<a class="dong-item" style="text-decoration:none;color:inherit;" href="/dong/{url_quote(dong_slug, safe="-")}.html">')
                 lines.append(f'  <div class="dong-name">{esc(dong)}</div>')
                 lines.append(f'  <div class="dong-count">{info["count"]}개 단지{" · 평균 "+avg_p if avg_p else ""}</div>')
                 lines.append(f'</a>')
@@ -341,7 +341,7 @@ def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None)
         lines.append(f'<div style="display:flex;flex-direction:column;gap:8px;">')
         for i, d in enumerate(sqm_list[:10]):
             slug_d = make_danji_slug(d["name"], d["location"], d["id"], d["address"])
-            lines.append(f'<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/{url_quote(slug_d, safe="-")}">')
+            lines.append(f'<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/{url_quote(slug_d, safe="-")}.html">')
             lines.append(f'  <div><div class="danji-name">{i+1}. {esc(d["name"])}</div><div class="danji-sub">{esc(d["location"])} · 전용{d["area"]}㎡</div></div>')
             lines.append(f'  <div><div class="danji-price">{format_price(d["price"])}</div><div class="danji-rate">{format_price(d["sqmPrice"])}/㎡</div></div>')
             lines.append(f'</a>')
@@ -354,7 +354,7 @@ def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None)
         lines.append(f'<div style="display:flex;flex-direction:column;gap:8px;">')
         for t in trades[:10]:
             slug_d = make_danji_slug(t["name"], t.get("location", ""), t["id"], t["address"])
-            lines.append(f'<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/{url_quote(slug_d, safe="-")}">')
+            lines.append(f'<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/{url_quote(slug_d, safe="-")}.html">')
             lines.append(f'  <div><div class="trade-price">{format_price(t["price"])}</div>')
             lines.append(f'  <div class="trade-detail">{esc(t["name"])} · {t["area"]}㎡{" · "+str(t["floor"])+"층" if t.get("floor") else ""}</div></div>')
             lines.append(f'  <div class="trade-date">{esc(t.get("date",""))}</div>')
@@ -367,7 +367,7 @@ def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None)
         lines.append(f'<div class="section"><h2 class="section-title">{esc(region_label)}의 다른 구/시</h2>')
         lines.append(f'<div class="gu-grid">')
         for sib_name, sib_slug in sibling_gus:
-            lines.append(f'<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/{url_quote(sib_slug, safe="-")}">')
+            lines.append(f'<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/{url_quote(sib_slug, safe="-")}.html">')
             lines.append(f'  <div class="gu-name">{esc(sib_name)}</div><div class="gu-info">시세 보기 →</div>')
             lines.append(f'</a>')
         lines.append(f'</div></div>')
@@ -433,7 +433,7 @@ def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None)
                 "numberOfItems": len(danji_list),
                 "itemListElement": [
                     {"@type": "ListItem", "position": i+1, "name": d["complex_name"],
-                     "url": f"https://hwik.kr/danji/{url_quote(make_danji_slug(d['complex_name'], d.get('location',''), d['id'], d.get('address','')), safe='-')}"}
+                     "url": f"https://hwik.kr/danji/{url_quote(make_danji_slug(d['complex_name'], d.get('location',''), d['id'], d.get('address','')), safe='-')}.html"}
                     for i, d in enumerate(danji_list[:50])
                 ]
             }
@@ -464,7 +464,7 @@ def build_gu_index_html():
         lines.append(f'<div class="section"><h2 class="section-title">{esc(r["label"])} {esc(r["sub"])}</h2>')
         lines.append(f'<div class="gu-grid">')
         for g, g_slug in visible:
-            lines.append(f'<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/{url_quote(g_slug, safe="-")}">')
+            lines.append(f'<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/{url_quote(g_slug, safe="-")}.html">')
             lines.append(f'  <div class="gu-name">{esc(g)}</div><div class="gu-info">아파트 시세 보기 →</div>')
             lines.append(f'</a>')
         lines.append(f'</div></div>')
