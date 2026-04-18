@@ -182,7 +182,7 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
         <div class="header-name-row">
           <div class="header-name" id="profileName">불러오는 중...</div>
           <span class="header-badge">공인중개사</span>
-          <span class="header-badge header-badge-region" id="profileRegionBadge" style="display:none"></span>
+          <span id="profileRegionBadges" style="display:inline-flex;gap:6px;flex-wrap:wrap;"></span>
         </div>
         <div class="header-sub" id="profileSub"></div>
         <div class="header-address" id="profileAddress"></div>
@@ -488,11 +488,14 @@ function renderProfile(p, count) {
 
   document.getElementById('profileSub').textContent = biz;
   document.getElementById('profileAddress').textContent = addr;
-  if (region) {
-    document.getElementById('navRegion').textContent = region;
-    const rb = document.getElementById('profileRegionBadge');
-    rb.textContent = `${region} 전문`;
-    rb.style.display = 'inline-block';
+
+  // 전문 지역 배지: 명시 지정(specialty_regions) 우선, 없으면 주소 파싱 1개
+  const specialty = Array.isArray(p.specialty_regions) ? p.specialty_regions.filter(Boolean).slice(0, 3) : [];
+  const regionList = specialty.length ? specialty : (region ? [region] : []);
+  if (regionList.length) {
+    document.getElementById('navRegion').textContent = regionList[0];
+    const rbs = document.getElementById('profileRegionBadges');
+    rbs.innerHTML = regionList.map(r => `<span class="header-badge header-badge-region">${esc(r)} 전문</span>`).join('');
   }
 
   if (p.naver_map_url) {

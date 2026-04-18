@@ -739,7 +739,7 @@ const Auth = (() => {
 
   async function loadProfile(uid) {
     const id = uid || user?.id; if (!id) return null;
-    const { data } = await sb.from('profiles').select('business_name,agent_name,phone,address,og_version,profile_photo_url,profile_photo,kakao_chat_url').eq('id',id).maybeSingle();
+    const { data } = await sb.from('profiles').select('business_name,agent_name,phone,address,og_version,profile_photo_url,profile_photo,kakao_chat_url,specialty_regions').eq('id',id).maybeSingle();
     profile = data;
     if (data) localStorage.setItem('hwik_agent', JSON.stringify({ name:data.agent_name||'', office:data.business_name||'', phone:data.phone||'', address:data.address||'', isAdmin:false }));
     return data;
@@ -1945,6 +1945,7 @@ const Hub = (() => {
       <div class="edit-field" style="margin-top:12px;"><label>연락처</label><input value="${esc(pr.phone||'')}" readonly style="background:var(--bg);color:var(--text-light);"><div style="font-size:11px;color:var(--text-light);margin-top:4px;">연락처 변경은 고객센터에 문의</div></div>
       <div class="edit-field" style="margin-top:12px;"><label>주소 (선택)</label><input id="sAddr" value="${esc(pr.address||'')}"></div>
       <div class="edit-field" style="margin-top:12px;"><label>카카오 오픈채팅 URL</label><input id="sKakao" value="${esc(pr.kakao_chat_url||'')}" placeholder="https://open.kakao.com/o/..."></div>
+      <div class="edit-field" style="margin-top:12px;"><label>전문 지역 (최대 3개)</label><input id="sRegions" value="${esc((pr.specialty_regions||[]).join(', '))}" placeholder="예: 중랑구, 노원구, 성북구"><div style="font-size:11px;color:var(--text-light);margin-top:4px;">쉼표(,)로 구분. 중개사 홈 상단 배지로 노출됩니다.</div></div>
       <div class="edit-buttons"><button class="btn-cancel" onclick="this.closest('.modal-overlay').classList.remove('show')">취소</button><button class="btn-primary" style="width:auto;padding:10px 24px;" onclick="Hub._saveSettings()">저장하기</button></div>
     </div></div>`;m.classList.add('show');
   }
@@ -1983,7 +1984,9 @@ const Hub = (() => {
       _pendingPhoto=null;
     }
 
-    await Auth.sb.from('profiles').upsert({id:Auth.user.id,business_name:office,agent_name:name||'',address:addr||'',profile_photo:photoUrl,...(kakao!==undefined&&{kakao_chat_url:kakao||null})});
+    const regionsRaw=document.getElementById('sRegions')?.value||'';
+    const regions=regionsRaw.split(/[,·、]/).map(s=>s.trim()).filter(Boolean).slice(0,3);
+    await Auth.sb.from('profiles').upsert({id:Auth.user.id,business_name:office,agent_name:name||'',address:addr||'',profile_photo:photoUrl,specialty_regions:regions.length?regions:null,...(kakao!==undefined&&{kakao_chat_url:kakao||null})});
     await Auth.loadProfile();
     Toast.show('저장 완료');
     const nav=document.getElementById('navAgent');if(nav)nav.textContent=office;
@@ -1998,6 +2001,7 @@ const Hub = (() => {
       <div class="edit-field" style="margin-top:12px;"><label>전화번호</label><div style="display:flex;gap:8px;"><input id="miPhone" value="${esc(pr.phone||'')}" placeholder="01012345678" style="flex:1;" ${pr.phone?'readonly':''}><button class="filter-btn" onclick="Hub._sendOtp()" id="miOtpBtn">${pr.phone?'인증완료':'인증요청'}</button></div><div id="miOtpArea" style="display:none;margin-top:8px;"><div style="display:flex;gap:8px;"><input id="miOtpCode" placeholder="인증번호 6자리" maxlength="6"><button class="filter-btn active" onclick="Hub._verifyOtp()">확인</button></div></div></div>
       <div class="edit-field" style="margin-top:12px;"><label>주소</label><input id="miAddr" value="${esc(pr.address||'')}" placeholder="사무소 주소"></div>
       <div class="edit-field" style="margin-top:12px;"><label>카카오 오픈채팅 URL</label><input id="miKakao" value="${esc(pr.kakao_chat_url||'')}" placeholder="https://open.kakao.com/o/..."><div style="font-size:11px;color:var(--text-light);margin-top:4px;">카카오톡 앱 → 오픈채팅 → 1대1 오픈채팅방 만들기 → 링크 복사</div></div>
+      <div class="edit-field" style="margin-top:12px;"><label>전문 지역 (최대 3개)</label><input id="miRegions" value="${esc((pr.specialty_regions||[]).join(', '))}" placeholder="예: 중랑구, 노원구, 성북구"><div style="font-size:11px;color:var(--text-light);margin-top:4px;">쉼표(,)로 구분. 중개사 홈 상단 배지로 노출됩니다.</div></div>
       <div class="edit-buttons"><button class="btn-cancel" onclick="this.closest('.modal-overlay').classList.remove('show')">취소</button><button class="btn-primary" style="width:auto;padding:10px 24px;" onclick="Hub._saveMyInfo()">저장</button></div>
     </div></div>`;m.classList.add('show');
   }
@@ -2023,7 +2027,9 @@ const Hub = (() => {
     const kakao=document.getElementById('miKakao')?.value?.trim();
     if(!office){Toast.show('부동산 이름을 입력하세요');return;}
     if(phone&&!_phoneVerified&&!Auth.profile?.phone){Toast.show('전화번호 인증이 필요합니다');return;}
-    await Auth.sb.from('profiles').upsert({id:Auth.user.id,business_name:office,agent_name:name,phone:phone||Auth.profile?.phone||'',address:addr,...(kakao!==undefined&&{kakao_chat_url:kakao||null})});
+    const regionsRaw=document.getElementById('miRegions')?.value||'';
+    const regions=regionsRaw.split(/[,·、]/).map(s=>s.trim()).filter(Boolean).slice(0,3);
+    await Auth.sb.from('profiles').upsert({id:Auth.user.id,business_name:office,agent_name:name,phone:phone||Auth.profile?.phone||'',address:addr,specialty_regions:regions.length?regions:null,...(kakao!==undefined&&{kakao_chat_url:kakao||null})});
     await Auth.loadProfile();
     document.getElementById('editModal').classList.remove('show');
     Toast.show('저장 완료');
