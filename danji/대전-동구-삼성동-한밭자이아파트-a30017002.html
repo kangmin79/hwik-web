@@ -20,7 +20,7 @@
 <meta name="google-site-verification" content="R2ye41AVVTRs8BxEXyEafFSTqMSiHKdb9zgTklrktSI" />
 <meta name="naver-site-verification" content="367bd1e77a8ad48b74e345be3e4a0f8125c2c4e1" />
 <meta property="article:published_time" content="2026-04-16T18:04:23+00:00">
-<meta property="article:modified_time" content="2026-04-19T00:35:33+00:00">
+<meta property="article:modified_time" content="2026-04-19T00:45:55+00:00">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
 <meta name="twitter:card" content="summary_large_image">
@@ -104,6 +104,19 @@
     <li><a href="/ranking/daejeon-sqm.html" style="display:block;padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">대전 평당 가격 순위</a></li>
     </ul>
     </nav>
+    <details style="font-size:12px;color:#6b7280;margin-top:24px;">
+  <summary style="cursor:pointer;">데이터 안내 ▼</summary>
+  <div style="margin-top:6px;line-height:1.8;">
+    <b>실거래가</b>: 국토교통부 실거래가 공개시스템 (매일 자동 수집)<br>
+    <b>공급면적</b>: 국토교통부 건축물대장 (전용면적 + 주거공용면적)<br>
+    공급면적이 확인되지 않은 단지는 전용면적만 표시합니다<br>
+    같은 타입도 세대별 실측값 기준으로 면적이 미세하게 다를 수 있습니다<br>
+    거래 취소·정정 건은 반영이 지연될 수 있습니다
+  </div>
+</details>
+    <div style="margin-top:14px;text-align:center;">
+  <button onclick="openReportModal()" style="background:none;border:1px solid #e5e7eb;border-radius:20px;color:#6b7280;font-size:12px;cursor:pointer;padding:6px 16px;">🚨 데이터 오류 신고</button>
+</div>
 </div>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>

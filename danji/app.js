@@ -646,24 +646,8 @@ function render() {
       <a class="btn-secondary" href="/card_generator_v2_auth.html" style="display:block;text-align:center;text-decoration:none;">공인중개사 서비스 · 무료로 시작하기</a>
     </div>
 
-    <!-- SEO -->
-    <div class="seo-section">
-      <!-- seo-text 제거 (2026-04-19): fallback-content 의 "단지 정보" 서술형과 중복 → 시각적 중복 방지 -->
-      <details style="font-size:12px;color:var(--sub);margin-top:10px;">
-        <summary style="cursor:pointer;">데이터 안내 ▼</summary>
-        <div style="margin-top:6px;line-height:1.8;">
-          <b>실거래가</b>: 국토교통부 실거래가 공개시스템 (매일 자동 수집)<br>
-          <b>공급면적</b>: 국토교통부 건축물대장 (전용면적 + 주거공용면적)<br>
-          공급면적이 확인되지 않은 단지는 전용면적만 표시합니다<br>
-          같은 타입도 세대별 실측값 기준으로 면적이 미세하게 다를 수 있습니다<br>
-          거래 취소·정정 건은 반영이 지연될 수 있습니다
-        </div>
-      </details>
-      <div class="seo-source" style="margin-top:8px;">실거래가 출처: 국토교통부 · 최종 데이터 확인: ${new Date(Date.now() + 9*3600*1000).toISOString().slice(0,10)}</div>
-      <div style="margin-top:14px;text-align:center;">
-        <button onclick="openReportModal()" style="background:none;border:1px solid var(--border, #e5e7eb);border-radius:20px;color:var(--sub, #6b7280);font-size:12px;cursor:pointer;padding:6px 16px;">🚨 데이터 오류 신고</button>
-      </div>
-    </div>
+    <!-- .seo-section 제거 (2026-04-19): 데이터 안내·출처·오류 신고 모두 fallback-content 끝으로 이동
+         → 페이지 가장 하단에 위치 (시세·FAQ·관련 검색어 다음) -->
   `;
 
   // 이벤트 바인딩
