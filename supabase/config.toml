@@ -1,0 +1,29 @@
+project_id = "jqaxejgzkchxbfzgzyzi"
+
+# Edge Function 설정 — 사용자 토큰 사용 함수는 verify_jwt = false
+# (ES256 JWT signing key 업그레이드 이후 게이트웨이 검증 실패 회피)
+# 각 함수 내부에서 /auth/v1/user fetch로 수동 검증함
+
+[functions.parse-property]
+verify_jwt = false
+
+[functions.locate-card]
+verify_jwt = false
+
+[functions.auto-match]
+verify_jwt = false
+
+[functions.match-properties]
+verify_jwt = false
+
+[functions.search-property]
+verify_jwt = false
+
+[functions.embed-card]
+verify_jwt = false
+
+[functions.batch-generate-tags]
+verify_jwt = false
+
+[functions.room-share-match]
+verify_jwt = false

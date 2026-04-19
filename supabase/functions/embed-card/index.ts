@@ -16,13 +16,17 @@ Deno.serve(async (req) => {
 
     if (!OPENAI_API_KEY) throw new Error('OPENAI_API_KEY not set');
 
-    // ★ 인증 체크: 로그인한 사용자만 임베딩 업데이트 가능
+    // ★ 인증 체크: /auth/v1/user fetch (ES256 JWT 호환)
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) throw new Error('인증이 필요합니다');
     const token = authHeader.replace('Bearer ', '');
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) throw new Error('인증이 필요합니다');
+    const authRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { 'Authorization': `Bearer ${token}`, 'apikey': SUPABASE_SERVICE_ROLE_KEY },
+    });
+    if (!authRes.ok) throw new Error('인증이 필요합니다');
+    const user = await authRes.json();
+    if (!user?.id) throw new Error('인증이 필요합니다');
 
     const { card_id, text } = await req.json();
     if (!card_id || !text) throw new Error('card_id and text required');
