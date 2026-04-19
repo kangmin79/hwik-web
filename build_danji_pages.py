@@ -650,39 +650,9 @@ def build_fallback_html(d):
                     f'<p style="font-size:12px;color:#6b7280;margin-bottom:8px;">'
                     f'주변 {total}개 단지 중 거래가 <strong>{rank}위</strong></p>'
                 )
-    # 주변 단지
-    if nearby:
-        lines.append('<h2 style="font-size:14px;font-weight:600;margin:16px 0 8px;">주변 단지</h2>')
-        lines.append('<ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;">')
-        shown = 0
-        for n in nearby:
-            if shown >= 5:
-                break
-            nid = n.get("id", "")
-            if nid not in DANJI_SLUG_MAP:
-                continue  # 페이지 미생성 단지 스킵
-            prices = n.get("prices") or {}
-            nbest = None
-            ndiff = 999
-            for k, v in prices.items():
-                diff = abs(safe_int(k) - 84)
-                if diff < ndiff:
-                    ndiff = diff
-                    nbest = v
-            p = format_price(nbest.get("price")) if nbest and nbest.get("price") else "-"
-            nname_raw = n.get("name", "")
-            nloc_raw = n.get("location", "")
-            nslug = DANJI_SLUG_MAP[nid]
-            nname = esc(nname_raw)
-            nloc = esc(nloc_raw)
-            shown += 1
-            lines.append(
-                f'<li><a href="/danji/{url_quote(nslug, safe="-")}.html" style="display:flex;justify-content:space-between;'
-                f'padding:10px 12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">'
-                f'<span>{nname} <span style="color:#6b7280;font-size:11px;">{nloc}</span></span>'
-                f'<span style="font-weight:600;">{p}</span></a></li>'
-            )
-        lines.append("</ul>")
+    # 주변 단지 섹션 제거 (2026-04-19): SPA(app.js) 의 "삼성동 주변 단지" 섹션과 100% 중복.
+    # SPA 가 더 풍부 (거리 표시 m, 실시간 위치 기반). Modern Googlebot 은 JS 실행하므로
+    # SPA 콘텐츠도 SEO 인식. fallback 의 관련 검색어 4 개로 내부 링크 충분.
 
     # 요약 문단 (FAQ 위 — 구글 스니펫 + 본문 텍스트 신호)
     _intro = build_intro_sentence(
