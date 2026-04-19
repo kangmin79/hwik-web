@@ -2455,7 +2455,7 @@ const PanelRegister = (() => {
           if(loc?.kapt_name){
             Toast.show(`✅ ${loc.kapt_name} 단지로 매칭됨`);
           }else{
-            console.log('[locate-card debug]', loc);
+            console.log('[locate-card debug]', JSON.stringify(loc?.debug, null, 2));
             Toast.show(`⚠️ 단지 매칭 실패 — 콘솔(F12) 확인`);
           }
         }
