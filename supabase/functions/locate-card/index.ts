@@ -14,17 +14,22 @@ const corsHeaders = {
 }
 
 // 카카오 Geocoding API 호출
-async function kakaoGeocode(query: string, apiKey: string): Promise<{ lat: number; lng: number } | null> {
-  if (!query?.trim()) return null;
+async function kakaoGeocode(query: string, apiKey: string, debugOut?: any): Promise<{ lat: number; lng: number } | null> {
+  if (!query?.trim()) { if (debugOut) debugOut.kakao_reason = 'empty_query'; return null; }
+  if (!apiKey) { if (debugOut) debugOut.kakao_reason = 'no_api_key'; return null; }
   try {
     const url = `https://dapi.kakao.com/v2/local/search/address.json?query=${encodeURIComponent(query)}&size=1`;
     const resp = await fetch(url, { headers: { Authorization: `KakaoAK ${apiKey}` } });
-    if (!resp.ok) return null;
+    if (!resp.ok) {
+      if (debugOut) debugOut.kakao_reason = `http_${resp.status}`;
+      return null;
+    }
     const data = await resp.json();
     const doc = data.documents?.[0];
     if (doc) return { lat: parseFloat(doc.y), lng: parseFloat(doc.x) };
-  } catch {
-    // geocoding 실패 시 null 반환
+    if (debugOut) debugOut.kakao_reason = 'no_documents';
+  } catch (e) {
+    if (debugOut) debugOut.kakao_reason = `exception: ${(e as Error).message}`;
   }
   return null;
 }
@@ -213,19 +218,28 @@ Deno.serve(async (req) => {
     const addrLegacy = (p.address || '').trim();
 
     async function matchByAddress(addr: string, addrType: 'doro' | 'jibun'): Promise<{ code: string; name: string; lat: number; lng: number; sgg?: string; umd_nm?: string } | null> {
-      if (!addr || !KAKAO_API_KEY) return null;
-      const coord = await kakaoGeocode(addr, KAKAO_API_KEY);
+      if (!addr) { matchDebug[`${addrType}_fail`] = 'addr_empty'; return null; }
+      if (!KAKAO_API_KEY) { matchDebug[`${addrType}_fail`] = 'no_kakao_key_env'; return null; }
+      matchDebug[`${addrType}_key_len`] = KAKAO_API_KEY.length;
+      const geocodeDebug: any = {};
+      const coord = await kakaoGeocode(addr, KAKAO_API_KEY, geocodeDebug);
       if (!coord) {
-        console.log(`geocode 실패: "${addr}"`);
+        matchDebug[`${addrType}_fail`] = `geocode_failed:${geocodeDebug.kakao_reason || 'unknown'}`;
+        console.log(`geocode 실패: "${addr}" reason=${geocodeDebug.kakao_reason}`);
         return null;
       }
-      const { data: matches } = await supabase.rpc('match_apartment_by_coord', {
+      matchDebug[`${addrType}_coord`] = `${coord.lat},${coord.lng}`;
+      const { data: matches, error: rpcErr } = await supabase.rpc('match_apartment_by_coord', {
         p_lat: coord.lat,
         p_lng: coord.lng,
         p_radius_m: RADIUS_M,
         p_addr_type: addrType,
       });
+      if (rpcErr) { matchDebug[`${addrType}_fail`] = `rpc_error: ${rpcErr.message}`; return null; }
+      matchDebug[`${addrType}_matches`] = matches?.length || 0;
+      matchDebug[`${addrType}_match_names`] = (matches || []).map((m: any) => `${m.kapt_code}/${m.kapt_name}`).slice(0, 5);
       if (!matches?.length) {
+        matchDebug[`${addrType}_fail`] = 'no_matches_in_radius';
         console.log(`반경 ${RADIUS_M}m 내 단지 없음: "${addr}" (${addrType})`);
         return null;
       }
@@ -279,7 +293,8 @@ Deno.serve(async (req) => {
         return all.find(s => s.endsWith('구')) || all.find(s => s.endsWith('시')) || all[0] || null;
       };
       const sgg = pickSgg(location) || pickSgg(fullText);
-      const umdMatch = location.match(/([가-힣]+(?:동|읍|면|리))(?=[\s,.]|$)/) || fullText.match(/([가-힣]+(?:동|읍|면|리))(?=[\s,.]|$)/);
+      const umdRegex = /([가-힣]+(?:동|읍|면|리)(?:\d+가)?)(?=[\s,.]|$)/;
+      const umdMatch = location.match(umdRegex) || fullText.match(umdRegex);
       const umd = umdMatch ? umdMatch[1] : null;
 
       if (!complex || !sgg || !umd) {
