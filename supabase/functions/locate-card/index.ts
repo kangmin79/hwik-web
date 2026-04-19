@@ -279,7 +279,7 @@ Deno.serve(async (req) => {
         return all.find(s => s.endsWith('구')) || all.find(s => s.endsWith('시')) || all[0] || null;
       };
       const sgg = pickSgg(location) || pickSgg(fullText);
-      const umdMatch = location.match(/([가-힣]+(?:동|읍|면|리))\b/) || fullText.match(/([가-힣]+(?:동|읍|면|리))\b/);
+      const umdMatch = location.match(/([가-힣]+(?:동|읍|면|리))(?=[\s,.]|$)/) || fullText.match(/([가-힣]+(?:동|읍|면|리))(?=[\s,.]|$)/);
       const umd = umdMatch ? umdMatch[1] : null;
 
       if (!complex || !sgg || !umd) {
