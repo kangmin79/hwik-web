@@ -449,9 +449,65 @@ function render() {
     </a>`;
   }).join('');
 
-  // SEO 텍스트(seoParts) 생성 코드 제거 (2026-04-19):
-  // 화면 노출 위치였던 .seo-text 가 fallback-content 의 "단지 정보" 서술형과 100% 중복 →
-  // .seo-text div + 이 생성 로직 모두 제거. fallback-content 가 SEO 콘텐츠 단일 진실 소스.
+  // SEO 텍스트 — DB가 아닌 실제 데이터 기반으로 자동 생성
+  const seoParts = [];
+  // 기본 정보 (확실한 것만)
+  const nm = d.complex_name || '';
+  const lastCh = nm.charAt(nm.length - 1);
+  const hasJong = lastCh >= '가' && lastCh <= '힣' && (lastCh.charCodeAt(0) - 0xAC00) % 28 !== 0;
+  const seoBasic = [esc(d.complex_name), hasJong ? '은' : '는'];
+  if (d.address) seoBasic.push(esc(d.address) + '에 위치한');
+  if (d.build_year) seoBasic.push(d.build_year + '년 준공');
+  seoBasic.push('아파트입니다.');
+  if (d.total_units) seoBasic.push('총 ' + d.total_units.toLocaleString() + '세대 규모입니다.');
+  seoParts.push(seoBasic.join(' '));
+
+  // 단지 스펙 (확실한 것만)
+  const specParts = [];
+  if (d.top_floor) specParts.push('최고 ' + d.top_floor + '층');
+  if (parseInt(d.parking || 0) > 0) {
+    specParts.push('주차 ' + parseInt(d.parking).toLocaleString() + '대');
+    if (d.total_units) specParts.push('(세대당 ' + (parseInt(d.parking) / d.total_units).toFixed(1) + '대)');
+  }
+  if (d.heating) specParts.push(d.heating);
+  if (d.builder) specParts.push('시공 ' + d.builder);
+  if (specParts.length > 0) seoParts.push(specParts.join(', ') + '.');
+  if (d.mgmt_fee) seoParts.push('세대당 월 평균 관리비 약 ' + Math.round(d.mgmt_fee/10000) + '만원.');
+
+  // 평형 (DB categories 기반)
+  if (cats.length > 0) {
+    seoParts.push('보유 면적(전용): ' + cats.join(', ') + '㎡.');
+  }
+
+  // 지하철 (DB nearby_subway 기반)
+  if (subway.length > 0) {
+    const subList = subway.map(s => esc(s.name) + (s.line ? '('+esc(s.line)+')' : '') + ' 도보 ' + walkMin(s.distance));
+    seoParts.push('인근 지하철: ' + subList.join(', ') + '.');
+  }
+
+  // 학교 (DB nearby_school 기반)
+  if (school.length > 0) {
+    const schList = school.map(s => esc(s.name) + ' 도보 ' + walkMin(s.distance));
+    seoParts.push('인근 학교: ' + schList.join(', ') + '.');
+  }
+
+  // 시세 (실제 거래 데이터 기반)
+  if (recentPrice) {
+    let priceText = '최근 매매 실거래가는 ' + formatPrice(recentPrice);
+    if (recentData && recentData.date) priceText += ' (' + recentData.date + ' 기준)';
+    priceText += '입니다.';
+    seoParts.push(priceText);
+  }
+  if (highPrice && highData) {
+    seoParts.push('최근 5년 최고가는 ' + formatPrice(highPrice) + (highData.date ? ' (' + highData.date + ')' : '') + '입니다.');
+  }
+  if (jeonseRate) {
+    seoParts.push('전세가율은 ' + jeonseRate + '%입니다.');
+  }
+
+  const seoFull = seoParts.join(' ');
+  const seoShort = seoFull.length > 120 ? seoFull.slice(0,120) : seoFull;
+  const seoRest = seoFull.length > 120 ? seoFull.slice(120) : '';
 
   // 조합
   const locationParts = (d.location || '').split(' ');
@@ -609,11 +665,8 @@ function render() {
         ${listingBadge ? '<div class="listing-badge">'+esc(listingBadge)+'</div>' : ''}
       </div>
       ${listingHtml
-        ? '<div class="trade-list">' + listingHtml + '</div>' +
-          (listings[0]?.agent_id
-            ? `<a class="listing-empty-cta" href="/agent.html?id=${encodeURIComponent(listings[0].agent_id)}&kapt_code=${encodeURIComponent(id)}&type=${encodeURIComponent(currentTab)}" style="display:block;text-align:center;padding:12px;margin-top:8px;background:var(--yellow-bg,#fef9e7);border-radius:8px;text-decoration:none;">이 단지 매물 전체 보기 →</a>`
-            : '')
-        : '<div class="listing-empty"><div class="listing-empty-text">아직 매물이 없어요</div><a class="listing-empty-cta" href="#nearby-section" style="text-decoration:none;">바로 아래 주변 단지 시세 확인 ↓</a></div>'
+        ? '<div class="trade-list">' + listingHtml + '</div>'
+        : '<div class="listing-empty"><div class="listing-empty-text">이 단지에 등록된 매물이 아직 없습니다</div><a class="listing-empty-cta" href="/card_generator_v2_auth.html" style="text-decoration:none;">중개사님, 매물을 등록해보세요 →</a></div>'
       }
     </div>
 
@@ -626,9 +679,31 @@ function render() {
       <div style="display:flex;flex-direction:column;gap:8px;" id="nearby-list">${nearbyHtml || ''}</div>
     </div>
 
-    <!-- 요약 문단 / FAQ / 더 알아보기 모두 제거 (2026-04-19):
-         SSR fallback-content 가 동일 정보를 더 풍부하게 노출 → 시각적 중복 방지.
-         fallback-content (페이지 하단) 가 단일 진실 소스 — 클로킹 방지 + Google 정책 준수. -->
+    <!-- 요약 문단 (구글 스니펫용 + 사용자 정보) -->
+    ${(() => {
+      const parts = [];
+      const addr = d.address || '';
+      const nm = d.complex_name || '';
+      const yr = d.build_year ? d.build_year + '년 준공' : '';
+      const ut = d.total_units ? d.total_units.toLocaleString() + '세대' : '';
+      const loc = addr || d.location || '';
+      if (loc) parts.push(`${esc(nm)}은(는) ${esc(loc)}에 위치한 아파트입니다.`);
+      if (yr && ut) parts.push(`${yr}, 총 ${ut} 규모입니다.`);
+      else if (yr) parts.push(`${yr} 준공되었습니다.`);
+      else if (ut) parts.push(`총 ${ut} 규모입니다.`);
+      if (recentPrice && currentPyeong) parts.push(`전용 ${currentPyeong}㎡ 최근 매매가는 ${formatPrice(recentPrice)}입니다.`);
+      if (jeonseRate) parts.push(`전세가율은 ${jeonseRate}%입니다.`);
+      parts.push('모든 데이터는 국토교통부 실거래가 공개시스템 기반입니다.');
+      return parts.length > 1
+        ? `<p style="font-size:12px;color:var(--sub);line-height:1.8;margin:0 16px 16px;">${parts.join(' ')}</p>`
+        : '';
+    })()}
+
+    <!-- FAQ -->
+    <div class="faq-section">
+      <div class="section-title">자주 묻는 질문</div>
+      ${faqHtml}
+    </div>
 
     <div class="divider"></div>
 
@@ -640,14 +715,50 @@ function render() {
     </div>
     <div class="divider"></div>` : ''}
 
+    <!-- 내부 링크 (SEO) -->
+    <div class="section">
+      <div class="section-title">더 알아보기</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <a href="/dong/${encodeURIComponent(makeDongSlug(guName, dong, d.address||''))}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
+          <span style="font-size:13px;">${esc(dongDisplay)} 다른 단지 시세</span><span style="color:var(--sub);font-size:12px;">→</span>
+        </a>
+        <a href="/gu.html?name=${encodeURIComponent(guName)}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
+          <span style="font-size:13px;">${esc(guName)} 전체 시세</span><span style="color:var(--sub);font-size:12px;">→</span>
+        </a>
+        <a href="/ranking.html" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
+          <span style="font-size:13px;">서울 아파트 순위</span><span style="color:var(--sub);font-size:12px;">→</span>
+        </a>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
     <!-- CTA -->
     <div class="cta-section">
       <a class="btn-primary" href="/mobile-v6.html" style="display:block;text-align:center;text-decoration:none;">이 단지 매물 전체보기</a>
       <a class="btn-secondary" href="/card_generator_v2_auth.html" style="display:block;text-align:center;text-decoration:none;">공인중개사 서비스 · 무료로 시작하기</a>
     </div>
 
-    <!-- .seo-section 제거 (2026-04-19): 데이터 안내·출처·오류 신고 모두 fallback-content 끝으로 이동
-         → 페이지 가장 하단에 위치 (시세·FAQ·관련 검색어 다음) -->
+    <!-- SEO -->
+    <div class="seo-section">
+      <div class="seo-text">
+        ${esc(seoShort)}${seoRest ? '<span id="seoMore" style="display:none;">' + esc(seoRest) + '</span><span class="seo-more" onclick="document.getElementById(\'seoMore\').style.display=\'inline\';this.style.display=\'none\';"> 더보기</span>' : ''}
+      </div>
+      <details style="font-size:12px;color:var(--sub);margin-top:10px;">
+        <summary style="cursor:pointer;">데이터 안내 ▼</summary>
+        <div style="margin-top:6px;line-height:1.8;">
+          <b>실거래가</b>: 국토교통부 실거래가 공개시스템 (매일 자동 수집)<br>
+          <b>공급면적</b>: 국토교통부 건축물대장 (전용면적 + 주거공용면적)<br>
+          공급면적이 확인되지 않은 단지는 전용면적만 표시합니다<br>
+          같은 타입도 세대별 실측값 기준으로 면적이 미세하게 다를 수 있습니다<br>
+          거래 취소·정정 건은 반영이 지연될 수 있습니다
+        </div>
+      </details>
+      <div class="seo-source" style="margin-top:8px;">실거래가 출처: 국토교통부 · 최종 데이터 확인: ${new Date(Date.now() + 9*3600*1000).toISOString().slice(0,10)}</div>
+      <div style="margin-top:14px;text-align:center;">
+        <button onclick="openReportModal()" style="background:none;border:1px solid var(--border, #e5e7eb);border-radius:20px;color:var(--sub, #6b7280);font-size:12px;cursor:pointer;padding:6px 16px;">🚨 데이터 오류 신고</button>
+      </div>
+    </div>
   `;
 
   // 이벤트 바인딩

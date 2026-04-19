@@ -70,130 +70,6 @@ def _has_gu_page(address, gu_url=None):
     return True
 
 
-# ── 관련 검색어 섹션 (GSC 데이터 기반 내부 링크) ───────────
-# GSC(2026-04-19) 쿼리 분석 결과에 근거한 앵커 텍스트만 사용한다.
-# 검증되지 않은 패턴은 링크 무덤이 되므로 추가 금지.
-#
-# 상위생활권 화이트리스트: 구글 autocomplete에서 "{상위} {동} 아파트 시세"
-# 패턴이 실재하는 지역만 prefix를 붙인다. 나머지는 동/구 단위만 사용.
-LIVING_AREA_PREFIX = {
-    # (region_key, gu_or_city) → prefix
-    ("gyeonggi", "성남시 분당구"): "분당",
-    ("gyeonggi", "고양시 일산동구"): "일산",
-    ("gyeonggi", "고양시 일산서구"): "일산",
-    ("gyeonggi", "성남시 수정구"): "판교",  # 판교신도시 일부
-    ("gyeonggi", "수원시 영통구"): "광교",  # 광교 일부
-    ("gyeonggi", "용인시 수지구"): "수지",
-    ("gyeonggi", "화성시"): "동탄",         # 동탄신도시 (화성시 포함)
-    ("gyeonggi", "하남시"): "미사",         # 미사지구 (하남시 일부)
-    ("gyeonggi", "시흥시"): "배곧",         # 배곧신도시 일부
-    ("incheon", "연수구"): "송도",          # 송도국제도시
-    ("seoul",   "강서구"): "마곡",          # 마곡지구 일부
-}
-
-
-def _is_upper_living_area(region_key, gu_raw):
-    """해당 단지가 상위생활권 prefix 대상인지."""
-    if not region_key or not gu_raw:
-        return None
-    key = (region_key, gu_raw)
-    return LIVING_AREA_PREFIX.get(key)
-
-
-def _page_seed(danji_id):
-    """단지 ID 기반 결정적 시드 (빌드 재현성 보장)."""
-    h = hashlib.md5((danji_id or "").encode("utf-8")).hexdigest()
-    return int(h[:8], 16)
-
-
-def _weighted_ranking_pick(danji_id, jeonse_rate, price_delta_ratio):
-    """3종 랭킹 중 단지 성격에 맞는 1개 선택 (결정적 가중치 랜덤).
-
-    규칙:
-      - 전세가율 ≥ 75% → 전세:매매:㎡당 = 60:20:20
-      - 1년 가격 변동 절대값 ≥ 10% → 매매:전세:㎡당 = 60:20:20
-      - 기본 → 매매:전세:㎡당 = 34:33:33
-    """
-    if jeonse_rate is not None and jeonse_rate >= 75:
-        weights = [("jeonse", 60), ("price", 20), ("sqm", 20)]
-    elif price_delta_ratio is not None and abs(price_delta_ratio) >= 10:
-        weights = [("price", 60), ("jeonse", 20), ("sqm", 20)]
-    else:
-        weights = [("price", 34), ("jeonse", 33), ("sqm", 33)]
-    seed = _page_seed(danji_id)
-    total = sum(w for _, w in weights)
-    pick = seed % total
-    acc = 0
-    for key, w in weights:
-        acc += w
-        if pick < acc:
-            return key
-    return weights[-1][0]
-
-
-_R_LABEL_MAP = {"seoul":"서울","incheon":"인천","gyeonggi":"경기","busan":"부산","daegu":"대구","gwangju":"광주","daejeon":"대전","ulsan":"울산","sejong":"세종","chungbuk":"충북","chungnam":"충남","jeonbuk":"전북","jeonnam":"전남","gyeongbuk":"경북","gyeongnam":"경남","gangwon":"강원","jeju":"제주"}
-
-
-def build_related_anchors(d, rt, jr, bc, year_ago):
-    """관련 검색어 섹션의 앵커 리스트 생성 — HTML과 JSON-LD에서 공유.
-
-    반환: [(href, text), ...]
-    GSC 쿼리 데이터(2026-04-19)에 근거한 패턴만 사용한다.
-    """
-    did = d.get("id", "")
-    loc_parts_raw = (d.get("location") or "").split(" ", 1)
-    dong_name = loc_parts_raw[1] if len(loc_parts_raw) >= 2 else ""
-    gu_raw = extract_gu_from_address(d.get("address", "")) or (loc_parts_raw[0] if loc_parts_raw else "")
-    gu_esc = esc(gu_raw)
-    dong_slug_str = make_dong_slug(gu_raw, dong_name, d.get("address", "")) if dong_name else ""
-    region_label = detect_region(d.get("address", "") or "")
-    gu_url = gu_url_slug(region_label, gu_raw)
-    region_key = _RLTK.get(region_label) if region_label else None
-    r_label = _R_LABEL_MAP.get(region_key, region_key) if region_key else ""
-    living_prefix = _is_upper_living_area(region_key, gu_raw)
-
-    # 가중치 계산
-    delta_ratio = None
-    if year_ago and bc and rt.get(bc):
-        cur_p_w = rt[bc].get("price", 0)
-        old_p_w = year_ago.get("price", 0)
-        if cur_p_w and old_p_w:
-            delta_ratio = (cur_p_w - old_p_w) / old_p_w * 100
-    jr_num = None
-    try:
-        jr_num = float(jr) if jr else None
-    except (ValueError, TypeError):
-        pass
-    ranking_pri = _weighted_ranking_pick(did, jr_num, delta_ratio)
-    ranking_alt_order = {"price": "jeonse", "jeonse": "sqm", "sqm": "price"}
-    ranking_sec = ranking_alt_order[ranking_pri]
-    seed = _page_seed(did)
-
-    anchors = []
-    if dong_name and dong_slug_str and dong_slug_str in DONG_SLUGS:
-        dong_href = f'/dong/{url_quote(dong_slug_str, safe="-")}.html'
-        if living_prefix and (seed % 3 != 0):
-            dong_text = f"{living_prefix} {esc(dong_name)} 아파트 시세"
-        elif seed % 2 == 0:
-            dong_text = f"{esc(dong_name)} 아파트 시세"
-        else:
-            dong_text = f"{esc(dong_name)} 아파트"
-        anchors.append((dong_href, dong_text))
-    if _has_gu_page(d.get("address", ""), gu_url):
-        gu_href = f'/gu/{url_quote(gu_url, safe="-")}.html'
-        gu_text = f"{gu_esc} 아파트 시세" if (seed % 2 == 0) else f"{gu_esc} 집값"
-        anchors.append((gu_href, gu_text))
-    if region_key:
-        rank_labels = {
-            "price":  f"{r_label} 아파트 매매가 순위",
-            "jeonse": f"{r_label} 전세 시세 순위",
-            "sqm":    f"{r_label} 평당 가격 순위",
-        }
-        anchors.append((f"/ranking/{region_key}-{ranking_pri}.html", rank_labels[ranking_pri]))
-        anchors.append((f"/ranking/{region_key}-{ranking_sec}.html", rank_labels[ranking_sec]))
-    return anchors
-
-
 # ── 유틸 ──────────────────────────────────────────────────
 def esc(s):
     return html_mod.escape(str(s)) if s else ""
@@ -650,9 +526,39 @@ def build_fallback_html(d):
                     f'<p style="font-size:12px;color:#6b7280;margin-bottom:8px;">'
                     f'주변 {total}개 단지 중 거래가 <strong>{rank}위</strong></p>'
                 )
-    # 주변 단지 섹션 제거 (2026-04-19): SPA(app.js) 의 "삼성동 주변 단지" 섹션과 100% 중복.
-    # SPA 가 더 풍부 (거리 표시 m, 실시간 위치 기반). Modern Googlebot 은 JS 실행하므로
-    # SPA 콘텐츠도 SEO 인식. fallback 의 관련 검색어 4 개로 내부 링크 충분.
+    # 주변 단지
+    if nearby:
+        lines.append('<h2 style="font-size:14px;font-weight:600;margin:16px 0 8px;">주변 단지</h2>')
+        lines.append('<ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px;">')
+        shown = 0
+        for n in nearby:
+            if shown >= 5:
+                break
+            nid = n.get("id", "")
+            if nid not in DANJI_SLUG_MAP:
+                continue  # 페이지 미생성 단지 스킵
+            prices = n.get("prices") or {}
+            nbest = None
+            ndiff = 999
+            for k, v in prices.items():
+                diff = abs(safe_int(k) - 84)
+                if diff < ndiff:
+                    ndiff = diff
+                    nbest = v
+            p = format_price(nbest.get("price")) if nbest and nbest.get("price") else "-"
+            nname_raw = n.get("name", "")
+            nloc_raw = n.get("location", "")
+            nslug = DANJI_SLUG_MAP[nid]
+            nname = esc(nname_raw)
+            nloc = esc(nloc_raw)
+            shown += 1
+            lines.append(
+                f'<li><a href="/danji/{url_quote(nslug, safe="-")}.html" style="display:flex;justify-content:space-between;'
+                f'padding:10px 12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">'
+                f'<span>{nname} <span style="color:#6b7280;font-size:11px;">{nloc}</span></span>'
+                f'<span style="font-weight:600;">{p}</span></a></li>'
+            )
+        lines.append("</ul>")
 
     # 요약 문단 (FAQ 위 — 구글 스니펫 + 본문 텍스트 신호)
     _intro = build_intro_sentence(
@@ -711,58 +617,6 @@ def build_fallback_html(d):
     if len(traded_areas) >= 2:
         parts = [f"전용 {a}㎡ {format_price(t.get('price'))}" for a, t in traded_areas]
         faq.append((f"{name} 면적별 가격은?", ", ".join(parts) + " (최근 거래가 기준)"))
-
-    # ── 신규 FAQ (2026-04-19): 5년 최저가 / 주력 평형 / 주차 대수 ──
-    # price_history 키: "85"=매매, "85_jeonse"=전세, "85_wolse"=월세
-    # 매매만 사용 (혼재 시 월세 보증금이 최저가로 잡혀 오류)
-    _pha = d.get("price_history") or {}
-    _min_trade = None  # {"price", "date", "cat"}
-    _cat_counts = {}   # {cat: 거래수} — 매매만
-    for _cat_k, _trades in _pha.items():
-        if not isinstance(_trades, list):
-            continue
-        if "_" in str(_cat_k):  # 전세/월세 제외
-            continue
-        _cat_counts[_cat_k] = _cat_counts.get(_cat_k, 0) + len(_trades)
-        for _tr in _trades:
-            _pr = _tr.get("price")
-            if not _pr:
-                continue
-            if _min_trade is None or _pr < _min_trade["price"]:
-                _min_trade = {"price": _pr, "date": _tr.get("date", ""), "cat": _cat_k}
-    # 5년 최저가 FAQ (최고가와 다를 때만)
-    _min_faq_added = False
-    if _min_trade and bc and high.get(bc):
-        _high_p = high[bc].get("price", 0)
-        if _min_trade["price"] and _high_p and _min_trade["price"] < _high_p:
-            _min_a = f"최근 5년 최저가는 {format_price(_min_trade['price'])}입니다."
-            if _min_trade.get("date"):
-                _min_a += f" ({_min_trade['date']}, 전용 {_min_trade['cat']}㎡)"
-            faq.append((f"{name} 최근 5년 최저가는?", _min_a))
-            _min_faq_added = True
-    # 주력 평형 FAQ (2개 이상 평형 거래, 5건 이상일 때)
-    _main_cat = None
-    _main_share = 0
-    _total_cat_trades = sum(_cat_counts.values())
-    if _cat_counts and _total_cat_trades >= 5:
-        _main_cat, _main_cnt = max(_cat_counts.items(), key=lambda x: x[1])
-        _main_share = round(_main_cnt / _total_cat_trades * 100)
-        if len(_cat_counts) >= 2 and _main_share >= 30:
-            faq.append((
-                f"{name} 주력 평형은?",
-                f"거래가 가장 많은 평형은 전용 {_main_cat}㎡로, 최근 거래의 약 {_main_share}%를 차지합니다.",
-            ))
-    # 주차 대수 FAQ (세대당 0.3대 이상일 때만 — 품질 필터)
-    _pk_n = safe_int(d.get("parking"), 0)
-    _units_n = units if isinstance(units, int) else 0
-    if _pk_n > 0 and _units_n > 0:
-        _per_unit = _pk_n / _units_n
-        if _per_unit >= 0.3:
-            faq.append((
-                f"{name} 주차 대수는?",
-                f"총 주차 {_pk_n:,}대로 세대당 약 {_per_unit:.2f}대 수준입니다.",
-            ))
-
     if faq:
         lines.append('<h2 style="font-size:14px;font-weight:600;margin:16px 0 8px;">자주 묻는 질문</h2>')
         for q, a in faq:
@@ -808,16 +662,6 @@ def build_fallback_html(d):
         seo.append(f"인근 학교로 {names}{josa(last_name, '이/가')} 있습니다.")
     if total_recent_trades >= 2:
         seo.append(f"최근 1년간 {total_recent_trades}건의 매매 거래가 있었습니다.")
-    # 신규 서술형 (2026-04-19): 5년 최저가 변동폭
-    if _min_faq_added and bc and high.get(bc):
-        _high_p_seo = high[bc].get("price", 0)
-        _min_p_seo = _min_trade["price"]
-        if _min_p_seo and _high_p_seo and _high_p_seo > _min_p_seo:
-            _swing = _high_p_seo - _min_p_seo
-            seo.append(f"최근 5년간 최저 {format_price(_min_p_seo)}에서 최고 {format_price(_high_p_seo)}까지 {format_price(_swing)} 범위에서 거래되었습니다.")
-    # 신규 서술형: 주력 평형 점유율
-    if _main_cat and _main_share >= 30 and len(_cat_counts) >= 2:
-        seo.append(f"거래가 가장 많은 평형은 전용 {_main_cat}㎡이며, 최근 거래 중 약 {_main_share}%를 차지합니다.")
     _today = datetime.now().strftime('%Y-%m-%d')
     seo.append(f"모든 데이터는 국토교통부 실거래가 공개시스템 기반입니다. 최종 데이터 확인: {_today}.")
     seo_text = " ".join(s for s in seo if s)
@@ -827,20 +671,28 @@ def build_fallback_html(d):
 
     lines.append(f'<p style="font-size:10px;color:#6b7280;margin-top:8px;">실거래가 출처: 국토교통부 · 최종 데이터 확인: {_today}</p>')
 
-    # ── 관련 검색어 섹션 (GSC 데이터 기반 내부 링크) ──
-    _anchors = build_related_anchors(d, rt, jr, bc, year_ago)
-
-    if _anchors:
-        lines.append('<nav aria-label="관련 검색어" style="margin-top:20px;">')
-        lines.append('<h2 style="font-size:14px;font-weight:600;margin:0 0 8px;">관련 검색어</h2>')
-        lines.append('<ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;">')
-        for _href, _text in _anchors:
-            lines.append(
-                f'<li><a href="{_href}" style="display:block;padding:12px;background:#f3f4f6;'
-                f'border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{_text}</a></li>'
-            )
-        lines.append('</ul>')
-        lines.append('</nav>')
+    # 내부 링크
+    loc_parts_raw = (d.get("location") or "").split(" ", 1)
+    dong_name = loc_parts_raw[1] if len(loc_parts_raw) >= 2 else ""
+    gu_for_link = extract_gu_from_address(d.get("address", "")) or (loc_parts_raw[0] if loc_parts_raw else "")
+    dong_slug_str = ""
+    if dong_name:
+        dong_slug_str = make_dong_slug(gu_for_link, dong_name, d.get("address", ""))
+    lines.append('<div style="margin-top:16px;display:flex;flex-direction:column;gap:8px;">')
+    if dong_name and dong_slug_str and dong_slug_str in DONG_SLUGS:
+        lines.append(f'<a href="/dong/{url_quote(dong_slug_str, safe="-")}.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{esc(dong_name)} 다른 단지 시세 →</a>')
+    _region_label = detect_region(d.get("address", "") or "")
+    _gu_url = gu_url_slug(_region_label, gu_raw)
+    if _has_gu_page(d.get("address", ""), _gu_url):
+        lines.append(f'<a href="/gu/{url_quote(_gu_url, safe="-")}.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{gu} 전체 시세 →</a>')
+    # 지역별 랭킹 3종 (ranking 슬러그: {region_key}-{type})
+    _region_key = _RLTK.get(_region_label) if _region_label else None
+    if _region_key:
+        _r_label = {"seoul":"서울","incheon":"인천","gyeonggi":"경기","busan":"부산","daegu":"대구","gwangju":"광주","daejeon":"대전","ulsan":"울산","sejong":"세종","chungbuk":"충북","chungnam":"충남","jeonbuk":"전북","jeonnam":"전남","gyeongbuk":"경북","gyeongnam":"경남","gangwon":"강원","jeju":"제주"}.get(_region_key, _region_key)
+        lines.append(f'<a href="/ranking/{_region_key}-price.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{_r_label} 아파트 매매가 순위 TOP 50 →</a>')
+        lines.append(f'<a href="/ranking/{_region_key}-sqm.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{_r_label} ㎡당 가격 순위 TOP 50 →</a>')
+        lines.append(f'<a href="/ranking/{_region_key}-jeonse.html" style="padding:12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">{_r_label} 전세가율 순위 TOP 50 →</a>')
+    lines.append("</div>")
 
     return "\n    ".join(lines)
 
@@ -1004,82 +856,8 @@ def build_jsonld(d):
             "name": f"{name} 면적별 가격은?",
             "acceptedAnswer": {"@type": "Answer", "text": ", ".join(parts) + " (최근 거래가 기준)"},
         })
-
-    # ── 신규 FAQ (JSON-LD, HTML과 동기화): 5년 최저가 / 주력 평형 / 주차 대수 ──
-    # 매매만 사용 (price_history 키 "_" 포함은 전세/월세)
-    _pha_jl = d.get("price_history") or {}
-    _min_trade_jl = None
-    _cat_counts_jl = {}
-    for _cat_kk, _trades_jl in _pha_jl.items():
-        if not isinstance(_trades_jl, list):
-            continue
-        if "_" in str(_cat_kk):
-            continue
-        _cat_counts_jl[_cat_kk] = _cat_counts_jl.get(_cat_kk, 0) + len(_trades_jl)
-        for _trjl in _trades_jl:
-            _prjl = _trjl.get("price")
-            if not _prjl:
-                continue
-            if _min_trade_jl is None or _prjl < _min_trade_jl["price"]:
-                _min_trade_jl = {"price": _prjl, "date": _trjl.get("date", ""), "cat": _cat_kk}
-    _high_jl = d.get("all_time_high") or {}
-    if _min_trade_jl and bc and _high_jl.get(bc):
-        _high_p_jl = _high_jl[bc].get("price", 0)
-        if _min_trade_jl["price"] and _high_p_jl and _min_trade_jl["price"] < _high_p_jl:
-            _min_a_jl = f"최근 5년 최저가는 {format_price(_min_trade_jl['price'])}입니다."
-            if _min_trade_jl.get("date"):
-                _min_a_jl += f" ({_min_trade_jl['date']}, 전용 {_min_trade_jl['cat']}㎡)"
-            faq_items.append({
-                "@type": "Question",
-                "name": f"{name} 최근 5년 최저가는?",
-                "acceptedAnswer": {"@type": "Answer", "text": _min_a_jl},
-            })
-    _total_cat_jl = sum(_cat_counts_jl.values())
-    if _cat_counts_jl and _total_cat_jl >= 5 and len(_cat_counts_jl) >= 2:
-        _main_cat_jl, _main_cnt_jl = max(_cat_counts_jl.items(), key=lambda x: x[1])
-        _main_share_jl = round(_main_cnt_jl / _total_cat_jl * 100)
-        if _main_share_jl >= 30:
-            faq_items.append({
-                "@type": "Question",
-                "name": f"{name} 주력 평형은?",
-                "acceptedAnswer": {"@type": "Answer", "text": f"거래가 가장 많은 평형은 전용 {_main_cat_jl}㎡로, 최근 거래의 약 {_main_share_jl}%를 차지합니다."},
-            })
-    _pk_jl = d.get("parking") or 0
-    try:
-        _pk_n_jl = int(_pk_jl)
-    except (ValueError, TypeError):
-        _pk_n_jl = 0
-    _units_jl = d.get("total_units") or 0
-    _units_n_jl = _units_jl if isinstance(_units_jl, int) else 0
-    if _pk_n_jl > 0 and _units_n_jl > 0:
-        _per_unit_jl = _pk_n_jl / _units_n_jl
-        if _per_unit_jl >= 0.3:
-            faq_items.append({
-                "@type": "Question",
-                "name": f"{name} 주차 대수는?",
-                "acceptedAnswer": {"@type": "Answer", "text": f"총 주차 {_pk_n_jl:,}대로 세대당 약 {_per_unit_jl:.2f}대 수준입니다."},
-            })
-
     if faq_items:
         graph.append({"@type": "FAQPage", "mainEntity": faq_items})
-
-    # ItemList — 관련 검색어 섹션 구조화 (HTML의 <nav>와 동일한 앵커)
-    year_ago_rl = find_year_ago_trade(d, bc) if bc else None
-    rel_anchors = build_related_anchors(d, rt, jr, bc, year_ago_rl)
-    if rel_anchors:
-        graph.append({
-            "@type": "ItemList",
-            "name": f"{name} 관련 검색어",
-            "itemListElement": [
-                {
-                    "@type": "ListItem",
-                    "position": i + 1,
-                    "name": text,
-                    "url": f"https://hwik.kr{href}",
-                }
-                for i, (href, text) in enumerate(rel_anchors)
-            ],
-        })
 
     return json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False)
 
@@ -1219,16 +997,17 @@ def generate_page(d):
     <div class="loading-spinner"></div>
     <div class="loading-text">단지 정보 불러오는 중...</div>
   </div>
-</div>
-<!--
-  SEO 보강 콘텐츠 (2026-04-19 클로킹 수정):
-  이전: id="fallback-content" 가 #app 안에 있고 display:none. app.js가 #app innerHTML을
-  덮어쓰면서 DOM에서 사라짐 → bot은 보고 사용자는 못 보는 구조 = Google 클로킹 위반.
-  변경: #app 밖으로 이동 + display:none 제거. JSON-LD FAQPage 11개와 화면 콘텐츠 일치.
-  h1은 app.js가 그리므로 여기서는 h2 사용 (중복 방지). nav/og-image는 SPA가 처리하므로 제거.
--->
-<div class="wrap" id="fallback-content" style="padding:24px 20px 20px;border-top:1px solid #e5e7eb;margin-top:8px;">
-  {fallback}
+  <div id="fallback-content" style="display:none;padding:20px;">
+    <nav style="font-size:11px;color:#6b7280;margin-bottom:12px;">
+      <a href="/" style="color:#6b7280;text-decoration:none;">휙</a> &gt;
+      {gu_nav}
+      {dong_nav}
+      {name}
+    </nav>
+    <img src="/og-image.png" alt="{name} 실거래가 시세" width="600" height="315" loading="lazy" style="width:100%;border-radius:8px;margin-bottom:12px;">
+    <h1 style="font-size:18px;font-weight:700;margin-bottom:8px;">{name} 실거래가</h1>
+    {fallback}
+  </div>
 </div>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -1303,23 +1082,18 @@ def main():
 
     print(f"{len(all_danji)}개 단지 로드 (기존 대비 {len(all_danji)/existing_html_count:.1%})" if existing_html_count else f"{len(all_danji)}개 단지 로드")
 
-    # ── 단일 단지 모드 체크 (테스트용): ONE_DANJI_ID=a14077902 환경변수 ──
-    # 필터링은 SLUG_MAP 생성 후로 미룸 (주변 단지 링크는 전체 데이터 기준)
-    one_id = os.environ.get("ONE_DANJI_ID", "").strip()
-
-    # ── 데이터 확보 후 기존 HTML 삭제 (단일 모드는 스킵 — 다른 페이지 보호) ──
-    if not one_id:
-        old_count = 0
-        skip_count = 0
-        for f in os.listdir(DANJI_DIR):
-            if f.endswith(".html"):
-                try:
-                    os.remove(os.path.join(DANJI_DIR, f))
-                    old_count += 1
-                except PermissionError:
-                    skip_count += 1  # VS Code 등이 파일 잠금 중 — 덮어쓰기로 처리됨
-        if old_count:
-            print(f"기존 {old_count}개 HTML 삭제" + (f" ({skip_count}개 잠금으로 스킵)" if skip_count else ""))
+    # ── 데이터 확보 후 기존 HTML 삭제 ──
+    old_count = 0
+    skip_count = 0
+    for f in os.listdir(DANJI_DIR):
+        if f.endswith(".html"):
+            try:
+                os.remove(os.path.join(DANJI_DIR, f))
+                old_count += 1
+            except PermissionError:
+                skip_count += 1  # VS Code 등이 파일 잠금 중 — 덮어쓰기로 처리됨
+    if old_count:
+        print(f"기존 {old_count}개 HTML 삭제" + (f" ({skip_count}개 잠금으로 스킵)" if skip_count else ""))
 
     # app.js 캐시 버전 — 오늘 날짜(KST) 기준으로 매일 자동 갱신
     global app_js_hash
@@ -1327,7 +1101,7 @@ def main():
     kst = datetime.now(timezone(timedelta(hours=9)))
     app_js_hash = kst.strftime("%Y%m%d")
 
-    # id → slug 맵 (주변 단지 링크용 — 거래 있는 단지만, 전체 데이터 기준)
+    # id → slug 맵 (주변 단지 링크용 — 거래 있는 단지만)
     global DANJI_SLUG_MAP
     DANJI_SLUG_MAP = {}
     for d in all_danji:
@@ -1339,14 +1113,6 @@ def main():
         if any(rt.get(c) for c in cats):
             DANJI_SLUG_MAP[did] = APT_SLUG_MAP.get(did) or make_slug(d.get("complex_name", ""), d.get("location", ""), did, d.get("address", ""))
     print(f"slug 맵: {len(DANJI_SLUG_MAP)}개 (거래 있는 단지만)")
-
-    # ── 단일 단지 모드: SLUG_MAP 생성 후 필터 적용 ──
-    if one_id:
-        all_danji = [d for d in all_danji if d.get("id") == one_id]
-        print(f"⚡ 단일 단지 모드: {one_id} ({len(all_danji)}개 매칭)")
-        if not all_danji:
-            print(f"❌ id={one_id} 단지를 DB에서 찾을 수 없음")
-            sys.exit(1)
 
     count = 0
     skipped = 0
