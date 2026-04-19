@@ -346,7 +346,11 @@ Deno.serve(async (req) => {
       if (!result && addrJibun) { matchDebug.step2 = 'attempted'; result = await matchByAddress(addrJibun, 'jibun'); matchDebug.step2_result = result ? 'success' : 'failed'; }
       if (!result && addrLegacy && !addrRoad && !addrJibun) { matchDebug.step_legacy = 'attempted'; result = await matchByAddress(addrLegacy, 'doro'); }
       // Step 3: 좌표 매칭 전부 실패 → 이름+지역 fallback
-      if (!result) { matchDebug.step3 = 'attempted'; result = await matchByNameRegion(); matchDebug.step3_result = result ? 'success' : 'failed'; }
+      //  apartments 테이블에는 아파트+오피스텔만 있으므로, 빌라/상가/사무실은 스킵 (RPC 호출 낭비 방지)
+      const cat = (p.category || '').toLowerCase();
+      const isApartmentLike = cat === 'apartment' || cat === 'officetel' || !cat;
+      if (!result && isApartmentLike) { matchDebug.step3 = 'attempted'; result = await matchByNameRegion(); matchDebug.step3_result = result ? 'success' : 'failed'; }
+      else if (!result) { matchDebug.step3 = `skipped:category=${cat}`; }
 
       if (result) {
         kaptCode = result.code.toLowerCase();

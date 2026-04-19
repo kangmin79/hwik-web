@@ -8,20 +8,29 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// ========== ㎡ → 평 변환 ==========
+// ========== ㎡ ↔ 평 변환 ==========
 function sqmToPyeong(sqm: number): number {
   return Math.round(sqm / 3.305785 * 10) / 10;
 }
+function pyeongToSqm(pyeong: number): number {
+  return Math.round(pyeong * 3.305785 * 10) / 10;
+}
 
-function extractAndConvertArea(areaStr: string): { original: string; pyeong: string | null } {
-  if (!areaStr) return { original: areaStr, pyeong: null };
-  const sqmMatch = areaStr.match(/(\d+\.?\d*)\s*㎡/);
-  if (sqmMatch) {
-    const sqm = parseFloat(sqmMatch[1]);
-    const pyeong = sqmToPyeong(sqm);
-    return { original: areaStr, pyeong: `${pyeong}평 (${sqm}㎡)` };
+// 평/㎡ 중 한 쪽만 있으면 양쪽 병기한 문자열로 정규화
+function extractAndConvertArea(areaStr: string): { original: string; normalized: string | null } {
+  if (!areaStr) return { original: areaStr, normalized: null };
+  const hasSqm = /(\d+\.?\d*)\s*㎡/.test(areaStr);
+  const hasPyeong = /(\d+\.?\d*)\s*평/.test(areaStr);
+  if (hasSqm && hasPyeong) return { original: areaStr, normalized: areaStr };
+  if (hasSqm) {
+    const sqm = parseFloat(areaStr.match(/(\d+\.?\d*)\s*㎡/)![1]);
+    return { original: areaStr, normalized: `${sqmToPyeong(sqm)}평 (${sqm}㎡)` };
   }
-  return { original: areaStr, pyeong: null };
+  if (hasPyeong) {
+    const py = parseFloat(areaStr.match(/(\d+\.?\d*)\s*평/)![1]);
+    return { original: areaStr, normalized: `${py}평 (${pyeongToSqm(py)}㎡)` };
+  }
+  return { original: areaStr, normalized: null };
 }
 
 // ========== 임베딩 ==========
@@ -406,8 +415,15 @@ Deno.serve(async (req) => {
 3. 확신 없으면 매물로 처리
 4. 호수(~호)는 절대 비공개 → memo에만
 
-■ ㎡ → 평 자동변환:
-area 필드에 ㎡가 있으면 평수도 함께 표기 (예: "84.8㎡(25.7평)")
+■ ㎡ ↔ 평 자동변환:
+- area 필드에 ㎡만 있으면 평수 병기 (예: "84.8㎡" → "25.7평 (84.8㎡)")
+- area 필드에 평만 있어도 ㎡ 병기 (예: "32평" → "32평 (105.8㎡)")
+- 두 표기 모두 나오게 정규화
+
+■ 상가/사무실 추가 필드 (category가 commercial/office일 때만):
+- management_fee: 월 관리비 (숫자만, 만원 단위). "관리비 30만원" → 30. 없으면 null.
+- rights_money: 권리금 (숫자만, 만원 단위). "권리금 3000만원" → 3000, "권리금 3000" → 3000. 없으면 null.
+- 아파트/오피스텔/원투룸은 이 두 필드 모두 null.
 
 ■ category:
 - apartment: 아파트, 주상복합
@@ -491,7 +507,9 @@ area 필드에 ㎡가 있으면 평수도 함께 표기 (예: "84.8㎡(25.7평)"
   "memo": "나만 보는 정보 (호수, 사람정보, 하자, 개인사유 등. 없으면 null)",
   "shared_memo": "중개사 공유 정보 (네고, 융자, 급매, 거래조건, 시세 등. 없으면 null)",
   "agent_comment": "중개사 코멘트 (없으면 null)",
-  "category": "apartment/officetel/room/commercial/office"
+  "category": "apartment/officetel/room/commercial/office",
+  "management_fee": "월 관리비 (숫자, 만원 단위. commercial/office만. 없으면 null)",
+  "rights_money": "권리금 (숫자, 만원 단위. commercial만. 없으면 null)"
 }
 
 매물 정보:
@@ -536,12 +554,10 @@ ${text}`
       parsedResult.floor = parsedResult.floor.replace(/\s+/g, ' ').replace(/\d+호/g, '').trim();
     }
 
-    // ㎡ → 평 변환 보완
+    // 평 / ㎡ 중 한 쪽만 있으면 양쪽 병기 (모든 타입 일관화)
     if (parsedResult.area) {
       const converted = extractAndConvertArea(parsedResult.area);
-      if (converted.pyeong && !parsedResult.area.includes('평')) {
-        parsedResult.area = converted.pyeong;
-      }
+      if (converted.normalized) parsedResult.area = converted.normalized;
     }
 
     const requiredFields = parsedResult.type === '손님'
@@ -556,6 +572,12 @@ ${text}`
     if (parsedResult.category && !VALID_CATEGORIES.includes(parsedResult.category)) {
       parsedResult.category = CATEGORY_FIX[parsedResult.category] || 'room';
     }
+
+    // ★ 관리비/권리금 — 해당 없는 카테고리는 강제 null (오분류 방지)
+    const _mf = parsedResult.management_fee;
+    parsedResult.management_fee = (parsedResult.category === 'commercial' || parsedResult.category === 'office') && _mf != null && !isNaN(Number(_mf)) ? Number(_mf) : null;
+    const _rm = parsedResult.rights_money;
+    parsedResult.rights_money = parsedResult.category === 'commercial' && _rm != null && !isNaN(Number(_rm)) ? Number(_rm) : null;
 
     console.log(`PARSED (${Date.now() - startTime}ms):`, parsedResult);
 

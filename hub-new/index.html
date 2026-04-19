@@ -2415,7 +2415,9 @@ const PanelRegister = (() => {
         complex:document.getElementById('cfComplex').value, area:document.getElementById('cfArea').value,
         floor:document.getElementById('cfFloor').value, room:r.room||null,
         features:Array.from(document.querySelectorAll('#cfTags .edit-chip')).map(el=>el.textContent.replace('✕','').trim()),
-        moveIn:r.moveIn||null, category:r.category||null, rawText:text
+        moveIn:r.moveIn||null, category:r.category||null,
+        management_fee:r.management_fee||null, rights_money:r.rights_money||null,
+        rawText:text
       };
       const comment=document.getElementById('cfComment')?.value?.trim();
       const sharedMemo=document.getElementById('cfShared')?.value?.trim();
@@ -2453,13 +2455,13 @@ const PanelRegister = (() => {
       Data.updateEmbedding(linkId);
       Data.batchGenerateTags(linkId).catch(()=>{});
       Data.locateCard(linkId).then(loc=>{
-        if(r.category==='apartment'){
-          if(loc?.kapt_name){
-            Toast.show(`🏢 ${loc.kapt_name} 단지로 매칭됨`);
-          }else{
-            console.log('[locate-card debug]', JSON.stringify(loc?.debug, null, 2));
-            Toast.show('⚠️ 단지 매칭 실패');
-          }
+        if(loc?.kapt_name){
+          Toast.show(`🏢 ${loc.kapt_name} 단지로 매칭됨`);
+        }else if(r.category==='apartment'||r.category==='officetel'){
+          console.log('[locate-card debug]', JSON.stringify(loc?.debug, null, 2));
+          Toast.show('⚠️ 단지 매칭 실패');
+        }else if(loc?.lat && loc?.lng){
+          Toast.show('📍 위치 매칭 완료');
         }
         Data.triggerAutoMatch(linkId);
       });
@@ -2525,7 +2527,7 @@ const PanelRegister = (() => {
   async function fiSaveAll(){
     const cards=fiParsedCards.filter(c=>!fiDeletedIds.has(c._id));if(!cards.length||!Auth.user)return;
     document.getElementById('leaveBanner').style.display='';const btn=document.getElementById('fiSaveBtn');btn.textContent='저장 중...';btn.disabled=true;let saved=0;const savedIds=[];
-    for(const c of cards){try{const prop={type:c.type,price:c.price,complex:c.complex,location:c.location,address_road:c.address_road||null,address_jibun:c.address_jibun||null,area:c.area,floor:c.floor,room:c.room,features:c.features||[],rawText:c.rawText||''};
+    for(const c of cards){try{const prop={type:c.type,price:c.price,complex:c.complex,location:c.location,address_road:c.address_road||null,address_jibun:c.address_jibun||null,area:c.area,floor:c.floor,room:c.room,features:c.features||[],category:c.category||null,management_fee:c.management_fee||null,rights_money:c.rights_money||null,rawText:c.rawText||''};
       const coords=await Data.matchCoords(prop);if(coords.lat){prop.lat=coords.lat;prop.lng=coords.lng;}
       const _pf=Data.parsePriceFields(c.price,c.type);
       const {data:sv}=await Auth.sb.from('cards').insert({agent_id:Auth.user.id,property:prop,style:'noimg',color:prop.type==='전세'?'mint':prop.type==='매매'?'coral':'blue',trade_status:'계약가능',tags:c.tags||[],embedding:c.embedding||null,search_text:c.search_text||null,search_text_private:c.search_text_private||null,price_number:_pf.price_number||c.price_number||null,deposit:_pf.deposit||c.deposit||null,monthly_rent:_pf.monthly_rent||c.monthly_rent||null}).select('id').single();
@@ -2691,8 +2693,14 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
       const feats=(p.features||[]).slice(0,4);
       const sel=Preview.getSelected().some(s=>s.id===c.id);
       const photos=c.photos||[];
-      const mainText=[p.complex,p.location].filter(Boolean).map(v=>esc(v)).join(' · ');
-      const subText=[p.area,p.floor].filter(Boolean).map(v=>esc(v)).join(' · ');
+      const _v=v=>v!=null&&String(v).trim()&&String(v).trim().toLowerCase()!=='null';
+      const mainText=[p.complex,p.location].filter(_v).map(v=>esc(v)).join(' · ');
+      const _extra=[];
+      if(p.category==='commercial'||p.category==='office'){
+        if(p.management_fee) _extra.push(`관리비 ${p.management_fee}만`);
+        if(p.rights_money) _extra.push(`권리금 ${p.rights_money}만`);
+      }
+      const subText=[p.area,p.floor,..._extra].filter(_v).map(v=>esc(v)).join(' · ');
 
       // 사진 썸네일
       let thumbHtml='';
@@ -3768,7 +3776,9 @@ const PanelClient = (() => {
         type:r.type||null,price:r.price||null,location:r.location||null,address:r.address||null,
         address_road:r.address_road||null,address_jibun:r.address_jibun||null,
         complex:r.complex||null,area:r.area||null,floor:r.floor||null,room:r.room||null,
-        features:r.features||[],moveIn:r.moveIn||null,category:r.category||null,rawText:text
+        features:r.features||[],moveIn:r.moveIn||null,category:r.category||null,
+        management_fee:r.management_fee||null,rights_money:r.rights_money||null,
+        rawText:text
       };
       const card2=Data.cache.clientCards.find(c=>c.id===cardId);
       const newStatus=card2?.client_status||'탐색중';
