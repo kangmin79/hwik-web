@@ -733,7 +733,19 @@ const Auth = (() => {
   const sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_KEY, { auth:{ clockSkewInSeconds:300 } });
   let user = null, profile = null, _token = '';
 
-  function getToken() { return _token || ''; }
+  function getToken() {
+    if (_token) return _token;
+    // ★ 세션 초기 로드 타이밍 이슈 방지: localStorage에서 직접 읽기 (Edge Function 401 방지)
+    try {
+      for (const k of Object.keys(localStorage)) {
+        if (k.startsWith('sb-') && k.endsWith('-auth-token')) {
+          const d = JSON.parse(localStorage.getItem(k) || 'null');
+          if (d?.access_token) { _token = d.access_token; return _token; }
+        }
+      }
+    } catch (_) {}
+    return '';
+  }
   function login() { sb.auth.signInWithOAuth({ provider:'kakao', options:{ redirectTo: location.href.split('?')[0].split('#')[0] }}); }
   async function logout() { try{await sb.auth.signOut();}catch(_){} user=null; profile=null; localStorage.removeItem('hwik_agent'); localStorage.removeItem('sb-jqaxejgzkchxbfzgzyzi-auth-token'); location.reload(); }
 
