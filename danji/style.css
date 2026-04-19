@@ -142,7 +142,7 @@ html,body { height:100%; font-family:-apple-system,BlinkMacSystemFont,'Apple SD 
 
 /* 로딩 */
 .loading { display:none; flex-direction:column; align-items:center; justify-content:center; height:80vh; gap:12px; }
-#fallback-content { display:none; }
+/* #fallback-content 의 display:none 제거 (2026-04-19): SSR SEO 콘텐츠 가시화 — Google 클로킹 방지 */
 .loading-spinner { width:32px; height:32px; border:3px solid var(--border); border-top-color:var(--yellow); border-radius:50%; animation:spin .8s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
 .loading-text { font-size:13px; color:var(--sub); }
