@@ -1257,8 +1257,7 @@ def generate_page(d):
   변경: #app 밖으로 이동 + display:none 제거. JSON-LD FAQPage 11개와 화면 콘텐츠 일치.
   h1은 app.js가 그리므로 여기서는 h2 사용 (중복 방지). nav/og-image는 SPA가 처리하므로 제거.
 -->
-<div class="wrap" id="fallback-content" style="padding:0 20px 20px;">
-  <h2 style="font-size:16px;font-weight:700;margin:24px 0 12px;color:#374151;border-top:1px solid #e5e7eb;padding-top:24px;">{name} 상세 정보</h2>
+<div class="wrap" id="fallback-content" style="padding:24px 20px 20px;border-top:1px solid #e5e7eb;margin-top:8px;">
   {fallback}
 </div>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>

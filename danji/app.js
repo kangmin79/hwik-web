@@ -682,29 +682,9 @@ function render() {
       <div style="display:flex;flex-direction:column;gap:8px;" id="nearby-list">${nearbyHtml || ''}</div>
     </div>
 
-    <!-- 요약 문단 (구글 스니펫용 + 사용자 정보) -->
-    ${(() => {
-      const parts = [];
-      const addr = d.address || '';
-      const nm = d.complex_name || '';
-      const yr = d.build_year ? d.build_year + '년 준공' : '';
-      const ut = d.total_units ? d.total_units.toLocaleString() + '세대' : '';
-      const loc = addr || d.location || '';
-      if (loc) parts.push(`${esc(nm)}은(는) ${esc(loc)}에 위치한 아파트입니다.`);
-      if (yr && ut) parts.push(`${yr}, 총 ${ut} 규모입니다.`);
-      else if (yr) parts.push(`${yr} 준공되었습니다.`);
-      else if (ut) parts.push(`총 ${ut} 규모입니다.`);
-      if (recentPrice && currentPyeong) parts.push(`전용 ${currentPyeong}㎡ 최근 매매가는 ${formatPrice(recentPrice)}입니다.`);
-      if (jeonseRate) parts.push(`전세가율은 ${jeonseRate}%입니다.`);
-      parts.push('모든 데이터는 국토교통부 실거래가 공개시스템 기반입니다.');
-      return parts.length > 1
-        ? `<p style="font-size:12px;color:var(--sub);line-height:1.8;margin:0 16px 16px;">${parts.join(' ')}</p>`
-        : '';
-    })()}
-
-    <!-- FAQ / 더 알아보기 섹션 제거 (2026-04-19): SSR fallback-content와 중복 → 클로킹 방지 -->
-    <!-- FAQ는 fallback-content의 "자주 묻는 질문" 11개로 통일 (JSON-LD와 일치) -->
-    <!-- 더 알아보기는 fallback-content의 "관련 검색어" 4개로 통일 (GSC 데이터 기반) -->
+    <!-- 요약 문단 / FAQ / 더 알아보기 모두 제거 (2026-04-19):
+         SSR fallback-content 가 동일 정보를 더 풍부하게 노출 → 시각적 중복 방지.
+         fallback-content (페이지 하단) 가 단일 진실 소스 — 클로킹 방지 + Google 정책 준수. -->
 
     <div class="divider"></div>
 
