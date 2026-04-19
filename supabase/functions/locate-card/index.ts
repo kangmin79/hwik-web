@@ -323,14 +323,15 @@ Deno.serve(async (req) => {
       };
     }
 
+    const matchDebug: any = { addrRoad, addrJibun, addrLegacy, complex: p.complex, location: p.location };
     try {
       // Waterfall: 도로명 → 지번 → legacy address → 이름+지역 fallback
       let result = null;
-      if (addrRoad) result = await matchByAddress(addrRoad, 'doro');
-      if (!result && addrJibun) result = await matchByAddress(addrJibun, 'jibun');
-      if (!result && addrLegacy && !addrRoad && !addrJibun) result = await matchByAddress(addrLegacy, 'doro');
+      if (addrRoad) { matchDebug.step1 = 'attempted'; result = await matchByAddress(addrRoad, 'doro'); matchDebug.step1_result = result ? 'success' : 'failed'; }
+      if (!result && addrJibun) { matchDebug.step2 = 'attempted'; result = await matchByAddress(addrJibun, 'jibun'); matchDebug.step2_result = result ? 'success' : 'failed'; }
+      if (!result && addrLegacy && !addrRoad && !addrJibun) { matchDebug.step_legacy = 'attempted'; result = await matchByAddress(addrLegacy, 'doro'); }
       // Step 3: 좌표 매칭 전부 실패 → 이름+지역 fallback
-      if (!result) result = await matchByNameRegion();
+      if (!result) { matchDebug.step3 = 'attempted'; result = await matchByNameRegion(); matchDebug.step3_result = result ? 'success' : 'failed'; }
 
       if (result) {
         kaptCode = result.code.toLowerCase();
@@ -438,6 +439,7 @@ Deno.serve(async (req) => {
       kapt_name: kaptName,
       added_tags: addedTags,
       total_tags: mergedTags,
+      debug: matchDebug,
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });

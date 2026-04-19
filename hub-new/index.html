@@ -2455,7 +2455,8 @@ const PanelRegister = (() => {
           if(loc?.kapt_name){
             Toast.show(`✅ ${loc.kapt_name} 단지로 매칭됨`);
           }else{
-            Toast.show(`⚠️ 단지 매칭 실패 — 정확한 도로명/지번 주소를 포함해주세요`);
+            console.log('[locate-card debug]', loc);
+            Toast.show(`⚠️ 단지 매칭 실패 — 콘솔(F12) 확인`);
           }
         }
         Data.triggerAutoMatch(linkId);
