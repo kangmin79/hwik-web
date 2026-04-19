@@ -449,65 +449,9 @@ function render() {
     </a>`;
   }).join('');
 
-  // SEO 텍스트 — DB가 아닌 실제 데이터 기반으로 자동 생성
-  const seoParts = [];
-  // 기본 정보 (확실한 것만)
-  const nm = d.complex_name || '';
-  const lastCh = nm.charAt(nm.length - 1);
-  const hasJong = lastCh >= '가' && lastCh <= '힣' && (lastCh.charCodeAt(0) - 0xAC00) % 28 !== 0;
-  const seoBasic = [esc(d.complex_name), hasJong ? '은' : '는'];
-  if (d.address) seoBasic.push(esc(d.address) + '에 위치한');
-  if (d.build_year) seoBasic.push(d.build_year + '년 준공');
-  seoBasic.push('아파트입니다.');
-  if (d.total_units) seoBasic.push('총 ' + d.total_units.toLocaleString() + '세대 규모입니다.');
-  seoParts.push(seoBasic.join(' '));
-
-  // 단지 스펙 (확실한 것만)
-  const specParts = [];
-  if (d.top_floor) specParts.push('최고 ' + d.top_floor + '층');
-  if (parseInt(d.parking || 0) > 0) {
-    specParts.push('주차 ' + parseInt(d.parking).toLocaleString() + '대');
-    if (d.total_units) specParts.push('(세대당 ' + (parseInt(d.parking) / d.total_units).toFixed(1) + '대)');
-  }
-  if (d.heating) specParts.push(d.heating);
-  if (d.builder) specParts.push('시공 ' + d.builder);
-  if (specParts.length > 0) seoParts.push(specParts.join(', ') + '.');
-  if (d.mgmt_fee) seoParts.push('세대당 월 평균 관리비 약 ' + Math.round(d.mgmt_fee/10000) + '만원.');
-
-  // 평형 (DB categories 기반)
-  if (cats.length > 0) {
-    seoParts.push('보유 면적(전용): ' + cats.join(', ') + '㎡.');
-  }
-
-  // 지하철 (DB nearby_subway 기반)
-  if (subway.length > 0) {
-    const subList = subway.map(s => esc(s.name) + (s.line ? '('+esc(s.line)+')' : '') + ' 도보 ' + walkMin(s.distance));
-    seoParts.push('인근 지하철: ' + subList.join(', ') + '.');
-  }
-
-  // 학교 (DB nearby_school 기반)
-  if (school.length > 0) {
-    const schList = school.map(s => esc(s.name) + ' 도보 ' + walkMin(s.distance));
-    seoParts.push('인근 학교: ' + schList.join(', ') + '.');
-  }
-
-  // 시세 (실제 거래 데이터 기반)
-  if (recentPrice) {
-    let priceText = '최근 매매 실거래가는 ' + formatPrice(recentPrice);
-    if (recentData && recentData.date) priceText += ' (' + recentData.date + ' 기준)';
-    priceText += '입니다.';
-    seoParts.push(priceText);
-  }
-  if (highPrice && highData) {
-    seoParts.push('최근 5년 최고가는 ' + formatPrice(highPrice) + (highData.date ? ' (' + highData.date + ')' : '') + '입니다.');
-  }
-  if (jeonseRate) {
-    seoParts.push('전세가율은 ' + jeonseRate + '%입니다.');
-  }
-
-  const seoFull = seoParts.join(' ');
-  const seoShort = seoFull.length > 120 ? seoFull.slice(0,120) : seoFull;
-  const seoRest = seoFull.length > 120 ? seoFull.slice(120) : '';
+  // SEO 텍스트(seoParts) 생성 코드 제거 (2026-04-19):
+  // 화면 노출 위치였던 .seo-text 가 fallback-content 의 "단지 정보" 서술형과 100% 중복 →
+  // .seo-text div + 이 생성 로직 모두 제거. fallback-content 가 SEO 콘텐츠 단일 진실 소스.
 
   // 조합
   const locationParts = (d.location || '').split(' ');
@@ -704,9 +648,7 @@ function render() {
 
     <!-- SEO -->
     <div class="seo-section">
-      <div class="seo-text">
-        ${esc(seoShort)}${seoRest ? '<span id="seoMore" style="display:none;">' + esc(seoRest) + '</span><span class="seo-more" onclick="document.getElementById(\'seoMore\').style.display=\'inline\';this.style.display=\'none\';"> 더보기</span>' : ''}
-      </div>
+      <!-- seo-text 제거 (2026-04-19): fallback-content 의 "단지 정보" 서술형과 중복 → 시각적 중복 방지 -->
       <details style="font-size:12px;color:var(--sub);margin-top:10px;">
         <summary style="cursor:pointer;">데이터 안내 ▼</summary>
         <div style="margin-top:6px;line-height:1.8;">
