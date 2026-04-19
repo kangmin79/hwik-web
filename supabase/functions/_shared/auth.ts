@@ -1,9 +1,7 @@
-// Supabase 표준 인증 — auth.getUser()로 검증
-// 내부 서비스 간 호출(telegram-webhook 등)은 x-hwik-internal 시크릿 + x-agent-id 헤더로 bypass
-import { createClient } from 'jsr:@supabase/supabase-js@2'
+// Supabase 인증 — Auth API 직접 호출 (ES256 JWT 호환)
+// 내부 서비스 bypass: x-hwik-internal + x-agent-id 헤더
 
 export async function getAuthUserId(req: Request): Promise<string | null> {
-  // 내부 서비스 bypass: HWIK_INTERNAL_SECRET 시크릿 일치 + x-agent-id 헤더로 유저 ID 전달
   const internalSecret = Deno.env.get('HWIK_INTERNAL_SECRET') || '';
   const internalHeader = req.headers.get('x-hwik-internal') || '';
   if (internalSecret.length > 0 && internalHeader === internalSecret) {
@@ -11,19 +9,20 @@ export async function getAuthUserId(req: Request): Promise<string | null> {
     if (agentId) return agentId;
   }
 
-  const authHeader = req.headers.get('authorization') || '';
+  const authHeader = req.headers.get('authorization') || req.headers.get('Authorization') || '';
   const token = authHeader.replace('Bearer ', '');
   if (!token) return null;
 
   try {
+    // ★ supabase-js getUser() ES256 검증 실패 우회 → Auth API 직접 호출
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-    const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      global: { headers: { Authorization: `Bearer ${token}` } }
+    const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const r = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { 'Authorization': `Bearer ${token}`, 'apikey': SUPABASE_ANON_KEY },
     });
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    if (error || !user) return null;
-    return user.id;
+    if (!r.ok) return null;
+    const user = await r.json();
+    return user?.id || null;
   } catch {
     return null;
   }

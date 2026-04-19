@@ -327,9 +327,17 @@ Deno.serve(async (req) => {
   const internalHeader = req.headers.get('x-hwik-internal') || '';
   const isInternalCall = internalSecret.length > 0 && internalHeader === internalSecret;
   if (!isInternalCall) {
-    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, SERVICE_ROLE);
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !user) {
+    // ★ supabase-js getUser()가 ES256 JWT 검증 실패하는 문제 우회 → Auth API 직접 호출
+    try {
+      const authRes = await fetch(`${Deno.env.get('SUPABASE_URL')!}/auth/v1/user`, {
+        headers: { 'Authorization': `Bearer ${token}`, 'apikey': SERVICE_ROLE },
+      });
+      if (!authRes.ok) {
+        return new Response(JSON.stringify({ error: '로그인이 필요합니다.' }), {
+          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+    } catch (_) {
       return new Response(JSON.stringify({ error: '로그인이 필요합니다.' }), {
         status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
