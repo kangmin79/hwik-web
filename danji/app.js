@@ -665,8 +665,11 @@ function render() {
         ${listingBadge ? '<div class="listing-badge">'+esc(listingBadge)+'</div>' : ''}
       </div>
       ${listingHtml
-        ? '<div class="trade-list">' + listingHtml + '</div>'
-        : '<div class="listing-empty"><div class="listing-empty-text">이 단지에 등록된 매물이 아직 없습니다</div><a class="listing-empty-cta" href="/card_generator_v2_auth.html" style="text-decoration:none;">중개사님, 매물을 등록해보세요 →</a></div>'
+        ? '<div class="trade-list">' + listingHtml + '</div>' +
+          (listings[0]?.agent_id
+            ? `<a class="listing-empty-cta" href="/agent.html?id=${encodeURIComponent(listings[0].agent_id)}&kapt_code=${encodeURIComponent(id)}&type=${encodeURIComponent(currentTab)}" style="display:block;text-align:center;padding:12px;margin-top:8px;background:var(--yellow-bg,#fef9e7);border-radius:8px;text-decoration:none;">이 단지 매물 전체 보기 →</a>`
+            : '')
+        : '<div class="listing-empty"><div class="listing-empty-text">아직 매물이 없어요</div><a class="listing-empty-cta" href="#nearby-section" style="text-decoration:none;">바로 아래 주변 단지 시세 확인 ↓</a></div>'
       }
     </div>
 
@@ -699,11 +702,9 @@ function render() {
         : '';
     })()}
 
-    <!-- FAQ -->
-    <div class="faq-section">
-      <div class="section-title">자주 묻는 질문</div>
-      ${faqHtml}
-    </div>
+    <!-- FAQ / 더 알아보기 섹션 제거 (2026-04-19): SSR fallback-content와 중복 → 클로킹 방지 -->
+    <!-- FAQ는 fallback-content의 "자주 묻는 질문" 11개로 통일 (JSON-LD와 일치) -->
+    <!-- 더 알아보기는 fallback-content의 "관련 검색어" 4개로 통일 (GSC 데이터 기반) -->
 
     <div class="divider"></div>
 
@@ -714,24 +715,6 @@ function render() {
       <a href="https://map.kakao.com/link/map/${encodeURIComponent(d.complex_name)},${d.lat},${d.lng}" target="_blank" rel="noopener" style="display:block;text-align:right;font-size:12px;color:var(--sub);margin-top:6px;text-decoration:none;">카카오맵에서 보기 →</a>
     </div>
     <div class="divider"></div>` : ''}
-
-    <!-- 내부 링크 (SEO) -->
-    <div class="section">
-      <div class="section-title">더 알아보기</div>
-      <div style="display:flex;flex-direction:column;gap:8px;">
-        <a href="/dong/${encodeURIComponent(makeDongSlug(guName, dong, d.address||''))}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
-          <span style="font-size:13px;">${esc(dongDisplay)} 다른 단지 시세</span><span style="color:var(--sub);font-size:12px;">→</span>
-        </a>
-        <a href="/gu.html?name=${encodeURIComponent(guName)}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
-          <span style="font-size:13px;">${esc(guName)} 전체 시세</span><span style="color:var(--sub);font-size:12px;">→</span>
-        </a>
-        <a href="/ranking.html" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
-          <span style="font-size:13px;">서울 아파트 순위</span><span style="color:var(--sub);font-size:12px;">→</span>
-        </a>
-      </div>
-    </div>
-
-    <div class="divider"></div>
 
     <!-- CTA -->
     <div class="cta-section">

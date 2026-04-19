@@ -1249,17 +1249,17 @@ def generate_page(d):
     <div class="loading-spinner"></div>
     <div class="loading-text">단지 정보 불러오는 중...</div>
   </div>
-  <div id="fallback-content" style="display:none;padding:20px;">
-    <nav style="font-size:11px;color:#6b7280;margin-bottom:12px;">
-      <a href="/" style="color:#6b7280;text-decoration:none;">휙</a> &gt;
-      {gu_nav}
-      {dong_nav}
-      {name}
-    </nav>
-    <img src="/og-image.png" alt="{name} 실거래가 시세" width="600" height="315" loading="lazy" style="width:100%;border-radius:8px;margin-bottom:12px;">
-    <h1 style="font-size:18px;font-weight:700;margin-bottom:8px;">{name} 실거래가</h1>
-    {fallback}
-  </div>
+</div>
+<!--
+  SEO 보강 콘텐츠 (2026-04-19 클로킹 수정):
+  이전: id="fallback-content" 가 #app 안에 있고 display:none. app.js가 #app innerHTML을
+  덮어쓰면서 DOM에서 사라짐 → bot은 보고 사용자는 못 보는 구조 = Google 클로킹 위반.
+  변경: #app 밖으로 이동 + display:none 제거. JSON-LD FAQPage 11개와 화면 콘텐츠 일치.
+  h1은 app.js가 그리므로 여기서는 h2 사용 (중복 방지). nav/og-image는 SPA가 처리하므로 제거.
+-->
+<div class="wrap" id="fallback-content" style="padding:0 20px 20px;">
+  <h2 style="font-size:16px;font-weight:700;margin:24px 0 12px;color:#374151;border-top:1px solid #e5e7eb;padding-top:24px;">{name} 상세 정보</h2>
+  {fallback}
 </div>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -1334,18 +1334,23 @@ def main():
 
     print(f"{len(all_danji)}개 단지 로드 (기존 대비 {len(all_danji)/existing_html_count:.1%})" if existing_html_count else f"{len(all_danji)}개 단지 로드")
 
-    # ── 데이터 확보 후 기존 HTML 삭제 ──
-    old_count = 0
-    skip_count = 0
-    for f in os.listdir(DANJI_DIR):
-        if f.endswith(".html"):
-            try:
-                os.remove(os.path.join(DANJI_DIR, f))
-                old_count += 1
-            except PermissionError:
-                skip_count += 1  # VS Code 등이 파일 잠금 중 — 덮어쓰기로 처리됨
-    if old_count:
-        print(f"기존 {old_count}개 HTML 삭제" + (f" ({skip_count}개 잠금으로 스킵)" if skip_count else ""))
+    # ── 단일 단지 모드 체크 (테스트용): ONE_DANJI_ID=a14077902 환경변수 ──
+    # 필터링은 SLUG_MAP 생성 후로 미룸 (주변 단지 링크는 전체 데이터 기준)
+    one_id = os.environ.get("ONE_DANJI_ID", "").strip()
+
+    # ── 데이터 확보 후 기존 HTML 삭제 (단일 모드는 스킵 — 다른 페이지 보호) ──
+    if not one_id:
+        old_count = 0
+        skip_count = 0
+        for f in os.listdir(DANJI_DIR):
+            if f.endswith(".html"):
+                try:
+                    os.remove(os.path.join(DANJI_DIR, f))
+                    old_count += 1
+                except PermissionError:
+                    skip_count += 1  # VS Code 등이 파일 잠금 중 — 덮어쓰기로 처리됨
+        if old_count:
+            print(f"기존 {old_count}개 HTML 삭제" + (f" ({skip_count}개 잠금으로 스킵)" if skip_count else ""))
 
     # app.js 캐시 버전 — 오늘 날짜(KST) 기준으로 매일 자동 갱신
     global app_js_hash
@@ -1353,7 +1358,7 @@ def main():
     kst = datetime.now(timezone(timedelta(hours=9)))
     app_js_hash = kst.strftime("%Y%m%d")
 
-    # id → slug 맵 (주변 단지 링크용 — 거래 있는 단지만)
+    # id → slug 맵 (주변 단지 링크용 — 거래 있는 단지만, 전체 데이터 기준)
     global DANJI_SLUG_MAP
     DANJI_SLUG_MAP = {}
     for d in all_danji:
@@ -1365,6 +1370,14 @@ def main():
         if any(rt.get(c) for c in cats):
             DANJI_SLUG_MAP[did] = APT_SLUG_MAP.get(did) or make_slug(d.get("complex_name", ""), d.get("location", ""), did, d.get("address", ""))
     print(f"slug 맵: {len(DANJI_SLUG_MAP)}개 (거래 있는 단지만)")
+
+    # ── 단일 단지 모드: SLUG_MAP 생성 후 필터 적용 ──
+    if one_id:
+        all_danji = [d for d in all_danji if d.get("id") == one_id]
+        print(f"⚡ 단일 단지 모드: {one_id} ({len(all_danji)}개 매칭)")
+        if not all_danji:
+            print(f"❌ id={one_id} 단지를 DB에서 찾을 수 없음")
+            sys.exit(1)
 
     count = 0
     skipped = 0
