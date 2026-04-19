@@ -470,8 +470,9 @@ area 필드에 ㎡가 있으면 평수도 함께 표기 (예: "84.8㎡(25.7평)"
   "type": "매매/전세/월세/손님 중 하나",
   "price": "가격만 (네고/협의 등 제외)",
   "location": "지역 (구+동, 예: 마포구 합정동)",
-  "address": "도로명주소 (있으면 추출, 예: 서울시 마포구 양화로 123. 없으면 null)",
-  "complex": "단지명 (없으면 null)",
+  "address_road": "도로명주소 (있으면 추출, '○○로/길/대로 + 번지' 형태. 예: 서울 송파구 올림픽로 300. 없으면 null)",
+  "address_jibun": "지번주소 (있으면 추출, '○○동 + 번지' 형태. 예: 서울 송파구 가락동 913. 번지 없이 동만 있으면 null)",
+  "complex": "단지명 (없으면 null). ★ 주의: 동번호/호수 반드시 제외. 예: '한양에드가3차301동'→'한양에드가3차', '광교2차 푸르지오시티 C동'→'광교2차 푸르지오시티'. 괄호 포함 이름은 그대로 보존. 예: '느티마을(3단지)(공무원)'. 한글을 숫자로 변환 금지 (예: '백운'을 '100'으로 바꾸지 마세요). '도시형생활주택','다세대주택','연립주택','빌라','상가건물' 같은 건물 유형 단어만 있으면 null.",
   "area": "면적 (㎡있으면 평수 병기)",
   "floor": "동+층만 (호수 제외 — 호수는 memo로)",
   "room": "방 구조",
@@ -510,6 +511,19 @@ ${text}`
     parsedResult.type = normalizeType(parsedResult.type);
     parsedResult.location = normalizeText(parsedResult.location);
     parsedResult.complex = normalizeText(parsedResult.complex);
+    // ★ complex 후처리: 동 번호 제거 + 건물 유형만 남으면 null
+    if (parsedResult.complex) {
+      parsedResult.complex = parsedResult.complex
+        .replace(/\s*\d+\s*동\s*$/g, '')           // "101동" 제거
+        .replace(/\s+\d+\s*동\s+/g, ' ')           // 중간 "101동" 제거
+        .replace(/\s+[A-Za-z]\s*동\s*$/g, '')     // "C동" 제거
+        .replace(/\s*\d+\s*호$/g, '')             // "501호" 제거
+        .trim();
+      // 건물 유형 단어만 있으면 null
+      if (/^(도시형생활주택|다세대주택|연립주택|빌라|상가건물|오피스텔|주상복합)$/.test(parsedResult.complex)) {
+        parsedResult.complex = null;
+      }
+    }
     if (parsedResult.floor) {
       parsedResult.floor = parsedResult.floor.replace(/\s+/g, ' ').replace(/\d+호/g, '').trim();
     }

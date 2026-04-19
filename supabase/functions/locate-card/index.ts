@@ -202,70 +202,152 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 7. ★ apartments 테이블 매칭 (단지명 → kapt_code)
+    // 7. ★ 좌표 기반 단지 매칭 (주소 → 카카오 geocode → apartments.doro_lat/lon or jibun_lat/lon 반경 매칭)
+    //    대원칙: 매칭 정확 못하면 kapt_code NULL (danji 연결 금지, False positive 방지)
     let kaptCode: string | null = null;
     let kaptName: string | null = null;
-    const complex = (p.complex || '').replace(/아파트|오피스텔/g, '').trim();
+    const RADIUS_M = 50;  // 50m 반경 — 같은 주소 geocode는 거의 0m, 50m 여유
+    const addrRoad = (p.address_road || '').trim();
+    const addrJibun = (p.address_jibun || '').trim();
+    // 하위 호환: 기존 property.address 필드 (도로명이었음)
+    const addrLegacy = (p.address || '').trim();
 
-    if (complex && complex.length >= 2) {
-      try {
-        // 위치 힌트: location 필드에서 구/시 추출 (예: "서울 강남구 대치동" → "강남구")
-        const location = p.location || '';
-        const sggMatch = location.match(/([가-힣]+(?:구|시|군))/) || fullText.match(/([가-힣]+(?:구|시|군))/);
-        const umdMatch = location.match(/([가-힣]+(?:동|읍|면|리))\b/) || fullText.match(/([가-힣]+(?:동|읍|면|리))\b/);
-        const sggHint = sggMatch ? sggMatch[1] : null;
-        const umdHint = umdMatch ? umdMatch[1] : null;
-
-        // 좌표 힌트: 카드 좌표 → 없으면 중개사 기존 매물 평균 좌표
-        let hintLat = finalLat;
-        let hintLng = finalLng;
-
-        if (!hintLat || !hintLng) {
-          // 중개사의 기존 매물에서 평균 좌표 계산
-          const { data: agentCards } = await supabase
-            .from('cards')
-            .select('lat, lng')
-            .eq('agent_id', agent_id)
-            .not('lat', 'is', null)
-            .not('lng', 'is', null)
-            .limit(20);
-          if (agentCards?.length) {
-            hintLat = agentCards.reduce((s: number, c: any) => s + c.lat, 0) / agentCards.length;
-            hintLng = agentCards.reduce((s: number, c: any) => s + c.lng, 0) / agentCards.length;
-          }
-        }
-
-        // match_apartment RPC 호출 (단지명 + 주소 + 좌표 같이)
-        const { data: aptMatches } = await supabase.rpc('match_apartment', {
-          p_complex: complex,
-          p_sgg: sggHint,
-          p_umd: umdHint,
-          p_lat: hintLat,
-          p_lng: hintLng,
-          p_radius_km: 10.0,
-        });
-
-        if (aptMatches?.length) {
-          const best = aptMatches[0];
-          // 신뢰도: score 40 이상이면 자동 확정
-          if (best.score >= 80 && /^a\d/i.test(best.kapt_code || '')) {
-            kaptCode = best.kapt_code.toLowerCase();
-            kaptName = best.kapt_name;
-            // 좌표가 없으면 단지 좌표로 보강
-            if (!finalLat && !finalLng && best.lat && best.lon) {
-              finalLat = best.lat;
-              finalLng = best.lon;
-              source = 'apartment_db';
-            }
-            // 구/동 태그 보강
-            if (best.sgg && !addedTags.includes(best.sgg)) addedTags.push(best.sgg);
-            if (best.umd_nm && !addedTags.includes(best.umd_nm)) addedTags.push(best.umd_nm);
-            console.log(`단지 매칭: "${complex}" → ${kaptName} (${best.sgg} ${best.umd_nm}) score=${best.score}`);
-          }
-        }
-      } catch (e) {
-        console.warn('단지 매칭 실패 (무시):', (e as Error).message);
+    async function matchByAddress(addr: string, addrType: 'doro' | 'jibun'): Promise<{ code: string; name: string; lat: number; lng: number; sgg?: string; umd_nm?: string } | null> {
+      if (!addr || !KAKAO_API_KEY) return null;
+      const coord = await kakaoGeocode(addr, KAKAO_API_KEY);
+      if (!coord) {
+        console.log(`geocode 실패: "${addr}"`);
+        return null;
       }
+      const { data: matches } = await supabase.rpc('match_apartment_by_coord', {
+        p_lat: coord.lat,
+        p_lng: coord.lng,
+        p_radius_m: RADIUS_M,
+        p_addr_type: addrType,
+      });
+      if (!matches?.length) {
+        console.log(`반경 ${RADIUS_M}m 내 단지 없음: "${addr}" (${addrType})`);
+        return null;
+      }
+      // complex 이름 토큰 정규화
+      const complexNorm = (p.complex || '').replace(/\s+/g, '').replace(/아파트|오피스텔/g, '');
+      const nameContains = (dbName: string): boolean => {
+        if (complexNorm.length < 2) return false;
+        const n = (dbName || '').replace(/\s+/g, '');
+        const token = complexNorm.slice(0, Math.min(3, complexNorm.length));
+        return n.includes(token) || complexNorm.slice(0, 2).length >= 2 && n.includes(complexNorm.slice(0, 2));
+      };
+
+      // ★ 이름 토큰 일치하는 것만 후보 (False positive 방지)
+      const validMatches = complexNorm.length >= 2
+        ? matches.filter((m: any) => nameContains(m.kapt_name))
+        : matches;  // complex 없으면 모든 반경 내 결과 허용 (중개사가 단지명 안 쓴 케이스)
+
+      if (!validMatches.length) {
+        console.log(`이름 불일치 거부: "${addr}" complex="${complexNorm}" 반경 내 ${matches.length}개 전부 이름 mismatch`);
+        return null;
+      }
+      // ★ 공식 K-apt A코드 우선 (같은 단지가 공식 A + 비공식 apt-* 중복 등록된 경우 정답은 공식)
+      const officialOnly = validMatches.filter((m: any) => /^A\d/i.test(m.kapt_code));
+      const finalMatches = officialOnly.length > 0 ? officialOnly : validMatches;
+      if (finalMatches.length > 1) {
+        console.log(`다중 매칭 거부 (${finalMatches.length}개): "${addr}" → 모호`);
+        return null;
+      }
+      const best = finalMatches[0];
+      if (!/^(a\d|apt-|offi-)/i.test(best.kapt_code || '')) {
+        console.log(`code 형식 불일치: ${best.kapt_code}`);
+        return null;
+      }
+      return {
+        code: best.kapt_code,
+        name: best.kapt_name,
+        lat: best.target_lat,
+        lng: best.target_lon,
+        sgg: best.sgg,
+        umd_nm: best.umd_nm,
+      };
+    }
+
+    // Step 3: 이름+지역 fallback (도로명/지번 매칭 실패 시)
+    async function matchByNameRegion(): Promise<{ code: string; name: string; lat: number; lng: number; sgg?: string; umd_nm?: string } | null> {
+      const complex = (p.complex || '').trim();
+      const location = p.location || '';
+      const pickSgg = (t: string): string | null => {
+        if (!t) return null;
+        const all = [...t.matchAll(/([가-힣]+(?:구|시|군))/g)].map(m => m[1]);
+        return all.find(s => s.endsWith('구')) || all.find(s => s.endsWith('시')) || all[0] || null;
+      };
+      const sgg = pickSgg(location) || pickSgg(fullText);
+      const umdMatch = location.match(/([가-힣]+(?:동|읍|면|리))\b/) || fullText.match(/([가-힣]+(?:동|읍|면|리))\b/);
+      const umd = umdMatch ? umdMatch[1] : null;
+
+      if (!complex || !sgg || !umd) {
+        console.log(`Step3 조건 미충족: complex="${complex}" sgg="${sgg}" umd="${umd}"`);
+        return null;
+      }
+
+      const { data: matches } = await supabase.rpc('match_apartment_by_name_region', {
+        p_complex: complex.replace(/아파트|오피스텔/g, '').trim(),
+        p_sgg: sgg,
+        p_umd: umd,
+        p_lat: finalLat,
+        p_lng: finalLng,
+      });
+      if (!matches?.length) {
+        console.log(`Step3 이름+지역 매칭 없음: complex="${complex}" ${sgg} ${umd}`);
+        return null;
+      }
+      // 공식 A코드 우선
+      const officialOnly = matches.filter((m: any) => /^A\d/i.test(m.kapt_code));
+      const finalList = officialOnly.length > 0 ? officialOnly : matches;
+      if (finalList.length > 1) {
+        console.log(`Step3 다중 매칭 거부 (${finalList.length}개): "${complex}" in ${sgg} ${umd}`);
+        return null;
+      }
+      const best = finalList[0];
+      if (!/^(a\d|apt-|offi-)/i.test(best.kapt_code || '')) return null;
+      // 좌표 힌트 있으면 반경 5km 이내 보조 검증
+      if (finalLat && finalLng && best.distance_km != null && best.distance_km > 5) {
+        console.log(`Step3 거리 보조검증 실패 (${best.distance_km.toFixed(2)}km): "${complex}"`);
+        return null;
+      }
+      console.log(`Step3 이름+지역 매칭 성공: "${complex}" → ${best.kapt_name} (${best.sgg} ${best.umd_nm})`);
+      return {
+        code: best.kapt_code,
+        name: best.kapt_name,
+        lat: best.target_lat,
+        lng: best.target_lon,
+        sgg: best.sgg,
+        umd_nm: best.umd_nm,
+      };
+    }
+
+    try {
+      // Waterfall: 도로명 → 지번 → legacy address → 이름+지역 fallback
+      let result = null;
+      if (addrRoad) result = await matchByAddress(addrRoad, 'doro');
+      if (!result && addrJibun) result = await matchByAddress(addrJibun, 'jibun');
+      if (!result && addrLegacy && !addrRoad && !addrJibun) result = await matchByAddress(addrLegacy, 'doro');
+      // Step 3: 좌표 매칭 전부 실패 → 이름+지역 fallback
+      if (!result) result = await matchByNameRegion();
+
+      if (result) {
+        kaptCode = result.code.toLowerCase();
+        kaptName = result.name;
+        if (!finalLat && !finalLng) {
+          finalLat = result.lat;
+          finalLng = result.lng;
+          source = 'apartment_match';
+        }
+        if (result.sgg && !addedTags.includes(result.sgg)) addedTags.push(result.sgg);
+        if (result.umd_nm && !addedTags.includes(result.umd_nm)) addedTags.push(result.umd_nm);
+        console.log(`단지 매칭 확정: ${kaptName} (${result.sgg} ${result.umd_nm}) code=${kaptCode}`);
+      } else {
+        console.log(`단지 매칭 실패 — kapt_code NULL 유지 (addr_road="${addrRoad}" addr_jibun="${addrJibun}" complex="${p.complex}")`);
+      }
+    } catch (e) {
+      console.warn('단지 매칭 에러 (무시):', (e as Error).message);
     }
 
     // 8. ★ 좌표 기반 근처 역/학교 자동 탐지 (반경 500m 역, 1km 학교)
