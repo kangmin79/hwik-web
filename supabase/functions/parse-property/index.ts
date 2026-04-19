@@ -563,28 +563,16 @@ ${text}`
     const searchTextPrivate = createSearchTextPrivate(parsedResult, text);
     const embeddingText = parsedResult.type === '손님' ? searchTextPrivate : searchText;
 
-    // ★ 임베딩 + lawdCd 병렬 처리 (좌표 조회 제거됨)
-    const [embedding, lawdCd] = await Promise.all([
-      generateEmbedding(embeddingText),
-      getLawdCd(parsedResult.location || ''),
-    ]);
+    // ★ 임베딩만 (lawdCd는 실거래가 이관과 함께 제거)
+    const embedding = await generateEmbedding(embeddingText);
+    const lawdCd: string | null = null;
 
-    console.log(`임베딩+lawdCd (${Date.now() - startTime}ms)`);
+    console.log(`임베딩 (${Date.now() - startTime}ms)`);
 
-    // 실거래가 조회 (매물이고 단지명+lawdCd 있을 때)
-    let salesData: any[] = [];
-    if (parsedResult.type !== '손님' && parsedResult.complex && lawdCd) {
-      salesData = await fetchRecentSales(parsedResult.complex, lawdCd, 12);
-      console.log(`실거래가: ${salesData.length}건 (${Date.now() - startTime}ms)`);
-    }
-
-    // agent_comment 생성 (실거래가 기반)
-    if (!parsedResult.agent_comment && parsedResult.type !== '손님') {
-      parsedResult.agent_comment = await generateAgentComment(parsedResult, salesData, ANTHROPIC_API_KEY);
-    }
-
-    // AI 크롤링용 public_data
-    const publicData = createPublicData(parsedResult, salesData);
+    // ★ 성능 최적화: 실거래가/agent_comment/public_data는 백그라운드로 이관
+    //    (fetchRecentSales/generateAgentComment/AI 태그 진화 모두 제거 — 매물 등록 응답속도 우선)
+    const salesData: any[] = [];
+    const publicData = null;
 
     const moveInDate = parseMoveInDate(parsedResult.moveIn);
 
@@ -753,67 +741,8 @@ ${text}`
       console.log(`거래조건→shared_memo 이동: ${extraShared.join(', ')}`);
     }
 
-    // ★ AI 자가진화 태그: 키워드로 못 잡은 텍스트 → Claude AI 분석 → 태그 추가
-    try {
-      // 기존 태그로 커버된 키워드 제거 → 남은 텍스트 추출
-      const taggedWords = new Set<string>();
-      for (const t of tags) taggedWords.add(t);
-      const allWords = [parsedResult.type, parsedResult.price, parsedResult.location, parsedResult.complex,
-        parsedResult.area, parsedResult.floor, ...(parsedResult.features||[]), parsedResult.memo, parsedResult.shared_memo,
-        parsedResult.contact_name, parsedResult.contact_phone].filter(Boolean).join(' ');
-      // rawText에서 이미 파싱된 정보를 제거한 나머지
-      let remaining = text;
-      for (const w of allWords.split(/\s+/)) { if (w.length >= 2) remaining = remaining.replace(new RegExp(w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), ''); }
-      remaining = remaining.replace(/\d+/g, '').replace(/[,./\-()~\s]+/g, ' ').trim();
-      // 의미 있는 텍스트가 남았으면 AI 분석
-      if (remaining.length >= 4) {
-        // 1. 먼저 ai_tag_mappings에서 기존 학습된 매핑 조회
-        const { data: existingMaps } = await supabase.from('ai_tag_mappings').select('input_text, standard_tag, confidence').gte('confidence', 0.7);
-        const learnedMap: Record<string, string> = {};
-        if (existingMaps) for (const m of existingMaps) learnedMap[m.input_text] = m.standard_tag;
-        // 기존 학습으로 잡히는 태그 추가
-        let aiTagsAdded: string[] = [];
-        for (const [inp, tag] of Object.entries(learnedMap)) {
-          if (remaining.includes(inp) && !tags.includes(tag)) { tags.push(tag); aiTagsAdded.push(`${inp}→${tag}(학습)`); }
-        }
-        // 2. 아직 남은 텍스트 → Claude AI 분석 (비동기, 실패해도 무시)
-        const stillRemaining = remaining;
-        if (stillRemaining.length >= 4) {
-          const FEATURE_LIST = '올수리,풀옵션,신축,리모델링,시스템에어컨,드레스룸,베란다확장,빌트인,부분수리,남향,동향,서향,북향,남동향,남서향,정남향,역세권,초역세권,더블역세권,학군좋음,학원가,대로변,초품아,GTX역세권,주차가능,주차1대,주차2대,주차무료,한강뷰,공원뷰,산뷰,시티뷰,탁트인전망,복층,테라스,루프탑,고층,저층,로얄층,분리형,애견가능,엘리베이터,경비실,보안,무인택배,관리비포함,즉시입주,입주협의,공실,HUG가능,무융자,대출가능,슬세권,런세권,숲세권,채광좋음,조용한동네,통풍좋음,전면넓음,코너자리,유동인구많음,권리금없음,업종제한없음,1층상가';
-          try {
-            const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-              body: JSON.stringify({
-                model: 'claude-haiku-4-5-20251001', max_tokens: 200,
-                messages: [{ role: 'user', content: `부동산 매물 텍스트에서 표준 태그를 추출해주세요.
-표준 태그 목록: ${FEATURE_LIST}
-텍스트: "${stillRemaining}"
-JSON 배열만 반환 (예: [{"input":"살기좋은","tag":"조용한동네","confidence":0.9}])
-매칭되는 것만. 없으면 []` }]
-              })
-            });
-            const aiData = await aiRes.json();
-            const aiText = aiData.content?.[0]?.text || '[]';
-            const jsonMatch = aiText.match(/\[[\s\S]*\]/);
-            if (jsonMatch) {
-              const aiMappings: any[] = JSON.parse(jsonMatch[0]);
-              for (const m of aiMappings) {
-                if (m.tag && m.confidence >= 0.7 && !tags.includes(m.tag)) {
-                  tags.push(m.tag);
-                  aiTagsAdded.push(`${m.input}→${m.tag}(AI:${m.confidence})`);
-                  // ai_tag_mappings에 저장 (upsert)
-                  supabase.from('ai_tag_mappings').upsert({
-                    input_text: m.input, standard_tag: m.tag, confidence: m.confidence, updated_at: new Date().toISOString()
-                  }, { onConflict: 'input_text,standard_tag' }).then(() => {});
-                }
-              }
-            }
-          } catch (aiErr) { console.warn('AI 태그 분석 실패 (무시):', (aiErr as Error).message); }
-        }
-        if (aiTagsAdded.length) console.log(`AI 태그 추가: ${aiTagsAdded.join(', ')}`);
-      }
-    } catch (tagErr) { console.warn('AI 태그 진화 실패 (무시):', (tagErr as Error).message); }
+    // ★ 성능 최적화: AI 자가진화 태그(Haiku Claude 호출)는 batchGenerateTags로 이관
+    //    1차 키워드 태그만 즉시 반환, AI 보강은 등록 후 백그라운드
 
     (result as any).tags = tags;
 
