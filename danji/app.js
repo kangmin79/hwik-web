@@ -161,6 +161,9 @@ async function loadData() {
     }
   } catch (e) { /* 태그 없이 정상 렌더링 */ }
 
+  // danji_pages.active_listings writer 없음 → cards 테이블 직접 조회 (플라이휠 복구)
+  data.active_listings = await fetchActiveListings(id);
+
   render();
   setupMapLazyLoad();
 }
@@ -195,6 +198,59 @@ function setupMapLazyLoad() {
     }
   }, { rootMargin: '200px' }); // 200px 전에 미리 로드
   obs.observe(el);
+}
+
+// ── cards 테이블에서 kapt_code로 계약가능 매물 조회 ──
+// danji_pages.active_listings에 writer가 없어서 항상 비어있음 → 런타임에 cards 직접 조회.
+async function fetchActiveListings(kaptCode) {
+  try {
+    const kc = (kaptCode || '').toLowerCase();
+    if (!/^a\d/.test(kc)) return []; // apt-/offi- 접미사 ID는 danji 페이지 없음
+    const { data, error } = await sb.from('cards')
+      .select('id,agent_id,property,photos,trade_status,created_at')
+      .eq('kapt_code', kc)
+      .eq('trade_status', '계약가능')
+      .order('created_at', { ascending: false })
+      .limit(20);
+    if (error || !data || data.length === 0) return [];
+
+    const agentIds = [...new Set(data.map(c => c.agent_id).filter(Boolean))];
+    const agentInfo = {};
+    if (agentIds.length > 0) {
+      const ap = await sb.from('profiles').select('id,agent_name,business_name,profile_photo,profile_photo_url').in('id', agentIds);
+      (ap.data || []).forEach(p => {
+        agentInfo[p.id] = {
+          agent_name: p.agent_name || '',
+          business_name: p.business_name || '',
+          photo: p.profile_photo_url || p.profile_photo || ''
+        };
+      });
+    }
+
+    return data.map(c => {
+      const p = c.property || {};
+      const photos = Array.isArray(c.photos) ? c.photos : [];
+      const thumb = photos[0]?.url || (typeof photos[0] === 'string' ? photos[0] : '');
+      const info = agentInfo[c.agent_id] || {};
+      return {
+        id: c.id,
+        agent_id: c.agent_id,
+        agent_name: info.agent_name || '',
+        business_name: info.business_name || '',
+        agent_photo: info.photo || '',
+        type: p.type || '',
+        price: p.price || '',
+        floor: p.floor || '',
+        area: p.area || '',
+        room: p.room || '',
+        move_in: p.move_in || '',
+        thumb
+      };
+    });
+  } catch (e) {
+    console.warn('fetchActiveListings failed', e);
+    return [];
+  }
 }
 
 // ── 렌더링 ──
@@ -389,18 +445,49 @@ function render() {
   const listingCount = {};
   listings.forEach(l => { listingCount[l.type] = (listingCount[l.type]||0) + 1; });
   const listingBadge = Object.entries(listingCount).map(([k,v]) => `${k} ${v}`).join(' · ');
-  const listingHtml = listings.slice(0,3).map(l => `
-    <div class="listing-item" style="display:flex;flex-direction:column;gap:6px;">
-      <a href="/property_view.html?id=${encodeURIComponent(l.id)}" style="text-decoration:none;color:inherit;display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          <div class="trade-price">${esc(l.type)} ${formatPrice(l.price)}</div>
-          <div class="trade-detail">${l.floor ? l.floor+'층' : ''} ${l.area ? '· '+l.area+'㎡' : ''} ${l.move_in ? '· '+esc(l.move_in) : ''}</div>
-        </div>
-        <div class="listing-link">상세보기</div>
-      </a>
-      ${l.agent_id ? `<a href="/agent.html?id=${encodeURIComponent(l.agent_id)}&kapt_code=${encodeURIComponent(id)}&type=${encodeURIComponent(currentTab)}" style="font-size:11px;color:var(--sub);text-decoration:none;display:flex;align-items:center;gap:4px;">${l.agent_name ? '담당: '+esc(l.agent_name) : '담당 중개사 보기'} →</a>` : ''}
-    </div>
-  `).join('');
+  // 카드 전체를 중개사 페이지로 연결 (손님 유입 → 중개사 연락 플라이휠)
+  // 1슬롯 고정: "한 카드 = 한 결정" 원칙. 여러 중개사 생기면 라운드로빈으로 1명만 노출.
+  const listingHtml = listings.slice(0,1).map(l => {
+    // 매물 실제 거래유형으로 필터 (danji 탭과 다를 수 있음 — 예: 매매 탭에서 월세 매물 클릭)
+    const typeParam = l.type || currentTab;
+    const href = l.agent_id
+      ? `/agent.html?id=${encodeURIComponent(l.agent_id)}&kapt_code=${encodeURIComponent(d.id)}&type=${encodeURIComponent(typeParam)}`
+      : `/property_view.html?id=${encodeURIComponent(l.id)}`;
+    const thumbHtml = l.thumb
+      ? `<img src="${esc(l.thumb)}" alt="매물" loading="lazy" decoding="async" style="width:80px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0;">`
+      : `<div style="width:80px;height:80px;border-radius:8px;flex-shrink:0;background:var(--hover, #f5f5f5);display:flex;align-items:center;justify-content:center;font-size:28px;">${{매매:'🏠',전세:'🔑',월세:'💰',반전세:'🏡'}[l.type]||'🏠'}</div>`;
+    const avatarInitial = (l.business_name || l.agent_name || '?').trim().charAt(0) || '?';
+    const avatarHtml = l.agent_photo
+      ? `<img src="${esc(l.agent_photo)}" alt="중개사" loading="lazy" decoding="async" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
+      : `<div style="width:28px;height:28px;border-radius:50%;background:var(--accent, #facc15);color:#1a1a1a;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">${esc(avatarInitial)}</div>`;
+    const agentTitle = l.business_name || l.agent_name || '';
+    const agentSub = l.business_name && l.agent_name ? `${l.agent_name} 공인중개사` : '';
+    const agentHeader = agentTitle
+      ? `<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;min-width:0;">
+          ${avatarHtml}
+          <div style="min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">
+            <span style="font-size:13px;font-weight:600;">${esc(agentTitle)}</span>${agentSub ? `<span style="font-size:12px;color:var(--sub);margin-left:6px;">${esc(agentSub)}</span>` : ''}
+          </div>
+        </div>`
+      : '';
+    return `
+    <a href="${href}" class="listing-item" style="text-decoration:none;color:inherit;display:flex;justify-content:space-between;align-items:center;gap:10px;">
+      <div style="flex:1;min-width:0;">
+        ${agentHeader}
+        <div class="trade-price" style="font-size:14px;">${esc(l.type)} ${formatPrice(l.price)}</div>
+        ${(() => {
+          const tags = [];
+          if (l.area) tags.push(/[㎡평]/.test(String(l.area)) ? l.area : l.area + '㎡');
+          if (l.floor) tags.push(l.floor + '층');
+          if (l.room) tags.push(l.room);
+          if (l.move_in) tags.push(l.move_in);
+          if (!tags.length) return '';
+          return `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">${tags.slice(0,4).map(t => `<span style="font-size:11px;padding:3px 8px;background:var(--hover,#f5f5f5);border-radius:10px;color:var(--sub);white-space:nowrap;">${esc(t)}</span>`).join('')}</div>`;
+        })()}
+      </div>
+      ${thumbHtml}
+    </a>`;
+  }).join('');
 
   // 주변 단지 (현재 선택 평형 기준으로 비교)
   const curArea = currentPyeong ? parseInt(currentPyeong) : 84;

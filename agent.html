@@ -34,8 +34,8 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
 .logo { width:46px; height:46px; background:var(--yellow); border-radius:11px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:20px; color:var(--dark); flex-shrink:0; overflow:hidden; }
 .logo img { width:100%; height:100%; object-fit:cover; border-radius:11px; }
 .header-info { flex:1; min-width:0; }
-.header-name-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:2px; }
-.header-name { font-size:16px; font-weight:700; color:var(--text); letter-spacing:-0.3px; }
+.header-name-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:4px; row-gap:6px; }
+.header-name { font-size:16px; font-weight:700; color:var(--text); letter-spacing:-0.3px; flex-basis:100%; }
 .header-badge { font-size:9px; font-weight:700; color:var(--dark); background:var(--yellow); padding:2px 6px; border-radius:3px; letter-spacing:0.2px; }
 .header-badge-region { background:var(--yellow-dim); border:1px solid var(--yellow); font-weight:600; }
 .header-sub { font-size:12px; color:var(--text); line-height:1.35; }
@@ -70,7 +70,7 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
 .listing-item { display:flex; gap:12px; align-items:flex-start; padding:14px; border:1.5px solid var(--yellow); border-radius:var(--radius); background:var(--yellow-bg); cursor:pointer; box-shadow:0 1px 4px rgba(245,200,66,0.15); transition:all .15s; }
 .listing-item:hover { box-shadow:0 3px 10px rgba(245,200,66,0.25); transform:translateY(-1px); }
 .listing-item:active { transform:scale(0.98); }
-.thumb { width:56px; height:56px; border-radius:8px; background:var(--card); flex-shrink:0; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:20px; }
+.thumb { width:96px; height:96px; border-radius:10px; background:var(--card); flex-shrink:0; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:32px; }
 .thumb img { width:100%; height:100%; object-fit:cover; }
 .card-body { flex:1; min-width:0; }
 .badges { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:4px; }
@@ -224,6 +224,13 @@ html,body { font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','
     </div>
   </div>
 
+  <!-- 중개사의 다른 매물 (단지 유입 모드 전용) -->
+  <div class="section" id="otherListingsSection" style="display:none;">
+    <div class="section-title">중개사의 다른 매물</div>
+    <div class="trade-list" id="otherListingsList"></div>
+    <button id="otherListingsMore" onclick="expandOtherListings()" style="display:none;width:100%;padding:12px;margin-top:8px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);font-size:13px;font-weight:600;color:var(--text);cursor:pointer;">더보기 (<span id="otherListingsRemain">0</span>건)</button>
+  </div>
+
   <!-- 더보기 배너 (단지에서 유입 시) -->
   <a class="more-banner" id="moreBanner" href="#" style="display:none">
     <span class="more-banner-text">다른 중개사 매물 더보기</span>
@@ -292,7 +299,7 @@ const sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_
 const params = new URLSearchParams(location.search);
 const agentId = params.get('id');
 const filterKaptCode = params.get('kapt_code') || '';
-const filterType = params.get('type') || '';
+let filterType = params.get('type') || '';
 const filterLat = parseFloat(params.get('lat') || '');
 const filterLng = parseFloat(params.get('lng') || '');
 const filterCards = params.get('cards') ? params.get('cards').split(',').filter(Boolean) : [];
@@ -364,6 +371,10 @@ async function load() {
   if (isDanjiMode) {
     renderProfile(p, cards.length);
     renderCardsDanji(cards);
+    // 같은 중개사의 다른 단지 매물 (별도 쿼리, 비동기)
+    const refLat = (cards.find(c => c.lat && c.lng) || {}).lat;
+    const refLng = (cards.find(c => c.lat && c.lng) || {}).lng;
+    loadOtherListings(agentId, filterKaptCode, refLat, refLng);
     return;
   }
 
@@ -485,14 +496,30 @@ function renderProfile(p, count) {
   const name = p.agent_name || p.business_name || '공인중개사';
   document.title = `${name} — 휙`;
   document.getElementById('navName').textContent = name;
-  document.getElementById('profileName').textContent = name;
 
   const biz = p.business_name || '';
   const addr = p.address || '';
   const region = parseRegion(addr);
 
-  document.getElementById('profileSub').textContent = biz;
-  document.getElementById('profileAddress').textContent = addr;
+  // Line 1: "스마일부동산 · 강동욱 공인중개사" 조합
+  let combined;
+  if (biz && p.agent_name) combined = `${biz} · ${p.agent_name} 공인중개사`;
+  else if (biz) combined = biz;
+  else if (p.agent_name) combined = `${p.agent_name} 공인중개사`;
+  else combined = name;
+  document.getElementById('profileName').textContent = combined;
+
+  // 사무실/이름은 Line 1에 병합했으므로 sub 줄 숨김
+  const subEl = document.getElementById('profileSub');
+  subEl.textContent = '';
+  subEl.style.display = 'none';
+
+  // 주소 표시 제거 (손님이 사무실 주소 보고 연락하지 않음)
+  const addrEl = document.getElementById('profileAddress');
+  if (addrEl) {
+    addrEl.textContent = '';
+    addrEl.style.display = 'none';
+  }
 
   // 전문 지역 배지: 명시 지정(specialty_regions) 우선, 없으면 주소 파싱 1개
   const specialty = Array.isArray(p.specialty_regions) ? p.specialty_regions.filter(Boolean).slice(0, 3) : [];
@@ -549,6 +576,66 @@ function renderProfile(p, count) {
 let _shownCount = 10;
 
 // 단지 유입 모드: 거래유형 → 면적순 그룹핑
+// 같은 중개사의 다른 단지 매물 로드 + 렌더 (초기 3건, 더보기로 최대 10건)
+const OTHER_LISTINGS_INITIAL = 3;
+const OTHER_LISTINGS_MAX = 10;
+let _otherListings = [];
+
+async function loadOtherListings(agentId, excludeKapt, refLat, refLng) {
+  try {
+    let q = sb.from('cards')
+      .select('id,property,trade_status,photos,tags,lat,lng,kapt_code')
+      .eq('agent_id', agentId)
+      .neq('property->>type', '손님')
+      .eq('trade_status', '계약가능')
+      .order('created_at', { ascending: false })
+      .limit(50);
+    if (excludeKapt) q = q.neq('kapt_code', excludeKapt);
+    const { data, error } = await q;
+    if (error || !Array.isArray(data) || data.length === 0) return;
+
+    // 거리 계산 가능하면 거리순, 없으면 최신순
+    if (refLat && refLng) {
+      data.forEach(c => {
+        c._dist = (c.lat && c.lng) ? distKm(refLat, refLng, c.lat, c.lng) : Infinity;
+      });
+      data.sort((a, b) => a._dist - b._dist);
+    }
+    _otherListings = data.slice(0, OTHER_LISTINGS_MAX);
+
+    // 카드 데이터 캐시 (openSheet용)
+    window._cardsData = window._cardsData || {};
+    _otherListings.forEach(c => { window._cardsData[c.id] = c; });
+
+    renderOtherListings(OTHER_LISTINGS_INITIAL);
+  } catch (e) {
+    console.warn('loadOtherListings failed:', e);
+  }
+}
+
+function renderOtherListings(showCount) {
+  const section = document.getElementById('otherListingsSection');
+  const listEl = document.getElementById('otherListingsList');
+  const moreBtn = document.getElementById('otherListingsMore');
+  const remainEl = document.getElementById('otherListingsRemain');
+  if (!_otherListings.length) { section.style.display = 'none'; return; }
+
+  section.style.display = 'block';
+  listEl.innerHTML = _otherListings.slice(0, showCount).map(cardItemHtml).join('');
+
+  const remain = _otherListings.length - showCount;
+  if (remain > 0) {
+    moreBtn.style.display = 'block';
+    remainEl.textContent = remain;
+  } else {
+    moreBtn.style.display = 'none';
+  }
+}
+
+function expandOtherListings() {
+  renderOtherListings(OTHER_LISTINGS_MAX);
+}
+
 function renderCardsDanji(cards) {
   const listEl = document.getElementById('cardList');
   const countEl = document.getElementById('cardCount');
@@ -558,15 +645,16 @@ function renderCardsDanji(cards) {
     return;
   }
 
-  // filterType 있으면 해당 거래유형만 노출 (사용자가 전세 탭에서 들어왔으면 전세만)
+  // filterType 있으면 해당 거래유형 우선 — 없으면 다른 유형으로 fallback (빈 페이지 방지)
+  let fallbackNotice = '';
   if (filterType) {
     const filtered = cards.filter(c => (c.property?.type || '') === filterType);
-    if (!filtered.length) {
-      listEl.innerHTML = `<div class="listing-empty"><div class="listing-empty-text">이 단지의 <b>${esc(filterType)}</b> 매물이 아직 없습니다</div><a class="listing-empty-btn" href="/">휙 홈으로 →</a></div>`;
-      countEl.textContent = '';
-      return;
+    if (filtered.length) {
+      cards = filtered;
+    } else {
+      fallbackNotice = `<div style="padding:10px 14px;margin-bottom:10px;background:#fef3c7;border-radius:8px;font-size:13px;color:#92400e;">이 단지의 <b>${esc(filterType)}</b> 매물은 아직 없어요. 등록된 다른 매물을 보여드립니다.</div>`;
+      filterType = ''; // 전체 유형 그룹핑 모드로 전환
     }
-    cards = filtered;
   }
 
   countEl.textContent = `${cards.length}건`;
@@ -596,7 +684,7 @@ function renderCardsDanji(cards) {
     });
   });
 
-  let html = '';
+  let html = fallbackNotice;
   typeOrder.forEach(type => {
     if (!groups[type]) return;
     html += `<div style="margin-bottom:4px;padding:8px 0 4px;font-size:12px;font-weight:700;color:var(--sub);border-bottom:1px solid var(--border);">${esc(type)}</div>`;
@@ -624,7 +712,10 @@ function cardItemHtml(card) {
   const floor = p.floor || '';
   const status = card.trade_status || '계약가능';
   const tags = filterDisplayTags(card.tags).slice(0, 4);
-  const loc = [complex, location, area, floor ? floor + '층' : ''].filter(Boolean).join(' · ');
+  const tail = [location, area, floor ? floor + '층' : ''].filter(Boolean).join(' · ');
+  const loc = complex
+    ? `<span style="font-weight:700;color:var(--text);">${esc(complex)}</span>${tail ? ' · ' + esc(tail) : ''}`
+    : esc(tail);
   const photos = card.photos || [];
   const thumb = photos[0]?.url || (typeof photos[0] === 'string' ? photos[0] : null);
   const thumbHtml = thumb
@@ -634,17 +725,16 @@ function cardItemHtml(card) {
     ? `<div class="card-tags">${tags.map(t=>`<span class="card-tag">${esc(t)}</span>`).join('')}</div>`
     : '';
   return `<div class="listing-item" onclick="openSheet(${esc(JSON.stringify(card.id))}, this)">
-    ${thumbHtml}
     <div class="card-body">
       <div class="badges">
         <span class="badge b-${esc(type)}">${esc(type)}</span>
         <span class="badge b-${esc(status)}">${esc(status)}</span>
       </div>
       <div class="card-price">${esc(price)}</div>
-      <div class="card-loc">${esc(loc)}</div>
+      <div class="card-loc">${loc}</div>
       ${tagsHtml}
     </div>
-    <span class="listing-link">보기 →</span>
+    ${thumbHtml}
   </div>`;
 }
 
@@ -1014,6 +1104,12 @@ function initMinimap(lat, lng, title) {
   _minimapTitle = title || '위치 보기';
   minimap.style.display = 'block';
 
+  // Kakao SDK 로드 실패(도메인 미등록 등) 시 지도만 숨기고 시트 자체는 정상 표시
+  if (typeof kakao === 'undefined' || !kakao.maps) {
+    minimap.style.display = 'none';
+    return;
+  }
+
   kakao.maps.load(() => {
     const position = new kakao.maps.LatLng(lat, lng);
     _minimapInstance = new kakao.maps.Map(container, {
@@ -1029,6 +1125,7 @@ let _fullscreenMapInstance = null;
 
 function openFullscreenMap() {
   if (!_minimapCoords) return;
+  if (typeof kakao === 'undefined' || !kakao.maps) return;
   const overlay = document.getElementById('mapFullscreenOverlay');
   const container = document.getElementById('mapFullscreen');
   document.getElementById('mapFullscreenTitle').textContent = _minimapTitle;
