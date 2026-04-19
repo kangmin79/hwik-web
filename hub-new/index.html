@@ -2421,14 +2421,10 @@ const PanelRegister = (() => {
       const sharedMemo=document.getElementById('cfShared')?.value?.trim();
       const privateMemo=document.getElementById('cfMemo')?.value?.trim();
 
-      // 사진 업로드 + 좌표 매칭
-      const needCoord=!r.lat&&(property.complex||property.location);
-      const [photoUrls,coordResult]=await Promise.all([
-        pendingPhotos.length?Data.uploadPhotos(linkId,pendingPhotos.map(p=>p.file)):[],
-        needCoord?Data.matchCoords(property):Promise.resolve(null)
-      ]);
-      const finalLat=r.lat||(coordResult?.lat)||null;
-      const finalLng=r.lng||(coordResult?.lng)||null;
+      // 사진만 await (카드 insert에 URL 필요). 좌표 매칭은 locate-card가 백그라운드로 처리.
+      const photoUrls = pendingPhotos.length ? await Data.uploadPhotos(linkId,pendingPhotos.map(p=>p.file)) : [];
+      const finalLat = r.lat || null;
+      const finalLng = r.lng || null;
       const _pf=Data.parsePriceFields(property.price,property.type);
 
       const cardData={
@@ -2448,22 +2444,25 @@ const PanelRegister = (() => {
       const {error:dbErr}=await Auth.sb.from('cards').insert([cardData]);
       if(dbErr)throw new Error('저장 실패: '+dbErr.message);
 
+      // 즉시 UI 완료 처리
+      document.getElementById('editModal').classList.remove('show');
+      document.getElementById('regResult').innerHTML='<div class="reg-success">✅ 매물 카드가 생성되었습니다!</div>';
+      Toast.show('✅ 매물 등록 완료 — 단지 매칭 중...');
+
+      // 백그라운드: embedding/태그/좌표+단지 매칭 전부 독립 실행
       Data.updateEmbedding(linkId);
-      Promise.all([Data.batchGenerateTags(linkId).catch(()=>{}),Data.locateCard(linkId)]).then(([_,loc])=>{
-        // ★ 단지 매칭 결과 토스트 (아파트만)
+      Data.batchGenerateTags(linkId).catch(()=>{});
+      Data.locateCard(linkId).then(loc=>{
         if(r.category==='apartment'){
           if(loc?.kapt_name){
-            Toast.show(`✅ ${loc.kapt_name} 단지로 매칭됨`);
+            Toast.show(`🏢 ${loc.kapt_name} 단지로 매칭됨`);
           }else{
             console.log('[locate-card debug]', JSON.stringify(loc?.debug, null, 2));
-            Toast.show(`⚠️ 단지 매칭 실패 — 콘솔(F12) 확인`);
+            Toast.show('⚠️ 단지 매칭 실패');
           }
         }
         Data.triggerAutoMatch(linkId);
       });
-
-      document.getElementById('editModal').classList.remove('show');
-      document.getElementById('regResult').innerHTML='<div class="reg-success">✅ 매물 카드가 생성되었습니다!</div>';
       document.getElementById('regInput').value='';pendingPhotos=[];_renderPhotos();onInput();
       document.getElementById('regComment').value='';
       _pendingParse=null;
