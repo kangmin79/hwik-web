@@ -257,31 +257,49 @@ function parseMoveInDate(moveIn: string | null | undefined): string | null {
   return null;
 }
 
+// "5백" → 500, "2백50" → 250, "백" → 100 / 숫자만이면 parseInt
+function parseKoreanTail(s: string): number {
+  if (!s) return 0;
+  if (s.includes('백')) {
+    const [bS, rest] = s.split('백');
+    const b = bS ? (parseInt(bS) || 1) : 1;
+    const r = rest ? (parseInt(rest) || 0) : 0;
+    return b * 100 + r;
+  }
+  if (s.includes('십')) {
+    const [bS, rest] = s.split('십');
+    const b = bS ? (parseInt(bS) || 1) : 1;
+    const r = rest ? (parseInt(rest) || 0) : 0;
+    return b * 10 + r;
+  }
+  return parseInt(s) || 0;
+}
+
 // 단일 가격 문자열 → 만원 단위 숫자
 function parseSinglePrice(str: string, isMonthly = false): number | null {
   if (!str) return null;
   try {
     let s = str.replace(/[\s,원보증금월세]/g, '');
-    // "3억5천", "1억8500", "1억8천500" 모두 지원
+    // "3억5천", "1억8500", "1억8천500", "1억8천5백" 모두 지원
     if (s.includes('억')) {
       const [bigS, tailRaw] = s.split('억');
       const big = (parseInt(bigS) || 0) * 10000;
       const tail = tailRaw || '';
       let small = 0;
       if (tail.includes('천')) {
-        // "5천", "8천500"
+        // "5천", "8천500", "8천5백"
         const [chS, restS] = tail.split('천');
-        small = (parseInt(chS) || 0) * 1000 + (parseInt(restS) || 0);
+        small = (parseInt(chS) || 0) * 1000 + parseKoreanTail(restS || '');
       } else {
-        // "8500" → 8500만원
-        small = parseInt(tail) || 0;
+        // "8500" → 8500만원, "5백" → 500
+        small = parseKoreanTail(tail);
       }
       return big + small;
     }
-    // "4천904" → 4904, "1천88" → 1088
+    // "4천904" → 4904, "1천88" → 1088, "8천5백" → 8500
     if (s.includes('천')) {
       const parts = s.split('천');
-      return (parseInt(parts[0]) || 0) * 1000 + (parseInt(parts[1]) || 0);
+      return (parseInt(parts[0]) || 0) * 1000 + parseKoreanTail(parts[1] || '');
     }
     if (s.includes('만')) return parseInt(s.replace('만', '')) || null;
     const num = parseInt(s);
@@ -463,7 +481,7 @@ Deno.serve(async (req) => {
 [방향] 남향, 동향, 서향, 북향, 남동향, 남서향, 정남향
 [위치] 역세권, 초역세권, 더블역세권, 학군좋음, 학원가, 대로변, 초품아, GTX역세권
 [주차] 주차가능, 주차1대, 주차2대, 주차무료
-[뷰/구조] 한강뷰, 공원뷰, 산뷰, 시티뷰, 탁트인전망, 복층, 테라스, 루프탑, 고층, 저층, 로얄층, 분리형
+[뷰/구조] 한강뷰, 공원뷰, 산뷰, 시티뷰, 탁트인전망, 복층, 테라스, 루프탑, 고층, 저층, 로얄층, 분리형, 반지하, 옥탑
 [편의] 애견가능, 엘리베이터, 경비실, 보안, 무인택배, 관리비포함
 [입주] 즉시입주, 입주협의, 공실
 [금융] HUG가능, 무융자, 대출가능
