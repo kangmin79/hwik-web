@@ -1,7 +1,8 @@
 {
   "scripts": {
     "test:matching": "node tests/smoke_matching.mjs",
-    "deploy:matching": "npm run test:matching && npx supabase functions deploy auto-match match-properties room-share-match"
+    "test:matching:hyunsil": "node tests/smoke_matching.mjs --file=scenarios_hyunsil.json",
+    "deploy:matching": "npm run test:matching && npm run test:matching:hyunsil && npx supabase functions deploy auto-match match-properties room-share-match"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.101.1"

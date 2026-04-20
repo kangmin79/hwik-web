@@ -36,6 +36,8 @@ const onlyArg = (process.argv.find(a => a.startsWith('--only=')) || '').replace(
 const onlyIds = onlyArg ? onlyArg.split(',').map(s => s.trim()) : null;
 const concurrencyArg = (process.argv.find(a => a.startsWith('--concurrency=')) || '').replace('--concurrency=', '');
 const CONCURRENCY = Math.max(1, parseInt(concurrencyArg || '1') || 1);
+const fileArg = (process.argv.find(a => a.startsWith('--file=')) || '').replace('--file=', '');
+const SCENARIOS_FILE = fileArg || 'scenarios.json';
 
 // ─ HTTP (브라우저와 동일한 헤더) ─
 async function sbFetch(path, opts = {}) {
@@ -178,7 +180,7 @@ async function runScenario(s, idx) {
 // ─ 메인 ─
 async function main() {
   const startedAt = Date.now();
-  const raw = readFileSync(resolve(__dirname, 'scenarios.json'), 'utf8');
+  const raw = readFileSync(resolve(__dirname, SCENARIOS_FILE), 'utf8');
   let scenarios = JSON.parse(raw);
   if (onlyIds) scenarios = scenarios.filter(s => onlyIds.includes(s.id));
   console.log(`매칭 매트릭스 테스트 시작 — ${scenarios.length}개 시나리오\n`);

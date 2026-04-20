@@ -111,6 +111,15 @@ export function parsePriceCondition(text: string, tradeType?: string): PriceCond
       result.monthly = parseInt(boWolMatch[2].replace(/,/g, ''));
     }
 
+    // [C] 슬래시 + 상한 표현: "1000/200 이하" / "월세 1000/200 이하" → deposit 고정, maxMonthly 명시
+    if (!result.maxMonthly) {
+      const slashMax = text.match(/(\d+)\s*\/\s*(\d+)\s*(?:이하|까지|이내|미만|넘지\s*않게)/);
+      if (slashMax) {
+        if (!result.deposit) result.deposit = parseInt(slashMax[1]);
+        result.maxMonthly = parseInt(slashMax[2]);
+      }
+    }
+
     // "1000/50 2000/40도 가능" — 두 번째 조건이 max
     if (!result.maxDeposit) {
       const dualSlash = text.match(/(\d+)\s*\/\s*(\d+)\s+(\d+)\s*\/\s*(\d+)\s*(?:도|면|까지)?\s*(?:가능|괜찮|OK)/i);
@@ -280,26 +289,29 @@ export function isPriceMatch(
   propMonthly?: number,       // 매물 월세
 ): boolean {
   if (tradeType === '월세') {
-    // 보증금 체크
-    const effMaxDep = condition.maxDeposit || (condition.deposit ? Math.round(condition.deposit * 1.15) : null);
+    // [B] 보증금: maxDeposit 명시 = × 1.001 엄격 / deposit만 있으면 × 1.15 (모호)
+    const effMaxDep = condition.maxDeposit
+      ? Math.round(condition.maxDeposit * 1.001)
+      : (condition.deposit ? Math.round(condition.deposit * 1.15) : null);
     if (effMaxDep && propDeposit && propDeposit > effMaxDep) return false;
 
-    // 월세 체크
-    const effMaxMon = condition.maxMonthly || (condition.monthly ? Math.round(condition.monthly * 1.15) : null);
+    // [B] 월세: maxMonthly 명시 = × 1.001 엄격 / monthly만 있으면 × 1.15 (모호)
+    const effMaxMon = condition.maxMonthly
+      ? Math.round(condition.maxMonthly * 1.001)
+      : (condition.monthly ? Math.round(condition.monthly * 1.15) : null);
     if (effMaxMon && propMonthly && propMonthly > effMaxMon) return false;
 
     return true;
   }
 
   // 매매/전세
-  if (!propPrice || propPrice <= 0) return true; // 가격 정보 없으면 통과
+  if (!propPrice || propPrice <= 0) return true;
 
-  // maxPrice 있으면: 매물이 최대가보다 10% 이상 비싸면 탈락
-  if (condition.maxPrice && propPrice > condition.maxPrice * 1.1) return false;
+  // [B] maxPrice 명시된 경우: 0.1% 여유만 (LLM 반올림 오차 흡수)
+  if (condition.maxPrice && propPrice > condition.maxPrice * 1.001) return false;
 
-  // minPrice 있으면: 매물이 최소가보다 30% 이상 싸면 탈락
-  // (maxPrice 유무와 관계없이 항상 체크 — "3억 정도"일 때 5천만원짜리 방지)
-  if (condition.minPrice && propPrice < condition.minPrice * 0.7) return false;
+  // [B] minPrice 명시된 경우: 0.1% 여유
+  if (condition.minPrice && propPrice < condition.minPrice * 0.999) return false;
 
   return true;
 }

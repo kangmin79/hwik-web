@@ -1,0 +1,402 @@
+[
+  {
+    "id": "H001",
+    "axis": "송파-잠실엘스-매매-정확",
+    "property": "송파 잠실 엘스 매매 22억 25평 7층 남향 즉시입주",
+    "client": "송파 잠실 엘스 매매 22억 이하 25평 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H002",
+    "axis": "송파-리센츠-전세-정확",
+    "property": "송파 잠실 리센츠 전세 12억 33평 고층 남향 올수리 2월말",
+    "client": "잠실 리센츠 전세 12억 이하 30평대 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H003",
+    "axis": "송파-파크리오-월세-정확",
+    "property": "송파 신천 파크리오 월세 1000/180 24평 저층 풀옵션",
+    "client": "송파 파크리오 월세 보증금 1000 월세 200 이하 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H004",
+    "axis": "송파-헬리오시티-매매-정확",
+    "property": "송파 가락 헬리오시티 매매 25억5천 34평 로얄층 남동향",
+    "client": "송파 헬리오시티 매매 26억 이하 30평대 남향 로얄층",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H005",
+    "axis": "송파-트리지움-전세-정확",
+    "property": "송파 잠실 트리지움 전세 10억 27평 9층 확장 깨끗함 3월입주",
+    "client": "잠실 트리지움 전세 10억 이하 25평 이상 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H006",
+    "axis": "송파-올림픽훼밀리-매매-정확",
+    "property": "송파 문정 올림픽훼밀리타운 매매 18억 32평 탑층 동향",
+    "client": "송파 올림픽훼밀리 매매 18억 이하 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H007",
+    "axis": "송파-가락프라자-전세-정확",
+    "property": "송파 가락동 프라자아파트 전세 5억5천 22평 5층 즉시",
+    "client": "송파 가락 전세 6억 이하 20평대 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H008",
+    "axis": "강남-래미안대치팰리스-매매-정확",
+    "property": "강남 대치 래미안 대치팰리스 매매 38억 34평 고층 남향",
+    "client": "강남 대치동 래미안 매매 40억 이하 30평대 남향",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H009",
+    "axis": "강남-대치은마-매매-정확",
+    "property": "강남 대치 은마아파트 매매 28억 31평 중층 재건축",
+    "client": "대치 은마 매매 30억 이하 구합니다 재건축",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H010",
+    "axis": "강남-도곡렉슬-전세-정확",
+    "property": "강남 도곡 렉슬 전세 17억 43평 고층 남향 올수리",
+    "client": "강남 도곡렉슬 전세 18억 이하 40평대 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H011",
+    "axis": "강남-압구정현대-매매-정확",
+    "property": "강남 압구정 현대1차 매매 50억 43평 로얄층 한강뷰",
+    "client": "압구정 현대 매매 55억 이하 한강뷰 40평대",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H012",
+    "axis": "서초-반포자이-매매-정확",
+    "property": "서초 반포 자이 매매 45억 34평 로얄층 한강뷰 남향",
+    "client": "반포 자이 매매 45억 이하 30평대 한강뷰 구함",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H013",
+    "axis": "서초-래미안퍼스티지-전세-정확",
+    "property": "서초 반포 래미안퍼스티지 전세 22억 42평 고층 올수리",
+    "client": "반포 래미안퍼스티지 전세 22억 이하 40평대",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H014",
+    "axis": "마포-래미안푸르지오-매매-정확",
+    "property": "마포 아현 마포래미안푸르지오 매매 18억 34평 고층 남서향",
+    "client": "마포 래미안푸르지오 매매 18억 이하 30평대 고층",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H015",
+    "axis": "용산-한남더힐-매매-정확",
+    "property": "용산 한남동 한남더힐 매매 80억 65평 고층 한강뷰 풀옵션",
+    "client": "한남더힐 매매 90억 이하 60평대 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H016",
+    "axis": "용산-이촌한가람-전세-정확",
+    "property": "용산 이촌 한가람 전세 11억 30평 중층 동향 즉시입주",
+    "client": "이촌 한가람 전세 12억 이하 30평 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H017",
+    "axis": "영등포-여의도시범-매매-정확",
+    "property": "영등포 여의도 시범아파트 매매 30억 48평 한강뷰 재건축",
+    "client": "여의도 시범 매매 30억 이하 40평대 한강뷰",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H018",
+    "axis": "양천-목동7단지-매매-정확",
+    "property": "양천 목동 목동신시가지7단지 매매 22억 35평 고층 학군",
+    "client": "목동 7단지 매매 22억 이하 30평대 학군",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H019",
+    "axis": "노원-상계주공-매매-정확",
+    "property": "노원 상계 상계주공7단지 매매 8억 24평 중층 재건축 대기",
+    "client": "상계주공 매매 8억 이하 20평대 재건축",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H020",
+    "axis": "성동-서울숲트리마제-매매-정확",
+    "property": "성동 성수 서울숲 트리마제 매매 40억 45평 고층 한강뷰",
+    "client": "성수 트리마제 매매 45억 이하 40평대 한강뷰",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H021",
+    "axis": "경기-분당-서현삼성한신-매매-정확",
+    "property": "경기 성남 분당 서현 삼성한신 매매 13억 34평 고층 남향",
+    "client": "분당 서현 삼성한신 매매 13억 이하 30평대",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H022",
+    "axis": "경기-판교-푸르지오그랑블-전세-정확",
+    "property": "경기 성남 판교 푸르지오그랑블 전세 14억 42평 판교역 5분",
+    "client": "판교 푸르지오그랑블 전세 14억 이하 40평대 역세권",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H023",
+    "axis": "경기-광교-이편한세상-매매-정확",
+    "property": "경기 수원 광교 이편한세상 매매 12억 33평 광교중앙역 인근",
+    "client": "광교 이편한세상 매매 12억 이하 30평대 역세권",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H024",
+    "axis": "경기-광명역센트럴자이-매매-정확",
+    "property": "경기 광명 광명역 센트럴자이 매매 11억 34평 역세권 로얄층",
+    "client": "광명역 센트럴자이 매매 11억 이하 30평대 역세권",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H025",
+    "axis": "경기-하남미사-강변센트럴자이-전세-정확",
+    "property": "경기 하남 미사 강변센트럴자이 전세 6억5천 34평 한강뷰",
+    "client": "하남 미사 강변센트럴자이 전세 7억 이하 30평대 한강뷰",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H026",
+    "axis": "경기-일산-라페스타-월세-정확",
+    "property": "경기 고양 일산 라페스타 월세 2000/120 25평 즉시입주",
+    "client": "일산 라페스타 월세 2000/150 이하 20평대",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H027",
+    "axis": "경기-동탄-SK뷰파크-매매-정확",
+    "property": "경기 화성 동탄 SK뷰파크 매매 7억 34평 동탄역 근처",
+    "client": "동탄 SK뷰파크 매매 7억 이하 30평대 역세권",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H028",
+    "axis": "경기-위례-송파중앙푸르지오-매매-정확",
+    "property": "경기 성남 위례 송파중앙푸르지오 매매 13억 34평 로얄층",
+    "client": "위례 송파중앙푸르지오 매매 13억 이하 30평대 로얄층",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H029",
+    "axis": "인천-송도-SK뷰-매매-정확",
+    "property": "인천 연수 송도 SK뷰 매매 8억 34평 센트럴파크 조망",
+    "client": "송도 SK뷰 매매 8억 이하 30평대 공원뷰",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H030",
+    "axis": "인천-부평-힐스테이트-전세-정확",
+    "property": "인천 부평 힐스테이트 전세 4억 25평 부평역 10분 올수리",
+    "client": "부평 힐스테이트 전세 4억5천 이하 20평대 역세권",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H031",
+    "axis": "구매칭-송파잠실-지역정확",
+    "property": "송파 잠실 엘스 매매 22억 25평",
+    "client": "강남 대치동 매매 22억 이하 25평 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H032",
+    "axis": "구매칭-강남서초-경계오버",
+    "property": "강남 역삼 매매 20억 30평",
+    "client": "서초 서초동 매매 20억 이하 30평 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H033",
+    "axis": "구매칭-마포영등포-경계오버",
+    "property": "마포 공덕 전세 8억 25평",
+    "client": "영등포 여의도 전세 8억 이하 25평 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H034",
+    "axis": "가격-직전경계-송파매매",
+    "property": "송파 잠실 매매 22억 25평",
+    "client": "송파 잠실 매매 22억 이하 25평",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H035",
+    "axis": "가격-1만원오버-송파매매",
+    "property": "송파 잠실 매매 22억1천 25평",
+    "client": "송파 잠실 매매 22억 이하 25평",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H036",
+    "axis": "월세-보증금일치-월세오버",
+    "property": "송파 잠실 월세 1000/250 24평",
+    "client": "송파 잠실 월세 1000/200 이하 24평",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H037",
+    "axis": "월세-보증금오버-월세일치",
+    "property": "송파 잠실 월세 3000/180 24평",
+    "client": "송파 잠실 월세 2000/200 이하 24평",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H038",
+    "axis": "학군-대치학원가-전세",
+    "property": "강남 대치동 래미안 전세 15억 34평 학원가 도보 5분",
+    "client": "대치동 학원가 전세 15억 이하 30평대 초중등 학군",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H039",
+    "axis": "학군-목동학군-매매",
+    "property": "양천 목동 신시가지 7단지 매매 22억 35평 목운초 인근",
+    "client": "목동 학군 매매 22억 이하 30평대 초등 배정",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H040",
+    "axis": "신혼-역세권10분-전세",
+    "property": "마포 공덕 래미안 전세 8억 24평 공덕역 도보 5분 신혼",
+    "client": "마포 신혼부부 전세 8억 이하 20평대 역세권 10분 이내",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H041",
+    "axis": "투자-갭투자-매매",
+    "property": "송파 잠실 엘스 매매 22억 25평 전세 13억 갭 9억",
+    "client": "송파 잠실 갭투자 매매 22억 이하 25평 갭 10억 이하",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H042",
+    "axis": "방향-매물먼저-송파잠실",
+    "property": "송파 잠실 리센츠 매매 23억 33평 남향 로얄층",
+    "client": "잠실 리센츠 매매 25억 이하 30평대 남향",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "H043",
+    "axis": "방향-매물먼저-강남대치",
+    "property": "강남 대치 래미안 대치팰리스 매매 38억 34평 고층",
+    "client": "대치 래미안 매매 40억 이하 30평대 고층",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "H044",
+    "axis": "방향-매물먼저-마포공덕",
+    "property": "마포 공덕 래미안 전세 9억 34평 공덕역 5분",
+    "client": "마포 공덕 전세 9억 이하 30평대 역세권",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "H045",
+    "axis": "방향-매물먼저-분당판교",
+    "property": "경기 성남 판교 푸르지오그랑블 매매 17억 42평",
+    "client": "판교 푸르지오 매매 17억 이하 40평대",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "H046",
+    "axis": "오피스텔-강남역-월세",
+    "property": "강남 역삼 강남역 오피스텔 월세 1000/120 12평 풀옵션",
+    "client": "강남역 오피스텔 월세 1000/150 이하 10평대 풀옵션",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H047",
+    "axis": "상가-홍대-월세",
+    "property": "마포 서교동 홍대 상가 월세 3000/300 15평 1층 역세권",
+    "client": "홍대 상가 월세 3000/350 이하 15평 1층",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H048",
+    "axis": "사무실-강남-월세",
+    "property": "강남 역삼 사무실 월세 2000/200 30평 역세권 엘리베이터",
+    "client": "강남 사무실 월세 2500/250 이하 30평 역세권",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H049",
+    "axis": "원룸-신혼-홍대",
+    "property": "마포 서교 홍대 원룸 월세 500/70 8평 풀옵션 신축",
+    "client": "홍대 원룸 월세 500/80 이하 신축 풀옵션",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "H050",
+    "axis": "크로스지역-잠실vs대치-불일치",
+    "property": "송파 잠실 엘스 매매 22억 25평",
+    "client": "강남 대치동 매매 22억 이하 25평 학군",
+    "expect": "no-match",
+    "matchOn": "client"
+  }
+]
