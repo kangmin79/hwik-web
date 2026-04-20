@@ -809,7 +809,7 @@ function render() {
         <a href="/dong/${encodeURIComponent(makeDongSlug(guName, dong, d.address||''))}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
           <span style="font-size:13px;">${esc(dongDisplay)} 다른 단지 시세</span><span style="color:var(--sub);font-size:12px;">→</span>
         </a>
-        <a href="/gu.html?name=${encodeURIComponent(guName)}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
+        <a href="/gu/${encodeURIComponent(_guUrlSlug)}" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
           <span style="font-size:13px;">${esc(guName)} 전체 시세</span><span style="color:var(--sub);font-size:12px;">→</span>
         </a>
         <a href="/ranking.html" style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:all .15s;">
