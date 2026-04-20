@@ -1,0 +1,182 @@
+[
+  {
+    "id": "CO001",
+    "axis": "좌표-같은단지-잠실엘스",
+    "property": "송파 잠실 엘스 매매 22억 25평 7층",
+    "client": "송파 잠실 엘스 매매 22억 이하 25평",
+    "expect": "match",
+    "matchOn": "client",
+    "withLocate": true
+  },
+  {
+    "id": "CO002",
+    "axis": "좌표-같은동-다른단지",
+    "property": "송파 잠실 엘스 매매 22억 25평",
+    "client": "송파 잠실 리센츠 매매 22억 이하 25평",
+    "expect": "match",
+    "matchOn": "client",
+    "withLocate": true
+  },
+  {
+    "id": "CO003",
+    "axis": "좌표-같은구-다른동-송파",
+    "property": "송파 잠실 엘스 매매 20억 25평",
+    "client": "송파 가락동 매매 22억 이하 25평",
+    "expect": "match",
+    "matchOn": "client",
+    "withLocate": true
+  },
+  {
+    "id": "CO004",
+    "axis": "좌표-인접구-송파vs강동",
+    "property": "송파 잠실 매매 20억 25평",
+    "client": "강동 매매 22억 이하 25평",
+    "expect": "no-match",
+    "matchOn": "client",
+    "withLocate": true
+  },
+  {
+    "id": "CO005",
+    "axis": "좌표-먼구-송파vs노원",
+    "property": "송파 잠실 엘스 매매 20억 25평",
+    "client": "노원 매매 22억 이하 25평",
+    "expect": "no-match",
+    "matchOn": "client",
+    "withLocate": true
+  },
+  {
+    "id": "CO006",
+    "axis": "좌표-강남권내-대치vs압구정",
+    "property": "강남 대치 은마 매매 28억 31평",
+    "client": "강남 압구정 매매 30억 이하 30평",
+    "expect": "match",
+    "matchOn": "client",
+    "withLocate": true
+  },
+  {
+    "id": "CO007",
+    "axis": "좌표-분당동일권역",
+    "property": "경기 성남 분당 서현 매매 13억 34평",
+    "client": "분당 서현 매매 13억 이하 30평대",
+    "expect": "match",
+    "matchOn": "client",
+    "withLocate": true
+  },
+  {
+    "id": "CO008",
+    "axis": "좌표-송도동일권역",
+    "property": "인천 연수 송도 SK뷰 매매 8억 34평",
+    "client": "송도 매매 8억 이하 30평대",
+    "expect": "match",
+    "matchOn": "client",
+    "withLocate": true
+  },
+  {
+    "id": "CO009",
+    "axis": "좌표-브랜드단지명우선",
+    "property": "강남 대치 래미안 대치팰리스 매매 38억 34평",
+    "client": "래미안 대치팰리스 매매 40억 이하 30평대",
+    "expect": "match",
+    "matchOn": "client",
+    "withLocate": true
+  },
+  {
+    "id": "CO010",
+    "axis": "좌표-서울-경기크로스",
+    "property": "경기 성남 분당 매매 13억 34평",
+    "client": "강남 매매 15억 이하 30평대",
+    "expect": "no-match",
+    "matchOn": "client",
+    "withLocate": true
+  },
+  {
+    "id": "CO011",
+    "axis": "좌표-판교-분당경계",
+    "property": "경기 성남 판교 푸르지오그랑블 매매 17억 42평",
+    "client": "분당 판교 매매 17억 이하 40평대",
+    "expect": "match",
+    "matchOn": "client",
+    "withLocate": true
+  },
+  {
+    "id": "CO012",
+    "axis": "좌표-서초반포-강남권",
+    "property": "서초 반포 자이 매매 45억 34평",
+    "client": "반포 매매 45억 이하 30평대",
+    "expect": "match",
+    "matchOn": "client",
+    "withLocate": true
+  },
+  {
+    "id": "CO013",
+    "axis": "좌표-마포공덕-용산이촌",
+    "property": "마포 공덕 매매 18억 34평",
+    "client": "용산 이촌 매매 18억 이하 30평대",
+    "expect": "no-match",
+    "matchOn": "client",
+    "withLocate": true
+  },
+  {
+    "id": "CO014",
+    "axis": "좌표-양천목동-강서화곡",
+    "property": "양천 목동 매매 22억 35평",
+    "client": "강서 화곡 매매 22억 이하 30평대",
+    "expect": "no-match",
+    "matchOn": "client",
+    "withLocate": true
+  },
+  {
+    "id": "CO015",
+    "axis": "좌표-광명역-경기광명",
+    "property": "경기 광명 광명역 센트럴자이 매매 11억 34평",
+    "client": "광명 매매 11억 이하 30평대",
+    "expect": "match",
+    "matchOn": "client",
+    "withLocate": true
+  },
+  {
+    "id": "CO016",
+    "axis": "좌표-위례-송파경계(경기 vs 서울 엄격)",
+    "property": "경기 성남 위례 송파중앙푸르지오 매매 13억 34평",
+    "client": "송파 위례 매매 13억 이하 30평대",
+    "expect": "no-match",
+    "matchOn": "client",
+    "withLocate": true
+  },
+  {
+    "id": "CO017",
+    "axis": "좌표-동탄-수원권역",
+    "property": "경기 화성 동탄 SK뷰파크 매매 7억 34평",
+    "client": "수원 매매 7억 이하 30평대",
+    "expect": "no-match",
+    "matchOn": "client",
+    "withLocate": true
+  },
+  {
+    "id": "CO018",
+    "axis": "좌표-영등포여의도-마포",
+    "property": "영등포 여의도 시범 매매 30억 48평",
+    "client": "마포 매매 30억 이하 40평대",
+    "expect": "no-match",
+    "matchOn": "client",
+    "withLocate": true
+  },
+  {
+    "id": "CO019",
+    "axis": "좌표-성동성수-광진",
+    "property": "성동 성수 매매 30억 34평",
+    "client": "광진 매매 30억 이하 30평대",
+    "expect": "no-match",
+    "matchOn": "client",
+    "withLocate": true
+  },
+  {
+    "id": "CO020",
+    "axis": "좌표-일산-고양아파트",
+    "property": "경기 고양 일산 두산위브 아파트 매매 8억 25평",
+    "client": "일산 매매 8억 이하 25평 아파트",
+    "expect": "match",
+    "matchOn": "client",
+    "withLocate": true
+  }
+]

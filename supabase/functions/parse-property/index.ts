@@ -8,6 +8,37 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// ========== Anthropic API 호출 (Overloaded 자동 재시도 + 프롬프트 캐싱) ==========
+async function callAnthropicWithRetry(apiKey: string, body: any, maxRetries = 4): Promise<any> {
+  let lastErr: any = null;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'prompt-caching-2024-07-31',
+      },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (res.ok && !data.error) return data;
+    const errType = data?.error?.type || '';
+    const errMsg = data?.error?.message || '';
+    const retriable = res.status === 529
+      || res.status === 503
+      || (res.status === 500 && /Overloaded|overloaded|rate limit|timeout/i.test(errMsg + errType))
+      || errType === 'overloaded_error';
+    lastErr = { status: res.status, error: data?.error || data };
+    if (!retriable || attempt === maxRetries) break;
+    const delay = 400 * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 200);
+    console.log(`Anthropic ${res.status} ${errType} — retry ${attempt}/${maxRetries} after ${delay}ms`);
+    await new Promise(r => setTimeout(r, delay));
+  }
+  throw new Error(lastErr?.error?.message || `Anthropic ${lastErr?.status}`);
+}
+
 // ========== ㎡ ↔ 평 변환 ==========
 function sqmToPyeong(sqm: number): number {
   return Math.round(sqm / 3.305785 * 10) / 10;
@@ -117,24 +148,19 @@ async function generateAgentComment(parsedResult: any, salesData: any[], anthrop
   }
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 150,
-        messages: [{
-          role: 'user',
-          content: `부동산 중개사가 손님에게 보내는 매물 소개 한 줄 코멘트를 작성해주세요.
+    const data = await callAnthropicWithRetry(anthropicKey, {
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 150,
+      messages: [{
+        role: 'user',
+        content: `부동산 중개사가 손님에게 보내는 매물 소개 한 줄 코멘트를 작성해주세요.
 이모지 1개로 시작하고, 30자 이내로 간결하게.
 실거래가 데이터가 있으면 시세 대비 언급해주세요.
 코멘트만 반환하세요.
 
 매물: ${parsedResult.type} ${parsedResult.price} ${parsedResult.location} ${parsedResult.complex || ''} ${parsedResult.area || ''}${salesContext}`
-        }]
-      })
+      }]
     });
-    const data = await response.json();
     return data.content?.[0]?.text?.trim() || null;
   } catch (e) { return null; }
 }
@@ -406,16 +432,8 @@ Deno.serve(async (req) => {
     console.log('INPUT:', text);
     const startTime = Date.now();
 
-    // ★ Claude 파싱 (좌표 조회 제거 → 클라이언트에서 처리)
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1024,
-        messages: [{
-          role: 'user',
-          content: `당신은 부동산 매물 정보를 분석하는 전문가입니다.
+    // ★ Claude 파싱 (프롬프트 캐싱 + Overloaded 재시도)
+    const systemPrompt = `당신은 부동산 매물 정보를 분석하는 전문가입니다.
 아래 매물 정보를 분석해서 JSON으로 반환해주세요.
 
 ■ 중요: 반드시 JSON만 반환하고, 다른 설명은 하지 마세요.
@@ -554,16 +572,14 @@ Deno.serve(async (req) => {
   "category": "apartment/officetel/room/commercial/office",
   "management_fee": "월 관리비 (숫자, 만원 단위. commercial/office만. 없으면 null)",
   "rights_money": "권리금 (숫자, 만원 단위. commercial만. 없으면 null)"
-}
+}`;
 
-매물 정보:
-${text}`
-        }]
-      })
+    const claudeData = await callAnthropicWithRetry(ANTHROPIC_API_KEY, {
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
+      system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
+      messages: [{ role: 'user', content: `매물 정보:\n${text}` }]
     });
-
-    const claudeData = await response.json();
-    if (claudeData.error) throw new Error(claudeData.error.message);
 
     let parsedResult: any;
     try {

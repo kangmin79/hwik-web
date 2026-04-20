@@ -90,6 +90,14 @@ async function autoMatch(cardId) {
   return r.body;
 }
 
+async function locateCard(cardId) {
+  const r = await sbFetch('/functions/v1/locate-card', {
+    method: 'POST', body: JSON.stringify({ card_id: cardId }),
+  });
+  if (!r.ok) throw new Error(`locate-card ${r.status}: ${JSON.stringify(r.body).slice(0, 200)}`);
+  return r.body;
+}
+
 async function pairNotification(propId, cliId) {
   const r = await sbFetch(
     `/rest/v1/match_notifications?and=(card_id.eq.${propId},client_card_id.eq.${cliId})&select=id,similarity`,
@@ -143,10 +151,12 @@ async function runScenario(s, idx) {
   try {
     const pr = await parseProperty(s.property);
     await insertCard(buildCardFromParse(propId, s.property, pr, false));
+    if (s.withLocate) await locateCard(propId);
     diag.prop = { price_number: pr.price_number, cat: pr.category, type: pr.type, embedding: !!pr.embedding };
 
     const cr = await parseProperty(s.client);
     await insertCard(buildCardFromParse(cliId, s.client, cr, true));
+    if (s.withLocate) await locateCard(cliId);
     diag.cli = { wanted_trade_type: cr.wanted_trade_type, wanted_cats: cr.wanted_categories, price_number: cr.price_number, embedding: !!cr.embedding, wanted_conditions: cr.wanted_conditions };
 
     // 진단: DB에 저장된 값 확인

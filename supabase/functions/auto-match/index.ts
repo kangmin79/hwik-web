@@ -116,7 +116,8 @@ Deno.serve(async (req) => {
     }
 
     // ── 스마트 필터 ──
-    const GU_RE = /(강남|서초|송파|마포|용산|성동|광진|영등포|강동|동작|관악|종로|중구|강서|양천|구로|노원|서대문|은평|중랑|도봉|동대문|성북|금천|강북)/;
+    // 서울 25구 + 경기 주요 도시 + 인천 주요 구
+    const GU_RE = /(강남|서초|송파|마포|용산|성동|광진|영등포|강동|동작|관악|종로|중구|강서|양천|구로|노원|서대문|은평|중랑|도봉|동대문|성북|금천|강북|수원|성남|고양|용인|부천|안산|안양|남양주|화성|의정부|시흥|평택|광명|하남|김포|군포|의왕|과천|구리|오산|파주|양주|안성|포천|이천|광주시|여주|연수|부평|계양|미추홀|서구|남동)/;
 
     function filterMatch(property: any, client: any): boolean {
       const prop = property.property || {};
@@ -140,20 +141,24 @@ Deno.serve(async (req) => {
       // 카테고리 체크
       if (cp.category && prop.category && cp.category !== prop.category) return false;
 
-      // 지역 체크
+      // 지역 체크 — 구 이름 양쪽 다 있으면 엄격 비교 우선, 매물 구 미상일 때만 좌표 폴백
       const clientLoc = [cp.location, memo].join(' ');
       const clientGuMatch = clientLoc.match(GU_RE);
       if (clientGuMatch) {
         const clientGu = clientGuMatch[1];
-        const coordInfo = DISTRICT_COORDS[clientGu];
-        const pLat = property.lat || null;
-        const pLng = property.lng || null;
-        if (coordInfo && pLat && pLng) {
-          const dist = haversineDistance(coordInfo.lat, coordInfo.lng, pLat, pLng);
-          if (dist > 5.0) return false;
+        const propGuMatch = (prop.location || '').match(GU_RE);
+        if (propGuMatch) {
+          // 1순위: 양쪽 구 이름 엄격 비교 (다른 구는 거리 무관 탈락)
+          if (propGuMatch[1] !== clientGu) return false;
         } else {
-          const propGuMatch = (prop.location || '').match(GU_RE);
-          if (propGuMatch && propGuMatch[1] !== clientGu) return false;
+          // 2순위: 매물 구 미상 → 좌표 거리 5km 폴백
+          const coordInfo = DISTRICT_COORDS[clientGu];
+          const pLat = property.lat || null;
+          const pLng = property.lng || null;
+          if (coordInfo && pLat && pLng) {
+            const dist = haversineDistance(coordInfo.lat, coordInfo.lng, pLat, pLng);
+            if (dist > 5.0) return false;
+          }
         }
       }
 
