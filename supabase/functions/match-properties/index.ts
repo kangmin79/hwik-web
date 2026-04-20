@@ -5,6 +5,7 @@ import { fixTypos } from '../_shared/typo.ts'
 import { getAuthUserId } from '../_shared/auth.ts'
 import { generateTags, TAG_WEIGHTS, extractExcludedTags } from '../_shared/tags.ts'
 import { parsePriceCondition, parseAreaCondition } from '../_shared/price.ts'
+import { CLIENT_SELECT, PROPERTY_SELECT } from '../_shared/card-fields.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://hwik.kr',
@@ -31,7 +32,7 @@ Deno.serve(async (req) => {
     // 1. 손님 카드 조회
     const { data: clientCard, error: clientError } = await supabase
       .from('cards')
-      .select('id, property, private_note, agent_id, wanted_trade_type, wanted_categories, wanted_conditions, move_in_date, tags, required_tags, excluded_tags, price_number, deposit, monthly_rent, kapt_code')
+      .select(CLIENT_SELECT)
       .eq('id', client_card_id)
       .single();
 
@@ -185,7 +186,7 @@ Deno.serve(async (req) => {
     console.log(`태그 매칭: must=[${mustTags}] trades=[${wantedTradeTypes}] cats=[${wantedCats}] price=${minPrice}~${maxPrice}`);
 
     let results: any[] = [];
-    const selectCols = 'id, property, agent_id, agent_comment, price_number, deposit, monthly_rent, trade_status, photos, lat, lng, created_at, search_text, tags, kapt_code';
+    const selectCols = PROPERTY_SELECT;
 
     // 공통 필터 적용 헬퍼
     function applyFilters(q: any, tagsOnly = false) {

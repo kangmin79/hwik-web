@@ -3,6 +3,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2'
 import { DISTRICT_COORDS, haversineDistance } from '../_shared/geo.ts'
 import { fixTypos } from '../_shared/typo.ts'
 import { getAuthUserId } from '../_shared/auth.ts'
+import { PROPERTY_SELECT, CLIENT_SELECT } from '../_shared/card-fields.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://hwik.kr',
@@ -37,7 +38,7 @@ Deno.serve(async (req) => {
     // 1. 공유된 매물 조회
     const { data: card, error: cardErr } = await supabase
       .from('cards')
-      .select('id, property, embedding, agent_id, price_number, lat, lng')
+      .select(PROPERTY_SELECT)
       .eq('id', card_id)
       .single();
 
@@ -106,7 +107,7 @@ Deno.serve(async (req) => {
     // 3. 멤버들의 손님 카드 일괄 조회
     const { data: clients } = await supabase
       .from('cards')
-      .select('id, agent_id, property, embedding, price_number, wanted_trade_type, search_text')
+      .select(CLIENT_SELECT)
       .in('agent_id', memberIds)
       .eq('property->>type', '손님')
       .not('embedding', 'is', null)

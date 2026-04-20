@@ -76,10 +76,10 @@ export function parsePriceCondition(text: string, tradeType?: string): PriceCond
     if (chun) result.maxPrice = parseInt(chun[1]) * 1000;
   }
 
-  // "3억 이상/초과/넘는/부터/위로"
+  // "3억 이상" / "3억5천 이상"
   if (!result.minPrice) {
-    const minMatch = text.match(/(\d+\.?\d*)\s*억\s*(?:이상|초과|넘는|부터|위로|넘게)/);
-    if (minMatch) result.minPrice = parseFloat(minMatch[1]) * 10000;
+    const minMatch = text.match(/(\d+\.?\d*)\s*억\s*(\d+)?\s*천?\s*(?:이상|초과|넘는|부터|위로|넘게)/);
+    if (minMatch) result.minPrice = parseFloat(minMatch[1]) * 10000 + (minMatch[2] ? parseInt(minMatch[2]) * 1000 : 0);
   }
 
   // "3억선" / "3억대" / "3억 정도/쯤/내외/안팎/전후/언저리" → ±15%

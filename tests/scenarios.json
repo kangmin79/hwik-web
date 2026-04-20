@@ -1,0 +1,1682 @@
+[
+  {
+    "id": "G001",
+    "axis": "전세-강남-아파트-기본",
+    "property": "강남 역삼 힐스테이트 전세 1억5천 아파트 15평",
+    "client": "강남 역삼 전세 1억5천 이하 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G002",
+    "axis": "전세-강남-원룸-기본",
+    "property": "강남 대치 전세 2억5천 원룸 18평",
+    "client": "강남 대치 전세 2억5천 이하 원룸 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G003",
+    "axis": "전세-서초-아파트-기본",
+    "property": "서초 반포 자이 전세 3억5천 아파트 22평",
+    "client": "서초 반포 전세 3억5천 이하 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G004",
+    "axis": "전세-서초-원룸-기본",
+    "property": "서초 방배 전세 4억5천 원룸 25평",
+    "client": "서초 방배 전세 4억5천 이하 원룸 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G005",
+    "axis": "전세-송파-아파트-기본",
+    "property": "송파 잠실 엘스 전세 5억5천 아파트 30평",
+    "client": "송파 잠실 전세 5억5천 이하 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G006",
+    "axis": "전세-송파-원룸-기본",
+    "property": "송파 문정 전세 7억 원룸 33평",
+    "client": "송파 문정 전세 7억 이하 원룸 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G007",
+    "axis": "전세-마포-아파트-기본",
+    "property": "마포 공덕 래미안 전세 9억 아파트 42평",
+    "client": "마포 공덕 전세 9억 이하 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G008",
+    "axis": "전세-마포-원룸-기본",
+    "property": "마포 합정 전세 12억 원룸 50평",
+    "client": "마포 합정 전세 12억 이하 원룸 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G009",
+    "axis": "전세-용산-아파트-기본",
+    "property": "용산 이촌 한가람 전세 1억5천 아파트 15평",
+    "client": "용산 이촌 전세 1억5천 이하 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G010",
+    "axis": "전세-성동-원룸-기본",
+    "property": "성동 성수 전세 2억5천 원룸 18평",
+    "client": "성동 성수 전세 2억5천 이하 원룸 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G011",
+    "axis": "전세-영등포-아파트-기본",
+    "property": "영등포 여의도 삼부 전세 3억5천 아파트 22평",
+    "client": "영등포 여의도 전세 3억5천 이하 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G012",
+    "axis": "전세-강서-원룸-기본",
+    "property": "강서 마곡 전세 4억5천 원룸 25평",
+    "client": "강서 마곡 전세 4억5천 이하 원룸 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G013",
+    "axis": "전세-양천-아파트-기본",
+    "property": "양천 목동 신시가지 전세 5억5천 아파트 30평",
+    "client": "양천 목동 전세 5억5천 이하 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G014",
+    "axis": "전세-동작-원룸-기본",
+    "property": "동작 상도 전세 7억 원룸 33평",
+    "client": "동작 상도 전세 7억 이하 원룸 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G015",
+    "axis": "전세-관악-아파트-기본",
+    "property": "관악 신림 푸르지오 전세 9억 아파트 42평",
+    "client": "관악 신림 전세 9억 이하 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G016",
+    "axis": "전세-광진-원룸-기본",
+    "property": "광진 자양 전세 12억 원룸 50평",
+    "client": "광진 자양 전세 12억 이하 원룸 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G017",
+    "axis": "전세-중랑-아파트-기본",
+    "property": "중랑 망우 금호어울림 전세 1억5천 아파트 15평",
+    "client": "중랑 망우 전세 1억5천 이하 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G018",
+    "axis": "전세-노원-원룸-기본",
+    "property": "노원 상계 전세 2억5천 원룸 18평",
+    "client": "노원 상계 전세 2억5천 이하 원룸 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G019",
+    "axis": "전세-도봉-아파트-기본",
+    "property": "도봉 창동 힐스테이트 전세 3억5천 아파트 22평",
+    "client": "도봉 창동 전세 3억5천 이하 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G020",
+    "axis": "전세-성북-원룸-기본",
+    "property": "성북 길음 전세 4억5천 원룸 25평",
+    "client": "성북 길음 전세 4억5천 이하 원룸 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G021",
+    "axis": "전세-강남-가격초과",
+    "property": "강남 역삼 힐스테이트 전세 12억 아파트 30평",
+    "client": "강남 역삼 전세 6억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G022",
+    "axis": "전세-강남-가격초과",
+    "property": "강남 대치 미도 전세 1억5천 아파트 33평",
+    "client": "강남 대치 전세 7.5천 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G023",
+    "axis": "전세-서초-가격초과",
+    "property": "서초 반포 자이 전세 2억5천 아파트 42평",
+    "client": "서초 반포 전세 1억2천 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G024",
+    "axis": "전세-서초-가격초과",
+    "property": "서초 방배 아크로 전세 3억5천 아파트 50평",
+    "client": "서초 방배 전세 1억7천 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G025",
+    "axis": "전세-송파-가격초과",
+    "property": "송파 잠실 엘스 전세 4억5천 아파트 15평",
+    "client": "송파 잠실 전세 2억2천 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G026",
+    "axis": "전세-송파-가격초과",
+    "property": "송파 문정 올림픽훼밀리 전세 5억5천 아파트 18평",
+    "client": "송파 문정 전세 2억7천 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G027",
+    "axis": "전세-마포-가격초과",
+    "property": "마포 공덕 래미안 전세 7억 아파트 22평",
+    "client": "마포 공덕 전세 3억5천 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G028",
+    "axis": "전세-마포-가격초과",
+    "property": "마포 합정 메세나폴리스 전세 9억 아파트 25평",
+    "client": "마포 합정 전세 4억5천 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G029",
+    "axis": "전세-용산-가격초과",
+    "property": "용산 이촌 한가람 전세 12억 아파트 30평",
+    "client": "용산 이촌 전세 6억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G030",
+    "axis": "전세-성동-가격초과",
+    "property": "성동 성수 갤러리아포레 전세 1억5천 아파트 33평",
+    "client": "성동 성수 전세 7.5천 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G031",
+    "axis": "전세-영등포-가격초과",
+    "property": "영등포 여의도 삼부 전세 2억5천 아파트 42평",
+    "client": "영등포 여의도 전세 1억2천 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G032",
+    "axis": "전세-강서-가격초과",
+    "property": "강서 마곡 엠밸리 전세 3억5천 아파트 50평",
+    "client": "강서 마곡 전세 1억7천 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G033",
+    "axis": "전세-양천-가격초과",
+    "property": "양천 목동 신시가지 전세 4억5천 아파트 15평",
+    "client": "양천 목동 전세 2억2천 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G034",
+    "axis": "전세-동작-가격초과",
+    "property": "동작 상도 래미안 전세 5억5천 아파트 18평",
+    "client": "동작 상도 전세 2억7천 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G035",
+    "axis": "전세-관악-가격초과",
+    "property": "관악 신림 푸르지오 전세 7억 아파트 22평",
+    "client": "관악 신림 전세 3억5천 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G036",
+    "axis": "전세-광진-가격초과",
+    "property": "광진 자양 더샵스타시티 전세 9억 아파트 25평",
+    "client": "광진 자양 전세 4억5천 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G037",
+    "axis": "전세-중랑-가격초과",
+    "property": "중랑 망우 금호어울림 전세 12억 아파트 30평",
+    "client": "중랑 망우 전세 6억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G038",
+    "axis": "전세-노원-가격초과",
+    "property": "노원 상계 주공 전세 1억5천 아파트 33평",
+    "client": "노원 상계 전세 7.5천 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G039",
+    "axis": "전세-도봉-가격초과",
+    "property": "도봉 창동 힐스테이트 전세 2억5천 아파트 42평",
+    "client": "도봉 창동 전세 1억2천 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G040",
+    "axis": "전세-성북-가격초과",
+    "property": "성북 길음 래미안 전세 3억5천 아파트 50평",
+    "client": "성북 길음 전세 1억7천 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G041",
+    "axis": "매매-강남-정확",
+    "property": "강남 역삼 힐스테이트 매매 5억 아파트 15평",
+    "client": "강남 역삼 매매 5억 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G042",
+    "axis": "매매-강남-정확",
+    "property": "강남 대치 미도 매매 8억 아파트 18평",
+    "client": "강남 대치 매매 8억 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G043",
+    "axis": "매매-서초-정확",
+    "property": "서초 반포 자이 매매 12억 아파트 22평",
+    "client": "서초 반포 매매 12억 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G044",
+    "axis": "매매-서초-정확",
+    "property": "서초 방배 아크로 매매 18억 아파트 25평",
+    "client": "서초 방배 매매 18억 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G045",
+    "axis": "매매-송파-정확",
+    "property": "송파 잠실 엘스 매매 25억 아파트 30평",
+    "client": "송파 잠실 매매 25억 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G046",
+    "axis": "매매-송파-정확",
+    "property": "송파 문정 올림픽훼밀리 매매 35억 아파트 33평",
+    "client": "송파 문정 매매 35억 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G047",
+    "axis": "매매-마포-정확",
+    "property": "마포 공덕 래미안 매매 50억 아파트 42평",
+    "client": "마포 공덕 매매 50억 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G048",
+    "axis": "매매-마포-정확",
+    "property": "마포 합정 메세나폴리스 매매 5억 아파트 50평",
+    "client": "마포 합정 매매 5억 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G049",
+    "axis": "매매-용산-정확",
+    "property": "용산 이촌 한가람 매매 8억 아파트 15평",
+    "client": "용산 이촌 매매 8억 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G050",
+    "axis": "매매-성동-정확",
+    "property": "성동 성수 갤러리아포레 매매 12억 아파트 18평",
+    "client": "성동 성수 매매 12억 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G051",
+    "axis": "매매-영등포-정확",
+    "property": "영등포 여의도 삼부 매매 18억 아파트 22평",
+    "client": "영등포 여의도 매매 18억 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G052",
+    "axis": "매매-강서-정확",
+    "property": "강서 마곡 엠밸리 매매 25억 아파트 25평",
+    "client": "강서 마곡 매매 25억 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G053",
+    "axis": "매매-양천-정확",
+    "property": "양천 목동 신시가지 매매 35억 아파트 30평",
+    "client": "양천 목동 매매 35억 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G054",
+    "axis": "매매-동작-정확",
+    "property": "동작 상도 래미안 매매 50억 아파트 33평",
+    "client": "동작 상도 매매 50억 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G055",
+    "axis": "매매-관악-정확",
+    "property": "관악 신림 푸르지오 매매 5억 아파트 42평",
+    "client": "관악 신림 매매 5억 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G056",
+    "axis": "매매-강남-가격초과",
+    "property": "강남 역삼 힐스테이트 매매 18억 아파트 30평",
+    "client": "강남 역삼 매매 9억 이하 아파트 찾아요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G057",
+    "axis": "매매-강남-가격초과",
+    "property": "강남 대치 미도 매매 25억 아파트 30평",
+    "client": "강남 대치 매매 12억5천 이하 아파트 찾아요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G058",
+    "axis": "매매-서초-가격초과",
+    "property": "서초 반포 자이 매매 35억 아파트 30평",
+    "client": "서초 반포 매매 17억5천 이하 아파트 찾아요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G059",
+    "axis": "매매-서초-가격초과",
+    "property": "서초 방배 아크로 매매 50억 아파트 30평",
+    "client": "서초 방배 매매 25억 이하 아파트 찾아요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G060",
+    "axis": "매매-송파-가격초과",
+    "property": "송파 잠실 엘스 매매 5억 아파트 30평",
+    "client": "송파 잠실 매매 2억5천 이하 아파트 찾아요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G061",
+    "axis": "매매-송파-가격초과",
+    "property": "송파 문정 올림픽훼밀리 매매 8억 아파트 30평",
+    "client": "송파 문정 매매 4억 이하 아파트 찾아요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G062",
+    "axis": "매매-마포-가격초과",
+    "property": "마포 공덕 래미안 매매 12억 아파트 30평",
+    "client": "마포 공덕 매매 6억 이하 아파트 찾아요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G063",
+    "axis": "매매-마포-가격초과",
+    "property": "마포 합정 메세나폴리스 매매 18억 아파트 30평",
+    "client": "마포 합정 매매 9억 이하 아파트 찾아요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G064",
+    "axis": "매매-용산-가격초과",
+    "property": "용산 이촌 한가람 매매 25억 아파트 30평",
+    "client": "용산 이촌 매매 12억5천 이하 아파트 찾아요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G065",
+    "axis": "매매-성동-가격초과",
+    "property": "성동 성수 갤러리아포레 매매 35억 아파트 30평",
+    "client": "성동 성수 매매 17억5천 이하 아파트 찾아요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G066",
+    "axis": "매매-영등포-가격초과",
+    "property": "영등포 여의도 삼부 매매 50억 아파트 30평",
+    "client": "영등포 여의도 매매 25억 이하 아파트 찾아요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G067",
+    "axis": "매매-강서-가격초과",
+    "property": "강서 마곡 엠밸리 매매 5억 아파트 30평",
+    "client": "강서 마곡 매매 2억5천 이하 아파트 찾아요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G068",
+    "axis": "매매-양천-가격초과",
+    "property": "양천 목동 신시가지 매매 8억 아파트 30평",
+    "client": "양천 목동 매매 4억 이하 아파트 찾아요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G069",
+    "axis": "매매-동작-가격초과",
+    "property": "동작 상도 래미안 매매 12억 아파트 30평",
+    "client": "동작 상도 매매 6억 이하 아파트 찾아요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G070",
+    "axis": "매매-관악-가격초과",
+    "property": "관악 신림 푸르지오 매매 18억 아파트 30평",
+    "client": "관악 신림 매매 9억 이하 아파트 찾아요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G071",
+    "axis": "월세-강남-정확",
+    "property": "강남 역삼 월세 보증금 500 월 40 원룸",
+    "client": "강남 역삼 월세 보증금 500 월 40 이하 원룸 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G072",
+    "axis": "월세-강남-정확",
+    "property": "강남 대치 월세 보증금 1천 월 60 원룸",
+    "client": "강남 대치 월세 보증금 1천 월 60 이하 원룸 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G073",
+    "axis": "월세-서초-정확",
+    "property": "서초 반포 월세 보증금 2천 월 80 원룸",
+    "client": "서초 반포 월세 보증금 2천 월 80 이하 원룸 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G074",
+    "axis": "월세-서초-정확",
+    "property": "서초 방배 월세 보증금 3천 월 100 원룸",
+    "client": "서초 방배 월세 보증금 3천 월 100 이하 원룸 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G075",
+    "axis": "월세-송파-정확",
+    "property": "송파 잠실 월세 보증금 5천 월 150 원룸",
+    "client": "송파 잠실 월세 보증금 5천 월 150 이하 원룸 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G076",
+    "axis": "월세-송파-정확",
+    "property": "송파 문정 월세 보증금 1억 월 200 원룸",
+    "client": "송파 문정 월세 보증금 1억 월 200 이하 원룸 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G077",
+    "axis": "월세-마포-정확",
+    "property": "마포 공덕 월세 보증금 500 월 40 원룸",
+    "client": "마포 공덕 월세 보증금 500 월 40 이하 원룸 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G078",
+    "axis": "월세-마포-정확",
+    "property": "마포 합정 월세 보증금 1천 월 60 원룸",
+    "client": "마포 합정 월세 보증금 1천 월 60 이하 원룸 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G079",
+    "axis": "월세-용산-정확",
+    "property": "용산 이촌 월세 보증금 2천 월 80 원룸",
+    "client": "용산 이촌 월세 보증금 2천 월 80 이하 원룸 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G080",
+    "axis": "월세-성동-정확",
+    "property": "성동 성수 월세 보증금 3천 월 100 원룸",
+    "client": "성동 성수 월세 보증금 3천 월 100 이하 원룸 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G081",
+    "axis": "월세-영등포-정확",
+    "property": "영등포 여의도 월세 보증금 5천 월 150 원룸",
+    "client": "영등포 여의도 월세 보증금 5천 월 150 이하 원룸 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G082",
+    "axis": "월세-강서-정확",
+    "property": "강서 마곡 월세 보증금 1억 월 200 원룸",
+    "client": "강서 마곡 월세 보증금 1억 월 200 이하 원룸 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G083",
+    "axis": "월세-양천-정확",
+    "property": "양천 목동 월세 보증금 500 월 40 원룸",
+    "client": "양천 목동 월세 보증금 500 월 40 이하 원룸 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G084",
+    "axis": "월세-동작-정확",
+    "property": "동작 상도 월세 보증금 1천 월 60 원룸",
+    "client": "동작 상도 월세 보증금 1천 월 60 이하 원룸 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G085",
+    "axis": "월세-관악-정확",
+    "property": "관악 신림 월세 보증금 2천 월 80 원룸",
+    "client": "관악 신림 월세 보증금 2천 월 80 이하 원룸 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G086",
+    "axis": "월세-광진-정확",
+    "property": "광진 자양 월세 보증금 3천 월 100 원룸",
+    "client": "광진 자양 월세 보증금 3천 월 100 이하 원룸 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G087",
+    "axis": "월세-중랑-정확",
+    "property": "중랑 망우 월세 보증금 5천 월 150 원룸",
+    "client": "중랑 망우 월세 보증금 5천 월 150 이하 원룸 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G088",
+    "axis": "월세-노원-정확",
+    "property": "노원 상계 월세 보증금 1억 월 200 원룸",
+    "client": "노원 상계 월세 보증금 1억 월 200 이하 원룸 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G089",
+    "axis": "월세-도봉-정확",
+    "property": "도봉 창동 월세 보증금 500 월 40 원룸",
+    "client": "도봉 창동 월세 보증금 500 월 40 이하 원룸 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G090",
+    "axis": "월세-성북-정확",
+    "property": "성북 길음 월세 보증금 1천 월 60 원룸",
+    "client": "성북 길음 월세 보증금 1천 월 60 이하 원룸 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G091",
+    "axis": "월세-강남-월세초과",
+    "property": "강남 역삼 월세 보증금 500 월 140 원룸",
+    "client": "강남 역삼 월세 보증금 500 월 40 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G092",
+    "axis": "월세-강남-월세초과",
+    "property": "강남 대치 월세 보증금 1천 월 160 원룸",
+    "client": "강남 대치 월세 보증금 1천 월 60 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G093",
+    "axis": "월세-서초-월세초과",
+    "property": "서초 반포 월세 보증금 2천 월 180 원룸",
+    "client": "서초 반포 월세 보증금 2천 월 80 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G094",
+    "axis": "월세-서초-월세초과",
+    "property": "서초 방배 월세 보증금 3천 월 200 원룸",
+    "client": "서초 방배 월세 보증금 3천 월 100 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G095",
+    "axis": "월세-송파-월세초과",
+    "property": "송파 잠실 월세 보증금 5천 월 300 원룸",
+    "client": "송파 잠실 월세 보증금 5천 월 150 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G096",
+    "axis": "월세-송파-월세초과",
+    "property": "송파 문정 월세 보증금 1억 월 400 원룸",
+    "client": "송파 문정 월세 보증금 1억 월 200 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G097",
+    "axis": "월세-마포-월세초과",
+    "property": "마포 공덕 월세 보증금 500 월 140 원룸",
+    "client": "마포 공덕 월세 보증금 500 월 40 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G098",
+    "axis": "월세-마포-월세초과",
+    "property": "마포 합정 월세 보증금 1천 월 160 원룸",
+    "client": "마포 합정 월세 보증금 1천 월 60 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G099",
+    "axis": "월세-용산-월세초과",
+    "property": "용산 이촌 월세 보증금 2천 월 180 원룸",
+    "client": "용산 이촌 월세 보증금 2천 월 80 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G100",
+    "axis": "월세-성동-월세초과",
+    "property": "성동 성수 월세 보증금 3천 월 200 원룸",
+    "client": "성동 성수 월세 보증금 3천 월 100 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G101",
+    "axis": "월세-영등포-월세초과",
+    "property": "영등포 여의도 월세 보증금 5천 월 300 원룸",
+    "client": "영등포 여의도 월세 보증금 5천 월 150 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G102",
+    "axis": "월세-강서-월세초과",
+    "property": "강서 마곡 월세 보증금 1억 월 400 원룸",
+    "client": "강서 마곡 월세 보증금 1억 월 200 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G103",
+    "axis": "월세-양천-월세초과",
+    "property": "양천 목동 월세 보증금 500 월 140 원룸",
+    "client": "양천 목동 월세 보증금 500 월 40 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G104",
+    "axis": "월세-동작-월세초과",
+    "property": "동작 상도 월세 보증금 1천 월 160 원룸",
+    "client": "동작 상도 월세 보증금 1천 월 60 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G105",
+    "axis": "월세-관악-월세초과",
+    "property": "관악 신림 월세 보증금 2천 월 180 원룸",
+    "client": "관악 신림 월세 보증금 2천 월 80 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G106",
+    "axis": "월세-강남-보증금초과",
+    "property": "강남 역삼 월세 보증금 5.5천 월 40 원룸",
+    "client": "강남 역삼 월세 보증금 500 월 40 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G107",
+    "axis": "월세-강남-보증금초과",
+    "property": "강남 대치 월세 보증금 6천 월 60 원룸",
+    "client": "강남 대치 월세 보증금 1천 월 60 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G108",
+    "axis": "월세-서초-보증금초과",
+    "property": "서초 반포 월세 보증금 7천 월 80 원룸",
+    "client": "서초 반포 월세 보증금 2천 월 80 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G109",
+    "axis": "월세-서초-보증금초과",
+    "property": "서초 방배 월세 보증금 8천 월 100 원룸",
+    "client": "서초 방배 월세 보증금 3천 월 100 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G110",
+    "axis": "월세-송파-보증금초과",
+    "property": "송파 잠실 월세 보증금 1억 월 150 원룸",
+    "client": "송파 잠실 월세 보증금 5천 월 150 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G111",
+    "axis": "월세-송파-보증금초과",
+    "property": "송파 문정 월세 보증금 2억 월 200 원룸",
+    "client": "송파 문정 월세 보증금 1억 월 200 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G112",
+    "axis": "월세-마포-보증금초과",
+    "property": "마포 공덕 월세 보증금 5.5천 월 40 원룸",
+    "client": "마포 공덕 월세 보증금 500 월 40 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G113",
+    "axis": "월세-마포-보증금초과",
+    "property": "마포 합정 월세 보증금 6천 월 60 원룸",
+    "client": "마포 합정 월세 보증금 1천 월 60 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G114",
+    "axis": "월세-용산-보증금초과",
+    "property": "용산 이촌 월세 보증금 7천 월 80 원룸",
+    "client": "용산 이촌 월세 보증금 2천 월 80 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G115",
+    "axis": "월세-성동-보증금초과",
+    "property": "성동 성수 월세 보증금 8천 월 100 원룸",
+    "client": "성동 성수 월세 보증금 3천 월 100 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G116",
+    "axis": "월세-영등포-보증금초과",
+    "property": "영등포 여의도 월세 보증금 1억 월 150 원룸",
+    "client": "영등포 여의도 월세 보증금 5천 월 150 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G117",
+    "axis": "월세-강서-보증금초과",
+    "property": "강서 마곡 월세 보증금 2억 월 200 원룸",
+    "client": "강서 마곡 월세 보증금 1억 월 200 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G118",
+    "axis": "월세-양천-보증금초과",
+    "property": "양천 목동 월세 보증금 5.5천 월 40 원룸",
+    "client": "양천 목동 월세 보증금 500 월 40 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G119",
+    "axis": "월세-동작-보증금초과",
+    "property": "동작 상도 월세 보증금 6천 월 60 원룸",
+    "client": "동작 상도 월세 보증금 1천 월 60 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G120",
+    "axis": "월세-관악-보증금초과",
+    "property": "관악 신림 월세 보증금 7천 월 80 원룸",
+    "client": "관악 신림 월세 보증금 2천 월 80 이하 원룸 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G121",
+    "axis": "다른구-강남vs영등포",
+    "property": "강남 역삼 힐스테이트 전세 4억 아파트 24평",
+    "client": "영등포 여의도 전세 4억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G122",
+    "axis": "다른구-강남vs강서",
+    "property": "강남 대치 미도 전세 4억 아파트 24평",
+    "client": "강서 마곡 전세 4억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G123",
+    "axis": "다른구-서초vs양천",
+    "property": "서초 반포 자이 전세 4억 아파트 24평",
+    "client": "양천 목동 전세 4억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G124",
+    "axis": "다른구-서초vs동작",
+    "property": "서초 방배 아크로 전세 4억 아파트 24평",
+    "client": "동작 상도 전세 4억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G125",
+    "axis": "다른구-송파vs관악",
+    "property": "송파 잠실 엘스 전세 4억 아파트 24평",
+    "client": "관악 신림 전세 4억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G126",
+    "axis": "다른구-송파vs광진",
+    "property": "송파 문정 올림픽훼밀리 전세 4억 아파트 24평",
+    "client": "광진 자양 전세 4억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G127",
+    "axis": "다른구-마포vs중랑",
+    "property": "마포 공덕 래미안 전세 4억 아파트 24평",
+    "client": "중랑 망우 전세 4억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G128",
+    "axis": "다른구-마포vs노원",
+    "property": "마포 합정 메세나폴리스 전세 4억 아파트 24평",
+    "client": "노원 상계 전세 4억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G129",
+    "axis": "다른구-용산vs도봉",
+    "property": "용산 이촌 한가람 전세 4억 아파트 24평",
+    "client": "도봉 창동 전세 4억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G130",
+    "axis": "다른구-성동vs성북",
+    "property": "성동 성수 갤러리아포레 전세 4억 아파트 24평",
+    "client": "성북 길음 전세 4억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G131",
+    "axis": "다른구-영등포vs강남",
+    "property": "영등포 여의도 삼부 전세 4억 아파트 24평",
+    "client": "강남 역삼 전세 4억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G132",
+    "axis": "다른구-강서vs강남",
+    "property": "강서 마곡 엠밸리 전세 4억 아파트 24평",
+    "client": "강남 대치 전세 4억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G133",
+    "axis": "다른구-양천vs서초",
+    "property": "양천 목동 신시가지 전세 4억 아파트 24평",
+    "client": "서초 반포 전세 4억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G134",
+    "axis": "다른구-동작vs서초",
+    "property": "동작 상도 래미안 전세 4억 아파트 24평",
+    "client": "서초 방배 전세 4억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G135",
+    "axis": "다른구-관악vs송파",
+    "property": "관악 신림 푸르지오 전세 4억 아파트 24평",
+    "client": "송파 잠실 전세 4억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G136",
+    "axis": "다른구-광진vs송파",
+    "property": "광진 자양 더샵스타시티 전세 4억 아파트 24평",
+    "client": "송파 문정 전세 4억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G137",
+    "axis": "다른구-중랑vs마포",
+    "property": "중랑 망우 금호어울림 전세 4억 아파트 24평",
+    "client": "마포 공덕 전세 4억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G138",
+    "axis": "다른구-노원vs마포",
+    "property": "노원 상계 주공 전세 4억 아파트 24평",
+    "client": "마포 합정 전세 4억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G139",
+    "axis": "다른구-도봉vs용산",
+    "property": "도봉 창동 힐스테이트 전세 4억 아파트 24평",
+    "client": "용산 이촌 전세 4억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G140",
+    "axis": "다른구-성북vs성동",
+    "property": "성북 길음 래미안 전세 4억 아파트 24평",
+    "client": "성동 성수 전세 4억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G141",
+    "axis": "카테고리-아파트vs아파트-match",
+    "property": "강남 역삼 힐스테이트 전세 3억 아파트 20평",
+    "client": "강남 역삼 전세 3억 이하 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G142",
+    "axis": "카테고리-원룸vs원룸-match",
+    "property": "강남 대치 전세 3억 원룸 20평",
+    "client": "강남 대치 전세 3억 이하 원룸 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G143",
+    "axis": "카테고리-오피스텔vs오피스텔-match",
+    "property": "서초 반포 전세 3억 오피스텔 20평",
+    "client": "서초 반포 전세 3억 이하 오피스텔 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G144",
+    "axis": "카테고리-상가vs상가-match",
+    "property": "서초 방배 아크로 전세 3억 상가 20평",
+    "client": "서초 방배 전세 3억 이하 상가 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G145",
+    "axis": "카테고리-사무실vs사무실-match",
+    "property": "송파 잠실 엘스 전세 3억 사무실 20평",
+    "client": "송파 잠실 전세 3억 이하 사무실 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G146",
+    "axis": "카테고리-아파트vs원룸-no-match",
+    "property": "송파 문정 올림픽훼밀리 전세 3억 아파트 20평",
+    "client": "송파 문정 전세 3억 이하 원룸 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G147",
+    "axis": "카테고리-원룸vs아파트-no-match",
+    "property": "마포 공덕 전세 3억 원룸 20평",
+    "client": "마포 공덕 전세 3억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G148",
+    "axis": "카테고리-아파트vs상가-no-match",
+    "property": "마포 합정 메세나폴리스 전세 3억 아파트 20평",
+    "client": "마포 합정 전세 3억 이하 상가 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G149",
+    "axis": "카테고리-오피스텔vs아파트-no-match",
+    "property": "용산 이촌 전세 3억 오피스텔 20평",
+    "client": "용산 이촌 전세 3억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G150",
+    "axis": "카테고리-상가vs사무실-no-match",
+    "property": "성동 성수 갤러리아포레 전세 3억 상가 20평",
+    "client": "성동 성수 전세 3억 이하 사무실 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G151",
+    "axis": "카테고리-아파트vs아파트-match",
+    "property": "영등포 여의도 삼부 전세 3억 아파트 20평",
+    "client": "영등포 여의도 전세 3억 이하 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G152",
+    "axis": "카테고리-원룸vs원룸-match",
+    "property": "강서 마곡 전세 3억 원룸 20평",
+    "client": "강서 마곡 전세 3억 이하 원룸 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G153",
+    "axis": "카테고리-오피스텔vs오피스텔-match",
+    "property": "양천 목동 전세 3억 오피스텔 20평",
+    "client": "양천 목동 전세 3억 이하 오피스텔 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G154",
+    "axis": "카테고리-상가vs상가-match",
+    "property": "동작 상도 래미안 전세 3억 상가 20평",
+    "client": "동작 상도 전세 3억 이하 상가 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G155",
+    "axis": "카테고리-사무실vs사무실-match",
+    "property": "관악 신림 푸르지오 전세 3억 사무실 20평",
+    "client": "관악 신림 전세 3억 이하 사무실 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G156",
+    "axis": "카테고리-아파트vs원룸-no-match",
+    "property": "광진 자양 더샵스타시티 전세 3억 아파트 20평",
+    "client": "광진 자양 전세 3억 이하 원룸 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G157",
+    "axis": "카테고리-원룸vs아파트-no-match",
+    "property": "중랑 망우 전세 3억 원룸 20평",
+    "client": "중랑 망우 전세 3억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G158",
+    "axis": "카테고리-아파트vs상가-no-match",
+    "property": "노원 상계 주공 전세 3억 아파트 20평",
+    "client": "노원 상계 전세 3억 이하 상가 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G159",
+    "axis": "카테고리-오피스텔vs아파트-no-match",
+    "property": "도봉 창동 전세 3억 오피스텔 20평",
+    "client": "도봉 창동 전세 3억 이하 아파트 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G160",
+    "axis": "카테고리-상가vs사무실-no-match",
+    "property": "성북 길음 래미안 전세 3억 상가 20평",
+    "client": "성북 길음 전세 3억 이하 사무실 구합니다",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G161",
+    "axis": "카테고리-아파트vs아파트-match",
+    "property": "강남 역삼 힐스테이트 전세 3억 아파트 20평",
+    "client": "강남 역삼 전세 3억 이하 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G162",
+    "axis": "카테고리-원룸vs원룸-match",
+    "property": "강남 대치 전세 3억 원룸 20평",
+    "client": "강남 대치 전세 3억 이하 원룸 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G163",
+    "axis": "카테고리-오피스텔vs오피스텔-match",
+    "property": "서초 반포 전세 3억 오피스텔 20평",
+    "client": "서초 반포 전세 3억 이하 오피스텔 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G164",
+    "axis": "카테고리-상가vs상가-match",
+    "property": "서초 방배 아크로 전세 3억 상가 20평",
+    "client": "서초 방배 전세 3억 이하 상가 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G165",
+    "axis": "카테고리-사무실vs사무실-match",
+    "property": "송파 잠실 엘스 전세 3억 사무실 20평",
+    "client": "송파 잠실 전세 3억 이하 사무실 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G166",
+    "axis": "방향-매물먼저-강남",
+    "property": "강남 역삼 힐스테이트 전세 1억5천 아파트 25평",
+    "client": "강남 역삼 전세 1억5천 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "G167",
+    "axis": "방향-매물먼저-강남",
+    "property": "강남 대치 미도 전세 2억5천 아파트 25평",
+    "client": "강남 대치 전세 2억5천 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "G168",
+    "axis": "방향-매물먼저-서초",
+    "property": "서초 반포 자이 전세 3억5천 아파트 25평",
+    "client": "서초 반포 전세 3억5천 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "G169",
+    "axis": "방향-매물먼저-서초",
+    "property": "서초 방배 아크로 전세 4억5천 아파트 25평",
+    "client": "서초 방배 전세 4억5천 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "G170",
+    "axis": "방향-매물먼저-송파",
+    "property": "송파 잠실 엘스 전세 5억5천 아파트 25평",
+    "client": "송파 잠실 전세 5억5천 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "G171",
+    "axis": "방향-매물먼저-송파",
+    "property": "송파 문정 올림픽훼밀리 전세 7억 아파트 25평",
+    "client": "송파 문정 전세 7억 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "G172",
+    "axis": "방향-매물먼저-마포",
+    "property": "마포 공덕 래미안 전세 9억 아파트 25평",
+    "client": "마포 공덕 전세 9억 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "G173",
+    "axis": "방향-매물먼저-마포",
+    "property": "마포 합정 메세나폴리스 전세 12억 아파트 25평",
+    "client": "마포 합정 전세 12억 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "G174",
+    "axis": "방향-매물먼저-용산",
+    "property": "용산 이촌 한가람 전세 1억5천 아파트 25평",
+    "client": "용산 이촌 전세 1억5천 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "G175",
+    "axis": "방향-매물먼저-성동",
+    "property": "성동 성수 갤러리아포레 전세 2억5천 아파트 25평",
+    "client": "성동 성수 전세 2억5천 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "G176",
+    "axis": "방향-매물먼저-영등포",
+    "property": "영등포 여의도 삼부 전세 3억5천 아파트 25평",
+    "client": "영등포 여의도 전세 3억5천 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "G177",
+    "axis": "방향-매물먼저-강서",
+    "property": "강서 마곡 엠밸리 전세 4억5천 아파트 25평",
+    "client": "강서 마곡 전세 4억5천 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "G178",
+    "axis": "방향-매물먼저-양천",
+    "property": "양천 목동 신시가지 전세 5억5천 아파트 25평",
+    "client": "양천 목동 전세 5억5천 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "G179",
+    "axis": "방향-매물먼저-동작",
+    "property": "동작 상도 래미안 전세 7억 아파트 25평",
+    "client": "동작 상도 전세 7억 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "G180",
+    "axis": "방향-매물먼저-관악",
+    "property": "관악 신림 푸르지오 전세 9억 아파트 25평",
+    "client": "관악 신림 전세 9억 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "G181",
+    "axis": "방향-매물먼저-광진",
+    "property": "광진 자양 더샵스타시티 전세 12억 아파트 25평",
+    "client": "광진 자양 전세 12억 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "G182",
+    "axis": "방향-매물먼저-중랑",
+    "property": "중랑 망우 금호어울림 전세 1억5천 아파트 25평",
+    "client": "중랑 망우 전세 1억5천 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "G183",
+    "axis": "방향-매물먼저-노원",
+    "property": "노원 상계 주공 전세 2억5천 아파트 25평",
+    "client": "노원 상계 전세 2억5천 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "G184",
+    "axis": "방향-매물먼저-도봉",
+    "property": "도봉 창동 힐스테이트 전세 3억5천 아파트 25평",
+    "client": "도봉 창동 전세 3억5천 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "G185",
+    "axis": "방향-매물먼저-성북",
+    "property": "성북 길음 래미안 전세 4억5천 아파트 25평",
+    "client": "성북 길음 전세 4억5천 이하 아파트 찾아요",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "G186",
+    "axis": "가격-경계정확-강남",
+    "property": "강남 역삼 힐스테이트 전세 1억5천 아파트 22평",
+    "client": "강남 역삼 전세 1억5천 이하 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G187",
+    "axis": "가격-경계정확-강남",
+    "property": "강남 대치 미도 전세 2억5천 아파트 22평",
+    "client": "강남 대치 전세 2억5천 이하 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G188",
+    "axis": "가격-경계정확-서초",
+    "property": "서초 반포 자이 전세 3억5천 아파트 22평",
+    "client": "서초 반포 전세 3억5천 이하 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G189",
+    "axis": "가격-경계정확-서초",
+    "property": "서초 방배 아크로 전세 4억5천 아파트 22평",
+    "client": "서초 방배 전세 4억5천 이하 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G190",
+    "axis": "가격-경계정확-송파",
+    "property": "송파 잠실 엘스 전세 5억5천 아파트 22평",
+    "client": "송파 잠실 전세 5억5천 이하 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G191",
+    "axis": "가격-경계정확-송파",
+    "property": "송파 문정 올림픽훼밀리 전세 7억 아파트 22평",
+    "client": "송파 문정 전세 7억 이하 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G192",
+    "axis": "가격-경계정확-마포",
+    "property": "마포 공덕 래미안 전세 9억 아파트 22평",
+    "client": "마포 공덕 전세 9억 이하 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G193",
+    "axis": "가격-경계정확-마포",
+    "property": "마포 합정 메세나폴리스 전세 12억 아파트 22평",
+    "client": "마포 합정 전세 12억 이하 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G194",
+    "axis": "가격-경계정확-용산",
+    "property": "용산 이촌 한가람 전세 1억5천 아파트 22평",
+    "client": "용산 이촌 전세 1억5천 이하 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G195",
+    "axis": "가격-경계정확-성동",
+    "property": "성동 성수 갤러리아포레 전세 2억5천 아파트 22평",
+    "client": "성동 성수 전세 2억5천 이하 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G196",
+    "axis": "가격-범위내-강남",
+    "property": "강남 역삼 힐스테이트 전세 2억5천 아파트 22평",
+    "client": "강남 역삼 전세 1억5천 이상 3억5천 이하 아파트 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G197",
+    "axis": "가격-범위내-강남",
+    "property": "강남 대치 미도 전세 3억5천 아파트 22평",
+    "client": "강남 대치 전세 2억5천 이상 4억5천 이하 아파트 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G198",
+    "axis": "가격-범위내-서초",
+    "property": "서초 반포 자이 전세 4억5천 아파트 22평",
+    "client": "서초 반포 전세 3억5천 이상 5억5천 이하 아파트 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G199",
+    "axis": "가격-범위내-서초",
+    "property": "서초 방배 아크로 전세 5억5천 아파트 22평",
+    "client": "서초 방배 전세 4억5천 이상 7억 이하 아파트 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G200",
+    "axis": "가격-범위내-송파",
+    "property": "송파 잠실 엘스 전세 7억 아파트 22평",
+    "client": "송파 잠실 전세 5억5천 이상 9억 이하 아파트 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G201",
+    "axis": "면적-15평이상-강남",
+    "property": "강남 역삼 힐스테이트 전세 3억 아파트 20평",
+    "client": "강남 역삼 전세 3억 이하 15평 이상 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G202",
+    "axis": "면적-17평이상-강남",
+    "property": "강남 대치 미도 전세 3억 아파트 22평",
+    "client": "강남 대치 전세 3억 이하 17평 이상 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G203",
+    "axis": "면적-19평이상-서초",
+    "property": "서초 반포 자이 전세 3억 아파트 24평",
+    "client": "서초 반포 전세 3억 이하 19평 이상 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G204",
+    "axis": "면적-21평이상-서초",
+    "property": "서초 방배 아크로 전세 3억 아파트 26평",
+    "client": "서초 방배 전세 3억 이하 21평 이상 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G205",
+    "axis": "면적-23평이상-송파",
+    "property": "송파 잠실 엘스 전세 3억 아파트 28평",
+    "client": "송파 잠실 전세 3억 이하 23평 이상 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G206",
+    "axis": "면적-25평이상-송파",
+    "property": "송파 문정 올림픽훼밀리 전세 3억 아파트 30평",
+    "client": "송파 문정 전세 3억 이하 25평 이상 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G207",
+    "axis": "면적-27평이상-마포",
+    "property": "마포 공덕 래미안 전세 3억 아파트 32평",
+    "client": "마포 공덕 전세 3억 이하 27평 이상 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G208",
+    "axis": "면적-29평이상-마포",
+    "property": "마포 합정 메세나폴리스 전세 3억 아파트 34평",
+    "client": "마포 합정 전세 3억 이하 29평 이상 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G209",
+    "axis": "면적-31평이상-용산",
+    "property": "용산 이촌 한가람 전세 3억 아파트 36평",
+    "client": "용산 이촌 전세 3억 이하 31평 이상 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "G210",
+    "axis": "면적-33평이상-성동",
+    "property": "성동 성수 갤러리아포레 전세 3억 아파트 38평",
+    "client": "성동 성수 전세 3억 이하 33평 이상 아파트 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  }
+]

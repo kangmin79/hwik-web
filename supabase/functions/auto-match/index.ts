@@ -4,6 +4,7 @@ import { DISTRICT_COORDS, haversineDistance } from '../_shared/geo.ts'
 import { fixTypos } from '../_shared/typo.ts'
 import { getAuthUserId } from '../_shared/auth.ts'
 import { parsePriceCondition, parseAreaCondition, isPriceMatch, isAreaMatch } from '../_shared/price.ts'
+import { SELF_SELECT, CLIENT_SELECT, PROPERTY_SELECT } from '../_shared/card-fields.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': 'https://hwik.kr',
@@ -31,7 +32,7 @@ Deno.serve(async (req) => {
     // 1. 새 매물 조회 (손님일 수도 있음 → wanted_* / required_tags / excluded_tags / tags 필수)
     const { data: card, error: cardErr } = await supabase
       .from('cards')
-      .select('id, property, private_note, embedding, agent_id, price_number, deposit, monthly_rent, lat, lng, kapt_code, wanted_trade_type, wanted_categories, required_tags, excluded_tags, tags')
+      .select(SELF_SELECT)
       .eq('id', card_id)
       .single();
 
@@ -77,7 +78,7 @@ Deno.serve(async (req) => {
       // 손님 카드 → 기존 매물과 매칭
       const { data, error } = await supabase
         .from('cards')
-        .select('id, property, private_note, embedding, price_number, deposit, monthly_rent, lat, lng, tags, kapt_code')
+        .select(PROPERTY_SELECT)
         .eq('agent_id', agent_id)
         .neq('property->>type', '손님')
         .eq('trade_status', '계약가능')
@@ -100,7 +101,7 @@ Deno.serve(async (req) => {
       // 매물 카드 → 기존 손님과 매칭
       const { data, error } = await supabase
         .from('cards')
-        .select('id, property, private_note, embedding, price_number, wanted_trade_type, lat, lng, tags, required_tags, excluded_tags, kapt_code')
+        .select(CLIENT_SELECT)
         .eq('agent_id', agent_id)
         .eq('property->>type', '손님')
         .not('embedding', 'is', null)
@@ -121,7 +122,8 @@ Deno.serve(async (req) => {
       const prop = property.property || {};
       const cp = client.property || {};
       const memo = client.private_note?.memo || '';
-      let allText = [cp.price, cp.location, memo, ...(cp.features || [])].filter(Boolean).join(' ');
+      const rawText = client.private_note?.rawText || cp.rawText || '';
+      let allText = [rawText, cp.price, cp.location, cp.complex, cp.area, memo, ...(cp.features || [])].filter(Boolean).join(' ');
       allText = fixTypos(allText);
 
       const tradeType = prop.type;
@@ -170,6 +172,20 @@ Deno.serve(async (req) => {
       // 가격 체크 (정밀 파싱: 이하/이상/그쯤/범위/보월 전부 지원)
       const tradeTypeStr = prop.type || client.wanted_trade_type || '';
       const priceCondition = parsePriceCondition(allText, tradeTypeStr);
+      // 월세는 DB에 저장된 wanted 값(손님 입력 구조화된 보증금/월세)을 우선
+      if (tradeTypeStr === '월세') {
+        if (!priceCondition.maxMonthly && !priceCondition.monthly && client.monthly_rent) {
+          priceCondition.monthly = client.monthly_rent;
+        }
+        if (!priceCondition.maxDeposit && !priceCondition.deposit && client.deposit) {
+          priceCondition.deposit = client.deposit;
+        }
+      } else {
+        // 매매/전세도 DB wanted_conditions가 있으면 활용 (maxPrice 덮어쓰기는 하지 않고 fallback만)
+        if (!priceCondition.maxPrice && !priceCondition.minPrice && client.price_number) {
+          priceCondition.maxPrice = client.price_number;
+        }
+      }
       if (!isPriceMatch(
         property.price_number || 0,
         priceCondition,

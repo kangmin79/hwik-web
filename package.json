@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "test:matching": "node tests/smoke_matching.mjs",
+    "deploy:matching": "npm run test:matching && npx supabase functions deploy auto-match match-properties room-share-match"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.101.1"
   },
