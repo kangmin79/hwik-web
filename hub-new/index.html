@@ -2480,7 +2480,7 @@ const PanelRegister = (() => {
     lines.forEach(l=>{if((cur+'\n'+l).length>1500&&cur){chunks.push(cur);cur=l;}else cur=cur?cur+'\n'+l:l;});if(cur)chunks.push(cur);
     let done=0;
     for(const chunk of chunks){
-      try{const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/batch-parse`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({text:chunk,skip_save:true})});const d=await res.json();if(d.cards)d.cards.forEach(c=>{c._id=crypto.randomUUID();fiParsedCards.push(c);});}catch(_){}
+      try{const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/batch-parse`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({text:chunk,skip_save:true})});const d=await res.json();if(d.cards)d.cards.forEach(c=>{c._id=crypto.randomUUID();if(!c.rawText)c.rawText=chunk;fiParsedCards.push(c);});}catch(_){}
       done++;document.getElementById('fiProgressFill').style.width=Math.round(done/chunks.length*100)+'%';document.getElementById('fiProgressText').textContent=`${done}/${chunks.length} 청크 완료`;
     }
     const seen={};fiParsedCards.forEach(c=>{const k=`${c.type||''}|${c.price||''}|${c.complex||''}`;if(seen[k]){c._dup=true;seen[k]._dup=true;}else seen[k]=c;});
@@ -2507,7 +2507,7 @@ const PanelRegister = (() => {
     lines.forEach(l=>{if((cur+'\n'+l).length>1500&&cur){chunks.push(cur);cur=l;}else cur=cur?cur+'\n'+l:l;});if(cur)chunks.push(cur);
     let done=0;
     for(const chunk of chunks){
-      try{const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/batch-parse`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({text:chunk,skip_save:true})});const d=await res.json();if(d.cards)d.cards.forEach(c=>{c._id=crypto.randomUUID();fiParsedCards.push(c);});}catch(_){}
+      try{const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/batch-parse`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({text:chunk,skip_save:true})});const d=await res.json();if(d.cards)d.cards.forEach(c=>{c._id=crypto.randomUUID();if(!c.rawText)c.rawText=chunk;fiParsedCards.push(c);});}catch(_){}
       done++;document.getElementById('fiProgressFill').style.width=Math.round(done/chunks.length*100)+'%';document.getElementById('fiProgressText').textContent=`${done}/${chunks.length} 청크 완료`;
     }
     // 중복 감지
@@ -2527,10 +2527,28 @@ const PanelRegister = (() => {
   async function fiSaveAll(){
     const cards=fiParsedCards.filter(c=>!fiDeletedIds.has(c._id));if(!cards.length||!Auth.user)return;
     document.getElementById('leaveBanner').style.display='';const btn=document.getElementById('fiSaveBtn');btn.textContent='저장 중...';btn.disabled=true;let saved=0;const savedIds=[];
-    for(const c of cards){try{const prop={type:c.type,price:c.price,complex:c.complex,location:c.location,address_road:c.address_road||null,address_jibun:c.address_jibun||null,area:c.area,floor:c.floor,room:c.room,features:c.features||[],category:c.category||null,management_fee:c.management_fee||null,rights_money:c.rights_money||null,rawText:c.rawText||''};
-      const coords=await Data.matchCoords(prop);if(coords.lat){prop.lat=coords.lat;prop.lng=coords.lng;}
+    for(const c of cards){try{
+      const prop={type:c.type,price:c.price,complex:c.complex,location:c.location,
+        address:c.address||null,address_road:c.address_road||null,address_jibun:c.address_jibun||null,
+        area:c.area,floor:c.floor,room:c.room,features:c.features||[],
+        moveIn:c.moveIn||null,category:c.category||null,
+        management_fee:c.management_fee||null,rights_money:c.rights_money||null,
+        rawText:c.rawText||''};
+      const coords=await Data.matchCoords(prop);
       const _pf=Data.parsePriceFields(c.price,c.type);
-      const {data:sv}=await Auth.sb.from('cards').insert({agent_id:Auth.user.id,property:prop,style:'noimg',color:prop.type==='전세'?'mint':prop.type==='매매'?'coral':'blue',trade_status:'계약가능',tags:c.tags||[],embedding:c.embedding||null,search_text:c.search_text||null,search_text_private:c.search_text_private||null,price_number:_pf.price_number||c.price_number||null,deposit:_pf.deposit||c.deposit||null,monthly_rent:_pf.monthly_rent||c.monthly_rent||null}).select('id').single();
+      const payload={id:crypto.randomUUID().slice(0,12),agent_id:Auth.user.id,property:prop,style:'noimg',
+        color:prop.type==='전세'?'mint':prop.type==='매매'?'coral':'blue',
+        trade_status:'계약가능',tags:c.tags||[],
+        private_note:{memo:c.memo||null,shared_memo:c.shared_memo||null,rawText:c.rawText||''},
+        agent_comment:c.agent_comment||null,
+        contact_name:c.contact_name||null,contact_phone:c.contact_phone||null,
+        embedding:c.embedding||null,
+        search_text:c.search_text||null,search_text_private:c.search_text_private||null,
+        price_number:_pf.price_number||c.price_number||null,
+        deposit:_pf.deposit||c.deposit||null,monthly_rent:_pf.monthly_rent||c.monthly_rent||null,
+        move_in_date:c.move_in_date||null,wanted_trade_type:c.wanted_trade_type||null};
+      if(coords.lat){payload.lat=coords.lat;payload.lng=coords.lng;}
+      const {data:sv}=await Auth.sb.from('cards').insert(payload).select('id').single();
       if(sv){savedIds.push(sv.id);Data.locateCard(sv.id).then(()=>Data.triggerAutoMatch(sv.id));}saved++;btn.textContent=`저장 중... (${saved}/${cards.length})`;
     }catch(_){}}
     document.getElementById('leaveBanner').style.display='none';Toast.show(`${saved}건 저장 완료`);btn.textContent='전체 저장';btn.disabled=false;fiParsedCards=[];fiDeletedIds=new Set();document.getElementById('fiResults').style.display='none';document.getElementById('fiDirectInput').value='';
@@ -2903,11 +2921,15 @@ function setFilter(f,btn){cFilter=f;btn?.closest('.filters').querySelectorAll('.
     prop.features=Array.from(document.querySelectorAll('#eTags .edit-chip')).map(el=>el.textContent.replace('✕','').trim());
     const existPhotos=Array.from(document.querySelectorAll('#ePhotos .edit-photo-thumb:not(.new) img')).map(i=>i.src);
     let newUrls=[];if(_editNewPhotos.length)newUrls=await Data.uploadPhotos(id,_editNewPhotos);
-    const coords=await Data.matchCoords(prop);if(coords.lat){prop.lat=coords.lat;prop.lng=coords.lng;}
+    // lat/lng는 top-level 컬럼. property 안에 stale 좌표 제거.
+    delete prop.lat; delete prop.lng;
+    const coords=await Data.matchCoords(prop);
     const _pf=Data.parsePriceFields(prop.price,prop.type);
     const memoVal=document.getElementById('eMemo')?.value||'';
     const pn={...(c.private_note||{}),memo:memoVal||null};
-    const {error:updateErr}=await Auth.sb.from('cards').update({property:prop,photos:[...existPhotos,...newUrls],agent_comment:document.getElementById('eComment').value,private_note:pn,price_number:_pf.price_number,deposit:_pf.deposit,monthly_rent:_pf.monthly_rent}).eq('id',id);
+    const updatePayload={property:prop,photos:[...existPhotos,...newUrls],agent_comment:document.getElementById('eComment').value,private_note:pn,price_number:_pf.price_number,deposit:_pf.deposit,monthly_rent:_pf.monthly_rent};
+    if(coords.lat){updatePayload.lat=coords.lat;updatePayload.lng=coords.lng;}
+    const {error:updateErr}=await Auth.sb.from('cards').update(updatePayload).eq('id',id);
     if(updateErr){Toast.show('수정 실패: '+updateErr.message);return;}
     Data.updateEmbedding(id);
     Promise.all([Data.batchGenerateTags(id).catch(()=>{}),Data.locateCard(id)]).then(()=>Data.triggerAutoMatch(id));
@@ -3269,7 +3291,12 @@ const PanelClient = (() => {
       const res=await fetch(`${HWIK_CONFIG.SUPABASE_URL}/functions/v1/parse-property`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+Auth.getToken(),'apikey':HWIK_CONFIG.SUPABASE_KEY},body:JSON.stringify({text:inp.value.trim()})});
       const r=await res.json();if(r.error)throw new Error(r.error);
       // 손님 카드로 강제 설정
-      const property={type:'손님',price:r.price||null,location:r.location||null,complex:r.complex||null,area:r.area||null,floor:r.floor||null,room:r.room||null,features:r.features||[],category:r.category||null,rawText:inp.value.trim()};
+      const property={type:'손님',price:r.price||null,location:r.location||null,
+        address:r.address||null,address_road:r.address_road||null,address_jibun:r.address_jibun||null,
+        complex:r.complex||null,area:r.area||null,floor:r.floor||null,room:r.room||null,
+        features:r.features||[],moveIn:r.moveIn||null,category:r.category||null,
+        management_fee:r.management_fee||null,rights_money:r.rights_money||null,
+        rawText:inp.value.trim()};
       const cardData={id:crypto.randomUUID().slice(0,12),agent_id:Auth.user.id,property,style:'noimg',color:'blue',private_note:{memo:r.memo||null,rawText:inp.value.trim()},contact_name:r.contact_name||null,contact_phone:r.contact_phone||null,embedding:r.embedding||null,search_text:r.search_text||null,search_text_private:r.search_text_private||null,price_number:r.price_number||null,deposit:r.deposit||null,monthly_rent:r.monthly_rent||null,move_in_date:r.move_in_date||null,wanted_trade_type:r.wanted_trade_type||null,wanted_categories:r.wanted_categories||[],wanted_conditions:r.wanted_conditions||[],tags:r.tags||[],trade_status:'계약가능',client_status:'탐색중'};
       const {error:dbErr}=await Auth.sb.from('cards').insert([cardData]);
       if(dbErr)throw new Error(dbErr.message);
@@ -3787,7 +3814,10 @@ const PanelClient = (() => {
         price_number:r.price_number||null,deposit:r.deposit||null,monthly_rent:r.monthly_rent||null,
         wanted_trade_type:r.wanted_trade_type||null,wanted_categories:r.wanted_categories||[],wanted_conditions:r.wanted_conditions||[],
         contact_name:r.contact_name||null,contact_phone:r.contact_phone||null,
-        embedding:r.embedding||null,search_text:r.search_text||null
+        move_in_date:r.move_in_date||null,
+        tags:r.tags||[],
+        embedding:r.embedding||null,
+        search_text:r.search_text||null,search_text_private:r.search_text_private||null
       }).eq('id',cardId).eq('agent_id',Auth.user.id);
       document.getElementById('editModal').classList.remove('show');
       _updateClientTags(cardId,text);
