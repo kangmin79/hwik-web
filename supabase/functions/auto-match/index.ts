@@ -28,10 +28,10 @@ Deno.serve(async (req) => {
     // 권한은 agent_id + 매물 소유자 확인으로 검증 (아래에서)
     const startTime = Date.now();
 
-    // 1. 새 매물 조회
+    // 1. 새 매물 조회 (손님일 수도 있음 → wanted_* / required_tags / excluded_tags / tags 필수)
     const { data: card, error: cardErr } = await supabase
       .from('cards')
-      .select('id, property, private_note, embedding, agent_id, price_number, deposit, monthly_rent, lat, lng, kapt_code')
+      .select('id, property, private_note, embedding, agent_id, price_number, deposit, monthly_rent, lat, lng, kapt_code, wanted_trade_type, wanted_categories, required_tags, excluded_tags, tags')
       .eq('id', card_id)
       .single();
 

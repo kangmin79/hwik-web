@@ -656,6 +656,14 @@ Deno.serve(async (req) => {
       // 카테고리 → 태그 변환
       const catTagMap: Record<string,string> = {apartment:'아파트',officetel:'오피스텔',room:'원투룸',commercial:'상가',office:'사무실'};
       if (finalPropertyType && catTagMap[finalPropertyType]) searchTags.push(catTagMap[finalPropertyType]);
+      // 구 이름 축약 → 전체 ("강남" → "강남구") — tags 저장은 "강남구"라 contains 미스매치 방지
+      const GU_EXPAND: Record<string, string> = {
+        '강남':'강남구','서초':'서초구','마포':'마포구','송파':'송파구','용산':'용산구',
+        '성동':'성동구','광진':'광진구','영등포':'영등포구','강동':'강동구','동작':'동작구',
+        '관악':'관악구','종로':'종로구','강서':'강서구','양천':'양천구','구로':'구로구',
+        '노원':'노원구','서대문':'서대문구','은평':'은평구','중랑':'중랑구','도봉':'도봉구',
+        '동대문':'동대문구','성북':'성북구','금천':'금천구','강북':'강북구'
+      };
       // 지역/특징 키워드 → 태그
       for (const word of searchWords) {
         if (['매매','전세','월세','아파트','오피스텔','원룸','투룸','빌라','상가','사무실','원투룸'].includes(word)) continue;
@@ -663,11 +671,16 @@ Deno.serve(async (req) => {
         if (word.length < 2) continue;
         // 동의어 변환
         const std = SYNONYM_MAP[word] || word;
-        searchTags.push(std);
+        // 구 축약 확장
+        const expanded = GU_EXPAND[std] || std;
+        searchTags.push(expanded);
       }
       // 태그 필터 적용 (GIN 인덱스 활용)
+      // ★ cards.tags는 jsonb 타입 — 태그 각각 개별 contains로 AND 결합 (supabase-js가 배열을 Postgres array literal로 생성해 json type에서 에러났던 문제)
       if (searchTags.length) {
-        sqlQuery = sqlQuery.contains('tags', searchTags);
+        for (const t of searchTags) {
+          sqlQuery = sqlQuery.filter('tags', 'cs', `["${t.replace(/"/g, '\\"')}"]`);
+        }
       }
       // 가격은 숫자 직접 비교
       if (parsed.filters?.min_price) sqlQuery = sqlQuery.gte('price_number', parsed.filters.min_price);
