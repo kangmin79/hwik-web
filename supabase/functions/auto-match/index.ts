@@ -204,17 +204,29 @@ Deno.serve(async (req) => {
     }
 
     // ── 벡터 유사도 계산 ──
-    const cardEmb = card.embedding;
+    // pgvector는 PostgREST select 시 문자열 '[0.1,0.2,...]'로 반환 → 배열로 파싱 필요
+    const parseEmb = (e: any): number[] | null => {
+      if (Array.isArray(e)) return e;
+      if (typeof e === 'string') { try { return JSON.parse(e); } catch { return null; } }
+      return null;
+    };
+    const cardEmb = parseEmb(card.embedding);
+    if (!cardEmb) {
+      return new Response(JSON.stringify({ success: true, matched: 0, reason: 'embedding 파싱 실패' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
     const THRESHOLD = 0.25;
     const matches: { propertyId: string; clientId: string; similarity: number }[] = [];
 
     for (const target of filteredTargets) {
-      if (!target.embedding || target.embedding.length !== cardEmb.length) continue;
+      const targetEmb = parseEmb(target.embedding);
+      if (!targetEmb || targetEmb.length !== cardEmb.length) continue;
       let dotProduct = 0, normA = 0, normB = 0;
       for (let i = 0; i < cardEmb.length; i++) {
-        dotProduct += cardEmb[i] * target.embedding[i];
+        dotProduct += cardEmb[i] * targetEmb[i];
         normA += cardEmb[i] * cardEmb[i];
-        normB += target.embedding[i] * target.embedding[i];
+        normB += targetEmb[i] * targetEmb[i];
       }
       const denom = Math.sqrt(normA) * Math.sqrt(normB);
       if (denom === 0) continue;

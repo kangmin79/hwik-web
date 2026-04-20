@@ -608,8 +608,9 @@ ${text}`
     }
 
 
+    // 손님은 location/category 누락 허용 (아래에서 wanted_categories로 폴백 + 매칭은 allText 기반)
     const requiredFields = parsedResult.type === '손님'
-      ? ['type', 'location', 'category']
+      ? ['type']
       : ['type', 'price', 'location', 'category'];
     for (const field of requiredFields) {
       if (!parsedResult[field]) throw new Error(`필수 정보 누락: ${field}`);
@@ -652,9 +653,14 @@ ${text}`
     if (parsedResult.type === '손님') {
       const allText = [parsedResult.price, parsedResult.location, parsedResult.memo, text].join(' ');
       const wantedTypes: string[] = [];
-      if (/매매|매도|분양|사려|매입|구매/.test(allText)) wantedTypes.push('매매');
-      if (/전세/.test(allText)) wantedTypes.push('전세');
-      if (/월세|임대|빌려|렌트/.test(allText)) wantedTypes.push('월세');
+      // 반전세는 월세로 분류 (전세 키워드 중복 매치 방지)
+      if (/반전세|반젼세/.test(allText)) {
+        wantedTypes.push('월세');
+      } else {
+        if (/매매|매도|분양|사려|매입|구매/.test(allText)) wantedTypes.push('매매');
+        if (/전세/.test(allText)) wantedTypes.push('전세');
+        if (/월세|임대|빌려|렌트/.test(allText)) wantedTypes.push('월세');
+      }
       // 가격 패턴으로 추론
       if (!wantedTypes.length) {
         if (/\/\s*\d|월\s*\d|보증금.*월/.test(allText)) wantedTypes.push('월세');
@@ -678,9 +684,17 @@ ${text}`
       for (const tt of wantedTypes) {
         const cond: any = { trade_type: tt };
         if (tt === '월세') {
+          // 반전세 "2억/80" (억 보증금 + 월세)
+          const bigSlash = allText.match(/(\d+)\s*억\s*(\d*)\s*\/\s*(\d+)/);
+          if (bigSlash) {
+            cond.deposit = parseInt(bigSlash[1]) * 10000 + (parseInt(bigSlash[2]) || 0);
+            cond.monthly = parseInt(bigSlash[3]);
+          }
           // "보증금 1000/월 50" 또는 "1000/50"
-          const slash = allText.match(/(\d+)\s*\/\s*(\d+)/);
-          if (slash) { cond.deposit = parseInt(slash[1]); cond.monthly = parseInt(slash[2]); }
+          if (!cond.deposit) {
+            const slash = allText.match(/(\d+)\s*\/\s*(\d+)/);
+            if (slash) { cond.deposit = parseInt(slash[1]); cond.monthly = parseInt(slash[2]); }
+          }
           const depM = allText.match(/보증금\s*(\d+)/);
           if (depM && !cond.deposit) cond.deposit = parseInt(depM[1]);
           const monM = allText.match(/월(?:세)?\s*(\d+)/);
@@ -717,6 +731,8 @@ ${text}`
       }
       // 빈 배열이면 category에서 단일값 사용
       if (!wantedCategories.length && parsedResult.category) wantedCategories = [parsedResult.category];
+      // ★ AI가 category=null 반환한 손님(복수 언급 혼란 등) → wanted_categories[0]로 폴백
+      if (!parsedResult.category && wantedCategories.length) parsedResult.category = wantedCategories[0];
     }
 
     // ★ 가격 필드 파싱 (매물: type 기준, 손님: wantedTradeType 기준)
