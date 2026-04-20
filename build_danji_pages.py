@@ -10,7 +10,8 @@ Usage:
 """
 
 import os, json, re, time, hashlib, html as html_mod
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+KST = timezone(timedelta(hours=9))
 from urllib.parse import quote as url_quote
 import requests
 from slug_utils import REGION_MAP, METRO_CITIES, clean as _clean, detect_region, make_danji_slug as make_slug, make_dong_slug, extract_gu_from_address, gu_url_slug
@@ -662,7 +663,7 @@ def build_fallback_html(d):
         seo.append(f"인근 학교로 {names}{josa(last_name, '이/가')} 있습니다.")
     if total_recent_trades >= 2:
         seo.append(f"최근 1년간 {total_recent_trades}건의 매매 거래가 있었습니다.")
-    _today = datetime.now().strftime('%Y-%m-%d')
+    _today = datetime.now(KST).strftime('%Y-%m-%d')
     seo.append(f"모든 데이터는 국토교통부 실거래가 공개시스템 기반입니다. 최종 데이터 확인: {_today}.")
     seo_text = " ".join(s for s in seo if s)
     if seo_text:

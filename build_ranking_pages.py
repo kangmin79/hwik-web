@@ -11,7 +11,8 @@ Usage:
 """
 
 import os, sys, json, time, html as html_mod
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+KST = timezone(timedelta(hours=9))
 from urllib.parse import quote as url_quote
 import requests
 from slug_utils import make_danji_slug, detect_region as slug_detect_region
@@ -306,7 +307,7 @@ def build_ranking_html(region, rank_type, data):
         seo += f' {esc(top50[0]["name"])}({format_price(top50[0]["price"])})이 1위.'
     seo += ' 국토교통부 실거래가 기반.'
     lines.append(f'<div class="seo-section"><div class="seo-text">{seo}</div>')
-    _today = datetime.now().strftime("%Y-%m-%d")
+    _today = datetime.now(KST).strftime("%Y-%m-%d")
     lines.append(f'<div class="seo-source">실거래가 출처: 국토교통부 · 최종 데이터 확인: {_today}</div></div>')
 
     body = "\n".join(lines)
@@ -456,7 +457,7 @@ def build_hub_html():
     lines.append('  <a href="/dong/" style="display:inline-block;margin:0 8px;color:var(--yellow);font-weight:600;text-decoration:none;">동별 시세 →</a>')
     lines.append('</div>')
 
-    _today = datetime.now().strftime("%Y-%m-%d")
+    _today = datetime.now(KST).strftime("%Y-%m-%d")
     lines.append(f'<div style="margin-top:20px;padding:12px;font-size:11px;color:var(--muted);text-align:center;">출처: 국토교통부 실거래가 공개시스템 · 마지막 갱신 {_today}</div>')
 
     body = "\n".join(lines)

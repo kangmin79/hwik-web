@@ -10,7 +10,8 @@ Usage:
 """
 
 import os, sys, json, re, time, hashlib, html as html_mod
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+KST = timezone(timedelta(hours=9))
 import requests
 from collections import defaultdict
 from urllib.parse import quote as url_quote
@@ -280,7 +281,7 @@ def build_dong_html(gu, dong, danji_list, region, same_gu_dongs, dong_slug_map=N
     title = f"{gu} {dong} 아파트 실거래가 시세 - 휙"
     _prices = [x["_best_trade"].get("price", 0) for x in tradeable if x.get("_best_trade")]
     _valid = [p for p in _prices if p > 0]
-    today = datetime.now().strftime('%Y-%m-%d')
+    today = datetime.now(KST).strftime('%Y-%m-%d')
     _price_range = f"{format_price(min(_valid))}~{format_price(max(_valid))}" if len(_valid) >= 2 else ""
     _recent_name = most_recent.get("complex_name", "") if most_recent else ""
     _recent_date = most_recent["_best_trade"].get("date", "") if most_recent else ""
