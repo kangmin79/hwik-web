@@ -262,10 +262,21 @@ function parseSinglePrice(str: string, isMonthly = false): number | null {
   if (!str) return null;
   try {
     let s = str.replace(/[\s,원보증금월세]/g, '');
-    // "3억5000" → 35000
+    // "3억5천", "1억8500", "1억8천500" 모두 지원
     if (s.includes('억')) {
-      const parts = s.split('억');
-      return (parseInt(parts[0]) || 0) * 10000 + (parseInt(parts[1]) || 0);
+      const [bigS, tailRaw] = s.split('억');
+      const big = (parseInt(bigS) || 0) * 10000;
+      const tail = tailRaw || '';
+      let small = 0;
+      if (tail.includes('천')) {
+        // "5천", "8천500"
+        const [chS, restS] = tail.split('천');
+        small = (parseInt(chS) || 0) * 1000 + (parseInt(restS) || 0);
+      } else {
+        // "8500" → 8500만원
+        small = parseInt(tail) || 0;
+      }
+      return big + small;
     }
     // "4천904" → 4904, "1천88" → 1088
     if (s.includes('천')) {
@@ -315,7 +326,12 @@ function normalizeType(type: string): string {
 }
 
 function normalizeText(text?: string): string | null {
-  return text?.replace(/\s+/g, ' ').trim() || null;
+  if (!text) return null;
+  const t = text.replace(/\s+/g, ' ').trim();
+  if (!t) return null;
+  // 모델이 드물게 JSON null 대신 문자열 "null"/"undefined"를 반환하는 케이스 방어
+  if (/^(null|undefined|none|n\/a|-|없음)$/i.test(t)) return null;
+  return t;
 }
 
 // ========== 메인 ==========
@@ -414,6 +430,16 @@ Deno.serve(async (req) => {
 2. "사려고 합니다" = 손님 (매수 희망)
 3. 확신 없으면 매물로 처리
 4. 호수(~호)는 절대 비공개 → memo에만
+
+■ price 원문 보존 (⚠️⚠️⚠️ 절대 지켜야 함):
+- 반올림·요약·단위변환 모두 금지. 입력에 적힌 숫자 그대로 복사하세요.
+- "1억8500" 입력 → price="1억8500" (절대 "1억9천"·"2억"으로 바꾸면 안 됩니다. 500만원이 사라집니다)
+- "3억5000" 입력 → price="3억5000" (절대 "3억5천"으로 바꾸지 마세요)
+- "2억3900" 입력 → price="2억3900"
+- "1억8천5백" 입력 → price="1억8천5백" (한글 단위 그대로)
+- "1000/80" → price="1000/80"
+- 네고/협의 같은 수식어만 제거하고, 숫자와 한글 단위(억/천/만/백)는 원문 그대로 유지하세요.
+- 이 규칙을 어기면 계약 금액이 달라져 중개사고로 이어집니다.
 
 ■ ㎡ ↔ 평 자동변환:
 - area 필드에 ㎡만 있으면 평수 병기 (예: "84.8㎡" → "25.7평 (84.8㎡)")
@@ -535,8 +561,11 @@ ${text}`
 
     parsedResult.features = [...new Set(parsedResult.features || [])];
     parsedResult.type = normalizeType(parsedResult.type);
-    parsedResult.location = normalizeText(parsedResult.location);
-    parsedResult.complex = normalizeText(parsedResult.complex);
+    // ★ 모든 문자열 필드를 normalizeText로 돌려 "null"/"undefined" 문자열 일괄 방어
+    const _strFields = ['location','complex','price','area','floor','room','moveIn','address','address_road','address_jibun','contact_name','contact_phone','memo','shared_memo','agent_comment'];
+    for (const f of _strFields) {
+      if (typeof parsedResult[f] === 'string') parsedResult[f] = normalizeText(parsedResult[f]);
+    }
     // ★ complex 후처리: 동 번호 제거 + 건물 유형만 남으면 null
     if (parsedResult.complex) {
       parsedResult.complex = parsedResult.complex
@@ -559,6 +588,7 @@ ${text}`
       const converted = extractAndConvertArea(parsedResult.area);
       if (converted.normalized) parsedResult.area = converted.normalized;
     }
+
 
     const requiredFields = parsedResult.type === '손님'
       ? ['type', 'location', 'category']
@@ -753,6 +783,19 @@ ${text}`
         if (SHARED_KW.some(kw => f.includes(kw))) { extraShared.push(f); return false; }
         return true;
       });
+    }
+    // ★ shared_memo 교차검증: AI가 집주인/세입자 등 민감 키워드를 shared에 넣으면 memo로 재이동
+    if (result.shared_memo && typeof result.shared_memo === 'string') {
+      let sm = result.shared_memo;
+      for (const kw of PRIVATE_KW) {
+        if (sm.includes(kw)) {
+          // kw 주변 구(句)를 추출해 memo로 이동
+          const m = sm.match(new RegExp(`${kw}[^,./]*`));
+          if (m) extraMemo.push(m[0].trim());
+          sm = sm.replace(new RegExp(`${kw}[^,./]*[,./]?\\s*`, 'g'), '').trim();
+        }
+      }
+      result.shared_memo = sm.replace(/\s+/g, ' ').replace(/^[,.\s]+|[,.\s]+$/g, '').trim() || null;
     }
     if (extraMemo.length) {
       result.memo = [result.memo, ...extraMemo].filter(Boolean).join(', ');
