@@ -3,15 +3,16 @@
 ## 세션 시작 멘트
 "docs/next-session.md 보고 이어서 해줘"
 
-## 오늘(2026-04-20) 완료 — 매칭 시스템 0% → 100% 복구
-- parse-property 74케이스 통과 (가격 반올림·null문자열·백100·반지하·한글가격파서)
+## 오늘(2026-04-20) 완료 — 매칭/검색 시스템 0% → 대부분 복구
+- parse-property 74/74 · 손님 25/25 · DB 4/4 · 매칭 E2E 8/8 · locate-card 20/20 · auto-match 역방향 10/10
+- search-property 10/15 (치명 2건 수리, 유명동명→구·단지명 부분매치만 남음)
 - DB 저장 4경로 일관화 (confirmSave/fiSaveAll/registerClient/saveClientEdit)
-- 🚨 fiSaveAll id NULL 제약 위반 수정 (일괄 저장 100% 실패 상태였음)
-- 🚨 match_notifications UNIQUE 제약 추가 (알림 저장 0% 상태였음)
-- 🚨 auto-match pgvector 문자열 파싱 (벡터 유사도 NaN → 매칭 0% 상태였음)
-- 손님 파싱 보강 (location/category 필수 해제, 반전세, wanted_categories 폴백)
-- 손님 매칭 E2E 8/8 통과 (locate-card → auto-match → match_notifications)
-- 커밋 `066d31cc530` 배포 완료
+- 🚨 fiSaveAll id NULL 위반 (일괄 저장 100% 실패 상태)
+- 🚨 match_notifications UNIQUE 제약 추가 (알림 저장 0% 상태)
+- 🚨 auto-match pgvector 문자열 파싱 (유사도 NaN → 매칭 0% 상태)
+- 🚨 auto-match card select에 wanted_trade_type 누락 (손님→매물 방향 전면 실패)
+- 🚨 search-property tags jsonb에 postgres array 문법 (SQL 태그 검색 400)
+- 커밋 `6dfa9d5→3b0f0ea→71b843a→27764cc→066d31c→adfaafd→531c195` (7개) 배포 완료
 
 ## 1순위 — hub-new 브라우저 E2E 확인 (사용자)
 자동 테스트로 서버 전 경로 통과 확인. 이제 실제 브라우저 UI 확인 필요.
@@ -26,9 +27,13 @@
 - 또는 활성 중개사만 대상으로 하룻밤 배치 돌리기
 
 ## 3순위 — 보류
+- search-property 남은 5건 해결
+  - "홍대/잠실/대치" 같은 유명동명→구 자동 매핑 (현재 agent 본인구 fallback)
+  - 단지명 부분 매치 ("래미안"→"래미안 삼성동" 포함 매물)
+  - tags에 price_number 태그와 별도로 숫자 직접 필터 확인
 - wanted_conditions / wanted_categories 매칭 활용 (현재 저장만 됨)
-- auto-match THRESHOLD 조정 (현재 0.25, E2E 8/8 통과했으니 유지 가능)
-- 공유방 매물 auto-match 누락 (`session_20260419_evening.md` 계승)
+- auto-match THRESHOLD 조정 (현재 0.25, 통과했으니 유지 가능)
+- 공유방 매물 auto-match 누락
 - 단지 매칭 정확도 게이트 강화
 
 ## 금지
