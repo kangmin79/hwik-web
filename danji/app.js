@@ -511,6 +511,8 @@ function render() {
     }
     // 오피스텔(offi-)·비아파트(apt-) = 페이지 미생성 → 스킵 (404 방지)
     if (n.id && (n.id.startsWith('offi-') || n.id.startsWith('apt-'))) return '';
+    // 임대단지 = 정적 HTML 미생성 → 스킵 (404 방지)
+    if (/임대/.test(n.name || '')) return '';
     // 거래 없는 단지 = 페이지 미생성 → 스킵 (404 방지)
     if (!bestPrice) return '';
     // 면적 표시 (전용/공급 토글 반영)
