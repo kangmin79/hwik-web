@@ -753,7 +753,7 @@ function render() {
       </div>
       ${listingHtml
         ? '<div class="trade-list">' + listingHtml + '</div>'
-        : '<div class="listing-empty"><div class="listing-empty-text">이 단지에 등록된 매물이 아직 없습니다</div><a class="listing-empty-cta" href="/card_generator_v2_auth.html" style="text-decoration:none;">중개사님, 매물을 등록해보세요 →</a></div>'
+        : '<div class="listing-empty"><div class="listing-empty-text">이 단지에 등록된 매물이 아직 없습니다</div><a class="listing-empty-cta" href="/hub-new/" style="text-decoration:none;">중개사님, 매물을 등록해보세요 →</a></div>'
       }
     </div>
 
@@ -823,7 +823,7 @@ function render() {
     <!-- CTA -->
     <div class="cta-section">
       <a class="btn-primary" href="/mobile-v6.html" style="display:block;text-align:center;text-decoration:none;">이 단지 매물 전체보기</a>
-      <a class="btn-secondary" href="/card_generator_v2_auth.html" style="display:block;text-align:center;text-decoration:none;">공인중개사 서비스 · 무료로 시작하기</a>
+      <a class="btn-secondary" href="/hub-new/" style="display:block;text-align:center;text-decoration:none;">공인중개사 서비스 · 무료로 시작하기</a>
     </div>
 
     <!-- SEO -->
