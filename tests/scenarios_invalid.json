@@ -1,0 +1,88 @@
+[
+  {
+    "id": "IN001",
+    "axis": "잘못된입력-너무짧음",
+    "property": "송파 매매",
+    "client": "잠실 매매 22억 이하 25평",
+    "expect": "error-prop",
+    "matchOn": "client",
+    "expectError": "property"
+  },
+  {
+    "id": "IN002",
+    "axis": "잘못된입력-숫자만",
+    "property": "12345 67890 32 25 7",
+    "client": "잠실 매매 22억 이하 25평",
+    "expect": "error-prop",
+    "matchOn": "client",
+    "expectError": "property"
+  },
+  {
+    "id": "IN003",
+    "axis": "잘못된입력-빈지역",
+    "property": "매매 22억 25평 7층",
+    "client": "잠실 매매 22억 이하 25평",
+    "expect": "error-prop",
+    "matchOn": "client",
+    "expectError": "property"
+  },
+  {
+    "id": "IN004",
+    "axis": "손님입력-짧지만매칭가능",
+    "property": "송파 잠실 매매 22억 25평 7층 남향",
+    "client": "잠실 매매 22억",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "IN005",
+    "axis": "잘못된입력-특수문자",
+    "property": "!@#$%^&*()_+ 22억",
+    "client": "잠실 매매 22억 이하 25평",
+    "expect": "error-prop",
+    "matchOn": "client",
+    "expectError": "property"
+  },
+  {
+    "id": "IN006",
+    "axis": "이모지만-매물",
+    "property": "🏢🏠💰📈",
+    "client": "잠실 매매 22억 이하 25평",
+    "expect": "error-prop",
+    "matchOn": "client",
+    "expectError": "property"
+  },
+  {
+    "id": "IN007",
+    "axis": "중복공백다중-매물",
+    "property": "송파    잠실         매매           22억              25평",
+    "client": "잠실 매매 22억 이하 25평",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "IN008",
+    "axis": "한글영어혼합-매물",
+    "property": "Songpa Jamsil apartment sale 22bil 25pyeong",
+    "client": "잠실 매매 22억 이하 25평",
+    "expect": "match-or-no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "IN009",
+    "axis": "매우긴텍스트-매물",
+    "property": "송파구 잠실동 엘스아파트 매매 22억 25평 7층 남향 즉시입주 리모델링 2020년 구조변경 화장실 2개 현관2개 중문설치 전등LED교체 바닥수리 완료 관리비 15만원 주차2대 엘리베이터 신형 계약금10% 중도금없음 잔금5월30일 전세낀거아님 순수매매 급매아닙니다 정가매매",
+    "client": "잠실 엘스 매매 22억 이하 25평",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "IN010",
+    "axis": "가격없는매물",
+    "property": "송파 잠실 엘스 아파트 25평 7층 남향",
+    "client": "잠실 매매 22억 이하 25평",
+    "expect": "error-prop",
+    "matchOn": "client",
+    "expectError": "property"
+  }
+]

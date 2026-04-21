@@ -71,10 +71,17 @@ Deno.serve(async (req) => {
 
     const p = card.property || {};
     const isClient = p.type === '손님';
+    const ACTIVE_CLIENT_STATUSES = ['탐색중', '급해요', '협의중'];
 
     // ── 방향 결정: 매물→손님 or 손님→매물 ──
     let targets: any[] = [];
     if (isClient) {
+      // 자기 손님 상태가 활성이 아니면 매칭 불필요 (연락두절/계약완료)
+      if (card.client_status && !ACTIVE_CLIENT_STATUSES.includes(card.client_status)) {
+        return new Response(JSON.stringify({ success: true, matched: 0, reason: `손님 상태 ${card.client_status}` }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
       // 손님 카드 → 기존 매물과 매칭
       const { data, error } = await supabase
         .from('cards')
@@ -98,12 +105,19 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
-      // 매물 카드 → 기존 손님과 매칭
+      // 자기 매물 상태가 계약가능이 아니면 매칭 불필요 (계약중/완료)
+      if (card.trade_status && card.trade_status !== '계약가능') {
+        return new Response(JSON.stringify({ success: true, matched: 0, reason: `매물 상태 ${card.trade_status}` }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      // 매물 카드 → 기존 손님과 매칭 (탐색중/급해요/협의중만)
       const { data, error } = await supabase
         .from('cards')
         .select(CLIENT_SELECT)
         .eq('agent_id', agent_id)
         .eq('property->>type', '손님')
+        .in('client_status', ACTIVE_CLIENT_STATUSES)
         .not('embedding', 'is', null)
         .limit(100);
       if (error || !data?.length) {
@@ -128,18 +142,25 @@ Deno.serve(async (req) => {
       allText = fixTypos(allText);
 
       const tradeType = prop.type;
-      // 거래유형 체크
-      const clientWanted = client.wanted_trade_type || '';
-      if (clientWanted) {
-        if (clientWanted !== tradeType) return false;
+      // 거래유형 체크 — wanted_conditions에 복수 거래유형 저장 가능 ("매매나 전세")
+      const wantedTradeTypes: string[] = [];
+      if (client.wanted_trade_type) wantedTradeTypes.push(client.wanted_trade_type);
+      if (Array.isArray(client.wanted_conditions)) {
+        for (const c of client.wanted_conditions) {
+          if (c?.trade_type && !wantedTradeTypes.includes(c.trade_type)) wantedTradeTypes.push(c.trade_type);
+        }
+      }
+      if (wantedTradeTypes.length > 0) {
+        if (!wantedTradeTypes.includes(tradeType)) return false;
       } else {
         if (tradeType === '매매' && !/매매|매도|분양|ㅁㅁ/.test(allText)) return false;
         if (tradeType === '전세' && !/전세|ㅈㅅ|젼세/.test(allText)) return false;
         if (tradeType === '월세' && !/월세|임대|ㅇㅅ|웜세/.test(allText)) return false;
       }
 
-      // 카테고리 체크
-      if (cp.category && prop.category && cp.category !== prop.category) return false;
+      // 카테고리 체크 — wanted_categories 명시 시만 체크 (빈 배열이면 모든 카테고리 허용)
+      const wantedCats = client.wanted_categories || [];
+      if (wantedCats.length > 0 && prop.category && !wantedCats.includes(prop.category)) return false;
 
       // 지역 체크 — 구 이름 양쪽 다 있으면 엄격 비교 우선, 매물 구 미상일 때만 좌표 폴백
       const clientLoc = [cp.location, memo].join(' ');

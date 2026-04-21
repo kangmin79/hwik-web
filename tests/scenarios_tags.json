@@ -1,0 +1,182 @@
+[
+  {
+    "id": "TG001",
+    "axis": "required-엘리베이터-매칭",
+    "property": "송파 잠실 매매 22억 25평 엘리베이터 남향",
+    "client": "송파 잠실 매매 22억 이하 25평 엘리베이터 꼭 필요해요",
+    "expect": "match",
+    "matchOn": "client",
+    "withTags": true
+  },
+  {
+    "id": "TG002",
+    "axis": "required-엘리베이터-불만족",
+    "property": "송파 잠실 매매 22억 25평 남향",
+    "client": "송파 잠실 매매 22억 이하 25평 엘리베이터 꼭 필요",
+    "expect": "no-match",
+    "matchOn": "client",
+    "withTags": true
+  },
+  {
+    "id": "TG003",
+    "axis": "required-주차-매칭",
+    "property": "강남 역삼 매매 15억 25평 주차 가능 남향",
+    "client": "강남 역삼 매매 15억 이하 25평 주차 필수",
+    "expect": "match",
+    "matchOn": "client",
+    "withTags": true
+  },
+  {
+    "id": "TG004",
+    "axis": "required-남향-매칭",
+    "property": "마포 공덕 전세 9억 30평 남향 고층",
+    "client": "마포 공덕 전세 9억 이하 30평 남향 꼭",
+    "expect": "match",
+    "matchOn": "client",
+    "withTags": true
+  },
+  {
+    "id": "TG005",
+    "axis": "required-역세권-매칭",
+    "property": "서초 반포 매매 25억 30평 역세권 5분",
+    "client": "서초 반포 매매 25억 이하 30평 역세권 반드시",
+    "expect": "match",
+    "matchOn": "client",
+    "withTags": true
+  },
+  {
+    "id": "TG006",
+    "axis": "required-즉시입주-매칭",
+    "property": "송파 잠실 전세 10억 25평 즉시입주 가능",
+    "client": "잠실 전세 10억 이하 25평 즉시입주 필수",
+    "expect": "match",
+    "matchOn": "client",
+    "withTags": true
+  },
+  {
+    "id": "TG007",
+    "axis": "required-풀옵션-매칭",
+    "property": "마포 서교 월세 500/60 12평 풀옵션 원룸",
+    "client": "홍대 원룸 월세 500/80 이하 풀옵션 필수",
+    "expect": "match",
+    "matchOn": "client",
+    "withTags": true
+  },
+  {
+    "id": "TG008",
+    "axis": "required-올수리-매칭",
+    "property": "강남 도곡 전세 13억 33평 올수리 고층",
+    "client": "강남 도곡 전세 13억 이하 30평대 올수리 꼭",
+    "expect": "match",
+    "matchOn": "client",
+    "withTags": true
+  },
+  {
+    "id": "TG009",
+    "axis": "required-주차-불만족",
+    "property": "강서 화곡 월세 800/60 16평",
+    "client": "강서 화곡 월세 800/80 이하 15평대 주차 필수",
+    "expect": "no-match",
+    "matchOn": "client",
+    "withTags": true
+  },
+  {
+    "id": "TG010",
+    "axis": "required-복수-올수리+남향",
+    "property": "송파 잠실 전세 12억 30평 남향 올수리 고층",
+    "client": "잠실 전세 12억 이하 30평 남향 올수리 둘 다 필수",
+    "expect": "match",
+    "matchOn": "client",
+    "withTags": true
+  },
+  {
+    "id": "TG011",
+    "axis": "excluded-반지하-매칭(매물지상)",
+    "property": "마포 공덕 월세 1000/80 20평 3층 남향",
+    "client": "마포 공덕 월세 1000/100 이하 20평대 반지하 빼고",
+    "expect": "match",
+    "matchOn": "client",
+    "withTags": true
+  },
+  {
+    "id": "TG012",
+    "axis": "excluded-저층-필터링",
+    "property": "송파 가락 매매 12억 25평 저층 2층",
+    "client": "송파 가락 매매 13억 이하 25평 저층 싫어요",
+    "expect": "no-match",
+    "matchOn": "client",
+    "withTags": true
+  },
+  {
+    "id": "TG013",
+    "axis": "excluded-북향-필터링",
+    "property": "강남 역삼 전세 8억 25평 북향 고층",
+    "client": "강남 역삼 전세 8억 이하 25평 북향 제외",
+    "expect": "no-match",
+    "matchOn": "client",
+    "withTags": true
+  },
+  {
+    "id": "TG014",
+    "axis": "excluded-탑층-필터링",
+    "property": "용산 이촌 매매 25억 30평 탑층",
+    "client": "용산 이촌 매매 25억 이하 30평 탑층 싫어요",
+    "expect": "no-match",
+    "matchOn": "client",
+    "withTags": true
+  },
+  {
+    "id": "TG015",
+    "axis": "excluded-구축-필터링",
+    "property": "서초 잠원 매매 15억 30평 구축",
+    "client": "서초 잠원 매매 15억 이하 30평 구축 제외",
+    "expect": "no-match",
+    "matchOn": "client",
+    "withTags": true
+  },
+  {
+    "id": "TG016",
+    "axis": "excluded-없는조건-통과",
+    "property": "마포 공덕 전세 8억 25평 남향 고층 신축",
+    "client": "마포 공덕 전세 8억 이하 25평 반지하 제외",
+    "expect": "match",
+    "matchOn": "client",
+    "withTags": true
+  },
+  {
+    "id": "TG017",
+    "axis": "required+excluded-혼합",
+    "property": "강남 대치 매매 28억 33평 남향 고층 엘리베이터",
+    "client": "대치 매매 28억 이하 30평대 남향 꼭 필요하고 저층 빼고",
+    "expect": "match",
+    "matchOn": "client",
+    "withTags": true
+  },
+  {
+    "id": "TG018",
+    "axis": "required+excluded-혼합-불만족",
+    "property": "송파 가락 매매 12억 30평 저층 2층 남향",
+    "client": "송파 가락 매매 13억 이하 30평 남향 필수 저층 빼고",
+    "expect": "no-match",
+    "matchOn": "client",
+    "withTags": true
+  },
+  {
+    "id": "TG019",
+    "axis": "excluded-북향+필수남향-모순",
+    "property": "강남 역삼 매매 15억 25평 북향",
+    "client": "강남 역삼 매매 15억 이하 25평 남향 꼭 필요하고 북향 제외",
+    "expect": "no-match",
+    "matchOn": "client",
+    "withTags": true
+  },
+  {
+    "id": "TG020",
+    "axis": "태그없음-기본매칭",
+    "property": "영등포 여의도 매매 18억 28평",
+    "client": "영등포 여의도 매매 18억 이하 28평",
+    "expect": "match",
+    "matchOn": "client",
+    "withTags": true
+  }
+]

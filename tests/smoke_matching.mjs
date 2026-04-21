@@ -3,16 +3,17 @@
 // 실행: node tests/smoke_matching.mjs [--only S01,S02]
 // 전제: .env.test에 HWIK_TEST_JWT, HWIK_TEST_AGENT_ID 설정됨
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
+const ENV_PATH = resolve(ROOT, '.env.test');
 
 function loadEnv() {
   try {
-    const raw = readFileSync(resolve(ROOT, '.env.test'), 'utf8');
+    const raw = readFileSync(ENV_PATH, 'utf8');
     for (const line of raw.split(/\r?\n/)) {
       const m = line.match(/^([A-Z_]+)=(.*)$/);
       if (m) process.env[m[1]] = m[2].trim();
@@ -23,8 +24,33 @@ loadEnv();
 
 const SUPABASE_URL = 'https://api.hwik.kr';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpxYXhlamd6a2NoeGJmemd6eXppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY2MzI3NTIsImV4cCI6MjA4MjIwODc1Mn0.-njNdAKVA7Me60H98AYaf-Z3oi45SfUmeoBNvuRJugE';
-const JWT = process.env.HWIK_TEST_JWT || '';
+let JWT = process.env.HWIK_TEST_JWT || '';
+let REFRESH_TOKEN = process.env.HWIK_TEST_REFRESH_TOKEN || '';
 const AGENT_ID = process.env.HWIK_TEST_AGENT_ID || '';
+
+// JWT 갱신 (1시간 만료 대응) — refresh_token 이 있을 때만
+async function refreshJwt() {
+  if (!REFRESH_TOKEN) return false;
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_KEY },
+      body: JSON.stringify({ refresh_token: REFRESH_TOKEN }),
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    if (!data.access_token) return false;
+    JWT = data.access_token;
+    if (data.refresh_token) REFRESH_TOKEN = data.refresh_token;
+    // .env.test 파일 덮어쓰기 (다음 실행 시 사용)
+    try {
+      const content = `HWIK_TEST_JWT=${JWT}\nHWIK_TEST_REFRESH_TOKEN=${REFRESH_TOKEN}\nHWIK_TEST_AGENT_ID=${AGENT_ID}\n`;
+      writeFileSync(ENV_PATH, content);
+    } catch { /* 파일 쓰기 실패해도 런타임은 계속 */ }
+    console.log(`🔄 JWT refreshed (exp in ${data.expires_in}s)`);
+    return true;
+  } catch { return false; }
+}
 
 if (!JWT || !AGENT_ID) {
   console.error('❌ .env.test에 HWIK_TEST_JWT, HWIK_TEST_AGENT_ID 설정 필요');
@@ -39,20 +65,27 @@ const CONCURRENCY = Math.max(1, parseInt(concurrencyArg || '1') || 1);
 const fileArg = (process.argv.find(a => a.startsWith('--file=')) || '').replace('--file=', '');
 const SCENARIOS_FILE = fileArg || 'scenarios.json';
 
-// ─ HTTP (브라우저와 동일한 헤더) ─
+// ─ HTTP (브라우저와 동일한 헤더, 401 시 JWT 자동 갱신) ─
+let refreshInFlight = null;
 async function sbFetch(path, opts = {}) {
   const url = path.startsWith('http') ? path : `${SUPABASE_URL}${path}`;
-  const headers = {
+  const buildHeaders = () => ({
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${JWT}`,
     'apikey': SUPABASE_KEY,
     ...(opts.headers || {}),
-  };
+  });
   for (let attempt = 1; attempt <= 3; attempt++) {
-    const res = await fetch(url, { ...opts, headers });
+    const res = await fetch(url, { ...opts, headers: buildHeaders() });
     const text = await res.text();
     let body;
     try { body = text ? JSON.parse(text) : null; } catch { body = text; }
+    // 401 + refresh_token 있으면 한 번만 갱신 시도 후 재시도 (동시 요청 중복 갱신 방지)
+    if (res.status === 401 && REFRESH_TOKEN && attempt === 1) {
+      if (!refreshInFlight) refreshInFlight = refreshJwt().finally(() => { refreshInFlight = null; });
+      const ok = await refreshInFlight;
+      if (ok) continue;
+    }
     if (res.ok || ![502, 503, 504].includes(res.status) || attempt === 3) {
       return { ok: res.ok, status: res.status, body };
     }
@@ -95,6 +128,14 @@ async function locateCard(cardId) {
     method: 'POST', body: JSON.stringify({ card_id: cardId }),
   });
   if (!r.ok) throw new Error(`locate-card ${r.status}: ${JSON.stringify(r.body).slice(0, 200)}`);
+  return r.body;
+}
+
+async function batchGenerateTags(cardId) {
+  const r = await sbFetch('/functions/v1/batch-generate-tags', {
+    method: 'POST', body: JSON.stringify({ card_id: cardId }),
+  });
+  if (!r.ok) throw new Error(`batch-generate-tags ${r.status}: ${JSON.stringify(r.body).slice(0, 200)}`);
   return r.body;
 }
 
@@ -141,6 +182,12 @@ function buildCardFromParse(id, text, parsed, asClient) {
   return base;
 }
 
+function applyStatusOverrides(card, s, asClient) {
+  if (!asClient && s.propTradeStatus) card.trade_status = s.propTradeStatus;
+  if (asClient && s.clientStatus) card.client_status = s.clientStatus;
+  return card;
+}
+
 // ─ 시나리오 1개 실행 ─
 async function runScenario(s, idx) {
   const ts = Date.now() + idx;
@@ -150,13 +197,15 @@ async function runScenario(s, idx) {
   const diag = {};
   try {
     const pr = await parseProperty(s.property);
-    await insertCard(buildCardFromParse(propId, s.property, pr, false));
+    await insertCard(applyStatusOverrides(buildCardFromParse(propId, s.property, pr, false), s, false));
     if (s.withLocate) await locateCard(propId);
+    if (s.withTags) await batchGenerateTags(propId);
     diag.prop = { price_number: pr.price_number, cat: pr.category, type: pr.type, embedding: !!pr.embedding };
 
     const cr = await parseProperty(s.client);
-    await insertCard(buildCardFromParse(cliId, s.client, cr, true));
+    await insertCard(applyStatusOverrides(buildCardFromParse(cliId, s.client, cr, true), s, true));
     if (s.withLocate) await locateCard(cliId);
+    if (s.withTags) await batchGenerateTags(cliId);
     diag.cli = { wanted_trade_type: cr.wanted_trade_type, wanted_cats: cr.wanted_categories, price_number: cr.price_number, embedding: !!cr.embedding, wanted_conditions: cr.wanted_conditions };
 
     // 진단: DB에 저장된 값 확인
@@ -174,12 +223,21 @@ async function runScenario(s, idx) {
     const notifs = await pairNotification(propId, cliId);
     // 정확한 판정: "이 페어"가 매칭됐는지 (사용자의 기존 실데이터 오염 배제)
     const actualMatch = notifs.length > 0;
-    const expectMatch = s.expect === 'match';
-    const pass = actualMatch === expectMatch;
+    // expect 해석: 'match' / 'no-match' / 'error-xxx' / 'match-or-no-match' (둘 다 OK)
+    let pass;
+    if (typeof s.expect === 'string' && s.expect.startsWith('error')) {
+      pass = false; // 에러 기대했는데 에러 없이 끝남 → FAIL
+    } else if (s.expect === 'match-or-no-match') {
+      pass = true; // 둘 다 허용
+    } else {
+      const expectMatch = s.expect === 'match';
+      pass = actualMatch === expectMatch;
+    }
 
     return { ...s, pass, actualMatch, notifs: notifs.length, diag };
   } catch (e) {
-    return { ...s, pass: false, error: e.message, diag };
+    const expectsError = typeof s.expect === 'string' && s.expect.startsWith('error');
+    return { ...s, pass: !!expectsError, error: e.message, diag };
   } finally {
     // 각 시나리오 후 개별 정리
     await sbFetch(`/rest/v1/match_notifications?or=(card_id.eq.${propId},client_card_id.eq.${cliId})`, { method: 'DELETE' });

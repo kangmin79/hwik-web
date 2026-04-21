@@ -1,0 +1,82 @@
+[
+  {
+    "id": "CM001",
+    "axis": "상가-홍대-월세-권리금",
+    "property": "마포 서교 홍대 상가 월세 3000/300 15평 1층 역세권 권리금 5000",
+    "client": "홍대 상가 월세 3000/300 이하 15평 1층",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "CM002",
+    "axis": "상가-강남-매매-권리금없음",
+    "property": "강남 역삼 상가 매매 8억 20평 코너 전면넓음 무권리",
+    "client": "강남 역삼 상가 매매 8억 이하 20평 코너",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "CM003",
+    "axis": "상가-신규업종",
+    "property": "종로 종각 상가 월세 2000/250 18평 카페용 업종제한없음",
+    "client": "종로 종각 상가 월세 2000/300 이하 18평 카페 가능",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "CM004",
+    "axis": "사무실-강남-월세-관리비",
+    "property": "강남 역삼 사무실 월세 2000/200 30평 엘리베이터 관리비 30",
+    "client": "강남 사무실 월세 2500/250 이하 30평",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "CM005",
+    "axis": "사무실-판교-매매",
+    "property": "경기 성남 판교 사무실 매매 12억 25평 판교역 5분",
+    "client": "판교 사무실 매매 12억 이하 25평 역세권",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "CM006",
+    "axis": "상가-손님유동인구",
+    "property": "강남 신사 상가 월세 5000/500 25평 유동인구많음 간판가능",
+    "client": "강남 신사 상가 월세 5000/500 이하 25평 유동인구 많은 곳",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "CM007",
+    "axis": "상가vs사무실-카테고리불일치",
+    "property": "서초 사무실 월세 1500/180 22평",
+    "client": "서초 상가 월세 1500/200 이하 22평",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "CM008",
+    "axis": "상가-권리금초과",
+    "property": "마포 서교 상가 월세 2000/200 20평 권리금 8000",
+    "client": "홍대 상가 월세 2000/250 이하 20평 권리금 5000 이하",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "CM009",
+    "axis": "사무실-코워킹-매칭",
+    "property": "강남 역삼 코워킹 오피스 월세 500/50 10평",
+    "client": "강남 오피스 월세 500/80 이하 10평 1인 업무용",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "CM010",
+    "axis": "상가-매매-권리금합산매물",
+    "property": "송파 잠실 상가 매매 12억 30평 1층 권리금 1억",
+    "client": "잠실 상가 매매 12억 이하 30평 1층",
+    "expect": "match",
+    "matchOn": "client"
+  }
+]

@@ -467,6 +467,21 @@ Deno.serve(async (req) => {
 3. 확신 없으면 매물로 처리
 4. 호수(~호)는 절대 비공개 → memo에만
 
+★★★ 거래유형(wanted_trade_type) 절대 규칙 — 반드시 이 순서대로 판단하세요:
+
+STEP 1: 텍스트에 "월세/ㅇㅅ/임대/렌트" 또는 "보증금+월" 또는 슬래시 가격("500/50") 있음 → "월세"
+STEP 2: (STEP 1 해당 X) 텍스트에 "전세/ㅈㅅ/젼세" 단어 있음 → "전세"
+STEP 3: (STEP 1·2 해당 X) → "매매" (기본값)
+
+⚠️ CRITICAL: "전세"라는 단어가 텍스트에 없는데 wanted_trade_type="전세"로 설정하는 것은 절대 금지. 전세는 반드시 "전세" 단어가 명시되어야 합니다.
+
+반례 금지 (매우 중요):
+- "헬리오시티 25억 이하" → "전세" 단어 없음 → ✅"매매" (절대 "전세" 금지)
+- "잠실 12억" → "전세" 단어 없음 → ✅"매매"
+- "역삼 5억" → "전세" 단어 없음 → ✅"매매"
+- "마포 젼세 7억" → "젼세"는 "전세" 오타로 인식 → ✅"전세"
+- "원룸 500에 50" → 슬래시/보증금+월 → ✅"월세"
+
 ■ price 원문 보존 (⚠️⚠️⚠️ 절대 지켜야 함):
 - 반올림·요약·단위변환 모두 금지. 입력에 적힌 숫자 그대로 복사하세요.
 - "1억8500" 입력 → price="1억8500" (절대 "1억9천"·"2억"으로 바꾸면 안 됩니다. 500만원이 사라집니다)
@@ -677,10 +692,10 @@ Deno.serve(async (req) => {
         if (/전세/.test(allText)) wantedTypes.push('전세');
         if (/월세|임대|빌려|렌트/.test(allText)) wantedTypes.push('월세');
       }
-      // 가격 패턴으로 추론
+      // 가격 패턴으로 추론 — "전세" 단어 없이 억 단위만 있으면 매매 (전세는 반드시 명시)
       if (!wantedTypes.length) {
         if (/\/\s*\d|월\s*\d|보증금.*월/.test(allText)) wantedTypes.push('월세');
-        else if (/억|천만/.test(allText)) wantedTypes.push('전세');
+        else if (/억|천만/.test(allText)) wantedTypes.push('매매');
       }
       wantedTradeType = wantedTypes[0] || null;
 
@@ -732,7 +747,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ★ 손님일 때 원하는 카테고리 복수 추출
+    // ★ 손님일 때 원하는 카테고리 복수 추출 — 손님 텍스트에 명시된 키워드만
     let wantedCategories: string[] = [];
     if (parsedResult.type === '손님') {
       const allText = [parsedResult.location, parsedResult.complex, parsedResult.memo, text, ...(parsedResult.features || [])].filter(Boolean).join(' ');
@@ -741,13 +756,8 @@ Deno.serve(async (req) => {
       if (/원룸|투룸|쓰리룸|빌라|다세대|연립|주택/.test(allText)) wantedCategories.push('room');
       if (/상가|점포|매장|식당|카페|편의점|치킨|미용|베이커리/.test(allText)) wantedCategories.push('commercial');
       if (/사무실|오피스(?!텔)|업무|코워킹/.test(allText)) wantedCategories.push('office');
-      // category 필드가 있으면 포함
-      if (parsedResult.category && !wantedCategories.includes(parsedResult.category)) {
-        wantedCategories.push(parsedResult.category);
-      }
-      // 빈 배열이면 category에서 단일값 사용
-      if (!wantedCategories.length && parsedResult.category) wantedCategories = [parsedResult.category];
-      // ★ AI가 category=null 반환한 손님(복수 언급 혼란 등) → wanted_categories[0]로 폴백
+      // ★ parsedResult.category는 LLM 추측 기본값 — wanted에 주입하지 않음
+      //   (손님이 카테고리 언급 X → wantedCategories 빈 배열 유지 → 모든 카테고리 매칭 허용)
       if (!parsedResult.category && wantedCategories.length) parsedResult.category = wantedCategories[0];
     }
 

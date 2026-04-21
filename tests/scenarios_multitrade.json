@@ -1,0 +1,122 @@
+[
+  {
+    "id": "MT001",
+    "axis": "복수거래-매매or전세-매매매물",
+    "property": "송파 잠실 매매 22억 25평",
+    "client": "잠실 매매나 전세 구해요 25평",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "MT002",
+    "axis": "복수거래-매매or전세-전세매물",
+    "property": "송파 잠실 전세 12억 25평",
+    "client": "잠실 매매나 전세 구해요 25평",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "MT003",
+    "axis": "복수거래-전세or월세-전세매물",
+    "property": "마포 공덕 전세 9억 25평",
+    "client": "마포 공덕 전세나 월세 둘 다 괜찮 25평",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "MT004",
+    "axis": "복수거래-전세or월세-월세매물",
+    "property": "마포 공덕 월세 1000/80 25평",
+    "client": "마포 공덕 전세나 월세 둘 다 괜찮 25평",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "MT005",
+    "axis": "복수거래-매매or전세-월세매물(불일치)",
+    "property": "송파 잠실 월세 1000/80 25평",
+    "client": "잠실 매매나 전세 구해요 25평",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "MT006",
+    "axis": "복수거래-모두OK-매매매물",
+    "property": "강남 역삼 매매 15억 25평",
+    "client": "강남 역삼 매매 전세 월세 다 괜찮 25평",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "MT007",
+    "axis": "복수거래-모두OK-전세매물",
+    "property": "강남 역삼 전세 7억 25평",
+    "client": "강남 역삼 매매 전세 월세 다 괜찮 25평",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "MT008",
+    "axis": "복수거래-모두OK-월세매물",
+    "property": "강남 역삼 월세 1000/100 25평",
+    "client": "강남 역삼 매매 전세 월세 다 괜찮 25평",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "MT009",
+    "axis": "복수거래-가격조건-매매15억이하or전세10억이하",
+    "property": "송파 잠실 매매 14억 25평",
+    "client": "잠실 매매 15억 이하 or 전세 10억 이하 25평",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "MT010",
+    "axis": "복수거래-가격조건-매매15억이하or전세10억이하-전세매칭",
+    "property": "송파 잠실 전세 9억 25평",
+    "client": "잠실 매매 15억 이하 or 전세 10억 이하 25평",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "MT011",
+    "axis": "복수거래-매매또는전세-관용표현",
+    "property": "서초 반포 매매 20억 30평",
+    "client": "반포 매매 또는 전세 구합니다 30평",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "MT012",
+    "axis": "복수거래-슬래시-매매/전세",
+    "property": "용산 이촌 매매 18억 28평",
+    "client": "용산 이촌 매매/전세 18억 이하 28평",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "MT013",
+    "axis": "복수거래-콤마구분-매매,전세",
+    "property": "마포 공덕 전세 10억 30평",
+    "client": "마포 공덕 매매, 전세 10억 이하 30평",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "MT014",
+    "axis": "복수거래-전세월세-한쪽만초과",
+    "property": "송파 잠실 전세 15억 25평",
+    "client": "잠실 전세 10억 이하 또는 월세 1000/100 이하 25평",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "MT015",
+    "axis": "복수거래-방향전환-매물먼저",
+    "property": "강남 대치 래미안 대치팰리스 매매 28억 33평 중층 남향",
+    "client": "대치 래미안 매매 또는 전세 30평대 구해요",
+    "expect": "match",
+    "matchOn": "property"
+  }
+]

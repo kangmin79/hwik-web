@@ -1,0 +1,242 @@
+[
+  {
+    "id": "FF001",
+    "axis": "자유발화-오탈자-매매",
+    "property": "송파 잠실엘스 ㅁㅁ 22억 25평 7층 남향",
+    "client": "잠실 엘스 매매 22억 이하 25평 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF002",
+    "axis": "자유발화-초성축약-전세",
+    "property": "강남 역삼 ㅈㅅ 5억 25평 역세권",
+    "client": "강남 역삼 전세 5억 이하 25평 급구",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF003",
+    "axis": "자유발화-보증금월세-슬래시",
+    "property": "마포 공덕 ㅇㅅ 1000/80 20평 풀옵션",
+    "client": "마포 공덕 월세 1000/100 이하 20평대 구함",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF004",
+    "axis": "자유발화-긴문장-학부모",
+    "property": "강남 대치동 래미안 아파트 매매 28억 34평 중층 남향 즉시입주 가능합니다",
+    "client": "대치동 학원가 근처에 초등학생 둘 있는 학부모인데요 매매 30억 이하 30평대 아파트 알아봐요 학군 중요합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF005",
+    "axis": "자유발화-반말-손님",
+    "property": "홍대입구 원룸 월세 500/50 8평 풀옵션",
+    "client": "홍대 원룸 월세 500에 50 정도로 구해",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF006",
+    "axis": "자유발화-단문-손님",
+    "property": "송파 가락동 헬리오시티 매매 25억 34평 고층",
+    "client": "헬리오시티 25억 이하",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF007",
+    "axis": "자유발화-오탈자섞임",
+    "property": "마포 망원 전세 7억 24평 역세권",
+    "client": "마포 망언 젼세 7억 이하 20평대",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF008",
+    "axis": "자유발화-가격범위",
+    "property": "송파 잠실 매매 22억 25평",
+    "client": "송파 잠실 매매 20억~23억 사이 25평",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF009",
+    "axis": "자유발화-가격정도-모호",
+    "property": "강남 도곡 매매 18억 33평",
+    "client": "강남 도곡 매매 20억 정도 30평대",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF010",
+    "axis": "자유발화-복수손님표현",
+    "property": "서초 반포 자이 매매 45억 34평 로얄층",
+    "client": "반포 자이 매매 구합니다 45억 선에서 30평대 고층",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF011",
+    "axis": "자유발화-이모지포함",
+    "property": "용산 이촌 한가람 전세 11억 30평 🏢 중층 즉시",
+    "client": "🔍 용산 이촌 전세 11억 이하 30평 한가람 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF012",
+    "axis": "자유발화-전화번호포함",
+    "property": "양천 목동 7단지 매매 22억 35평 010-1234-5678",
+    "client": "목동 7단지 매매 22억 이하 30평대",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF013",
+    "axis": "자유발화-매매전세혼동방지",
+    "property": "송파 잠실 전세 12억 33평",
+    "client": "송파 잠실 매매 12억 이하 30평대",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF014",
+    "axis": "자유발화-제곱미터표기",
+    "property": "강남 역삼 매매 15억 전용 84㎡ 아파트 고층",
+    "client": "강남 역삼 매매 15억 이하 25평 아파트",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF015",
+    "axis": "자유발화-월세-무보증",
+    "property": "마포 공덕 무보증 월세 100 8평 원룸",
+    "client": "마포 공덕 원룸 무보증 월세 100 이하 8평",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF016",
+    "axis": "자유발화-즉시입주",
+    "property": "송파 잠실 전세 10억 25평 즉시 입주 가능",
+    "client": "잠실 전세 10억 이하 25평 급하게 이사 들어가려고요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF017",
+    "axis": "자유발화-층수조건",
+    "property": "서초 반포 매매 18억 25평 저층 2층",
+    "client": "서초 반포 매매 20억 이하 25평 고층 로얄층 구함",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF018",
+    "axis": "자유발화-한글숫자",
+    "property": "강서 화곡 매매 삼억오천 18평",
+    "client": "강서 화곡 매매 3억5천 이하 18평",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF019",
+    "axis": "자유발화-줄바꿈다중라인",
+    "property": "송파 잠실\n엘스아파트\n매매 22억\n25평 7층\n남향",
+    "client": "잠실 엘스 매매 22억 이하 25평 구합니다",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF020",
+    "axis": "자유발화-띄어쓰기없음",
+    "property": "송파잠실매매22억25평",
+    "client": "송파잠실매매22억이하25평",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF021",
+    "axis": "자유발화-오피스텔-업무",
+    "property": "강남 역삼 강남역 오피스텔 월세 1000/120 12평 업무용",
+    "client": "강남역 오피스텔 월세 1500/150 이하 업무용 구함",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF022",
+    "axis": "자유발화-특이조건-반려동물",
+    "property": "마포 서교 월세 500/60 15평 반려동물 가능",
+    "client": "홍대 월세 500/80 이하 15평대 반려견 키울 수 있는 곳",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF023",
+    "axis": "자유발화-가족동반-역세권",
+    "property": "광진 구의 매매 12억 32평 건대입구역 10분",
+    "client": "광진 구의 매매 13억 이하 30평대 신혼집 역세권",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF024",
+    "axis": "자유발화-극단가격-낮은",
+    "property": "관악 신림 전세 8000 8평 원룸",
+    "client": "관악 신림 원룸 전세 1억 이하",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF025",
+    "axis": "자유발화-극단가격-높은",
+    "property": "강남 청담 매매 85억 65평 펜트하우스 한강뷰",
+    "client": "청담 매매 100억 이하 60평대 한강뷰",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF026",
+    "axis": "자유발화-중개사메모표현",
+    "property": "송파 잠실 매매 22억 25평 갭 9억 투자용 추천",
+    "client": "잠실 매매 22억 이하 갭투자 25평 구해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF027",
+    "axis": "자유발화-네고가능",
+    "property": "강남 대치 매매 28억 네고 가능 33평 중층",
+    "client": "대치 매매 28억 이하 30평대 가격협의 가능한 거",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF028",
+    "axis": "자유발화-학생급",
+    "property": "관악 신림 월세 500/40 7평 원룸 학생 전용",
+    "client": "신림 원룸 학생 월세 500/50 이하",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF029",
+    "axis": "자유발화-월세매매혼동",
+    "property": "강남 역삼 매매 15억 25평",
+    "client": "강남 역삼 월세 1000/150 이하 20평대",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "FF030",
+    "axis": "자유발화-매매무관-손님",
+    "property": "마포 상암 매매 15억 32평 남향",
+    "client": "상암 전세 8억 이하 30평대 남향 구해요",
+    "expect": "no-match",
+    "matchOn": "client"
+  }
+]

@@ -1,0 +1,152 @@
+[
+  {
+    "id": "TS001",
+    "axis": "매물계약가능+손님탐색중-기본",
+    "property": "송파 잠실 매매 22억 25평",
+    "client": "잠실 매매 22억 이하 25평",
+    "propTradeStatus": "계약가능",
+    "clientStatus": "탐색중",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "TS002",
+    "axis": "매물계약중-제외",
+    "property": "송파 잠실 매매 22억 25평",
+    "client": "잠실 매매 22억 이하 25평",
+    "propTradeStatus": "계약중",
+    "clientStatus": "탐색중",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "TS003",
+    "axis": "매물완료-제외",
+    "property": "송파 잠실 매매 22억 25평",
+    "client": "잠실 매매 22억 이하 25평",
+    "propTradeStatus": "완료",
+    "clientStatus": "탐색중",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "TS004",
+    "axis": "손님연락두절-처리",
+    "property": "송파 잠실 매매 22억 25평",
+    "client": "잠실 매매 22억 이하 25평",
+    "propTradeStatus": "계약가능",
+    "clientStatus": "연락두절",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "TS005",
+    "axis": "손님계약완료-처리",
+    "property": "송파 잠실 매매 22억 25평",
+    "client": "잠실 매매 22억 이하 25평",
+    "propTradeStatus": "계약가능",
+    "clientStatus": "계약완료",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "TS006",
+    "axis": "손님급해요-우선매칭",
+    "property": "강남 대치 매매 28억 33평",
+    "client": "대치 매매 28억 이하 30평대",
+    "propTradeStatus": "계약가능",
+    "clientStatus": "급해요",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "TS007",
+    "axis": "손님협의중-매칭유지",
+    "property": "마포 공덕 전세 9억 30평",
+    "client": "마포 공덕 전세 9억 이하 30평",
+    "propTradeStatus": "계약가능",
+    "clientStatus": "협의중",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "TS008",
+    "axis": "매물방향-계약중제외",
+    "property": "송파 잠실 매매 22억 25평",
+    "client": "잠실 매매 22억 이하 25평",
+    "propTradeStatus": "계약중",
+    "clientStatus": "탐색중",
+    "expect": "no-match",
+    "matchOn": "property"
+  },
+  {
+    "id": "TS009",
+    "axis": "매물방향-완료제외",
+    "property": "서초 반포 매매 45억 34평",
+    "client": "반포 매매 45억 이하 30평대",
+    "propTradeStatus": "완료",
+    "clientStatus": "탐색중",
+    "expect": "no-match",
+    "matchOn": "property"
+  },
+  {
+    "id": "TS010",
+    "axis": "매물방향-계약가능+급해요",
+    "property": "용산 이촌 전세 11억 30평",
+    "client": "용산 이촌 전세 11억 이하 30평",
+    "propTradeStatus": "계약가능",
+    "clientStatus": "급해요",
+    "expect": "match",
+    "matchOn": "property"
+  },
+  {
+    "id": "TS011",
+    "axis": "월세-매물완료-제외",
+    "property": "마포 공덕 월세 1000/80 20평",
+    "client": "마포 공덕 월세 1000/100 이하 20평",
+    "propTradeStatus": "완료",
+    "clientStatus": "탐색중",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "TS012",
+    "axis": "전세-매물계약중-제외",
+    "property": "송파 잠실 전세 12억 30평",
+    "client": "잠실 전세 12억 이하 30평",
+    "propTradeStatus": "계약중",
+    "clientStatus": "탐색중",
+    "expect": "no-match",
+    "matchOn": "client"
+  },
+  {
+    "id": "TS013",
+    "axis": "손님탐색중-기본-매칭",
+    "property": "양천 목동 매매 22억 35평",
+    "client": "목동 매매 22억 이하 30평대",
+    "propTradeStatus": "계약가능",
+    "clientStatus": "탐색중",
+    "expect": "match",
+    "matchOn": "client"
+  },
+  {
+    "id": "TS014",
+    "axis": "매물계약가능+손님연락두절-매물방향",
+    "property": "강남 역삼 매매 15억 25평",
+    "client": "강남 역삼 매매 15억 이하 25평",
+    "propTradeStatus": "계약가능",
+    "clientStatus": "연락두절",
+    "expect": "no-match",
+    "matchOn": "property"
+  },
+  {
+    "id": "TS015",
+    "axis": "매물계약가능+손님계약완료-매물방향",
+    "property": "강남 역삼 매매 15억 25평",
+    "client": "강남 역삼 매매 15억 이하 25평",
+    "propTradeStatus": "계약가능",
+    "clientStatus": "계약완료",
+    "expect": "no-match",
+    "matchOn": "property"
+  }
+]

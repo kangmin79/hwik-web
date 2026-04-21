@@ -6,9 +6,9 @@
 export const MATCH_BASE =
   'id, property, agent_id, embedding, price_number, deposit, monthly_rent, lat, lng, kapt_code, tags, private_note, search_text';
 
-// 손님 카드 전용 — wanted_* / 태그 제약 / 입주시기
+// 손님 카드 전용 — wanted_* / 태그 제약 / 입주시기 / 상태
 export const MATCH_CLIENT_EXTRA =
-  'wanted_trade_type, wanted_categories, wanted_conditions, required_tags, excluded_tags, move_in_date';
+  'wanted_trade_type, wanted_categories, wanted_conditions, required_tags, excluded_tags, move_in_date, client_status';
 
 // 매물 카드 전용
 export const MATCH_PROPERTY_EXTRA =
