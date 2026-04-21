@@ -88,6 +88,15 @@ def sb_upsert(table, rows, conflict="id"):
     return total
 
 
+# ── 임대 단지 판별 (이중 방어) ────────────────────────────
+def is_rental(apt: dict) -> bool:
+    if (apt.get("trade_type") or "") == "임대":
+        return True
+    if "임대" in (apt.get("kapt_name") or ""):
+        return True
+    return False
+
+
 # ── 면적 매핑 ─────────────────────────────────────────────
 def build_pyeongs_map(pyeongs: list) -> dict:
     """apartments.pyeongs → {cat: {exclu, supply}} 매핑 테이블"""
@@ -340,7 +349,7 @@ def get_changed_apts(hours: int) -> list[dict]:
         seq_filter = ",".join(chunk)
         batch = sb_get("apartments", {
             "select": "kapt_code,kapt_name,apt_seq,sgg,umd_nm,doro_juso,"
-                      "lat,lon,build_year,households,top_floor,heat_type,builder,pyeongs,parking_ground",
+                      "lat,lon,build_year,households,top_floor,heat_type,builder,pyeongs,parking_ground,trade_type",
             "apt_seq": f"in.({seq_filter})",
             "kapt_code": "like.A*",
         })
@@ -357,6 +366,8 @@ def process_apt_list(apts: list[dict], dry: bool) -> tuple[int, int, int]:
     for apt in apts:
         apt_seq = apt.get("apt_seq")
         if not apt_seq:
+            skip += 1; continue
+        if is_rental(apt):
             skip += 1; continue
 
         trades = sb_get("trade_raw_v2", {
@@ -390,7 +401,7 @@ def process_lawd(lawd_cd: str, sgg_name: str, dry: bool) -> tuple[int, int, int]
     # 1. apartments 조회 (apt_seq 있는 것만)
     apts = sb_get("apartments", {
         "select": "kapt_code,kapt_name,apt_seq,sgg,umd_nm,doro_juso,"
-                  "lat,lon,build_year,households,top_floor,heat_type,builder,pyeongs,parking_ground",
+                  "lat,lon,build_year,households,top_floor,heat_type,builder,pyeongs,parking_ground,trade_type",
         "lawd_cd": f"eq.{lawd_cd}",
         "kapt_code": "like.A*",
         "apt_seq": "not.is.null",
@@ -406,6 +417,8 @@ def process_lawd(lawd_cd: str, sgg_name: str, dry: bool) -> tuple[int, int, int]
     for apt in apts:
         apt_seq = apt.get("apt_seq")
         if not apt_seq:
+            skip += 1; continue
+        if is_rental(apt):
             skip += 1; continue
 
         # 2. trade_raw_v2 조회 (해당 단지 전체 거래)
