@@ -162,6 +162,8 @@ def run_phase1(root_files, idx):
             prefix = f"/{folder}/"
             if path_str.startswith(prefix):
                 slug = path_str[len(prefix):]
+                if slug.endswith(".html"):
+                    slug = slug[:-5]
                 if slug:
                     sm_sets[folder].add(slug)
                     if slug not in idx[folder]:
