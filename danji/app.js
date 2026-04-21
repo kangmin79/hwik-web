@@ -525,8 +525,13 @@ function render() {
     if (_nct === '주상복합' || _nct === '도시형 생활주택(주상복합)') _nctLabel = '주상복합';
     else if (_nct === '도시형 생활주택(아파트)') _nctLabel = '도시형';
     const _nctTag = _nctLabel ? `<span style="display:inline-block;background:#ede9fe;color:#5b21b6;font-size:10px;font-weight:600;padding:1px 6px;border-radius:3px;margin-left:4px;vertical-align:middle;">${_nctLabel}</span>` : '';
+    // URL 우선순위: n.slug (DB SSOT) → 정적 HTML에 박힌 href → 런타임 makeSlug fallback
+    const nHref = n.slug
+      ? ('/danji/' + encodeURIComponent(n.slug) + '.html')
+      : (STATIC_NEARBY_HREF[n.id]
+         || ('/danji/' + encodeURIComponent(makeSlug(n.name, n.location, n.id, parentMetro && n.location ? (parentMetro + ' ' + n.location) : '')) + '.html'));
     return `
-    <a class="nearby-item" href="${STATIC_NEARBY_HREF[n.id] || ('/danji/' + encodeURIComponent(makeSlug(n.name, n.location, n.id, parentMetro && n.location ? (parentMetro + ' ' + n.location) : '')))}" style="text-decoration:none;color:inherit;">
+    <a class="nearby-item" href="${nHref}" style="text-decoration:none;color:inherit;">
       <div>
         <div class="nearby-name">${esc(n.name)}${_nctTag}</div>
         <div class="nearby-sub">${esc(n.location)} ${n.distance ? '· '+distText(n.distance) : ''}${areaLabel ? ' · '+areaLabel : ''}</div>
@@ -688,7 +693,6 @@ function render() {
     <!-- 평형 -->
     ${toggleRowHtml}
     <div class="pyeong-wrap"><div class="pyeong-row">${pyeongHtml}</div></div>
-    <div style="font-size:10px;color:var(--sub);padding:4px 16px 0;">최근 5년 내 매매·전세·월세 거래가 없는 면적은 표시하지 않습니다.</div>
 
     <!-- 핵심 시세 카드 (월세 탭에서는 숨김) -->
     ${!hasCurData ? `<div style="margin:20px 16px;padding:20px;background:var(--card-bg);border-radius:12px;text-align:center;color:var(--sub);font-size:14px;line-height:1.6;">

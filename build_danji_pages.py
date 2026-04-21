@@ -535,8 +535,10 @@ def build_fallback_html(d):
         for n in nearby:
             if shown >= 5:
                 break
-            nid = n.get("id", "")
-            if nid not in DANJI_SLUG_MAP:
+            nid = (n.get("id") or "").lower()
+            # DB.slug SSOT — nearby_complex JSON에 저장된 slug가 1순위
+            nslug = n.get("slug") or DANJI_SLUG_MAP.get(nid)
+            if not nslug:
                 continue  # 페이지 미생성 단지 스킵
             prices = n.get("prices") or {}
             nbest = None
@@ -549,12 +551,12 @@ def build_fallback_html(d):
             p = format_price(nbest.get("price")) if nbest and nbest.get("price") else "-"
             nname_raw = n.get("name", "")
             nloc_raw = n.get("location", "")
-            nslug = DANJI_SLUG_MAP[nid]
             nname = esc(nname_raw)
             nloc = esc(nloc_raw)
             shown += 1
+            # class="nearby-item" — app.js STATIC_NEARBY_HREF 캡처 대상
             lines.append(
-                f'<li><a href="/danji/{url_quote(nslug, safe="-")}.html" style="display:flex;justify-content:space-between;'
+                f'<li><a class="nearby-item" href="/danji/{url_quote(nslug, safe="-")}.html" style="display:flex;justify-content:space-between;'
                 f'padding:10px 12px;background:#f3f4f6;border-radius:8px;text-decoration:none;color:#1a1a2e;font-size:13px;">'
                 f'<span>{nname} <span style="color:#6b7280;font-size:11px;">{nloc}</span></span>'
                 f'<span style="font-weight:600;">{p}</span></a></li>'
@@ -1047,7 +1049,8 @@ def main():
             break
         for r in rows:
             if r.get("kapt_code") and r.get("slug"):
-                APT_SLUG_MAP[r["kapt_code"]] = r["slug"]
+                # danji_pages.id 는 소문자('a...') → 조회 경로 대소문자 통일
+                APT_SLUG_MAP[r["kapt_code"].lower()] = r["slug"]
         apt_offset += APT_BATCH
         if len(rows) < APT_BATCH:
             break

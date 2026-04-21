@@ -80,7 +80,7 @@ def load_apartments():
                     f"{SUPABASE_URL}/rest/v1/apartments",
                     headers={"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"},
                     params={
-                        "select": "kapt_code,kapt_name,doro_juso,lat,lon,lawd_cd,property_type,households,use_date,sgg,umd_nm,pyeongs,slug,top_floor,parking,heating,builder,mgmt_fee",
+                        "select": "kapt_code,kapt_name,doro_juso,lat,lon,lawd_cd,property_type,households,use_date,sgg,umd_nm,pyeongs,slug,top_floor,parking,heating,builder,mgmt_fee,trade_type",
                         "limit": str(limit),
                         "offset": str(offset),
                     },
@@ -113,8 +113,16 @@ def fill_nearby_complex(danji_list: list, apartments: list):
     import math
 
     name_to_type = {}
+    rental_ids = set()  # apartments.trade_type == '임대' 단지 id(소문자) 집합
+    kc_to_slug = {}     # apartments.kapt_code(소문자) → apartments.slug
     for apt in apartments:
         name_to_type[apt.get("kapt_name", "")] = apt.get("property_type", "apt")
+        kc = (apt.get("kapt_code") or "").lower()
+        if kc:
+            if apt.get("trade_type") == "임대":
+                rental_ids.add(kc)
+            if apt.get("slug"):
+                kc_to_slug[kc] = apt["slug"]
 
     def get_prop_type(danji):
         return name_to_type.get(danji.get("complex_name", ""), "apt")
@@ -143,6 +151,16 @@ def fill_nearby_complex(danji_list: list, apartments: list):
         for other in type_groups[pt]:
             if other["id"] == d["id"]:
                 continue
+            # 정적 HTML 미생성 = 404. 런타임 필터(danji/app.js)와 동일 규칙으로 선차단
+            other_id = (other.get("id") or "").lower()
+            if other_id.startswith("offi-") or other_id.startswith("apt-"):
+                continue
+            # 1차: 국토부 codeSaleNm='임대' 단지 (정확, 숨은 임대까지)
+            if other_id in rental_ids:
+                continue
+            # 2차(이중 방어): 이름에 '임대' 포함
+            if "임대" in (other.get("complex_name") or ""):
+                continue
             dist = haversine(lat1, lon1, other.get("lat"), other.get("lng"))
             if dist < 2000:
                 rt = other.get("recent_trade") or {}
@@ -168,6 +186,8 @@ def fill_nearby_complex(danji_list: list, apartments: list):
                     "location": other.get("location", ""),
                     "distance": round(dist),
                     "prices": prices,
+                    # DB.slug SSOT — 빌드·런타임 모두 이 값 우선 사용 (정적/동적 URL 통일)
+                    "slug": kc_to_slug.get(other_id, ""),
                 })
 
         candidates.sort(key=lambda x: x["distance"])
@@ -289,28 +309,55 @@ def update_nearby(danji_list: list):
         if len(row) > 1:
             rows.append(row)
 
-    total = 0
-    batch_size = 50
-    for i in range(0, len(rows), batch_size):
-        batch = rows[i:i+batch_size]
+    # PATCH ?id=eq.X 방식 (PostgREST upsert는 INSERT 경로 → NOT NULL 위반)
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+    patch_headers = {**SB_HEADERS, "Prefer": "return=minimal"}
+
+    def _patch_one(row: dict):
+        rid = row["id"]
+        body = {k: v for k, v in row.items() if k != "id"}
         for attempt in range(3):
             try:
-                resp = sb_session.post(
-                    f"{SUPABASE_URL}/rest/v1/danji_pages?on_conflict=id",
-                    headers=SB_HEADERS,
-                    json=batch,
-                    timeout=60,
+                r = sb_session.patch(
+                    f"{SUPABASE_URL}/rest/v1/danji_pages",
+                    headers=patch_headers,
+                    params={"id": f"eq.{rid}"},
+                    json=body,
+                    timeout=30,
                 )
-                if resp.status_code in (200, 201):
-                    total += len(batch)
+                if r.status_code in (200, 204):
+                    return (rid, True, "")
+                if attempt < 2:
+                    time.sleep(1)
                 else:
-                    print(f"  ⚠️ nearby upsert 실패: {resp.status_code} {resp.text[:200]}")
-                break
+                    return (rid, False, f"{r.status_code} {r.text[:160]}")
             except Exception as e:
                 if attempt < 2:
-                    time.sleep(3)
+                    time.sleep(1)
                 else:
-                    print(f"  ⚠️ nearby upsert 예외: {e}")
+                    return (rid, False, str(e)[:160])
+        return (rid, False, "unreachable")
+
+    total = 0
+    failed = 0
+    fail_samples = []
+    t0 = time.time()
+    with ThreadPoolExecutor(max_workers=20) as ex:
+        futs = [ex.submit(_patch_one, r) for r in rows]
+        for i, f in enumerate(as_completed(futs), 1):
+            rid, ok, err = f.result()
+            if ok:
+                total += 1
+            else:
+                failed += 1
+                if len(fail_samples) < 5:
+                    fail_samples.append((rid, err))
+            if i % 2000 == 0:
+                print(f"  진행 {i:,}/{len(rows):,} ({time.time()-t0:.1f}s, 실패 {failed})")
+    print(f"  ✅ nearby PATCH 완료: {total:,}건 ({time.time()-t0:.1f}s, 실패 {failed})")
+    if fail_samples:
+        for rid, err in fail_samples:
+            print(f"    실패 샘플 {rid}: {err}")
     return total
 
 
@@ -343,6 +390,32 @@ def generate_sitemap(danji_list: list):
     from urllib.parse import quote as _quote
     from slug_utils import make_danji_slug as _make_slug, make_dong_slug as _make_dong_slug
 
+    # apartments에서 임대 id 집합 + DB.slug 맵 로드 (SSOT 활용)
+    _rental_ids = set()
+    _kc_to_slug = {}
+    _apt_offset = 0
+    while True:
+        _resp = sb_session.get(
+            f"{SUPABASE_URL}/rest/v1/apartments",
+            headers=SB_HEADERS,
+            params={"select": "kapt_code,slug,trade_type", "limit": "1000", "offset": str(_apt_offset)},
+            timeout=60,
+        )
+        _rows = _resp.json() if _resp.status_code == 200 else []
+        if not _rows:
+            break
+        for _r in _rows:
+            _kc = (_r.get("kapt_code") or "").lower()
+            if not _kc:
+                continue
+            if _r.get("trade_type") == "임대":
+                _rental_ids.add(_kc)
+            if _r.get("slug"):
+                _kc_to_slug[_kc] = _r["slug"]
+        _apt_offset += 1000
+        if len(_rows) < 1000:
+            break
+
     urls = []
     static_pages = [
         ('/', 'daily', '1.0'),
@@ -363,7 +436,7 @@ def generate_sitemap(danji_list: list):
             if fname.endswith(".html") and fname != "index.html":
                 slug = fname[:-5]
                 safe = _quote(slug, safe='-')
-                urls.append(f'  <url><loc>{base}/gu/{safe}</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>')
+                urls.append(f'  <url><loc>{base}/gu/{safe}.html</loc><lastmod>{today}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>')
 
     rank_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "ranking")
     if os.path.isdir(rank_dir):
@@ -371,7 +444,7 @@ def generate_sitemap(danji_list: list):
         for fname in sorted(os.listdir(rank_dir)):
             if fname.endswith(".html") and fname != "index.html":
                 slug = fname[:-5]
-                urls.append(f'  <url><loc>{base}/ranking/{slug}</loc><lastmod>{today}</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>')
+                urls.append(f'  <url><loc>{base}/ranking/{slug}.html</loc><lastmod>{today}</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>')
 
     danji_html_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "danji")
     existing_slugs = set()
@@ -386,13 +459,19 @@ def generate_sitemap(danji_list: list):
         if did.startswith("offi-") or did.startswith("apt-"):
             excluded += 1
             continue
+        did_lower = did.lower()
+        # 임대 단지 제외 (trade_type='임대' 정확 식별 + 이중 방어)
+        if did_lower in _rental_ids or "임대" in (d.get("complex_name") or ""):
+            excluded += 1
+            continue
         rt = d.get("recent_trade") or {}
         cats = d.get("categories") or []
         has_trade = any(rt.get(c) for c in cats)
         if not has_trade:
             excluded += 1
             continue
-        slug = _make_slug(d.get("complex_name", ""), d.get("location", ""), did, d.get("address", ""))
+        # DB.slug 우선 (SSOT) → 없을 때만 make_slug fallback
+        slug = _kc_to_slug.get(did_lower) or _make_slug(d.get("complex_name", ""), d.get("location", ""), did, d.get("address", ""))
         safe_slug = _quote(slug, safe="-")
         if existing_slugs and slug not in existing_slugs:
             excluded += 1
@@ -403,7 +482,7 @@ def generate_sitemap(danji_list: list):
             if td and td > latest_trade_date:
                 latest_trade_date = td
         lastmod = today  # 매일 빌드로 갱신되므로 오늘 날짜 사용
-        urls.append(f'  <url><loc>{base}/danji/{safe_slug}</loc><lastmod>{lastmod}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>')
+        urls.append(f'  <url><loc>{base}/danji/{safe_slug}.html</loc><lastmod>{lastmod}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>')
         included += 1
 
     from collections import defaultdict as _defaultdict
@@ -458,20 +537,20 @@ def generate_sitemap(danji_list: list):
             continue
         addr = dong_addr_cache.get((region, gu, dong), "")
         dong_slug = _make_dong_slug(gu, dong, addr)
-        safe_dong_slug = _quote(dong_slug, safe="-")
-        if safe_dong_slug in seen_dong_slugs:
+        if dong_slug in seen_dong_slugs:
             continue
         if existing_dong_slugs and dong_slug not in existing_dong_slugs:
             continue
-        seen_dong_slugs.add(safe_dong_slug)
+        seen_dong_slugs.add(dong_slug)
+        safe_dong_slug = _quote(dong_slug, safe="-")
         dong_lastmod = dong_latest_date.get((region, gu, dong), today)[:10]
-        urls.append(f'  <url><loc>{base}/dong/{safe_dong_slug}</loc><lastmod>{dong_lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>')
+        urls.append(f'  <url><loc>{base}/dong/{safe_dong_slug}.html</loc><lastmod>{dong_lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>')
         dong_count += 1
 
     # cnt < 3 이지만 HTML 파일이 존재하는 동 페이지도 sitemap에 등록 (priority 낮춤)
     for slug in sorted(existing_dong_slugs - seen_dong_slugs):
         safe_slug = _quote(slug, safe="-")
-        urls.append(f'  <url><loc>{base}/dong/{safe_slug}</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>')
+        urls.append(f'  <url><loc>{base}/dong/{safe_slug}.html</loc><lastmod>{today}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>')
         dong_count += 1
 
     # ── URL을 4개 그룹으로 분리 ──
