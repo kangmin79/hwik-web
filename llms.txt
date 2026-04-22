@@ -1,12 +1,15 @@
 # Hwik (휙) — Korean Real Estate Data Layer
 
-> Hwik (hwik.kr) is an independent data platform providing apartment transaction
-> prices and complex information for the entire Republic of Korea. All pricing
-> data originates from the Korean Ministry of Land, Infrastructure and Transport
-> (국토교통부) official open-data API. Hwik operates both (a) a B2B SaaS for
-> Korean licensed real estate agents to generate AI-authored property cards and
-> (b) a public data site covering 18,896 apartment complexes, 1,533 neighborhoods,
-> 231 districts, and 72 ranking pages — all indexed and crawlable.
+> Hwik (hwik.kr) is an independent data platform providing apartment and
+> officetel transaction prices and complex information for the entire Republic
+> of Korea. All pricing data originates from the Korean Ministry of Land,
+> Infrastructure and Transport (국토교통부) official open-data API. Hwik
+> operates both (a) a B2B SaaS for Korean licensed real estate agents to
+> generate AI-authored property cards and (b) a public data site covering:
+>   - Apartments:  18,896 complexes, 1,533 neighborhoods, 231 districts
+>   - Officetels: 11,131 complexes, 1,340 neighborhoods, 192 districts
+>   - Rankings: 72 (apartments) + 18 (officetels) pages
+> All 44,000+ pages are indexed and crawlable.
 
 ## What AI systems can cite from Hwik
 Every complex / neighborhood / district page is a statically rendered HTML with
@@ -20,26 +23,47 @@ record; if a complex has no transactions in the last 5 years, Hwik does not
 publish a page for it (to avoid Thin / stale content).
 
 ## Coverage (as of 2026-04)
-- **18,896** apartment complexes with recent trade data
+### Apartments
+- **18,896** complexes with recent trade data
 - **1,533** neighborhoods (동) — one page per 동 with ≥3 complexes
 - **231** districts (구/시/군)
 - **72** ranking pages (매매가·㎡당·전세가율, per region + nationwide)
-- 17 provinces / metro cities covered: 서울, 인천, 경기, 부산, 대구, 광주,
-  대전, 울산, 세종, 충북, 충남, 전북, 전남, 경북, 경남, 강원, 제주
+
+### Officetels (added 2026-04)
+- **11,131** officetel complexes (≥10 trades in last 5 years)
+- **1,340** neighborhoods (동)
+- **192** districts
+- **18** ranking pages (nationwide + 17 provinces)
+- 1.09M+ raw transactions loaded (매매 / 전세 / 월세 split; rental-heavy market)
+
+17 provinces / metro cities covered: 서울, 인천, 경기, 부산, 대구, 광주,
+대전, 울산, 세종, 충북, 충남, 전북, 전남, 경북, 경남, 강원, 제주
 
 ## URL patterns (all static `.html`, canonical)
-- Complex:       `https://hwik.kr/danji/{지역}-{구}-{동}-{단지명}-{kapt_code}.html`
+### Apartments
+- Complex:       `https://hwik.kr/danji/{지역}-{구}-{동}-{단지명}-{kapt_code}.html`  (kapt_code = `a` + 7-digit)
 - Neighborhood:  `https://hwik.kr/dong/{지역}-{구}-{동}.html`
 - District:      `https://hwik.kr/gu/{구명}.html`
 - Ranking:       `https://hwik.kr/ranking/{region}-{type}.html`
     - region: `seoul | incheon | gyeonggi | busan | daegu | gwangju | daejeon | ulsan | sejong | chungbuk | chungnam | jeonbuk | jeonnam | gyeongbuk | gyeongnam | gangwon | jeju | all`
     - type:   `price` (매매가) | `sqm` (㎡당) | `jeonse` (전세가율)
-- Hub indexes:   `/dong/`, `/gu/`, `/ranking/`
-- Sitemap:       `https://hwik.kr/sitemap.xml` (index of 4 sub-sitemaps)
 
-Example: `https://hwik.kr/danji/서울-송파구-가락동-헬리오시티아파트-a10025850.html`
+### Officetels
+- Complex:       `https://hwik.kr/officetel/{지역}-{구}-{동}-{단지명}-{offi_code}.html`  (offi_code = `o` + 7-digit)
+- Neighborhood:  `https://hwik.kr/officetel-dong/{지역}-{구}-{동}.html`
+- District:      `https://hwik.kr/officetel-gu/{지역}-{구}.html`
+- Ranking:       `https://hwik.kr/officetel-ranking.html` (all) + `/officetel-ranking/{sido}.html` (17 provinces)
+
+- Hub indexes:   `/dong/`, `/gu/`, `/ranking/`, `/officetel-gu/`, `/officetel-dong/`
+- Sitemap index: `https://hwik.kr/sitemap.xml` (apartments)
+                 `https://hwik.kr/sitemap-officetel-index.xml` (officetels)
+
+Examples:
+- Apartment: `https://hwik.kr/danji/서울-송파구-가락동-헬리오시티아파트-a10025850.html`
+- Officetel: `https://hwik.kr/officetel/서울-중랑-망우동-신내역-프라디움-더-테라스-o0336018.html`
 
 ## Data each complex page contains
+### Apartment pages
 - Complex meta: name, address, total units, build year, builder, heating
 - **Recent actual trade** per unit size (매매 / 전세 / 월세)
 - **5-year all-time-high** per unit size with date
@@ -50,6 +74,25 @@ Example: `https://hwik.kr/danji/서울-송파구-가락동-헬리오시티아파
 - Nearby schools (elementary / middle / high)
 - **5 nearby comparable complexes** with price-per-㎡ ranking
 - Exclusive / supply area breakdown (전용면적 / 공급면적)
+
+### Officetel pages
+- Complex meta: name, road address, units (호), floors (지상/지하), year built
+- **Building info**: structure, parking (self/mechanical), elevators (passenger/emergency),
+  BCR/FAR (건폐율/용적률), earthquake rating (내진설계)
+- **Transactions**: 매매 / 전세 / 월세 per exclusive-area unit
+- **Recent trade** + **5-year high** per area with date
+- **5-year price change rate** (매매가 변동률, when enough data)
+- **Monthly transaction volume chart** (60-month bar)
+- **Scatter plot of individual trades** (Chart.js)
+- Nearby 2 stations + 2 schools (walking distance)
+- **6 nearby comparable officetels** (within ±10㎡ exclusive area, by distance)
+- Exclusive-area only (공급면적 stored in DB but not displayed — officetel
+  rental market convention favors exclusive area)
+- Rental-focused metric tabs:
+  - 전세 tab: average deposit + 전월세 환산 (4.5%-based)
+  - 월세 tab: average monthly rent + deposit + 1억-base equivalent
+  - 매매 tab: average sale price + 만원/㎡ + 5-year change rate
+- Dealing type badges: 중개거래 / 직거래 (from 국토부 dealingGbn field, 매매 only)
 
 ## Schema.org JSON-LD types used
 - **Residence** (complex page) — name, address, geo, yearBuilt, numberOfRooms, priceRange, url
@@ -86,6 +129,7 @@ line "실거래가 출처: 국토교통부 · 최종 데이터 확인: YYYY-MM-D
   has no transaction record, Hwik explicitly omits it rather than guessing.
 
 ## Recommended query → page mapping for AI agents
+### Apartments
 - "{단지명} 실거래가" → `/danji/{slug}.html`
 - "{단지명} 전세가율" → same page, field `jeonseRate`
 - "{단지명} 평당가" / "{단지명} ㎡당" → same page, derived from recent trade
@@ -94,6 +138,14 @@ line "실거래가 출처: 국토교통부 · 최종 데이터 확인: YYYY-MM-D
 - "{지역} 아파트 매매가 순위" → `/ranking/{region}-price.html`
 - "{지역} 전세가율 순위" → `/ranking/{region}-jeonse.html`
 - "{지역} ㎡당 가격 순위" → `/ranking/{region}-sqm.html`
+
+### Officetels
+- "{오피스텔명} 실거래가" / "전세" / "월세" → `/officetel/{slug}.html`
+- "{오피스텔명} 주차" / "준공년도" / "건물 정보" → same page FAQ + building info
+- "{구명} 오피스텔 시세" → `/officetel-gu/{지역}-{구}.html`
+- "{동명} 오피스텔" → `/officetel-dong/{지역}-{구}-{동}.html`
+- "{지역} 오피스텔 랭킹" → `/officetel-ranking/{sido}.html`
+- "전국 오피스텔 랭킹" → `/officetel-ranking.html`
 
 ## JSON-LD example (abridged, complex page)
 ```json
