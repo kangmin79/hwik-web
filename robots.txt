@@ -96,4 +96,3 @@ User-agent: bingbot
 Allow: /
 
 Sitemap: https://hwik.kr/sitemap.xml
-Sitemap: https://hwik.kr/sitemap-officetel-index.xml
