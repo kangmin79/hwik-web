@@ -254,6 +254,67 @@ def find_year_ago_trade(d, cat):
         return None
 
 
+def find_5y_ago_trade(d, cat):
+    """price_history에서 5년 전 ±6개월 범위의 거래를 찾아 반환 (가장 가까운 월)"""
+    ph = d.get("price_history") or {}
+    trades = ph.get(cat) or []
+    if not trades:
+        return None
+    rt = (d.get("recent_trade") or {}).get(cat) or {}
+    recent_date = rt.get("date", "")
+    if not recent_date or len(recent_date) < 10:
+        return None
+    try:
+        ry, rm = int(recent_date[:4]), int(recent_date[5:7])
+        target_ym = (ry - 5) * 12 + rm
+        best = None
+        best_diff = 999
+        for t in trades:
+            td = t.get("date", "")
+            if not td or len(td) < 7:
+                continue
+            ty, tm = int(td[:4]), int(td[5:7])
+            diff = abs((ty * 12 + tm) - target_ym)
+            if diff <= 6 and diff < best_diff:
+                best_diff = diff
+                best = t
+        return best
+    except (ValueError, IndexError):
+        return None
+
+
+def calc_years_between(old_date, new_date):
+    """YYYY-MM-DD 두 날짜 사이 연수 (소수 포함). 실패 시 None."""
+    try:
+        from datetime import date as _d
+        y1, m1 = int(old_date[:4]), int(old_date[5:7])
+        day1 = int(old_date[8:10]) if len(old_date) >= 10 else 15
+        y2, m2 = int(new_date[:4]), int(new_date[5:7])
+        day2 = int(new_date[8:10]) if len(new_date) >= 10 else 15
+        d1 = _d(y1, m1, min(day1, 28))
+        d2 = _d(y2, m2, min(day2, 28))
+        diff_days = abs((d2 - d1).days)
+        if diff_days <= 0:
+            return None
+        return diff_days / 365.25
+    except (ValueError, IndexError, TypeError):
+        return None
+
+
+def calc_cagr(old_price, new_price, years):
+    """연평균 복리 상승률 (%). 소수점 1자리."""
+    if not old_price or not new_price or not years or years <= 0:
+        return None
+    try:
+        ratio = new_price / old_price
+        if ratio <= 0:
+            return None
+        cagr = (ratio ** (1.0 / years) - 1) * 100
+        return round(cagr, 1)
+    except (ValueError, ZeroDivisionError, OverflowError):
+        return None
+
+
 # kapt_code(소문자) → complex_type 맵 (빌드 시 로드)
 COMPLEX_TYPE_MAP: dict = {}
 
@@ -454,6 +515,30 @@ def build_fallback_html(d):
                 f'</div>'
             )
 
+    # 시계열 비교 (5년 전 거래와 비교 + 연평균 상승률) — 직거래 양쪽 제외
+    five_y_ago = find_5y_ago_trade(d, bc) if bc else None
+    _old5_kind = (five_y_ago or {}).get("kind") if five_y_ago else ""
+    cagr5 = None
+    if five_y_ago and bc and rt.get(bc) and _cur_kind != "직거래" and _old5_kind != "직거래":
+        cur_p5 = rt[bc].get("price", 0)
+        old_p5 = five_y_ago.get("price", 0)
+        cur_d5 = rt[bc].get("date", "")
+        old_d5 = five_y_ago.get("date", "")
+        yrs = calc_years_between(old_d5, cur_d5)
+        cagr5 = calc_cagr(old_p5, cur_p5, yrs) if yrs else None
+        if cagr5 is not None and cagr5 != 0 and cur_p5 != old_p5:
+            diff5 = cur_p5 - old_p5
+            direction5 = "상승" if diff5 > 0 else "하락"
+            lines.append(
+                f'<div style="margin:12px 0;padding:12px;background:#f0fdf4;border-radius:8px;font-size:13px;line-height:1.7;">'
+                f'<strong>5년 전 비교 (연평균 상승률)</strong><br>'
+                f'전용 {bc}㎡ 5년 전 거래가: {format_price(old_p5)} ({old_d5})<br>'
+                f'현재 거래가: {format_price(cur_p5)} ({cur_d5})<br>'
+                f'<span style="color:{"#dc2626" if diff5 > 0 else "#2563eb"};font-weight:600;">'
+                f'{format_price(abs(diff5))} {direction5} · 연평균 {abs(cagr5):.1f}% {direction5}</span>'
+                f'</div>'
+            )
+
     # 거래 활발도 (최근 1년간 거래 건수)
     from datetime import date as _date, timedelta as _td
     one_year_ago_str = (_date.today() - _td(days=365)).strftime("%Y-%m")
@@ -500,7 +585,9 @@ def build_fallback_html(d):
     if d.get("top_floor"):
         specs.append(f"최고 {d['top_floor']}층")
     pk = safe_int(d.get("parking"), 0)
-    if pk > 0:
+    tu = safe_int(d.get("total_units"), 0)
+    # 세대당 0.5대 미만은 DB 원본 오류 가능성 → 스펙 생략
+    if pk > 0 and (not tu or tu <= 0 or (pk / tu) >= 0.5):
         specs.append(f"주차 {pk:,}대")
     if d.get("heating"):
         specs.append(esc(d["heating"]))
@@ -604,6 +691,16 @@ def build_fallback_html(d):
             faq.append((f"{name} 1년 전 가격은?",
                 f"전용 {bc}㎡ 기준 1년 전 거래가는 {format_price(old_p)}({year_ago.get('date','')})이었으며, "
                 f"현재 {format_price(cur_p)}으로 {format_price(abs(diff))} {direction}했습니다."))
+    # 5년 전 CAGR FAQ (직거래 제외)
+    if five_y_ago and bc and rt.get(bc) and cagr5 is not None and cagr5 != 0:
+        cur_p5 = rt[bc].get("price", 0)
+        old_p5 = five_y_ago.get("price", 0)
+        if cur_p5 and old_p5 and cur_p5 != old_p5:
+            diff5 = cur_p5 - old_p5
+            direction5 = "상승" if diff5 > 0 else "하락"
+            faq.append((f"{name} 5년간 가격 변동은?",
+                f"전용 {bc}㎡ 기준 5년 전 거래가({five_y_ago.get('date','')})는 {format_price(old_p5)}이었고, "
+                f"현재 {format_price(cur_p5)}({rt[bc].get('date','')})으로 연평균 {abs(cagr5):.1f}% {direction5}했습니다."))
     if school:
         items = ", ".join(f"{esc(s.get('name',''))} 도보 {walk_min(s.get('distance'))}" for s in school[:3])
         faq.append((f"{name} 주변 학교는?", items))
@@ -656,6 +753,9 @@ def build_fallback_html(d):
             diff = cur_p - old_p
             direction = "상승" if diff > 0 else "하락"
             seo.append(f"1년 전 같은 면적 거래가 대비 {format_price(abs(diff))} {direction}했습니다.")
+    if five_y_ago and bc and rt.get(bc) and cagr5 is not None and cagr5 != 0:
+        direction5 = "상승" if cagr5 > 0 else "하락"
+        seo.append(f"최근 5년간 전용 {bc}㎡ 실거래가는 연평균 {abs(cagr5):.1f}% {direction5}했습니다.")
     if subway:
         names = ", ".join(f"{s.get('name','')}({clean_line(s.get('line',''))})" for s in subway[:2])
         seo.append(f"인근 지하철역은 {names}입니다.")
@@ -819,6 +919,20 @@ def build_jsonld(d):
                 "name": f"{name} 1년 전 가격은?",
                 "acceptedAnswer": {"@type": "Answer", "text": f"전용 {bc}㎡ 기준 1년 전 거래가는 {format_price(old_p)}({year_ago_jl.get('date','')})이었으며, 현재 {format_price(cur_p)}으로 {format_price(abs(diff))} {direction}했습니다."},
             })
+    five_y_ago_jl = find_5y_ago_trade(d, bc) if bc else None
+    if five_y_ago_jl and bc and rt.get(bc):
+        cur_p5 = rt[bc].get("price", 0)
+        old_p5 = five_y_ago_jl.get("price", 0)
+        if cur_p5 and old_p5 and cur_p5 != old_p5:
+            yrs_jl = calc_years_between(five_y_ago_jl.get("date", ""), rt[bc].get("date", ""))
+            cagr_jl = calc_cagr(old_p5, cur_p5, yrs_jl) if yrs_jl else None
+            if cagr_jl is not None and cagr_jl != 0:
+                direction5 = "상승" if cagr_jl > 0 else "하락"
+                faq_items.append({
+                    "@type": "Question",
+                    "name": f"{name} 5년간 가격 변동은?",
+                    "acceptedAnswer": {"@type": "Answer", "text": f"전용 {bc}㎡ 기준 5년 전 거래가({five_y_ago_jl.get('date','')})는 {format_price(old_p5)}이었고, 현재 {format_price(cur_p5)}({rt[bc].get('date','')})으로 연평균 {abs(cagr_jl):.1f}% {direction5}했습니다."},
+                })
     school = d.get("nearby_school") or []
     if school:
         a = ", ".join(f"{s.get('name','')} 도보 {walk_min(s.get('distance'))}" for s in school[:3])
@@ -1029,6 +1143,9 @@ def main():
 
     os.makedirs(DANJI_DIR, exist_ok=True)
 
+    # 로컬 프리뷰 모드: 환경변수 ONE_DANJI_ID 지정 시 해당 단지만 재생성 (삭제 없음)
+    ONE_DANJI_ID = os.environ.get("ONE_DANJI_ID", "").strip().lower()
+
     # complex_type 맵 로드 (주상복합·도시형 태그용)
     global COMPLEX_TYPE_MAP
     COMPLEX_TYPE_MAP = fetch_complex_type_map()
@@ -1086,18 +1203,21 @@ def main():
 
     print(f"{len(all_danji)}개 단지 로드 (기존 대비 {len(all_danji)/existing_html_count:.1%})" if existing_html_count else f"{len(all_danji)}개 단지 로드")
 
-    # ── 데이터 확보 후 기존 HTML 삭제 ──
-    old_count = 0
-    skip_count = 0
-    for f in os.listdir(DANJI_DIR):
-        if f.endswith(".html"):
-            try:
-                os.remove(os.path.join(DANJI_DIR, f))
-                old_count += 1
-            except PermissionError:
-                skip_count += 1  # VS Code 등이 파일 잠금 중 — 덮어쓰기로 처리됨
-    if old_count:
-        print(f"기존 {old_count}개 HTML 삭제" + (f" ({skip_count}개 잠금으로 스킵)" if skip_count else ""))
+    # ── 데이터 확보 후 기존 HTML 삭제 ── (ONE_DANJI_ID 모드에선 스킵)
+    if not ONE_DANJI_ID:
+        old_count = 0
+        skip_count = 0
+        for f in os.listdir(DANJI_DIR):
+            if f.endswith(".html"):
+                try:
+                    os.remove(os.path.join(DANJI_DIR, f))
+                    old_count += 1
+                except PermissionError:
+                    skip_count += 1  # VS Code 등이 파일 잠금 중 — 덮어쓰기로 처리됨
+        if old_count:
+            print(f"기존 {old_count}개 HTML 삭제" + (f" ({skip_count}개 잠금으로 스킵)" if skip_count else ""))
+    else:
+        print(f"[ONE_DANJI_ID={ONE_DANJI_ID}] 프리뷰 모드 — 기존 HTML 유지, 해당 단지만 덮어쓰기")
 
     # app.js 캐시 버전 — 오늘 날짜(KST) 기준으로 매일 자동 갱신
     global app_js_hash
@@ -1124,6 +1244,8 @@ def main():
         did = d.get("id", "")
         if not did:
             continue
+        if ONE_DANJI_ID and did.lower() != ONE_DANJI_ID:
+            continue
         rt = d.get("recent_trade") or {}
         cats = d.get("categories") or []
         has_trade = any(rt.get(c) for c in cats)
@@ -1137,6 +1259,8 @@ def main():
         with open(path, "w", encoding="utf-8") as f:
             f.write(page)
         count += 1
+        if ONE_DANJI_ID:
+            print(f"[프리뷰] 생성: {path}")
         if count % 1000 == 0:
             print(f"  {count}개 생성...")
 

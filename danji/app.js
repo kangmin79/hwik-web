@@ -24,6 +24,50 @@ let volumeChart = null;
 // ── 유틸 ──
 function esc(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
+// 5년 전 ±6개월 범위에서 가장 가까운 거래 1건 반환
+function find5yAgoTrade(tradeList, recentDate) {
+  if (!Array.isArray(tradeList) || tradeList.length === 0) return null;
+  if (!recentDate || recentDate.length < 10) return null;
+  const ry = parseInt(recentDate.slice(0,4));
+  const rm = parseInt(recentDate.slice(5,7));
+  if (!ry || !rm) return null;
+  const targetYm = (ry - 5) * 12 + rm;
+  let best = null;
+  let bestDiff = 999;
+  for (const t of tradeList) {
+    const td = t && t.date;
+    if (!td || td.length < 7) continue;
+    const ty = parseInt(td.slice(0,4));
+    const tm = parseInt(td.slice(5,7));
+    if (!ty || !tm) continue;
+    const diff = Math.abs((ty * 12 + tm) - targetYm);
+    if (diff <= 6 && diff < bestDiff) { bestDiff = diff; best = t; }
+  }
+  return best;
+}
+
+// 두 날짜(YYYY-MM-DD) 사이 연수 (소수 포함)
+function calcYearsBetween(oldDate, newDate) {
+  try {
+    const oldT = Date.parse(oldDate);
+    const newT = Date.parse(newDate);
+    if (!oldT || !newT) return null;
+    const diffDays = Math.abs(newT - oldT) / 86400000;
+    if (diffDays <= 0) return null;
+    return diffDays / 365.25;
+  } catch (e) { return null; }
+}
+
+// 연평균 복리 상승률 (%). 소수점 1자리.
+function calcCagr(oldPrice, newPrice, years) {
+  if (!oldPrice || !newPrice || !years || years <= 0) return null;
+  const ratio = newPrice / oldPrice;
+  if (ratio <= 0) return null;
+  const cagr = (Math.pow(ratio, 1 / years) - 1) * 100;
+  if (!isFinite(cagr)) return null;
+  return Math.round(cagr * 10) / 10;
+}
+
 function formatPrice(manwon) {
   if (!manwon) return '-';
   const uk = Math.floor(manwon / 10000);
@@ -401,6 +445,23 @@ function render() {
     }
   }
 
+  // 5년 CAGR 배지 — 직거래 양쪽 제외, 선택 평형·탭 기준
+  let cagrBadgeHtml = '';
+  const _tkfBadge = (currentPyeong || '') + (currentTab === '전세' ? '_jeonse' : (currentTab === '월세' ? '_wolse' : ''));
+  if (recentPrice && recentData && recentData.date && currentPyeong && currentTab !== '월세' && recentData.kind !== '직거래') {
+    const _phCagr = (d.price_history || {})[_tkfBadge] || [];
+    const _old5Badge = find5yAgoTrade(_phCagr, recentData.date);
+    if (_old5Badge && _old5Badge.price && _old5Badge.kind !== '직거래') {
+      const _yrsBadge = calcYearsBetween(_old5Badge.date, recentData.date);
+      const _cagrBadge = calcCagr(_old5Badge.price, recentPrice, _yrsBadge);
+      if (_cagrBadge !== null && _cagrBadge !== 0) {
+        const _cls = _cagrBadge > 0 ? 'up' : 'down';
+        const _sign = _cagrBadge > 0 ? '+' : '-';
+        cagrBadgeHtml = `<div class="price-card-change ${_cls}">5년 연평균 ${_sign}${Math.abs(_cagrBadge).toFixed(1)}%</div>`;
+      }
+    }
+  }
+
   // 최근 거래 목록 (현재 선택 평형 + 탭 기준)
   const tradeKeyFull = currentPyeong + (currentTab === '전세' ? '_jeonse' : (currentTab === '월세' ? '_wolse' : ''));
   const ph = (d.price_history || {})[tradeKeyFull] || [];
@@ -598,6 +659,19 @@ function render() {
   if (jeonseRate) {
     seoParts.push('전세가율은 ' + jeonseRate + '%입니다.');
   }
+  // 5년 CAGR SEO 문장 — 직거래 양쪽 제외
+  if (recentPrice && recentData && recentData.date && currentPyeong && currentTab !== '월세') {
+    const _phListSeo = (d.price_history || {})[tradeKeyFull] || [];
+    const _old5seo = find5yAgoTrade(_phListSeo, recentData.date);
+    if (_old5seo && _old5seo.price && recentData.kind !== '직거래' && _old5seo.kind !== '직거래') {
+      const _yrsSeo = calcYearsBetween(_old5seo.date, recentData.date);
+      const _cagrSeo = calcCagr(_old5seo.price, recentPrice, _yrsSeo);
+      if (_cagrSeo !== null && _cagrSeo !== 0 && recentPrice !== _old5seo.price) {
+        const _dirSeo = _cagrSeo > 0 ? '상승' : '하락';
+        seoParts.push('최근 5년간 전용 ' + currentPyeong + '㎡ 실거래가는 연평균 ' + Math.abs(_cagrSeo).toFixed(1) + '% ' + _dirSeo + '했습니다.');
+      }
+    }
+  }
 
   const seoFull = seoParts.join(' ');
   const seoShort = seoFull.length > 120 ? seoFull.slice(0,120) : seoFull;
@@ -645,12 +719,32 @@ function render() {
     }
     if (jeonseRate) faqItems.push({ q: `${d.complex_name} 전세가율은?`, a: `${d.complex_name}의 전세가율은 ${jeonseRate}%입니다.` });
     if (highPrice) faqItems.push({ q: `${d.complex_name} 최근 5년 최고가는?`, a: `최근 5년 최고가는 ${formatPrice(highPrice)}입니다.${highData && highData.date ? ' ('+highData.date+')' : ''}` });
+    // 5년 CAGR FAQ — 직거래 양쪽 제외
+    if (recentPrice && recentData && recentData.date && currentPyeong) {
+      const _phList = (d.price_history || {})[tradeKeyFull] || [];
+      const _old5 = find5yAgoTrade(_phList, recentData.date);
+      if (_old5 && _old5.price && recentData.kind !== '직거래' && _old5.kind !== '직거래') {
+        const _yrs = calcYearsBetween(_old5.date, recentData.date);
+        const _cagr = calcCagr(_old5.price, recentPrice, _yrs);
+        if (_cagr !== null && _cagr !== 0 && recentPrice !== _old5.price) {
+          const _dir = _cagr > 0 ? '상승' : '하락';
+          faqItems.push({
+            q: `${d.complex_name} 5년간 가격 변동은?`,
+            a: `전용 ${currentPyeong}㎡ 기준 5년 전 거래가(${_old5.date})는 ${formatPrice(_old5.price)}이었고, 현재 ${formatPrice(recentPrice)}(${recentData.date})으로 연평균 ${Math.abs(_cagr).toFixed(1)}% ${_dir}했습니다.`
+          });
+        }
+      }
+    }
   }
   // 매매/전세/월세 공통 FAQ
   if (subway.length > 0) faqItems.push({ q: `${d.complex_name} 근처 지하철역은?`, a: subway.map(s => `<span style="color:${lineColor(s.line)};font-weight:500;">${esc(s.name)}</span>(${esc(shortLine(s.line))}) 도보 ${walkMin(s.distance)}`).join(', '), html: true });
   if (parseInt(d.parking || 0) > 0 && d.total_units) {
-    const _ratio = (parseInt(d.parking) / d.total_units).toFixed(1);
-    faqItems.push({ q: `${d.complex_name} 주차 대수는?`, a: `총 ${parseInt(d.parking).toLocaleString()}대 (세대당 ${_ratio}대)입니다.` });
+    const _parkingNum = parseInt(d.parking);
+    const _ratioNum = _parkingNum / d.total_units;
+    // 세대당 0.5대 미만은 DB 원본 오류 가능성 높음 (법정 최소 주차도 이 이상) → FAQ 생략
+    if (_ratioNum >= 0.5) {
+      faqItems.push({ q: `${d.complex_name} 주차 대수는?`, a: `총 ${_parkingNum.toLocaleString()}대 (세대당 ${_ratioNum.toFixed(1)}대)입니다.` });
+    }
   }
   if (d.heating) faqItems.push({ q: `${d.complex_name} 난방 방식은?`, a: `${d.heating}입니다.` });
   if (d.builder) faqItems.push({ q: `${d.complex_name} 시공사는?`, a: `${esc(d.builder)}입니다.` });
@@ -703,6 +797,7 @@ function render() {
         <div class="price-card-value">${recentPrice ? formatPrice(recentPrice) : '-'}</div>
         <div class="price-card-sub">${recentData && recentData.floor ? recentData.floor + '층' : ''}${recentData && recentData.date ? ' · ' + recentData.date : ''}</div>
         ${changeHtml}
+        ${cagrBadgeHtml}
       </div>
       <div class="price-card secondary" onclick="highlightChartPoint('high')" style="cursor:pointer;transition:transform .15s,background .15s,border-color .15s;" ontouchstart="this.style.transform='scale(.97)';this.style.background='#fef2f2';this.style.borderColor='#f87171';" ontouchend="this.style.transform='';this.style.background='';this.style.borderColor='';">
         <div style="display:flex;justify-content:space-between;align-items:center;"><span class="price-card-label">최근 5년 최고${currentTab === '전세' ? ' 전세가' : '가'}</span>${highData ? kindBadge(highData.kind || '') : ''}</div>
