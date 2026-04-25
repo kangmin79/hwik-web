@@ -5,7 +5,7 @@
 <meta name="description" content="강남구 역삼동 역삼역센트럴푸르지오시티 2019년 준공 400호 오피스텔. 최근 매매 전용 18㎡ 1억 8,500만(2026-03-21). 국토부 실거래.">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
 <link rel="canonical" href="https://hwik.kr/officetel/서울-강남구-역삼동-역삼역센트럴푸르지오시티-o5142614.html">
-<meta property="article:modified_time" content="2026-04-26T07:36:26+09:00">
+<meta property="article:modified_time" content="2026-04-26T07:43:50+09:00">
 <meta property="article:section" content="오피스텔 실거래">
 <meta property="og:type" content="article"><meta property="og:site_name" content="휙"><meta property="og:locale" content="ko_KR">
 <meta property="og:title" content="역삼역센트럴푸르지오시티 시세 · 서울 강남구 오피스텔 | 휙"><meta property="og:description" content="강남구 역삼동 역삼역센트럴푸르지오시티 2019년 준공 400호 오피스텔. 최근 매매 전용 18㎡ 1억 8,500만(2026-03-21). 국토부 실거래.">
@@ -35,9 +35,9 @@ table.trade-list td.trade-info{flex:1;min-width:0;}
 </style>
 
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="stylesheet" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css" media="(min-width: 768px)">
+<link rel="stylesheet" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css">
 <style id="design-override">
-@media (min-width: 768px) {
+@media all {
   html, body {
     background: #F0EEE6 !important;
     font-family: Pretendard, -apple-system, BlinkMacSystemFont,
@@ -455,8 +455,7 @@ table.trade-list td.trade-info{flex:1;min-width:0;}
 </style>
 <script>
 (function(){
-  // PC(≥768px) 전용 — 모바일은 D 디자인 JS 일체 미적용
-  if (!window.matchMedia('(min-width: 768px)').matches) return;
+  // PC + 모바일 모두 D 디자인 JS 적용 (미디어 가드 해제)
   function enrichHeaderSub() {
     const sub = document.querySelector('header.header .header-sub');
     if (!sub || sub.dataset.enriched) return;
@@ -631,12 +630,8 @@ table.trade-list td.trade-info{flex:1;min-width:0;}
       rows.push(`<div class="loc-row"><div class="loc-items">${items}</div></div>`);
     }
     sec.innerHTML = rows.join('');
-    // 데스크탑(≥768px): 헤더 우측 컬럼으로, 모바일: 헤더 뒤(기존 위치)
-    if (window.matchMedia('(min-width: 768px)').matches) {
-      header.appendChild(sec);
-    } else {
-      header.insertAdjacentElement('afterend', sec);
-    }
+    // PC/모바일 통일: 헤더 우측 컬럼으로 (D 디자인)
+    header.appendChild(sec);
   }
 
   function run() {
