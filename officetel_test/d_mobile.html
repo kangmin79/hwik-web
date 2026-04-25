@@ -5,7 +5,7 @@
 <meta name="description" content="강남구 역삼동 역삼역센트럴푸르지오시티 2019년 준공 400호 오피스텔. 최근 매매 전용 18㎡ 1억 8,500만(2026-03-21). 국토부 실거래.">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
 <link rel="canonical" href="https://hwik.kr/officetel/서울-강남구-역삼동-역삼역센트럴푸르지오시티-o5142614.html">
-<meta property="article:modified_time" content="2026-04-25T13:29:27+09:00">
+<meta property="article:modified_time" content="2026-04-25T14:03:36+09:00">
 <meta property="article:section" content="오피스텔 실거래">
 <meta property="og:type" content="article"><meta property="og:site_name" content="휙"><meta property="og:locale" content="ko_KR">
 <meta property="og:title" content="역삼역센트럴푸르지오시티 시세 · 서울 강남구 오피스텔 | 휙"><meta property="og:description" content="강남구 역삼동 역삼역센트럴푸르지오시티 2019년 준공 400호 오피스텔. 최근 매매 전용 18㎡ 1억 8,500만(2026-03-21). 국토부 실거래.">
@@ -316,11 +316,20 @@ table.trade-list td.trade-info{flex:1;min-width:0;}
     background: #94a3b8; color: #fff; font-size: 10px; font-weight: 600;
     line-height: 1.3; letter-spacing: 0.1px; opacity: 0.78;
   }
-  /* 학교 뱃지: 채움 제거 — 외곽선만 */
+  /* 학교 뱃지: 은은한 태그 톤 (초/중/고 구분) */
   .location-section .loc-item .type-badge {
     display: inline-block; padding: 0 5px; border-radius: 3px;
     background: transparent; color: #64748b; font-size: 10px; font-weight: 600;
     line-height: 1.3; border: 1px solid #cbd5e1;
+  }
+  .location-section .loc-item .type-badge.type-elem {
+    background: #d1fae5 !important; color: #047857 !important; border-color: #6ee7b7 !important;
+  }
+  .location-section .loc-item .type-badge.type-mid {
+    background: #dbeafe !important; color: #1d4ed8 !important; border-color: #93c5fd !important;
+  }
+  .location-section .loc-item .type-badge.type-high {
+    background: #fef3c7 !important; color: #b45309 !important; border-color: #fcd34d !important;
   }
   .location-section .loc-item .nm { color: #334155; font-weight: 500; }
   .location-section .loc-item .mn { color: #9ca3af; font-size: 11px; font-weight: 400; }
@@ -438,7 +447,7 @@ table.trade-list td.trade-info{flex:1;min-width:0;}
   article > .tabs { font-size: 15px !important; }
   article > #area-price-cards .price-card-value { font-size: 24px !important; }
   article > .chart-section { padding: 0 8px; }
-  article > .section { padding: 20px 24px !important; }
+  article > .section { padding: 20px 8px !important; }
   article > p.seo-text { margin: 0 24px 16px !important; font-size: 13px !important; line-height: 1.85 !important; }
   article > .seo-section { padding: 24px !important; }
   body { padding-bottom: 40px; }
@@ -616,7 +625,8 @@ table.trade-list td.trade-info{flex:1;min-width:0;}
     if (school.length) {
       const items = school.map(s => {
         const tip = `${s.typ} ${s.name} 도보 ${s.time}`.replace(/"/g, '&quot;');
-        return `<span class="loc-item" title="${tip}"><span class="type-badge">${s.typ}</span><span class="nm">${s.name}</span><span class="mn">${s.time}</span></span>`;
+        const cls = s.typ === '초' ? ' type-elem' : s.typ === '중' ? ' type-mid' : s.typ === '고' ? ' type-high' : '';
+        return `<span class="loc-item" title="${tip}"><span class="type-badge${cls}">${s.typ}</span><span class="nm">${s.name}</span><span class="mn">${s.time}</span></span>`;
       }).join('');
       rows.push(`<div class="loc-row"><div class="loc-items">${items}</div></div>`);
     }
@@ -664,7 +674,6 @@ table.trade-list td.trade-info{flex:1;min-width:0;}
 <div class="tag-line" style="margin-top:4px;gap:4px;"><span class="school-tag" style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.85);margin-right:8px;"><span class="school-type" style="display:inline-block;padding:0 5px;border-radius:8px;font-size:9px;font-weight:600;background:rgba(163,212,104,0.3);color:#d7ebbb;">고</span><span style="color:rgba(255,255,255,0.85);">진선여자고등학교</span><span style="color:rgba(255,255,255,0.5);font-size:11px;">9분</span></span><span class="tag-sep">·</span><span class="school-tag" style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.85);margin-right:8px;"><span class="school-type" style="display:inline-block;padding:0 5px;border-radius:8px;font-size:9px;font-weight:600;background:rgba(163,212,104,0.3);color:#d7ebbb;">중</span><span style="color:rgba(255,255,255,0.85);">진선여자중학교</span><span style="color:rgba(255,255,255,0.5);font-size:11px;">9분</span></span><span class="tag-sep">·</span><span class="school-tag" style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.85);margin-right:8px;"><span class="school-type" style="display:inline-block;padding:0 5px;border-radius:8px;font-size:9px;font-weight:600;background:rgba(163,212,104,0.3);color:#d7ebbb;">초</span><span style="color:rgba(255,255,255,0.85);">서울도성초등학교</span><span style="color:rgba(255,255,255,0.5);font-size:11px;">9분</span></span></div>
 </header>
 
-<h2 class="section-title" style="padding:14px 16px 0;font-size:15px;color:var(--dark);margin:0;">시세</h2>
 <div class="tabs">
 <div class="tab active" data-tab="월세">월세</div>
 <div class="tab" data-tab="전세">전세</div>
@@ -1206,14 +1215,12 @@ function setupMapLazyLoad() {
 </script>
 <style id="d-mobile-fix">
 @media (max-width: 600px) {
-  /* 헤더: 세로 스택으로 풀어 H1/sub/뱃지 영역 충돌 해소 */
   article > .header {
     flex-direction: column !important;
     align-items: stretch !important;
     gap: 10px !important;
     padding: 18px 18px !important;
   }
-  /* H1: 한 줄 강제 → 정상 줄바꿈 허용, ellipsis 제거 */
   article > .header > .header-top .header-name,
   article > .header .header-name {
     white-space: normal !important;
@@ -1223,14 +1230,12 @@ function setupMapLazyLoad() {
     font-size: 22px !important;
     line-height: 1.3 !important;
   }
-  /* 헤더 sub: flex 너비 풀어주기 */
   article > .header .header-top { gap: 10px !important; }
   article > .header .header-sub {
     font-size: 13px !important;
     white-space: normal !important;
     line-height: 1.55 !important;
   }
-  /* location-section 우측 220px 컬럼 → 풀폭 행으로 */
   article > .header > .location-section {
     width: 100% !important;
     margin-top: 0 !important;
@@ -1248,16 +1253,12 @@ function setupMapLazyLoad() {
   article > .header > .location-section .loc-item .type-badge {
     font-size: 10px !important; padding: 2px 5px !important;
   }
-  /* 카드 컨테이너 풀폭 */
   main.wrap { max-width: 100% !important; margin: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
-  /* 섹션 패딩 축소 — 거래 카드 풀폭 */
   article > .section { padding: 16px 0 !important; }
   article > .section .section-title { padding-left: 12px !important; }
   article > p.seo-text { margin: 0 12px 14px !important; }
   article > .seo-section { padding: 18px 12px !important; }
-  /* 거래 카드 */
   article .trade-item { padding: 12px !important; }
-  /* 가격 카드 폰트 살짝 축소 */
   article > #area-price-cards .price-card-value { font-size: 22px !important; }
 }
 </style>
