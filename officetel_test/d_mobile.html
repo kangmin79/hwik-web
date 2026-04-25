@@ -1250,10 +1250,11 @@ function setupMapLazyLoad() {
   }
   /* 카드 컨테이너 풀폭 */
   main.wrap { max-width: 100% !important; margin: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
-  /* 섹션 패딩 축소 */
-  article > .section { padding: 16px 18px !important; }
-  article > p.seo-text { margin: 0 18px 14px !important; }
-  article > .seo-section { padding: 18px !important; }
+  /* 섹션 패딩 축소 — 거래 카드 풀폭 */
+  article > .section { padding: 16px 0 !important; }
+  article > .section .section-title { padding-left: 12px !important; }
+  article > p.seo-text { margin: 0 12px 14px !important; }
+  article > .seo-section { padding: 18px 12px !important; }
   /* 거래 카드 */
   article .trade-item { padding: 12px !important; }
   /* 가격 카드 폰트 살짝 축소 */
