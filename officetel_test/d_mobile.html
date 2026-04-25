@@ -1204,4 +1204,61 @@ function setupMapLazyLoad() {
   obs.observe(el);
 }
 </script>
+<style id="d-mobile-fix">
+@media (max-width: 600px) {
+  /* 헤더: 세로 스택으로 풀어 H1/sub/뱃지 영역 충돌 해소 */
+  article > .header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    padding: 18px 18px !important;
+  }
+  /* H1: 한 줄 강제 → 정상 줄바꿈 허용, ellipsis 제거 */
+  article > .header > .header-top .header-name,
+  article > .header .header-name {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    max-width: 100% !important;
+    font-size: 22px !important;
+    line-height: 1.3 !important;
+  }
+  /* 헤더 sub: flex 너비 풀어주기 */
+  article > .header .header-top { gap: 10px !important; }
+  article > .header .header-sub {
+    font-size: 13px !important;
+    white-space: normal !important;
+    line-height: 1.55 !important;
+  }
+  /* location-section 우측 220px 컬럼 → 풀폭 행으로 */
+  article > .header > .location-section {
+    width: 100% !important;
+    margin-top: 0 !important;
+    padding-top: 8px !important;
+    border-top: 1px solid #eef0f4 !important;
+  }
+  article > .header > .location-section .loc-row {
+    display: flex !important;
+    padding: 4px 0 !important;
+    font-size: 12px !important;
+  }
+  article > .header > .location-section .loc-item .nm { font-size: 12px !important; }
+  article > .header > .location-section .loc-item .mn { font-size: 11px !important; }
+  article > .header > .location-section .loc-item .line-badge,
+  article > .header > .location-section .loc-item .type-badge {
+    font-size: 10px !important; padding: 2px 5px !important;
+  }
+  /* 카드 컨테이너 풀폭 */
+  main.wrap { max-width: 100% !important; margin: 0 !important; border-radius: 0 !important; box-shadow: none !important; }
+  /* 섹션 패딩 축소 */
+  article > .section { padding: 16px 18px !important; }
+  article > p.seo-text { margin: 0 18px 14px !important; }
+  article > .seo-section { padding: 18px !important; }
+  /* 거래 카드 */
+  article .trade-item { padding: 12px !important; }
+  /* 가격 카드 폰트 살짝 축소 */
+  article > #area-price-cards .price-card-value { font-size: 22px !important; }
+}
+</style>
 </body></html>
+

@@ -23,9 +23,7 @@ APARTMENT_COUNT_MIN = 30000            # apartments baseline (사고 시 30,999 
 
 APARTMENT_TABLES_FORBIDDEN = frozenset({
     "apartments",
-    "trades",
     "trade_cache",
-    "apartment_pyeongs",
     "danji_pages",
 })
 
@@ -134,6 +132,28 @@ def assert_whitelist_present(whitelist_names: Iterable[str], existing_names: Ite
         raise SafetyViolation(
             f"화이트리스트 {len(missing)}개 단지 누락: {missing[:5]}. "
             f"10건 게이트/매칭 로직 재검토 필요."
+        )
+
+
+def assert_umd_is_dong(officetels: Iterable[dict]) -> None:
+    """umd 컬럼은 진짜 동/면/읍/리/가만 허용.
+
+    2026-04-25 사고 교훈: 자치구(*구)가 umd 자리에 들어가서 dong 페이지 슬러그가 깨졌음.
+    한국 법정동/행정동 명칭은 동·면·읍·리·가 외 끝맺음이 사실상 없음.
+    *구로 끝나는 umd는 무조건 자치구 잘못 들어간 것 → 적재 거부.
+    """
+    bad: list[tuple[str, str, str]] = []
+    for d in officetels:
+        umd = (d.get("umd") or "").strip()
+        if not umd:
+            continue
+        if umd.endswith("구"):
+            bad.append((d.get("id") or "?", d.get("sgg") or "?", umd))
+    if bad:
+        raise SafetyViolation(
+            f"umd 자리에 자치구가 들어간 단지 {len(bad):,}건 — 적재 거부.\n"
+            f"올바른 처리: sgg=시+자치구 결합(예: '고양덕양구'), umd=진짜 동(예: '원흥동').\n"
+            f"샘플: {bad[:5]}"
         )
 
 

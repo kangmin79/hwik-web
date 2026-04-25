@@ -159,8 +159,15 @@ Deno.serve(async (req) => {
       }
 
       // 카테고리 체크 — wanted_categories 명시 시만 체크 (빈 배열이면 모든 카테고리 허용)
+      // "원룸/투룸(room)" 요청 시 15평 이하 apartment/officetel도 허용 (중개사 관행)
       const wantedCats = client.wanted_categories || [];
-      if (wantedCats.length > 0 && prop.category && !wantedCats.includes(prop.category)) return false;
+      if (wantedCats.length > 0 && prop.category && !wantedCats.includes(prop.category)) {
+        const roomCompat =
+          wantedCats.includes('room') &&
+          ['apartment','officetel'].includes(prop.category) &&
+          (() => { const a = parseFloat(String(prop.area || '')); return a > 0 && a <= 15; })();
+        if (!roomCompat) return false;
+      }
 
       // 지역 체크 — 구 이름 양쪽 다 있으면 엄격 비교 우선, 매물 구 미상일 때만 좌표 폴백
       const clientLoc = [cp.location, memo].join(' ');

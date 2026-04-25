@@ -223,6 +223,30 @@
 - 추측/계산 데이터 절대 금지 — 모든 데이터 출처: 국토교통부
 - 데이터 없는 항목은 표시 안 함
 
+### 오피스텔 SEO 거래량 기준
+- **최근 5년 실거래(매매+전세+월세 합산) 10건 이상** 단지만 DB에 존재·URL 생성
+- 10건 미만은 **수집 단계에서 insert 자체 금지** (나중에 제외 처리 X, 처음부터 안 들임)
+- 이유: 저품질 공백 페이지로 Google 평가 하락 + 사용자 가치 없음
+- 5년은 rolling (2026 기준이면 `deal_year >= 2021`)
+- dong/gu/ranking 페이지는 포함되는 단지가 있는 경우에만 생성 (0건 dong/gu은 페이지 자체 미생성)
+- 기준 미달 단지는 `officetels`·`officetel_pyeongs`·`officetel_trades` 모두 미적재
+
+### 오피스텔 게이트 (3중 방어 — 2026-04-24 확정)
+- **gate1**: 5년 실거래 ≥ 10 (위와 동일)
+- **gate2**: `bld_nm` 필수 (건축물대장 명칭). 빈 단지는 영구 차단
+  - 이유: 이름 없는 단지는 카드 표시·검색·SEO 모두 저품질
+  - 80%+ 누락 단지는 건축물대장과 실거래 모두 이름 미부여 — 진짜 무명
+- **영구 블랙리스트**: `scripts/officetel_sync/blacklist_mgm.json` (git tracked)
+  - 한 번 게이트 탈락한 mgm은 재수집 시 자동 차단 (조회 비용 절약 + 일관성)
+  - 차단 사유 기록: `trade_below_min` / `no_bld_nm`
+- **stage6 적재 직전 SafetyViolation 검증**: 위 3개 위반 시 INSERT 중단
+
+### 오피스텔 DB 현황 (2026-04-24 적재 완료)
+- `officetels`: 9,833 (좌표 100%, bld_nm 100%, trade_count ≥ 10)
+- `officetel_trades`: 1,275,569 (dedup 후)
+- `officetel_pyeongs`: 0 (현 stage4 파이프라인에 pyeongs 생성 로직 없음 — 추후 추가)
+- 영구 차단: 8,867 mgm (no_bld_nm 1,359 + trade_below_min 7,508)
+
 ### 배포
 - git push origin main → GitHub Pages 자동 배포
 - 승인 묻지 말고 바로 배포

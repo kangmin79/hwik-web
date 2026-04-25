@@ -262,10 +262,15 @@ export function parseAreaCondition(text: string): AreaCondition {
     if (maxMatch2) result.maxArea = parseInt(maxMatch2[1]);
   }
 
-  // "넓은 집" → 30평 이상
-  if (!result.minArea && /넓은|넓고|큰\s*집|대형/.test(text)) result.minArea = 30;
-  // "소형" → 15평 이하
-  if (!result.maxArea && /소형|작은|좁은|소규모/.test(text)) result.maxArea = 15;
+  // "넓은 집" → 35평 이상 (중개사 관행: 대형 = 전용 85㎡ 초과 ≈ 30평대 후반~)
+  if (!result.minArea && /넓은|넓고|큰\s*집|대형/.test(text)) result.minArea = 35;
+  // "소형" → 20평 이하 (중개사 관행: 소형 = 전용 60㎡ 이하 ≈ 20평 이하)
+  if (!result.maxArea && /소형|작은|좁은|소규모/.test(text)) result.maxArea = 20;
+  // "중형" → 20~35평
+  if (!result.minArea && !result.maxArea && /중형|적당한/.test(text)) {
+    result.minArea = 20;
+    result.maxArea = 35;
+  }
 
   // 숫자만 ("25평") → ±5
   if (!result.minArea && !result.maxArea) {

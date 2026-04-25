@@ -25,6 +25,7 @@ from .local_store import read_jsonl, write_json
 from .safety_guards import (
     SafetyViolation,
     assert_baseline_unchanged,
+    assert_umd_is_dong,
     snapshot_apartment_baseline,
 )
 
@@ -85,6 +86,9 @@ def run(args) -> int:
             f"  trade_count<{MIN_TRADE_COUNT_5Y}: {len(bad_trade):,}건\n"
             f"  → stage4_normalize 재실행으로 정리 필요"
         )
+
+    # umd 자리에 자치구(*구)가 들어가는 사고 방지 (2026-04-25 사고 재발 방지)
+    assert_umd_is_dong(officetels)
 
     # trades 측 보호: officetels 화이트리스트에 없는 officetel_id는 제거
     valid_ids = {d["id"] for d in officetels}

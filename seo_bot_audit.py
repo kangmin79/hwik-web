@@ -198,23 +198,34 @@ def main():
     ap.add_argument("--limit-dong",    type=int, default=50)
     ap.add_argument("--limit-gu",      type=int, default=50)
     ap.add_argument("--limit-ranking", type=int, default=70)
+    ap.add_argument("--limit-danji",   type=int, default=0)
+    ap.add_argument("--only",          choices=["dong","gu","ranking","danji"], default=None,
+                    help="특정 유형만 감사")
     args = ap.parse_args()
 
     random.seed(42)
     dong = json.loads(Path("dong-index.json").read_text(encoding="utf-8"))
     gu   = json.loads(Path("gu-index.json").read_text(encoding="utf-8"))
     rank = json.loads(Path("ranking-index.json").read_text(encoding="utf-8"))
+    danji_stems = [f.stem for f in Path("danji").glob("*.html") if f.stem != "index"]
 
-    dong_s = random.sample(dong, min(args.limit_dong, len(dong)))
-    gu_s   = random.sample(gu,   min(args.limit_gu, len(gu)))
-    rank_s = random.sample(rank, min(args.limit_ranking, len(rank)))
+    dong_s  = random.sample(dong, min(args.limit_dong, len(dong)))
+    gu_s    = random.sample(gu,   min(args.limit_gu, len(gu)))
+    rank_s  = random.sample(rank, min(args.limit_ranking, len(rank)))
+    danji_s = random.sample(danji_stems, min(args.limit_danji, len(danji_stems))) if args.limit_danji else []
 
-    urls = (
-        [(f"{HOST}/dong/{s}.html", "dong") for s in dong_s] +
-        [(f"{HOST}/gu/{s}.html",   "gu")   for s in gu_s] +
-        [(f"{HOST}/ranking/{s}.html", "ranking") for s in rank_s]
-    )
-    print(f"대상: {len(urls)}개 (dong {len(dong_s)} / gu {len(gu_s)} / ranking {len(rank_s)})")
+    all_urls = {
+        "dong":    [(f"{HOST}/dong/{s}.html", "dong") for s in dong_s],
+        "gu":      [(f"{HOST}/gu/{s}.html",   "gu")   for s in gu_s],
+        "ranking": [(f"{HOST}/ranking/{s}.html", "ranking") for s in rank_s],
+        "danji":   [(f"{HOST}/danji/{s}.html", "danji") for s in danji_s],
+    }
+    if args.only:
+        urls = all_urls[args.only]
+    else:
+        urls = all_urls["dong"] + all_urls["gu"] + all_urls["ranking"] + all_urls["danji"]
+
+    print(f"대상: {len(urls)}개 (dong {len(dong_s)} / gu {len(gu_s)} / ranking {len(rank_s)} / danji {len(danji_s)})")
     print(f"UA: {UA[:60]}...")
     print()
 
@@ -273,7 +284,7 @@ def main():
 
     # 유형별 평균
     print(f"\n[유형별 본문 크기 평균]")
-    for kind in ("dong", "gu", "ranking"):
+    for kind in ("dong", "gu", "ranking", "danji"):
         rs = [r for r in reports if r["kind"] == kind]
         if not rs: continue
         avg_body  = sum(r["info"].get("body_chars", 0) for r in rs) // len(rs)
