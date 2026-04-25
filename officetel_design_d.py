@@ -11,7 +11,7 @@ DESIGN_D_BLOCK = r"""
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css">
 <style id="design-override">
-@media all {
+@media (min-width: 1px) {
   html, body {
     background: #F0EEE6 !important;
     font-family: Pretendard, -apple-system, BlinkMacSystemFont,
