@@ -426,6 +426,59 @@ DESIGN_D_BLOCK = r"""
   article > .seo-section { padding: 24px !important; }
   body { padding-bottom: 40px; }
 }
+/* 모바일(<768px): 헤더를 세로 1열로 — H1 풀폭, location-section 헤더 아래로 */
+@media (max-width: 767px) {
+  main.wrap {
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  article > .header {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+    padding: 18px 16px !important;
+  }
+  article > .header > .header-top {
+    width: 100% !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+  article > .header > .header-top .header-name {
+    font-size: 20px !important;
+    white-space: normal !important;
+    text-overflow: clip !important;
+    overflow: visible !important;
+    line-height: 1.3 !important;
+  }
+  article > .header .header-sub {
+    font-size: 12.5px !important;
+    line-height: 1.5 !important;
+  }
+  /* location-section 헤더 우측 → 헤더 아래 풀폭으로 */
+  article > .header > .location-section {
+    width: 100% !important;
+    margin-top: 4px !important;
+  }
+  article > .header > .location-section .loc-row {
+    display: flex !important;
+    font-size: 12px !important;
+    padding: 3px 0 !important;
+  }
+  article > .header > .location-section .loc-item .line-badge,
+  article > .header > .location-section .loc-item .type-badge {
+    font-size: 10px !important; padding: 1px 5px !important;
+  }
+  article > .header > .location-section .loc-item .nm { font-size: 12px !important; }
+  article > .header > .location-section .loc-item .mn { font-size: 11px !important; }
+  /* breadcrumb 모바일 컴팩트 */
+  article > .breadcrumb { padding: 10px 16px !important; }
+  /* 본문 좌우 여백 */
+  article > .section { padding: 16px !important; }
+  article > p.seo-text { margin: 0 16px 12px !important; }
+  article > .seo-section { padding: 16px !important; }
+}
 </style>
 <script>
 (function(){
