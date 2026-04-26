@@ -21,7 +21,7 @@ MOLIT_BLDG_RECAP = "https://apis.data.go.kr/1613000/BldRgstHubService/getBrRecap
 MOLIT_BLDG_TITLE = "https://apis.data.go.kr/1613000/BldRgstHubService/getBrTitleInfo"
 MOLIT_BLDG_EXPOS = "https://apis.data.go.kr/1613000/BldRgstHubService/getBrExposPubuseAreaInfo"
 
-MOLIT_NUM_OF_ROWS = 1000
+MOLIT_NUM_OF_ROWS = 5000               # 2026-04-27: 1000→5000 (페이지 호출 1/3~1/5, 아파트 9999 검증됨)
 MOLIT_TIMEOUT_SEC = 15
 MOLIT_MAX_RETRY = 3
 MOLIT_PAGE_CAP = 3000                  # v6 파이프라인 기준 (2026-04-17 헬리오시티 잘림 사고 반영)
