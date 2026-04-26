@@ -38,17 +38,25 @@ def get_pool() -> urllib3.PoolManager:
                     retries=retry,
                     timeout=urllib3.Timeout(connect=5, read=20),
                     headers={
-                        "User-Agent": "curl/8.0.1",
-                        "Accept": "*/*",         # 국토부 BldRgstHubService 가 없으면 빈 응답
+                        # 2026-04-26: 국토부 WAF 가 'curl/*' UA 차단 시작 → 400 Request Blocked
+                        # 표준 브라우저 UA 로 회피. Accept: */* 는 BldRgstHubService 빈 응답 방지.
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                                      "AppleWebKit/537.36 (KHTML, like Gecko) "
+                                      "Chrome/124.0.0.0 Safari/537.36",
+                        "Accept": "*/*",
                     },
                 )
     return _POOL
 
 
 def get(url: str, params: dict | None = None) -> bytes:
-    """단일 GET. 타임아웃·재시도는 호출자 책임."""
+    """단일 GET. 타임아웃·재시도는 호출자 책임.
+
+    safe="" — 국토부 service key 의 '+', '/', '=' 도 모두 percent-encoding.
+    (이전 safe="+/=" 가 키를 raw 로 전송 → '+' 가 space 로 해석돼 400 Request Blocked)
+    """
     if params:
-        query = urllib.parse.urlencode(params, safe="+/=")
+        query = urllib.parse.urlencode(params, safe="")
         url = f"{url}?{query}"
     pool = get_pool()
     resp = pool.request("GET", url)

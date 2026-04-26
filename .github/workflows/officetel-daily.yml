@@ -1,0 +1,179 @@
+name: 오피스텔 일일 동기화
+
+# 매일 KST 03시(UTC 18시)에 17개 시도 병렬 수집 → 매칭 → DB UPSERT → 페이지·sitemap 재빌드.
+# **신규 단지 발굴 X** (기존 9,833 단지에 매칭되는 거래만). URL 영구 동결 규칙 준수.
+# 코드: scripts/officetel_sync/daily_trades.py
+
+on:
+  schedule:
+    - cron: '0 18 * * *'   # UTC 18:00 = KST 03:00
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Phase 5~7 스킵 (DB 쓰기 없음, 통계만 — 첫 수동 실행 권장)'
+        required: false
+        default: 'true'
+        type: choice
+        options: ['true', 'false']
+
+concurrency:
+  group: officetel-daily
+  cancel-in-progress: false   # 수집 중 중단 시 raw 손실 위험 → 직렬화
+
+permissions:
+  contents: write
+
+env:
+  GOV_SERVICE_KEY: ${{ secrets.GOV_SERVICE_KEY }}
+  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+  SMTP_USER: ${{ secrets.SMTP_USER }}
+  SMTP_PASS: ${{ secrets.SMTP_PASS }}
+  REPORT_EMAIL: bgtrfvcdewsx77@gmail.com
+  PYTHONIOENCODING: utf-8
+  PYTHONUNBUFFERED: '1'
+
+jobs:
+  # ── 17개 시도 병렬 수집·매칭·UPSERT ──────────────────────
+  sync:
+    name: 수집·매칭 (${{ matrix.sido }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 17
+      matrix:
+        sido:
+          - 서울
+          - 인천
+          - 경기
+          - 부산
+          - 대구
+          - 광주
+          - 대전
+          - 울산
+          - 세종
+          - 충북
+          - 충남
+          - 전북
+          - 전남
+          - 경북
+          - 경남
+          - 강원
+          - 제주
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install urllib3 python-dotenv
+      - name: ${{ matrix.sido }} 일일 동기화
+        run: |
+          DRY=""
+          if [ "${{ github.event.inputs.dry-run }}" = "true" ]; then
+            DRY="--dry-run"
+            echo "DRY-RUN 모드 — DB 쓰기 없음"
+          fi
+          ok=0
+          for attempt in 1 2 3; do
+            if python -m scripts.officetel_sync.daily_trades --sido "${{ matrix.sido }}" --months-back 3 $DRY; then
+              ok=1; break
+            fi
+            echo "[$attempt/3] 실패, 30초 후 재시도..."
+            [ $attempt -lt 3 ] && sleep 30
+          done
+          [ $ok -eq 1 ]
+
+  # ── 페이지·sitemap 재빌드 (모든 sido 완료 후, 실 실행 시만) ──
+  build:
+    name: 오피스텔 페이지·sitemap 재빌드
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: sync
+    # cron(inputs 없음) → !=true → 실행. 수동 dry-run=true → 스킵.
+    if: ${{ !cancelled() && github.event.inputs.dry-run != 'true' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install urllib3 python-dotenv requests
+
+      - name: 단지 페이지 빌드 (HTML 11,235개)
+        run: python build_officetel_pages.py 2>&1 | tee /tmp/log_pages.txt; exit ${PIPESTATUS[0]}
+
+      - name: gu/dong/ranking 인덱스 빌드
+        run: python build_officetel_index_pages.py 2>&1 | tee /tmp/log_index.txt; exit ${PIPESTATUS[0]}
+
+      - name: sitemap 재생성
+        run: python build_officetel_sitemap.py 2>&1 | tee /tmp/log_sitemap.txt; exit ${PIPESTATUS[0]}
+
+      - name: 404 전수 검증 (filesystem)
+        run: python _check_404.py 2>&1 | tee /tmp/log_404.txt; exit ${PIPESTATUS[0]}
+
+      - name: 커밋 및 푸시
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A officetel/ gu/ dong/ ranking/ sitemap_officetel*.xml
+          if git diff --cached --quiet; then
+            echo "변경 없음"
+          else
+            git commit -m "오피스텔 일일 동기화: 신규 거래 반영 ($(date -u +%Y-%m-%d))"
+            git pull --rebase origin main
+            git push
+          fi
+
+  # ── 알림 메일 (성공·실패 분기) ──────────────────────────
+  notify:
+    name: 결과 메일
+    runs-on: ubuntu-latest
+    needs: [sync, build]
+    if: always()
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install requests
+      - name: 메일 발송
+        run: |
+          python - <<'PYEOF'
+          import os, smtplib, datetime
+          from email.mime.text import MIMEText
+
+          today = datetime.date.today().isoformat()
+          run_url = f"https://github.com/{os.environ.get('GITHUB_REPOSITORY','')}/actions/runs/{os.environ.get('GITHUB_RUN_ID','')}"
+
+          sync_result  = "${{ needs.sync.result }}"
+          build_result = "${{ needs.build.result }}"
+          dry_run      = "${{ github.event.inputs.dry-run }}"
+
+          ok = sync_result == "success" and build_result in ("success", "skipped")
+          tag = "OK" if ok else "FAIL"
+          subject = f"[휙][오피스텔][{tag}] {today} 일일 동기화 — sync={sync_result}, build={build_result}"
+
+          body_lines = [
+              f"[휙] 오피스텔 일일 동기화 ({today})",
+              f"DRY-RUN: {dry_run or '(cron)'}",
+              "",
+              f"sync   : {sync_result}",
+              f"build  : {build_result}",
+              "",
+              "URL 영구 동결 규칙 준수 — 신규 단지 발굴 X, 데이터 갱신만",
+              "",
+              f"Actions 로그: {run_url}",
+          ]
+          if not ok:
+              body_lines += ["", "[흔한 원인]",
+                             "- 국토부 API 일시 오류 (내일 자동 재시도)",
+                             "- WAF UA 차단 → http_session.py User-Agent 점검",
+                             "- Supabase rate limit (재시도로 보통 해결)"]
+
+          msg = MIMEText("\n".join(body_lines), "plain", "utf-8")
+          msg["Subject"] = subject
+          msg["From"]    = os.environ["SMTP_USER"]
+          msg["To"]      = os.environ["REPORT_EMAIL"]
+
+          with smtplib.SMTP_SSL("smtp.gmail.com", 465) as s:
+              s.login(os.environ["SMTP_USER"], os.environ["SMTP_PASS"])
+              s.send_message(msg)
+          print(f"메일 발송 → {os.environ['REPORT_EMAIL']}")
+          PYEOF
