@@ -557,7 +557,9 @@ jobs:
       - name: 구 정적 페이지 빌드
         run: python build_gu_pages.py 2>&1 | tee /tmp/log_gu.txt; exit ${PIPESTATUS[0]}
       - name: 단지 정적 HTML 빌드 (dong/gu 슬러그 완비 후)
-        run: python build_danji_pages.py 2>&1 | tee /tmp/log_danji_pages.txt; exit ${PIPESTATUS[0]}
+        env:
+          USE_D_DESIGN: "1"
+        run: USE_D_DESIGN=1 python build_danji_pages.py 2>&1 | tee /tmp/log_danji_pages.txt; exit ${PIPESTATUS[0]}
       - name: 랭킹 정적 페이지 빌드
         run: python build_ranking_pages.py 2>&1 | tee /tmp/log_ranking.txt; exit ${PIPESTATUS[0]}
       - name: sitemap 재생성 (모든 HTML 빌드 완료 후)
