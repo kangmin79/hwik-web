@@ -973,6 +973,91 @@ def build_jsonld(d):
             "name": f"{name} 면적별 가격은?",
             "acceptedAnswer": {"@type": "Answer", "text": ", ".join(parts) + " (최근 거래가 기준)"},
         })
+    # D 디자인 보강 FAQ (build_d_design.build_d_faqs / app.js _dEnrichFaq 와 동일 텍스트)
+    # 5년 매매 / 전세 평균 / 월세 평균 / 최고층 / 신축·노후 / 전세가 vs 매매가 / dong 비교
+    sale_n_d = jeonse_n_d = monthly_n_d = 0
+    jeonse_sum_d = jeonse_cnt_d = 0
+    deposit_sum_d = monthly_sum_d = monthly_cnt_d = 0
+    for _k, _v in (d.get("price_history") or {}).items():
+        if not isinstance(_v, list):
+            continue
+        if _k.endswith("_jeonse"):
+            jeonse_n_d += len(_v)
+            for _t in _v:
+                if _t.get("price"):
+                    jeonse_sum_d += _t["price"]
+                    jeonse_cnt_d += 1
+        elif _k.endswith("_wolse"):
+            monthly_n_d += len(_v)
+            for _t in _v:
+                if _t.get("price"):
+                    deposit_sum_d += _t["price"]
+                    monthly_sum_d += (_t.get("monthly") or 0)
+                    monthly_cnt_d += 1
+        else:
+            sale_n_d += len(_v)
+    if sale_n_d > 0:
+        faq_items.append({
+            "@type": "Question",
+            "name": f"{name} 매매 거래는 얼마나 활발?",
+            "acceptedAnswer": {"@type": "Answer", "text": f"최근 5년 매매 {sale_n_d}건이 집계되었습니다."},
+        })
+    if jeonse_cnt_d > 0:
+        _avg = round(jeonse_sum_d / jeonse_cnt_d)
+        faq_items.append({
+            "@type": "Question",
+            "name": f"{name} 전세 시세는?",
+            "acceptedAnswer": {"@type": "Answer", "text": f"최근 5년 전세 실거래 {jeonse_n_d}건 평균 보증금은 {format_price(_avg)}입니다."},
+        })
+    if monthly_cnt_d > 0:
+        _avgD = round(deposit_sum_d / monthly_cnt_d)
+        _avgM = round(monthly_sum_d / monthly_cnt_d)
+        faq_items.append({
+            "@type": "Question",
+            "name": f"{name} 월세 평균은?",
+            "acceptedAnswer": {"@type": "Answer", "text": f"최근 5년 월세 실거래 {monthly_n_d}건 평균은 보증금 {format_price(_avgD)} / 월세 {_avgM}만입니다."},
+        })
+    if d.get("top_floor"):
+        faq_items.append({
+            "@type": "Question",
+            "name": f"{name} 최고층은?",
+            "acceptedAnswer": {"@type": "Answer", "text": f"지상 {d['top_floor']}층 규모입니다."},
+        })
+    if d.get("build_year"):
+        try:
+            _age = datetime.now().year - int(d["build_year"])
+            if 0 <= _age <= 5:
+                faq_items.append({
+                    "@type": "Question",
+                    "name": f"{name} 신축 아파트인가요?",
+                    "acceptedAnswer": {"@type": "Answer", "text": f"{name}{josa(name,'은/는')} {d['build_year']}년 준공으로 {_age + 1}년차 신축 아파트입니다."},
+                })
+            elif _age > 25:
+                faq_items.append({
+                    "@type": "Question",
+                    "name": f"{name} 노후 아파트인가요?",
+                    "acceptedAnswer": {"@type": "Answer", "text": f"{name}{josa(name,'은/는')} {d['build_year']}년 준공으로 {_age}년차 단지입니다."},
+                })
+        except (TypeError, ValueError):
+            pass
+    if d.get("jeonse_rate") and bc and rt.get(bc) and rt[bc].get("price"):
+        _jeo = rt.get(f"{bc}_jeonse")
+        if _jeo and _jeo.get("price"):
+            faq_items.append({
+                "@type": "Question",
+                "name": f"{name} 전세가가 매매가 대비 얼마나?",
+                "acceptedAnswer": {"@type": "Answer", "text": f"최근 매매가 {format_price(rt[bc]['price'])}, 최근 전세가 {format_price(_jeo['price'])}로, 전세가율은 약 {d['jeonse_rate']}%입니다."},
+            })
+    _loc_parts_d = (d.get("location", "") or "").split(" ")
+    _dong_d = _loc_parts_d[-1] if _loc_parts_d else ""
+    _gu_d = next((t for t in (d.get("address", "") or "").split(" ") if t.endswith("구")), _loc_parts_d[0] if _loc_parts_d else "")
+    if _dong_d and _gu_d:
+        faq_items.append({
+            "@type": "Question",
+            "name": f"{_dong_d} 아파트 중에 {name}만한 단지가 있나요?",
+            "acceptedAnswer": {"@type": "Answer", "text": f"{_dong_d}에는 {name} 외에도 여러 단지가 있습니다. {_gu_d} {_dong_d} 아파트 전체 목록과 시세 비교가 가능합니다."},
+        })
+
     if faq_items:
         graph.append({"@type": "FAQPage", "mainEntity": faq_items})
 
@@ -1064,7 +1149,42 @@ def generate_page(d):
 
     canonical = f"https://hwik.kr/danji/{url_quote(slug, safe='-')}.html"
     jsonld = build_jsonld(d)
-    fallback = build_fallback_html(d)
+    # USE_D_DESIGN=1 시 D 디자인 SSR 풀콘텐츠 (build_d_design.build_fallback_html_d).
+    # 환경변수 없을 때 기존 build_fallback_html 100% 그대로 — 13K 단지 영향 없음.
+    use_d = os.environ.get("USE_D_DESIGN", "").strip() == "1"
+    # D 디자인 CSS link + Pretendard 폰트 (PC ≥768px 만 적용 — style-d.css 안 @media)
+    d_css_link = (
+        '<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>\n'
+        '<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">\n'
+        f'<link rel="stylesheet" href="style-d.css?v={style_d_hash}">'
+    ) if use_d else ""
+    if use_d:
+        from build_d_design import build_fallback_html_d
+        # dong_href / gu_href 계산 (build_d_more_links + build_d_intro_section 용)
+        _dong_href = ""
+        if dong_raw and dong_slug_nav and dong_slug_nav in DONG_SLUGS:
+            _dong_href = f'/dong/{url_quote(dong_slug_nav, safe="-")}.html'
+        _region_label_main = detect_region(d.get("address", "") or "")
+        _gu_url_main = gu_url_slug(_region_label_main, gu_raw)
+        _gu_href = ""
+        if _has_gu_page(d.get("address", ""), _gu_url_main) and gu_raw:
+            _gu_href = f'/gu/{url_quote(_gu_url_main, safe="-")}.html'
+        _region_key = _RLTK.get(_region_label_main) if _region_label_main else None
+        _ctx = {
+            "esc": esc,
+            "format_price": format_price,
+            "prop_type": prop_type,
+            "gu_raw": gu_raw,
+            "dong_raw": dong_raw,
+            "dong_href": _dong_href,
+            "gu_href": _gu_href,
+            "region_key": _region_key,
+            "nearby_complex_types_map": COMPLEX_TYPE_MAP,
+            "today_str": datetime.now(KST).strftime("%Y-%m-%d"),
+        }
+        fallback = build_fallback_html_d(d, _ctx)
+    else:
+        fallback = build_fallback_html(d)
 
     # 네이버 메타태그용 시간 — published_time은 최초 데이터 시간, modified_time은 빌드 시점
     # modified_time >= published_time 보장
@@ -1107,6 +1227,7 @@ def generate_page(d):
 <meta name="twitter:description" id="tw-desc" content="{esc(desc)}">
 <script type="application/ld+json">{jsonld}</script>
 <link rel="stylesheet" href="style.css">
+{d_css_link}
 </head>
 <body>
 <div class="wrap" id="app">
@@ -1219,11 +1340,21 @@ def main():
     else:
         print(f"[ONE_DANJI_ID={ONE_DANJI_ID}] 프리뷰 모드 — 기존 HTML 유지, 해당 단지만 덮어쓰기")
 
-    # app.js 캐시 버전 — 오늘 날짜(KST) 기준으로 매일 자동 갱신
-    global app_js_hash
+    # app.js 캐시 버전 — 날짜 + 파일 mtime 으로 같은 날 변경분도 즉시 갱신
+    global app_js_hash, style_d_hash
     from datetime import timezone, timedelta
     kst = datetime.now(timezone(timedelta(hours=9)))
-    app_js_hash = kst.strftime("%Y%m%d")
+    _date = kst.strftime("%Y%m%d")
+    try:
+        _appjs_mt = int(os.path.getmtime(os.path.join(os.path.dirname(os.path.abspath(__file__)), "danji", "app.js")))
+    except OSError:
+        _appjs_mt = 0
+    app_js_hash = f"{_date}-{_appjs_mt}"
+    try:
+        _styled_mt = int(os.path.getmtime(os.path.join(os.path.dirname(os.path.abspath(__file__)), "danji", "style-d.css")))
+    except OSError:
+        _styled_mt = 0
+    style_d_hash = f"{_date}-{_styled_mt}"
 
     # id → slug 맵 (주변 단지 링크용 — 거래 있는 단지만)
     global DANJI_SLUG_MAP

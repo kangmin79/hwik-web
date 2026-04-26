@@ -1,63 +1,57 @@
 # 다음 세션
 
 ## 세션 시작 멘트
-"docs/next-session.md 보고 이어서 해줘" → docs/2026-04-25-evening.md 읽기
+"docs/next-session.md 보고 이어서 해줘" → 이 문서 + docs/2026-04-26-d-design-deploy.md 읽기
 
-## 🔴 다음 세션 최우선 — 생성된 URL 중복 검사
-**왜**: 9,833 단지 + 1,402 허브(dong/gu/ranking) URL이 새로 정렬됐는데, 자치구 시 정정 과정에서 같은 슬러그로 충돌하는 단지가 있을 수 있음 (다른 단지가 같은 dong/gu URL 갖거나, 동명 단지 id 충돌 등).
+---
 
-**검사 항목** (전부 0건이어야 통과):
-1. **단지 페이지** `officetel/*.html` — 파일명(슬러그) 중복 0건
-2. **dong 페이지** `officetel/dong/*.html` — `make_dong_slug` 결과 중복 0건
-3. **gu 페이지** `officetel/gu/*.html` — `gu_url_slug` 결과 중복 0건
-4. **단지 url 컬럼** vs 실제 파일 — 1:1 대응 (DB url ↔ 빌드 파일)
-5. **sitemap 등록 URL** — 같은 loc 중복 등록 0건
-6. **단지 id ↔ url 충돌** — 다른 id가 같은 url 가지는 경우 0건
+## 🟢 4/26 완료 — 단지 페이지 D 디자인 13K 운영 배포
+- 18,608개 단지 페이지 D 디자인 적용 + git push
+- 시각: 헤더 location-section, 단지명 인디고, 단지 소개 dl, 시세 요약 토글, footer, FAQ 보강, CTA 제거
+- SEO: 클로킹 안전(SSR≈hydrated), JSON-LD FAQPage 16 Q&A, structured `<dl>`
+- 모바일: 미디어쿼리 min-width 1px + max-width 767px 보정 (헤더 1열 스택)
+- GSC 70% PC 에 맞는 디자인 변경
 
-**검사 스크립트 작성**: `verify_url_uniqueness.py` (신규) — 위 6항목 한 번에 검증, 실패 시 어느 슬러그가 누구와 충돌하는지 출력.
+상세: docs/2026-04-26-d-design-deploy.md
 
-## 🟢 2026-04-25 저녁2 완료
-- **오피스텔 dong/gu URL 근본 정상화** (깨진 인터널 링크 0건 검증)
-- DB 651건 교체 (자치구가 umd 자리에 잘못 들어가 있던 문제):
-  - 예) `sgg=고양시, umd=덕양구` → `sgg=고양덕양구, umd=원흥동`
-  - 백업: `_umd_fix/dryrun_1777086820.json` (old_sgg/old_umd 보존)
-- 빌드 코드 2개 모두 `slug_utils.make_dong_slug` / `gu_url_slug` 사용 — URL 단일 소스
-- 9,833 단지 + 1,196 dong + 188 gu + 18 ranking 페이지 재빌드 완료
-- 검증: 단지 페이지 9,851건 / 깨진 dong/gu/ranking 링크 0건
+---
 
-### 404 영구 방지 보강
-1. `scripts/officetel_sync/safety_guards.py::assert_umd_is_dong` — umd가 *구로 끝나면 stage6 적재 거부 (단위 테스트 통과)
-2. `build_officetel_sitemap.py` (신규, 아파트와 분리) — 빌드된 파일 실존 확인 후에만 sitemap 등록
-   - `sitemap_officetel.xml` (인덱스)
-   - `sitemap_officetel_danji.xml` (9,833)
-   - `sitemap_officetel_hubs.xml` (1,402: gu 188 + dong 1,196 + ranking 17 + index 1)
-   - 루트 `sitemap.xml`에 항목 자동 추가 완료
+## 🟡 잔여 — 4/27 KST 03시 첫 cron 발화 결과 점검 (오피스텔 일일 동기화)
+1. 메일: `[휙][오피스텔][OK or FAIL] 2026-04-27 일일 동기화`
+2. Actions 로그: https://github.com/kangmin79/hwik-web/actions/workflows/officetel-daily.yml
+3. DB 변동: `officetel_trades` 신규 row, `officetels.trade_count` 변화
 
-## 🟡 미반영 (디자인 확정 후)
-- D 디자인 → `build_officetel_pages.py` 정식 통합 (`preview_desktop_designs.py` 오버레이로만 검증)
-- og-image 단지별 동적 생성
-- modified_time 해시 비교 (매일 신규 데이터 수집 후 변경 시만)
-- report-danji Edge Function이 o-prefix 처리하는지 백엔드 검증
+---
 
-## 핵심 파일
-- `build_officetel_pages.py` — 본 빌드 (slug_utils 사용 ✅)
-- `build_officetel_index_pages.py` — gu/dong/ranking (slug_utils 사용 ✅)
-- `build_officetel_sitemap.py` — 오피스텔 전용 sitemap (분리 ✅)
-- `slug_utils.py` — `make_dong_slug`, `gu_url_slug` URL 단일 소스
-- `scripts/officetel_sync/fix_missing_umd.py` — 자치구 시 단지 정정 도구 (재사용 가능)
-- `scripts/officetel_sync/safety_guards.py` — `assert_umd_is_dong` 게이트
-- `scripts/officetel_sync/stage6_upload.py` — 게이트 호출
+## 🔵 다음 작업 후보 (우선순위 순)
 
-## 절대 건드리지 말 것
-- 9,833 officetels.id/slug/url
-- danji/style.css (아파트와 공유)
-- scripts/officetel_sync/blacklist_mgm.json
-- 아파트 sitemap 파일들 (sitemap_seoul/metro/cities/pages.xml)
+### 1) 단지 페이지 배포 검증 (gp 전파 후)
+- 운영 URL https://hwik.kr/danji/... 5~10개 시각 확인
+- GSC `URL 검사` 로 D 디자인 색인 정상 확인
+- Core Web Vitals 변화 모니터 (LCP/CLS)
+- 1~2주 후 GSC `Devices` 리포트 → CTR/Position 변화 측정
 
-## 확인 URL
-- 자치구 시 단지: https://hwik.kr/officetel/경기-고양시-덕양구-3호선-원흥역-봄오피스텔-o8795601.html
-- 자치구 시 dong: https://hwik.kr/officetel/dong/경기-고양-덕양구-원흥동.html
-- 자치구 시 gu: https://hwik.kr/officetel/gu/고양덕양구.html
-- 단순 시 dong (회귀): https://hwik.kr/officetel/dong/서울-중랑구-망우동.html
-- 단순 시 gu (회귀): https://hwik.kr/officetel/gu/중랑구.html
-- 오피스텔 sitemap: https://hwik.kr/sitemap_officetel.xml
+### 2) nearby_complex N=5→10 확장 (선택)
+- 파이프라인 스크립트 위치 파악 + 변경 + 13K 단지 nearby 재계산
+- 작업량: 큼 (별도 세션)
+
+### 3) danji_pages.parking 헬리오시티 등 NULL 보강
+- apartments 테이블 또는 건축물대장에서 보강
+- 작업량: 중
+
+### 4) dong / gu / ranking 페이지 D 디자인 적용 검토
+- 단지 페이지만 D 적용했음. dong/gu/ranking 은 OLD 그대로
+- 사용자 결정 필요 (B2B2C 트래픽 vs SEO 가치 vs 작업량 비교)
+
+### 5) gu 강남구 오피스텔 페이지 운영 push (4/26 새벽 작업분)
+- 로컬 미리보기 OK 받음
+- dong/ranking 동일 톤 적용 후 일괄 운영 반영 예정 (사용자 콜)
+
+---
+
+## 🛠️ 참고 명령
+- 단지 페이지 빌드 (D): `USE_D_DESIGN=1 python build_danji_pages.py`
+- 단지 1개 미리보기: `USE_D_DESIGN=1 ONE_DANJI_ID=a10025850 python build_danji_pages.py`
+- 미리보기 서버: `python -m http.server 8765`
+- D 미리보기: http://localhost:8765/danji_test/design-d-preview-a10025850.html
+- 정식 (D): http://localhost:8765/danji/서울-송파구-가락동-헬리오시티아파트-a10025850.html

@@ -313,36 +313,29 @@ function render() {
 
   // 지하철/학교 태그
   function shortSchool(n) { return n.replace(/서울/g,'').replace(/초등학교/g,'초').replace(/중학교/g,'중').replace(/고등학교/g,'고'); }
+  // D 디자인 공식 호선 색상 (build_d_design.py LINE_COLORS 와 동일)
   function lineColor(line) {
-    if (!line) return '#888';
+    if (!line) return '#94a3b8';
     const l = line.replace(/수도권\s+도시철도\s*/,'').replace(/서울\s+도시철도\s*/,'').replace(/수도권\s+광역철도\s*/,'').replace(/수도권\s+경량도시철도\s*/,'');
-    // 1~9호선
-    const numColors = {'1호선':'#0052A4','2호선':'#00A84D','3호선':'#EF7C1C','4호선':'#00A5DE','5호선':'#996CAC','6호선':'#CD7C2F','7호선':'#747F00','8호선':'#E6186C','9호선':'#BDB092'};
-    if (numColors[l]) return numColors[l];
-    // 광역/신설 노선
-    if (l.includes('경의') || l.includes('중앙')) return '#77C4A3';
-    if (l.includes('분당') || l.includes('수인')) return '#F5A200';
-    if (l.includes('신분당')) return '#D4003B';
-    if (l.includes('우이')) return '#B7C452';
-    if (l.includes('경춘')) return '#0C8E72';
-    if (l.includes('공항') || l.includes('인천국제')) return '#0090D2';
-    if (l.includes('신림')) return '#6789CA';
-    if (l.includes('서해')) return '#8BC53F';
-    if (l.includes('경강')) return '#0054A6';
-    if (l.includes('김포')) return '#AD8602';
-    if (l.includes('에버라인')) return '#56AD2D';
-    if (l.includes('의정부')) return '#FDA600';
-    if (l.includes('안산') || l.includes('과천')) return '#00A5DE';
-    // KTX/일반철도
-    if (l.includes('경부') || l.includes('경원') || l.includes('경인') || l.includes('코레일')) return '#144278';
-    if (l.includes('동해') || l.includes('대경')) return '#144278';
-    // 지방 도시철도
+    const LC = {
+      '1호선':'#0052A4','2호선':'#00A84D','3호선':'#EF7C1C','4호선':'#00A4E3',
+      '5호선':'#996CAC','6호선':'#CD7C2F','7호선':'#747F00','8호선':'#E6186C',
+      '9호선':'#BDB092',
+      '경의중앙선':'#77C4A3','수인분당선':'#FABE00','신분당선':'#D4003B',
+      '공항철도':'#0090D2','GTX-A':'#9A6292','우이신설선':'#B0CE18',
+      '신림선':'#6789CA','경춘선':'#0C8E72','김포골드라인':'#A17E46',
+      '인천1호선':'#7CA8D5','인천2호선':'#ED8B00',
+    };
+    // 양방향 매칭: shortLine() 가 '9호선' → '9' 로 줄여도 매칭되도록 (l.includes(k) || k.includes(l))
+    for (const k in LC) {
+      if (l.includes(k) || k.includes(l)) return LC[k];
+    }
+    // 지방 도시철도 (LC 미포함분)
     if (l.includes('부산')) return '#F06A00';
     if (l.includes('대구')) return '#D93F5A';
     if (l.includes('대전')) return '#00B5B5';
     if (l.includes('광주')) return '#009088';
-    if (l.includes('인천')) return '#7CA8D5';
-    return '#888';
+    return '#94a3b8';
   }
   function shortLine(line) {
     if (!line) return '';
@@ -372,7 +365,12 @@ function render() {
       if (type.includes('고등')) return '고';
       return '학';
     }
-    const schoolItems = school.slice(0,3).map(s => {
+    // 초→중→고 순으로 정렬
+    const _schoolOrder = { '초': 0, '중': 1, '고': 2 };
+    const _schoolSorted = school.slice().sort((a, b) =>
+      (_schoolOrder[schoolLabel(a.type)] ?? 9) - (_schoolOrder[schoolLabel(b.type)] ?? 9)
+    );
+    const schoolItems = _schoolSorted.slice(0,3).map(s => {
       const bg = schoolColor(s.type);
       const label = schoolLabel(s.type);
       return `<span class="station-tag"><span class="line-badge" style="background:${bg.bg};color:${bg.text}">${label}</span><span class="station-name">${shortSchool(esc(s.name))}</span> <span class="station-time">${walkMin(s.distance)}</span></span>`;
@@ -969,6 +967,492 @@ function render() {
 
   // 주변 단지 부족하면 라이브 쿼리로 채우기
   fillNearbyIfNeeded();
+
+  // D 디자인 변환 (SSR fallback과 visible text 일치 — 클로킹 회피)
+  // body dataset flag 들 reset (render 재호출 시 중복 변환 방지)
+  delete document.body.dataset.faqEnriched;
+  delete document.body.dataset.faqSplit;
+  delete document.body.dataset.faqMoved;
+  delete document.body.dataset.mapPatched;
+  delete document.body.dataset.seoPatched;
+  applyDDesign(d);
+}
+
+// ── 가격 포맷 (D 변환에서 공통 사용) ──
+function _dFmtPrice(n) {
+  if (!n) return '-';
+  const eok = Math.floor(n / 10000);
+  const man = Math.round(n % 10000);
+  if (eok && man) return eok + '억 ' + man.toLocaleString() + '만';
+  if (eok) return eok + '억';
+  return man.toLocaleString() + '만';
+}
+
+// ── D 변환: 거래 항목에 거래유형 칩 inject (활성 탭 기준) ──
+const _D_KIND_COLOR = {
+  '매매': { bg: '#fff1e7', fg: '#c2410c' },
+  '전세': { bg: '#eaf2ff', fg: '#1d4ed8' },
+  '월세': { bg: '#e8f6ee', fg: '#047857' }
+};
+function _dInjectTradeKindBadge() {
+  const activeTab = document.querySelector('.tabs .tab.active');
+  const kind = activeTab && activeTab.dataset.tab;
+  const c = _D_KIND_COLOR[kind];
+  if (!c) return;
+  document.querySelectorAll('.trade-list .trade-item .trade-price').forEach(el => {
+    if (el.querySelector('.kind-badge-d')) return;
+    const span = document.createElement('span');
+    span.className = 'kind-badge-d';
+    span.textContent = kind;
+    span.style.cssText = 'display:inline-block;padding:2px 7px;border-radius:4px;background:' + c.bg + ';color:' + c.fg + ';font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;';
+    el.insertBefore(span, el.firstChild);
+  });
+}
+
+// ── D 변환: 주변 단지 카드 — 단지명 앞 단지타입 보라 뱃지 + 가격 주황 + 매매 칩 ──
+function _dInjectNearbyStyle() {
+  document.querySelectorAll('.nearby-item').forEach(el => {
+    if (el.dataset.dStyled) return;
+    el.dataset.dStyled = '1';
+    const nameEl = el.querySelector('.nearby-name');
+    if (nameEl) {
+      const existing = nameEl.querySelector('span');
+      if (existing) {
+        nameEl.insertBefore(existing, nameEl.firstChild);
+        existing.style.marginLeft = '0';
+        existing.style.marginRight = '6px';
+      } else {
+        const tag = document.createElement('span');
+        tag.textContent = '아파트';
+        tag.style.cssText = 'display:inline-block;padding:1px 6px;margin-right:6px;border-radius:4px;background:#eef2ff;color:#4338ca;font-size:10px;font-weight:600;vertical-align:middle;';
+        nameEl.insertBefore(tag, nameEl.firstChild);
+      }
+    }
+    const priceEl = el.querySelector('.nearby-price');
+    if (priceEl) priceEl.style.color = '#ea580c';
+    const dateContainer = priceEl ? priceEl.nextElementSibling : null;
+    if (dateContainer && !dateContainer.querySelector('.nearby-kind-d')) {
+      const kindSpan = document.createElement('span');
+      kindSpan.className = 'nearby-kind-d';
+      kindSpan.textContent = '매매';
+      kindSpan.style.cssText = 'display:inline-block;padding:2px 7px;border-radius:4px;background:#fff1e7;color:#c2410c;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;';
+      dateContainer.insertBefore(kindSpan, dateContainer.firstChild);
+    }
+  });
+}
+
+// ── D 변환: '단지 소개' info-row 섹션 inject (#map-section 다음) ──
+function _dInjectDanjiInfo(d) {
+  if (document.querySelector('#danji-info-d')) return;
+  const mapSec = document.querySelector('#map-section');
+  if (!mapSec) return;
+  const rowMap = {};
+  if (d.address) rowMap['소재지'] = esc(d.address);
+  if (d.build_year) rowMap['준공'] = d.build_year + '년 · 공동주택';
+  if (d.total_units) rowMap['세대수'] = d.total_units.toLocaleString() + '세대';
+  if (d.top_floor) rowMap['최고층'] = '지상 ' + d.top_floor + '층';
+  if (d.parking) {
+    const pk = parseInt(d.parking, 10);
+    if (pk > 0) {
+      const ratio = d.total_units ? (pk / parseInt(d.total_units, 10)) : 0;
+      const ratioStr = ratio > 0 ? ' (세대당 ' + ratio.toFixed(2) + '대)' : '';
+      rowMap['주차'] = pk.toLocaleString() + '대' + ratioStr;
+    }
+  }
+  if (d.heating) rowMap['난방'] = esc(d.heating);
+  if (d.builder) rowMap['시공사'] = esc(d.builder);
+  if (d.pyeongs_map && typeof d.pyeongs_map === 'object') {
+    const exclus = Object.keys(d.pyeongs_map)
+      .map(k => Math.round(parseFloat((d.pyeongs_map[k] || {}).exclu || k)))
+      .filter(v => v > 0)
+      .sort((a, b) => a - b);
+    const uniq = [...new Set(exclus)];
+    if (uniq.length) rowMap['전용면적'] = uniq.join('㎡, ') + '㎡';
+  }
+  if (Object.keys(rowMap).length === 0) return;
+
+  const _row = (label, value, full) =>
+    '<div style="' + (full ? 'grid-column:1 / -1;' : '') +
+    'display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid #f1f3f5;">' +
+    '<span style="color:#94a3b8;font-size:12px;flex-shrink:0;width:70px;">' + label + '</span>' +
+    '<span style="color:#0a0e1a;font-size:13px;line-height:1.5;">' + value + '</span>' +
+    '</div>';
+
+  const html = [
+    '<h2 class="section-title" style="padding:0 0 8px;font-size:15px;font-weight:700;color:#0a0e1a;margin:0;">단지 소개</h2>',
+    '<dl style="display:grid;grid-template-columns:1fr 1fr;column-gap:24px;row-gap:0;margin:0 0 16px;padding:0;">',
+  ];
+  if (rowMap['소재지']) html.push(_row('소재지', rowMap['소재지'], true));
+  ['준공', '세대수', '최고층', '주차', '난방', '시공사'].forEach(k => {
+    if (rowMap[k]) html.push(_row(k, rowMap[k], false));
+  });
+  if (rowMap['전용면적']) html.push(_row('전용면적', rowMap['전용면적'], true));
+  html.push('</dl>');
+
+  // 시세 요약 토글
+  const rt = d.recent_trade || {};
+  const ath = d.all_time_high || {};
+  const cats = d.categories || [];
+  const bestCat = cats.find(c => rt[c] && rt[c].price) || cats[0] || '';
+  const recentSale = bestCat ? rt[bestCat] : null;
+  const highSale = bestCat ? ath[bestCat] : null;
+  const summaryRows = [];
+  if (recentSale && recentSale.price) {
+    summaryRows.push('<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span style="color:#94a3b8;">최근 매매</span><span style="color:#0a0e1a;font-weight:500;">' + _dFmtPrice(recentSale.price) + ' <span style=\'color:#94a3b8;font-size:12px;\'>(전용 ' + bestCat + '㎡' + (recentSale.date ? ' · ' + recentSale.date : '') + ')</span></span></div>');
+  }
+  if (highSale && highSale.price) {
+    summaryRows.push('<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span style="color:#94a3b8;">5년 최고</span><span style="color:#0a0e1a;font-weight:500;">' + _dFmtPrice(highSale.price) + (highSale.date ? ' <span style=\'color:#94a3b8;font-size:12px;\'>(' + highSale.date + ')</span>' : '') + '</span></div>');
+  }
+  const footParts = [];
+  if (d.jeonse_rate) footParts.push('전세가율 ' + d.jeonse_rate + '%');
+  const footStr = footParts.length ? '<div style="margin-top:6px;padding-top:8px;border-top:1px solid #f1f3f5;font-size:12px;color:#94a3b8;">' + footParts.join(' · ') + '</div>' : '';
+
+  // 거래 통계
+  const ph = d.price_history || {};
+  let saleN = 0, jeonseN = 0, monthlyN = 0;
+  for (const k in ph) {
+    if (!Array.isArray(ph[k])) continue;
+    const cnt = ph[k].length;
+    if (k.endsWith('_jeonse')) jeonseN += cnt;
+    else if (k.endsWith('_wolse')) monthlyN += cnt;
+    else saleN += cnt;
+  }
+  const totalN = saleN + jeonseN + monthlyN;
+  const tradeStat = totalN > 0
+    ? '<p style="font-size:13px;color:#94a3b8;line-height:1.85;margin:0 0 10px;">최근 5년 동안 ' + esc(d.complex_name || '') + '에서는 총 ' + totalN.toLocaleString() + '건의 실거래가 집계되었으며, 매매 ' + saleN + '건, 전세 ' + jeonseN + '건, 월세 ' + monthlyN + '건이 신고되었습니다.</p>'
+    : '';
+  if (summaryRows.length || tradeStat) {
+    html.push('<details style="margin:0 0 12px;"><summary style="cursor:pointer;font-size:12px;color:#94a3b8;padding:2px 0;list-style:none;display:inline-flex;align-items:center;gap:4px;"><span style="display:inline-block;transform:rotate(0deg);transition:transform .15s;">▸</span>시세 요약 · 거래 활성도 · 인근 인프라 자세히 보기</summary><div style="margin-top:8px;">' +
+      (summaryRows.length ? '<div style="margin:0 0 14px;">' + summaryRows.join('') + footStr + '</div>' : '') +
+      tradeStat +
+      '</div></details><style>details[open] > summary > span{transform:rotate(90deg) !important;}</style>');
+  }
+
+  // 인근 단지 SEO 링크 문단
+  const dongA = document.querySelector('.section a[href*="/dong/"]');
+  const guA = document.querySelector('.section a[href*="/gu/"]');
+  const dongHref = dongA ? dongA.getAttribute('href') : '';
+  const guHref = guA ? guA.getAttribute('href') : '';
+  const dongName = (d.location || '').split(' ').pop() || '';
+  const guName = ((d.address || '').split(' ').find(t => t.endsWith('구'))) || ((d.location || '').split(' ')[0]) || '';
+  const nearbyArr = (d.nearby_complex || []).filter(n => n.id && !n.id.startsWith('offi-') && !n.id.startsWith('apt-') && n.slug);
+  const nearbyLinks = nearbyArr.slice(0, 2).map(n => {
+    const nDong = (n.location || '').split(' ').pop();
+    return '<a href="/danji/' + encodeURIComponent(n.slug) + '.html">' + (nDong ? esc(nDong) + ' ' : '') + esc(n.name) + ' 아파트</a>';
+  }).join(', ');
+  if (nearbyLinks && dongHref && dongName && guHref && guName) {
+    html.push('<p style="font-size:13px;color:#94a3b8;line-height:1.85;margin:0;">인근 단지로는 ' + nearbyLinks + ' 등이 있으며, 같은 ' + esc(dongName) + ' 일대의 다른 단지는 <a href="' + dongHref + '">' + esc(guName) + ' ' + esc(dongName) + ' 아파트</a>, 시군구 단위 비교는 <a href="' + guHref + '">' + esc(guName) + ' 아파트 시세</a>에서 확인할 수 있습니다.</p>');
+  }
+
+  const sec = document.createElement('section');
+  sec.id = 'danji-info-d';
+  sec.className = 'seo-intro';
+  sec.style.padding = '0 16px 16px';
+  sec.innerHTML = html.join('');
+  mapSec.insertAdjacentElement('afterend', sec);
+}
+
+// ── D 변환: FAQ 보강 (개수 늘림) — _enrichFaq from _make_preview.py ──
+function _dEnrichFaq(d) {
+  if (document.body.dataset.faqEnriched) return;
+  const faqSec = document.querySelector('.faq-section');
+  if (!faqSec) return;
+  const nm = d.complex_name || '';
+  const items = [];
+  if (d.build_year && d.total_units) {
+    items.push({ q: nm + '는 몇 년 준공, 몇 세대?', a: nm + '는 ' + d.build_year + '년 준공, 총 ' + d.total_units.toLocaleString() + '세대 규모입니다.' });
+  }
+  const ph = d.price_history || {};
+  let saleN = 0, jeonseN = 0, monthlyN = 0;
+  let jeonseSum = 0, jeonseCnt = 0;
+  let monthlyDepositSum = 0, monthlyMonthlySum = 0, monthlyCnt = 0;
+  for (const k in ph) {
+    if (!Array.isArray(ph[k])) continue;
+    const list = ph[k];
+    if (k.endsWith('_jeonse')) {
+      jeonseN += list.length;
+      list.forEach(t => { if (t.price) { jeonseSum += t.price; jeonseCnt++; } });
+    } else if (k.endsWith('_wolse')) {
+      monthlyN += list.length;
+      list.forEach(t => { if (t.price) { monthlyDepositSum += t.price; monthlyMonthlySum += (t.monthly || 0); monthlyCnt++; } });
+    } else {
+      saleN += list.length;
+    }
+  }
+  if (saleN > 0) items.push({ q: nm + ' 매매 거래는 얼마나 활발?', a: '최근 5년 매매 ' + saleN + '건이 집계되었습니다.' });
+  if (jeonseCnt > 0) {
+    const avg = Math.round(jeonseSum / jeonseCnt);
+    items.push({ q: nm + ' 전세 시세는?', a: '최근 5년 전세 실거래 ' + jeonseN + '건 평균 보증금은 ' + _dFmtPrice(avg) + '입니다.' });
+  }
+  if (monthlyCnt > 0) {
+    const avgD = Math.round(monthlyDepositSum / monthlyCnt);
+    const avgM = Math.round(monthlyMonthlySum / monthlyCnt);
+    items.push({ q: nm + ' 월세 평균은?', a: '최근 5년 월세 실거래 ' + monthlyN + '건 평균은 보증금 ' + _dFmtPrice(avgD) + ' / 월세 ' + avgM + '만입니다.' });
+  }
+  if (d.top_floor) items.push({ q: nm + ' 최고층은?', a: '지상 ' + d.top_floor + '층 규모입니다.' });
+  if (d.build_year) {
+    const age = (new Date().getFullYear() - d.build_year);
+    if (age >= 0 && age <= 5) items.push({ q: nm + ' 신축 아파트인가요?', a: nm + '는 ' + d.build_year + '년 준공으로 ' + (age + 1) + '년차 신축 아파트입니다.' });
+    else if (age > 25) items.push({ q: nm + ' 노후 아파트인가요?', a: nm + '는 ' + d.build_year + '년 준공으로 ' + age + '년차 단지입니다.' });
+  }
+  if (d.jeonse_rate) {
+    const rt2 = d.recent_trade || {};
+    const cats2 = d.categories || [];
+    const bc2 = cats2.find(c => rt2[c] && rt2[c].price) || cats2[0];
+    const sale = bc2 ? rt2[bc2] : null;
+    const jeo = bc2 ? rt2[bc2 + '_jeonse'] : null;
+    if (sale && sale.price && jeo && jeo.price) {
+      items.push({ q: nm + ' 전세가가 매매가 대비 얼마나?', a: '최근 매매가 ' + _dFmtPrice(sale.price) + ', 최근 전세가 ' + _dFmtPrice(jeo.price) + '로, 전세가율은 약 ' + d.jeonse_rate + '%입니다.' });
+    }
+  }
+  const locParts = (d.location || '').split(' ');
+  const dongName = locParts[locParts.length - 1] || '';
+  const guName = ((d.address || '').split(' ').find(t => t.endsWith('구'))) || (locParts[0] || '');
+  if (dongName && guName) {
+    items.push({ q: dongName + ' 아파트 중에 ' + nm + '만한 단지가 있나요?', a: dongName + '에는 ' + nm + ' 외에도 여러 단지가 있습니다. ' + guName + ' ' + dongName + ' 아파트 전체 목록과 시세 비교가 가능합니다.' });
+  }
+  if (!items.length) return;
+  const html = items.map(it => '<div class="faq-item"><div class="faq-q">' + esc(it.q) + '</div><div class="faq-a">' + esc(it.a) + '</div></div>').join('');
+  const last = faqSec.querySelectorAll('.faq-item');
+  if (last.length) last[last.length - 1].insertAdjacentHTML('afterend', html);
+  else faqSec.insertAdjacentHTML('beforeend', html);
+  document.body.dataset.faqEnriched = '1';
+}
+
+// ── D 변환: 가격 카드 onclick 제거 (smooth scroll 트리거 차단) ──
+function _dDisableCardClick() {
+  document.querySelectorAll('.price-card').forEach(c => {
+    if (c.dataset.dDisabled) return;
+    c.removeAttribute('onclick');
+    c.removeAttribute('ontouchstart');
+    c.removeAttribute('ontouchend');
+    c.style.cursor = 'default';
+    c.dataset.dDisabled = '1';
+  });
+}
+
+// ── D 변환: 지도 — 카카오맵 링크 제거 + 지도 자체 클릭 → 풀화면 새창 ──
+function _dPatchMap() {
+  if (document.body.dataset.mapPatched) return;
+  const mapSec = document.getElementById('map-section');
+  if (!mapSec) return;
+  const mapEl = mapSec.querySelector('#danji-map');
+  const link = mapSec.querySelector('a[href*="map.kakao.com"]');
+  if (!mapEl || !link) return;
+  const href = link.getAttribute('href');
+  link.remove();
+  mapEl.style.cursor = 'pointer';
+  mapEl.title = '카카오맵에서 자세히 보기';
+  mapEl.addEventListener('click', () => window.open(href, '_blank', 'noopener'));
+  document.body.dataset.mapPatched = '1';
+}
+
+// ── D 변환: 하단 SEO 영역 정리 (CTA 제거 + .seo-text 제거 + 데이터 안내 펼침 + 신고 버튼) ──
+function _dPatchSeo() {
+  if (document.body.dataset.seoPatched) return;
+  document.querySelectorAll('.cta-section').forEach(e => e.remove());
+  const seoSec = document.querySelector('.seo-section');
+  if (!seoSec) return;
+  const seoText = seoSec.querySelector('.seo-text');
+  if (seoText) seoText.remove();
+  const details = seoSec.querySelector('details');
+  if (details) {
+    details.setAttribute('open', '');
+    details.style.fontSize = '12px';
+    details.style.color = 'var(--sub)';
+    details.innerHTML =
+      '<summary style="cursor:pointer;">데이터 안내</summary>' +
+      '<div style="margin-top:6px;line-height:1.8;">' +
+      '<b>실거래가</b>: 국토교통부 실거래가 공개시스템 (<a href="https://rt.molit.go.kr/" target="_blank" rel="noopener nofollow">rt.molit.go.kr</a>) · 매일 자동 수집<br>' +
+      '<b>건축정보</b>: 국토교통부 건축물대장 (전유부 · 총괄표제부)<br>' +
+      '<b>세대 수</b>: 건축물대장 전유부 등기 기준 (분양 공급 수치와 다를 수 있음)<br>' +
+      '공급면적이 확인되지 않은 단지는 전용면적만 표시합니다<br>' +
+      '거래 취소·정정 건은 반영이 지연될 수 있습니다' +
+      '</div>';
+  }
+  const reportBtn = seoSec.querySelector('button[onclick*="openReportModal"]');
+  if (reportBtn) {
+    reportBtn.textContent = '데이터 오류 신고';
+    reportBtn.style.cssText = 'background:none;border:1px solid var(--border,#e5e7eb);border-radius:20px;color:var(--sub,#6b7280);font-size:12px;cursor:pointer;padding:6px 16px;';
+  }
+  document.body.dataset.seoPatched = '1';
+}
+
+// ── D 변환: FAQ split (visible 4 + hidden + 더보기) ──
+function _dSplitFaq() {
+  if (document.body.dataset.faqSplit) return;
+  const faqSec = document.querySelector('.faq-section');
+  if (!faqSec) return;
+  const items = Array.from(faqSec.querySelectorAll('.faq-item'));
+  if (items.length <= 4) return;
+  items.forEach(it => it.parentNode && it.parentNode.removeChild(it));
+  faqSec.querySelectorAll('.faq-list-visible, .faq-list-hidden, .faq-more').forEach(e => e.remove());
+  const visible = document.createElement('div');
+  visible.className = 'faq-list-visible';
+  const hidden = document.createElement('div');
+  hidden.className = 'faq-list-hidden';
+  hidden.id = 'faq-hidden';
+  items.forEach((it, i) => {
+    if (i < 4) visible.appendChild(it);
+    else hidden.appendChild(it);
+  });
+  const title = faqSec.querySelector('.section-title');
+  if (title) {
+    title.insertAdjacentElement('afterend', hidden);
+    title.insertAdjacentElement('afterend', visible);
+  } else {
+    faqSec.appendChild(visible);
+    faqSec.appendChild(hidden);
+  }
+  const more = document.createElement('div');
+  more.className = 'faq-more';
+  more.textContent = '더보기';
+  more.onclick = () => { hidden.classList.toggle('expanded'); more.style.display = 'none'; };
+  faqSec.appendChild(more);
+  document.body.dataset.faqSplit = '1';
+}
+
+// ── D 변환: 자주 묻는 질문을 '더 알아보기' 다음으로 이동 ──
+function _dReorderFaq() {
+  if (document.body.dataset.faqMoved) return;
+  const faqSec = document.querySelector('.faq-section');
+  if (!faqSec) return;
+  const moreSec = Array.from(document.querySelectorAll('.section')).find(s => {
+    const t = s.querySelector('.section-title');
+    return t && t.textContent.trim() === '더 알아보기';
+  });
+  if (!moreSec) return;
+  moreSec.insertAdjacentElement('afterend', faqSec);
+  document.body.dataset.faqMoved = '1';
+}
+
+// ── D 변환: footer inject (#app 끝, 또는 body 끝) ──
+function _dInjectFooter() {
+  if (document.querySelector('#hwik-d-footer')) return;
+  const footer = document.createElement('footer');
+  footer.id = 'hwik-d-footer';
+  footer.style.cssText = 'max-width:600px;margin:24px auto 40px;padding:24px 16px 0;border-top:1px solid var(--border,#e5e7eb);text-align:center;font-size:11.5px;color:var(--sub,#6b7280);line-height:1.7;';
+  footer.innerHTML =
+    '<div style="margin-bottom:8px;">' +
+    '<a href="/about.html" style="color:var(--sub,#6b7280);text-decoration:none;margin:0 8px;">휙 소개</a>·' +
+    '<a href="/privacy.html" style="color:var(--sub,#6b7280);text-decoration:none;margin:0 8px;">개인정보처리방침</a>·' +
+    '<a href="/terms.html" style="color:var(--sub,#6b7280);text-decoration:none;margin:0 8px;">이용약관</a>' +
+    '</div>' +
+    '<div style="color:var(--muted,#9ca3af);">실거래가 출처: 국토교통부 · 휙(HWIK) · ' +
+    '<a href="https://hwik.kr" style="color:var(--muted,#9ca3af);text-decoration:none;">hwik.kr</a></div>';
+  const app = document.getElementById('app');
+  if (app && app.parentNode) app.parentNode.insertBefore(footer, app.nextSibling);
+  else document.body.appendChild(footer);
+}
+
+// ── D 변환: SPA 의 .tags → D 의 .location-section 으로 변환 (헤더 우측 컬럼) ──
+function _dExtractLocationSection() {
+  const header = document.querySelector('header.header');
+  if (!header || document.querySelector('.location-section')) return;
+  const tagLines = header.querySelectorAll('.tag-line');
+  if (!tagLines.length) return;
+  const subway = [], school = [];
+  tagLines.forEach((tl, idx) => {
+    if (idx === 0) {
+      tl.querySelectorAll('.station-tag').forEach(t => {
+        const line = t.querySelector('.line-badge')?.textContent?.trim() || '';
+        const name = t.querySelector('.station-name')?.textContent?.trim() || '';
+        const time = t.querySelector('.station-time')?.textContent?.trim() || '';
+        if (name) subway.push({ line, name, time });
+      });
+    } else {
+      // SPA 는 학교에도 .station-tag 클래스 재사용 (app.js render())
+      tl.querySelectorAll('.station-tag').forEach(s => {
+        const spans = s.querySelectorAll('span');
+        const typ = spans[0]?.textContent?.trim() || '';
+        const name = spans[1]?.textContent?.trim() || '';
+        const time = spans[2]?.textContent?.trim() || '';
+        if (name) school.push({ typ, name, time });
+      });
+    }
+  });
+  function walkMinNum(s) {
+    const m = (s || '').match(/(\d+)\s*분/);
+    return m ? parseInt(m[1], 10) : 999;
+  }
+  // 지하철 도보 15분 이내 + 호선 중복 제거
+  const seenLines = new Set();
+  const subwayFinal = [];
+  for (const s of subway) {
+    if (walkMinNum(s.time) > 15) continue;
+    if (seenLines.has(s.line)) continue;
+    seenLines.add(s.line);
+    subwayFinal.push(s);
+  }
+  // 학교 도보 15분 + 중복 제거
+  const seenSchools = new Set();
+  const schoolFinal = [];
+  for (const s of school) {
+    if (walkMinNum(s.time) > 15) continue;
+    const key = s.typ + ':' + s.name;
+    if (seenSchools.has(key)) continue;
+    seenSchools.add(key);
+    schoolFinal.push(s);
+  }
+  if (!subwayFinal.length && !schoolFinal.length) return;
+  const sec = document.createElement('div');
+  sec.className = 'location-section';
+  const rows = [];
+  // 호선 색상 (D 디자인 공식 — render() 의 lineColor 와 동일 로직)
+  const _LC = {
+    '1호선':'#0052A4','2호선':'#00A84D','3호선':'#EF7C1C','4호선':'#00A4E3',
+    '5호선':'#996CAC','6호선':'#CD7C2F','7호선':'#747F00','8호선':'#E6186C',
+    '9호선':'#BDB092',
+    '경의중앙선':'#77C4A3','수인분당선':'#FABE00','신분당선':'#D4003B',
+    '공항철도':'#0090D2','GTX-A':'#9A6292','우이신설선':'#B0CE18',
+    '신림선':'#6789CA','경춘선':'#0C8E72','김포골드라인':'#A17E46',
+    '인천1호선':'#7CA8D5','인천2호선':'#ED8B00',
+  };
+  const _lineColor = (line) => {
+    if (!line) return '#94a3b8';
+    for (const k in _LC) { if (line.includes(k) || k.includes(line)) return _LC[k]; }
+    return '#94a3b8';
+  };
+  if (subwayFinal.length) {
+    const items = subwayFinal.map(s => {
+      const c = _lineColor(s.line);
+      const tip = `${s.line} ${s.name} 도보 ${s.time}`.replace(/"/g, '&quot;');
+      return `<span class="loc-item" title="${tip}"><span class="line-badge" style="background:${c};">${esc(s.line)}</span><span class="nm">${esc(s.name)}</span><span class="mn">${esc(s.time)}</span></span>`;
+    }).join('');
+    rows.push(`<div class="loc-row"><div class="loc-items">${items}</div></div>`);
+  }
+  if (schoolFinal.length) {
+    const items = schoolFinal.map(s => {
+      const tip = `${s.typ} ${s.name} 도보 ${s.time}`.replace(/"/g, '&quot;');
+      return `<span class="loc-item" title="${tip}"><span class="type-badge" data-type="${esc(s.typ)}">${esc(s.typ)}</span><span class="nm">${esc(s.name)}</span><span class="mn">${esc(s.time)}</span></span>`;
+    }).join('');
+    rows.push(`<div class="loc-row"><div class="loc-items">${items}</div></div>`);
+  }
+  sec.innerHTML = rows.join('');
+  // 데스크톱(≥768px): 헤더 우측 컬럼 / 모바일: 헤더 뒤
+  if (window.matchMedia('(min-width: 768px)').matches) {
+    header.appendChild(sec);
+  } else {
+    header.insertAdjacentElement('afterend', sec);
+  }
+}
+
+// ── D 디자인 변환 통합 함수 (render() 끝에서 호출) ──
+// 각 변환 함수를 try-catch 로 격리 — 한 함수가 throw 해도 나머지 진행, 페이지 깨짐 방지
+function applyDDesign(d) {
+  if (!d) return;
+  const _safe = (name, fn) => { try { fn(); } catch (e) { console.error('[applyDDesign]', name, e); } };
+  _safe('extractLocationSection', () => _dExtractLocationSection());
+  _safe('disableCardClick',       () => _dDisableCardClick());
+  _safe('injectTradeKindBadge',   () => _dInjectTradeKindBadge());
+  _safe('injectNearbyStyle',      () => _dInjectNearbyStyle());
+  _safe('injectDanjiInfo',        () => _dInjectDanjiInfo(d));
+  _safe('enrichFaq',              () => _dEnrichFaq(d));
+  _safe('reorderFaq',             () => _dReorderFaq());
+  _safe('patchMap',               () => _dPatchMap());
+  _safe('splitFaq',               () => _dSplitFaq());
+  _safe('patchSeo',               () => _dPatchSeo());
+  _safe('injectFooter',           () => _dInjectFooter());
 }
 
 // ── 주변 단지 부족 시 위치 기반으로 채우기 ──
@@ -1016,10 +1500,10 @@ async function fillNearbyIfNeeded() {
     const html = candidates.map(n => {
       const rt = n.recent_trade || {};
       const cats = n.categories || [];
-      // 가격: 어떤 면적이든 가장 최근 매매가
-      let price = null, area = null;
+      // 가격 + 거래일: 어떤 면적이든 가장 최근 매매가
+      let price = null, area = null, date = null;
       for (const c of cats) {
-        if (rt[c] && rt[c].price) { price = rt[c].price; area = c; break; }
+        if (rt[c] && rt[c].price) { price = rt[c].price; area = c; date = rt[c].date || null; break; }
       }
       if (!price) return '';
       const distKm = n.dist < 1 ? Math.round(n.dist * 1000) + 'm' : n.dist.toFixed(1) + 'km';
@@ -1028,13 +1512,18 @@ async function fillNearbyIfNeeded() {
           <div class="nearby-name">${esc(n.complex_name)}</div>
           <div class="nearby-sub">${esc(n.location)} · ${distKm}${area ? ' · 전용 '+area+'㎡' : ''}</div>
         </div>
-        <div style="text-align:right"><div class="nearby-price">${formatPrice(price)}</div></div>
+        <div style="text-align:right">
+          <div class="nearby-price">${formatPrice(price)}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px;">${date ? esc(date) : ''}</div>
+        </div>
       </a>`;
     }).join('');
 
     listEl.insertAdjacentHTML('beforeend', html);
     if (labelEl && !existing) labelEl.textContent = '거리순 (면적 무관)';
     else if (labelEl && existing) labelEl.textContent += ' + 거리순';
+    // 추가된 nearby-item 들에도 D 디자인 (보라 뱃지 + 매매 칩) 적용
+    try { _dInjectNearbyStyle(); } catch (e) { console.error('[fillNearbyIfNeeded] inject', e); }
   } catch(e) {}
 }
 

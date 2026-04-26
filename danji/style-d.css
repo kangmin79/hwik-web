@@ -1,0 +1,509 @@
+.info-row{display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:10px 14px;font-size:12px;}
+.info-row:last-child{border-bottom:none;}
+.info-label{color:var(--sub);} .info-value{font-weight:500;color:var(--dark);text-align:right;}
+.badge-trade{display:inline-block;background:#dbeafe;color:#1e40af;font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;margin-left:6px;vertical-align:middle;}
+.badge-direct{display:inline-block;background:#fef3c7;color:#92400e;font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;margin-left:6px;vertical-align:middle;}
+.faq-list-hidden{max-height:0;overflow:hidden;transition:max-height .3s ease;}
+.faq-list-hidden.expanded{max-height:3000px;}
+.faq-more{margin-top:10px;text-align:center;font-size:12px;color:var(--sub);cursor:pointer;padding:8px;border:1px solid var(--border);border-radius:20px;}
+.header .tag-line{flex-wrap:nowrap !important;overflow:hidden;position:relative;}
+.header .tag-line::after{content:"";position:absolute;top:0;right:0;bottom:0;width:32px;background:linear-gradient(to right, rgba(26,26,46,0), rgba(26,26,46,1));pointer-events:none;}
+.sr-only{position:absolute !important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+table.trade-list{display:block;width:100%;border-collapse:collapse;}
+table.trade-list tbody{display:block;}
+table.trade-list tr.trade-item{display:flex;}
+table.trade-list td{display:block;}
+table.trade-list td.trade-info{flex:1;min-width:0;}
+
+@media (min-width: 1px) {
+  html, body {
+    background: #F0EEE6 !important;
+    font-family: Pretendard, -apple-system, BlinkMacSystemFont,
+                 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR', sans-serif !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    text-rendering: optimizeLegibility !important;
+  }
+  /* 모든 텍스트 요소에 Pretendard 강제 (style.css의 inherit 끊기는 부분 대비) */
+  #app, #app *, .breadcrumb, .header, .header *, .tabs, .tab,
+  .pyeong-btn, .price-card, .price-card *, .metric, .metric *,
+  .chart-section, .chart-title, .trade-item, .trade-item *,
+  .nearby-item, .nearby-item *, .faq-item, .faq-q, .faq-a,
+  .seo-text, .section-title, .seo-section, .seo-section *,
+  .location-section, .location-section *, .seo-intro, .seo-intro * {
+    font-family: Pretendard, -apple-system, BlinkMacSystemFont,
+                 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR', sans-serif !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+  }
+
+  /* ── 타이포 위계 강화 (가독성 ↑) ─────────────────────────── */
+  /* H1 단지명 — 가장 강함 */
+  #app > .header > .header-top .header-name {
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    color: #4338ca !important;
+    letter-spacing: -0.03em !important;
+    line-height: 1.25 !important;
+  }
+  /* 헤더 sub (위치·준공 등) */
+  #app > .header .header-sub {
+    font-size: 13px !important;
+    color: #475569 !important;
+    font-weight: 500 !important;
+    letter-spacing: -0.015em !important;
+  }
+  /* breadcrumb — 더 옅게, 작게 */
+  #app > .breadcrumb { font-size: 12px !important; color: #94a3b8 !important; }
+  #app > .breadcrumb a { color: #64748b !important; }
+
+  /* H2 section-title — 진하고 큼직 */
+  #app .section-title,
+  #app #chart-h2.section-title,
+  #app #trade-section-title {
+    font-size: 16px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    letter-spacing: -0.025em !important;
+  }
+
+  /* 탭 활성 — 더 굵게 */
+  #app > .tabs .tab.active { font-weight: 700 !important; font-size: 16px !important; }
+  #app > .tabs .tab { letter-spacing: -0.015em !important; }
+
+  /* 평형 chip 활성 — 굵게 */
+  #app .pyeong-btn { font-weight: 600 !important; letter-spacing: -0.01em !important; }
+  #app .pyeong-btn.active { font-weight: 700 !important; }
+
+  /* 가격 카드 숫자 — 가장 큰 시각 강조 */
+  #app .price-card-value {
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    letter-spacing: -0.03em !important;
+    font-feature-settings: "tnum" 1 !important;
+    font-variant-numeric: tabular-nums !important;
+  }
+  #app .price-card-label {
+    font-size: 12px !important; color: #64748b !important; font-weight: 500 !important;
+  }
+  #app .price-card-sub {
+    font-size: 11.5px !important; color: #94a3b8 !important; font-weight: 500 !important;
+    font-feature-settings: "tnum" 1 !important;
+  }
+
+  /* 보조지표 카드 — 카드 간 높이 균형 + 안쪽 3행 (label/value/foot) 정렬 */
+  #app .metrics { align-items: stretch !important; }
+  #app .metric {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    min-height: 92px !important;
+    padding: 14px 16px !important;
+    box-sizing: border-box !important;
+  }
+  #app .metric-label {
+    font-size: 11.5px !important; color: #94a3b8 !important; font-weight: 500 !important;
+    line-height: 1.3 !important;
+  }
+  #app .metric-value {
+    font-size: 16px !important; font-weight: 700 !important; color: #0f172a !important;
+    letter-spacing: -0.02em !important;
+    font-feature-settings: "tnum" 1 !important;
+    line-height: 1.4 !important;
+    margin-top: 4px !important;
+    flex: 1 1 auto !important;
+    display: flex !important; align-items: center !important;
+    flex-wrap: wrap !important;
+  }
+  #app .metric-foot {
+    font-size: 11px !important; color: #94a3b8 !important; font-weight: 500 !important;
+    margin-top: 4px !important;
+  }
+
+  /* 거래 항목 — 가격 진하게, 메타 옅게 */
+  #app .trade-item .trade-price {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    letter-spacing: -0.02em !important;
+    font-feature-settings: "tnum" 1 !important;
+  }
+  #app .trade-item .trade-detail {
+    font-size: 12px !important;
+    color: #64748b !important;
+    font-weight: 500 !important;
+    margin-top: 4px !important;
+    font-feature-settings: "tnum" 1 !important;
+  }
+  #app .trade-item .trade-date {
+    font-size: 12.5px !important;
+    color: #475569 !important;
+    font-weight: 600 !important;
+    font-feature-settings: "tnum" 1 !important;
+  }
+
+  /* 주변 단지 — 가격 진하게 */
+  #app .nearby-item .nearby-name {
+    font-size: 14px !important; font-weight: 700 !important; color: #0f172a !important;
+    letter-spacing: -0.015em !important;
+  }
+  #app .nearby-item .nearby-sub {
+    font-size: 12px !important; color: #64748b !important; font-weight: 500 !important;
+    margin-top: 3px !important;
+    font-feature-settings: "tnum" 1 !important;
+  }
+  #app .nearby-item .nearby-price {
+    font-size: 15px !important; font-weight: 700 !important;
+    letter-spacing: -0.02em !important;
+    font-feature-settings: "tnum" 1 !important;
+  }
+
+  /* FAQ */
+  #app .faq-q { font-size: 14px !important; font-weight: 600 !important; color: #0f172a !important; letter-spacing: -0.015em !important; }
+  #app .faq-a { font-size: 13px !important; color: #475569 !important; line-height: 1.75 !important; }
+
+  /* 모든 숫자 영역에 tabular-nums (가격 정렬) */
+  #app .price-card *, #app .metric *, #app .trade-item *,
+  #app .nearby-price, #app .nearby-sub, #app .trade-date,
+  #app .pyeong-btn { font-variant-numeric: tabular-nums !important; }
+  .wrap {
+    max-width: 600px !important;
+    margin: 32px auto !important;
+    background: var(--surface) !important;
+    border-radius: 20px !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04) !important;
+    min-height: 0 !important;
+    overflow: hidden;
+  }
+  /* 헤더를 라이트 톤으로 (Richgo 참고) + 좌(이름) / 우(역·학교) 2열 */
+  #app > .header {
+    background: #fff !important;
+    padding: 22px 24px !important;
+    border-bottom: 1px solid #eef0f4 !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 16px !important;
+  }
+  #app > .header > .header-top {
+    flex: 1 1 auto !important; min-width: 0 !important;
+  }
+  /* H1 한 줄 고정 + 넘치면 말줄임 */
+  #app > .header > .header-top .header-name {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+  }
+  /* 헤더 안으로 들어온 location-section: 우측 컬럼화 */
+  #app > .header > .location-section {
+    flex: 0 0 auto !important;
+    width: 220px !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    border-bottom: none !important;
+    align-self: flex-start;
+    margin-top: 4px !important;
+  }
+  #app > .header > .location-section .loc-row {
+    display: block !important; padding: 2px 0 !important; font-size: 11px !important;
+  }
+  #app > .header > .location-section .loc-row + .loc-row {
+    margin-top: 2px !important;
+  }
+  #app > .header > .location-section .loc-row::after {
+    background: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,1)) !important;
+    width: 24px !important;
+  }
+  /* 우측 컬럼 안에서는 호선/학교 라벨 더 컴팩트 */
+  #app > .header > .location-section .loc-item .line-badge,
+  #app > .header > .location-section .loc-item .type-badge {
+    font-size: 9.5px !important; padding: 1px 4px !important;
+  }
+  #app > .header > .location-section .loc-item .nm { font-size: 11px !important; }
+  #app > .header > .location-section .loc-item .mn { font-size: 10.5px !important; }
+  #app > .header > .location-section .loc-item + .loc-item::before {
+    margin: 0 6px !important;
+  }
+  #app > .header .header-name {
+    font-size: 22px !important; font-weight: 700 !important; color: #4338ca !important;
+  }
+  #app > .header .header-sub {
+    font-size: 14px !important; margin-top: 4px !important; color: #64748b !important;
+  }
+  /* 로고는 브랜드 컬러(노란 "휙") 유지 — 라이트 배경에 포인트 */
+  /* 지하철/학교 태그: 라이트 톤 */
+  #app > .header .tag-line {
+    color: #334155 !important;
+    background: transparent !important;
+  }
+  #app > .header .tag-line::after {
+    background: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,1)) !important;
+  }
+  #app > .header .station-name,
+  #app > .header .station-time { color: #334155 !important; }
+  #app > .header .school-tag { color: #334155 !important; }
+  #app > .header .school-tag span[style*="rgba(255,255,255"] { color: #334155 !important; }
+  #app > .header .school-type {
+    background: #dcfce7 !important; color: #166534 !important;
+  }
+  #app > .header .tag-sep { color: #cbd5e1 !important; }
+
+  /* 헤더 좌정렬 (Richgo 스타일) */
+  #app > .header .header-top {
+    display: flex !important; align-items: center !important; gap: 12px !important;
+  }
+  #app > .header .header-top > div:nth-of-type(1) { flex: 1; min-width: 0; }
+  #app > .header .header-sub {
+    font-size: 13px !important; color: #64748b !important; margin-top: 4px !important;
+    line-height: 1.5 !important;
+  }
+
+  /* 헤더: 심플 좌정렬. 지하철/학교는 JS 로 별도 섹션으로 빠짐 */
+  #app > .header .tag-line { display: none !important; }
+
+  /* 새 섹션: 교통·학교 (헤더 바로 아래) — 시선 무게 낮춤 */
+  .location-section {
+    padding: 6px 24px 8px !important;
+    background: transparent;
+    border-bottom: 1px solid #eef0f4;
+  }
+  .location-section .loc-row {
+    display: flex; align-items: center; padding: 5px 0; font-size: 12.5px;
+    position: relative; overflow: hidden;
+  }
+  .location-section .loc-row + .loc-row { border-top: none; }
+  .location-section .loc-row::after {
+    content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 32px;
+    background: linear-gradient(to right, rgba(255,255,255,0), rgba(255,255,255,1));
+    pointer-events: none;
+  }
+  .location-section .loc-items {
+    display: flex; flex-wrap: nowrap; gap: 0; color: #475569; align-items: center;
+    white-space: nowrap; overflow: hidden; min-width: 0;
+  }
+  .location-section .loc-item { flex-shrink: 0; }
+  .location-section .loc-item { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; }
+  .location-section .loc-item + .loc-item::before {
+    content: '·'; color: #d1d5db; margin: 0 8px; font-weight: 500;
+  }
+  /* 호선 뱃지: 채도 낮춤 — 큰 칠 대신 작은 점 + 텍스트 */
+  .location-section .loc-item .line-badge {
+    display: inline-block; padding: 1px 5px; border-radius: 3px;
+    background: #94a3b8; color: #fff; font-size: 10px; font-weight: 600;
+    line-height: 1.3; letter-spacing: 0.1px; opacity: 0.78;
+  }
+  /* 학교 뱃지: 채움 제거 — 외곽선만 */
+  .location-section .loc-item .type-badge {
+    display: inline-block; padding: 0 5px; border-radius: 3px;
+    background: transparent; color: #64748b; font-size: 10px; font-weight: 600;
+    line-height: 1.3; border: 1px solid #cbd5e1;
+  }
+  .location-section .loc-item .nm { color: #334155; font-weight: 500; }
+  .location-section .loc-item .mn { color: #9ca3af; font-size: 11px; font-weight: 400; }
+
+  /* 탭 가독성 강화 */
+  #app > .tabs {
+    border-bottom: 1px solid #eef0f4 !important;
+    padding: 0 8px !important;
+  }
+  #app > .tabs .tab {
+    cursor: pointer !important;
+    font-size: 15px !important; font-weight: 600 !important;
+    color: #475569 !important;
+    padding: 14px 20px !important;
+    position: relative !important;
+    border-bottom: 3px solid transparent !important;
+    transition: color .15s ease, border-color .15s ease, background .15s ease;
+  }
+  #app > .tabs .tab:not(.active):hover {
+    color: #1e293b !important; background: #f8fafc !important;
+  }
+  /* 활성 탭: 유형별 색상 (월세=초록, 전세=파랑, 매매=주황) */
+  #app > .tabs .tab.active {
+    font-size: 16px !important; font-weight: 700 !important;
+    background: transparent !important;
+  }
+  #app > .tabs .tab.active[data-tab="월세"] {
+    color: #059669 !important; border-bottom-color: #059669 !important;
+  }
+  #app > .tabs .tab.active[data-tab="전세"] {
+    color: #2563eb !important; border-bottom-color: #2563eb !important;
+  }
+  #app > .tabs .tab.active[data-tab="매매"] {
+    color: #ea580c !important; border-bottom-color: #ea580c !important;
+  }
+
+  /* 평형 칩 호버 */
+  #app > .pyeong-wrap .pyeong-btn {
+    cursor: pointer !important;
+    transition: background .15s ease, border-color .15s ease, transform .12s ease;
+  }
+  #app > .pyeong-wrap .pyeong-btn:not(.active):hover {
+    background: #eef2ff !important;
+    border-color: #c7d2fe !important;
+    transform: translateY(-1px);
+  }
+
+  /* 주변 단지 카드 호버 — 강화 */
+  #app .nearby-item {
+    transition: background .18s ease, transform .18s ease, box-shadow .18s ease, border-color .18s ease !important;
+    cursor: pointer;
+  }
+  #app .nearby-item:hover {
+    background: #ffffff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(15,23,42,0.10);
+    border-color: #c7d2fe !important;
+  }
+
+  /* 실거래 거래 목록 — 주변 단지와 100% 동일 (카드 + 호버) */
+  /* display 는 !important 빼야 인라인 style="display:none" (탭 숨김) 가 동작 */
+  #app table.trade-list { display: flex; flex-direction: column; gap: 8px; }
+  #app table.trade-list tbody { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+  #app .trade-item {
+    background: var(--surface) !important;
+    border: 1px solid transparent !important;
+    border-left: none !important;
+    border-bottom: none !important;
+    border-radius: var(--radius) !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05) !important;
+    padding: 14px !important;
+    transition: background .18s ease, transform .18s ease, box-shadow .18s ease, border-color .18s ease !important;
+    cursor: default;
+  }
+  #app .trade-item:hover {
+    background: #ffffff !important;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(15,23,42,0.10);
+    border-color: #c7d2fe !important;
+  }
+  #app .trade-item .trade-price {
+    font-size: 14px !important; font-weight: 600 !important;
+  }
+  #app .trade-item .trade-detail {
+    font-size: 11.5px !important; color: #94a3b8 !important;
+  }
+  #app .trade-item .trade-date {
+    font-size: 11.5px !important; color: #94a3b8 !important;
+  }
+
+  /* 가격카드: 우측(5년 최고)은 빨강 강조 + 호버 인터랙션 */
+  #app .price-card {
+    transition: border-color .15s ease, background .15s ease, box-shadow .15s ease, transform .12s ease !important;
+    cursor: default;
+  }
+  /* 왼쪽 primary: 호버 시 파란 border 살짝 강조 */
+  #app .price-card.primary:hover {
+    box-shadow: 0 4px 12px rgba(99,102,241,0.12);
+    transform: translateY(-1px);
+  }
+  /* 오른쪽 secondary: 빨강 수치 + 호버 시 빨강 border 강조 */
+  #app .price-card.secondary .price-card-value {
+    color: #dc2626 !important;
+  }
+  #app .price-card.secondary {
+    border: 1px solid #fee2e2 !important;
+    background: #fef7f7 !important;
+  }
+  #app .price-card.secondary:hover {
+    border-color: #dc2626 !important;
+    background: #fef2f2 !important;
+    box-shadow: 0 4px 12px rgba(220,38,38,0.12);
+    transform: translateY(-1px);
+  }
+  #app > .tabs { font-size: 15px !important; }
+  #app > #area-price-cards .price-card-value { font-size: 24px !important; }
+  #app > .chart-section { padding: 0 8px; }
+  #app > .section { padding: 20px 24px !important; }
+  #app > p.seo-text { margin: 0 24px 16px !important; font-size: 13px !important; line-height: 1.85 !important; }
+  #app > .seo-section { padding: 24px !important; }
+  body { padding-bottom: 40px; }
+}
+
+/* ── SPA 적응 추가 ───────────────────────────────────────── */
+@media (min-width: 1px) {
+  /* SPA 가 일부 요소에 inline font 박을 가능성 → body 자손 모두 Pretendard 강제 */
+  body, body * {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont,
+                 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR', sans-serif !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    text-rendering: optimizeLegibility !important;
+  }
+  /* 휙 로고: 작은 정사각 뱃지 */
+  #app > .header > .header-top > .logo {
+    flex: 0 0 auto !important;
+    width: 36px !important;
+    height: 36px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    background: #facc15 !important;
+    color: #1a1a2e !important;
+    font-weight: 800 !important;
+    font-size: 14px !important;
+    border-radius: 8px !important;
+    line-height: 1 !important;
+    padding: 0 !important;
+    margin-right: 4px !important;
+  }
+  /* SPA 의 .header-top 안 .tags 는 D 정답에선 location-section 으로 추출됨 → 원본 .tags 숨김 */
+  #app > .header > .tags { display: none !important; }
+  /* 학교 뱃지: 종류별 색 (초=민트, 중=파랑, 고=옐로) */
+  .location-section .loc-item .type-badge[data-type="초"] {
+    background: #dcfce7 !important; color: #166534 !important; border-color: #bbf7d0 !important;
+  }
+  .location-section .loc-item .type-badge[data-type="중"] {
+    background: #dbeafe !important; color: #1e40af !important; border-color: #bfdbfe !important;
+  }
+  .location-section .loc-item .type-badge[data-type="고"] {
+    background: #fef3c7 !important; color: #92400e !important; border-color: #fde68a !important;
+  }
+}
+
+/* ── 모바일 보정 (<768px) — 헤더 1열 스택, location 풀폭 ────── */
+@media (max-width: 767px) {
+  /* 헤더: 좌우 2열 → 위아래 1열 스택 */
+  #app > .header {
+    flex-direction: column !important;
+    gap: 12px !important;
+    padding: 16px !important;
+  }
+  /* location-section 풀폭 (220px 고정 해제) */
+  #app > .header > .location-section {
+    width: 100% !important;
+    flex: 0 0 auto !important;
+    margin-top: 0 !important;
+  }
+  /* H1 모바일 살짝 작게 + 한 줄 제한 해제 (긴 단지명 안 잘리게) */
+  #app > .header > .header-top .header-name,
+  #app > .header .header-name {
+    font-size: 20px !important;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+  }
+  /* header-sub 모바일 폰트 */
+  #app > .header .header-sub {
+    font-size: 12px !important;
+  }
+  /* location loc-row: 가로 스크롤 방지, wrap */
+  #app > .header > .location-section .loc-row {
+    overflow: visible !important;
+  }
+  #app > .header > .location-section .loc-row .loc-items {
+    flex-wrap: wrap !important;
+    white-space: normal !important;
+    row-gap: 4px !important;
+  }
+  /* 본문 좌우 패딩 모바일에 맞게 */
+  #app .section,
+  #app .seo-section,
+  #app .faq-section,
+  #app .seo-intro {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+}
