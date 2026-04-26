@@ -90,8 +90,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     needs: sync
+    # sync 가 모두 success 일 때만 실행 (fail 시 자동 skip).
     # cron(inputs 없음) → !=true → 실행. 수동 dry-run=true → 스킵.
-    if: ${{ !cancelled() && github.event.inputs.dry-run != 'true' }}
+    if: ${{ success() && github.event.inputs.dry-run != 'true' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
