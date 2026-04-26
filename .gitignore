@@ -54,5 +54,3 @@ verify_match_*
 verify_all_dong.py
 verify_final.py
 
-# 법정동 CSV (용량 큼)
-국토교통부_법정동코드_*.csv
