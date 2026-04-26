@@ -297,15 +297,26 @@ def match_and_normalize(strict_idx: dict, jibun_idx: dict, mgm_to_id: dict,
 # ── Phase 5: officetel_trade_raw UPSERT (raw 보존) ─────────
 
 
+_RAW_DEDUP_KEYS = ("api_source", "apt_seq", "mgm_bldrgst_pk", "deal_ymd", "price_signature")
+
+
 def upsert_trade_raw(raw_rows: list[dict]) -> int:
     """officetel_trade_raw 에 raw 거래 적재. dedup 키:
       (api_source, apt_seq, mgm_bldrgst_pk, deal_ymd, price_signature)
+
+    배치 내부 dedup 필수 — 동일 키가 2개 이상이면 Postgres 21000 에러
+    "ON CONFLICT DO UPDATE command cannot affect row a second time".
     """
     if not raw_rows:
         return 0
+    seen: dict[tuple, dict] = {}
+    for r in raw_rows:
+        key = tuple(r.get(k) for k in _RAW_DEDUP_KEYS)
+        seen[key] = r  # 마지막 값 유지
+    deduped = list(seen.values())
     return insert_rows(
         "officetel_trade_raw",
-        raw_rows,
+        deduped,
         on_conflict="api_source,apt_seq,mgm_bldrgst_pk,deal_ymd,price_signature",
         upsert=True,
     )
@@ -321,20 +332,29 @@ _TRADE_DB_COLUMNS = {
     "contract_term", "contract_type",
 }
 
+_TRADE_DEDUP_KEYS = ("officetel_id", "deal_type", "deal_year", "deal_month",
+                     "deal_day", "excl_use_ar", "floor", "price", "monthly_rent")
+
 
 def upsert_officetel_trades(matched: list[dict]) -> int:
     """officetel_trades UPSERT. on_conflict = stage6 와 동일 9 필드.
     _match_source / _mgm_bldrgst_pk 등 디버그 키는 제거 후 적재.
+
+    배치 내부 dedup 필수 — 동일 9-tuple 키가 2개 이상이면 Postgres 21000.
+    국토부 sale/rent 양쪽에 같은 거래가 들어오거나 jibun_single 매핑이
+    동일 거래를 다른 mgm 에 매핑할 때 발생.
     """
     if not matched:
         return 0
-    cleaned = [
-        {k: v for k, v in row.items() if k in _TRADE_DB_COLUMNS}
-        for row in matched
-    ]
+    seen: dict[tuple, dict] = {}
+    for row in matched:
+        cleaned = {k: v for k, v in row.items() if k in _TRADE_DB_COLUMNS}
+        key = tuple(cleaned.get(k) for k in _TRADE_DEDUP_KEYS)
+        seen[key] = cleaned  # 마지막 값 유지
+    deduped = list(seen.values())
     return insert_rows(
         "officetel_trades",
-        cleaned,
+        deduped,
         on_conflict="officetel_id,deal_type,deal_year,deal_month,deal_day,"
                     "excl_use_ar,floor,price,monthly_rent",
         upsert=True,
