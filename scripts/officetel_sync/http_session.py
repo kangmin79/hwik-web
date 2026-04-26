@@ -36,7 +36,7 @@ def get_pool() -> urllib3.PoolManager:
                     num_pools=8,
                     maxsize=64,
                     retries=retry,
-                    timeout=urllib3.Timeout(connect=5, read=20),
+                    timeout=urllib3.Timeout(connect=10, read=60),  # 2026-04-27: 5/20→10/60 (아파트와 동일)
                     headers={
                         # 2026-04-26: 국토부 WAF 가 'curl/*' UA 차단 시작 → 400 Request Blocked
                         # 표준 브라우저 UA 로 회피. Accept: */* 는 BldRgstHubService 빈 응답 방지.
