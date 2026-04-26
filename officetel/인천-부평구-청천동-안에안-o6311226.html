@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>안에안 시세 · 인천 부평구 오피스텔 | 휙</title>
+<meta name="description" content="부평구 청천동 안에안 2023년 준공 84호 오피스텔. 최근 매매 전용 84㎡ 4억(2026-01-30). 국토부 실거래.">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+<link rel="canonical" href="https://hwik.kr/officetel/인천-부평구-청천동-안에안-o6311226.html">
+<meta property="article:modified_time" content="2026-04-26T10:20:22+09:00">
+<meta property="article:section" content="오피스텔 실거래">
+<meta property="og:type" content="article"><meta property="og:site_name" content="휙"><meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="안에안 시세 · 인천 부평구 오피스텔 | 휙"><meta property="og:description" content="부평구 청천동 안에안 2023년 준공 84호 오피스텔. 최근 매매 전용 84㎡ 4억(2026-01-30). 국토부 실거래.">
+<meta property="og:image" content="https://hwik.kr/og-image.png"><meta property="og:url" content="https://hwik.kr/officetel/인천-부평구-청천동-안에안-o6311226.html">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="안에안 시세 · 인천 부평구 오피스텔 | 휙"><meta name="twitter:description" content="부평구 청천동 안에안 2023년 준공 84호 오피스텔. 최근 매매 전용 84㎡ 4억(2026-01-30). 국토부 실거래.">
+<link rel="stylesheet" href="/officetel/style.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script defer src="/config.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+.info-row{display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding:10px 14px;font-size:12px;}
+.info-row:last-child{border-bottom:none;}
+.info-label{color:var(--sub);} .info-value{font-weight:500;color:var(--dark);text-align:right;}
+.badge-trade{display:inline-block;background:#dbeafe;color:#1e40af;font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;margin-left:6px;vertical-align:middle;}
+.badge-direct{display:inline-block;background:#fef3c7;color:#92400e;font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px;margin-left:6px;vertical-align:middle;}
+.faq-list-hidden{max-height:0;overflow:hidden;transition:max-height .3s ease;}
+.faq-list-hidden.expanded{max-height:3000px;}
+.faq-more{margin-top:10px;text-align:center;font-size:12px;color:var(--sub);cursor:pointer;padding:8px;border:1px solid var(--border);border-radius:20px;}
+.header .tag-line{flex-wrap:nowrap !important;overflow:hidden;position:relative;}
+.header .tag-line::after{content:"";position:absolute;top:0;right:0;bottom:0;width:32px;background:linear-gradient(to right, rgba(26,26,46,0), rgba(26,26,46,1));pointer-events:none;}
+.sr-only{position:absolute !important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+table.trade-list{display:block;width:100%;border-collapse:collapse;}
+table.trade-list tbody{display:block;}
+table.trade-list tr.trade-item{display:flex;}
+table.trade-list td{display:block;}
+table.trade-list td.trade-info{flex:1;min-width:0;}
+</style>
+
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css">
+<script>
+(function(){
+  function enrichHeaderSub() {
+    const sub = document.querySelector('header.header .header-sub');
+    if (!sub || sub.dataset.enriched) return;
+    const bodyText = (document.querySelector('p.seo-text')?.textContent || '') +
+                     ' ' + (document.querySelector('.faq-section')?.textContent || '');
+    const year = bodyText.match(/(\d{4})년 준공/)?.[1];
+    const units = bodyText.match(/총 (\d[\d,]*)호/)?.[1];
+    const floors = bodyText.match(/지상 (\d+)층/)?.[1] || bodyText.match(/최고 (\d+)층/)?.[1];
+    const parts = [sub.textContent.trim().replace(/· \d{4}년$/, '').trim(), '오피스텔'];
+    if (year) parts.push(`${year}년 준공`);
+    if (units) parts.push(`${units}세대`);
+    if (floors) parts.push(`지상 ${floors}층`);
+    sub.textContent = parts.filter(Boolean).join(' · ');
+    sub.dataset.enriched = '1';
+  }
+  function patchPriceChart() {
+    if (!window.renderPriceChart || window.__patched_price_chart) return;
+    window.__patched_price_chart = true;
+    const orig = window.renderPriceChart;
+    window.renderPriceChart = function(kind) {
+      orig.call(this, kind);
+      requestAnimationFrame(() => applyHighlights(null));
+    };
+  }
+  function applyHighlights(pulseTarget = null) {
+    const canvas = document.getElementById('priceChart');
+    const chart = canvas && (typeof Chart !== 'undefined') ? Chart.getChart(canvas) : null;
+    if (!chart || !chart.data || !chart.data.datasets || !chart.data.datasets[0]) return;
+    const ds = chart.data.datasets[0];
+    if (!ds.data.length) return;
+    let maxIdx = 0, recentIdx = 0;
+    ds.data.forEach((p, i) => {
+      if (Number(p.y) > Number(ds.data[maxIdx].y)) maxIdx = i;
+      if (String(p.x) > String(ds.data[recentIdx].x)) recentIdx = i;
+    });
+    const defaultBg = 'rgba(245,200,66,0.7)';
+    ds.backgroundColor = ds.data.map((_, i) =>
+      i === maxIdx ? '#dc2626' : i === recentIdx ? '#6366f1' : defaultBg);
+    ds.borderColor = ds.data.map((_, i) =>
+      (i === maxIdx || i === recentIdx) ? '#fff' : '#f5c842');
+    ds.borderWidth = ds.data.map((_, i) =>
+      (i === maxIdx || i === recentIdx) ? 2 : 1);
+    ds.pointRadius = ds.data.map((_, i) =>
+      (i === maxIdx || i === recentIdx) ? 8 : 5);
+    chart.update('none');
+  }
+  function bindCardHover() {
+    document.addEventListener('mouseenter', (e) => {
+      const card = e.target.closest && e.target.closest('.price-card');
+      if (!card) return;
+      const target = card.classList.contains('secondary') ? 'max' :
+                     card.classList.contains('primary') ? 'recent' : null;
+      applyHighlights(target);
+    }, true);
+    document.addEventListener('mouseleave', (e) => {
+      const card = e.target.closest && e.target.closest('.price-card');
+      if (!card) return;
+      applyHighlights(null);
+    }, true);
+  }
+  function extractLocationSection() {
+    const header = document.querySelector('header.header');
+    if (!header || document.querySelector('.location-section')) return;
+    const tagLines = header.querySelectorAll('.tag-line');
+    if (!tagLines.length) return;
+    const subway = [], school = [];
+    tagLines.forEach((tl, idx) => {
+      if (idx === 0) {
+        tl.querySelectorAll('.station-tag').forEach(t => {
+          const line = t.querySelector('.line-badge')?.textContent?.trim() || '';
+          const name = t.querySelector('.station-name')?.textContent?.trim() || '';
+          const time = t.querySelector('.station-time')?.textContent?.trim() || '';
+          if (name) subway.push({line, name, time});
+        });
+      } else {
+        tl.querySelectorAll('.school-tag').forEach(s => {
+          const spans = s.querySelectorAll('span');
+          const typ = spans[0]?.textContent?.trim() || '';
+          const name = spans[1]?.textContent?.trim() || '';
+          const time = spans[2]?.textContent?.trim() || '';
+          if (name) school.push({typ, name, time});
+        });
+      }
+    });
+    function walkMin(s) {
+      const m = (s || '').match(/(\d+)\s*분/);
+      return m ? parseInt(m[1], 10) : 999;
+    }
+    const subwayNear = subway.filter(s => walkMin(s.time) <= 15);
+    const seenLines = new Set();
+    const subwayDedup = [];
+    for (const s of subwayNear) {
+      if (seenLines.has(s.line)) continue;
+      seenLines.add(s.line);
+      subwayDedup.push(s);
+    }
+    const schoolNear = school.filter(s => walkMin(s.time) <= 15);
+    const seenNames = new Set();
+    const schoolDedup = [];
+    for (const s of schoolNear) {
+      const key = s.typ + ':' + s.name;
+      if (seenNames.has(key)) continue;
+      seenNames.add(key);
+      schoolDedup.push(s);
+    }
+    subway.length = 0; subway.push(...subwayDedup);
+    school.length = 0; school.push(...schoolDedup);
+    if (!subway.length && !school.length) return;
+    const LINE_COLORS = {
+      '1호선': '#5A85B8', '2호선': '#5BB87E', '3호선': '#E8A06A', '4호선': '#5DAFCC',
+      '5호선': '#A693B5', '6호선': '#C49679', '7호선': '#9AA053', '8호선': '#D87099',
+      '9호선': '#C5BDA5',
+      '경의중앙선': '#9DCDB6', '수인분당선': '#D4B370', '신분당선': '#C57085',
+      '공항철도': '#6FA9C8', 'GTX-A': '#A56BA5', '우이신설선': '#C4D26C',
+      '신림선': '#8FA6C6', '경춘선': '#6BA897', '김포골드라인': '#B89866',
+      '인천1호선': '#A0BCD3', '인천2호선': '#E0A06A',
+    };
+    function lineColor(line) {
+      if (!line) return '#64748b';
+      for (const k of Object.keys(LINE_COLORS)) {
+        if (line.includes(k)) return LINE_COLORS[k];
+      }
+      return '#64748b';
+    }
+    const sec = document.createElement('div');
+    sec.className = 'location-section';
+    const rows = [];
+    if (subway.length) {
+      const items = subway.map(s => {
+        const tip = `${s.line} ${s.name} 도보 ${s.time}`.replace(/"/g, '&quot;');
+        return `<span class="loc-item" title="${tip}"><span class="line-badge" style="background:${lineColor(s.line)};">${s.line}</span><span class="nm">${s.name}</span><span class="mn">${s.time}</span></span>`;
+      }).join('');
+      rows.push(`<div class="loc-row"><div class="loc-items">${items}</div></div>`);
+    }
+    if (school.length) {
+      const items = school.map(s => {
+        const tip = `${s.typ} ${s.name} 도보 ${s.time}`.replace(/"/g, '&quot;');
+        const cls = s.typ === '초' ? ' type-elem' : s.typ === '중' ? ' type-mid' : s.typ === '고' ? ' type-high' : '';
+        return `<span class="loc-item" title="${tip}"><span class="type-badge${cls}">${s.typ}</span><span class="nm">${s.name}</span><span class="mn">${s.time}</span></span>`;
+      }).join('');
+      rows.push(`<div class="loc-row"><div class="loc-items">${items}</div></div>`);
+    }
+    sec.innerHTML = rows.join('');
+    header.appendChild(sec);
+  }
+  function run() {
+    enrichHeaderSub();
+    extractLocationSection();
+    patchPriceChart();
+    bindCardHover();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', run);
+  } else { run(); }
+})();
+</script>
+
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "Residence", "@id": "https://hwik.kr/officetel/인천-부평구-청천동-안에안-o6311226.html#building", "name": "안에안", "address": {"@type": "PostalAddress", "streetAddress": "인천 부평구 평천로 132", "addressLocality": "부평구 청천동", "addressRegion": "KR-28", "addressCountry": "KR"}, "url": "https://hwik.kr/officetel/인천-부평구-청천동-안에안-o6311226.html", "yearBuilt": "2023", "geo": {"@type": "GeoCoordinates", "latitude": 37.5200611810889, "longitude": 126.706325938811}, "additionalProperty": [{"@type": "PropertyValue", "name": "총 호실 수", "value": 84, "unitText": "호"}, {"@type": "PropertyValue", "name": "지상 최고층", "value": 8, "unitText": "층"}, {"@type": "PropertyValue", "name": "구조", "value": "철근콘크리트구조"}], "amenityFeature": [{"@type": "LocationFeatureSpecification", "name": "인천용마초등학교", "value": {"@type": "QuantitativeValue", "value": 6, "unitText": "분", "description": "도보 소요 시간"}}, {"@type": "LocationFeatureSpecification", "name": "인천청천초등학교", "value": {"@type": "QuantitativeValue", "value": 7, "unitText": "분", "description": "도보 소요 시간"}}, {"@type": "LocationFeatureSpecification", "name": "북인천여자중학교", "value": {"@type": "QuantitativeValue", "value": 10, "unitText": "분", "description": "도보 소요 시간"}}], "containedInPlace": {"@type": "Place", "name": "청천동", "containedInPlace": {"@type": "AdministrativeArea", "name": "부평구", "containedInPlace": {"@type": "AdministrativeArea", "name": "인천", "containedInPlace": {"@type": "Country", "name": "대한민국"}}}}}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"}, {"@type": "ListItem", "position": 2, "name": "인천 부평구", "item": "https://hwik.kr/officetel/gu/%EB%B6%80%ED%8F%89%EA%B5%AC.html"}, {"@type": "ListItem", "position": 3, "name": "청천동", "item": "https://hwik.kr/officetel/dong/%EC%9D%B8%EC%B2%9C-%EB%B6%80%ED%8F%89%EA%B5%AC-%EC%B2%AD%EC%B2%9C%EB%8F%99.html"}, {"@type": "ListItem", "position": 4, "name": "안에안"}]}, {"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "안에안은 몇 년 준공, 몇 호?", "acceptedAnswer": {"@type": "Answer", "text": "안에안은 2023년 준공 오피스텔로, 총 84호실 규모입니다."}}, {"@type": "Question", "name": "안에안 최근 실거래가는?", "acceptedAnswer": {"@type": "Answer", "text": "최근 매매 실거래가는 4억입니다. (2026-01-30 기준)"}}, {"@type": "Question", "name": "안에안 최근 5년 최고가는?", "acceptedAnswer": {"@type": "Answer", "text": "최근 5년 매매 최고가는 4억입니다. (2026-01-30)"}}, {"@type": "Question", "name": "안에안 매매 거래는 얼마나 활발?", "acceptedAnswer": {"@type": "Answer", "text": "최근 5년 매매 3건이 집계되었습니다."}}, {"@type": "Question", "name": "안에안 월세 평균은?", "acceptedAnswer": {"@type": "Answer", "text": "최근 5년 월세 실거래 9건 평균은 보증금 2,111만 / 월세 106만입니다."}}, {"@type": "Question", "name": "안에안 최고층은?", "acceptedAnswer": {"@type": "Answer", "text": "지상 8층 규모입니다. 지하 1층."}}, {"@type": "Question", "name": "안에안 주변 학교는?", "acceptedAnswer": {"@type": "Answer", "text": "도보권 학교: 인천용마초등학교(도보 6분), 인천청천초등학교(도보 7분), 북인천여자중학교(도보 10분)."}}, {"@type": "Question", "name": "안에안 건폐율·용적률은?", "acceptedAnswer": {"@type": "Answer", "text": "건축물대장 기준 건폐율 42.81%, 용적률 297.05%입니다."}}, {"@type": "Question", "name": "안에안 내진설계 등급은?", "acceptedAnswer": {"@type": "Answer", "text": "내진설계 등급은 VII-0.204g입니다 (최대지반가속도 기준)."}}, {"@type": "Question", "name": "안에안 건물 구조는?", "acceptedAnswer": {"@type": "Answer", "text": "철근콘크리트구조입니다."}}, {"@type": "Question", "name": "안에안 신축 오피스텔인가요?", "acceptedAnswer": {"@type": "Answer", "text": "안에안은 2023년 준공으로 3년차 신축 오피스텔입니다."}}, {"@type": "Question", "name": "안에안 4억대 매매 가능한가요?", "acceptedAnswer": {"@type": "Answer", "text": "안에안 최근 5년 매매 최고가는 4억, 평균은 4억 수준입니다. 호수·층·평형에 따라 가격대가 달라집니다."}}, {"@type": "Question", "name": "청천동 오피스텔 중에 안에안만한 단지가 있나요?", "acceptedAnswer": {"@type": "Answer", "text": "청천동에는 안에안 외에도 여러 오피스텔이 있습니다. 인천 부평구 청천동 오피스텔 전체 목록과 시세 비교가 가능합니다."}}]}]}</script>
+</head>
+<body>
+<main class="wrap" role="main">
+<article itemscope itemtype="https://schema.org/Residence">
+
+<nav class="breadcrumb" aria-label="breadcrumb">
+<a href="/">휙</a><span>›</span>
+<a href="/officetel/gu/%EB%B6%80%ED%8F%89%EA%B5%AC.html">인천 부평구</a><span>›</span>
+<a href="/officetel/dong/%EC%9D%B8%EC%B2%9C-%EB%B6%80%ED%8F%89%EA%B5%AC-%EC%B2%AD%EC%B2%9C%EB%8F%99.html">청천동</a><span>›</span>
+<span>안에안</span>
+</nav>
+
+<header class="header">
+<div class="header-top">
+<a class="logo" href="/" style="text-decoration:none;">휙</a>
+<div><h1 class="header-name" style="margin:0;">안에안</h1>
+<div class="header-sub">부평구 청천동 · 2023년</div></div>
+</div>
+
+<div class="tag-line" style="margin-top:4px;gap:4px;"><span class="school-tag" style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.85);margin-right:8px;"><span class="school-type" style="display:inline-block;padding:0 5px;border-radius:8px;font-size:9px;font-weight:600;background:rgba(163,212,104,0.3);color:#d7ebbb;">초</span><span style="color:rgba(255,255,255,0.85);">인천용마초등학교</span><span style="color:rgba(255,255,255,0.5);font-size:11px;">6분</span></span><span class="tag-sep">·</span><span class="school-tag" style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.85);margin-right:8px;"><span class="school-type" style="display:inline-block;padding:0 5px;border-radius:8px;font-size:9px;font-weight:600;background:rgba(163,212,104,0.3);color:#d7ebbb;">초</span><span style="color:rgba(255,255,255,0.85);">인천청천초등학교</span><span style="color:rgba(255,255,255,0.5);font-size:11px;">7분</span></span><span class="tag-sep">·</span><span class="school-tag" style="display:inline-flex;align-items:center;gap:4px;color:rgba(255,255,255,0.85);margin-right:8px;"><span class="school-type" style="display:inline-block;padding:0 5px;border-radius:8px;font-size:9px;font-weight:600;background:rgba(163,212,104,0.3);color:#d7ebbb;">중</span><span style="color:rgba(255,255,255,0.85);">북인천여자중학교</span><span style="color:rgba(255,255,255,0.5);font-size:11px;">10분</span></span></div>
+</header>
+
+<div class="tabs">
+<div class="tab active" data-tab="월세">월세</div>
+<div class="tab" data-tab="전세">전세</div>
+<div class="tab" data-tab="매매">매매</div>
+</div>
+
+<div style="padding:8px 16px 0;font-size:11px;color:var(--sub);">전용면적 기준</div><div class="pyeong-wrap"><div class="pyeong-row"><button type="button" class="pyeong-btn active" data-area="84">84㎡</button></div></div>
+<div id="area-price-cards" style="display:none;"><div class="price-cards"><div class="price-card primary"><div class="price-card-label">최근 매매</div><div class="price-card-value">4억</div><div class="price-card-sub">2026-01-30 · 전용 84㎡</div></div><div class="price-card secondary"><div class="price-card-label">5년 최고가</div><div class="price-card-value">4억</div><div class="price-card-sub">2026-01-30</div></div></div></div>
+
+<div class="divider" id="divider-before-chart" style="display:none;"></div>
+<section class="chart-section" id="chart-section" aria-labelledby="chart-h2" style="display:none;">
+  <h2 id="chart-h2" class="section-title" style="padding:0 0 10px;font-size:15px;color:var(--dark);margin:0;">가격 추이</h2>
+  <div class="chart-title">거래량 (최근 5년)</div>
+  <div style="height:80px;position:relative;"><canvas id="volumeChart"></canvas></div>
+  <div class="chart-title" style="margin-top:12px;">실거래가</div>
+  <div class="chart-wrap"><canvas id="priceChart"></canvas></div>
+</section>
+
+<div class="divider"></div>
+<div class="section"><h2 class="section-title" id="trade-section-title">최근 실거래</h2>
+<table class="trade-list" id="trade-list-매매" style="display:none;"><caption class="sr-only">안에안 매매 실거래</caption><thead class="sr-only"><tr><th scope="col">유형 및 가격</th><th scope="col">전용면적·층수</th><th scope="col">거래일</th></tr></thead><tbody><tr class="trade-item"><td class="trade-info"><div class="trade-price"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#fdba74;color:#7c2d12;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">매매</span>4억<span class="badge-direct">직거래</span></div><div class="trade-detail">전용 83.76㎡ · 6층</div></td><td class="trade-date">2026-01-30</td></tr><tr class="trade-item"><td class="trade-info"><div class="trade-price"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#fdba74;color:#7c2d12;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">매매</span>4억<span class="badge-direct">직거래</span></div><div class="trade-detail">전용 83.76㎡ · 3층</div></td><td class="trade-date">2025-07-20</td></tr><tr class="trade-item"><td class="trade-info"><div class="trade-price"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#fdba74;color:#7c2d12;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">매매</span>4억<span class="badge-direct">직거래</span></div><div class="trade-detail">전용 83.76㎡ · 5층</div></td><td class="trade-date">2025-06-15</td></tr><tr class="trade-item"><td class="trade-info"><div class="trade-price"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#6ee7b7;color:#064e3b;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">월세</span>2,000만 / 월 110만<span style="display:inline-block;padding:1px 6px;margin-left:6px;border-radius:4px;background:#f3e8ff;color:#6b21a8;font-size:10px;font-weight:600;vertical-align:middle;">다른 유형</span></div><div class="trade-detail">전용 83.76㎡ · 4층</div></td><td class="trade-date">2024-06-18</td></tr><tr class="trade-item"><td class="trade-info"><div class="trade-price"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#6ee7b7;color:#064e3b;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">월세</span>2,000만 / 월 110만<span style="display:inline-block;padding:1px 6px;margin-left:6px;border-radius:4px;background:#f3e8ff;color:#6b21a8;font-size:10px;font-weight:600;vertical-align:middle;">다른 유형</span></div><div class="trade-detail">전용 83.76㎡ · 6층</div></td><td class="trade-date">2024-05-31</td></tr></tbody></table>
+<table class="trade-list" id="trade-list-전세" style="display:none;"><caption class="sr-only">안에안 전세 실거래</caption><thead class="sr-only"><tr><th scope="col">유형 및 가격</th><th scope="col">전용면적·층수</th><th scope="col">거래일</th></tr></thead><tbody><tr class="trade-item"><td class="trade-info"><div class="trade-price"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#fdba74;color:#7c2d12;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">매매</span>4억<span class="badge-direct">직거래</span><span style="display:inline-block;padding:1px 6px;margin-left:6px;border-radius:4px;background:#f3e8ff;color:#6b21a8;font-size:10px;font-weight:600;vertical-align:middle;">다른 유형</span></div><div class="trade-detail">전용 83.76㎡ · 6층</div></td><td class="trade-date">2026-01-30</td></tr><tr class="trade-item"><td class="trade-info"><div class="trade-price"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#fdba74;color:#7c2d12;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">매매</span>4억<span class="badge-direct">직거래</span><span style="display:inline-block;padding:1px 6px;margin-left:6px;border-radius:4px;background:#f3e8ff;color:#6b21a8;font-size:10px;font-weight:600;vertical-align:middle;">다른 유형</span></div><div class="trade-detail">전용 83.76㎡ · 3층</div></td><td class="trade-date">2025-07-20</td></tr><tr class="trade-item"><td class="trade-info"><div class="trade-price"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#fdba74;color:#7c2d12;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">매매</span>4억<span class="badge-direct">직거래</span><span style="display:inline-block;padding:1px 6px;margin-left:6px;border-radius:4px;background:#f3e8ff;color:#6b21a8;font-size:10px;font-weight:600;vertical-align:middle;">다른 유형</span></div><div class="trade-detail">전용 83.76㎡ · 5층</div></td><td class="trade-date">2025-06-15</td></tr><tr class="trade-item"><td class="trade-info"><div class="trade-price"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#6ee7b7;color:#064e3b;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">월세</span>2,000만 / 월 110만<span style="display:inline-block;padding:1px 6px;margin-left:6px;border-radius:4px;background:#f3e8ff;color:#6b21a8;font-size:10px;font-weight:600;vertical-align:middle;">다른 유형</span></div><div class="trade-detail">전용 83.76㎡ · 4층</div></td><td class="trade-date">2024-06-18</td></tr><tr class="trade-item"><td class="trade-info"><div class="trade-price"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#6ee7b7;color:#064e3b;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">월세</span>2,000만 / 월 110만<span style="display:inline-block;padding:1px 6px;margin-left:6px;border-radius:4px;background:#f3e8ff;color:#6b21a8;font-size:10px;font-weight:600;vertical-align:middle;">다른 유형</span></div><div class="trade-detail">전용 83.76㎡ · 6층</div></td><td class="trade-date">2024-05-31</td></tr></tbody></table>
+<table class="trade-list" id="trade-list-월세" style="display:;"><caption class="sr-only">안에안 월세 실거래</caption><thead class="sr-only"><tr><th scope="col">유형 및 가격</th><th scope="col">전용면적·층수</th><th scope="col">거래일</th></tr></thead><tbody><tr class="trade-item"><td class="trade-info"><div class="trade-price"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#6ee7b7;color:#064e3b;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">월세</span>2,000만 / 월 110만</div><div class="trade-detail">전용 83.76㎡ · 4층</div></td><td class="trade-date">2024-06-18</td></tr><tr class="trade-item"><td class="trade-info"><div class="trade-price"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#6ee7b7;color:#064e3b;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">월세</span>2,000만 / 월 110만</div><div class="trade-detail">전용 83.76㎡ · 6층</div></td><td class="trade-date">2024-05-31</td></tr><tr class="trade-item"><td class="trade-info"><div class="trade-price"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#6ee7b7;color:#064e3b;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">월세</span>2,000만 / 월 110만</div><div class="trade-detail">전용 83.76㎡ · 6층</div></td><td class="trade-date">2024-05-06</td></tr><tr class="trade-item"><td class="trade-info"><div class="trade-price"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#6ee7b7;color:#064e3b;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">월세</span>2,000만 / 월 110만</div><div class="trade-detail">전용 83.76㎡ · 5층</div></td><td class="trade-date">2024-04-26</td></tr><tr class="trade-item"><td class="trade-info"><div class="trade-price"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#6ee7b7;color:#064e3b;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">월세</span>2,000만 / 월 110만</div><div class="trade-detail">전용 83.76㎡ · 3층</div></td><td class="trade-date">2024-02-24</td></tr></tbody></table>
+</div>
+
+<div class="divider"></div>
+<div class="section" id="listing-section" data-officetel-id="o6311226">
+<h2 class="section-title">휙 등록 매물</h2>
+<div id="listing-content">
+<div class="listing-empty">
+<div class="listing-empty-text">이 단지에 등록된 매물이 아직 없습니다</div>
+<a class="listing-empty-cta" href="/hub-new/" style="text-decoration:none;">중개사님, 매물을 등록해보세요 →</a>
+</div>
+</div>
+</div>
+
+<div class="divider"></div>
+<div class="section"><h2 class="section-title">청천동 주변 오피스텔</h2>
+<div style="display:flex;flex-direction:column;gap:8px;"><a class="nearby-item" href="/officetel/인천-부평구-청천동-브릭스-o1927835.html" style="text-decoration:none;color:inherit;"><div><div class="nearby-name" style="font-weight:600;"><span style="display:inline-block;padding:1px 6px;margin-right:6px;border-radius:4px;background:#eef2ff;color:#4338ca;font-size:10px;font-weight:600;vertical-align:middle;">오피스텔</span>브릭스</div><div class="nearby-sub">부평구 청천동 · 116m · 전용 68㎡</div></div><div style="text-align:right;"><div class="nearby-price" style="color:#ea580c;">1억 5,000만</div><div style="font-size:11px;color:var(--sub);margin-top:2px;"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#fdba74;color:#7c2d12;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">매매</span>2026-04-17</div></div></a><a class="nearby-item" href="/officetel/인천-부평구-청천동-우진드림캐슬-o0230985.html" style="text-decoration:none;color:inherit;"><div><div class="nearby-name" style="font-weight:600;"><span style="display:inline-block;padding:1px 6px;margin-right:6px;border-radius:4px;background:#eef2ff;color:#4338ca;font-size:10px;font-weight:600;vertical-align:middle;">오피스텔</span>우진드림캐슬</div><div class="nearby-sub">부평구 청천동 · 150m · 전용 72㎡</div></div><div style="text-align:right;"><div class="nearby-price" style="color:#2563eb;">1억 4,670만</div><div style="font-size:11px;color:var(--sub);margin-top:2px;"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#93c5fd;color:#1e3a8a;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">전세</span>2026-01-02</div></div></a><a class="nearby-item" href="/officetel/인천-부평구-청천동-세광오피스텔-o0873646.html" style="text-decoration:none;color:inherit;"><div><div class="nearby-name" style="font-weight:600;"><span style="display:inline-block;padding:1px 6px;margin-right:6px;border-radius:4px;background:#eef2ff;color:#4338ca;font-size:10px;font-weight:600;vertical-align:middle;">오피스텔</span>세광오피스텔</div><div class="nearby-sub">부평구 청천동 · 231m · 전용 32㎡</div></div><div style="text-align:right;"><div class="nearby-price" style="color:#059669;">500만 / 월 45만</div><div style="font-size:11px;color:var(--sub);margin-top:2px;"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#6ee7b7;color:#064e3b;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">월세</span>2025-08-28</div></div></a><a class="nearby-item" href="/officetel/인천-부평구-청천동-럭스96-o1678294.html" style="text-decoration:none;color:inherit;"><div><div class="nearby-name" style="font-weight:600;"><span style="display:inline-block;padding:1px 6px;margin-right:6px;border-radius:4px;background:#eef2ff;color:#4338ca;font-size:10px;font-weight:600;vertical-align:middle;">오피스텔</span>럭스96</div><div class="nearby-sub">부평구 청천동 · 251m · 전용 63㎡</div></div><div style="text-align:right;"><div class="nearby-price" style="color:#2563eb;">1억 4,500만</div><div style="font-size:11px;color:var(--sub);margin-top:2px;"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#93c5fd;color:#1e3a8a;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">전세</span>2026-04-08</div></div></a><a class="nearby-item" href="/officetel/인천-부평구-청천동-명성-푸르네-o1306174.html" style="text-decoration:none;color:inherit;"><div><div class="nearby-name" style="font-weight:600;"><span style="display:inline-block;padding:1px 6px;margin-right:6px;border-radius:4px;background:#eef2ff;color:#4338ca;font-size:10px;font-weight:600;vertical-align:middle;">오피스텔</span>명성 푸르네</div><div class="nearby-sub">부평구 청천동 · 374m · 전용 69㎡</div></div><div style="text-align:right;"><div class="nearby-price" style="color:#ea580c;">2억 2,300만</div><div style="font-size:11px;color:var(--sub);margin-top:2px;"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#fdba74;color:#7c2d12;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">매매</span>2026-02-09</div></div></a><a class="nearby-item" href="/officetel/인천-부평구-청천동-어반스뷰3차-o2092624.html" style="text-decoration:none;color:inherit;"><div><div class="nearby-name" style="font-weight:600;"><span style="display:inline-block;padding:1px 6px;margin-right:6px;border-radius:4px;background:#eef2ff;color:#4338ca;font-size:10px;font-weight:600;vertical-align:middle;">오피스텔</span>어반스뷰3차</div><div class="nearby-sub">부평구 청천동 · 401m · 전용 73㎡</div></div><div style="text-align:right;"><div class="nearby-price" style="color:#2563eb;">1억 7,500만</div><div style="font-size:11px;color:var(--sub);margin-top:2px;"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#93c5fd;color:#1e3a8a;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">전세</span>2026-02-24</div></div></a><a class="nearby-item" href="/officetel/인천-부평구-청천동-월드메르디앙-부평-o4644674.html" style="text-decoration:none;color:inherit;"><div><div class="nearby-name" style="font-weight:600;"><span style="display:inline-block;padding:1px 6px;margin-right:6px;border-radius:4px;background:#eef2ff;color:#4338ca;font-size:10px;font-weight:600;vertical-align:middle;">오피스텔</span>월드메르디앙 부평</div><div class="nearby-sub">부평구 청천동 · 408m · 전용 61㎡</div></div><div style="text-align:right;"><div class="nearby-price" style="color:#059669;">1,000만 / 월 100만</div><div style="font-size:11px;color:var(--sub);margin-top:2px;"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#6ee7b7;color:#064e3b;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">월세</span>2026-03-10</div></div></a><a class="nearby-item" href="/officetel/인천-부평구-청천동-골든-힐-타운-o2916986.html" style="text-decoration:none;color:inherit;"><div><div class="nearby-name" style="font-weight:600;"><span style="display:inline-block;padding:1px 6px;margin-right:6px;border-radius:4px;background:#eef2ff;color:#4338ca;font-size:10px;font-weight:600;vertical-align:middle;">오피스텔</span>골든 힐 타운</div><div class="nearby-sub">부평구 청천동 · 457m · 전용 64㎡</div></div><div style="text-align:right;"><div class="nearby-price" style="color:#ea580c;">2억 476만</div><div style="font-size:11px;color:var(--sub);margin-top:2px;"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#fdba74;color:#7c2d12;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">매매</span>2026-01-29</div></div></a><a class="nearby-item" href="/officetel/인천-부평구-청천동-아이뷰-o5148994.html" style="text-decoration:none;color:inherit;"><div><div class="nearby-name" style="font-weight:600;"><span style="display:inline-block;padding:1px 6px;margin-right:6px;border-radius:4px;background:#eef2ff;color:#4338ca;font-size:10px;font-weight:600;vertical-align:middle;">오피스텔</span>아이뷰</div><div class="nearby-sub">부평구 청천동 · 520m · 전용 68㎡</div></div><div style="text-align:right;"><div class="nearby-price" style="color:#ea580c;">1억 9,500만</div><div style="font-size:11px;color:var(--sub);margin-top:2px;"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#fdba74;color:#7c2d12;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">매매</span>2026-04-01</div></div></a><a class="nearby-item" href="/officetel/인천-부평구-청천동-더렉스-o0234993.html" style="text-decoration:none;color:inherit;"><div><div class="nearby-name" style="font-weight:600;"><span style="display:inline-block;padding:1px 6px;margin-right:6px;border-radius:4px;background:#eef2ff;color:#4338ca;font-size:10px;font-weight:600;vertical-align:middle;">오피스텔</span>더렉스</div><div class="nearby-sub">부평구 청천동 · 532m · 전용 76㎡</div></div><div style="text-align:right;"><div class="nearby-price" style="color:#ea580c;">2억 5,800만</div><div style="font-size:11px;color:var(--sub);margin-top:2px;"><span style="display:inline-block;padding:2px 7px;border-radius:4px;background:#fdba74;color:#7c2d12;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;">매매</span>2026-03-23</div></div></a></div>
+</div>
+
+<div class="divider"></div><div class="section" id="map-section"><h2 class="section-title">위치</h2><div style="position:relative;cursor:pointer;" onclick="openOffMap()" role="button" tabindex="0" aria-label="인천 부평구 평천로 132 지도 크게 보기"><div id="kakao-map" data-lat="37.5200611810889" data-lng="126.706325938811" style="width:100%;height:240px;border-radius:8px;overflow:hidden;background:#e5e7eb;pointer-events:none;touch-action:pan-y;" aria-hidden="true"></div><div style="position:absolute;right:10px;bottom:10px;background:rgba(10,10,18,0.85);color:#fff;font-size:11px;font-weight:600;padding:6px 10px;border-radius:18px;display:inline-flex;align-items:center;gap:4px;pointer-events:none;">⤢ 크게 보기</div></div><div style="margin-top:8px;font-size:11px;color:var(--sub);">인천 부평구 평천로 132</div></div>
+
+<div class="divider"></div>
+<section class="seo-intro" style="padding:0 16px 16px;">
+<h2 class="section-title" style="padding:0 0 8px;font-size:15px;color:var(--dark);margin:0;">단지 소개</h2>
+<dl style="display:grid;grid-template-columns:1fr 1fr;column-gap:24px;row-gap:0;margin:0 0 16px;padding:0;"><div style="grid-column:1 / -1;display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid #f1f3f5;"><span style="color:var(--sub);font-size:12px;flex-shrink:0;width:70px;">소재지</span><span style="color:var(--dark);font-size:13px;line-height:1.5;">인천 부평구 평천로 132</span></div><div style="display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid #f1f3f5;"><span style="color:var(--sub);font-size:12px;flex-shrink:0;width:70px;">준공</span><span style="color:var(--dark);font-size:13px;line-height:1.5;">2023년 · 업무시설</span></div><div style="display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid #f1f3f5;"><span style="color:var(--sub);font-size:12px;flex-shrink:0;width:70px;">호실</span><span style="color:var(--dark);font-size:13px;line-height:1.5;">총 84호</span></div><div style="display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid #f1f3f5;"><span style="color:var(--sub);font-size:12px;flex-shrink:0;width:70px;">층수</span><span style="color:var(--dark);font-size:13px;line-height:1.5;">지상 8층 / 지하 1층</span></div><div style="display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid #f1f3f5;"><span style="color:var(--sub);font-size:12px;flex-shrink:0;width:70px;">구조</span><span style="color:var(--dark);font-size:13px;line-height:1.5;">철근콘크리트구조</span></div><div style="display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid #f1f3f5;"><span style="color:var(--sub);font-size:12px;flex-shrink:0;width:70px;">건폐 / 용적률</span><span style="color:var(--dark);font-size:13px;line-height:1.5;">42.81% / 297.05%</span></div><div style="grid-column:1 / -1;display:flex;gap:10px;align-items:baseline;padding:6px 0;border-bottom:1px solid #f1f3f5;"><span style="color:var(--sub);font-size:12px;flex-shrink:0;width:70px;">전용면적</span><span style="color:var(--dark);font-size:13px;line-height:1.5;">84㎡</span></div></dl><details style="margin:0 0 12px;"><summary style="cursor:pointer;font-size:12px;color:var(--sub);padding:2px 0;list-style:none;display:inline-flex;align-items:center;gap:4px;"><span style="display:inline-block;transform:rotate(0deg);transition:transform .15s;">▸</span>시세 요약 · 거래 활성도 · 인근 인프라 자세히 보기</summary><div style="margin-top:8px;"><div style="margin:0 0 14px;"><div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span style="color:var(--sub);">최근 매매</span><span style="color:var(--dark);font-weight:500;">4억 <span style='color:var(--sub);font-size:12px;'>(전용 84㎡ · 2026-01-30)</span></span></div><div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span style="color:var(--sub);">5년 최고</span><span style="color:var(--dark);font-weight:500;">4억 <span style='color:var(--sub);font-size:12px;'>(2026-01-30)</span></span></div><div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span style="color:var(--sub);">월세 평균</span><span style="color:var(--dark);font-weight:500;">보증금 2,111만 / 월 106만</span></div></div><p style="font-size:13px;color:var(--sub);line-height:1.85;margin:0 0 10px;">최근 5년 동안 안에안에서는 총 12건의 실거래가 집계되었으며, 매매 3건, 월세 9건이 신고되었습니다.</p><p style="font-size:13px;color:var(--sub);line-height:1.85;margin:0;">통학·통근 환경으로는 인천용마초등학교 도보 6분, 인천청천초등학교 도보 7분, 북인천여자중학교 도보 10분 등 학교가 인근에 위치합니다. 2023년 준공으로 청천동 일대의 신축 오피스텔에 해당합니다.</p></div></details><style>details[open] > summary > span{transform:rotate(90deg) !important;}</style><p style="font-size:13px;color:var(--sub);line-height:1.85;margin:0;">인근 단지로는 <a href="/officetel/인천-부평구-청천동-브릭스-o1927835.html">청천동 브릭스 오피스텔</a>, <a href="/officetel/인천-부평구-청천동-우진드림캐슬-o0230985.html">청천동 우진드림캐슬 오피스텔</a> 등이 있으며, 같은 청천동 일대의 다른 단지는 <a href="/officetel/dong/%EC%9D%B8%EC%B2%9C-%EB%B6%80%ED%8F%89%EA%B5%AC-%EC%B2%AD%EC%B2%9C%EB%8F%99.html">인천 부평구 청천동 오피스텔</a>, 시군구 단위 비교는 <a href="/officetel/gu/%EB%B6%80%ED%8F%89%EA%B5%AC.html">인천 부평구 오피스텔 시세</a>에서 확인할 수 있습니다.</p>
+</section>
+
+<div class="divider"></div><section class="section" aria-labelledby="learn-more-h2"><h2 id="learn-more-h2" class="section-title">더 알아보기</h2><div style="display:flex;flex-direction:column;gap:8px;"><a class="learn-more-card" href="/officetel/dong/%EC%9D%B8%EC%B2%9C-%EB%B6%80%ED%8F%89%EA%B5%AC-%EC%B2%AD%EC%B2%9C%EB%8F%99.html" aria-label="청천동 다른 오피스텔 시세"><span>청천동 다른 오피스텔 시세</span><span class="learn-more-arrow">→</span></a><a class="learn-more-card" href="/officetel/gu/%EB%B6%80%ED%8F%89%EA%B5%AC.html" aria-label="부평구 전체 오피스텔 시세"><span>부평구 전체 오피스텔 시세</span><span class="learn-more-arrow">→</span></a><a class="learn-more-card" href="/officetel/ranking-%EC%9D%B8%EC%B2%9C.html" aria-label="인천 오피스텔 거래량 순위"><span>인천 오피스텔 순위</span><span class="learn-more-arrow">→</span></a></div></section>
+
+<section class="faq-section"><h2 class="section-title">자주 묻는 질문</h2>
+<div class="faq-list-visible"><div class="faq-item"><div class="faq-q">안에안은 몇 년 준공, 몇 호?</div><div class="faq-a">안에안은 2023년 준공 오피스텔로, 총 84호실 규모입니다.</div></div><div class="faq-item"><div class="faq-q">안에안 최근 실거래가는?</div><div class="faq-a">최근 매매 실거래가는 4억입니다. (2026-01-30 기준)</div></div><div class="faq-item"><div class="faq-q">안에안 최근 5년 최고가는?</div><div class="faq-a">최근 5년 매매 최고가는 4억입니다. (2026-01-30)</div></div><div class="faq-item"><div class="faq-q">안에안 매매 거래는 얼마나 활발?</div><div class="faq-a">최근 5년 매매 3건이 집계되었습니다.</div></div></div>
+<div class="faq-list-hidden" id="faq-hidden"><div class="faq-item"><div class="faq-q">안에안 월세 평균은?</div><div class="faq-a">최근 5년 월세 실거래 9건 평균은 보증금 2,111만 / 월세 106만입니다.</div></div><div class="faq-item"><div class="faq-q">안에안 최고층은?</div><div class="faq-a">지상 8층 규모입니다. 지하 1층.</div></div><div class="faq-item"><div class="faq-q">안에안 주변 학교는?</div><div class="faq-a">도보권 학교: 인천용마초등학교(도보 6분), 인천청천초등학교(도보 7분), 북인천여자중학교(도보 10분).</div></div><div class="faq-item"><div class="faq-q">안에안 건폐율·용적률은?</div><div class="faq-a">건축물대장 기준 건폐율 42.81%, 용적률 297.05%입니다.</div></div><div class="faq-item"><div class="faq-q">안에안 내진설계 등급은?</div><div class="faq-a">내진설계 등급은 VII-0.204g입니다 (최대지반가속도 기준).</div></div><div class="faq-item"><div class="faq-q">안에안 건물 구조는?</div><div class="faq-a">철근콘크리트구조입니다.</div></div><div class="faq-item"><div class="faq-q">안에안 신축 오피스텔인가요?</div><div class="faq-a">안에안은 2023년 준공으로 3년차 신축 오피스텔입니다.</div></div><div class="faq-item"><div class="faq-q">안에안 4억대 매매 가능한가요?</div><div class="faq-a">안에안 최근 5년 매매 최고가는 4억, 평균은 4억 수준입니다. 호수·층·평형에 따라 가격대가 달라집니다.</div></div><div class="faq-item"><div class="faq-q">청천동 오피스텔 중에 안에안만한 단지가 있나요?</div><div class="faq-a">청천동에는 안에안 외에도 여러 오피스텔이 있습니다. 인천 부평구 청천동 오피스텔 전체 목록과 시세 비교가 가능합니다.</div></div></div><div class="faq-more" onclick="document.getElementById('faq-hidden').classList.toggle('expanded');this.style.display='none';">더보기</div>
+</section>
+
+<div class="seo-section" style="padding:16px;">
+<details open style="font-size:12px;color:var(--sub);">
+<summary style="cursor:pointer;">데이터 안내</summary>
+<div style="margin-top:6px;line-height:1.8;">
+<b>실거래가</b>: 국토교통부 실거래가 공개시스템 (<a href="https://rt.molit.go.kr/" target="_blank" rel="noopener nofollow">rt.molit.go.kr</a>) · 매일 자동 수집<br>
+<b>건축정보</b>: 국토교통부 건축물대장 (전유부 · 총괄표제부)<br>
+<b>호실 수</b>: 건축물대장 전유부 등기 기준 (분양 공급 수치와 다를 수 있음)<br>
+오피스텔은 전용면적만 표시합니다 (공급면적 규정 없음)<br>
+거래 취소·정정 건은 반영이 지연될 수 있습니다
+</div>
+</details>
+<div class="seo-source" style="margin-top:8px;font-size:11px;color:var(--muted);">실거래가 출처: 국토교통부 · 최종 데이터 확인: <time datetime="2026-04-26">2026-04-26</time></div>
+<div style="margin-top:14px;text-align:center;">
+<button type="button" onclick="openReportModal()"
+   style="background:none;border:1px solid var(--border,#e5e7eb);border-radius:20px;color:var(--sub,#6b7280);font-size:12px;cursor:pointer;padding:6px 16px;">
+데이터 오류 신고
+</button>
+</div>
+</div>
+
+</article>
+</main>
+
+<!-- 풀스크린 지도 (agent.html 패턴) -->
+<div id="offMapOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:#0a0a12;flex-direction:column;">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:rgba(10,10,18,0.95);flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.08);">
+    <div id="offMapTitle" style="font-size:15px;font-weight:700;color:#fff;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:6px;">
+      <span style="font-size:11px;font-weight:900;color:#0a0a12;background:#facc15;padding:3px 7px;border-radius:6px;flex-shrink:0;">휙</span>
+      <span id="offMapTitleText"></span>
+    </div>
+    <button type="button" onclick="closeOffMap()" aria-label="닫기"
+       style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:16px;width:40px;height:40px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:12px;">✕</button>
+  </div>
+  <div id="offMapFull" style="flex:1;width:100%;"></div>
+</div>
+
+<footer style="max-width:600px;margin:24px auto 40px;padding:24px 16px 0;border-top:1px solid var(--border,#e5e7eb);text-align:center;font-size:11.5px;color:var(--sub,#6b7280);line-height:1.7;">
+<div style="margin-bottom:8px;">
+<a href="/about.html" style="color:var(--sub,#6b7280);text-decoration:none;margin:0 8px;">휙 소개</a>·
+<a href="/privacy.html" style="color:var(--sub,#6b7280);text-decoration:none;margin:0 8px;">개인정보처리방침</a>·
+<a href="/terms.html" style="color:var(--sub,#6b7280);text-decoration:none;margin:0 8px;">이용약관</a>
+</div>
+<div style="color:var(--muted,#9ca3af);">실거래가 출처: 국토교통부 · 휙(HWIK) · <a href="https://hwik.kr" style="color:var(--muted,#9ca3af);text-decoration:none;">hwik.kr</a></div>
+</footer>
+
+<script type="application/json" id="__chart_data">{"scatter": {"매매": [{"x": "2025-06-15", "y": 40000, "floor": 5, "area": 83.76}, {"x": "2025-07-20", "y": 40000, "floor": 3, "area": 83.76}, {"x": "2026-01-30", "y": 40000, "floor": 6, "area": 83.76}], "전세": [], "월세": [{"x": "2023-09-23", "y": 3000, "floor": 8, "area": 83.76}, {"x": "2023-12-12", "y": 2000, "floor": 3, "area": 83.76}, {"x": "2024-02-01", "y": 2000, "floor": 4, "area": 83.76}, {"x": "2024-02-24", "y": 2000, "floor": 3, "area": 83.76}, {"x": "2024-02-24", "y": 2000, "floor": 2, "area": 83.76}, {"x": "2024-04-26", "y": 2000, "floor": 5, "area": 83.76}, {"x": "2024-05-06", "y": 2000, "floor": 6, "area": 83.76}, {"x": "2024-05-31", "y": 2000, "floor": 6, "area": 83.76}, {"x": "2024-06-18", "y": 2000, "floor": 4, "area": 83.76}]}, "volume": {"years": [2022, 2023, 2024, 2025, 2026], "매매": [0, 0, 0, 2, 1], "전세": [0, 0, 0, 0, 0], "월세": [0, 2, 7, 0, 0]}}</script>
+<script type="application/json" id="__area_data">{"84": {"pc": "<div class=\"price-cards\"><div class=\"price-card primary\"><div class=\"price-card-label\">최근 매매<\/div><div class=\"price-card-value\">4억<\/div><div class=\"price-card-sub\">2026-01-30 · 전용 84㎡<\/div><\/div><div class=\"price-card secondary\"><div class=\"price-card-label\">5년 최고가<\/div><div class=\"price-card-value\">4억<\/div><div class=\"price-card-sub\">2026-01-30<\/div><\/div><\/div>", "pc_by_kind": {"매매": "<div class=\"price-cards\"><div class=\"price-card primary\"><div class=\"price-card-label\">최근 매매<\/div><div class=\"price-card-value\">4억<\/div><div class=\"price-card-sub\">2026-01-30 · 전용 84㎡<\/div><\/div><div class=\"price-card secondary\"><div class=\"price-card-label\">5년 최고가<\/div><div class=\"price-card-value\">4억<\/div><div class=\"price-card-sub\">2026-01-30<\/div><\/div><\/div>", "전세": "<div class=\"price-cards\"><div class=\"price-card secondary\"><div class=\"price-card-label\">최근 전세<\/div><div class=\"price-card-value\">-<\/div><\/div><div class=\"price-card secondary\"><div class=\"price-card-label\">5년 최고 전세<\/div><div class=\"price-card-value\">-<\/div><\/div><\/div>"}, "metrics": "", "scatter": {"매매": [{"x": "2025-06-15", "y": 40000, "floor": 5, "area": 83.76}, {"x": "2025-07-20", "y": 40000, "floor": 3, "area": 83.76}, {"x": "2026-01-30", "y": 40000, "floor": 6, "area": 83.76}], "전세": [], "월세": [{"x": "2023-09-23", "y": 3000, "floor": 8, "area": 83.76}, {"x": "2023-12-12", "y": 2000, "floor": 3, "area": 83.76}, {"x": "2024-02-01", "y": 2000, "floor": 4, "area": 83.76}, {"x": "2024-02-24", "y": 2000, "floor": 3, "area": 83.76}, {"x": "2024-02-24", "y": 2000, "floor": 2, "area": 83.76}, {"x": "2024-04-26", "y": 2000, "floor": 5, "area": 83.76}, {"x": "2024-05-06", "y": 2000, "floor": 6, "area": 83.76}, {"x": "2024-05-31", "y": 2000, "floor": 6, "area": 83.76}, {"x": "2024-06-18", "y": 2000, "floor": 4, "area": 83.76}]}, "volume": {"years": [2022, 2023, 2024, 2025, 2026], "매매": [0, 0, 0, 2, 1], "전세": [0, 0, 0, 0, 0], "월세": [0, 2, 7, 0, 0]}, "trades": {"매매": "<tr class=\"trade-item\"><td class=\"trade-info\"><div class=\"trade-price\"><span style=\"display:inline-block;padding:2px 7px;border-radius:4px;background:#fdba74;color:#7c2d12;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;\">매매<\/span>4억<span class=\"badge-direct\">직거래<\/span><\/div><div class=\"trade-detail\">전용 83.76㎡ · 6층<\/div><\/td><td class=\"trade-date\">2026-01-30<\/td><\/tr><tr class=\"trade-item\"><td class=\"trade-info\"><div class=\"trade-price\"><span style=\"display:inline-block;padding:2px 7px;border-radius:4px;background:#fdba74;color:#7c2d12;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;\">매매<\/span>4억<span class=\"badge-direct\">직거래<\/span><\/div><div class=\"trade-detail\">전용 83.76㎡ · 3층<\/div><\/td><td class=\"trade-date\">2025-07-20<\/td><\/tr><tr class=\"trade-item\"><td class=\"trade-info\"><div class=\"trade-price\"><span style=\"display:inline-block;padding:2px 7px;border-radius:4px;background:#fdba74;color:#7c2d12;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;\">매매<\/span>4억<span class=\"badge-direct\">직거래<\/span><\/div><div class=\"trade-detail\">전용 83.76㎡ · 5층<\/div><\/td><td class=\"trade-date\">2025-06-15<\/td><\/tr><tr class=\"trade-item\"><td class=\"trade-info\"><div class=\"trade-price\"><span style=\"display:inline-block;padding:2px 7px;border-radius:4px;background:#6ee7b7;color:#064e3b;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;\">월세<\/span>2,000만 / 월 110만<span style=\"display:inline-block;padding:1px 6px;margin-left:6px;border-radius:4px;background:#f3e8ff;color:#6b21a8;font-size:10px;font-weight:600;vertical-align:middle;\">다른 유형<\/span><\/div><div class=\"trade-detail\">전용 83.76㎡ · 4층<\/div><\/td><td class=\"trade-date\">2024-06-18<\/td><\/tr><tr class=\"trade-item\"><td class=\"trade-info\"><div class=\"trade-price\"><span style=\"display:inline-block;padding:2px 7px;border-radius:4px;background:#6ee7b7;color:#064e3b;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;\">월세<\/span>2,000만 / 월 110만<span style=\"display:inline-block;padding:1px 6px;margin-left:6px;border-radius:4px;background:#f3e8ff;color:#6b21a8;font-size:10px;font-weight:600;vertical-align:middle;\">다른 유형<\/span><\/div><div class=\"trade-detail\">전용 83.76㎡ · 6층<\/div><\/td><td class=\"trade-date\">2024-05-31<\/td><\/tr>", "전세": "<tr class=\"trade-item\"><td class=\"trade-info\"><div class=\"trade-price\"><span style=\"display:inline-block;padding:2px 7px;border-radius:4px;background:#fdba74;color:#7c2d12;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;\">매매<\/span>4억<span class=\"badge-direct\">직거래<\/span><span style=\"display:inline-block;padding:1px 6px;margin-left:6px;border-radius:4px;background:#f3e8ff;color:#6b21a8;font-size:10px;font-weight:600;vertical-align:middle;\">다른 유형<\/span><\/div><div class=\"trade-detail\">전용 83.76㎡ · 6층<\/div><\/td><td class=\"trade-date\">2026-01-30<\/td><\/tr><tr class=\"trade-item\"><td class=\"trade-info\"><div class=\"trade-price\"><span style=\"display:inline-block;padding:2px 7px;border-radius:4px;background:#fdba74;color:#7c2d12;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;\">매매<\/span>4억<span class=\"badge-direct\">직거래<\/span><span style=\"display:inline-block;padding:1px 6px;margin-left:6px;border-radius:4px;background:#f3e8ff;color:#6b21a8;font-size:10px;font-weight:600;vertical-align:middle;\">다른 유형<\/span><\/div><div class=\"trade-detail\">전용 83.76㎡ · 3층<\/div><\/td><td class=\"trade-date\">2025-07-20<\/td><\/tr><tr class=\"trade-item\"><td class=\"trade-info\"><div class=\"trade-price\"><span style=\"display:inline-block;padding:2px 7px;border-radius:4px;background:#fdba74;color:#7c2d12;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;\">매매<\/span>4억<span class=\"badge-direct\">직거래<\/span><span style=\"display:inline-block;padding:1px 6px;margin-left:6px;border-radius:4px;background:#f3e8ff;color:#6b21a8;font-size:10px;font-weight:600;vertical-align:middle;\">다른 유형<\/span><\/div><div class=\"trade-detail\">전용 83.76㎡ · 5층<\/div><\/td><td class=\"trade-date\">2025-06-15<\/td><\/tr><tr class=\"trade-item\"><td class=\"trade-info\"><div class=\"trade-price\"><span style=\"display:inline-block;padding:2px 7px;border-radius:4px;background:#6ee7b7;color:#064e3b;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;\">월세<\/span>2,000만 / 월 110만<span style=\"display:inline-block;padding:1px 6px;margin-left:6px;border-radius:4px;background:#f3e8ff;color:#6b21a8;font-size:10px;font-weight:600;vertical-align:middle;\">다른 유형<\/span><\/div><div class=\"trade-detail\">전용 83.76㎡ · 4층<\/div><\/td><td class=\"trade-date\">2024-06-18<\/td><\/tr><tr class=\"trade-item\"><td class=\"trade-info\"><div class=\"trade-price\"><span style=\"display:inline-block;padding:2px 7px;border-radius:4px;background:#6ee7b7;color:#064e3b;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;\">월세<\/span>2,000만 / 월 110만<span style=\"display:inline-block;padding:1px 6px;margin-left:6px;border-radius:4px;background:#f3e8ff;color:#6b21a8;font-size:10px;font-weight:600;vertical-align:middle;\">다른 유형<\/span><\/div><div class=\"trade-detail\">전용 83.76㎡ · 6층<\/div><\/td><td class=\"trade-date\">2024-05-31<\/td><\/tr>", "월세": "<tr class=\"trade-item\"><td class=\"trade-info\"><div class=\"trade-price\"><span style=\"display:inline-block;padding:2px 7px;border-radius:4px;background:#6ee7b7;color:#064e3b;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;\">월세<\/span>2,000만 / 월 110만<\/div><div class=\"trade-detail\">전용 83.76㎡ · 4층<\/div><\/td><td class=\"trade-date\">2024-06-18<\/td><\/tr><tr class=\"trade-item\"><td class=\"trade-info\"><div class=\"trade-price\"><span style=\"display:inline-block;padding:2px 7px;border-radius:4px;background:#6ee7b7;color:#064e3b;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;\">월세<\/span>2,000만 / 월 110만<\/div><div class=\"trade-detail\">전용 83.76㎡ · 6층<\/div><\/td><td class=\"trade-date\">2024-05-31<\/td><\/tr><tr class=\"trade-item\"><td class=\"trade-info\"><div class=\"trade-price\"><span style=\"display:inline-block;padding:2px 7px;border-radius:4px;background:#6ee7b7;color:#064e3b;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;\">월세<\/span>2,000만 / 월 110만<\/div><div class=\"trade-detail\">전용 83.76㎡ · 6층<\/div><\/td><td class=\"trade-date\">2024-05-06<\/td><\/tr><tr class=\"trade-item\"><td class=\"trade-info\"><div class=\"trade-price\"><span style=\"display:inline-block;padding:2px 7px;border-radius:4px;background:#6ee7b7;color:#064e3b;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;\">월세<\/span>2,000만 / 월 110만<\/div><div class=\"trade-detail\">전용 83.76㎡ · 5층<\/div><\/td><td class=\"trade-date\">2024-04-26<\/td><\/tr><tr class=\"trade-item\"><td class=\"trade-info\"><div class=\"trade-price\"><span style=\"display:inline-block;padding:2px 7px;border-radius:4px;background:#6ee7b7;color:#064e3b;font-size:10.5px;font-weight:700;letter-spacing:0.2px;line-height:1.4;margin-right:8px;vertical-align:middle;\">월세<\/span>2,000만 / 월 110만<\/div><div class=\"trade-detail\">전용 83.76㎡ · 3층<\/div><\/td><td class=\"trade-date\">2024-02-24<\/td><\/tr>"}}}</script>
+<script>
+let CHART_DATA = JSON.parse(document.getElementById('__chart_data').textContent);
+const AREA_DATA = JSON.parse(document.getElementById('__area_data').textContent);
+const DEFAULT_TAB = "월세";
+let currentTab = DEFAULT_TAB;
+let currentArea = null;
+const ADDR = "인천 부평구 평천로 132";
+const LAT = 37.5200611810889;
+const LNG = 126.706325938811;
+
+// 탭 전환 (document-level 이벤트 위임 — DOM 파싱 타이밍 무관하게 동작)
+function switchTab(t) {
+  currentTab = t;
+  document.querySelectorAll('.tabs .tab').forEach(x =>
+    x.classList.toggle('active', x.dataset.tab === t));
+  ['매매','전세','월세'].forEach(k => {
+    const el = document.getElementById('trade-list-' + k);
+    if (el) el.style.display = (k === t) ? '' : 'none';
+  });
+  // 월세 탭: 가격카드/보조지표/차트 섹션 숨김 (아파트 패리티)
+  const isWol = (t === '월세');
+  const pc = document.getElementById('area-price-cards');
+  const mt = document.getElementById('area-metrics');
+  const cs = document.getElementById('chart-section');
+  const dv = document.getElementById('divider-before-chart');
+  if (pc) pc.style.display = isWol ? 'none' : '';
+  if (mt) mt.style.display = isWol ? 'none' : '';
+  if (cs) cs.style.display = isWol ? 'none' : '';
+  if (dv) dv.style.display = isWol ? 'none' : '';
+  const tst = document.getElementById('trade-section-title');
+  if (tst) tst.textContent = '최근 거래';
+  // 가격카드를 탭(매매/전세)에 맞게 교체
+  if (!isWol && pc && currentArea != null) {
+    const ad = AREA_DATA[String(currentArea)];
+    if (ad && ad.pc_by_kind && ad.pc_by_kind[t]) pc.innerHTML = ad.pc_by_kind[t];
+  }
+  if (!isWol) renderPriceChart(t);
+}
+
+// 거래량 막대 차트 (3종 스택, 아파트 스타일 — 반투명/얇은 바/축 숨김)
+function renderVolumeChart() {
+  const ctx = document.getElementById('volumeChart');
+  if (!ctx || typeof Chart === 'undefined') return;
+  volumeChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: CHART_DATA.volume.years,
+      datasets: [
+        {label: '매매', data: CHART_DATA.volume['매매'], backgroundColor: 'rgba(245,200,66,0.55)', borderRadius: 2, barPercentage: 0.6},
+        {label: '전세', data: CHART_DATA.volume['전세'], backgroundColor: 'rgba(74,144,217,0.55)', borderRadius: 2, barPercentage: 0.6},
+        {label: '월세', data: CHART_DATA.volume['월세'], backgroundColor: 'rgba(163,212,104,0.55)', borderRadius: 2, barPercentage: 0.6},
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: {display: true, position: 'bottom', labels: {boxWidth: 8, font: {size: 10}, color: '#6b7280'}},
+        tooltip: {callbacks: {label: c => c.dataset.label + ' ' + c.parsed.y + '건'}},
+      },
+      scales: {
+        x: {stacked: true, grid: {display: false}, ticks: {font: {size: 10}, color: '#6b7280'}},
+        y: {stacked: true, display: false},
+      },
+    },
+  });
+}
+
+// 실거래가 스캐터 차트 (아파트 스타일 통일)
+let priceChart = null;
+function _fmtKrwMan(v) {
+  if (v == null) return '-';
+  const eok = Math.floor(v / 10000);
+  const man = v - eok * 10000;
+  if (eok > 0 && man > 0) return eok + '억 ' + man.toLocaleString() + '만';
+  if (eok > 0) return eok + '억';
+  return v.toLocaleString() + '만';
+}
+function renderPriceChart(kind) {
+  const ctx = document.getElementById('priceChart');
+  if (!ctx || typeof Chart === 'undefined') return;
+  const wrap = ctx.parentElement;
+  if (wrap && getComputedStyle(wrap).position === 'static') wrap.style.position = 'relative';
+  let emptyEl = wrap && wrap.querySelector('.chart-empty');
+  const points = (CHART_DATA.scatter[kind] || []);
+  if (priceChart) { priceChart.destroy(); priceChart = null; }
+  if (!points.length) {
+    ctx.style.display = 'none';
+    if (wrap) {
+      if (!emptyEl) {
+        emptyEl = document.createElement('div');
+        emptyEl.className = 'chart-empty';
+        emptyEl.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--sub);';
+        wrap.appendChild(emptyEl);
+      }
+      emptyEl.textContent = '거래 데이터가 없습니다';
+      emptyEl.style.display = '';
+    }
+    return;
+  }
+  ctx.style.display = '';
+  if (emptyEl) emptyEl.style.display = 'none';
+  const yVals = points.map(p => p.y);
+  const yMin = Math.floor(Math.min(...yVals) * 0.92);
+  const yMax = Math.ceil(Math.max(...yVals) * 1.05);
+  priceChart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [{
+        data: points.map(p => ({x: p.x, y: p.y})),
+        backgroundColor: 'rgba(245,200,66,0.7)',
+        borderColor: '#f5c842',
+        borderWidth: 1,
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        pointHoverBackgroundColor: '#f5c842',
+      }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: {mode: 'nearest', axis: 'x', intersect: false},
+      onClick: (evt, els) => { if (els && els.length) hapticTap(15); },
+      plugins: {
+        legend: {display: false},
+        tooltip: {
+          displayColors: false,
+          callbacks: {
+            title: ctx => points[ctx[0].dataIndex].x,
+            beforeBody: ctx => {
+              const p = points[ctx[0].dataIndex];
+              const parts = [kind];
+              if (p.area != null) parts.push(Math.round(p.area) + '㎡');
+              if (p.floor != null && p.floor !== '') parts.push(p.floor + '층');
+              return parts.join(' · ');
+            },
+            label: ctx => _fmtKrwMan(points[ctx.dataIndex].y),
+          },
+        },
+      },
+      scales: {
+        x: {
+          type: 'category',
+          labels: [...new Set(points.map(p => p.x))],
+          grid: {display: false},
+          ticks: {
+            font: {size: 10}, color: '#aaa',
+            maxTicksLimit: 8, maxRotation: 0,
+            callback: function(val) {
+              const label = this.getLabelForValue(val);
+              if (!label) return '';
+              const p = label.split('-');
+              return p.length >= 2 ? p[0].slice(2) + '.' + p[1] : label;
+            },
+          },
+        },
+        y: {
+          grid: {color: 'rgba(0,0,0,0.05)'},
+          ticks: {
+            font: {size: 10}, color: '#aaa',
+            callback: v => (v / 10000).toFixed(v % 10000 === 0 ? 0 : 1) + '억',
+          },
+          min: yMin, max: yMax,
+        },
+      },
+    },
+  });
+}
+
+// 평형 캡슐 클릭 → 가격카드/지표/차트 모두 해당 평형 기준으로 교체
+let volumeChart = null;
+function applyArea(ai) {
+  const data = AREA_DATA[String(ai)];
+  if (!data) return;
+  currentArea = ai;
+  document.querySelectorAll('.pyeong-row .pyeong-btn').forEach(x =>
+    x.classList.toggle('active', x.dataset.area === String(ai)));
+  const pc = document.getElementById('area-price-cards');
+  const mt = document.getElementById('area-metrics');
+  const pcHtml = (data.pc_by_kind && data.pc_by_kind[currentTab]) || data.pc;
+  if (pc) pc.innerHTML = pcHtml;
+  if (mt) mt.innerHTML = data.metrics;
+  if (data.trades) {
+    ['매매','전세','월세'].forEach(k => {
+      const el = document.getElementById('trade-list-' + k);
+      if (!el) return;
+      const target = (el.tagName === 'TABLE') ? (el.querySelector('tbody') || el) : el;
+      target.innerHTML = data.trades[k] || '';
+    });
+  }
+  CHART_DATA = {scatter: data.scatter, volume: data.volume};
+  if (volumeChart) { volumeChart.destroy(); volumeChart = null; }
+  renderVolumeChart();
+  renderPriceChart(currentTab);
+}
+
+// document-level 이벤트 위임 (모든 클릭을 한 리스너에서 처리)
+document.addEventListener('click', (e) => {
+  const tab = e.target.closest('.tabs .tab');
+  if (tab && tab.dataset.tab) {
+    switchTab(tab.dataset.tab);
+    return;
+  }
+  const chip = e.target.closest('.pyeong-row .pyeong-btn');
+  if (chip && chip.dataset.area) {
+    hapticTap(10);
+    applyArea(chip.dataset.area);
+    return;
+  }
+});
+
+// 모바일 햅틱 (Android Chrome) — iOS Safari 미지원이지만 silent fail
+function hapticTap(ms) {
+  try { if (navigator.vibrate) navigator.vibrate(ms || 15); } catch (e) {}
+}
+
+window.addEventListener('load', () => {
+  const activeChip = document.querySelector('.pyeong-row .pyeong-btn.active');
+  if (activeChip && activeChip.dataset.area) currentArea = activeChip.dataset.area;
+  renderVolumeChart();
+  switchTab(DEFAULT_TAB);
+  setupMapLazyLoad();
+});
+
+// ── 휙 등록 매물 (cards 테이블에서 officetel_id로 조회) ───────
+// 아파트 단지와 동일 패턴 — 1슬롯 고정, 계약가능 매물만.
+// 데이터 없으면 SSR 빈 상태 유지 (Googlebot이 보는 화면 동일).
+function _esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function _fmtPrice(v) {
+  if (v == null || v === '') return '';
+  if (typeof v === 'string') return v;
+  const n = Number(v); if (!isFinite(n) || n <= 0) return '';
+  const eok = Math.floor(n / 10000); const man = n - eok * 10000;
+  if (eok > 0 && man > 0) return eok + '억 ' + man.toLocaleString() + '만';
+  if (eok > 0) return eok + '억';
+  return n.toLocaleString() + '만';
+}
+async function loadOfficetelListings() {
+  try {
+    const sec = document.getElementById('listing-section');
+    if (!sec) return;
+    const oid = sec.dataset.officetelId || '';
+    if (!/^o\d/.test(oid.toLowerCase())) return;
+    if (typeof window.HWIK_CONFIG === 'undefined' || typeof window.supabase === 'undefined') return;
+    const sb = supabase.createClient(HWIK_CONFIG.SUPABASE_URL, HWIK_CONFIG.SUPABASE_KEY);
+    // cards.kapt_code 에 officetel id (o-prefix) 가 저장된다는 가정 (아파트와 동일 패턴 확장)
+    const { data, error } = await sb.from('cards')
+      .select('id,agent_id,property,photos,trade_status,created_at')
+      .eq('kapt_code', oid.toLowerCase())
+      .eq('trade_status', '계약가능')
+      .order('created_at', { ascending: false })
+      .limit(20);
+    if (error || !data || data.length === 0) return; // 빈 상태 유지
+
+    // 중개사 정보 batch fetch
+    const agentIds = [...new Set(data.map(c => c.agent_id).filter(Boolean))];
+    const agentInfo = {};
+    if (agentIds.length > 0) {
+      const ap = await sb.from('profiles')
+        .select('id,agent_name,business_name,profile_photo,profile_photo_url')
+        .in('id', agentIds);
+      (ap.data || []).forEach(p => {
+        agentInfo[p.id] = {
+          agent_name: p.agent_name || '',
+          business_name: p.business_name || '',
+          photo: p.profile_photo_url || p.profile_photo || ''
+        };
+      });
+    }
+
+    // 1슬롯 고정 (아파트와 동일: "한 카드 = 한 결정")
+    const l = (() => {
+      const c = data[0];
+      const p = c.property || {};
+      const photos = Array.isArray(c.photos) ? c.photos : [];
+      const thumb = (photos[0] && photos[0].url) || (typeof photos[0] === 'string' ? photos[0] : '');
+      const info = agentInfo[c.agent_id] || {};
+      return {
+        id: c.id, agent_id: c.agent_id,
+        agent_name: info.agent_name || '', business_name: info.business_name || '',
+        agent_photo: info.photo || '',
+        type: p.type || '', price: p.price || '', floor: p.floor || '',
+        area: p.area || '', room: p.room || '', move_in: p.move_in || '', thumb
+      };
+    })();
+
+    const href = l.agent_id
+      ? '/agent.html?id=' + encodeURIComponent(l.agent_id) + '&kapt_code=' + encodeURIComponent(oid) + '&type=' + encodeURIComponent(l.type || '')
+      : '/property_view.html?id=' + encodeURIComponent(l.id);
+    const TYPE_ICON = {매매:'🏠', 전세:'🔑', 월세:'💰', 반전세:'🏡'};
+    const thumbHtml = l.thumb
+      ? '<img src="' + _esc(l.thumb) + '" alt="매물" loading="lazy" decoding="async" style="width:80px;height:80px;object-fit:cover;border-radius:8px;flex-shrink:0;">'
+      : '<div style="width:80px;height:80px;border-radius:8px;flex-shrink:0;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:28px;">' + (TYPE_ICON[l.type] || '🏠') + '</div>';
+    const avatarInitial = (l.business_name || l.agent_name || '?').trim().charAt(0) || '?';
+    const avatarHtml = l.agent_photo
+      ? '<img src="' + _esc(l.agent_photo) + '" alt="중개사" loading="lazy" decoding="async" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">'
+      : '<div style="width:28px;height:28px;border-radius:50%;background:#facc15;color:#1a1a1a;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;">' + _esc(avatarInitial) + '</div>';
+    const agentTitle = l.business_name || l.agent_name || '';
+    const agentSub = l.business_name && l.agent_name ? l.agent_name + ' 공인중개사' : '';
+    const agentHeader = agentTitle
+      ? '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;min-width:0;">' + avatarHtml +
+        '<div style="min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;">' +
+        '<span style="font-size:13px;font-weight:600;">' + _esc(agentTitle) + '</span>' +
+        (agentSub ? '<span style="font-size:12px;color:var(--sub);margin-left:6px;">' + _esc(agentSub) + '</span>' : '') +
+        '</div></div>'
+      : '';
+    const tags = [];
+    if (l.area) tags.push(/[㎡평]/.test(String(l.area)) ? l.area : l.area + '㎡');
+    if (l.floor) tags.push(l.floor + '층');
+    if (l.room) tags.push(l.room);
+    if (l.move_in) tags.push(l.move_in);
+    const tagsHtml = tags.length
+      ? '<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">' +
+        tags.slice(0, 4).map(t =>
+          '<span style="font-size:11px;padding:3px 8px;background:#f5f5f5;border-radius:10px;color:var(--sub);white-space:nowrap;">' + _esc(t) + '</span>'
+        ).join('') + '</div>'
+      : '';
+
+    const html = '<div class="trade-list">' +
+      '<a href="' + href + '" class="listing-item" style="text-decoration:none;color:inherit;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:14px;background:var(--surface);border-radius:var(--radius);box-shadow:0 1px 4px rgba(0,0,0,0.05);">' +
+      '<div style="flex:1;min-width:0;">' + agentHeader +
+      '<div class="trade-price" style="font-size:14px;">' + _esc(l.type) + ' ' + _esc(_fmtPrice(l.price)) + '</div>' +
+      tagsHtml +
+      '</div>' + thumbHtml + '</a></div>';
+
+    const content = document.getElementById('listing-content');
+    if (content) content.innerHTML = html;
+  } catch (e) {
+    // 실패 시 빈 상태 유지 — 사용자에게 에러 안 보임
+    console.warn('loadOfficetelListings failed', e);
+  }
+}
+window.addEventListener('load', () => { setTimeout(loadOfficetelListings, 0); });
+
+// ── 데이터 오류 신고 모달 (아파트 단지와 동일 패턴) ───────────
+const REPORT_OFFICETEL_ID = "o6311226";
+const REPORT_OFFICETEL_NAME = "안에안";
+function openReportModal() {
+  if (document.getElementById('reportModal')) return;
+  const overlay = document.createElement('div');
+  overlay.id = 'reportModal';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+  const types = ['가격 오류', '면적 오류', '단지 정보 오류', '기타'];
+  overlay.innerHTML =
+    '<div style="background:var(--bg, #fff);border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:480px;box-shadow:0 -4px 20px rgba(0,0,0,0.15);">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">' +
+        '<span style="font-size:16px;font-weight:700;color:var(--text, #1a1a2e);">데이터 오류 신고</span>' +
+        '<button onclick="closeReportModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--sub, #9ca3af);line-height:1;">×</button>' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">' +
+        types.map(t =>
+          '<button onclick="selectReportType(this,\'' + t + '\')" data-type="' + t + '"' +
+          ' style="padding:10px;border:1.5px solid var(--border, #e5e7eb);border-radius:10px;background:var(--card, #f8f9fa);font-size:14px;cursor:pointer;color:var(--text, #374151);transition:all .15s;">' +
+          t + '</button>'
+        ).join('') +
+      '</div>' +
+      '<textarea id="reportMemo" placeholder="추가 내용 (선택사항)" rows="3"' +
+        ' style="width:100%;border:1.5px solid var(--border, #e5e7eb);border-radius:10px;padding:10px 12px;font-size:14px;background:var(--bg, #fff);color:var(--text, #374151);resize:none;box-sizing:border-box;"></textarea>' +
+      '<button id="reportSubmitBtn" onclick="submitReport()" disabled' +
+        ' style="width:100%;margin-top:12px;padding:13px;border:none;border-radius:12px;background:#d1d5db;color:#9ca3af;font-size:15px;font-weight:700;cursor:not-allowed;transition:all .2s;">' +
+        '신고하기</button>' +
+      '<p id="reportMsg" style="text-align:center;font-size:13px;margin-top:10px;min-height:18px;"></p>' +
+    '</div>';
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeReportModal(); });
+  document.body.appendChild(overlay);
+}
+function closeReportModal() {
+  const el = document.getElementById('reportModal');
+  if (el) el.remove();
+}
+function selectReportType(btn, type) {
+  document.querySelectorAll('#reportModal [data-type]').forEach(b => {
+    b.style.background = 'var(--card, #f8f9fa)';
+    b.style.borderColor = 'var(--border, #e5e7eb)';
+    b.style.color = 'var(--text, #374151)';
+    b.style.fontWeight = '400';
+  });
+  btn.style.background = '#ede9fe';
+  btn.style.borderColor = '#7c3aed';
+  btn.style.color = '#7c3aed';
+  btn.style.fontWeight = '700';
+  const submitBtn = document.getElementById('reportSubmitBtn');
+  if (submitBtn) {
+    submitBtn.disabled = false;
+    submitBtn.style.background = '#7c3aed';
+    submitBtn.style.color = '#fff';
+    submitBtn.style.cursor = 'pointer';
+  }
+  window._reportType = type;
+}
+async function submitReport() {
+  const type = window._reportType;
+  if (!type) return;
+  const memo = (document.getElementById('reportMemo')?.value || '').trim();
+  const btn = document.getElementById('reportSubmitBtn');
+  const msg = document.getElementById('reportMsg');
+  if (btn) { btn.disabled = true; btn.textContent = '전송 중...'; }
+  try {
+    const res = await fetch('https://jqaxejgzkchxbfzgzyzi.supabase.co/functions/v1/report-danji', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        danji_id: REPORT_OFFICETEL_ID,
+        danji_name: REPORT_OFFICETEL_NAME,
+        report_type: type,
+        memo: memo || null,
+        page_url: location.href,
+      }),
+    });
+    if (res.ok) {
+      if (msg) { msg.style.color = '#16a34a'; msg.textContent = '신고가 접수됐습니다. 감사합니다.'; }
+      setTimeout(closeReportModal, 1800);
+    } else {
+      throw new Error('서버 오류');
+    }
+  } catch (e) {
+    if (msg) { msg.style.color = '#dc2626'; msg.textContent = '전송 실패. 잠시 후 다시 시도해주세요.'; }
+    if (btn) { btn.disabled = false; btn.textContent = '신고하기'; }
+  }
+}
+
+// ── 카카오 지도 lazy load (스크롤 도달 시에만 SDK 다운) ───────
+const KAKAO_JS_KEY = '124cd68b3419bde24e03efa4f1ca2830';
+function _hwikMarker(position, map) {
+  const html =
+    '<div style="display:flex;flex-direction:column;align-items:center;transform:translateY(-100%)">' +
+    '<div style="background:#1a1a2e;color:#f5c518;font-size:12px;font-weight:900;padding:4px 10px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.5);">휙</div>' +
+    '<div style="width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;border-top:8px solid #1a1a2e;margin-top:-1px;"></div>' +
+    '</div>';
+  return new kakao.maps.CustomOverlay({ position: position, content: html, map: map, yAnchor: 0 });
+}
+function _doInitMap() {
+  const el = document.getElementById('kakao-map');
+  if (!el) return;
+  const lat = parseFloat(el.dataset.lat);
+  const lng = parseFloat(el.dataset.lng);
+  if (!lat || !lng) return;
+  const center = new kakao.maps.LatLng(lat, lng);
+  const map = new kakao.maps.Map(el, { center: center, level: 4 });
+  _hwikMarker(center, map);
+  map.setDraggable(false);
+  map.setZoomable(false);
+}
+let _offMapInst = null;
+function openOffMap() {
+  const el = document.getElementById('kakao-map');
+  if (!el) return;
+  const lat = parseFloat(el.dataset.lat);
+  const lng = parseFloat(el.dataset.lng);
+  if (!lat || !lng) return;
+  const overlay = document.getElementById('offMapOverlay');
+  const titleEl = document.getElementById('offMapTitleText');
+  if (titleEl) titleEl.textContent = (document.querySelector('h1') || {textContent:''}).textContent;
+  overlay.style.display = 'flex';
+  history.pushState({ offMapOpen: true }, '');
+  function _make() {
+    const center = new kakao.maps.LatLng(lat, lng);
+    _offMapInst = new kakao.maps.Map(document.getElementById('offMapFull'), { center: center, level: 4 });
+    _hwikMarker(center, _offMapInst);
+  }
+  if (window.kakao && window.kakao.maps) { kakao.maps.load(_make); }
+  else { _loadKakaoSdk(); setTimeout(function(){ if (window.kakao && window.kakao.maps) kakao.maps.load(_make); }, 600); }
+}
+function closeOffMap() {
+  const overlay = document.getElementById('offMapOverlay');
+  overlay.style.display = 'none';
+  document.getElementById('offMapFull').innerHTML = '';
+  _offMapInst = null;
+}
+window.addEventListener('popstate', function() {
+  const overlay = document.getElementById('offMapOverlay');
+  if (overlay && overlay.style.display === 'flex') closeOffMap();
+});
+function _loadKakaoSdk() {
+  if (window.kakao && window.kakao.maps) { kakao.maps.load(_doInitMap); return; }
+  const s = document.createElement('script');
+  s.src = '//dapi.kakao.com/v2/maps/sdk.js?appkey=' + KAKAO_JS_KEY + '&autoload=false';
+  s.onload = function() { kakao.maps.load(_doInitMap); };
+  document.head.appendChild(s);
+}
+function setupMapLazyLoad() {
+  const el = document.getElementById('kakao-map');
+  if (!el) return;
+  if (!('IntersectionObserver' in window)) { _loadKakaoSdk(); return; }
+  const obs = new IntersectionObserver(function(entries) {
+    if (entries[0].isIntersecting) {
+      obs.disconnect();
+      _loadKakaoSdk();
+    }
+  }, { rootMargin: '200px' });
+  obs.observe(el);
+}
+</script>
+</body></html>
