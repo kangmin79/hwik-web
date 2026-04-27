@@ -32,6 +32,14 @@ a{display:inline-block;padding:10px 20px;background:#1a1a2e;color:#fff;text-deco
   var VALID_REGIONS = {seoul:1, incheon:1, gyeonggi:1, busan:1, daegu:1, gwangju:1, daejeon:1, ulsan:1, all:1};
   var VALID_TYPES = {price:1, sqm:1, jeonse:1, jeonse_low:1};
   var p = new URLSearchParams(location.search);
+  // ?gu=<한글구> — 옛 SPA가 구별 랭킹을 가졌던 시절의 잔재 URL.
+  // 현재는 /gu/<name>.html 로 통합 → 거기로 보낸다 (gu.html 과 동일 규칙).
+  var gu = (p.get('gu') || '').trim();
+  if (gu) {
+    var guSlug = gu.replace(/\s+/g, '-');
+    location.replace('/gu/' + encodeURIComponent(guSlug));
+    return;
+  }
   var region = (p.get('region') || '').trim().toLowerCase();
   var type = (p.get('type') || '').trim().toLowerCase();
   if (VALID_REGIONS[region] && VALID_TYPES[type]) {
