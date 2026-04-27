@@ -97,7 +97,9 @@ def build_danji_sitemap(officetels: list[dict]) -> tuple[Path, int]:
         if not local.exists():
             skipped += 1
             continue
-        loc = f"https://hwik.kr{url_path}"
+        # sitemap URL은 percent-encoded 표기로 통일 (RFC 3986, 다른 sub sitemap 모두 동일)
+        enc_path = "/".join(url_quote(seg) for seg in url_path.split("/"))
+        loc = f"https://hwik.kr{enc_path}"
         lastmod = (o.get("updated_at") or TODAY)[:10]
         urls.append(_xml_url(loc, lastmod, "weekly", "0.7"))
 
