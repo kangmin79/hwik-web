@@ -363,6 +363,16 @@ def _check_seo(category, fpath, html, root_files, idx, errors):
         if re.search(r'/danji/[^"\']*offi-', html):
             errors["officetel_dong"].append(fid)
 
+    # ── 5. D 디자인 마커 (dong/gu/ranking 회귀 방지, 2026-04-27 도입) ──
+    # 빌더가 옛 디자인으로 롤백되거나, 워크플로우가 다른 빌더를 호출하는
+    # 사고를 새벽 빌드 게이트에서 즉시 차단한다. 마커는 d5aeebf659a
+    # 커밋의 D 디자인에 고유한 4종.
+    if category in ("dong", "gu", "ranking"):
+        d_markers = ("Pretendard", "hero-left", "#F0EEE6", "#4338ca")
+        missing = [m for m in d_markers if m not in html]
+        if missing:
+            errors["d_design_missing"].append((fid, ",".join(missing)))
+
 
 def run_phase2(all_paths, root_files, idx):
     sec("Phase 2: SEO 검증 (로컬 전수)")
@@ -394,6 +404,7 @@ def run_phase2(all_paths, root_files, idx):
     fail += show("canonical URL 불일치 (.html 누락 등)", errors["canon_mismatch"])
     fail += show("addressRegion 하드코딩", errors["addr_hardcoded"])
     fail += show("dong 페이지에 오피스텔 포함", errors["officetel_dong"])
+    fail += show("D 디자인 마커 누락 (dong/gu/ranking)", errors["d_design_missing"])
     # ─ WARN 항목 (배포 차단 안 함)
     show("JSON-LD 없음 (danji/dong)", errors["no_jsonld"], warn=True)
     show("FAQPage 없음", errors["faq_missing"], warn=True)
