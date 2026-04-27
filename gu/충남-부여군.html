@@ -49,20 +49,35 @@
 .trade-price { font-size:16px; font-weight:700; }
 .trade-detail { font-size:11px; color:var(--sub); margin-top:3px; }
 .trade-date { font-size:11px; color:var(--muted); align-self:center; }
+/* 최근 거래 카드 — 좌:이름+메타 / 우:가격+칩+날짜 */
+.trade-card { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 16px; background:var(--card); border-radius:12px; cursor:pointer; transition:all .15s; }
+.trade-card:active { transform:scale(0.99); }
+.trade-card-left { flex:1; min-width:0; }
+.trade-card-head { display:flex; align-items:center; gap:8px; }
+.trade-cat-chip { display:inline-block; padding:2px 8px; background:rgba(99,102,241,0.15); color:#a5b4fc; border-radius:6px; font-size:10.5px; font-weight:700; }
+.trade-card-name { font-size:14px; font-weight:700; color:var(--text); letter-spacing:-0.015em; }
+.trade-card-meta { font-size:11.5px; color:var(--sub); margin-top:5px; }
+.trade-card-right { flex-shrink:0; text-align:right; }
+.trade-card-price { font-size:18px; font-weight:800; color:var(--yellow); letter-spacing:-0.02em; }
+.trade-card-foot { display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-top:5px; }
+.trade-type-chip { display:inline-block; padding:2px 7px; background:rgba(234,88,12,0.15); color:#fb923c; border-radius:5px; font-size:10px; font-weight:700; }
+.trade-card-date { font-size:11px; color:var(--muted); }
 /* Hero 박스 — 모바일 다크 기본 */
 .hero-box { margin:12px 14px; padding:12px 14px; background:var(--card); border-radius:var(--radius); border-left:3px solid var(--yellow); }
 .hero-meta { font-size:11.5px; color:var(--sub); line-height:1.6; }
 .hero-tag { display:inline-block; padding:1px 6px; background:var(--yellow); color:#0a0a12; border-radius:4px; font-size:10px; font-weight:700; margin-right:4px; }
 .hero-cite { font-size:13px; color:var(--text); margin-top:6px; line-height:1.5; }
 .hero-cite a { color:var(--yellow); text-decoration:none; font-weight:600; }
-/* 1위 강조 카드 — 모바일 다크 */
-.danji-hero { position:relative; padding:18px 16px; background:linear-gradient(135deg, #2a2820 0%, #2a2515 100%); border:1px solid #3a3525; border-left:4px solid var(--yellow); border-radius:14px; margin-bottom:8px; cursor:pointer; transition:all .15s; }
+/* 1위 강조 카드 — 모바일 다크 (세로) */
+.danji-hero { display:block; position:relative; padding:18px 16px; background:linear-gradient(135deg, #2a2820 0%, #2a2515 100%); border:1px solid #3a3525; border-left:4px solid var(--yellow); border-radius:14px; margin-bottom:8px; cursor:pointer; transition:all .15s; }
 .danji-hero:active { transform:scale(0.99); }
+.danji-hero .hero-left { display:block; }
+.danji-hero .hero-right { display:block; margin-top:10px; }
 .danji-hero .rank-badge { display:inline-block; padding:3px 9px; background:var(--yellow); color:#0a0a12; border-radius:6px; font-size:10.5px; font-weight:800; margin-bottom:8px; letter-spacing:0.02em; }
 .danji-hero .hero-name { font-size:17px; font-weight:700; color:var(--text); letter-spacing:-0.02em; }
 .danji-hero .hero-meta { font-size:12px; color:var(--sub); margin-top:6px; line-height:1.6; }
-.danji-hero .hero-price { font-size:22px; font-weight:800; color:var(--yellow); margin-top:10px; letter-spacing:-0.02em; }
-.danji-hero .hero-price-label { font-size:11px; color:var(--muted); margin-left:6px; font-weight:500; }
+.danji-hero .hero-price { font-size:22px; font-weight:800; color:var(--yellow); letter-spacing:-0.02em; }
+.danji-hero .hero-price-label { font-size:11px; color:var(--muted); font-weight:500; margin-top:2px; }
 /* 2-3위 컴팩트 카드 */
 .danji-compact { display:flex; justify-content:space-between; align-items:center; padding:11px 13px; background:var(--card); border-radius:10px; cursor:pointer; transition:all .15s; }
 .danji-compact:active { transform:scale(0.98); }
@@ -215,12 +230,45 @@
   .danji-price, .trade-price { color: #0f172a !important; }
   .danji-rate, .trade-detail { color: #64748b !important; }
   .trade-date { color: #94a3b8 !important; }
-  /* 1위 강조 카드 — PC 라이트 */
+  /* 최근 거래 카드 — PC 라이트 */
+  .trade-card {
+    background: #fff !important;
+    border: 1px solid #eef0f4 !important;
+    border-radius: 12px !important;
+    padding: 14px 18px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
+    transition: all 0.15s ease !important;
+  }
+  .trade-card:hover {
+    border-color: #c7d2fe !important;
+    box-shadow: 0 6px 16px rgba(67,56,202,0.08) !important;
+    transform: translateY(-1px) !important;
+  }
+  .trade-cat-chip {
+    background: #ede9fe !important; color: #6d28d9 !important;
+    padding: 3px 9px !important; border-radius: 6px !important;
+    font-size: 10.5px !important; font-weight: 700 !important;
+  }
+  .trade-card-name { color: #1e293b !important; font-size: 14.5px !important; font-weight: 700 !important; }
+  .trade-card:hover .trade-card-name { color: #4338ca !important; }
+  .trade-card-meta { color: #64748b !important; font-size: 12px !important; }
+  .trade-card-price { color: #ea580c !important; font-size: 19px !important; font-weight: 800 !important; }
+  .trade-type-chip {
+    background: #fff7ed !important; color: #c2410c !important;
+    padding: 2px 8px !important; border-radius: 5px !important;
+    font-size: 10px !important; font-weight: 700 !important;
+  }
+  .trade-card-date { color: #94a3b8 !important; font-size: 11.5px !important; }
+  /* 1위 강조 카드 — PC 라이트 (좌우 flex) */
   .danji-hero {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 20px !important;
     background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%) !important;
     border: 1px solid #fde68a !important;
     border-left: 4px solid #facc15 !important;
-    padding: 20px 18px !important;
+    padding: 18px 22px !important;
     border-radius: 14px !important;
     box-shadow: 0 4px 14px rgba(250,204,21,0.12) !important;
     transition: all 0.18s ease !important;
@@ -229,37 +277,52 @@
     transform: translateY(-1px) !important;
     box-shadow: 0 8px 22px rgba(250,204,21,0.18) !important;
   }
+  .danji-hero .hero-left { flex: 1; min-width: 0; }
+  .danji-hero .hero-right { flex-shrink: 0; text-align: right; }
   .danji-hero .rank-badge {
     background: #facc15 !important; color: #0a0a12 !important;
     padding: 3px 10px !important; border-radius: 6px !important;
     font-size: 11px !important; font-weight: 800 !important;
     letter-spacing: 0.04em !important;
+    margin-bottom: 8px !important;
   }
   .danji-hero .hero-name {
-    font-size: 19px !important; font-weight: 800 !important;
+    font-size: 18px !important; font-weight: 800 !important;
     color: #1e293b !important; letter-spacing: -0.025em !important;
   }
-  .danji-hero .hero-meta { color: #78716c !important; font-size: 12.5px !important; line-height: 1.7 !important; }
+  .danji-hero .hero-meta { color: #78716c !important; font-size: 12.5px !important; line-height: 1.7 !important; margin-top: 4px !important; }
   .danji-hero .hero-price {
-    color: #ca8a04 !important; font-size: 24px !important;
+    color: #ca8a04 !important; font-size: 26px !important;
     font-weight: 900 !important; letter-spacing: -0.025em !important;
+    margin: 0 !important;
   }
-  .danji-hero .hero-price-label { color: #a8a29e !important; font-weight: 600 !important; }
+  .danji-hero .hero-price-label { color: #a8a29e !important; font-weight: 600 !important; font-size: 11px !important; margin-top: 4px !important; }
   /* 2-3위 컴팩트 — PC */
   .danji-compact {
     background: transparent !important;
-    border: none !important; border-bottom: 1px solid #f1f5f9 !important;
+    border: none !important;
+    border-left: 3px solid transparent !important;
+    border-bottom: 1px solid #f1f5f9 !important;
     border-radius: 0 !important;
-    padding: 12px 6px !important;
-    transition: background 0.15s ease !important;
+    padding: 12px 12px !important;
+    transition: all 0.15s ease !important;
   }
-  .danji-compact:hover { background: #f8fafc !important; }
+  .danji-compact:hover {
+    background: #eef2ff !important;
+    border-left-color: #4338ca !important;
+    transform: translateX(2px) !important;
+    border-bottom-color: transparent !important;
+    box-shadow: 0 4px 12px rgba(67,56,202,0.08) !important;
+  }
   .danji-compact:last-child { border-bottom: none !important; }
   .danji-compact-rank { color: #cbd5e1 !important; font-weight: 800 !important; font-size: 13px !important; }
+  .danji-compact:hover .danji-compact-rank { color: #4338ca !important; }
   .danji-compact-name { color: #1e293b !important; font-weight: 600 !important; }
-  .danji-compact:hover .danji-compact-name { color: #4338ca !important; }
+  .danji-compact:hover .danji-compact-name { color: #4338ca !important; font-weight: 700 !important; }
   .danji-compact-meta { color: #64748b !important; }
-  .danji-compact-price { color: #0f172a !important; font-weight: 700 !important; }
+  .danji-compact:hover .danji-compact-meta { color: #475569 !important; }
+  .danji-compact-price { color: #ca8a04 !important; font-weight: 800 !important; letter-spacing: -0.015em !important; }
+  .danji-compact:hover .danji-compact-price { color: #4338ca !important; }
   /* FAQ */
   .faq-section { padding: 20px 14px !important; }
   .faq-item {
@@ -312,7 +375,7 @@
   .hwik-footer-copy a { color: #9ca3af !important; text-decoration: none !important; }
 }
 </style>
-<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@context": "https://schema.org", "@type": "Organization", "@id": "https://hwik.kr/#org", "name": "휙 (HWIK)", "url": "https://hwik.kr", "logo": {"@type": "ImageObject", "url": "https://hwik.kr/og-image.png", "width": 1200, "height": 630}, "sameAs": ["https://hwik.kr"]}, {"@context": "https://schema.org", "@type": "CollectionPage", "name": "충남 부여군 아파트 실거래가 시세 · 9개 단지", "description": "충남 부여군의 아파트 9개 단지 매매·전세·월세 실거래가와 시세를 동별로 비교하세요. 규암면·부여읍 등 평균 매매가 1억 3천, 최고가 부여코아루더퍼스트아파트, 전세가율 최고 부여코아루더퍼스트아파트. 국토교통부 실거래가 공개시스템 기반.", "url": "https://hwik.kr/gu/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC%EA%B5%B0.html", "inLanguage": "ko-KR", "datePublished": "2026-01-01", "dateModified": "2026-04-27", "isPartOf": {"@type": "WebSite", "name": "휙", "url": "https://hwik.kr"}, "publisher": {"@id": "https://hwik.kr/#org"}, "about": {"@type": "AdministrativeArea", "name": "충남 부여군", "containedInPlace": {"@type": "AdministrativeArea", "name": "충남", "containedInPlace": {"@type": "Country", "name": "대한민국"}}, "geo": {"@type": "GeoCoordinates", "latitude": 36.275435, "longitude": 126.893313}}, "mainEntity": {"@type": "ItemList", "name": "부여군 아파트 시세", "numberOfItems": 9, "itemListElement": [{"@type": "ListItem", "position": 1, "url": "https://hwik.kr/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EC%84%BC%ED%8A%B8%EB%9F%B4%ED%9C%B4%EC%97%94%ED%95%98%EC%9E%84%EC%95%84%ED%8C%8C%ED%8A%B8-a10026258.html", "name": "부여센트럴휴엔하임아파트", "description": "규암면 · 611세대"}, {"@type": "ListItem", "position": 2, "url": "https://hwik.kr/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EC%BD%94%EC%95%84%EB%A3%A8%EB%8D%94%ED%8D%BC%EC%8A%A4%ED%8A%B8%EC%95%84%ED%8C%8C%ED%8A%B8-a10026334.html", "name": "부여코아루더퍼스트아파트", "description": "규암면 · 416세대"}, {"@type": "ListItem", "position": 3, "url": "https://hwik.kr/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%EB%8F%99%EB%82%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a32380606.html", "name": "부여동남아파트", "description": "부여읍 · 480세대"}, {"@type": "ListItem", "position": 4, "url": "https://hwik.kr/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%EC%8C%8D%EB%B6%81%EC%A3%BC%EA%B3%B51%EB%8B%A8%EC%A7%80-a32380803.html", "name": "부여쌍북주공1단지", "description": "부여읍 · 390세대"}, {"@type": "ListItem", "position": 5, "url": "https://hwik.kr/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%ED%99%8D%EC%84%A0%EA%B8%88%EB%8F%99%EC%95%84%ED%8C%8C%ED%8A%B8-a32380804.html", "name": "부여홍선금동아파트", "description": "부여읍 · 406세대"}, {"@type": "ListItem", "position": 6, "url": "https://hwik.kr/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%EC%8C%8D%EB%B6%81%EC%99%95%EA%B6%81-a32380805.html", "name": "부여쌍북왕궁", "description": "부여읍 · 459세대"}, {"@type": "ListItem", "position": 7, "url": "https://hwik.kr/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EB%AC%B4%EC%A7%80%EA%B0%9C%EC%95%84%ED%8C%8C%ED%8A%B8-a32381302.html", "name": "부여무지개아파트", "description": "규암면 · 300세대"}, {"@type": "ListItem", "position": 8, "url": "https://hwik.kr/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%8C%80%EB%8F%99%ED%99%A9%ED%86%A0%EB%B0%A9-a32381303.html", "name": "대동황토방", "description": "규암면 · 420세대"}, {"@type": "ListItem", "position": 9, "url": "https://hwik.kr/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EA%B0%95%EC%82%B0-a32381601.html", "name": "부여강산", "description": "규암면 · 263세대"}]}}, {"@type": "AdministrativeArea", "name": "충남 부여군", "containedInPlace": {"@type": "AdministrativeArea", "name": "충남", "containedInPlace": {"@type": "Country", "name": "대한민국"}}, "geo": {"@type": "GeoCoordinates", "latitude": 36.275435, "longitude": 126.893313}, "@context": "https://schema.org"}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "부여군 아파트 평균 매매가는?", "acceptedAnswer": {"@type": "Answer", "text": "부여군 9개 단지 평균 매매가는 1억 3천입니다. 국토교통부 실거래가 공개시스템 기준."}}, {"@type": "Question", "name": "부여군 아파트 전세가율은?", "acceptedAnswer": {"@type": "Answer", "text": "부여군 평균 전세가율은 59.3%입니다."}}, {"@type": "Question", "name": "부여군에서 가장 비싼 아파트는?", "acceptedAnswer": {"@type": "Answer", "text": "매매가 1위는 부여코아루더퍼스트아파트로 4억 8천에 거래되었습니다."}}, {"@type": "Question", "name": "부여군에서 아파트 단지가 많은 동은?", "acceptedAnswer": {"@type": "Answer", "text": "부여군에서는 규암면·부여읍 일대에 아파트 단지가 가장 많이 분포합니다."}}, {"@type": "Question", "name": "부여군 아파트 단지 수는?", "acceptedAnswer": {"@type": "Answer", "text": "부여군에는 총 9개 아파트 단지, 3,745세대가 있습니다."}}, {"@type": "Question", "name": "부여군 아파트 실거래가 데이터 출처는?", "acceptedAnswer": {"@type": "Answer", "text": "국토교통부 실거래가 공개시스템(rt.molit.go.kr) 데이터를 매일 자동 수집합니다."}}]}, {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"}, {"@type": "ListItem", "position": 2, "name": "충남 구별 시세", "item": "https://hwik.kr/gu/"}, {"@type": "ListItem", "position": 3, "name": "부여군"}]}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@context": "https://schema.org", "@type": "Organization", "@id": "https://hwik.kr/#org", "name": "휙 (HWIK)", "url": "https://hwik.kr", "logo": {"@type": "ImageObject", "url": "https://hwik.kr/og-image.png", "width": 1200, "height": 630}, "sameAs": ["https://hwik.kr"]}, {"@context": "https://schema.org", "@type": "CollectionPage", "name": "충남 부여군 아파트 실거래가 시세 · 9개 단지", "description": "충남 부여군의 아파트 9개 단지 매매·전세·월세 실거래가와 시세를 동별로 비교하세요. 규암면·부여읍 등 평균 매매가 1억 3천, 최고가 부여코아루더퍼스트아파트, 전세가율 최고 부여코아루더퍼스트아파트. 국토교통부 실거래가 공개시스템 기반.", "url": "https://hwik.kr/gu/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC%EA%B5%B0.html", "inLanguage": "ko-KR", "datePublished": "2026-01-01", "dateModified": "2026-04-27", "isPartOf": {"@type": "WebSite", "name": "휙", "url": "https://hwik.kr"}, "publisher": {"@id": "https://hwik.kr/#org"}, "about": {"@type": "AdministrativeArea", "name": "충남 부여군", "containedInPlace": {"@type": "AdministrativeArea", "name": "충남", "containedInPlace": {"@type": "Country", "name": "대한민국"}}, "geo": {"@type": "GeoCoordinates", "latitude": 36.275435, "longitude": 126.893313}}, "mainEntity": {"@type": "ItemList", "name": "부여군 아파트 시세", "numberOfItems": 9, "itemListElement": [{"@type": "ListItem", "position": 1, "url": "https://hwik.kr/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EC%84%BC%ED%8A%B8%EB%9F%B4%ED%9C%B4%EC%97%94%ED%95%98%EC%9E%84%EC%95%84%ED%8C%8C%ED%8A%B8-a10026258.html", "name": "부여센트럴휴엔하임아파트", "description": "규암면 · 611세대"}, {"@type": "ListItem", "position": 2, "url": "https://hwik.kr/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EC%BD%94%EC%95%84%EB%A3%A8%EB%8D%94%ED%8D%BC%EC%8A%A4%ED%8A%B8%EC%95%84%ED%8C%8C%ED%8A%B8-a10026334.html", "name": "부여코아루더퍼스트아파트", "description": "규암면 · 416세대"}, {"@type": "ListItem", "position": 3, "url": "https://hwik.kr/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%EB%8F%99%EB%82%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a32380606.html", "name": "부여동남아파트", "description": "부여읍 · 480세대"}, {"@type": "ListItem", "position": 4, "url": "https://hwik.kr/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%EC%8C%8D%EB%B6%81%EC%A3%BC%EA%B3%B51%EB%8B%A8%EC%A7%80-a32380803.html", "name": "부여쌍북주공1단지", "description": "부여읍 · 390세대"}, {"@type": "ListItem", "position": 5, "url": "https://hwik.kr/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%ED%99%8D%EC%84%A0%EA%B8%88%EB%8F%99%EC%95%84%ED%8C%8C%ED%8A%B8-a32380804.html", "name": "부여홍선금동아파트", "description": "부여읍 · 406세대"}, {"@type": "ListItem", "position": 6, "url": "https://hwik.kr/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%EC%8C%8D%EB%B6%81%EC%99%95%EA%B6%81-a32380805.html", "name": "부여쌍북왕궁", "description": "부여읍 · 459세대"}, {"@type": "ListItem", "position": 7, "url": "https://hwik.kr/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EB%AC%B4%EC%A7%80%EA%B0%9C%EC%95%84%ED%8C%8C%ED%8A%B8-a32381302.html", "name": "부여무지개아파트", "description": "규암면 · 300세대"}, {"@type": "ListItem", "position": 8, "url": "https://hwik.kr/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%8C%80%EB%8F%99%ED%99%A9%ED%86%A0%EB%B0%A9-a32381303.html", "name": "대동황토방", "description": "규암면 · 420세대"}, {"@type": "ListItem", "position": 9, "url": "https://hwik.kr/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EA%B0%95%EC%82%B0-a32381601.html", "name": "부여강산", "description": "규암면 · 263세대"}]}}, {"@type": "AdministrativeArea", "name": "충남 부여군", "containedInPlace": {"@type": "AdministrativeArea", "name": "충남", "containedInPlace": {"@type": "Country", "name": "대한민국"}}, "geo": {"@type": "GeoCoordinates", "latitude": 36.275435, "longitude": 126.893313}, "@context": "https://schema.org"}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "부여군 아파트 평균 매매가는?", "acceptedAnswer": {"@type": "Answer", "text": "부여군 9개 단지 평균 매매가는 1억 3천입니다."}}, {"@type": "Question", "name": "부여군에서 가장 비싼 아파트는?", "acceptedAnswer": {"@type": "Answer", "text": "매매가 1위는 부여코아루더퍼스트아파트로 4억 8천에 거래되었습니다."}}, {"@type": "Question", "name": "부여군에서 아파트 단지가 많은 동은?", "acceptedAnswer": {"@type": "Answer", "text": "규암면·부여읍 일대에 아파트 단지가 가장 많이 분포합니다."}}, {"@type": "Question", "name": "부여군 아파트 단지 수는?", "acceptedAnswer": {"@type": "Answer", "text": "총 9개 아파트 단지, 3,745세대."}}]}, {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"}, {"@type": "ListItem", "position": 2, "name": "충남 구별 시세", "item": "https://hwik.kr/gu/"}, {"@type": "ListItem", "position": 3, "name": "부여군"}]}]}</script>
 </head>
 <body>
 <div class="wrap">
@@ -323,23 +386,22 @@
 </div></header>
 <nav class="breadcrumb"><a href="/">휙</a><span>&gt;</span>
 <a href="/gu/">충남</a><span>&gt;</span>부여군</nav>
-<p class="seo-text" style="font-size:13px;line-height:1.85;margin:14px 16px 4px;color:var(--sub);">충남 부여군의 아파트 <b>9개 단지</b>(규암면·부여읍 등 주요 입지) 시세를 한 번에 확인하세요., 평균 매매가 <b>1억 3천</b>, 평균 전세가율 <b>59.3%</b>, 수집 거래 <b>9건</b>. 매매·전세·월세 면적별 가격, 동별 단지 비교, ㎡당 가격 순위까지 — 국토교통부 실거래가 공개시스템 기반.</p>
+<p class="seo-text" style="font-size:13px;line-height:1.7;margin:14px 16px 4px;color:var(--sub);"><b>부여군</b> 아파트 9개 단지 · 평균 1억 3천 · 전세가율 59.3% · 규암면·부여읍 중심</p>
 <div class="metrics">
   <div class="metric"><div class="metric-label">단지 수</div><div class="metric-value">9개</div></div>
   <div class="metric"><div class="metric-label">평균 매매가</div><div class="metric-value">1억 3천</div></div>
   <div class="metric"><div class="metric-label">평균 전세가율</div><div class="metric-value">59.3%</div></div>
 </div>
 <div class="divider"></div>
-<p class="seo-text" style="font-size:13px;line-height:1.85;margin:4px 16px 16px;color:var(--sub);">부여군에서 가장 비싼 아파트는 규암면의 <a href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EC%BD%94%EC%95%84%EB%A3%A8%EB%8D%94%ED%8D%BC%EC%8A%A4%ED%8A%B8%EC%95%84%ED%8C%8C%ED%8A%B8-a10026334.html" title="부여코아루더퍼스트아파트 실거래가 시세" style="color:var(--yellow);text-decoration:none;font-weight:700;">부여코아루더퍼스트아파트</a>로 <b>4억 8천</b>에 거래됐습니다. 뒤이어 <a href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EC%84%BC%ED%8A%B8%EB%9F%B4%ED%9C%B4%EC%97%94%ED%95%98%EC%9E%84%EC%95%84%ED%8C%8C%ED%8A%B8-a10026258.html" style="color:var(--yellow);text-decoration:none;font-weight:600;">부여센트럴휴엔하임아파트</a>·<a href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%ED%99%8D%EC%84%A0%EA%B8%88%EB%8F%99%EC%95%84%ED%8C%8C%ED%8A%B8-a32380804.html" style="color:var(--yellow);text-decoration:none;font-weight:600;">부여홍선금동아파트</a>가 자리잡고 있습니다.</p>
 <div class="section"><h2 class="section-title">부여군에서 가장 비싼 아파트는?</h2>
-<a class="danji-hero" title="부여코아루더퍼스트아파트 실거래가 · 부여군 매매가 1위" style="text-decoration:none;display:block;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EC%BD%94%EC%95%84%EB%A3%A8%EB%8D%94%ED%8D%BC%EC%8A%A4%ED%8A%B8%EC%95%84%ED%8C%8C%ED%8A%B8-a10026334.html"><span class="rank-badge">매매가 1위</span><div class="hero-name">부여코아루더퍼스트아파트</div><div class="hero-meta">부여군 규암면 · 전용 100㎡ · 2018년 입주 · 416세대</div><div class="hero-price">4억 8천<span class="hero-price-label">최고가 기준</span></div></a>
+<a class="danji-hero" title="부여코아루더퍼스트아파트 실거래가 · 부여군 매매가 1위" style="text-decoration:none;display:block;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EC%BD%94%EC%95%84%EB%A3%A8%EB%8D%94%ED%8D%BC%EC%8A%A4%ED%8A%B8%EC%95%84%ED%8C%8C%ED%8A%B8-a10026334.html"><div class="hero-left"><span class="rank-badge">매매가 1위</span><div class="hero-name">부여코아루더퍼스트아파트</div><div class="hero-meta">부여군 규암면 · 전용 100㎡ · 2018년 입주 · 416세대</div></div><div class="hero-right"><div class="hero-price">4억 8천</div><div class="hero-price-label">최고가 기준</div></div></a>
 <div style="margin-top:6px;">
 <a class="danji-compact" title="부여센트럴휴엔하임아파트 실거래가 · 부여군 매매가 2위" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EC%84%BC%ED%8A%B8%EB%9F%B4%ED%9C%B4%EC%97%94%ED%95%98%EC%9E%84%EC%95%84%ED%8C%8C%ED%8A%B8-a10026258.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">2</span><div style="min-width:0;"><div class="danji-compact-name">부여센트럴휴엔하임아파트</div><div class="danji-compact-meta">부여군 규암면 · 전용 85㎡ · 2018년</div></div></div><div class="danji-compact-price">3억 2천</div></a>
 <a class="danji-compact" title="부여홍선금동아파트 실거래가 · 부여군 매매가 3위" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%ED%99%8D%EC%84%A0%EA%B8%88%EB%8F%99%EC%95%84%ED%8C%8C%ED%8A%B8-a32380804.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">3</span><div style="min-width:0;"><div class="danji-compact-name">부여홍선금동아파트</div><div class="danji-compact-meta">부여군 부여읍 · 전용 128㎡ · 2001년</div></div></div><div class="danji-compact-price">3억 2천</div></a>
 </div>
 </div><div class="divider"></div>
 <div class="section"><h2 class="section-title">전세가율이 높은 단지 (실거주 추천)</h2>
-<a class="danji-hero" title="부여코아루더퍼스트아파트 실거래가 · 부여군 전세가율 1위" style="text-decoration:none;display:block;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EC%BD%94%EC%95%84%EB%A3%A8%EB%8D%94%ED%8D%BC%EC%8A%A4%ED%8A%B8%EC%95%84%ED%8C%8C%ED%8A%B8-a10026334.html"><span class="rank-badge">전세가율 1위</span><div class="hero-name">부여코아루더퍼스트아파트</div><div class="hero-meta">부여군 규암면 · 전용 60㎡ · 2018년 입주 · 416세대</div><div class="hero-price">76.6%<span class="hero-price-label">매매 대비 전세 비율</span></div></a>
+<a class="danji-hero" title="부여코아루더퍼스트아파트 실거래가 · 부여군 전세가율 1위" style="text-decoration:none;display:block;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EC%BD%94%EC%95%84%EB%A3%A8%EB%8D%94%ED%8D%BC%EC%8A%A4%ED%8A%B8%EC%95%84%ED%8C%8C%ED%8A%B8-a10026334.html"><div class="hero-left"><span class="rank-badge">전세가율 1위</span><div class="hero-name">부여코아루더퍼스트아파트</div><div class="hero-meta">부여군 규암면 · 전용 60㎡ · 2018년 입주 · 416세대</div></div><div class="hero-right"><div class="hero-price">76.6%</div><div class="hero-price-label">매매 대비 전세 비율</div></div></a>
 <div style="margin-top:6px;">
 <a class="danji-compact" title="부여동남아파트 실거래가 · 부여군 전세가율 2위" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%EB%8F%99%EB%82%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a32380606.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">2</span><div style="min-width:0;"><div class="danji-compact-name">부여동남아파트</div><div class="danji-compact-meta">부여군 부여읍 · 전용 39㎡ · 1986년</div></div></div><div class="danji-compact-price">71.4%</div></a>
 <a class="danji-compact" title="부여강산 실거래가 · 부여군 전세가율 3위" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EA%B0%95%EC%82%B0-a32381601.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">3</span><div style="min-width:0;"><div class="danji-compact-name">부여강산</div><div class="danji-compact-meta">부여군 규암면 · 전용 60㎡ · 2001년</div></div></div><div class="danji-compact-price">60.9%</div></a>
@@ -358,67 +420,29 @@
 </a>
 </div></div>
 <div class="divider"></div>
-<div class="section"><h2 class="section-title">㎡당 가격이 가장 비싼 단지는? <span style="font-size:10px;color:var(--muted);font-weight:400;">(전용면적 기준)</span></h2>
-<a class="danji-hero" title="부여코아루더퍼스트아파트 ㎡당 시세 · 부여군 1위" style="text-decoration:none;display:block;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EC%BD%94%EC%95%84%EB%A3%A8%EB%8D%94%ED%8D%BC%EC%8A%A4%ED%8A%B8%EC%95%84%ED%8C%8C%ED%8A%B8-a10026334.html"><span class="rank-badge">㎡당 1위</span><div class="hero-name">부여코아루더퍼스트아파트</div><div class="hero-meta">부여군 규암면 · 전용 60㎡ · 거래가 2억 4천</div><div class="hero-price">413만<span class="hero-price-label">/㎡ 전용면적 기준</span></div></a>
+<div class="section"><h2 class="section-title">㎡당 가격이 가장 비싼 단지는? <span style="font-size:10px;color:var(--muted);font-weight:400;">(공급면적 기준)</span></h2>
+<a class="danji-hero" title="부여쌍북왕궁 ㎡당 시세 · 부여군 1위" style="text-decoration:none;display:block;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%EC%8C%8D%EB%B6%81%EC%99%95%EA%B6%81-a32380805.html"><div class="hero-left"><span class="rank-badge">㎡당 1위</span><div class="hero-name">부여쌍북왕궁</div><div class="hero-meta">부여군 부여읍 · 공급 66.3㎡ · 거래가 1억 5천</div></div><div class="hero-right"><div class="hero-price">226만</div><div class="hero-price-label">/㎡ 공급면적 기준</div></div></a>
 <div style="margin-top:6px;">
-<a class="danji-compact" title="부여센트럴휴엔하임아파트 ㎡당 시세 · 부여군 2위" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EC%84%BC%ED%8A%B8%EB%9F%B4%ED%9C%B4%EC%97%94%ED%95%98%EC%9E%84%EC%95%84%ED%8C%8C%ED%8A%B8-a10026258.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">2</span><div style="min-width:0;"><div class="danji-compact-name">부여센트럴휴엔하임아파트</div><div class="danji-compact-meta">부여군 규암면 · 전용 60㎡</div></div></div><div class="danji-compact-price">393만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
-<a class="danji-compact" title="부여쌍북왕궁 ㎡당 시세 · 부여군 3위" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%EC%8C%8D%EB%B6%81%EC%99%95%EA%B6%81-a32380805.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">3</span><div style="min-width:0;"><div class="danji-compact-name">부여쌍북왕궁</div><div class="danji-compact-meta">부여군 부여읍 · 전용 59㎡</div></div></div><div class="danji-compact-price">254만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
-<a class="danji-compact" title="부여홍선금동아파트 ㎡당 시세 · 부여군 4위" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%ED%99%8D%EC%84%A0%EA%B8%88%EB%8F%99%EC%95%84%ED%8C%8C%ED%8A%B8-a32380804.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">4</span><div style="min-width:0;"><div class="danji-compact-name">부여홍선금동아파트</div><div class="danji-compact-meta">부여군 부여읍 · 전용 60㎡</div></div></div><div class="danji-compact-price">250만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
-<a class="danji-compact" title="대동황토방 ㎡당 시세 · 부여군 5위" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%8C%80%EB%8F%99%ED%99%A9%ED%86%A0%EB%B0%A9-a32381303.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">5</span><div style="min-width:0;"><div class="danji-compact-name">대동황토방</div><div class="danji-compact-meta">부여군 규암면 · 전용 60㎡</div></div></div><div class="danji-compact-price">192만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
-<a class="danji-compact" title="부여강산 ㎡당 시세 · 부여군 6위" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EA%B0%95%EC%82%B0-a32381601.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">6</span><div style="min-width:0;"><div class="danji-compact-name">부여강산</div><div class="danji-compact-meta">부여군 규암면 · 전용 60㎡</div></div></div><div class="danji-compact-price">192만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
-<a class="danji-compact" title="부여동남아파트 ㎡당 시세 · 부여군 7위" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%EB%8F%99%EB%82%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a32380606.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">7</span><div style="min-width:0;"><div class="danji-compact-name">부여동남아파트</div><div class="danji-compact-meta">부여군 부여읍 · 전용 39㎡</div></div></div><div class="danji-compact-price">179만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
-<a class="danji-compact" title="부여무지개아파트 ㎡당 시세 · 부여군 8위" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EB%AC%B4%EC%A7%80%EA%B0%9C%EC%95%84%ED%8C%8C%ED%8A%B8-a32381302.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">8</span><div style="min-width:0;"><div class="danji-compact-name">부여무지개아파트</div><div class="danji-compact-meta">부여군 규암면 · 전용 50㎡</div></div></div><div class="danji-compact-price">176만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
-<a class="danji-compact" title="부여쌍북주공1단지 ㎡당 시세 · 부여군 9위" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%EC%8C%8D%EB%B6%81%EC%A3%BC%EA%B3%B51%EB%8B%A8%EC%A7%80-a32380803.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">9</span><div style="min-width:0;"><div class="danji-compact-name">부여쌍북주공1단지</div><div class="danji-compact-meta">부여군 부여읍 · 전용 40㎡</div></div></div><div class="danji-compact-price">175만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="부여홍선금동아파트 ㎡당 시세 · 부여군 2위" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%ED%99%8D%EC%84%A0%EA%B8%88%EB%8F%99%EC%95%84%ED%8C%8C%ED%8A%B8-a32380804.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">2</span><div style="min-width:0;"><div class="danji-compact-name">부여홍선금동아파트</div><div class="danji-compact-meta">부여군 부여읍 · 공급 80.8㎡</div></div></div><div class="danji-compact-price">186만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="부여동남아파트 ㎡당 시세 · 부여군 3위" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%EB%8F%99%EB%82%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a32380606.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">3</span><div style="min-width:0;"><div class="danji-compact-name">부여동남아파트</div><div class="danji-compact-meta">부여군 부여읍 · 공급 45.1㎡</div></div></div><div class="danji-compact-price">155만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="부여쌍북주공1단지 ㎡당 시세 · 부여군 4위" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%EC%8C%8D%EB%B6%81%EC%A3%BC%EA%B3%B51%EB%8B%A8%EC%A7%80-a32380803.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">4</span><div style="min-width:0;"><div class="danji-compact-name">부여쌍북주공1단지</div><div class="danji-compact-meta">부여군 부여읍 · 공급 45.8㎡</div></div></div><div class="danji-compact-price">153만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="대동황토방 ㎡당 시세 · 부여군 5위" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%8C%80%EB%8F%99%ED%99%A9%ED%86%A0%EB%B0%A9-a32381303.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">5</span><div style="min-width:0;"><div class="danji-compact-name">대동황토방</div><div class="danji-compact-meta">부여군 규암면 · 공급 77.1㎡</div></div></div><div class="danji-compact-price">149만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="부여강산 ㎡당 시세 · 부여군 6위" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EA%B0%95%EC%82%B0-a32381601.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">6</span><div style="min-width:0;"><div class="danji-compact-name">부여강산</div><div class="danji-compact-meta">부여군 규암면 · 공급 78.7㎡</div></div></div><div class="danji-compact-price">146만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="부여무지개아파트 ㎡당 시세 · 부여군 7위" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EB%AC%B4%EC%A7%80%EA%B0%9C%EC%95%84%ED%8C%8C%ED%8A%B8-a32381302.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">7</span><div style="min-width:0;"><div class="danji-compact-name">부여무지개아파트</div><div class="danji-compact-meta">부여군 규암면 · 공급 73.0㎡</div></div></div><div class="danji-compact-price">121만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
 </div>
 </div>
 <div class="divider"></div>
 <div class="section"><h2 class="section-title">최근 거래된 단지</h2>
-<div style="display:flex;flex-direction:column;gap:8px;">
-<a class="trade-item" title="부여쌍북주공1단지 · 부여군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%EC%8C%8D%EB%B6%81%EC%A3%BC%EA%B3%B51%EB%8B%A8%EC%A7%80-a32380803.html">
-  <div><div class="trade-price">7,000만</div>
-  <div class="trade-detail">부여쌍북주공1단지 · 40㎡ · 4층</div></div>
-  <div class="trade-date"><time datetime="2026-04-13">2026-04-13</time></div>
-</a>
-<a class="trade-item" title="부여무지개아파트 · 부여군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EB%AC%B4%EC%A7%80%EA%B0%9C%EC%95%84%ED%8C%8C%ED%8A%B8-a32381302.html">
-  <div><div class="trade-price">8,800만</div>
-  <div class="trade-detail">부여무지개아파트 · 50㎡ · 2층</div></div>
-  <div class="trade-date"><time datetime="2026-04-06">2026-04-06</time></div>
-</a>
-<a class="trade-item" title="대동황토방 · 부여군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%8C%80%EB%8F%99%ED%99%A9%ED%86%A0%EB%B0%A9-a32381303.html">
-  <div><div class="trade-price">1억 1천</div>
-  <div class="trade-detail">대동황토방 · 60㎡ · 3층</div></div>
-  <div class="trade-date"><time datetime="2026-03-18">2026-03-18</time></div>
-</a>
-<a class="trade-item" title="부여강산 · 부여군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EA%B0%95%EC%82%B0-a32381601.html">
-  <div><div class="trade-price">1억 1천</div>
-  <div class="trade-detail">부여강산 · 60㎡ · 12층</div></div>
-  <div class="trade-date"><time datetime="2026-03-06">2026-03-06</time></div>
-</a>
-<a class="trade-item" title="부여쌍북왕궁 · 부여군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%EC%8C%8D%EB%B6%81%EC%99%95%EA%B6%81-a32380805.html">
-  <div><div class="trade-price">1억 5천</div>
-  <div class="trade-detail">부여쌍북왕궁 · 59㎡ · 3층</div></div>
-  <div class="trade-date"><time datetime="2026-02-25">2026-02-25</time></div>
-</a>
-<a class="trade-item" title="부여코아루더퍼스트아파트 · 부여군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EC%BD%94%EC%95%84%EB%A3%A8%EB%8D%94%ED%8D%BC%EC%8A%A4%ED%8A%B8%EC%95%84%ED%8C%8C%ED%8A%B8-a10026334.html">
-  <div><div class="trade-price">2억 4천</div>
-  <div class="trade-detail">부여코아루더퍼스트아파트 · 60㎡ · 3층</div></div>
-  <div class="trade-date"><time datetime="2026-02-12">2026-02-12</time></div>
-</a>
-<a class="trade-item" title="부여동남아파트 · 부여군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%EB%8F%99%EB%82%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a32380606.html">
-  <div><div class="trade-price">7,000만</div>
-  <div class="trade-detail">부여동남아파트 · 39㎡ · 2층</div></div>
-  <div class="trade-date"><time datetime="2026-02-09">2026-02-09</time></div>
-</a>
-<a class="trade-item" title="부여센트럴휴엔하임아파트 · 부여군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EC%84%BC%ED%8A%B8%EB%9F%B4%ED%9C%B4%EC%97%94%ED%95%98%EC%9E%84%EC%95%84%ED%8C%8C%ED%8A%B8-a10026258.html">
-  <div><div class="trade-price">2억 3천</div>
-  <div class="trade-detail">부여센트럴휴엔하임아파트 · 60㎡ · 12층</div></div>
-  <div class="trade-date"><time datetime="2025-12-08">2025-12-08</time></div>
-</a>
-<a class="trade-item" title="부여홍선금동아파트 · 부여군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%ED%99%8D%EC%84%A0%EA%B8%88%EB%8F%99%EC%95%84%ED%8C%8C%ED%8A%B8-a32380804.html">
-  <div><div class="trade-price">1억 5천</div>
-  <div class="trade-detail">부여홍선금동아파트 · 60㎡ · 4층</div></div>
-  <div class="trade-date"><time datetime="2024-11-11">2024-11-11</time></div>
-</a>
+<div style="display:flex;flex-direction:column;gap:10px;">
+<a class="trade-card" title="부여쌍북주공1단지 · 부여군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%EC%8C%8D%EB%B6%81%EC%A3%BC%EA%B3%B51%EB%8B%A8%EC%A7%80-a32380803.html"><div class="trade-card-left"><div class="trade-card-head"><span class="trade-cat-chip">아파트</span><span class="trade-card-name">부여쌍북주공1단지</span></div><div class="trade-card-meta">부여군 부여읍 · 전용 40㎡ · 4층</div></div><div class="trade-card-right"><div class="trade-card-price">7,000만</div><div class="trade-card-foot"><span class="trade-type-chip">매매</span><span class="trade-card-date"><time datetime="2026-04-13">2026-04-13</time></span></div></div></a>
+<a class="trade-card" title="부여무지개아파트 · 부여군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EB%AC%B4%EC%A7%80%EA%B0%9C%EC%95%84%ED%8C%8C%ED%8A%B8-a32381302.html"><div class="trade-card-left"><div class="trade-card-head"><span class="trade-cat-chip">아파트</span><span class="trade-card-name">부여무지개아파트</span></div><div class="trade-card-meta">부여군 규암면 · 전용 50㎡ · 2층</div></div><div class="trade-card-right"><div class="trade-card-price">8,800만</div><div class="trade-card-foot"><span class="trade-type-chip">매매</span><span class="trade-card-date"><time datetime="2026-04-06">2026-04-06</time></span></div></div></a>
+<a class="trade-card" title="대동황토방 · 부여군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%8C%80%EB%8F%99%ED%99%A9%ED%86%A0%EB%B0%A9-a32381303.html"><div class="trade-card-left"><div class="trade-card-head"><span class="trade-cat-chip">아파트</span><span class="trade-card-name">대동황토방</span></div><div class="trade-card-meta">부여군 규암면 · 전용 60㎡ · 3층</div></div><div class="trade-card-right"><div class="trade-card-price">1억 1천</div><div class="trade-card-foot"><span class="trade-type-chip">매매</span><span class="trade-card-date"><time datetime="2026-03-18">2026-03-18</time></span></div></div></a>
+<a class="trade-card" title="부여강산 · 부여군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EA%B0%95%EC%82%B0-a32381601.html"><div class="trade-card-left"><div class="trade-card-head"><span class="trade-cat-chip">아파트</span><span class="trade-card-name">부여강산</span></div><div class="trade-card-meta">부여군 규암면 · 전용 60㎡ · 12층</div></div><div class="trade-card-right"><div class="trade-card-price">1억 1천</div><div class="trade-card-foot"><span class="trade-type-chip">매매</span><span class="trade-card-date"><time datetime="2026-03-06">2026-03-06</time></span></div></div></a>
+<a class="trade-card" title="부여쌍북왕궁 · 부여군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%EC%8C%8D%EB%B6%81%EC%99%95%EA%B6%81-a32380805.html"><div class="trade-card-left"><div class="trade-card-head"><span class="trade-cat-chip">아파트</span><span class="trade-card-name">부여쌍북왕궁</span></div><div class="trade-card-meta">부여군 부여읍 · 전용 59㎡ · 3층</div></div><div class="trade-card-right"><div class="trade-card-price">1억 5천</div><div class="trade-card-foot"><span class="trade-type-chip">매매</span><span class="trade-card-date"><time datetime="2026-02-25">2026-02-25</time></span></div></div></a>
+<a class="trade-card" title="부여코아루더퍼스트아파트 · 부여군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EC%BD%94%EC%95%84%EB%A3%A8%EB%8D%94%ED%8D%BC%EC%8A%A4%ED%8A%B8%EC%95%84%ED%8C%8C%ED%8A%B8-a10026334.html"><div class="trade-card-left"><div class="trade-card-head"><span class="trade-cat-chip">아파트</span><span class="trade-card-name">부여코아루더퍼스트아파트</span></div><div class="trade-card-meta">부여군 규암면 · 전용 60㎡ · 3층</div></div><div class="trade-card-right"><div class="trade-card-price">2억 4천</div><div class="trade-card-foot"><span class="trade-type-chip">매매</span><span class="trade-card-date"><time datetime="2026-02-12">2026-02-12</time></span></div></div></a>
+<a class="trade-card" title="부여동남아파트 · 부여군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%EB%8F%99%EB%82%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a32380606.html"><div class="trade-card-left"><div class="trade-card-head"><span class="trade-cat-chip">아파트</span><span class="trade-card-name">부여동남아파트</span></div><div class="trade-card-meta">부여군 부여읍 · 전용 39㎡ · 2층</div></div><div class="trade-card-right"><div class="trade-card-price">7,000만</div><div class="trade-card-foot"><span class="trade-type-chip">매매</span><span class="trade-card-date"><time datetime="2026-02-09">2026-02-09</time></span></div></div></a>
+<a class="trade-card" title="부여센트럴휴엔하임아파트 · 부여군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EA%B7%9C%EC%95%94%EB%A9%B4-%EB%B6%80%EC%97%AC%EC%84%BC%ED%8A%B8%EB%9F%B4%ED%9C%B4%EC%97%94%ED%95%98%EC%9E%84%EC%95%84%ED%8C%8C%ED%8A%B8-a10026258.html"><div class="trade-card-left"><div class="trade-card-head"><span class="trade-cat-chip">아파트</span><span class="trade-card-name">부여센트럴휴엔하임아파트</span></div><div class="trade-card-meta">부여군 규암면 · 전용 60㎡ · 12층</div></div><div class="trade-card-right"><div class="trade-card-price">2억 3천</div><div class="trade-card-foot"><span class="trade-type-chip">매매</span><span class="trade-card-date"><time datetime="2025-12-08">2025-12-08</time></span></div></div></a>
+<a class="trade-card" title="부여홍선금동아파트 · 부여군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%B6%A9%EB%82%A8-%EB%B6%80%EC%97%AC-%EB%B6%80%EC%97%AC%EC%9D%8D-%EB%B6%80%EC%97%AC%ED%99%8D%EC%84%A0%EA%B8%88%EB%8F%99%EC%95%84%ED%8C%8C%ED%8A%B8-a32380804.html"><div class="trade-card-left"><div class="trade-card-head"><span class="trade-cat-chip">아파트</span><span class="trade-card-name">부여홍선금동아파트</span></div><div class="trade-card-meta">부여군 부여읍 · 전용 60㎡ · 4층</div></div><div class="trade-card-right"><div class="trade-card-price">1억 5천</div><div class="trade-card-foot"><span class="trade-type-chip">매매</span><span class="trade-card-date"><time datetime="2024-11-11">2024-11-11</time></span></div></div></a>
 </div></div>
 <div class="divider"></div>
 <div class="section"><h2 class="section-title">부여군 근처 구/시는?</h2>
@@ -476,17 +500,17 @@
 <div class="faq-item"><div class="faq-q">부여군 전세가율은?</div>
 <div class="faq-a">부여군 평균 전세가율은 59.3%입니다.</div></div>
 <div class="faq-item"><div class="faq-q">부여군에서 가장 비싼 아파트는?</div>
-<div class="faq-a">전용면적 ㎡당 가격 기준 부여코아루더퍼스트아파트이(가) 413만/㎡으로 가장 높습니다.</div></div>
+<div class="faq-a">공급면적 ㎡당 가격 기준 부여쌍북왕궁이(가) 226만/㎡으로 가장 높습니다.</div></div>
 <div class="faq-item"><div class="faq-q">부여군 아파트 단지 수는?</div>
 <div class="faq-a">부여군에는 총 9개 아파트 단지, 3,745세대가 있습니다.</div></div>
 </div>
 <div class="divider"></div>
 <div class="cta-section">
-<a class="btn-primary" style="display:block;text-align:center;text-decoration:none;" href="/mobile-v6.html">부여군 매물 전체보기</a>
+<a class="btn-primary" style="display:block;text-align:center;text-decoration:none;" href="https://hwik.kr">부여군 매물 전체보기</a>
 </div>
 <div class="seo-section" style="padding:16px;">
 <div class="seo-text">부여군의 아파트 실거래가, 전세가, 시세 추이를 확인하세요. 9개 단지, 3,745세대 규모. 평균 매매가 1억 3천. 평균 전세가율 59.3%. 국토교통부 실거래가 공개시스템 데이터 기반.</div>
-<details open class="data-notice" style="margin-top:14px;font-size:12px;color:var(--sub);">
+<details class="data-notice" style="margin-top:14px;font-size:12px;color:var(--sub);">
 <summary style="cursor:pointer;">데이터 안내</summary>
 <div style="margin-top:6px;line-height:1.8;">
 <b>실거래가</b>: 국토교통부 실거래가 공개시스템 (<a href="https://rt.molit.go.kr/" target="_blank" rel="noopener nofollow">rt.molit.go.kr</a>) · 매일 자동 수집<br>

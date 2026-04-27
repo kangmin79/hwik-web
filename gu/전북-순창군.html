@@ -49,20 +49,35 @@
 .trade-price { font-size:16px; font-weight:700; }
 .trade-detail { font-size:11px; color:var(--sub); margin-top:3px; }
 .trade-date { font-size:11px; color:var(--muted); align-self:center; }
+/* 최근 거래 카드 — 좌:이름+메타 / 우:가격+칩+날짜 */
+.trade-card { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 16px; background:var(--card); border-radius:12px; cursor:pointer; transition:all .15s; }
+.trade-card:active { transform:scale(0.99); }
+.trade-card-left { flex:1; min-width:0; }
+.trade-card-head { display:flex; align-items:center; gap:8px; }
+.trade-cat-chip { display:inline-block; padding:2px 8px; background:rgba(99,102,241,0.15); color:#a5b4fc; border-radius:6px; font-size:10.5px; font-weight:700; }
+.trade-card-name { font-size:14px; font-weight:700; color:var(--text); letter-spacing:-0.015em; }
+.trade-card-meta { font-size:11.5px; color:var(--sub); margin-top:5px; }
+.trade-card-right { flex-shrink:0; text-align:right; }
+.trade-card-price { font-size:18px; font-weight:800; color:var(--yellow); letter-spacing:-0.02em; }
+.trade-card-foot { display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-top:5px; }
+.trade-type-chip { display:inline-block; padding:2px 7px; background:rgba(234,88,12,0.15); color:#fb923c; border-radius:5px; font-size:10px; font-weight:700; }
+.trade-card-date { font-size:11px; color:var(--muted); }
 /* Hero 박스 — 모바일 다크 기본 */
 .hero-box { margin:12px 14px; padding:12px 14px; background:var(--card); border-radius:var(--radius); border-left:3px solid var(--yellow); }
 .hero-meta { font-size:11.5px; color:var(--sub); line-height:1.6; }
 .hero-tag { display:inline-block; padding:1px 6px; background:var(--yellow); color:#0a0a12; border-radius:4px; font-size:10px; font-weight:700; margin-right:4px; }
 .hero-cite { font-size:13px; color:var(--text); margin-top:6px; line-height:1.5; }
 .hero-cite a { color:var(--yellow); text-decoration:none; font-weight:600; }
-/* 1위 강조 카드 — 모바일 다크 */
-.danji-hero { position:relative; padding:18px 16px; background:linear-gradient(135deg, #2a2820 0%, #2a2515 100%); border:1px solid #3a3525; border-left:4px solid var(--yellow); border-radius:14px; margin-bottom:8px; cursor:pointer; transition:all .15s; }
+/* 1위 강조 카드 — 모바일 다크 (세로) */
+.danji-hero { display:block; position:relative; padding:18px 16px; background:linear-gradient(135deg, #2a2820 0%, #2a2515 100%); border:1px solid #3a3525; border-left:4px solid var(--yellow); border-radius:14px; margin-bottom:8px; cursor:pointer; transition:all .15s; }
 .danji-hero:active { transform:scale(0.99); }
+.danji-hero .hero-left { display:block; }
+.danji-hero .hero-right { display:block; margin-top:10px; }
 .danji-hero .rank-badge { display:inline-block; padding:3px 9px; background:var(--yellow); color:#0a0a12; border-radius:6px; font-size:10.5px; font-weight:800; margin-bottom:8px; letter-spacing:0.02em; }
 .danji-hero .hero-name { font-size:17px; font-weight:700; color:var(--text); letter-spacing:-0.02em; }
 .danji-hero .hero-meta { font-size:12px; color:var(--sub); margin-top:6px; line-height:1.6; }
-.danji-hero .hero-price { font-size:22px; font-weight:800; color:var(--yellow); margin-top:10px; letter-spacing:-0.02em; }
-.danji-hero .hero-price-label { font-size:11px; color:var(--muted); margin-left:6px; font-weight:500; }
+.danji-hero .hero-price { font-size:22px; font-weight:800; color:var(--yellow); letter-spacing:-0.02em; }
+.danji-hero .hero-price-label { font-size:11px; color:var(--muted); font-weight:500; margin-top:2px; }
 /* 2-3위 컴팩트 카드 */
 .danji-compact { display:flex; justify-content:space-between; align-items:center; padding:11px 13px; background:var(--card); border-radius:10px; cursor:pointer; transition:all .15s; }
 .danji-compact:active { transform:scale(0.98); }
@@ -215,12 +230,45 @@
   .danji-price, .trade-price { color: #0f172a !important; }
   .danji-rate, .trade-detail { color: #64748b !important; }
   .trade-date { color: #94a3b8 !important; }
-  /* 1위 강조 카드 — PC 라이트 */
+  /* 최근 거래 카드 — PC 라이트 */
+  .trade-card {
+    background: #fff !important;
+    border: 1px solid #eef0f4 !important;
+    border-radius: 12px !important;
+    padding: 14px 18px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
+    transition: all 0.15s ease !important;
+  }
+  .trade-card:hover {
+    border-color: #c7d2fe !important;
+    box-shadow: 0 6px 16px rgba(67,56,202,0.08) !important;
+    transform: translateY(-1px) !important;
+  }
+  .trade-cat-chip {
+    background: #ede9fe !important; color: #6d28d9 !important;
+    padding: 3px 9px !important; border-radius: 6px !important;
+    font-size: 10.5px !important; font-weight: 700 !important;
+  }
+  .trade-card-name { color: #1e293b !important; font-size: 14.5px !important; font-weight: 700 !important; }
+  .trade-card:hover .trade-card-name { color: #4338ca !important; }
+  .trade-card-meta { color: #64748b !important; font-size: 12px !important; }
+  .trade-card-price { color: #ea580c !important; font-size: 19px !important; font-weight: 800 !important; }
+  .trade-type-chip {
+    background: #fff7ed !important; color: #c2410c !important;
+    padding: 2px 8px !important; border-radius: 5px !important;
+    font-size: 10px !important; font-weight: 700 !important;
+  }
+  .trade-card-date { color: #94a3b8 !important; font-size: 11.5px !important; }
+  /* 1위 강조 카드 — PC 라이트 (좌우 flex) */
   .danji-hero {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 20px !important;
     background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%) !important;
     border: 1px solid #fde68a !important;
     border-left: 4px solid #facc15 !important;
-    padding: 20px 18px !important;
+    padding: 18px 22px !important;
     border-radius: 14px !important;
     box-shadow: 0 4px 14px rgba(250,204,21,0.12) !important;
     transition: all 0.18s ease !important;
@@ -229,37 +277,52 @@
     transform: translateY(-1px) !important;
     box-shadow: 0 8px 22px rgba(250,204,21,0.18) !important;
   }
+  .danji-hero .hero-left { flex: 1; min-width: 0; }
+  .danji-hero .hero-right { flex-shrink: 0; text-align: right; }
   .danji-hero .rank-badge {
     background: #facc15 !important; color: #0a0a12 !important;
     padding: 3px 10px !important; border-radius: 6px !important;
     font-size: 11px !important; font-weight: 800 !important;
     letter-spacing: 0.04em !important;
+    margin-bottom: 8px !important;
   }
   .danji-hero .hero-name {
-    font-size: 19px !important; font-weight: 800 !important;
+    font-size: 18px !important; font-weight: 800 !important;
     color: #1e293b !important; letter-spacing: -0.025em !important;
   }
-  .danji-hero .hero-meta { color: #78716c !important; font-size: 12.5px !important; line-height: 1.7 !important; }
+  .danji-hero .hero-meta { color: #78716c !important; font-size: 12.5px !important; line-height: 1.7 !important; margin-top: 4px !important; }
   .danji-hero .hero-price {
-    color: #ca8a04 !important; font-size: 24px !important;
+    color: #ca8a04 !important; font-size: 26px !important;
     font-weight: 900 !important; letter-spacing: -0.025em !important;
+    margin: 0 !important;
   }
-  .danji-hero .hero-price-label { color: #a8a29e !important; font-weight: 600 !important; }
+  .danji-hero .hero-price-label { color: #a8a29e !important; font-weight: 600 !important; font-size: 11px !important; margin-top: 4px !important; }
   /* 2-3위 컴팩트 — PC */
   .danji-compact {
     background: transparent !important;
-    border: none !important; border-bottom: 1px solid #f1f5f9 !important;
+    border: none !important;
+    border-left: 3px solid transparent !important;
+    border-bottom: 1px solid #f1f5f9 !important;
     border-radius: 0 !important;
-    padding: 12px 6px !important;
-    transition: background 0.15s ease !important;
+    padding: 12px 12px !important;
+    transition: all 0.15s ease !important;
   }
-  .danji-compact:hover { background: #f8fafc !important; }
+  .danji-compact:hover {
+    background: #eef2ff !important;
+    border-left-color: #4338ca !important;
+    transform: translateX(2px) !important;
+    border-bottom-color: transparent !important;
+    box-shadow: 0 4px 12px rgba(67,56,202,0.08) !important;
+  }
   .danji-compact:last-child { border-bottom: none !important; }
   .danji-compact-rank { color: #cbd5e1 !important; font-weight: 800 !important; font-size: 13px !important; }
+  .danji-compact:hover .danji-compact-rank { color: #4338ca !important; }
   .danji-compact-name { color: #1e293b !important; font-weight: 600 !important; }
-  .danji-compact:hover .danji-compact-name { color: #4338ca !important; }
+  .danji-compact:hover .danji-compact-name { color: #4338ca !important; font-weight: 700 !important; }
   .danji-compact-meta { color: #64748b !important; }
-  .danji-compact-price { color: #0f172a !important; font-weight: 700 !important; }
+  .danji-compact:hover .danji-compact-meta { color: #475569 !important; }
+  .danji-compact-price { color: #ca8a04 !important; font-weight: 800 !important; letter-spacing: -0.015em !important; }
+  .danji-compact:hover .danji-compact-price { color: #4338ca !important; }
   /* FAQ */
   .faq-section { padding: 20px 14px !important; }
   .faq-item {
@@ -312,7 +375,7 @@
   .hwik-footer-copy a { color: #9ca3af !important; text-decoration: none !important; }
 }
 </style>
-<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@context": "https://schema.org", "@type": "Organization", "@id": "https://hwik.kr/#org", "name": "휙 (HWIK)", "url": "https://hwik.kr", "logo": {"@type": "ImageObject", "url": "https://hwik.kr/og-image.png", "width": 1200, "height": 630}, "sameAs": ["https://hwik.kr"]}, {"@context": "https://schema.org", "@type": "CollectionPage", "name": "전북 순창군 아파트 실거래가 시세 · 6개 단지", "description": "전북 순창군의 아파트 6개 단지 매매·전세·월세 실거래가와 시세를 동별로 비교하세요. 순창읍 등 평균 매매가 1억 7천, 최고가 순창남양휴튼아파트, 전세가율 최고 순창 온리뷰 아파트. 국토교통부 실거래가 공개시스템 기반.", "url": "https://hwik.kr/gu/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD%EA%B5%B0.html", "inLanguage": "ko-KR", "datePublished": "2026-01-01", "dateModified": "2026-04-27", "isPartOf": {"@type": "WebSite", "name": "휙", "url": "https://hwik.kr"}, "publisher": {"@id": "https://hwik.kr/#org"}, "about": {"@type": "AdministrativeArea", "name": "전북 순창군", "containedInPlace": {"@type": "AdministrativeArea", "name": "전북", "containedInPlace": {"@type": "Country", "name": "대한민국"}}, "geo": {"@type": "GeoCoordinates", "latitude": 35.375616, "longitude": 127.141783}}, "mainEntity": {"@type": "ItemList", "name": "순창군 아파트 시세", "numberOfItems": 6, "itemListElement": [{"@type": "ListItem", "position": 1, "url": "https://hwik.kr/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EB%8C%80%EC%84%9D%EC%95%84%ED%8C%8C%ED%8A%B8-a10020179.html", "name": "순창대석아파트", "description": "순창읍 · 136세대"}, {"@type": "ListItem", "position": 2, "url": "https://hwik.kr/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%ED%95%B4%ED%83%9C%ED%83%80%EC%9A%B4%EC%95%84%ED%8C%8C%ED%8A%B8-a10020615.html", "name": "순창해태타운아파트", "description": "순창읍 · 142세대"}, {"@type": "ListItem", "position": 3, "url": "https://hwik.kr/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EA%B4%91%EB%AA%85%EB%A9%94%EC%9D%B4%EB%A3%A8%EC%A6%88-a10021969.html", "name": "순창광명메이루즈", "description": "순창읍 · 116세대"}, {"@type": "ListItem", "position": 4, "url": "https://hwik.kr/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EB%82%A8%EC%96%91%ED%9C%B4%ED%8A%BC%EC%95%84%ED%8C%8C%ED%8A%B8-a10023301.html", "name": "순창남양휴튼아파트", "description": "순창읍 · 378세대"}, {"@type": "ListItem", "position": 5, "url": "https://hwik.kr/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EC%98%A8%EB%A6%AC%EB%B7%B02%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10024537.html", "name": "순창온리뷰2차아파트", "description": "순창읍 · 126세대"}, {"@type": "ListItem", "position": 6, "url": "https://hwik.kr/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD-%EC%98%A8%EB%A6%AC%EB%B7%B0-%EC%95%84%ED%8C%8C%ED%8A%B8-a10026607.html", "name": "순창 온리뷰 아파트", "description": "순창읍 · 165세대"}]}}, {"@type": "AdministrativeArea", "name": "전북 순창군", "containedInPlace": {"@type": "AdministrativeArea", "name": "전북", "containedInPlace": {"@type": "Country", "name": "대한민국"}}, "geo": {"@type": "GeoCoordinates", "latitude": 35.375616, "longitude": 127.141783}, "@context": "https://schema.org"}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "순창군 아파트 평균 매매가는?", "acceptedAnswer": {"@type": "Answer", "text": "순창군 6개 단지 평균 매매가는 1억 7천입니다. 국토교통부 실거래가 공개시스템 기준."}}, {"@type": "Question", "name": "순창군 아파트 전세가율은?", "acceptedAnswer": {"@type": "Answer", "text": "순창군 평균 전세가율은 66.0%입니다."}}, {"@type": "Question", "name": "순창군에서 가장 비싼 아파트는?", "acceptedAnswer": {"@type": "Answer", "text": "매매가 1위는 순창남양휴튼아파트로 4억 850에 거래되었습니다."}}, {"@type": "Question", "name": "순창군에서 아파트 단지가 많은 동은?", "acceptedAnswer": {"@type": "Answer", "text": "순창군에서는 순창읍 일대에 아파트 단지가 가장 많이 분포합니다."}}, {"@type": "Question", "name": "순창군 아파트 단지 수는?", "acceptedAnswer": {"@type": "Answer", "text": "순창군에는 총 6개 아파트 단지, 1,063세대가 있습니다."}}, {"@type": "Question", "name": "순창군 아파트 실거래가 데이터 출처는?", "acceptedAnswer": {"@type": "Answer", "text": "국토교통부 실거래가 공개시스템(rt.molit.go.kr) 데이터를 매일 자동 수집합니다."}}]}, {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"}, {"@type": "ListItem", "position": 2, "name": "전북 구별 시세", "item": "https://hwik.kr/gu/"}, {"@type": "ListItem", "position": 3, "name": "순창군"}]}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@context": "https://schema.org", "@type": "Organization", "@id": "https://hwik.kr/#org", "name": "휙 (HWIK)", "url": "https://hwik.kr", "logo": {"@type": "ImageObject", "url": "https://hwik.kr/og-image.png", "width": 1200, "height": 630}, "sameAs": ["https://hwik.kr"]}, {"@context": "https://schema.org", "@type": "CollectionPage", "name": "전북 순창군 아파트 실거래가 시세 · 6개 단지", "description": "전북 순창군의 아파트 6개 단지 매매·전세·월세 실거래가와 시세를 동별로 비교하세요. 순창읍 등 평균 매매가 1억 7천, 최고가 순창남양휴튼아파트, 전세가율 최고 순창 온리뷰 아파트. 국토교통부 실거래가 공개시스템 기반.", "url": "https://hwik.kr/gu/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD%EA%B5%B0.html", "inLanguage": "ko-KR", "datePublished": "2026-01-01", "dateModified": "2026-04-27", "isPartOf": {"@type": "WebSite", "name": "휙", "url": "https://hwik.kr"}, "publisher": {"@id": "https://hwik.kr/#org"}, "about": {"@type": "AdministrativeArea", "name": "전북 순창군", "containedInPlace": {"@type": "AdministrativeArea", "name": "전북", "containedInPlace": {"@type": "Country", "name": "대한민국"}}, "geo": {"@type": "GeoCoordinates", "latitude": 35.375616, "longitude": 127.141783}}, "mainEntity": {"@type": "ItemList", "name": "순창군 아파트 시세", "numberOfItems": 6, "itemListElement": [{"@type": "ListItem", "position": 1, "url": "https://hwik.kr/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EB%8C%80%EC%84%9D%EC%95%84%ED%8C%8C%ED%8A%B8-a10020179.html", "name": "순창대석아파트", "description": "순창읍 · 136세대"}, {"@type": "ListItem", "position": 2, "url": "https://hwik.kr/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%ED%95%B4%ED%83%9C%ED%83%80%EC%9A%B4%EC%95%84%ED%8C%8C%ED%8A%B8-a10020615.html", "name": "순창해태타운아파트", "description": "순창읍 · 142세대"}, {"@type": "ListItem", "position": 3, "url": "https://hwik.kr/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EA%B4%91%EB%AA%85%EB%A9%94%EC%9D%B4%EB%A3%A8%EC%A6%88-a10021969.html", "name": "순창광명메이루즈", "description": "순창읍 · 116세대"}, {"@type": "ListItem", "position": 4, "url": "https://hwik.kr/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EB%82%A8%EC%96%91%ED%9C%B4%ED%8A%BC%EC%95%84%ED%8C%8C%ED%8A%B8-a10023301.html", "name": "순창남양휴튼아파트", "description": "순창읍 · 378세대"}, {"@type": "ListItem", "position": 5, "url": "https://hwik.kr/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EC%98%A8%EB%A6%AC%EB%B7%B02%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10024537.html", "name": "순창온리뷰2차아파트", "description": "순창읍 · 126세대"}, {"@type": "ListItem", "position": 6, "url": "https://hwik.kr/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD-%EC%98%A8%EB%A6%AC%EB%B7%B0-%EC%95%84%ED%8C%8C%ED%8A%B8-a10026607.html", "name": "순창 온리뷰 아파트", "description": "순창읍 · 165세대"}]}}, {"@type": "AdministrativeArea", "name": "전북 순창군", "containedInPlace": {"@type": "AdministrativeArea", "name": "전북", "containedInPlace": {"@type": "Country", "name": "대한민국"}}, "geo": {"@type": "GeoCoordinates", "latitude": 35.375616, "longitude": 127.141783}, "@context": "https://schema.org"}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "순창군 아파트 평균 매매가는?", "acceptedAnswer": {"@type": "Answer", "text": "순창군 6개 단지 평균 매매가는 1억 7천입니다."}}, {"@type": "Question", "name": "순창군에서 가장 비싼 아파트는?", "acceptedAnswer": {"@type": "Answer", "text": "매매가 1위는 순창남양휴튼아파트로 4억 850에 거래되었습니다."}}, {"@type": "Question", "name": "순창군에서 아파트 단지가 많은 동은?", "acceptedAnswer": {"@type": "Answer", "text": "순창읍 일대에 아파트 단지가 가장 많이 분포합니다."}}, {"@type": "Question", "name": "순창군 아파트 단지 수는?", "acceptedAnswer": {"@type": "Answer", "text": "총 6개 아파트 단지, 1,063세대."}}]}, {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"}, {"@type": "ListItem", "position": 2, "name": "전북 구별 시세", "item": "https://hwik.kr/gu/"}, {"@type": "ListItem", "position": 3, "name": "순창군"}]}]}</script>
 </head>
 <body>
 <div class="wrap">
@@ -323,23 +386,22 @@
 </div></header>
 <nav class="breadcrumb"><a href="/">휙</a><span>&gt;</span>
 <a href="/gu/">전북</a><span>&gt;</span>순창군</nav>
-<p class="seo-text" style="font-size:13px;line-height:1.85;margin:14px 16px 4px;color:var(--sub);">전북 순창군의 아파트 <b>6개 단지</b>(순창읍 등 주요 입지) 시세를 한 번에 확인하세요., 평균 매매가 <b>1억 7천</b>, 평균 전세가율 <b>66.0%</b>, 수집 거래 <b>6건</b>. 매매·전세·월세 면적별 가격, 동별 단지 비교, ㎡당 가격 순위까지 — 국토교통부 실거래가 공개시스템 기반.</p>
+<p class="seo-text" style="font-size:13px;line-height:1.7;margin:14px 16px 4px;color:var(--sub);"><b>순창군</b> 아파트 6개 단지 · 평균 1억 7천 · 전세가율 66.0% · 순창읍 중심</p>
 <div class="metrics">
   <div class="metric"><div class="metric-label">단지 수</div><div class="metric-value">6개</div></div>
   <div class="metric"><div class="metric-label">평균 매매가</div><div class="metric-value">1억 7천</div></div>
   <div class="metric"><div class="metric-label">평균 전세가율</div><div class="metric-value">66.0%</div></div>
 </div>
 <div class="divider"></div>
-<p class="seo-text" style="font-size:13px;line-height:1.85;margin:4px 16px 16px;color:var(--sub);">순창군에서 가장 비싼 아파트는 순창읍의 <a href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EB%82%A8%EC%96%91%ED%9C%B4%ED%8A%BC%EC%95%84%ED%8C%8C%ED%8A%B8-a10023301.html" title="순창남양휴튼아파트 실거래가 시세" style="color:var(--yellow);text-decoration:none;font-weight:700;">순창남양휴튼아파트</a>로 <b>4억 850</b>에 거래됐습니다. 뒤이어 <a href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EC%98%A8%EB%A6%AC%EB%B7%B02%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10024537.html" style="color:var(--yellow);text-decoration:none;font-weight:600;">순창온리뷰2차아파트</a>·<a href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD-%EC%98%A8%EB%A6%AC%EB%B7%B0-%EC%95%84%ED%8C%8C%ED%8A%B8-a10026607.html" style="color:var(--yellow);text-decoration:none;font-weight:600;">순창 온리뷰 아파트</a>가 자리잡고 있습니다.</p>
 <div class="section"><h2 class="section-title">순창군에서 가장 비싼 아파트는?</h2>
-<a class="danji-hero" title="순창남양휴튼아파트 실거래가 · 순창군 매매가 1위" style="text-decoration:none;display:block;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EB%82%A8%EC%96%91%ED%9C%B4%ED%8A%BC%EC%95%84%ED%8C%8C%ED%8A%B8-a10023301.html"><span class="rank-badge">매매가 1위</span><div class="hero-name">순창남양휴튼아파트</div><div class="hero-meta">순창군 순창읍 · 전용 114㎡ · 2023년 입주 · 378세대</div><div class="hero-price">4억 850<span class="hero-price-label">최고가 기준</span></div></a>
+<a class="danji-hero" title="순창남양휴튼아파트 실거래가 · 순창군 매매가 1위" style="text-decoration:none;display:block;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EB%82%A8%EC%96%91%ED%9C%B4%ED%8A%BC%EC%95%84%ED%8C%8C%ED%8A%B8-a10023301.html"><div class="hero-left"><span class="rank-badge">매매가 1위</span><div class="hero-name">순창남양휴튼아파트</div><div class="hero-meta">순창군 순창읍 · 전용 114㎡ · 2023년 입주 · 378세대</div></div><div class="hero-right"><div class="hero-price">4억 850</div><div class="hero-price-label">최고가 기준</div></div></a>
 <div style="margin-top:6px;">
 <a class="danji-compact" title="순창온리뷰2차아파트 실거래가 · 순창군 매매가 2위" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EC%98%A8%EB%A6%AC%EB%B7%B02%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10024537.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">2</span><div style="min-width:0;"><div class="danji-compact-name">순창온리뷰2차아파트</div><div class="danji-compact-meta">순창군 순창읍 · 전용 85㎡ · 2019년</div></div></div><div class="danji-compact-price">2억 5천</div></a>
 <a class="danji-compact" title="순창 온리뷰 아파트 실거래가 · 순창군 매매가 3위" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD-%EC%98%A8%EB%A6%AC%EB%B7%B0-%EC%95%84%ED%8C%8C%ED%8A%B8-a10026607.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">3</span><div style="min-width:0;"><div class="danji-compact-name">순창 온리뷰 아파트</div><div class="danji-compact-meta">순창군 순창읍 · 전용 78㎡ · 2017년</div></div></div><div class="danji-compact-price">2억 2천</div></a>
 </div>
 </div><div class="divider"></div>
 <div class="section"><h2 class="section-title">전세가율이 높은 단지 (실거주 추천)</h2>
-<a class="danji-hero" title="순창 온리뷰 아파트 실거래가 · 순창군 전세가율 1위" style="text-decoration:none;display:block;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD-%EC%98%A8%EB%A6%AC%EB%B7%B0-%EC%95%84%ED%8C%8C%ED%8A%B8-a10026607.html"><span class="rank-badge">전세가율 1위</span><div class="hero-name">순창 온리뷰 아파트</div><div class="hero-meta">순창군 순창읍 · 전용 78㎡ · 2017년 입주 · 165세대</div><div class="hero-price">72.7%<span class="hero-price-label">매매 대비 전세 비율</span></div></a>
+<a class="danji-hero" title="순창 온리뷰 아파트 실거래가 · 순창군 전세가율 1위" style="text-decoration:none;display:block;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD-%EC%98%A8%EB%A6%AC%EB%B7%B0-%EC%95%84%ED%8C%8C%ED%8A%B8-a10026607.html"><div class="hero-left"><span class="rank-badge">전세가율 1위</span><div class="hero-name">순창 온리뷰 아파트</div><div class="hero-meta">순창군 순창읍 · 전용 78㎡ · 2017년 입주 · 165세대</div></div><div class="hero-right"><div class="hero-price">72.7%</div><div class="hero-price-label">매매 대비 전세 비율</div></div></a>
 <div style="margin-top:6px;">
 <a class="danji-compact" title="순창대석아파트 실거래가 · 순창군 전세가율 2위" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EB%8C%80%EC%84%9D%EC%95%84%ED%8C%8C%ED%8A%B8-a10020179.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">2</span><div style="min-width:0;"><div class="danji-compact-name">순창대석아파트</div><div class="danji-compact-meta">순창군 순창읍 · 전용 60㎡ · 1999년</div></div></div><div class="danji-compact-price">72.3%</div></a>
 <a class="danji-compact" title="순창온리뷰2차아파트 실거래가 · 순창군 전세가율 3위" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EC%98%A8%EB%A6%AC%EB%B7%B02%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10024537.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">3</span><div style="min-width:0;"><div class="danji-compact-name">순창온리뷰2차아파트</div><div class="danji-compact-meta">순창군 순창읍 · 전용 79㎡ · 2019년</div></div></div><div class="danji-compact-price">63.4%</div></a>
@@ -354,49 +416,25 @@
 </a>
 </div></div>
 <div class="divider"></div>
-<div class="section"><h2 class="section-title">㎡당 가격이 가장 비싼 단지는? <span style="font-size:10px;color:var(--muted);font-weight:400;">(전용면적 기준)</span></h2>
-<a class="danji-hero" title="순창남양휴튼아파트 ㎡당 시세 · 순창군 1위" style="text-decoration:none;display:block;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EB%82%A8%EC%96%91%ED%9C%B4%ED%8A%BC%EC%95%84%ED%8C%8C%ED%8A%B8-a10023301.html"><span class="rank-badge">㎡당 1위</span><div class="hero-name">순창남양휴튼아파트</div><div class="hero-meta">순창군 순창읍 · 전용 78㎡ · 거래가 2억 7천</div><div class="hero-price">347만<span class="hero-price-label">/㎡ 전용면적 기준</span></div></a>
+<div class="section"><h2 class="section-title">㎡당 가격이 가장 비싼 단지는? <span style="font-size:10px;color:var(--muted);font-weight:400;">(공급면적 기준)</span></h2>
+<a class="danji-hero" title="순창남양휴튼아파트 ㎡당 시세 · 순창군 1위" style="text-decoration:none;display:block;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EB%82%A8%EC%96%91%ED%9C%B4%ED%8A%BC%EC%95%84%ED%8C%8C%ED%8A%B8-a10023301.html"><div class="hero-left"><span class="rank-badge">㎡당 1위</span><div class="hero-name">순창남양휴튼아파트</div><div class="hero-meta">순창군 순창읍 · 공급 94.2㎡ · 거래가 2억 7천</div></div><div class="hero-right"><div class="hero-price">288만</div><div class="hero-price-label">/㎡ 공급면적 기준</div></div></a>
 <div style="margin-top:6px;">
-<a class="danji-compact" title="순창 온리뷰 아파트 ㎡당 시세 · 순창군 2위" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD-%EC%98%A8%EB%A6%AC%EB%B7%B0-%EC%95%84%ED%8C%8C%ED%8A%B8-a10026607.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">2</span><div style="min-width:0;"><div class="danji-compact-name">순창 온리뷰 아파트</div><div class="danji-compact-meta">순창군 순창읍 · 전용 78㎡</div></div></div><div class="danji-compact-price">282만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
-<a class="danji-compact" title="순창온리뷰2차아파트 ㎡당 시세 · 순창군 3위" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EC%98%A8%EB%A6%AC%EB%B7%B02%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10024537.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">3</span><div style="min-width:0;"><div class="danji-compact-name">순창온리뷰2차아파트</div><div class="danji-compact-meta">순창군 순창읍 · 전용 79㎡</div></div></div><div class="danji-compact-price">259만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
-<a class="danji-compact" title="순창광명메이루즈 ㎡당 시세 · 순창군 4위" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EA%B4%91%EB%AA%85%EB%A9%94%EC%9D%B4%EB%A3%A8%EC%A6%88-a10021969.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">4</span><div style="min-width:0;"><div class="danji-compact-name">순창광명메이루즈</div><div class="danji-compact-meta">순창군 순창읍 · 전용 78㎡</div></div></div><div class="danji-compact-price">237만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
-<a class="danji-compact" title="순창해태타운아파트 ㎡당 시세 · 순창군 5위" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%ED%95%B4%ED%83%9C%ED%83%80%EC%9A%B4%EC%95%84%ED%8C%8C%ED%8A%B8-a10020615.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">5</span><div style="min-width:0;"><div class="danji-compact-name">순창해태타운아파트</div><div class="danji-compact-meta">순창군 순창읍 · 전용 60㎡</div></div></div><div class="danji-compact-price">150만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
-<a class="danji-compact" title="순창대석아파트 ㎡당 시세 · 순창군 6위" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EB%8C%80%EC%84%9D%EC%95%84%ED%8C%8C%ED%8A%B8-a10020179.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">6</span><div style="min-width:0;"><div class="danji-compact-name">순창대석아파트</div><div class="danji-compact-meta">순창군 순창읍 · 전용 60㎡</div></div></div><div class="danji-compact-price">138만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="순창 온리뷰 아파트 ㎡당 시세 · 순창군 2위" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD-%EC%98%A8%EB%A6%AC%EB%B7%B0-%EC%95%84%ED%8C%8C%ED%8A%B8-a10026607.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">2</span><div style="min-width:0;"><div class="danji-compact-name">순창 온리뷰 아파트</div><div class="danji-compact-meta">순창군 순창읍 · 공급 95.9㎡</div></div></div><div class="danji-compact-price">229만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="순창온리뷰2차아파트 ㎡당 시세 · 순창군 3위" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EC%98%A8%EB%A6%AC%EB%B7%B02%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10024537.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">3</span><div style="min-width:0;"><div class="danji-compact-name">순창온리뷰2차아파트</div><div class="danji-compact-meta">순창군 순창읍 · 공급 95.7㎡</div></div></div><div class="danji-compact-price">214만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="순창광명메이루즈 ㎡당 시세 · 순창군 4위" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EA%B4%91%EB%AA%85%EB%A9%94%EC%9D%B4%EB%A3%A8%EC%A6%88-a10021969.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">4</span><div style="min-width:0;"><div class="danji-compact-name">순창광명메이루즈</div><div class="danji-compact-meta">순창군 순창읍 · 공급 98.9㎡</div></div></div><div class="danji-compact-price">187만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="순창해태타운아파트 ㎡당 시세 · 순창군 5위" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%ED%95%B4%ED%83%9C%ED%83%80%EC%9A%B4%EC%95%84%ED%8C%8C%ED%8A%B8-a10020615.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">5</span><div style="min-width:0;"><div class="danji-compact-name">순창해태타운아파트</div><div class="danji-compact-meta">순창군 순창읍 · 공급 75.5㎡</div></div></div><div class="danji-compact-price">119만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="순창대석아파트 ㎡당 시세 · 순창군 6위" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EB%8C%80%EC%84%9D%EC%95%84%ED%8C%8C%ED%8A%B8-a10020179.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">6</span><div style="min-width:0;"><div class="danji-compact-name">순창대석아파트</div><div class="danji-compact-meta">순창군 순창읍 · 공급 74.1㎡</div></div></div><div class="danji-compact-price">112만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
 </div>
 </div>
 <div class="divider"></div>
 <div class="section"><h2 class="section-title">최근 거래된 단지</h2>
-<div style="display:flex;flex-direction:column;gap:8px;">
-<a class="trade-item" title="순창대석아파트 · 순창군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EB%8C%80%EC%84%9D%EC%95%84%ED%8C%8C%ED%8A%B8-a10020179.html">
-  <div><div class="trade-price">8,300만</div>
-  <div class="trade-detail">순창대석아파트 · 60㎡ · 17층</div></div>
-  <div class="trade-date"><time datetime="2026-04-11">2026-04-11</time></div>
-</a>
-<a class="trade-item" title="순창해태타운아파트 · 순창군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%ED%95%B4%ED%83%9C%ED%83%80%EC%9A%B4%EC%95%84%ED%8C%8C%ED%8A%B8-a10020615.html">
-  <div><div class="trade-price">9,000만</div>
-  <div class="trade-detail">순창해태타운아파트 · 60㎡ · 10층</div></div>
-  <div class="trade-date"><time datetime="2026-04-08">2026-04-08</time></div>
-</a>
-<a class="trade-item" title="순창남양휴튼아파트 · 순창군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EB%82%A8%EC%96%91%ED%9C%B4%ED%8A%BC%EC%95%84%ED%8C%8C%ED%8A%B8-a10023301.html">
-  <div><div class="trade-price">2억 7천</div>
-  <div class="trade-detail">순창남양휴튼아파트 · 78㎡ · 10층</div></div>
-  <div class="trade-date"><time datetime="2026-03-18">2026-03-18</time></div>
-</a>
-<a class="trade-item" title="순창 온리뷰 아파트 · 순창군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD-%EC%98%A8%EB%A6%AC%EB%B7%B0-%EC%95%84%ED%8C%8C%ED%8A%B8-a10026607.html">
-  <div><div class="trade-price">2억 2천</div>
-  <div class="trade-detail">순창 온리뷰 아파트 · 78㎡ · 11층</div></div>
-  <div class="trade-date"><time datetime="2026-03-13">2026-03-13</time></div>
-</a>
-<a class="trade-item" title="순창광명메이루즈 · 순창군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EA%B4%91%EB%AA%85%EB%A9%94%EC%9D%B4%EB%A3%A8%EC%A6%88-a10021969.html">
-  <div><div class="trade-price">1억 8천</div>
-  <div class="trade-detail">순창광명메이루즈 · 78㎡ · 4층</div></div>
-  <div class="trade-date"><time datetime="2025-11-12">2025-11-12</time></div>
-</a>
-<a class="trade-item" title="순창온리뷰2차아파트 · 순창군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EC%98%A8%EB%A6%AC%EB%B7%B02%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10024537.html">
-  <div><div class="trade-price">2억 500</div>
-  <div class="trade-detail">순창온리뷰2차아파트 · 79㎡ · 17층</div></div>
-  <div class="trade-date"><time datetime="2025-04-22">2025-04-22</time></div>
-</a>
+<div style="display:flex;flex-direction:column;gap:10px;">
+<a class="trade-card" title="순창대석아파트 · 순창군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EB%8C%80%EC%84%9D%EC%95%84%ED%8C%8C%ED%8A%B8-a10020179.html"><div class="trade-card-left"><div class="trade-card-head"><span class="trade-cat-chip">아파트</span><span class="trade-card-name">순창대석아파트</span></div><div class="trade-card-meta">순창군 순창읍 · 전용 60㎡ · 17층</div></div><div class="trade-card-right"><div class="trade-card-price">8,300만</div><div class="trade-card-foot"><span class="trade-type-chip">매매</span><span class="trade-card-date"><time datetime="2026-04-11">2026-04-11</time></span></div></div></a>
+<a class="trade-card" title="순창해태타운아파트 · 순창군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%ED%95%B4%ED%83%9C%ED%83%80%EC%9A%B4%EC%95%84%ED%8C%8C%ED%8A%B8-a10020615.html"><div class="trade-card-left"><div class="trade-card-head"><span class="trade-cat-chip">아파트</span><span class="trade-card-name">순창해태타운아파트</span></div><div class="trade-card-meta">순창군 순창읍 · 전용 60㎡ · 10층</div></div><div class="trade-card-right"><div class="trade-card-price">9,000만</div><div class="trade-card-foot"><span class="trade-type-chip">매매</span><span class="trade-card-date"><time datetime="2026-04-08">2026-04-08</time></span></div></div></a>
+<a class="trade-card" title="순창남양휴튼아파트 · 순창군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EB%82%A8%EC%96%91%ED%9C%B4%ED%8A%BC%EC%95%84%ED%8C%8C%ED%8A%B8-a10023301.html"><div class="trade-card-left"><div class="trade-card-head"><span class="trade-cat-chip">아파트</span><span class="trade-card-name">순창남양휴튼아파트</span></div><div class="trade-card-meta">순창군 순창읍 · 전용 78㎡ · 10층</div></div><div class="trade-card-right"><div class="trade-card-price">2억 7천</div><div class="trade-card-foot"><span class="trade-type-chip">매매</span><span class="trade-card-date"><time datetime="2026-03-18">2026-03-18</time></span></div></div></a>
+<a class="trade-card" title="순창 온리뷰 아파트 · 순창군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD-%EC%98%A8%EB%A6%AC%EB%B7%B0-%EC%95%84%ED%8C%8C%ED%8A%B8-a10026607.html"><div class="trade-card-left"><div class="trade-card-head"><span class="trade-cat-chip">아파트</span><span class="trade-card-name">순창 온리뷰 아파트</span></div><div class="trade-card-meta">순창군 순창읍 · 전용 78㎡ · 11층</div></div><div class="trade-card-right"><div class="trade-card-price">2억 2천</div><div class="trade-card-foot"><span class="trade-type-chip">매매</span><span class="trade-card-date"><time datetime="2026-03-13">2026-03-13</time></span></div></div></a>
+<a class="trade-card" title="순창광명메이루즈 · 순창군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EA%B4%91%EB%AA%85%EB%A9%94%EC%9D%B4%EB%A3%A8%EC%A6%88-a10021969.html"><div class="trade-card-left"><div class="trade-card-head"><span class="trade-cat-chip">아파트</span><span class="trade-card-name">순창광명메이루즈</span></div><div class="trade-card-meta">순창군 순창읍 · 전용 78㎡ · 4층</div></div><div class="trade-card-right"><div class="trade-card-price">1억 8천</div><div class="trade-card-foot"><span class="trade-type-chip">매매</span><span class="trade-card-date"><time datetime="2025-11-12">2025-11-12</time></span></div></div></a>
+<a class="trade-card" title="순창온리뷰2차아파트 · 순창군 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%A0%84%EB%B6%81-%EC%88%9C%EC%B0%BD-%EC%88%9C%EC%B0%BD%EC%9D%8D-%EC%88%9C%EC%B0%BD%EC%98%A8%EB%A6%AC%EB%B7%B02%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10024537.html"><div class="trade-card-left"><div class="trade-card-head"><span class="trade-cat-chip">아파트</span><span class="trade-card-name">순창온리뷰2차아파트</span></div><div class="trade-card-meta">순창군 순창읍 · 전용 79㎡ · 17층</div></div><div class="trade-card-right"><div class="trade-card-price">2억 500</div><div class="trade-card-foot"><span class="trade-type-chip">매매</span><span class="trade-card-date"><time datetime="2025-04-22">2025-04-22</time></span></div></div></a>
 </div></div>
 <div class="divider"></div>
 <div class="section"><h2 class="section-title">순창군 근처 구/시는?</h2>
@@ -449,17 +487,17 @@
 <div class="faq-item"><div class="faq-q">순창군 전세가율은?</div>
 <div class="faq-a">순창군 평균 전세가율은 66.0%입니다.</div></div>
 <div class="faq-item"><div class="faq-q">순창군에서 가장 비싼 아파트는?</div>
-<div class="faq-a">전용면적 ㎡당 가격 기준 순창남양휴튼아파트이(가) 347만/㎡으로 가장 높습니다.</div></div>
+<div class="faq-a">공급면적 ㎡당 가격 기준 순창남양휴튼아파트이(가) 288만/㎡으로 가장 높습니다.</div></div>
 <div class="faq-item"><div class="faq-q">순창군 아파트 단지 수는?</div>
 <div class="faq-a">순창군에는 총 6개 아파트 단지, 1,063세대가 있습니다.</div></div>
 </div>
 <div class="divider"></div>
 <div class="cta-section">
-<a class="btn-primary" style="display:block;text-align:center;text-decoration:none;" href="/mobile-v6.html">순창군 매물 전체보기</a>
+<a class="btn-primary" style="display:block;text-align:center;text-decoration:none;" href="https://hwik.kr">순창군 매물 전체보기</a>
 </div>
 <div class="seo-section" style="padding:16px;">
 <div class="seo-text">순창군의 아파트 실거래가, 전세가, 시세 추이를 확인하세요. 6개 단지, 1,063세대 규모. 평균 매매가 1억 7천. 평균 전세가율 66.0%. 국토교통부 실거래가 공개시스템 데이터 기반.</div>
-<details open class="data-notice" style="margin-top:14px;font-size:12px;color:var(--sub);">
+<details class="data-notice" style="margin-top:14px;font-size:12px;color:var(--sub);">
 <summary style="cursor:pointer;">데이터 안내</summary>
 <div style="margin-top:6px;line-height:1.8;">
 <b>실거래가</b>: 국토교통부 실거래가 공개시스템 (<a href="https://rt.molit.go.kr/" target="_blank" rel="noopener nofollow">rt.molit.go.kr</a>) · 매일 자동 수집<br>

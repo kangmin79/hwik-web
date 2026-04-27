@@ -13,30 +13,220 @@
 <meta property="og:title" content="전국 아파트 순위 - 서울·경기·부산·충청·경상·전라·강원·제주 | 휙">
 <meta property="og:description" content="서울·인천·경기·부산·대구·광주·대전·울산·충북·충남·전북·전남·경북·경남·강원·제주·세종 아파트 매매가·㎡당·전세가율 순위 TOP 50. 국토교통부 실거래가 기반.">
 <meta property="og:image" content="https://hwik.kr/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:url" content="https://hwik.kr/ranking/">
+<meta property="article:modified_time" content="2026-04-27">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="전국 아파트 순위 - 서울·경기·부산·충청·경상·전라·강원·제주 | 휙">
 <meta name="twitter:description" content="서울·인천·경기·부산·대구·광주·대전·울산·충북·충남·전북·전남·경북·경남·강원·제주·세종 아파트 매매가·㎡당·전세가율 순위 TOP 50. 국토교통부 실거래가 기반.">
+<meta name="twitter:image" content="https://hwik.kr/og-image.png">
 <meta name="google-site-verification" content="R2ye41AVVTRs8BxEXyEafFSTqMSiHKdb9zgTklrktSI">
 <meta name="naver-site-verification" content="367bd1e77a8ad48b74e345be3e4a0f8125c2c4e1">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
 <link rel="stylesheet" href="/danji/style.css">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css" media="(min-width: 768px)">
 <style>
 .tabs { display:flex; border-bottom:1px solid var(--border); overflow-x:auto; }
 .tabs::-webkit-scrollbar { display:none; }
 .tab { flex-shrink:0; padding:12px 16px; text-align:center; font-size:13px; color:var(--sub); cursor:pointer; border-bottom:2px solid transparent; transition:all .2s; white-space:nowrap; text-decoration:none; }
 .tab.active { color:var(--text); font-weight:500; border-bottom-color:var(--yellow); }
-.rank-item { display:flex; align-items:center; padding:14px; background:var(--surface); border-radius:var(--radius); cursor:pointer; transition:all .15s; box-shadow:0 1px 4px rgba(0,0,0,0.05); gap:12px; }
-.rank-item:active { transform:scale(0.98); }
-.rank-num { font-size:16px; font-weight:700; color:var(--yellow); min-width:28px; text-align:center; }
-.rank-num.top3 { color:var(--red); }
-.rank-info { flex:1; }
-.rank-name { font-size:13px; font-weight:600; }
-.rank-sub { font-size:11px; color:var(--sub); margin-top:2px; }
-.rank-price { text-align:right; }
-.rank-main { font-size:14px; font-weight:700; }
-.rank-detail { font-size:11px; color:var(--sub); margin-top:2px; }
+/* 1위 hero — 모바일 다크 (세로) */
+.danji-hero { display:block; position:relative; padding:18px 16px; background:linear-gradient(135deg, #2a2820 0%, #2a2515 100%); border:1px solid #3a3525; border-left:4px solid var(--yellow); border-radius:14px; margin-bottom:8px; cursor:pointer; transition:all .15s; }
+.danji-hero:active { transform:scale(0.99); }
+.danji-hero .hero-left { display:block; }
+.danji-hero .hero-right { display:block; margin-top:10px; }
+.danji-hero .rank-badge { display:inline-block; padding:3px 9px; background:var(--yellow); color:#0a0a12; border-radius:6px; font-size:10.5px; font-weight:800; margin-bottom:8px; letter-spacing:0.02em; }
+.danji-hero .hero-name { font-size:17px; font-weight:700; color:var(--text); letter-spacing:-0.02em; }
+.danji-hero .hero-meta { font-size:12px; color:var(--sub); margin-top:6px; line-height:1.6; }
+.danji-hero .hero-price { font-size:22px; font-weight:800; color:var(--yellow); letter-spacing:-0.02em; }
+.danji-hero .hero-price-label { font-size:11px; color:var(--muted); font-weight:500; margin-top:2px; }
+/* 2~ 컴팩트 */
+.danji-compact { display:flex; justify-content:space-between; align-items:center; padding:11px 13px; background:var(--card); border-radius:10px; cursor:pointer; transition:all .15s; }
+.danji-compact:active { transform:scale(0.98); }
+.danji-compact-rank { display:inline-block; min-width:18px; font-size:12px; font-weight:700; color:var(--muted); margin-right:8px; }
+.danji-compact-name { font-size:13px; font-weight:600; color:var(--text); }
+.danji-compact-meta { font-size:11px; color:var(--sub); margin-top:2px; }
+.danji-compact-price { font-size:14px; font-weight:700; text-align:right; color:var(--text); }
+/* 데이터 안내 + 푸터 */
+.data-notice summary { font-weight:600; color:var(--text); }
+.data-notice a { color:var(--yellow); text-decoration:none; }
+.hwik-footer { max-width:600px; margin:24px auto 40px; padding:24px 16px 0; border-top:1px solid var(--border, #2a2a3e); text-align:center; font-size:11.5px; color:var(--sub); line-height:1.7; }
+.hwik-footer-links { margin-bottom:8px; }
+.hwik-footer-links a { color:var(--sub); text-decoration:none; margin:0 8px; }
+.hwik-footer-copy a { color:var(--muted); text-decoration:none; }
+
+/* ── PC ≥768px D 디자인 라이트 ── */
+@media (min-width: 768px) {
+  html, body {
+    background: #F0EEE6 !important;
+    font-family: Pretendard, -apple-system, BlinkMacSystemFont,
+                 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR', sans-serif !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    text-rendering: optimizeLegibility !important;
+    color: #0f172a !important;
+  }
+  .wrap, .wrap * {
+    font-family: Pretendard, -apple-system, BlinkMacSystemFont,
+                 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR', sans-serif !important;
+  }
+  .wrap {
+    max-width: 720px !important;
+    margin: 32px auto !important;
+    background: #fff !important;
+    border-radius: 20px !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04) !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+  }
+  .breadcrumb {
+    background: #fff !important;
+    padding: 18px 14px 0 !important;
+    font-size: 12.5px !important;
+    color: #94a3b8 !important;
+    display: flex !important; flex-wrap: wrap !important; gap: 4px !important;
+  }
+  .breadcrumb a { color: #64748b !important; text-decoration: none !important; }
+  .breadcrumb a:hover { color: #4338ca !important; }
+  .breadcrumb span { color: #cbd5e1 !important; }
+  .header {
+    background: #fff !important;
+    padding: 14px 14px 22px !important;
+    border-bottom: 1px solid #eef0f4 !important;
+  }
+  .header .header-top {
+    display: flex !important; align-items: center !important; gap: 12px !important;
+    background: transparent !important; padding: 0 !important;
+  }
+  .header .logo {
+    background: #facc15 !important; color: #0a0a12 !important;
+    width: 32px !important; height: 32px !important;
+    border-radius: 8px !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    font-weight: 900 !important; font-size: 16px !important;
+    flex-shrink: 0 !important;
+  }
+  .header .header-name { font-size: 22px !important; font-weight: 700 !important; color: #4338ca !important; letter-spacing: -0.03em !important; line-height: 1.25 !important; margin: 0 !important; }
+  .header .header-sub { font-size: 12.5px !important; color: #64748b !important; margin-top: 2px !important; }
+  .divider { display: none !important; }
+  .section { padding: 20px 14px !important; }
+  .section-title { font-size: 16px !important; font-weight: 700 !important; color: #0f172a !important; letter-spacing: -0.025em !important; margin: 0 0 14px !important; }
+  /* 탭 */
+  .tabs { background: #fff !important; padding: 0 14px !important; border-bottom-color: #eef0f4 !important; }
+  .tab {
+    color: #475569 !important;
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    padding: 12px 16px !important;
+    border-bottom: 2px solid transparent !important;
+    transition: all 0.15s ease !important;
+    border-radius: 8px 8px 0 0 !important;
+    letter-spacing: -0.01em !important;
+  }
+  .tab.active {
+    color: #4338ca !important;
+    font-weight: 700 !important;
+    border-bottom-color: #facc15 !important;
+  }
+  .tab:hover:not(.active) {
+    color: #4338ca !important;
+    font-weight: 600 !important;
+    background: #fefce8 !important;
+    border-bottom-color: #fde68a !important;
+  }
+  /* 1위 hero — PC (좌우 flex) */
+  .danji-hero {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 20px !important;
+    background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%) !important;
+    border: 1px solid #fde68a !important;
+    border-left: 4px solid #facc15 !important;
+    padding: 18px 22px !important;
+    border-radius: 14px !important;
+    box-shadow: 0 4px 14px rgba(250,204,21,0.12) !important;
+    transition: all 0.18s ease !important;
+  }
+  .danji-hero:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 8px 22px rgba(250,204,21,0.18) !important;
+  }
+  .danji-hero .hero-left { flex: 1; min-width: 0; }
+  .danji-hero .hero-right { flex-shrink: 0; text-align: right; }
+  .danji-hero .rank-badge {
+    background: #facc15 !important; color: #0a0a12 !important;
+    padding: 3px 10px !important; border-radius: 6px !important;
+    font-size: 11px !important; font-weight: 800 !important;
+    letter-spacing: 0.04em !important;
+    margin-bottom: 8px !important;
+  }
+  .danji-hero .hero-name { font-size: 18px !important; font-weight: 800 !important; color: #1e293b !important; letter-spacing: -0.025em !important; }
+  .danji-hero .hero-meta { color: #78716c !important; font-size: 12.5px !important; line-height: 1.7 !important; margin-top: 4px !important; }
+  .danji-hero .hero-price { color: #ca8a04 !important; font-size: 26px !important; font-weight: 900 !important; letter-spacing: -0.025em !important; margin: 0 !important; }
+  .danji-hero .hero-price-label { color: #a8a29e !important; font-weight: 600 !important; font-size: 11px !important; margin-top: 4px !important; }
+  /* 2~ compact PC */
+  .danji-compact {
+    background: transparent !important;
+    border: none !important;
+    border-left: 3px solid transparent !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    border-radius: 0 !important;
+    padding: 12px 12px !important;
+    transition: all 0.15s ease !important;
+  }
+  .danji-compact:hover {
+    background: #eef2ff !important;
+    border-left-color: #4338ca !important;
+    transform: translateX(2px) !important;
+    border-bottom-color: transparent !important;
+    box-shadow: 0 4px 12px rgba(67,56,202,0.08) !important;
+  }
+  .danji-compact:last-child { border-bottom: none !important; }
+  .danji-compact-rank { color: #cbd5e1 !important; font-weight: 800 !important; }
+  .danji-compact:hover .danji-compact-rank { color: #4338ca !important; }
+  .danji-compact-name { color: #1e293b !important; font-weight: 600 !important; }
+  .danji-compact:hover .danji-compact-name { color: #4338ca !important; font-weight: 700 !important; }
+  .danji-compact-meta { color: #64748b !important; }
+  .danji-compact:hover .danji-compact-meta { color: #475569 !important; }
+  .danji-compact-price { color: #ca8a04 !important; font-weight: 800 !important; letter-spacing: -0.015em !important; }
+  .danji-compact:hover .danji-compact-price { color: #4338ca !important; }
+  /* FAQ */
+  .faq-section { padding: 20px 14px !important; }
+  .faq-item {
+    background: #f8fafc !important; border: 1px solid #eef0f4 !important;
+    border-radius: 10px !important; padding: 14px 16px !important;
+    margin-bottom: 8px !important;
+  }
+  .faq-q { color: #1e293b !important; font-weight: 700 !important; }
+  .faq-a { color: #475569 !important; margin-top: 6px !important; line-height: 1.7 !important; }
+  /* SEO */
+  .seo-section { background: #fafafa !important; padding: 16px 14px !important; }
+  .seo-text { color: #475569 !important; font-size: 13px !important; line-height: 1.85 !important; }
+  .seo-source { color: #94a3b8 !important; font-size: 11px !important; }
+  .data-notice { color: #64748b !important; font-size: 12px !important; }
+  .data-notice summary { cursor: pointer !important; font-weight: 700 !important; color: #1e293b !important; padding: 4px 0 !important; }
+  .data-notice a { color: #4338ca !important; text-decoration: none !important; }
+  .data-notice a:hover { text-decoration: underline !important; }
+  /* 푸터 */
+  .hwik-footer {
+    max-width: 720px !important;
+    margin: 24px auto 40px !important;
+    padding: 24px 16px 0 !important;
+    border-top: 1px solid #e5e7eb !important;
+    text-align: center !important;
+    font-size: 11.5px !important;
+    color: #6b7280 !important;
+    line-height: 1.7 !important;
+  }
+  .hwik-footer-links a { color: #6b7280 !important; }
+  .hwik-footer-links a:hover { color: #4338ca !important; }
+  .hwik-footer-copy { color: #9ca3af !important; }
+  .hwik-footer-copy a { color: #9ca3af !important; }
+}
 </style>
 <script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"}, {"@type": "ListItem", "position": 2, "name": "순위"}]}, {"@type": "ItemList", "name": "전국 아파트 순위", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "전체 아파트 순위", "url": "https://hwik.kr/ranking/all-price.html"}, {"@type": "ListItem", "position": 2, "name": "서울 아파트 순위", "url": "https://hwik.kr/ranking/seoul-price.html"}, {"@type": "ListItem", "position": 3, "name": "인천 아파트 순위", "url": "https://hwik.kr/ranking/incheon-price.html"}, {"@type": "ListItem", "position": 4, "name": "경기 아파트 순위", "url": "https://hwik.kr/ranking/gyeonggi-price.html"}, {"@type": "ListItem", "position": 5, "name": "부산 아파트 순위", "url": "https://hwik.kr/ranking/busan-price.html"}, {"@type": "ListItem", "position": 6, "name": "대구 아파트 순위", "url": "https://hwik.kr/ranking/daegu-price.html"}, {"@type": "ListItem", "position": 7, "name": "광주 아파트 순위", "url": "https://hwik.kr/ranking/gwangju-price.html"}, {"@type": "ListItem", "position": 8, "name": "대전 아파트 순위", "url": "https://hwik.kr/ranking/daejeon-price.html"}, {"@type": "ListItem", "position": 9, "name": "울산 아파트 순위", "url": "https://hwik.kr/ranking/ulsan-price.html"}, {"@type": "ListItem", "position": 10, "name": "충북 아파트 순위", "url": "https://hwik.kr/ranking/chungbuk-price.html"}, {"@type": "ListItem", "position": 11, "name": "충남 아파트 순위", "url": "https://hwik.kr/ranking/chungnam-price.html"}, {"@type": "ListItem", "position": 12, "name": "전북 아파트 순위", "url": "https://hwik.kr/ranking/jeonbuk-price.html"}, {"@type": "ListItem", "position": 13, "name": "전남 아파트 순위", "url": "https://hwik.kr/ranking/jeonnam-price.html"}, {"@type": "ListItem", "position": 14, "name": "경북 아파트 순위", "url": "https://hwik.kr/ranking/gyeongbuk-price.html"}, {"@type": "ListItem", "position": 15, "name": "경남 아파트 순위", "url": "https://hwik.kr/ranking/gyeongnam-price.html"}, {"@type": "ListItem", "position": 16, "name": "강원 아파트 순위", "url": "https://hwik.kr/ranking/gangwon-price.html"}, {"@type": "ListItem", "position": 17, "name": "제주 아파트 순위", "url": "https://hwik.kr/ranking/jeju-price.html"}, {"@type": "ListItem", "position": 18, "name": "세종 아파트 순위", "url": "https://hwik.kr/ranking/sejong-price.html"}]}]}</script>
 </head>
@@ -182,5 +372,13 @@
 </div>
 <div style="margin-top:20px;padding:12px;font-size:11px;color:var(--muted);text-align:center;">출처: 국토교통부 실거래가 공개시스템 · 마지막 갱신 2026-04-27</div>
 </div>
+<footer class="hwik-footer">
+<div class="hwik-footer-links">
+<a href="/about.html">휙 소개</a>·
+<a href="/privacy.html">개인정보처리방침</a>·
+<a href="/terms.html">이용약관</a>
+</div>
+<div class="hwik-footer-copy">실거래가 출처: 국토교통부 · 휙(HWIK) · <a href="https://hwik.kr">hwik.kr</a></div>
+</footer>
 </body>
 </html>

@@ -3,51 +3,241 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>전체 아파트 매매가 순위 TOP 50 - 휙</title>
-<meta name="description" content="전체 아파트 매매가 순위 TOP 50. 1위 아크로 서울포레스트 290억. 2위 나인원 한남 250억. 3위 래미안원베일리 165억. 국토교통부 공개시스템 실시간 기반.">
+<title>전체 아파트 매매가 TOP 50 · 2026-04-27 | 휙</title>
+<meta name="description" content="전체 아파트 매매가 순위 TOP 50. 1위 아크로 서울포레스트 290억 2위 나인원 한남, 3위 래미안원베일리 국토교통부 실거래가 공개시스템 기반.">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
 <link rel="canonical" href="https://hwik.kr/ranking/all-price.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="휙">
 <meta property="og:locale" content="ko_KR">
-<meta property="og:title" content="전체 아파트 매매가 순위 TOP 50 - 휙">
-<meta property="og:description" content="전체 아파트 매매가 순위 TOP 50. 1위 아크로 서울포레스트 290억. 2위 나인원 한남 250억. 3위 래미안원베일리 165억. 국토교통부 공개시스템 실시간 기반.">
+<meta property="og:title" content="전체 아파트 매매가 TOP 50 · 2026-04-27 | 휙">
+<meta property="og:description" content="전체 아파트 매매가 순위 TOP 50. 1위 아크로 서울포레스트 290억 2위 나인원 한남, 3위 래미안원베일리 국토교통부 실거래가 공개시스템 기반.">
 <meta property="og:image" content="https://hwik.kr/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:url" content="https://hwik.kr/ranking/all-price.html">
+<meta property="article:modified_time" content="2026-04-27">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="전체 아파트 매매가 순위 TOP 50 - 휙">
-<meta name="twitter:description" content="전체 아파트 매매가 순위 TOP 50. 1위 아크로 서울포레스트 290억. 2위 나인원 한남 250억. 3위 래미안원베일리 165억. 국토교통부 공개시스템 실시간 기반.">
+<meta name="twitter:title" content="전체 아파트 매매가 TOP 50 · 2026-04-27 | 휙">
+<meta name="twitter:description" content="전체 아파트 매매가 순위 TOP 50. 1위 아크로 서울포레스트 290억 2위 나인원 한남, 3위 래미안원베일리 국토교통부 실거래가 공개시스템 기반.">
+<meta name="twitter:image" content="https://hwik.kr/og-image.png">
 <meta name="google-site-verification" content="R2ye41AVVTRs8BxEXyEafFSTqMSiHKdb9zgTklrktSI">
 <meta name="naver-site-verification" content="367bd1e77a8ad48b74e345be3e4a0f8125c2c4e1">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
 <link rel="stylesheet" href="/danji/style.css">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css" media="(min-width: 768px)">
 <style>
 .tabs { display:flex; border-bottom:1px solid var(--border); overflow-x:auto; }
 .tabs::-webkit-scrollbar { display:none; }
 .tab { flex-shrink:0; padding:12px 16px; text-align:center; font-size:13px; color:var(--sub); cursor:pointer; border-bottom:2px solid transparent; transition:all .2s; white-space:nowrap; text-decoration:none; }
 .tab.active { color:var(--text); font-weight:500; border-bottom-color:var(--yellow); }
-.rank-item { display:flex; align-items:center; padding:14px; background:var(--surface); border-radius:var(--radius); cursor:pointer; transition:all .15s; box-shadow:0 1px 4px rgba(0,0,0,0.05); gap:12px; }
-.rank-item:active { transform:scale(0.98); }
-.rank-num { font-size:16px; font-weight:700; color:var(--yellow); min-width:28px; text-align:center; }
-.rank-num.top3 { color:var(--red); }
-.rank-info { flex:1; }
-.rank-name { font-size:13px; font-weight:600; }
-.rank-sub { font-size:11px; color:var(--sub); margin-top:2px; }
-.rank-price { text-align:right; }
-.rank-main { font-size:14px; font-weight:700; }
-.rank-detail { font-size:11px; color:var(--sub); margin-top:2px; }
+/* 1위 hero — 모바일 다크 (세로) */
+.danji-hero { display:block; position:relative; padding:18px 16px; background:linear-gradient(135deg, #2a2820 0%, #2a2515 100%); border:1px solid #3a3525; border-left:4px solid var(--yellow); border-radius:14px; margin-bottom:8px; cursor:pointer; transition:all .15s; }
+.danji-hero:active { transform:scale(0.99); }
+.danji-hero .hero-left { display:block; }
+.danji-hero .hero-right { display:block; margin-top:10px; }
+.danji-hero .rank-badge { display:inline-block; padding:3px 9px; background:var(--yellow); color:#0a0a12; border-radius:6px; font-size:10.5px; font-weight:800; margin-bottom:8px; letter-spacing:0.02em; }
+.danji-hero .hero-name { font-size:17px; font-weight:700; color:var(--text); letter-spacing:-0.02em; }
+.danji-hero .hero-meta { font-size:12px; color:var(--sub); margin-top:6px; line-height:1.6; }
+.danji-hero .hero-price { font-size:22px; font-weight:800; color:var(--yellow); letter-spacing:-0.02em; }
+.danji-hero .hero-price-label { font-size:11px; color:var(--muted); font-weight:500; margin-top:2px; }
+/* 2~ 컴팩트 */
+.danji-compact { display:flex; justify-content:space-between; align-items:center; padding:11px 13px; background:var(--card); border-radius:10px; cursor:pointer; transition:all .15s; }
+.danji-compact:active { transform:scale(0.98); }
+.danji-compact-rank { display:inline-block; min-width:18px; font-size:12px; font-weight:700; color:var(--muted); margin-right:8px; }
+.danji-compact-name { font-size:13px; font-weight:600; color:var(--text); }
+.danji-compact-meta { font-size:11px; color:var(--sub); margin-top:2px; }
+.danji-compact-price { font-size:14px; font-weight:700; text-align:right; color:var(--text); }
+/* 데이터 안내 + 푸터 */
+.data-notice summary { font-weight:600; color:var(--text); }
+.data-notice a { color:var(--yellow); text-decoration:none; }
+.hwik-footer { max-width:600px; margin:24px auto 40px; padding:24px 16px 0; border-top:1px solid var(--border, #2a2a3e); text-align:center; font-size:11.5px; color:var(--sub); line-height:1.7; }
+.hwik-footer-links { margin-bottom:8px; }
+.hwik-footer-links a { color:var(--sub); text-decoration:none; margin:0 8px; }
+.hwik-footer-copy a { color:var(--muted); text-decoration:none; }
+
+/* ── PC ≥768px D 디자인 라이트 ── */
+@media (min-width: 768px) {
+  html, body {
+    background: #F0EEE6 !important;
+    font-family: Pretendard, -apple-system, BlinkMacSystemFont,
+                 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR', sans-serif !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    text-rendering: optimizeLegibility !important;
+    color: #0f172a !important;
+  }
+  .wrap, .wrap * {
+    font-family: Pretendard, -apple-system, BlinkMacSystemFont,
+                 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR', sans-serif !important;
+  }
+  .wrap {
+    max-width: 720px !important;
+    margin: 32px auto !important;
+    background: #fff !important;
+    border-radius: 20px !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04) !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+  }
+  .breadcrumb {
+    background: #fff !important;
+    padding: 18px 14px 0 !important;
+    font-size: 12.5px !important;
+    color: #94a3b8 !important;
+    display: flex !important; flex-wrap: wrap !important; gap: 4px !important;
+  }
+  .breadcrumb a { color: #64748b !important; text-decoration: none !important; }
+  .breadcrumb a:hover { color: #4338ca !important; }
+  .breadcrumb span { color: #cbd5e1 !important; }
+  .header {
+    background: #fff !important;
+    padding: 14px 14px 22px !important;
+    border-bottom: 1px solid #eef0f4 !important;
+  }
+  .header .header-top {
+    display: flex !important; align-items: center !important; gap: 12px !important;
+    background: transparent !important; padding: 0 !important;
+  }
+  .header .logo {
+    background: #facc15 !important; color: #0a0a12 !important;
+    width: 32px !important; height: 32px !important;
+    border-radius: 8px !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    font-weight: 900 !important; font-size: 16px !important;
+    flex-shrink: 0 !important;
+  }
+  .header .header-name { font-size: 22px !important; font-weight: 700 !important; color: #4338ca !important; letter-spacing: -0.03em !important; line-height: 1.25 !important; margin: 0 !important; }
+  .header .header-sub { font-size: 12.5px !important; color: #64748b !important; margin-top: 2px !important; }
+  .divider { display: none !important; }
+  .section { padding: 20px 14px !important; }
+  .section-title { font-size: 16px !important; font-weight: 700 !important; color: #0f172a !important; letter-spacing: -0.025em !important; margin: 0 0 14px !important; }
+  /* 탭 */
+  .tabs { background: #fff !important; padding: 0 14px !important; border-bottom-color: #eef0f4 !important; }
+  .tab {
+    color: #475569 !important;
+    font-size: 13.5px !important;
+    font-weight: 500 !important;
+    padding: 12px 16px !important;
+    border-bottom: 2px solid transparent !important;
+    transition: all 0.15s ease !important;
+    border-radius: 8px 8px 0 0 !important;
+    letter-spacing: -0.01em !important;
+  }
+  .tab.active {
+    color: #4338ca !important;
+    font-weight: 700 !important;
+    border-bottom-color: #facc15 !important;
+  }
+  .tab:hover:not(.active) {
+    color: #4338ca !important;
+    font-weight: 600 !important;
+    background: #fefce8 !important;
+    border-bottom-color: #fde68a !important;
+  }
+  /* 1위 hero — PC (좌우 flex) */
+  .danji-hero {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 20px !important;
+    background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%) !important;
+    border: 1px solid #fde68a !important;
+    border-left: 4px solid #facc15 !important;
+    padding: 18px 22px !important;
+    border-radius: 14px !important;
+    box-shadow: 0 4px 14px rgba(250,204,21,0.12) !important;
+    transition: all 0.18s ease !important;
+  }
+  .danji-hero:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 8px 22px rgba(250,204,21,0.18) !important;
+  }
+  .danji-hero .hero-left { flex: 1; min-width: 0; }
+  .danji-hero .hero-right { flex-shrink: 0; text-align: right; }
+  .danji-hero .rank-badge {
+    background: #facc15 !important; color: #0a0a12 !important;
+    padding: 3px 10px !important; border-radius: 6px !important;
+    font-size: 11px !important; font-weight: 800 !important;
+    letter-spacing: 0.04em !important;
+    margin-bottom: 8px !important;
+  }
+  .danji-hero .hero-name { font-size: 18px !important; font-weight: 800 !important; color: #1e293b !important; letter-spacing: -0.025em !important; }
+  .danji-hero .hero-meta { color: #78716c !important; font-size: 12.5px !important; line-height: 1.7 !important; margin-top: 4px !important; }
+  .danji-hero .hero-price { color: #ca8a04 !important; font-size: 26px !important; font-weight: 900 !important; letter-spacing: -0.025em !important; margin: 0 !important; }
+  .danji-hero .hero-price-label { color: #a8a29e !important; font-weight: 600 !important; font-size: 11px !important; margin-top: 4px !important; }
+  /* 2~ compact PC */
+  .danji-compact {
+    background: transparent !important;
+    border: none !important;
+    border-left: 3px solid transparent !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+    border-radius: 0 !important;
+    padding: 12px 12px !important;
+    transition: all 0.15s ease !important;
+  }
+  .danji-compact:hover {
+    background: #eef2ff !important;
+    border-left-color: #4338ca !important;
+    transform: translateX(2px) !important;
+    border-bottom-color: transparent !important;
+    box-shadow: 0 4px 12px rgba(67,56,202,0.08) !important;
+  }
+  .danji-compact:last-child { border-bottom: none !important; }
+  .danji-compact-rank { color: #cbd5e1 !important; font-weight: 800 !important; }
+  .danji-compact:hover .danji-compact-rank { color: #4338ca !important; }
+  .danji-compact-name { color: #1e293b !important; font-weight: 600 !important; }
+  .danji-compact:hover .danji-compact-name { color: #4338ca !important; font-weight: 700 !important; }
+  .danji-compact-meta { color: #64748b !important; }
+  .danji-compact:hover .danji-compact-meta { color: #475569 !important; }
+  .danji-compact-price { color: #ca8a04 !important; font-weight: 800 !important; letter-spacing: -0.015em !important; }
+  .danji-compact:hover .danji-compact-price { color: #4338ca !important; }
+  /* FAQ */
+  .faq-section { padding: 20px 14px !important; }
+  .faq-item {
+    background: #f8fafc !important; border: 1px solid #eef0f4 !important;
+    border-radius: 10px !important; padding: 14px 16px !important;
+    margin-bottom: 8px !important;
+  }
+  .faq-q { color: #1e293b !important; font-weight: 700 !important; }
+  .faq-a { color: #475569 !important; margin-top: 6px !important; line-height: 1.7 !important; }
+  /* SEO */
+  .seo-section { background: #fafafa !important; padding: 16px 14px !important; }
+  .seo-text { color: #475569 !important; font-size: 13px !important; line-height: 1.85 !important; }
+  .seo-source { color: #94a3b8 !important; font-size: 11px !important; }
+  .data-notice { color: #64748b !important; font-size: 12px !important; }
+  .data-notice summary { cursor: pointer !important; font-weight: 700 !important; color: #1e293b !important; padding: 4px 0 !important; }
+  .data-notice a { color: #4338ca !important; text-decoration: none !important; }
+  .data-notice a:hover { text-decoration: underline !important; }
+  /* 푸터 */
+  .hwik-footer {
+    max-width: 720px !important;
+    margin: 24px auto 40px !important;
+    padding: 24px 16px 0 !important;
+    border-top: 1px solid #e5e7eb !important;
+    text-align: center !important;
+    font-size: 11.5px !important;
+    color: #6b7280 !important;
+    line-height: 1.7 !important;
+  }
+  .hwik-footer-links a { color: #6b7280 !important; }
+  .hwik-footer-links a:hover { color: #4338ca !important; }
+  .hwik-footer-copy { color: #9ca3af !important; }
+  .hwik-footer-copy a { color: #9ca3af !important; }
+}
 </style>
-<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "전체에서 가장 비싼 아파트는?", "acceptedAnswer": {"@type": "Answer", "text": "아크로 서울포레스트 (성동구 성수동1가)이 290억으로 1위입니다."}}, {"@type": "Question", "name": "전체 아파트 매매가 2위는?", "acceptedAnswer": {"@type": "Answer", "text": "2위는 나인원 한남 (용산구 한남동)으로 250억입니다."}}, {"@type": "Question", "name": "전체 아파트 매매가 3위는?", "acceptedAnswer": {"@type": "Answer", "text": "3위는 래미안원베일리 (서초구 반포동)으로 165억입니다."}}]}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"}, {"@type": "ListItem", "position": 2, "name": "순위"}]}, {"@type": "ItemList", "name": "전체 아파트 매매가 순위", "numberOfItems": 50, "itemListElement": [{"@type": "ListItem", "position": 1, "name": "아크로 서울포레스트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%B1%EB%8F%99%EA%B5%AC-%EC%84%B1%EC%88%98%EB%8F%991%EA%B0%80-%EC%95%84%ED%81%AC%EB%A1%9C-%EC%84%9C%EC%9A%B8%ED%8F%AC%EB%A0%88%EC%8A%A4%ED%8A%B8-a10024503.html"}, {"@type": "ListItem", "position": 2, "name": "나인원 한남", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%ED%95%9C%EB%82%A8%EB%8F%99-%EB%82%98%EC%9D%B8%EC%9B%90-%ED%95%9C%EB%82%A8-a10025192.html"}, {"@type": "ListItem", "position": 3, "name": "래미안원베일리", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EB%B0%98%ED%8F%AC%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88%EC%9B%90%EB%B2%A0%EC%9D%BC%EB%A6%AC-a10023043.html"}, {"@type": "ListItem", "position": 4, "name": "한남더힐", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%ED%95%9C%EB%82%A8%EB%8F%99-%ED%95%9C%EB%82%A8%EB%8D%94%ED%9E%90-a14077902.html"}, {"@type": "ListItem", "position": 5, "name": "래미안 원펜타스", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EB%B0%98%ED%8F%AC%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88-%EC%9B%90%ED%8E%9C%ED%83%80%EC%8A%A4-a10022556.html"}, {"@type": "ListItem", "position": 6, "name": "아크로리버파크", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EB%B0%98%ED%8F%AC%EB%8F%99-%EC%95%84%ED%81%AC%EB%A1%9C%EB%A6%AC%EB%B2%84%ED%8C%8C%ED%81%AC-a10027205.html"}, {"@type": "ListItem", "position": 7, "name": "아이파크삼성동", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%82%BC%EC%84%B1%EB%8F%99-%EC%95%84%EC%9D%B4%ED%8C%8C%ED%81%AC%EC%82%BC%EC%84%B1%EB%8F%99-a13509009.html"}, {"@type": "ListItem", "position": 8, "name": "타워팰리스1차", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EB%8F%84%EA%B3%A1%EB%8F%99-%ED%83%80%EC%9B%8C%ED%8C%B0%EB%A6%AC%EC%8A%A41%EC%B0%A8-a13527017.html"}, {"@type": "ListItem", "position": 9, "name": "압구정현대아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%ED%98%84%EB%8C%80%EC%95%84%ED%8C%8C%ED%8A%B8-a13589802.html"}, {"@type": "ListItem", "position": 10, "name": "래미안퍼스티지", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EB%B0%98%ED%8F%AC%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88%ED%8D%BC%EC%8A%A4%ED%8B%B0%EC%A7%80-a13776509.html"}, {"@type": "ListItem", "position": 11, "name": "성수갤러리아포레", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%B1%EB%8F%99%EA%B5%AC-%EC%84%B1%EC%88%98%EB%8F%991%EA%B0%80-%EC%84%B1%EC%88%98%EA%B0%A4%EB%9F%AC%EB%A6%AC%EC%95%84%ED%8F%AC%EB%A0%88-a13379401.html"}, {"@type": "ListItem", "position": 12, "name": "서울아파트관리사무소", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%98%81%EB%93%B1%ED%8F%AC%EA%B5%AC-%EC%97%AC%EC%9D%98%EB%8F%84%EB%8F%99-%EC%84%9C%EC%9A%B8%EC%95%84%ED%8C%8C%ED%8A%B8%EA%B4%80%EB%A6%AC%EC%82%AC%EB%AC%B4%EC%86%8C-a15001003.html"}, {"@type": "ListItem", "position": 13, "name": "타워팰리스2차", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EB%8F%84%EA%B3%A1%EB%8F%99-%ED%83%80%EC%9B%8C%ED%8C%B0%EB%A6%AC%EC%8A%A42%EC%B0%A8-a13585402.html"}, {"@type": "ListItem", "position": 14, "name": "타워팰리스G동", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EB%8F%84%EA%B3%A1%EB%8F%99-%ED%83%80%EC%9B%8C%ED%8C%B0%EB%A6%AC%EC%8A%A4G%EB%8F%99-a13585403.html"}, {"@type": "ListItem", "position": 15, "name": "해운대경동제이드", "url": "https://hwik.kr/danji/%EB%B6%80%EC%82%B0-%ED%95%B4%EC%9A%B4%EB%8C%80%EA%B5%AC-%EC%9A%B0%EB%8F%99-%ED%95%B4%EC%9A%B4%EB%8C%80%EA%B2%BD%EB%8F%99%EC%A0%9C%EC%9D%B4%EB%93%9C-a61274014.html"}, {"@type": "ListItem", "position": 16, "name": "트리마제", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%B1%EB%8F%99%EA%B5%AC-%EC%84%B1%EC%88%98%EB%8F%991%EA%B0%80-%ED%8A%B8%EB%A6%AC%EB%A7%88%EC%A0%9C-a10026988.html"}, {"@type": "ListItem", "position": 17, "name": "압구정현대8차", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%ED%98%84%EB%8C%808%EC%B0%A8-a13511201.html"}, {"@type": "ListItem", "position": 18, "name": "압구정하이츠파크", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%8B%A0%EC%82%AC%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%ED%95%98%EC%9D%B4%EC%B8%A0%ED%8C%8C%ED%81%AC-a10028094.html"}, {"@type": "ListItem", "position": 19, "name": "반포자이", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EB%B0%98%ED%8F%AC%EB%8F%99-%EB%B0%98%ED%8F%AC%EC%9E%90%EC%9D%B4-a13704104.html"}, {"@type": "ListItem", "position": 20, "name": "압구정미성2차", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%EB%AF%B8%EC%84%B12%EC%B0%A8-a13511003.html"}, {"@type": "ListItem", "position": 21, "name": "신반포한신2차", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EC%8B%A0%EB%B0%98%ED%8F%AC%ED%95%9C%EC%8B%A02%EC%B0%A8-a13790929.html"}, {"@type": "ListItem", "position": 22, "name": "서빙고신동아", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%EC%84%9C%EB%B9%99%EA%B3%A0%EB%8F%99-%EC%84%9C%EB%B9%99%EA%B3%A0%EC%8B%A0%EB%8F%99%EC%95%84-a14024002.html"}, {"@type": "ListItem", "position": 23, "name": "서울숲힐스테이트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%B1%EB%8F%99%EA%B5%AC-%EC%84%B1%EC%88%98%EB%8F%992%EA%B0%80-%EC%84%9C%EC%9A%B8%EC%88%B2%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-a13378001.html"}, {"@type": "ListItem", "position": 24, "name": "브라이튼여의도아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%98%81%EB%93%B1%ED%8F%AC%EA%B5%AC-%EC%97%AC%EC%9D%98%EB%8F%84%EB%8F%99-%EB%B8%8C%EB%9D%BC%EC%9D%B4%ED%8A%BC%EC%97%AC%EC%9D%98%EB%8F%84%EC%95%84%ED%8C%8C%ED%8A%B8-a10022891.html"}, {"@type": "ListItem", "position": 25, "name": "압구정 현대(10,13,14차)", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95-%ED%98%84%EB%8C%80-10-13-14%EC%B0%A8-a13511101.html"}, {"@type": "ListItem", "position": 26, "name": "잠실아시아선수촌", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%86%A1%ED%8C%8C%EA%B5%AC-%EC%9E%A0%EC%8B%A4%EB%8F%99-%EC%9E%A0%EC%8B%A4%EC%95%84%EC%8B%9C%EC%95%84%EC%84%A0%EC%88%98%EC%B4%8C-a13822701.html"}, {"@type": "ListItem", "position": 27, "name": "한남동현대하이페리온아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%ED%95%9C%EB%82%A8%EB%8F%99-%ED%95%9C%EB%82%A8%EB%8F%99%ED%98%84%EB%8C%80%ED%95%98%EC%9D%B4%ED%8E%98%EB%A6%AC%EC%98%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10022228.html"}, {"@type": "ListItem", "position": 28, "name": "신반포4차", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EC%8B%A0%EB%B0%98%ED%8F%AC4%EC%B0%A8-a13790828.html"}, {"@type": "ListItem", "position": 29, "name": "LG한강자이", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%EC%9D%B4%EC%B4%8C%EB%8F%99-LG%ED%95%9C%EA%B0%95%EC%9E%90%EC%9D%B4-a14003007.html"}, {"@type": "ListItem", "position": 30, "name": "압구정신현대", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%EC%8B%A0%ED%98%84%EB%8C%80-a13511004.html"}, {"@type": "ListItem", "position": 31, "name": "래미안 라클래시", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%82%BC%EC%84%B1%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88-%EB%9D%BC%ED%81%B4%EB%9E%98%EC%8B%9C-a10024131.html"}, {"@type": "ListItem", "position": 32, "name": "아스테리움용산", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%ED%95%9C%EA%B0%95%EB%A1%9C2%EA%B0%80-%EC%95%84%EC%8A%A4%ED%85%8C%EB%A6%AC%EC%9B%80%EC%9A%A9%EC%82%B0-a10026719.html"}, {"@type": "ListItem", "position": 33, "name": "압구정한양3단지", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%ED%95%9C%EC%96%913%EB%8B%A8%EC%A7%80-a13590602.html"}, {"@type": "ListItem", "position": 34, "name": "대치동부센트레빌", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EB%8C%80%EC%B9%98%EB%8F%99-%EB%8C%80%EC%B9%98%EB%8F%99%EB%B6%80%EC%84%BC%ED%8A%B8%EB%A0%88%EB%B9%8C-a13528103.html"}, {"@type": "ListItem", "position": 35, "name": "래미안 대치 팰리스", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EB%8C%80%EC%B9%98%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88-%EB%8C%80%EC%B9%98-%ED%8C%B0%EB%A6%AC%EC%8A%A4-a10027800.html"}, {"@type": "ListItem", "position": 36, "name": "반포힐스테이트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EB%B0%98%ED%8F%AC%EB%8F%99-%EB%B0%98%ED%8F%AC%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-a13776510.html"}, {"@type": "ListItem", "position": 37, "name": "이촌한강맨션", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%EC%9D%B4%EC%B4%8C%EB%8F%99-%EC%9D%B4%EC%B4%8C%ED%95%9C%EA%B0%95%EB%A7%A8%EC%85%98-a14003008.html"}, {"@type": "ListItem", "position": 38, "name": "디에이치 아너힐즈", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EA%B0%9C%ED%8F%AC%EB%8F%99-%EB%94%94%EC%97%90%EC%9D%B4%EC%B9%98-%EC%95%84%EB%84%88%ED%9E%90%EC%A6%88-a10025203.html"}, {"@type": "ListItem", "position": 39, "name": "아크로리버뷰 신반포", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EC%95%84%ED%81%AC%EB%A1%9C%EB%A6%AC%EB%B2%84%EB%B7%B0-%EC%8B%A0%EB%B0%98%ED%8F%AC-a10026227.html"}, {"@type": "ListItem", "position": 40, "name": "반포 르엘 아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EB%B0%98%ED%8F%AC-%EB%A5%B4%EC%97%98-%EC%95%84%ED%8C%8C%ED%8A%B8-a10023673.html"}, {"@type": "ListItem", "position": 41, "name": "반포센트럴자이아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EB%B0%98%ED%8F%AC%EC%84%BC%ED%8A%B8%EB%9F%B4%EC%9E%90%EC%9D%B4%EC%95%84%ED%8C%8C%ED%8A%B8-a10024913.html"}, {"@type": "ListItem", "position": 42, "name": "갤러리아팰리스", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%86%A1%ED%8C%8C%EA%B5%AC-%EC%9E%A0%EC%8B%A4%EB%8F%99-%EA%B0%A4%EB%9F%AC%EB%A6%AC%EC%95%84%ED%8C%B0%EB%A6%AC%EC%8A%A4-a13822301.html"}, {"@type": "ListItem", "position": 43, "name": "해운대아이파크", "url": "https://hwik.kr/danji/%EB%B6%80%EC%82%B0-%ED%95%B4%EC%9A%B4%EB%8C%80%EA%B5%AC-%EC%9A%B0%EB%8F%99-%ED%95%B4%EC%9A%B4%EB%8C%80%EC%95%84%EC%9D%B4%ED%8C%8C%ED%81%AC-a61274013.html"}, {"@type": "ListItem", "position": 44, "name": "청담삼성진흥", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%B2%AD%EB%8B%B4%EB%8F%99-%EC%B2%AD%EB%8B%B4%EC%82%BC%EC%84%B1%EC%A7%84%ED%9D%A5-a13510005.html"}, {"@type": "ListItem", "position": 45, "name": "신반포자이아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EC%8B%A0%EB%B0%98%ED%8F%AC%EC%9E%90%EC%9D%B4%EC%95%84%ED%8C%8C%ED%8A%B8-a10026004.html"}, {"@type": "ListItem", "position": 46, "name": "압구정미성1차", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%EB%AF%B8%EC%84%B11%EC%B0%A8-a13511001.html"}, {"@type": "ListItem", "position": 47, "name": "래미안 신반포팰리스", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88-%EC%8B%A0%EB%B0%98%ED%8F%AC%ED%8C%B0%EB%A6%AC%EC%8A%A4-a10027439.html"}, {"@type": "ListItem", "position": 48, "name": "대치아이파크", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EB%8C%80%EC%B9%98%EB%8F%99-%EB%8C%80%EC%B9%98%EC%95%84%EC%9D%B4%ED%8C%8C%ED%81%AC-a13528102.html"}, {"@type": "ListItem", "position": 49, "name": "용산시티파크1단지", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%ED%95%9C%EA%B0%95%EB%A1%9C3%EA%B0%80-%EC%9A%A9%EC%82%B0%EC%8B%9C%ED%8B%B0%ED%8C%8C%ED%81%AC1%EB%8B%A8%EC%A7%80-a14001303.html"}, {"@type": "ListItem", "position": 50, "name": "래미안리더스원", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%84%9C%EC%B4%88%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88%EB%A6%AC%EB%8D%94%EC%8A%A4%EC%9B%90-a10024552.html"}]}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@context": "https://schema.org", "@type": "Organization", "@id": "https://hwik.kr/#org", "name": "휙 (HWIK)", "url": "https://hwik.kr", "logo": {"@type": "ImageObject", "url": "https://hwik.kr/og-image.png", "width": 1200, "height": 630}, "sameAs": ["https://hwik.kr"]}, {"@context": "https://schema.org", "@type": "CollectionPage", "name": "전체 아파트 매매가 TOP 50 · 2026-04-27", "description": "전체 아파트 매매가 순위 TOP 50. 1위 아크로 서울포레스트 290억 2위 나인원 한남, 3위 래미안원베일리 국토교통부 실거래가 공개시스템 기반.", "url": "https://hwik.kr/ranking/all-price.html", "inLanguage": "ko-KR", "datePublished": "2026-01-01", "dateModified": "2026-04-27", "isPartOf": {"@type": "WebSite", "name": "휙", "url": "https://hwik.kr"}, "publisher": {"@id": "https://hwik.kr/#org"}, "about": {"@type": "AdministrativeArea", "name": "대한민국", "containedInPlace": {"@type": "Country", "name": "대한민국"}, "geo": {"@type": "GeoCoordinates", "latitude": 36.567921, "longitude": 127.560241}}, "mainEntity": {"@type": "ItemList", "name": "전체 아파트 매매가 순위", "numberOfItems": 50, "itemListElement": [{"@type": "ListItem", "position": 1, "name": "아크로 서울포레스트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%B1%EB%8F%99%EA%B5%AC-%EC%84%B1%EC%88%98%EB%8F%991%EA%B0%80-%EC%95%84%ED%81%AC%EB%A1%9C-%EC%84%9C%EC%9A%B8%ED%8F%AC%EB%A0%88%EC%8A%A4%ED%8A%B8-a10024503.html"}, {"@type": "ListItem", "position": 2, "name": "나인원 한남", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%ED%95%9C%EB%82%A8%EB%8F%99-%EB%82%98%EC%9D%B8%EC%9B%90-%ED%95%9C%EB%82%A8-a10025192.html"}, {"@type": "ListItem", "position": 3, "name": "래미안원베일리", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EB%B0%98%ED%8F%AC%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88%EC%9B%90%EB%B2%A0%EC%9D%BC%EB%A6%AC-a10023043.html"}, {"@type": "ListItem", "position": 4, "name": "한남더힐", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%ED%95%9C%EB%82%A8%EB%8F%99-%ED%95%9C%EB%82%A8%EB%8D%94%ED%9E%90-a14077902.html"}, {"@type": "ListItem", "position": 5, "name": "래미안 원펜타스", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EB%B0%98%ED%8F%AC%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88-%EC%9B%90%ED%8E%9C%ED%83%80%EC%8A%A4-a10022556.html"}, {"@type": "ListItem", "position": 6, "name": "아크로리버파크", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EB%B0%98%ED%8F%AC%EB%8F%99-%EC%95%84%ED%81%AC%EB%A1%9C%EB%A6%AC%EB%B2%84%ED%8C%8C%ED%81%AC-a10027205.html"}, {"@type": "ListItem", "position": 7, "name": "아이파크삼성동", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%82%BC%EC%84%B1%EB%8F%99-%EC%95%84%EC%9D%B4%ED%8C%8C%ED%81%AC%EC%82%BC%EC%84%B1%EB%8F%99-a13509009.html"}, {"@type": "ListItem", "position": 8, "name": "타워팰리스1차", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EB%8F%84%EA%B3%A1%EB%8F%99-%ED%83%80%EC%9B%8C%ED%8C%B0%EB%A6%AC%EC%8A%A41%EC%B0%A8-a13527017.html"}, {"@type": "ListItem", "position": 9, "name": "압구정현대아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%ED%98%84%EB%8C%80%EC%95%84%ED%8C%8C%ED%8A%B8-a13589802.html"}, {"@type": "ListItem", "position": 10, "name": "래미안퍼스티지", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EB%B0%98%ED%8F%AC%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88%ED%8D%BC%EC%8A%A4%ED%8B%B0%EC%A7%80-a13776509.html"}, {"@type": "ListItem", "position": 11, "name": "성수갤러리아포레", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%B1%EB%8F%99%EA%B5%AC-%EC%84%B1%EC%88%98%EB%8F%991%EA%B0%80-%EC%84%B1%EC%88%98%EA%B0%A4%EB%9F%AC%EB%A6%AC%EC%95%84%ED%8F%AC%EB%A0%88-a13379401.html"}, {"@type": "ListItem", "position": 12, "name": "서울아파트관리사무소", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%98%81%EB%93%B1%ED%8F%AC%EA%B5%AC-%EC%97%AC%EC%9D%98%EB%8F%84%EB%8F%99-%EC%84%9C%EC%9A%B8%EC%95%84%ED%8C%8C%ED%8A%B8%EA%B4%80%EB%A6%AC%EC%82%AC%EB%AC%B4%EC%86%8C-a15001003.html"}, {"@type": "ListItem", "position": 13, "name": "타워팰리스2차", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EB%8F%84%EA%B3%A1%EB%8F%99-%ED%83%80%EC%9B%8C%ED%8C%B0%EB%A6%AC%EC%8A%A42%EC%B0%A8-a13585402.html"}, {"@type": "ListItem", "position": 14, "name": "타워팰리스G동", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EB%8F%84%EA%B3%A1%EB%8F%99-%ED%83%80%EC%9B%8C%ED%8C%B0%EB%A6%AC%EC%8A%A4G%EB%8F%99-a13585403.html"}, {"@type": "ListItem", "position": 15, "name": "해운대경동제이드", "url": "https://hwik.kr/danji/%EB%B6%80%EC%82%B0-%ED%95%B4%EC%9A%B4%EB%8C%80%EA%B5%AC-%EC%9A%B0%EB%8F%99-%ED%95%B4%EC%9A%B4%EB%8C%80%EA%B2%BD%EB%8F%99%EC%A0%9C%EC%9D%B4%EB%93%9C-a61274014.html"}, {"@type": "ListItem", "position": 16, "name": "트리마제", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%B1%EB%8F%99%EA%B5%AC-%EC%84%B1%EC%88%98%EB%8F%991%EA%B0%80-%ED%8A%B8%EB%A6%AC%EB%A7%88%EC%A0%9C-a10026988.html"}, {"@type": "ListItem", "position": 17, "name": "압구정현대8차", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%ED%98%84%EB%8C%808%EC%B0%A8-a13511201.html"}, {"@type": "ListItem", "position": 18, "name": "압구정하이츠파크", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%8B%A0%EC%82%AC%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%ED%95%98%EC%9D%B4%EC%B8%A0%ED%8C%8C%ED%81%AC-a10028094.html"}, {"@type": "ListItem", "position": 19, "name": "반포자이", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EB%B0%98%ED%8F%AC%EB%8F%99-%EB%B0%98%ED%8F%AC%EC%9E%90%EC%9D%B4-a13704104.html"}, {"@type": "ListItem", "position": 20, "name": "압구정미성2차", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%EB%AF%B8%EC%84%B12%EC%B0%A8-a13511003.html"}, {"@type": "ListItem", "position": 21, "name": "신반포한신2차", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EC%8B%A0%EB%B0%98%ED%8F%AC%ED%95%9C%EC%8B%A02%EC%B0%A8-a13790929.html"}, {"@type": "ListItem", "position": 22, "name": "서빙고신동아", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%EC%84%9C%EB%B9%99%EA%B3%A0%EB%8F%99-%EC%84%9C%EB%B9%99%EA%B3%A0%EC%8B%A0%EB%8F%99%EC%95%84-a14024002.html"}, {"@type": "ListItem", "position": 23, "name": "서울숲힐스테이트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%B1%EB%8F%99%EA%B5%AC-%EC%84%B1%EC%88%98%EB%8F%992%EA%B0%80-%EC%84%9C%EC%9A%B8%EC%88%B2%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-a13378001.html"}, {"@type": "ListItem", "position": 24, "name": "브라이튼여의도아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%98%81%EB%93%B1%ED%8F%AC%EA%B5%AC-%EC%97%AC%EC%9D%98%EB%8F%84%EB%8F%99-%EB%B8%8C%EB%9D%BC%EC%9D%B4%ED%8A%BC%EC%97%AC%EC%9D%98%EB%8F%84%EC%95%84%ED%8C%8C%ED%8A%B8-a10022891.html"}, {"@type": "ListItem", "position": 25, "name": "압구정 현대(10,13,14차)", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95-%ED%98%84%EB%8C%80-10-13-14%EC%B0%A8-a13511101.html"}, {"@type": "ListItem", "position": 26, "name": "잠실아시아선수촌", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%86%A1%ED%8C%8C%EA%B5%AC-%EC%9E%A0%EC%8B%A4%EB%8F%99-%EC%9E%A0%EC%8B%A4%EC%95%84%EC%8B%9C%EC%95%84%EC%84%A0%EC%88%98%EC%B4%8C-a13822701.html"}, {"@type": "ListItem", "position": 27, "name": "한남동현대하이페리온아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%ED%95%9C%EB%82%A8%EB%8F%99-%ED%95%9C%EB%82%A8%EB%8F%99%ED%98%84%EB%8C%80%ED%95%98%EC%9D%B4%ED%8E%98%EB%A6%AC%EC%98%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10022228.html"}, {"@type": "ListItem", "position": 28, "name": "신반포4차", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EC%8B%A0%EB%B0%98%ED%8F%AC4%EC%B0%A8-a13790828.html"}, {"@type": "ListItem", "position": 29, "name": "LG한강자이", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%EC%9D%B4%EC%B4%8C%EB%8F%99-LG%ED%95%9C%EA%B0%95%EC%9E%90%EC%9D%B4-a14003007.html"}, {"@type": "ListItem", "position": 30, "name": "압구정신현대", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%EC%8B%A0%ED%98%84%EB%8C%80-a13511004.html"}, {"@type": "ListItem", "position": 31, "name": "래미안 라클래시", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%82%BC%EC%84%B1%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88-%EB%9D%BC%ED%81%B4%EB%9E%98%EC%8B%9C-a10024131.html"}, {"@type": "ListItem", "position": 32, "name": "아스테리움용산", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%ED%95%9C%EA%B0%95%EB%A1%9C2%EA%B0%80-%EC%95%84%EC%8A%A4%ED%85%8C%EB%A6%AC%EC%9B%80%EC%9A%A9%EC%82%B0-a10026719.html"}, {"@type": "ListItem", "position": 33, "name": "압구정한양3단지", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%ED%95%9C%EC%96%913%EB%8B%A8%EC%A7%80-a13590602.html"}, {"@type": "ListItem", "position": 34, "name": "대치동부센트레빌", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EB%8C%80%EC%B9%98%EB%8F%99-%EB%8C%80%EC%B9%98%EB%8F%99%EB%B6%80%EC%84%BC%ED%8A%B8%EB%A0%88%EB%B9%8C-a13528103.html"}, {"@type": "ListItem", "position": 35, "name": "래미안 대치 팰리스", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EB%8C%80%EC%B9%98%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88-%EB%8C%80%EC%B9%98-%ED%8C%B0%EB%A6%AC%EC%8A%A4-a10027800.html"}, {"@type": "ListItem", "position": 36, "name": "반포힐스테이트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EB%B0%98%ED%8F%AC%EB%8F%99-%EB%B0%98%ED%8F%AC%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-a13776510.html"}, {"@type": "ListItem", "position": 37, "name": "이촌한강맨션", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%EC%9D%B4%EC%B4%8C%EB%8F%99-%EC%9D%B4%EC%B4%8C%ED%95%9C%EA%B0%95%EB%A7%A8%EC%85%98-a14003008.html"}, {"@type": "ListItem", "position": 38, "name": "디에이치 아너힐즈", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EA%B0%9C%ED%8F%AC%EB%8F%99-%EB%94%94%EC%97%90%EC%9D%B4%EC%B9%98-%EC%95%84%EB%84%88%ED%9E%90%EC%A6%88-a10025203.html"}, {"@type": "ListItem", "position": 39, "name": "아크로리버뷰 신반포", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EC%95%84%ED%81%AC%EB%A1%9C%EB%A6%AC%EB%B2%84%EB%B7%B0-%EC%8B%A0%EB%B0%98%ED%8F%AC-a10026227.html"}, {"@type": "ListItem", "position": 40, "name": "반포 르엘 아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EB%B0%98%ED%8F%AC-%EB%A5%B4%EC%97%98-%EC%95%84%ED%8C%8C%ED%8A%B8-a10023673.html"}, {"@type": "ListItem", "position": 41, "name": "반포센트럴자이아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EB%B0%98%ED%8F%AC%EC%84%BC%ED%8A%B8%EB%9F%B4%EC%9E%90%EC%9D%B4%EC%95%84%ED%8C%8C%ED%8A%B8-a10024913.html"}, {"@type": "ListItem", "position": 42, "name": "갤러리아팰리스", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%86%A1%ED%8C%8C%EA%B5%AC-%EC%9E%A0%EC%8B%A4%EB%8F%99-%EA%B0%A4%EB%9F%AC%EB%A6%AC%EC%95%84%ED%8C%B0%EB%A6%AC%EC%8A%A4-a13822301.html"}, {"@type": "ListItem", "position": 43, "name": "해운대아이파크", "url": "https://hwik.kr/danji/%EB%B6%80%EC%82%B0-%ED%95%B4%EC%9A%B4%EB%8C%80%EA%B5%AC-%EC%9A%B0%EB%8F%99-%ED%95%B4%EC%9A%B4%EB%8C%80%EC%95%84%EC%9D%B4%ED%8C%8C%ED%81%AC-a61274013.html"}, {"@type": "ListItem", "position": 44, "name": "청담삼성진흥", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%B2%AD%EB%8B%B4%EB%8F%99-%EC%B2%AD%EB%8B%B4%EC%82%BC%EC%84%B1%EC%A7%84%ED%9D%A5-a13510005.html"}, {"@type": "ListItem", "position": 45, "name": "신반포자이아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EC%8B%A0%EB%B0%98%ED%8F%AC%EC%9E%90%EC%9D%B4%EC%95%84%ED%8C%8C%ED%8A%B8-a10026004.html"}, {"@type": "ListItem", "position": 46, "name": "압구정미성1차", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%EB%AF%B8%EC%84%B11%EC%B0%A8-a13511001.html"}, {"@type": "ListItem", "position": 47, "name": "래미안 신반포팰리스", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88-%EC%8B%A0%EB%B0%98%ED%8F%AC%ED%8C%B0%EB%A6%AC%EC%8A%A4-a10027439.html"}, {"@type": "ListItem", "position": 48, "name": "대치아이파크", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EB%8C%80%EC%B9%98%EB%8F%99-%EB%8C%80%EC%B9%98%EC%95%84%EC%9D%B4%ED%8C%8C%ED%81%AC-a13528102.html"}, {"@type": "ListItem", "position": 49, "name": "용산시티파크1단지", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%ED%95%9C%EA%B0%95%EB%A1%9C3%EA%B0%80-%EC%9A%A9%EC%82%B0%EC%8B%9C%ED%8B%B0%ED%8C%8C%ED%81%AC1%EB%8B%A8%EC%A7%80-a14001303.html"}, {"@type": "ListItem", "position": 50, "name": "래미안리더스원", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%84%9C%EC%B4%88%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88%EB%A6%AC%EB%8D%94%EC%8A%A4%EC%9B%90-a10024552.html"}]}}, {"@type": "AdministrativeArea", "name": "대한민국", "containedInPlace": {"@type": "Country", "name": "대한민국"}, "geo": {"@type": "GeoCoordinates", "latitude": 36.567921, "longitude": 127.560241}, "@context": "https://schema.org"}, {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"}, {"@type": "ListItem", "position": 2, "name": "아파트 순위", "item": "https://hwik.kr/ranking/"}, {"@type": "ListItem", "position": 3, "name": "전체 매매가"}]}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "전체에서 가장 비싼 아파트는?", "acceptedAnswer": {"@type": "Answer", "text": "아크로 서울포레스트 (성동구 성수동1가)이 290억으로 1위입니다."}}, {"@type": "Question", "name": "전체 매매가 2위는?", "acceptedAnswer": {"@type": "Answer", "text": "나인원 한남 (용산구 한남동) 250억."}}, {"@type": "Question", "name": "전체 매매가 3위는?", "acceptedAnswer": {"@type": "Answer", "text": "래미안원베일리 (서초구 반포동) 165억."}}, {"@type": "Question", "name": "이 순위는 어떤 데이터를 기반으로 하나요?", "acceptedAnswer": {"@type": "Answer", "text": "국토교통부 실거래가 공개시스템(rt.molit.go.kr) 데이터를 매일 자동 수집한 결과입니다."}}]}]}</script>
 </head>
 <body>
 <div class="wrap">
 <header class="header"><div class="header-top">
   <a class="logo" href="/" style="text-decoration:none;">휙</a>
-  <div><h1 class="header-name">전체 아파트 순위</h1>
-  <div class="header-sub">매매가 TOP 50</div></div>
+  <div><h1 class="header-name">전체 아파트 매매가 TOP 50</h1>
+  <div class="header-sub">50개 단지 · 마지막 업데이트 2026-04-27</div></div>
 </div></header>
-<nav class="breadcrumb"><a href="/">휙</a><span>&gt;</span><a href="/ranking/">순위</a><span>&gt;</span>전체 매매가</nav>
+<nav class="breadcrumb"><a href="/">휙</a><span>&gt;</span><a href="/ranking/">아파트 순위</a><span>&gt;</span>전체 매매가</nav>
 <div class="tabs" style="border-bottom:2px solid var(--border);">
 <a class="tab active" style="text-decoration:none;color:inherit;" href="/ranking/all-price.html">전체</a>
 <a class="tab" style="text-decoration:none;color:inherit;" href="/ranking/seoul-price.html">서울</a>
@@ -74,321 +264,101 @@
 <a class="tab" style="text-decoration:none;color:inherit;" href="/ranking/all-jeonse.html">전세가율↑</a>
 <a class="tab" style="text-decoration:none;color:inherit;" href="/ranking/all-jeonse_low.html">전세가율↓</a>
 </div>
-<p style="font-size:13px;color:var(--sub);padding:8px 16px 0;line-height:1.6;">전체 아파트 매매가 순위입니다. 국토교통부 실거래가 공개시스템 기반으로 최신 데이터를 반영합니다. 1위는 아크로 서울포레스트(성동구 성수동1가)으로 290억입니다.</p>
-<div class="section"><h2 class="section-title">전체 매매가 TOP 50</h2>
-<div style="display:flex;flex-direction:column;gap:8px;">
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%B1%EB%8F%99%EA%B5%AC-%EC%84%B1%EC%88%98%EB%8F%991%EA%B0%80-%EC%95%84%ED%81%AC%EB%A1%9C-%EC%84%9C%EC%9A%B8%ED%8F%AC%EB%A0%88%EC%8A%A4%ED%8A%B8-a10024503.html">
-  <div class="rank-num top3">1</div>
-  <div class="rank-info"><div class="rank-name">아크로 서울포레스트</div>
-  <div class="rank-sub">성동구 성수동1가 · 2020년 · 전용274㎡</div></div>
-  <div class="rank-price"><div class="rank-main">290억</div><div class="rank-detail">1억 584/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%ED%95%9C%EB%82%A8%EB%8F%99-%EB%82%98%EC%9D%B8%EC%9B%90-%ED%95%9C%EB%82%A8-a10025192.html">
-  <div class="rank-num top3">2</div>
-  <div class="rank-info"><div class="rank-name">나인원 한남</div>
-  <div class="rank-sub">용산구 한남동 · 2019년 · 전용274㎡</div></div>
-  <div class="rank-price"><div class="rank-main">250억</div><div class="rank-detail">9,124만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EB%B0%98%ED%8F%AC%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88%EC%9B%90%EB%B2%A0%EC%9D%BC%EB%A6%AC-a10023043.html">
-  <div class="rank-num top3">3</div>
-  <div class="rank-info"><div class="rank-name">래미안원베일리</div>
-  <div class="rank-sub">서초구 반포동 · 2023년 · 전용236㎡</div></div>
-  <div class="rank-price"><div class="rank-main">165억</div><div class="rank-detail">6,992만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%ED%95%9C%EB%82%A8%EB%8F%99-%ED%95%9C%EB%82%A8%EB%8D%94%ED%9E%90-a14077902.html">
-  <div class="rank-num">4</div>
-  <div class="rank-info"><div class="rank-name">한남더힐</div>
-  <div class="rank-sub">용산구 한남동 · 2011년 · 전용233㎡</div></div>
-  <div class="rank-price"><div class="rank-main">127억 7천</div><div class="rank-detail">5,481만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EB%B0%98%ED%8F%AC%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88-%EC%9B%90%ED%8E%9C%ED%83%80%EC%8A%A4-a10022556.html">
-  <div class="rank-num">5</div>
-  <div class="rank-info"><div class="rank-name">래미안 원펜타스</div>
-  <div class="rank-sub">서초구 반포동 · 2024년 · 전용192㎡</div></div>
-  <div class="rank-price"><div class="rank-main">100억</div><div class="rank-detail">5,208만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EB%B0%98%ED%8F%AC%EB%8F%99-%EC%95%84%ED%81%AC%EB%A1%9C%EB%A6%AC%EB%B2%84%ED%8C%8C%ED%81%AC-a10027205.html">
-  <div class="rank-num">6</div>
-  <div class="rank-info"><div class="rank-name">아크로리버파크</div>
-  <div class="rank-sub">서초구 반포동 · 2016년 · 전용155㎡</div></div>
-  <div class="rank-price"><div class="rank-main">100억</div><div class="rank-detail">6,452만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%82%BC%EC%84%B1%EB%8F%99-%EC%95%84%EC%9D%B4%ED%8C%8C%ED%81%AC%EC%82%BC%EC%84%B1%EB%8F%99-a13509009.html">
-  <div class="rank-num">7</div>
-  <div class="rank-info"><div class="rank-name">아이파크삼성동</div>
-  <div class="rank-sub">강남구 삼성동 · 2004년 · 전용195㎡</div></div>
-  <div class="rank-price"><div class="rank-main">99억</div><div class="rank-detail">5,077만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EB%8F%84%EA%B3%A1%EB%8F%99-%ED%83%80%EC%9B%8C%ED%8C%B0%EB%A6%AC%EC%8A%A41%EC%B0%A8-a13527017.html">
-  <div class="rank-num">8</div>
-  <div class="rank-info"><div class="rank-name">타워팰리스1차</div>
-  <div class="rank-sub">강남구 도곡동 · 2002년 · 전용301㎡</div></div>
-  <div class="rank-price"><div class="rank-main">99억</div><div class="rank-detail">3,289만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%ED%98%84%EB%8C%80%EC%95%84%ED%8C%8C%ED%8A%B8-a13589802.html">
-  <div class="rank-num">9</div>
-  <div class="rank-info"><div class="rank-name">압구정현대아파트</div>
-  <div class="rank-sub">강남구 압구정동 · 1976년 · 전용197㎡</div></div>
-  <div class="rank-price"><div class="rank-main">97억</div><div class="rank-detail">4,924만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EB%B0%98%ED%8F%AC%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88%ED%8D%BC%EC%8A%A4%ED%8B%B0%EC%A7%80-a13776509.html">
-  <div class="rank-num">10</div>
-  <div class="rank-info"><div class="rank-name">래미안퍼스티지</div>
-  <div class="rank-sub">서초구 반포동 · 2009년 · 전용223㎡</div></div>
-  <div class="rank-price"><div class="rank-main">96억</div><div class="rank-detail">4,305만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%B1%EB%8F%99%EA%B5%AC-%EC%84%B1%EC%88%98%EB%8F%991%EA%B0%80-%EC%84%B1%EC%88%98%EA%B0%A4%EB%9F%AC%EB%A6%AC%EC%95%84%ED%8F%AC%EB%A0%88-a13379401.html">
-  <div class="rank-num">11</div>
-  <div class="rank-info"><div class="rank-name">성수갤러리아포레</div>
-  <div class="rank-sub">성동구 성수동1가 · 2011년 · 전용219㎡</div></div>
-  <div class="rank-price"><div class="rank-main">94억 5천</div><div class="rank-detail">4,315만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%98%81%EB%93%B1%ED%8F%AC%EA%B5%AC-%EC%97%AC%EC%9D%98%EB%8F%84%EB%8F%99-%EC%84%9C%EC%9A%B8%EC%95%84%ED%8C%8C%ED%8A%B8%EA%B4%80%EB%A6%AC%EC%82%AC%EB%AC%B4%EC%86%8C-a15001003.html">
-  <div class="rank-num">12</div>
-  <div class="rank-info"><div class="rank-name">서울아파트관리사무소</div>
-  <div class="rank-sub">영등포구 여의도동 · 1976년 · 전용200㎡</div></div>
-  <div class="rank-price"><div class="rank-main">83억</div><div class="rank-detail">4,150만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EB%8F%84%EA%B3%A1%EB%8F%99-%ED%83%80%EC%9B%8C%ED%8C%B0%EB%A6%AC%EC%8A%A42%EC%B0%A8-a13585402.html">
-  <div class="rank-num">13</div>
-  <div class="rank-info"><div class="rank-name">타워팰리스2차</div>
-  <div class="rank-sub">강남구 도곡동 · 2003년 · 전용224㎡</div></div>
-  <div class="rank-price"><div class="rank-main">75억 5천</div><div class="rank-detail">3,371만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EB%8F%84%EA%B3%A1%EB%8F%99-%ED%83%80%EC%9B%8C%ED%8C%B0%EB%A6%AC%EC%8A%A4G%EB%8F%99-a13585403.html">
-  <div class="rank-num">14</div>
-  <div class="rank-info"><div class="rank-name">타워팰리스G동</div>
-  <div class="rank-sub">강남구 도곡동 · 2004년 · 전용244㎡</div></div>
-  <div class="rank-price"><div class="rank-main">75억</div><div class="rank-detail">3,074만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EB%B6%80%EC%82%B0-%ED%95%B4%EC%9A%B4%EB%8C%80%EA%B5%AC-%EC%9A%B0%EB%8F%99-%ED%95%B4%EC%9A%B4%EB%8C%80%EA%B2%BD%EB%8F%99%EC%A0%9C%EC%9D%B4%EB%93%9C-a61274014.html">
-  <div class="rank-num">15</div>
-  <div class="rank-info"><div class="rank-name">해운대경동제이드</div>
-  <div class="rank-sub">해운대구 우동 · 2012년 · 전용235㎡</div></div>
-  <div class="rank-price"><div class="rank-main">75억</div><div class="rank-detail">3,191만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%B1%EB%8F%99%EA%B5%AC-%EC%84%B1%EC%88%98%EB%8F%991%EA%B0%80-%ED%8A%B8%EB%A6%AC%EB%A7%88%EC%A0%9C-a10026988.html">
-  <div class="rank-num">16</div>
-  <div class="rank-info"><div class="rank-name">트리마제</div>
-  <div class="rank-sub">성동구 성수동1가 · 2017년 · 전용137㎡</div></div>
-  <div class="rank-price"><div class="rank-main">74억</div><div class="rank-detail">5,401만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%ED%98%84%EB%8C%808%EC%B0%A8-a13511201.html">
-  <div class="rank-num">17</div>
-  <div class="rank-info"><div class="rank-name">압구정현대8차</div>
-  <div class="rank-sub">강남구 압구정동 · 1980년 · 전용164㎡</div></div>
-  <div class="rank-price"><div class="rank-main">74억</div><div class="rank-detail">4,512만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%8B%A0%EC%82%AC%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%ED%95%98%EC%9D%B4%EC%B8%A0%ED%8C%8C%ED%81%AC-a10028094.html">
-  <div class="rank-num">18</div>
-  <div class="rank-info"><div class="rank-name">압구정하이츠파크</div>
-  <div class="rank-sub">강남구 신사동 · 2004년 · 전용213㎡</div></div>
-  <div class="rank-price"><div class="rank-main">72억 7천</div><div class="rank-detail">3,413만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EB%B0%98%ED%8F%AC%EB%8F%99-%EB%B0%98%ED%8F%AC%EC%9E%90%EC%9D%B4-a13704104.html">
-  <div class="rank-num">19</div>
-  <div class="rank-info"><div class="rank-name">반포자이</div>
-  <div class="rank-sub">서초구 반포동 · 2009년 · 전용195㎡</div></div>
-  <div class="rank-price"><div class="rank-main">71억 3천</div><div class="rank-detail">3,656만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%EB%AF%B8%EC%84%B12%EC%B0%A8-a13511003.html">
-  <div class="rank-num">20</div>
-  <div class="rank-info"><div class="rank-name">압구정미성2차</div>
-  <div class="rank-sub">강남구 압구정동 · 1987년 · 전용141㎡</div></div>
-  <div class="rank-price"><div class="rank-main">70억</div><div class="rank-detail">4,965만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EC%8B%A0%EB%B0%98%ED%8F%AC%ED%95%9C%EC%8B%A02%EC%B0%A8-a13790929.html">
-  <div class="rank-num">21</div>
-  <div class="rank-info"><div class="rank-name">신반포한신2차</div>
-  <div class="rank-sub">서초구 잠원동 · 1978년 · 전용138㎡</div></div>
-  <div class="rank-price"><div class="rank-main">69억 5천</div><div class="rank-detail">5,036만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%EC%84%9C%EB%B9%99%EA%B3%A0%EB%8F%99-%EC%84%9C%EB%B9%99%EA%B3%A0%EC%8B%A0%EB%8F%99%EC%95%84-a14024002.html">
-  <div class="rank-num">22</div>
-  <div class="rank-info"><div class="rank-name">서빙고신동아</div>
-  <div class="rank-sub">용산구 서빙고동 · 1984년 · 전용210㎡</div></div>
-  <div class="rank-price"><div class="rank-main">68억</div><div class="rank-detail">3,238만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%B1%EB%8F%99%EA%B5%AC-%EC%84%B1%EC%88%98%EB%8F%992%EA%B0%80-%EC%84%9C%EC%9A%B8%EC%88%B2%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-a13378001.html">
-  <div class="rank-num">23</div>
-  <div class="rank-info"><div class="rank-name">서울숲힐스테이트</div>
-  <div class="rank-sub">성동구 성수동2가 · 2009년 · 전용228㎡</div></div>
-  <div class="rank-price"><div class="rank-main">67억</div><div class="rank-detail">2,939만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%98%81%EB%93%B1%ED%8F%AC%EA%B5%AC-%EC%97%AC%EC%9D%98%EB%8F%84%EB%8F%99-%EB%B8%8C%EB%9D%BC%EC%9D%B4%ED%8A%BC%EC%97%AC%EC%9D%98%EB%8F%84%EC%95%84%ED%8C%8C%ED%8A%B8-a10022891.html">
-  <div class="rank-num">24</div>
-  <div class="rank-info"><div class="rank-name">브라이튼여의도아파트</div>
-  <div class="rank-sub">영등포구 여의도동 · 전용133㎡</div></div>
-  <div class="rank-price"><div class="rank-main">65억 8천</div><div class="rank-detail">4,951만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95-%ED%98%84%EB%8C%80-10-13-14%EC%B0%A8-a13511101.html">
-  <div class="rank-num">25</div>
-  <div class="rank-info"><div class="rank-name">압구정 현대(10,13,14차)</div>
-  <div class="rank-sub">강남구 압구정동 · 1982년 · 전용152㎡</div></div>
-  <div class="rank-price"><div class="rank-main">65억 5천</div><div class="rank-detail">4,309만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%86%A1%ED%8C%8C%EA%B5%AC-%EC%9E%A0%EC%8B%A4%EB%8F%99-%EC%9E%A0%EC%8B%A4%EC%95%84%EC%8B%9C%EC%95%84%EC%84%A0%EC%88%98%EC%B4%8C-a13822701.html">
-  <div class="rank-num">26</div>
-  <div class="rank-info"><div class="rank-name">잠실아시아선수촌</div>
-  <div class="rank-sub">송파구 잠실동 · 1986년 · 전용178㎡</div></div>
-  <div class="rank-price"><div class="rank-main">65억 5천</div><div class="rank-detail">3,680만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%ED%95%9C%EB%82%A8%EB%8F%99-%ED%95%9C%EB%82%A8%EB%8F%99%ED%98%84%EB%8C%80%ED%95%98%EC%9D%B4%ED%8E%98%EB%A6%AC%EC%98%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10022228.html">
-  <div class="rank-num">27</div>
-  <div class="rank-info"><div class="rank-name">한남동현대하이페리온아파트</div>
-  <div class="rank-sub">용산구 한남동 · 2002년 · 전용227㎡</div></div>
-  <div class="rank-price"><div class="rank-main">64억 9천</div><div class="rank-detail">2,859만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EC%8B%A0%EB%B0%98%ED%8F%AC4%EC%B0%A8-a13790828.html">
-  <div class="rank-num">28</div>
-  <div class="rank-info"><div class="rank-name">신반포4차</div>
-  <div class="rank-sub">서초구 잠원동 · 1979년 · 전용155㎡</div></div>
-  <div class="rank-price"><div class="rank-main">64억 8천</div><div class="rank-detail">4,181만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%EC%9D%B4%EC%B4%8C%EB%8F%99-LG%ED%95%9C%EA%B0%95%EC%9E%90%EC%9D%B4-a14003007.html">
-  <div class="rank-num">29</div>
-  <div class="rank-info"><div class="rank-name">LG한강자이</div>
-  <div class="rank-sub">용산구 이촌동 · 2003년 · 전용203㎡</div></div>
-  <div class="rank-price"><div class="rank-main">64억</div><div class="rank-detail">3,153만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%EC%8B%A0%ED%98%84%EB%8C%80-a13511004.html">
-  <div class="rank-num">30</div>
-  <div class="rank-info"><div class="rank-name">압구정신현대</div>
-  <div class="rank-sub">강남구 압구정동 · 1982년 · 전용109㎡</div></div>
-  <div class="rank-price"><div class="rank-main">63억 8천</div><div class="rank-detail">5,853만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%82%BC%EC%84%B1%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88-%EB%9D%BC%ED%81%B4%EB%9E%98%EC%8B%9C-a10024131.html">
-  <div class="rank-num">31</div>
-  <div class="rank-info"><div class="rank-name">래미안 라클래시</div>
-  <div class="rank-sub">강남구 삼성동 · 2021년 · 전용137㎡</div></div>
-  <div class="rank-price"><div class="rank-main">63억</div><div class="rank-detail">4,599만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%ED%95%9C%EA%B0%95%EB%A1%9C2%EA%B0%80-%EC%95%84%EC%8A%A4%ED%85%8C%EB%A6%AC%EC%9B%80%EC%9A%A9%EC%82%B0-a10026719.html">
-  <div class="rank-num">32</div>
-  <div class="rank-info"><div class="rank-name">아스테리움용산</div>
-  <div class="rank-sub">용산구 한강로2가 · 2012년 · 전용171㎡</div></div>
-  <div class="rank-price"><div class="rank-main">63억</div><div class="rank-detail">3,684만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%ED%95%9C%EC%96%913%EB%8B%A8%EC%A7%80-a13590602.html">
-  <div class="rank-num">33</div>
-  <div class="rank-info"><div class="rank-name">압구정한양3단지</div>
-  <div class="rank-sub">강남구 압구정동 · 1979년 · 전용154㎡</div></div>
-  <div class="rank-price"><div class="rank-main">63억</div><div class="rank-detail">4,091만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EB%8C%80%EC%B9%98%EB%8F%99-%EB%8C%80%EC%B9%98%EB%8F%99%EB%B6%80%EC%84%BC%ED%8A%B8%EB%A0%88%EB%B9%8C-a13528103.html">
-  <div class="rank-num">34</div>
-  <div class="rank-info"><div class="rank-name">대치동부센트레빌</div>
-  <div class="rank-sub">강남구 대치동 · 2005년 · 전용161㎡</div></div>
-  <div class="rank-price"><div class="rank-main">62억</div><div class="rank-detail">3,851만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EB%8C%80%EC%B9%98%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88-%EB%8C%80%EC%B9%98-%ED%8C%B0%EB%A6%AC%EC%8A%A4-a10027800.html">
-  <div class="rank-num">35</div>
-  <div class="rank-info"><div class="rank-name">래미안 대치 팰리스</div>
-  <div class="rank-sub">강남구 대치동 · 2015년 · 전용114㎡</div></div>
-  <div class="rank-price"><div class="rank-main">60억</div><div class="rank-detail">5,263만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EB%B0%98%ED%8F%AC%EB%8F%99-%EB%B0%98%ED%8F%AC%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-a13776510.html">
-  <div class="rank-num">36</div>
-  <div class="rank-info"><div class="rank-name">반포힐스테이트</div>
-  <div class="rank-sub">서초구 반포동 · 2012년 · 전용156㎡</div></div>
-  <div class="rank-price"><div class="rank-main">60억</div><div class="rank-detail">3,846만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%EC%9D%B4%EC%B4%8C%EB%8F%99-%EC%9D%B4%EC%B4%8C%ED%95%9C%EA%B0%95%EB%A7%A8%EC%85%98-a14003008.html">
-  <div class="rank-num">37</div>
-  <div class="rank-info"><div class="rank-name">이촌한강맨션</div>
-  <div class="rank-sub">용산구 이촌동 · 1971년 · 전용179㎡</div></div>
-  <div class="rank-price"><div class="rank-main">60억</div><div class="rank-detail">3,352만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EA%B0%9C%ED%8F%AC%EB%8F%99-%EB%94%94%EC%97%90%EC%9D%B4%EC%B9%98-%EC%95%84%EB%84%88%ED%9E%90%EC%A6%88-a10025203.html">
-  <div class="rank-num">38</div>
-  <div class="rank-info"><div class="rank-name">디에이치 아너힐즈</div>
-  <div class="rank-sub">강남구 개포동 · 2019년 · 전용131㎡</div></div>
-  <div class="rank-price"><div class="rank-main">59억 5천</div><div class="rank-detail">4,542만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EC%95%84%ED%81%AC%EB%A1%9C%EB%A6%AC%EB%B2%84%EB%B7%B0-%EC%8B%A0%EB%B0%98%ED%8F%AC-a10026227.html">
-  <div class="rank-num">39</div>
-  <div class="rank-info"><div class="rank-name">아크로리버뷰 신반포</div>
-  <div class="rank-sub">서초구 잠원동 · 2018년 · 전용78㎡</div></div>
-  <div class="rank-price"><div class="rank-main">58억</div><div class="rank-detail">7,436만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EB%B0%98%ED%8F%AC-%EB%A5%B4%EC%97%98-%EC%95%84%ED%8C%8C%ED%8A%B8-a10023673.html">
-  <div class="rank-num">40</div>
-  <div class="rank-info"><div class="rank-name">반포 르엘 아파트</div>
-  <div class="rank-sub">서초구 잠원동 · 2022년 · 전용122㎡</div></div>
-  <div class="rank-price"><div class="rank-main">57억</div><div class="rank-detail">4,672만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EB%B0%98%ED%8F%AC%EC%84%BC%ED%8A%B8%EB%9F%B4%EC%9E%90%EC%9D%B4%EC%95%84%ED%8C%8C%ED%8A%B8-a10024913.html">
-  <div class="rank-num">41</div>
-  <div class="rank-info"><div class="rank-name">반포센트럴자이아파트</div>
-  <div class="rank-sub">서초구 잠원동 · 2020년 · 전용99㎡</div></div>
-  <div class="rank-price"><div class="rank-main">57억</div><div class="rank-detail">5,758만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%86%A1%ED%8C%8C%EA%B5%AC-%EC%9E%A0%EC%8B%A4%EB%8F%99-%EA%B0%A4%EB%9F%AC%EB%A6%AC%EC%95%84%ED%8C%B0%EB%A6%AC%EC%8A%A4-a13822301.html">
-  <div class="rank-num">42</div>
-  <div class="rank-info"><div class="rank-name">갤러리아팰리스</div>
-  <div class="rank-sub">송파구 잠실동 · 2005년 · 전용212㎡</div></div>
-  <div class="rank-price"><div class="rank-main">57억</div><div class="rank-detail">2,689만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EB%B6%80%EC%82%B0-%ED%95%B4%EC%9A%B4%EB%8C%80%EA%B5%AC-%EC%9A%B0%EB%8F%99-%ED%95%B4%EC%9A%B4%EB%8C%80%EC%95%84%EC%9D%B4%ED%8C%8C%ED%81%AC-a61274013.html">
-  <div class="rank-num">43</div>
-  <div class="rank-info"><div class="rank-name">해운대아이파크</div>
-  <div class="rank-sub">해운대구 우동 · 2011년 · 전용205㎡</div></div>
-  <div class="rank-price"><div class="rank-main">57억</div><div class="rank-detail">2,780만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%B2%AD%EB%8B%B4%EB%8F%99-%EC%B2%AD%EB%8B%B4%EC%82%BC%EC%84%B1%EC%A7%84%ED%9D%A5-a13510005.html">
-  <div class="rank-num">44</div>
-  <div class="rank-info"><div class="rank-name">청담삼성진흥</div>
-  <div class="rank-sub">강남구 청담동 · 1984년 · 전용181㎡</div></div>
-  <div class="rank-price"><div class="rank-main">55억 9천</div><div class="rank-detail">3,088만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EC%8B%A0%EB%B0%98%ED%8F%AC%EC%9E%90%EC%9D%B4%EC%95%84%ED%8C%8C%ED%8A%B8-a10026004.html">
-  <div class="rank-num">45</div>
-  <div class="rank-info"><div class="rank-name">신반포자이아파트</div>
-  <div class="rank-sub">서초구 잠원동 · 2018년 · 전용115㎡</div></div>
-  <div class="rank-price"><div class="rank-main">55억 5천</div><div class="rank-detail">4,826만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%EB%AF%B8%EC%84%B11%EC%B0%A8-a13511001.html">
-  <div class="rank-num">46</div>
-  <div class="rank-info"><div class="rank-name">압구정미성1차</div>
-  <div class="rank-sub">강남구 압구정동 · 1982년 · 전용106㎡</div></div>
-  <div class="rank-price"><div class="rank-main">55억 5천</div><div class="rank-detail">5,236만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88-%EC%8B%A0%EB%B0%98%ED%8F%AC%ED%8C%B0%EB%A6%AC%EC%8A%A4-a10027439.html">
-  <div class="rank-num">47</div>
-  <div class="rank-info"><div class="rank-name">래미안 신반포팰리스</div>
-  <div class="rank-sub">서초구 잠원동 · 2016년 · 전용133㎡</div></div>
-  <div class="rank-price"><div class="rank-main">55억</div><div class="rank-detail">4,135만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EB%8C%80%EC%B9%98%EB%8F%99-%EB%8C%80%EC%B9%98%EC%95%84%EC%9D%B4%ED%8C%8C%ED%81%AC-a13528102.html">
-  <div class="rank-num">48</div>
-  <div class="rank-info"><div class="rank-name">대치아이파크</div>
-  <div class="rank-sub">강남구 대치동 · 2008년 · 전용150㎡</div></div>
-  <div class="rank-price"><div class="rank-main">55억</div><div class="rank-detail">3,667만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%ED%95%9C%EA%B0%95%EB%A1%9C3%EA%B0%80-%EC%9A%A9%EC%82%B0%EC%8B%9C%ED%8B%B0%ED%8C%8C%ED%81%AC1%EB%8B%A8%EC%A7%80-a14001303.html">
-  <div class="rank-num">49</div>
-  <div class="rank-info"><div class="rank-name">용산시티파크1단지</div>
-  <div class="rank-sub">용산구 한강로3가 · 2007년 · 전용242㎡</div></div>
-  <div class="rank-price"><div class="rank-main">55억</div><div class="rank-detail">2,273만/㎡</div></div>
-</a>
-<a class="rank-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%84%9C%EC%B4%88%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88%EB%A6%AC%EB%8D%94%EC%8A%A4%EC%9B%90-a10024552.html">
-  <div class="rank-num">50</div>
-  <div class="rank-info"><div class="rank-name">래미안리더스원</div>
-  <div class="rank-sub">서초구 서초동 · 2020년 · 전용179㎡</div></div>
-  <div class="rank-price"><div class="rank-main">54억</div><div class="rank-detail">3,017만/㎡</div></div>
-</a>
-</div></div>
+<p class="seo-text" style="font-size:13px;line-height:1.7;margin:14px 16px 4px;color:var(--sub);"><b>전체</b> 아파트 매매가 TOP 50 · 1위 290억</p>
+<div class="section"><h2 class="section-title">전체에서 가장 비싼 아파트는?</h2>
+<a class="danji-hero" title="아크로 서울포레스트 실거래가 시세 · 전체 매매가 1위" style="text-decoration:none;display:block;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%B1%EB%8F%99%EA%B5%AC-%EC%84%B1%EC%88%98%EB%8F%991%EA%B0%80-%EC%95%84%ED%81%AC%EB%A1%9C-%EC%84%9C%EC%9A%B8%ED%8F%AC%EB%A0%88%EC%8A%A4%ED%8A%B8-a10024503.html"><div class="hero-left"><span class="rank-badge">매매가 1위</span><div class="hero-name">아크로 서울포레스트</div><div class="hero-meta">성동구 성수동1가 · 전용 274㎡ · 2020년 입주 · 280세대</div></div><div class="hero-right"><div class="hero-price">290억</div><div class="hero-price-label">최고가 거래</div></div></a>
+<div style="margin-top:6px;">
+<a class="danji-compact" title="나인원 한남 실거래가 시세 · 전체 매매가 2위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%ED%95%9C%EB%82%A8%EB%8F%99-%EB%82%98%EC%9D%B8%EC%9B%90-%ED%95%9C%EB%82%A8-a10025192.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">2</span><div style="min-width:0;"><div class="danji-compact-name">나인원 한남</div><div class="danji-compact-meta">용산구 한남동 · 전용 274㎡ · 2019년</div></div></div><div class="danji-compact-price">250억</div></a>
+<a class="danji-compact" title="래미안원베일리 실거래가 시세 · 전체 매매가 3위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EB%B0%98%ED%8F%AC%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88%EC%9B%90%EB%B2%A0%EC%9D%BC%EB%A6%AC-a10023043.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">3</span><div style="min-width:0;"><div class="danji-compact-name">래미안원베일리</div><div class="danji-compact-meta">서초구 반포동 · 전용 236㎡ · 2023년</div></div></div><div class="danji-compact-price">165억</div></a>
+<a class="danji-compact" title="한남더힐 실거래가 시세 · 전체 매매가 4위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%ED%95%9C%EB%82%A8%EB%8F%99-%ED%95%9C%EB%82%A8%EB%8D%94%ED%9E%90-a14077902.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">4</span><div style="min-width:0;"><div class="danji-compact-name">한남더힐</div><div class="danji-compact-meta">용산구 한남동 · 전용 233㎡ · 2011년</div></div></div><div class="danji-compact-price">127억 7천</div></a>
+<a class="danji-compact" title="래미안 원펜타스 실거래가 시세 · 전체 매매가 5위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EB%B0%98%ED%8F%AC%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88-%EC%9B%90%ED%8E%9C%ED%83%80%EC%8A%A4-a10022556.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">5</span><div style="min-width:0;"><div class="danji-compact-name">래미안 원펜타스</div><div class="danji-compact-meta">서초구 반포동 · 전용 192㎡ · 2024년</div></div></div><div class="danji-compact-price">100억</div></a>
+<a class="danji-compact" title="아크로리버파크 실거래가 시세 · 전체 매매가 6위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EB%B0%98%ED%8F%AC%EB%8F%99-%EC%95%84%ED%81%AC%EB%A1%9C%EB%A6%AC%EB%B2%84%ED%8C%8C%ED%81%AC-a10027205.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">6</span><div style="min-width:0;"><div class="danji-compact-name">아크로리버파크</div><div class="danji-compact-meta">서초구 반포동 · 전용 155㎡ · 2016년</div></div></div><div class="danji-compact-price">100억</div></a>
+<a class="danji-compact" title="아이파크삼성동 실거래가 시세 · 전체 매매가 7위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%82%BC%EC%84%B1%EB%8F%99-%EC%95%84%EC%9D%B4%ED%8C%8C%ED%81%AC%EC%82%BC%EC%84%B1%EB%8F%99-a13509009.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">7</span><div style="min-width:0;"><div class="danji-compact-name">아이파크삼성동</div><div class="danji-compact-meta">강남구 삼성동 · 전용 195㎡ · 2004년</div></div></div><div class="danji-compact-price">99억</div></a>
+<a class="danji-compact" title="타워팰리스1차 실거래가 시세 · 전체 매매가 8위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EB%8F%84%EA%B3%A1%EB%8F%99-%ED%83%80%EC%9B%8C%ED%8C%B0%EB%A6%AC%EC%8A%A41%EC%B0%A8-a13527017.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">8</span><div style="min-width:0;"><div class="danji-compact-name">타워팰리스1차</div><div class="danji-compact-meta">강남구 도곡동 · 전용 301㎡ · 2002년</div></div></div><div class="danji-compact-price">99억</div></a>
+<a class="danji-compact" title="압구정현대아파트 실거래가 시세 · 전체 매매가 9위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%ED%98%84%EB%8C%80%EC%95%84%ED%8C%8C%ED%8A%B8-a13589802.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">9</span><div style="min-width:0;"><div class="danji-compact-name">압구정현대아파트</div><div class="danji-compact-meta">강남구 압구정동 · 전용 197㎡ · 1976년</div></div></div><div class="danji-compact-price">97억</div></a>
+<a class="danji-compact" title="래미안퍼스티지 실거래가 시세 · 전체 매매가 10위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EB%B0%98%ED%8F%AC%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88%ED%8D%BC%EC%8A%A4%ED%8B%B0%EC%A7%80-a13776509.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">10</span><div style="min-width:0;"><div class="danji-compact-name">래미안퍼스티지</div><div class="danji-compact-meta">서초구 반포동 · 전용 223㎡ · 2009년</div></div></div><div class="danji-compact-price">96억</div></a>
+<a class="danji-compact" title="성수갤러리아포레 실거래가 시세 · 전체 매매가 11위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%B1%EB%8F%99%EA%B5%AC-%EC%84%B1%EC%88%98%EB%8F%991%EA%B0%80-%EC%84%B1%EC%88%98%EA%B0%A4%EB%9F%AC%EB%A6%AC%EC%95%84%ED%8F%AC%EB%A0%88-a13379401.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">11</span><div style="min-width:0;"><div class="danji-compact-name">성수갤러리아포레</div><div class="danji-compact-meta">성동구 성수동1가 · 전용 219㎡ · 2011년</div></div></div><div class="danji-compact-price">94억 5천</div></a>
+<a class="danji-compact" title="서울아파트관리사무소 실거래가 시세 · 전체 매매가 12위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%98%81%EB%93%B1%ED%8F%AC%EA%B5%AC-%EC%97%AC%EC%9D%98%EB%8F%84%EB%8F%99-%EC%84%9C%EC%9A%B8%EC%95%84%ED%8C%8C%ED%8A%B8%EA%B4%80%EB%A6%AC%EC%82%AC%EB%AC%B4%EC%86%8C-a15001003.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">12</span><div style="min-width:0;"><div class="danji-compact-name">서울아파트관리사무소</div><div class="danji-compact-meta">영등포구 여의도동 · 전용 200㎡ · 1976년</div></div></div><div class="danji-compact-price">83억</div></a>
+<a class="danji-compact" title="타워팰리스2차 실거래가 시세 · 전체 매매가 13위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EB%8F%84%EA%B3%A1%EB%8F%99-%ED%83%80%EC%9B%8C%ED%8C%B0%EB%A6%AC%EC%8A%A42%EC%B0%A8-a13585402.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">13</span><div style="min-width:0;"><div class="danji-compact-name">타워팰리스2차</div><div class="danji-compact-meta">강남구 도곡동 · 전용 224㎡ · 2003년</div></div></div><div class="danji-compact-price">75억 5천</div></a>
+<a class="danji-compact" title="타워팰리스G동 실거래가 시세 · 전체 매매가 14위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EB%8F%84%EA%B3%A1%EB%8F%99-%ED%83%80%EC%9B%8C%ED%8C%B0%EB%A6%AC%EC%8A%A4G%EB%8F%99-a13585403.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">14</span><div style="min-width:0;"><div class="danji-compact-name">타워팰리스G동</div><div class="danji-compact-meta">강남구 도곡동 · 전용 244㎡ · 2004년</div></div></div><div class="danji-compact-price">75억</div></a>
+<a class="danji-compact" title="해운대경동제이드 실거래가 시세 · 전체 매매가 15위" style="text-decoration:none;color:inherit;" href="/danji/%EB%B6%80%EC%82%B0-%ED%95%B4%EC%9A%B4%EB%8C%80%EA%B5%AC-%EC%9A%B0%EB%8F%99-%ED%95%B4%EC%9A%B4%EB%8C%80%EA%B2%BD%EB%8F%99%EC%A0%9C%EC%9D%B4%EB%93%9C-a61274014.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">15</span><div style="min-width:0;"><div class="danji-compact-name">해운대경동제이드</div><div class="danji-compact-meta">해운대구 우동 · 전용 235㎡ · 2012년</div></div></div><div class="danji-compact-price">75억</div></a>
+<a class="danji-compact" title="트리마제 실거래가 시세 · 전체 매매가 16위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%B1%EB%8F%99%EA%B5%AC-%EC%84%B1%EC%88%98%EB%8F%991%EA%B0%80-%ED%8A%B8%EB%A6%AC%EB%A7%88%EC%A0%9C-a10026988.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">16</span><div style="min-width:0;"><div class="danji-compact-name">트리마제</div><div class="danji-compact-meta">성동구 성수동1가 · 전용 137㎡ · 2017년</div></div></div><div class="danji-compact-price">74억</div></a>
+<a class="danji-compact" title="압구정현대8차 실거래가 시세 · 전체 매매가 17위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%ED%98%84%EB%8C%808%EC%B0%A8-a13511201.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">17</span><div style="min-width:0;"><div class="danji-compact-name">압구정현대8차</div><div class="danji-compact-meta">강남구 압구정동 · 전용 164㎡ · 1980년</div></div></div><div class="danji-compact-price">74억</div></a>
+<a class="danji-compact" title="압구정하이츠파크 실거래가 시세 · 전체 매매가 18위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%8B%A0%EC%82%AC%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%ED%95%98%EC%9D%B4%EC%B8%A0%ED%8C%8C%ED%81%AC-a10028094.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">18</span><div style="min-width:0;"><div class="danji-compact-name">압구정하이츠파크</div><div class="danji-compact-meta">강남구 신사동 · 전용 213㎡ · 2004년</div></div></div><div class="danji-compact-price">72억 7천</div></a>
+<a class="danji-compact" title="반포자이 실거래가 시세 · 전체 매매가 19위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EB%B0%98%ED%8F%AC%EB%8F%99-%EB%B0%98%ED%8F%AC%EC%9E%90%EC%9D%B4-a13704104.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">19</span><div style="min-width:0;"><div class="danji-compact-name">반포자이</div><div class="danji-compact-meta">서초구 반포동 · 전용 195㎡ · 2009년</div></div></div><div class="danji-compact-price">71억 3천</div></a>
+<a class="danji-compact" title="압구정미성2차 실거래가 시세 · 전체 매매가 20위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%EB%AF%B8%EC%84%B12%EC%B0%A8-a13511003.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">20</span><div style="min-width:0;"><div class="danji-compact-name">압구정미성2차</div><div class="danji-compact-meta">강남구 압구정동 · 전용 141㎡ · 1987년</div></div></div><div class="danji-compact-price">70억</div></a>
+<a class="danji-compact" title="신반포한신2차 실거래가 시세 · 전체 매매가 21위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EC%8B%A0%EB%B0%98%ED%8F%AC%ED%95%9C%EC%8B%A02%EC%B0%A8-a13790929.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">21</span><div style="min-width:0;"><div class="danji-compact-name">신반포한신2차</div><div class="danji-compact-meta">서초구 잠원동 · 전용 138㎡ · 1978년</div></div></div><div class="danji-compact-price">69억 5천</div></a>
+<a class="danji-compact" title="서빙고신동아 실거래가 시세 · 전체 매매가 22위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%EC%84%9C%EB%B9%99%EA%B3%A0%EB%8F%99-%EC%84%9C%EB%B9%99%EA%B3%A0%EC%8B%A0%EB%8F%99%EC%95%84-a14024002.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">22</span><div style="min-width:0;"><div class="danji-compact-name">서빙고신동아</div><div class="danji-compact-meta">용산구 서빙고동 · 전용 210㎡ · 1984년</div></div></div><div class="danji-compact-price">68억</div></a>
+<a class="danji-compact" title="서울숲힐스테이트 실거래가 시세 · 전체 매매가 23위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%B1%EB%8F%99%EA%B5%AC-%EC%84%B1%EC%88%98%EB%8F%992%EA%B0%80-%EC%84%9C%EC%9A%B8%EC%88%B2%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-a13378001.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">23</span><div style="min-width:0;"><div class="danji-compact-name">서울숲힐스테이트</div><div class="danji-compact-meta">성동구 성수동2가 · 전용 228㎡ · 2009년</div></div></div><div class="danji-compact-price">67억</div></a>
+<a class="danji-compact" title="브라이튼여의도아파트 실거래가 시세 · 전체 매매가 24위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%98%81%EB%93%B1%ED%8F%AC%EA%B5%AC-%EC%97%AC%EC%9D%98%EB%8F%84%EB%8F%99-%EB%B8%8C%EB%9D%BC%EC%9D%B4%ED%8A%BC%EC%97%AC%EC%9D%98%EB%8F%84%EC%95%84%ED%8C%8C%ED%8A%B8-a10022891.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">24</span><div style="min-width:0;"><div class="danji-compact-name">브라이튼여의도아파트</div><div class="danji-compact-meta">영등포구 여의도동 · 전용 133㎡</div></div></div><div class="danji-compact-price">65억 8천</div></a>
+<a class="danji-compact" title="압구정 현대(10,13,14차) 실거래가 시세 · 전체 매매가 25위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95-%ED%98%84%EB%8C%80-10-13-14%EC%B0%A8-a13511101.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">25</span><div style="min-width:0;"><div class="danji-compact-name">압구정 현대(10,13,14차)</div><div class="danji-compact-meta">강남구 압구정동 · 전용 152㎡ · 1982년</div></div></div><div class="danji-compact-price">65억 5천</div></a>
+<a class="danji-compact" title="잠실아시아선수촌 실거래가 시세 · 전체 매매가 26위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%86%A1%ED%8C%8C%EA%B5%AC-%EC%9E%A0%EC%8B%A4%EB%8F%99-%EC%9E%A0%EC%8B%A4%EC%95%84%EC%8B%9C%EC%95%84%EC%84%A0%EC%88%98%EC%B4%8C-a13822701.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">26</span><div style="min-width:0;"><div class="danji-compact-name">잠실아시아선수촌</div><div class="danji-compact-meta">송파구 잠실동 · 전용 178㎡ · 1986년</div></div></div><div class="danji-compact-price">65억 5천</div></a>
+<a class="danji-compact" title="한남동현대하이페리온아파트 실거래가 시세 · 전체 매매가 27위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%ED%95%9C%EB%82%A8%EB%8F%99-%ED%95%9C%EB%82%A8%EB%8F%99%ED%98%84%EB%8C%80%ED%95%98%EC%9D%B4%ED%8E%98%EB%A6%AC%EC%98%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10022228.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">27</span><div style="min-width:0;"><div class="danji-compact-name">한남동현대하이페리온아파트</div><div class="danji-compact-meta">용산구 한남동 · 전용 227㎡ · 2002년</div></div></div><div class="danji-compact-price">64억 9천</div></a>
+<a class="danji-compact" title="신반포4차 실거래가 시세 · 전체 매매가 28위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EC%8B%A0%EB%B0%98%ED%8F%AC4%EC%B0%A8-a13790828.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">28</span><div style="min-width:0;"><div class="danji-compact-name">신반포4차</div><div class="danji-compact-meta">서초구 잠원동 · 전용 155㎡ · 1979년</div></div></div><div class="danji-compact-price">64억 8천</div></a>
+<a class="danji-compact" title="LG한강자이 실거래가 시세 · 전체 매매가 29위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%EC%9D%B4%EC%B4%8C%EB%8F%99-LG%ED%95%9C%EA%B0%95%EC%9E%90%EC%9D%B4-a14003007.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">29</span><div style="min-width:0;"><div class="danji-compact-name">LG한강자이</div><div class="danji-compact-meta">용산구 이촌동 · 전용 203㎡ · 2003년</div></div></div><div class="danji-compact-price">64억</div></a>
+<a class="danji-compact" title="압구정신현대 실거래가 시세 · 전체 매매가 30위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%EC%8B%A0%ED%98%84%EB%8C%80-a13511004.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">30</span><div style="min-width:0;"><div class="danji-compact-name">압구정신현대</div><div class="danji-compact-meta">강남구 압구정동 · 전용 109㎡ · 1982년</div></div></div><div class="danji-compact-price">63억 8천</div></a>
+<a class="danji-compact" title="래미안 라클래시 실거래가 시세 · 전체 매매가 31위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%82%BC%EC%84%B1%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88-%EB%9D%BC%ED%81%B4%EB%9E%98%EC%8B%9C-a10024131.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">31</span><div style="min-width:0;"><div class="danji-compact-name">래미안 라클래시</div><div class="danji-compact-meta">강남구 삼성동 · 전용 137㎡ · 2021년</div></div></div><div class="danji-compact-price">63억</div></a>
+<a class="danji-compact" title="아스테리움용산 실거래가 시세 · 전체 매매가 32위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%ED%95%9C%EA%B0%95%EB%A1%9C2%EA%B0%80-%EC%95%84%EC%8A%A4%ED%85%8C%EB%A6%AC%EC%9B%80%EC%9A%A9%EC%82%B0-a10026719.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">32</span><div style="min-width:0;"><div class="danji-compact-name">아스테리움용산</div><div class="danji-compact-meta">용산구 한강로2가 · 전용 171㎡ · 2012년</div></div></div><div class="danji-compact-price">63억</div></a>
+<a class="danji-compact" title="압구정한양3단지 실거래가 시세 · 전체 매매가 33위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%ED%95%9C%EC%96%913%EB%8B%A8%EC%A7%80-a13590602.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">33</span><div style="min-width:0;"><div class="danji-compact-name">압구정한양3단지</div><div class="danji-compact-meta">강남구 압구정동 · 전용 154㎡ · 1979년</div></div></div><div class="danji-compact-price">63억</div></a>
+<a class="danji-compact" title="대치동부센트레빌 실거래가 시세 · 전체 매매가 34위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EB%8C%80%EC%B9%98%EB%8F%99-%EB%8C%80%EC%B9%98%EB%8F%99%EB%B6%80%EC%84%BC%ED%8A%B8%EB%A0%88%EB%B9%8C-a13528103.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">34</span><div style="min-width:0;"><div class="danji-compact-name">대치동부센트레빌</div><div class="danji-compact-meta">강남구 대치동 · 전용 161㎡ · 2005년</div></div></div><div class="danji-compact-price">62억</div></a>
+<a class="danji-compact" title="래미안 대치 팰리스 실거래가 시세 · 전체 매매가 35위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EB%8C%80%EC%B9%98%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88-%EB%8C%80%EC%B9%98-%ED%8C%B0%EB%A6%AC%EC%8A%A4-a10027800.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">35</span><div style="min-width:0;"><div class="danji-compact-name">래미안 대치 팰리스</div><div class="danji-compact-meta">강남구 대치동 · 전용 114㎡ · 2015년</div></div></div><div class="danji-compact-price">60억</div></a>
+<a class="danji-compact" title="반포힐스테이트 실거래가 시세 · 전체 매매가 36위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EB%B0%98%ED%8F%AC%EB%8F%99-%EB%B0%98%ED%8F%AC%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-a13776510.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">36</span><div style="min-width:0;"><div class="danji-compact-name">반포힐스테이트</div><div class="danji-compact-meta">서초구 반포동 · 전용 156㎡ · 2012년</div></div></div><div class="danji-compact-price">60억</div></a>
+<a class="danji-compact" title="이촌한강맨션 실거래가 시세 · 전체 매매가 37위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%EC%9D%B4%EC%B4%8C%EB%8F%99-%EC%9D%B4%EC%B4%8C%ED%95%9C%EA%B0%95%EB%A7%A8%EC%85%98-a14003008.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">37</span><div style="min-width:0;"><div class="danji-compact-name">이촌한강맨션</div><div class="danji-compact-meta">용산구 이촌동 · 전용 179㎡ · 1971년</div></div></div><div class="danji-compact-price">60억</div></a>
+<a class="danji-compact" title="디에이치 아너힐즈 실거래가 시세 · 전체 매매가 38위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EA%B0%9C%ED%8F%AC%EB%8F%99-%EB%94%94%EC%97%90%EC%9D%B4%EC%B9%98-%EC%95%84%EB%84%88%ED%9E%90%EC%A6%88-a10025203.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">38</span><div style="min-width:0;"><div class="danji-compact-name">디에이치 아너힐즈</div><div class="danji-compact-meta">강남구 개포동 · 전용 131㎡ · 2019년</div></div></div><div class="danji-compact-price">59억 5천</div></a>
+<a class="danji-compact" title="아크로리버뷰 신반포 실거래가 시세 · 전체 매매가 39위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EC%95%84%ED%81%AC%EB%A1%9C%EB%A6%AC%EB%B2%84%EB%B7%B0-%EC%8B%A0%EB%B0%98%ED%8F%AC-a10026227.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">39</span><div style="min-width:0;"><div class="danji-compact-name">아크로리버뷰 신반포</div><div class="danji-compact-meta">서초구 잠원동 · 전용 78㎡ · 2018년</div></div></div><div class="danji-compact-price">58억</div></a>
+<a class="danji-compact" title="반포 르엘 아파트 실거래가 시세 · 전체 매매가 40위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EB%B0%98%ED%8F%AC-%EB%A5%B4%EC%97%98-%EC%95%84%ED%8C%8C%ED%8A%B8-a10023673.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">40</span><div style="min-width:0;"><div class="danji-compact-name">반포 르엘 아파트</div><div class="danji-compact-meta">서초구 잠원동 · 전용 122㎡ · 2022년</div></div></div><div class="danji-compact-price">57억</div></a>
+<a class="danji-compact" title="반포센트럴자이아파트 실거래가 시세 · 전체 매매가 41위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EB%B0%98%ED%8F%AC%EC%84%BC%ED%8A%B8%EB%9F%B4%EC%9E%90%EC%9D%B4%EC%95%84%ED%8C%8C%ED%8A%B8-a10024913.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">41</span><div style="min-width:0;"><div class="danji-compact-name">반포센트럴자이아파트</div><div class="danji-compact-meta">서초구 잠원동 · 전용 99㎡ · 2020년</div></div></div><div class="danji-compact-price">57억</div></a>
+<a class="danji-compact" title="갤러리아팰리스 실거래가 시세 · 전체 매매가 42위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%86%A1%ED%8C%8C%EA%B5%AC-%EC%9E%A0%EC%8B%A4%EB%8F%99-%EA%B0%A4%EB%9F%AC%EB%A6%AC%EC%95%84%ED%8C%B0%EB%A6%AC%EC%8A%A4-a13822301.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">42</span><div style="min-width:0;"><div class="danji-compact-name">갤러리아팰리스</div><div class="danji-compact-meta">송파구 잠실동 · 전용 212㎡ · 2005년</div></div></div><div class="danji-compact-price">57억</div></a>
+<a class="danji-compact" title="해운대아이파크 실거래가 시세 · 전체 매매가 43위" style="text-decoration:none;color:inherit;" href="/danji/%EB%B6%80%EC%82%B0-%ED%95%B4%EC%9A%B4%EB%8C%80%EA%B5%AC-%EC%9A%B0%EB%8F%99-%ED%95%B4%EC%9A%B4%EB%8C%80%EC%95%84%EC%9D%B4%ED%8C%8C%ED%81%AC-a61274013.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">43</span><div style="min-width:0;"><div class="danji-compact-name">해운대아이파크</div><div class="danji-compact-meta">해운대구 우동 · 전용 205㎡ · 2011년</div></div></div><div class="danji-compact-price">57억</div></a>
+<a class="danji-compact" title="청담삼성진흥 실거래가 시세 · 전체 매매가 44위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%B2%AD%EB%8B%B4%EB%8F%99-%EC%B2%AD%EB%8B%B4%EC%82%BC%EC%84%B1%EC%A7%84%ED%9D%A5-a13510005.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">44</span><div style="min-width:0;"><div class="danji-compact-name">청담삼성진흥</div><div class="danji-compact-meta">강남구 청담동 · 전용 181㎡ · 1984년</div></div></div><div class="danji-compact-price">55억 9천</div></a>
+<a class="danji-compact" title="신반포자이아파트 실거래가 시세 · 전체 매매가 45위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EC%8B%A0%EB%B0%98%ED%8F%AC%EC%9E%90%EC%9D%B4%EC%95%84%ED%8C%8C%ED%8A%B8-a10026004.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">45</span><div style="min-width:0;"><div class="danji-compact-name">신반포자이아파트</div><div class="danji-compact-meta">서초구 잠원동 · 전용 115㎡ · 2018년</div></div></div><div class="danji-compact-price">55억 5천</div></a>
+<a class="danji-compact" title="압구정미성1차 실거래가 시세 · 전체 매매가 46위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EC%95%95%EA%B5%AC%EC%A0%95%EB%8F%99-%EC%95%95%EA%B5%AC%EC%A0%95%EB%AF%B8%EC%84%B11%EC%B0%A8-a13511001.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">46</span><div style="min-width:0;"><div class="danji-compact-name">압구정미성1차</div><div class="danji-compact-meta">강남구 압구정동 · 전용 106㎡ · 1982년</div></div></div><div class="danji-compact-price">55억 5천</div></a>
+<a class="danji-compact" title="래미안 신반포팰리스 실거래가 시세 · 전체 매매가 47위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%9E%A0%EC%9B%90%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88-%EC%8B%A0%EB%B0%98%ED%8F%AC%ED%8C%B0%EB%A6%AC%EC%8A%A4-a10027439.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">47</span><div style="min-width:0;"><div class="danji-compact-name">래미안 신반포팰리스</div><div class="danji-compact-meta">서초구 잠원동 · 전용 133㎡ · 2016년</div></div></div><div class="danji-compact-price">55억</div></a>
+<a class="danji-compact" title="대치아이파크 실거래가 시세 · 전체 매매가 48위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B0%95%EB%82%A8%EA%B5%AC-%EB%8C%80%EC%B9%98%EB%8F%99-%EB%8C%80%EC%B9%98%EC%95%84%EC%9D%B4%ED%8C%8C%ED%81%AC-a13528102.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">48</span><div style="min-width:0;"><div class="danji-compact-name">대치아이파크</div><div class="danji-compact-meta">강남구 대치동 · 전용 150㎡ · 2008년</div></div></div><div class="danji-compact-price">55억</div></a>
+<a class="danji-compact" title="용산시티파크1단지 실거래가 시세 · 전체 매매가 49위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%9A%A9%EC%82%B0%EA%B5%AC-%ED%95%9C%EA%B0%95%EB%A1%9C3%EA%B0%80-%EC%9A%A9%EC%82%B0%EC%8B%9C%ED%8B%B0%ED%8C%8C%ED%81%AC1%EB%8B%A8%EC%A7%80-a14001303.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">49</span><div style="min-width:0;"><div class="danji-compact-name">용산시티파크1단지</div><div class="danji-compact-meta">용산구 한강로3가 · 전용 242㎡ · 2007년</div></div></div><div class="danji-compact-price">55억</div></a>
+<a class="danji-compact" title="래미안리더스원 실거래가 시세 · 전체 매매가 50위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EC%84%9C%EC%B4%88%EA%B5%AC-%EC%84%9C%EC%B4%88%EB%8F%99-%EB%9E%98%EB%AF%B8%EC%95%88%EB%A6%AC%EB%8D%94%EC%8A%A4%EC%9B%90-a10024552.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">50</span><div style="min-width:0;"><div class="danji-compact-name">래미안리더스원</div><div class="danji-compact-meta">서초구 서초동 · 전용 179㎡ · 2020년</div></div></div><div class="danji-compact-price">54억</div></a>
+</div>
+</div>
 <div class="divider"></div>
 <div class="faq-section"><h2 class="section-title">자주 묻는 질문</h2>
-<div class="faq-item"><div class="faq-q">전체에서 가장 비싼 아파트는?</div>
-<div class="faq-a">아크로 서울포레스트 (성동구 성수동1가)이 290억으로 1위입니다. 국토교통부 최신 실거래가 기준입니다.</div></div>
-<div class="faq-item"><div class="faq-q">전체 아파트 매매가 2위는?</div>
-<div class="faq-a">2위는 나인원 한남 (용산구 한남동)으로 250억입니다.</div></div>
-<div class="faq-item"><div class="faq-q">전체 아파트 매매가 3위는?</div>
-<div class="faq-a">3위는 래미안원베일리 (서초구 반포동)으로 165억입니다.</div></div>
+<div class="faq-item">
+<div class="faq-q">전체에서 가장 비싼 아파트는?</div>
+<div class="faq-a">아크로 서울포레스트 (성동구 성수동1가)이 290억으로 1위입니다.</div>
 </div>
-<div class="seo-section"><div class="seo-text">전체 아파트 매매가 순위 TOP 50. 아크로 서울포레스트(290억)이 1위. 국토교통부 실거래가 기반.</div>
-<div class="seo-source">실거래가 출처: 국토교통부 · 최종 데이터 확인: 2026-04-27</div></div>
+<div class="faq-item">
+<div class="faq-q">전체 매매가 2위는?</div>
+<div class="faq-a">나인원 한남 (용산구 한남동) 250억.</div>
 </div>
+<div class="faq-item">
+<div class="faq-q">전체 매매가 3위는?</div>
+<div class="faq-a">래미안원베일리 (서초구 반포동) 165억.</div>
+</div>
+<div class="faq-item">
+<div class="faq-q">이 순위는 어떤 데이터를 기반으로 하나요?</div>
+<div class="faq-a">국토교통부 실거래가 공개시스템(rt.molit.go.kr) 데이터를 매일 자동 수집한 결과입니다.</div>
+</div>
+</div><div class="divider"></div>
+<div class="seo-section" style="padding:16px;">
+<div class="seo-text">전체 아파트 매매가 TOP 50. 1위 아크로 서울포레스트(290억). 국토교통부 실거래가 공개시스템 기반.</div>
+<details class="data-notice" style="margin-top:14px;font-size:12px;color:var(--sub);">
+<summary style="cursor:pointer;">데이터 안내</summary>
+<div style="margin-top:6px;line-height:1.8;">
+<b>실거래가</b>: 국토교통부 실거래가 공개시스템 (<a href="https://rt.molit.go.kr/" target="_blank" rel="noopener nofollow">rt.molit.go.kr</a>) · 매일 자동 수집<br>
+<b>건축정보</b>: 국토교통부 건축물대장<br>
+<b>㎡당 가격</b>: 공급면적 기준 (단지 페이지와 동일)<br>
+전세가율 = 전세가 ÷ 매매가 × 100<br>
+거래 취소·정정 건은 반영이 지연될 수 있습니다
+</div></details>
+<div class="seo-source" style="margin-top:8px;font-size:11px;color:var(--muted);">실거래가 출처: 국토교통부 · 최종 데이터 확인: <time datetime="2026-04-27">2026-04-27</time></div>
+</div>
+</div>
+<footer class="hwik-footer">
+<div class="hwik-footer-links">
+<a href="/about.html">휙 소개</a>·
+<a href="/privacy.html">개인정보처리방침</a>·
+<a href="/terms.html">이용약관</a>
+</div>
+<div class="hwik-footer-copy">실거래가 출처: 국토교통부 · 휙(HWIK) · <a href="https://hwik.kr">hwik.kr</a></div>
+</footer>
 </body>
 </html>

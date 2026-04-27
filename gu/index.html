@@ -49,20 +49,35 @@
 .trade-price { font-size:16px; font-weight:700; }
 .trade-detail { font-size:11px; color:var(--sub); margin-top:3px; }
 .trade-date { font-size:11px; color:var(--muted); align-self:center; }
+/* 최근 거래 카드 — 좌:이름+메타 / 우:가격+칩+날짜 */
+.trade-card { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 16px; background:var(--card); border-radius:12px; cursor:pointer; transition:all .15s; }
+.trade-card:active { transform:scale(0.99); }
+.trade-card-left { flex:1; min-width:0; }
+.trade-card-head { display:flex; align-items:center; gap:8px; }
+.trade-cat-chip { display:inline-block; padding:2px 8px; background:rgba(99,102,241,0.15); color:#a5b4fc; border-radius:6px; font-size:10.5px; font-weight:700; }
+.trade-card-name { font-size:14px; font-weight:700; color:var(--text); letter-spacing:-0.015em; }
+.trade-card-meta { font-size:11.5px; color:var(--sub); margin-top:5px; }
+.trade-card-right { flex-shrink:0; text-align:right; }
+.trade-card-price { font-size:18px; font-weight:800; color:var(--yellow); letter-spacing:-0.02em; }
+.trade-card-foot { display:flex; align-items:center; justify-content:flex-end; gap:8px; margin-top:5px; }
+.trade-type-chip { display:inline-block; padding:2px 7px; background:rgba(234,88,12,0.15); color:#fb923c; border-radius:5px; font-size:10px; font-weight:700; }
+.trade-card-date { font-size:11px; color:var(--muted); }
 /* Hero 박스 — 모바일 다크 기본 */
 .hero-box { margin:12px 14px; padding:12px 14px; background:var(--card); border-radius:var(--radius); border-left:3px solid var(--yellow); }
 .hero-meta { font-size:11.5px; color:var(--sub); line-height:1.6; }
 .hero-tag { display:inline-block; padding:1px 6px; background:var(--yellow); color:#0a0a12; border-radius:4px; font-size:10px; font-weight:700; margin-right:4px; }
 .hero-cite { font-size:13px; color:var(--text); margin-top:6px; line-height:1.5; }
 .hero-cite a { color:var(--yellow); text-decoration:none; font-weight:600; }
-/* 1위 강조 카드 — 모바일 다크 */
-.danji-hero { position:relative; padding:18px 16px; background:linear-gradient(135deg, #2a2820 0%, #2a2515 100%); border:1px solid #3a3525; border-left:4px solid var(--yellow); border-radius:14px; margin-bottom:8px; cursor:pointer; transition:all .15s; }
+/* 1위 강조 카드 — 모바일 다크 (세로) */
+.danji-hero { display:block; position:relative; padding:18px 16px; background:linear-gradient(135deg, #2a2820 0%, #2a2515 100%); border:1px solid #3a3525; border-left:4px solid var(--yellow); border-radius:14px; margin-bottom:8px; cursor:pointer; transition:all .15s; }
 .danji-hero:active { transform:scale(0.99); }
+.danji-hero .hero-left { display:block; }
+.danji-hero .hero-right { display:block; margin-top:10px; }
 .danji-hero .rank-badge { display:inline-block; padding:3px 9px; background:var(--yellow); color:#0a0a12; border-radius:6px; font-size:10.5px; font-weight:800; margin-bottom:8px; letter-spacing:0.02em; }
 .danji-hero .hero-name { font-size:17px; font-weight:700; color:var(--text); letter-spacing:-0.02em; }
 .danji-hero .hero-meta { font-size:12px; color:var(--sub); margin-top:6px; line-height:1.6; }
-.danji-hero .hero-price { font-size:22px; font-weight:800; color:var(--yellow); margin-top:10px; letter-spacing:-0.02em; }
-.danji-hero .hero-price-label { font-size:11px; color:var(--muted); margin-left:6px; font-weight:500; }
+.danji-hero .hero-price { font-size:22px; font-weight:800; color:var(--yellow); letter-spacing:-0.02em; }
+.danji-hero .hero-price-label { font-size:11px; color:var(--muted); font-weight:500; margin-top:2px; }
 /* 2-3위 컴팩트 카드 */
 .danji-compact { display:flex; justify-content:space-between; align-items:center; padding:11px 13px; background:var(--card); border-radius:10px; cursor:pointer; transition:all .15s; }
 .danji-compact:active { transform:scale(0.98); }
@@ -215,12 +230,45 @@
   .danji-price, .trade-price { color: #0f172a !important; }
   .danji-rate, .trade-detail { color: #64748b !important; }
   .trade-date { color: #94a3b8 !important; }
-  /* 1위 강조 카드 — PC 라이트 */
+  /* 최근 거래 카드 — PC 라이트 */
+  .trade-card {
+    background: #fff !important;
+    border: 1px solid #eef0f4 !important;
+    border-radius: 12px !important;
+    padding: 14px 18px !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
+    transition: all 0.15s ease !important;
+  }
+  .trade-card:hover {
+    border-color: #c7d2fe !important;
+    box-shadow: 0 6px 16px rgba(67,56,202,0.08) !important;
+    transform: translateY(-1px) !important;
+  }
+  .trade-cat-chip {
+    background: #ede9fe !important; color: #6d28d9 !important;
+    padding: 3px 9px !important; border-radius: 6px !important;
+    font-size: 10.5px !important; font-weight: 700 !important;
+  }
+  .trade-card-name { color: #1e293b !important; font-size: 14.5px !important; font-weight: 700 !important; }
+  .trade-card:hover .trade-card-name { color: #4338ca !important; }
+  .trade-card-meta { color: #64748b !important; font-size: 12px !important; }
+  .trade-card-price { color: #ea580c !important; font-size: 19px !important; font-weight: 800 !important; }
+  .trade-type-chip {
+    background: #fff7ed !important; color: #c2410c !important;
+    padding: 2px 8px !important; border-radius: 5px !important;
+    font-size: 10px !important; font-weight: 700 !important;
+  }
+  .trade-card-date { color: #94a3b8 !important; font-size: 11.5px !important; }
+  /* 1위 강조 카드 — PC 라이트 (좌우 flex) */
   .danji-hero {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 20px !important;
     background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%) !important;
     border: 1px solid #fde68a !important;
     border-left: 4px solid #facc15 !important;
-    padding: 20px 18px !important;
+    padding: 18px 22px !important;
     border-radius: 14px !important;
     box-shadow: 0 4px 14px rgba(250,204,21,0.12) !important;
     transition: all 0.18s ease !important;
@@ -229,37 +277,52 @@
     transform: translateY(-1px) !important;
     box-shadow: 0 8px 22px rgba(250,204,21,0.18) !important;
   }
+  .danji-hero .hero-left { flex: 1; min-width: 0; }
+  .danji-hero .hero-right { flex-shrink: 0; text-align: right; }
   .danji-hero .rank-badge {
     background: #facc15 !important; color: #0a0a12 !important;
     padding: 3px 10px !important; border-radius: 6px !important;
     font-size: 11px !important; font-weight: 800 !important;
     letter-spacing: 0.04em !important;
+    margin-bottom: 8px !important;
   }
   .danji-hero .hero-name {
-    font-size: 19px !important; font-weight: 800 !important;
+    font-size: 18px !important; font-weight: 800 !important;
     color: #1e293b !important; letter-spacing: -0.025em !important;
   }
-  .danji-hero .hero-meta { color: #78716c !important; font-size: 12.5px !important; line-height: 1.7 !important; }
+  .danji-hero .hero-meta { color: #78716c !important; font-size: 12.5px !important; line-height: 1.7 !important; margin-top: 4px !important; }
   .danji-hero .hero-price {
-    color: #ca8a04 !important; font-size: 24px !important;
+    color: #ca8a04 !important; font-size: 26px !important;
     font-weight: 900 !important; letter-spacing: -0.025em !important;
+    margin: 0 !important;
   }
-  .danji-hero .hero-price-label { color: #a8a29e !important; font-weight: 600 !important; }
+  .danji-hero .hero-price-label { color: #a8a29e !important; font-weight: 600 !important; font-size: 11px !important; margin-top: 4px !important; }
   /* 2-3위 컴팩트 — PC */
   .danji-compact {
     background: transparent !important;
-    border: none !important; border-bottom: 1px solid #f1f5f9 !important;
+    border: none !important;
+    border-left: 3px solid transparent !important;
+    border-bottom: 1px solid #f1f5f9 !important;
     border-radius: 0 !important;
-    padding: 12px 6px !important;
-    transition: background 0.15s ease !important;
+    padding: 12px 12px !important;
+    transition: all 0.15s ease !important;
   }
-  .danji-compact:hover { background: #f8fafc !important; }
+  .danji-compact:hover {
+    background: #eef2ff !important;
+    border-left-color: #4338ca !important;
+    transform: translateX(2px) !important;
+    border-bottom-color: transparent !important;
+    box-shadow: 0 4px 12px rgba(67,56,202,0.08) !important;
+  }
   .danji-compact:last-child { border-bottom: none !important; }
   .danji-compact-rank { color: #cbd5e1 !important; font-weight: 800 !important; font-size: 13px !important; }
+  .danji-compact:hover .danji-compact-rank { color: #4338ca !important; }
   .danji-compact-name { color: #1e293b !important; font-weight: 600 !important; }
-  .danji-compact:hover .danji-compact-name { color: #4338ca !important; }
+  .danji-compact:hover .danji-compact-name { color: #4338ca !important; font-weight: 700 !important; }
   .danji-compact-meta { color: #64748b !important; }
-  .danji-compact-price { color: #0f172a !important; font-weight: 700 !important; }
+  .danji-compact:hover .danji-compact-meta { color: #475569 !important; }
+  .danji-compact-price { color: #ca8a04 !important; font-weight: 800 !important; letter-spacing: -0.015em !important; }
+  .danji-compact:hover .danji-compact-price { color: #4338ca !important; }
   /* FAQ */
   .faq-section { padding: 20px 14px !important; }
   .faq-item {
