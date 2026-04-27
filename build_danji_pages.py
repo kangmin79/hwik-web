@@ -1093,6 +1093,15 @@ def generate_page(d):
     title_loc = f" ({gu} {esc(dong_short)})" if gu and dong_short else (f" ({gu})" if gu else "")
     # SEO title용 위치 접미어: " · 여의도동" 또는 " · 영통구 망포동"
     title_loc_seo = f" · {gu} {esc(dong_short)}" if gu and dong_short else (f" · {gu}" if gu else "")
+    # title용 최근 매매가 — GSC 데스크톱 SERP에서 "이 단지 얼마야?" 검색의도 직접 매칭.
+    # 거래가 활발한 평형(_bc)의 최근 매매가(_bc_price). 둘 다 있을 때만 표시.
+    _bc_title = best_price_cat(d)
+    _rt_title = d.get("recent_trade") or {}
+    _bc_price_title = (_rt_title.get(_bc_title) or {}).get("price") if _bc_title else None
+    if _bc_price_title and _bc_title:
+        title_trade_seg = f" (전용 {_bc_title}㎡ {format_price(_bc_price_title)})"
+    else:
+        title_trade_seg = ""
 
     prop_type = get_prop_type(did)
     # 데이터 기반 메타 디스크립션 — 120~160자 타겟 (SERP 키워드 매칭 확대)
@@ -1203,7 +1212,7 @@ def generate_page(d):
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{name} 실거래가 시세{title_loc_seo} | 휙</title>
+<title>{name} 시세·실거래가{title_trade_seg}{title_loc_seo} | 휙</title>
 <meta name="description" content="{esc(desc)}">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
 <link rel="icon" href="/favicon.ico">
@@ -1211,7 +1220,7 @@ def generate_page(d):
 <meta property="og:type" content="article">
 <meta property="og:site_name" content="휙">
 <meta property="og:locale" content="ko_KR">
-<meta property="og:title" id="og-title" content="{name} 실거래가 시세{title_loc_seo} | 휙">
+<meta property="og:title" id="og-title" content="{name} 시세·실거래가{title_trade_seg}{title_loc_seo} | 휙">
 <meta property="og:description" id="og-desc" content="{esc(desc)}">
 <meta property="og:image" content="{OG_IMAGE_URL}">
 <meta property="og:image:width" content="1200">
@@ -1223,7 +1232,7 @@ def generate_page(d):
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){{dataLayer.push(arguments);}}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" id="tw-title" content="{name} 실거래가 시세 | 휙">
+<meta name="twitter:title" id="tw-title" content="{name} 시세·실거래가{title_trade_seg} | 휙">
 <meta name="twitter:description" id="tw-desc" content="{esc(desc)}">
 <script type="application/ld+json">{jsonld}</script>
 <link rel="stylesheet" href="style.css">
