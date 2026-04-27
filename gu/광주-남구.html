@@ -3,25 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>광주 남구 아파트 실거래가 시세 - 휙</title>
-<meta name="description" content="광주 남구 아파트 154개 단지 실거래가·전세가 시세. 평균 매매가 2억 9천. 매매·전세·월세 면적별 가격. 최고가 봉선동한국아델리움1단지. 전세가율 최고 제일파크. 국토교통부 공개시스템 기반.">
+<title>광주 남구 아파트 실거래가 시세 · 154개 단지 | 휙</title>
+<meta name="description" content="광주 남구의 아파트 154개 단지 매매·전세·월세 실거래가와 시세를 동별로 비교하세요. 봉선동·진월동·주월동 등 평균 매매가 2억 9천, 최고가 봉선동한국아델리움1단지, 전세가율 최고 제일파크. 국토교통부 실거래가 공개시스템 기반.">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
 <link rel="canonical" href="https://hwik.kr/gu/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="휙">
 <meta property="og:locale" content="ko_KR">
-<meta property="og:title" content="광주 남구 아파트 실거래가 시세 - 휙">
-<meta property="og:description" content="광주 남구 아파트 154개 단지 실거래가·전세가 시세. 평균 매매가 2억 9천. 매매·전세·월세 면적별 가격. 최고가 봉선동한국아델리움1단지. 전세가율 최고 제일파크. 국토교통부 공개시스템 기반.">
+<meta property="og:title" content="광주 남구 아파트 실거래가 시세 · 154개 단지 | 휙">
+<meta property="og:description" content="광주 남구의 아파트 154개 단지 매매·전세·월세 실거래가와 시세를 동별로 비교하세요. 봉선동·진월동·주월동 등 평균 매매가 2억 9천, 최고가 봉선동한국아델리움1단지, 전세가율 최고 제일파크. 국토교통부 실거래가 공개시스템 기반.">
 <meta property="og:image" content="https://hwik.kr/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:url" content="https://hwik.kr/gu/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC.html">
+<meta property="article:modified_time" content="2026-04-27">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="광주 남구 아파트 실거래가 시세 - 휙">
-<meta name="twitter:description" content="광주 남구 아파트 154개 단지 실거래가·전세가 시세. 평균 매매가 2억 9천. 매매·전세·월세 면적별 가격. 최고가 봉선동한국아델리움1단지. 전세가율 최고 제일파크. 국토교통부 공개시스템 기반.">
+<meta name="twitter:title" content="광주 남구 아파트 실거래가 시세 · 154개 단지 | 휙">
+<meta name="twitter:description" content="광주 남구의 아파트 154개 단지 매매·전세·월세 실거래가와 시세를 동별로 비교하세요. 봉선동·진월동·주월동 등 평균 매매가 2억 9천, 최고가 봉선동한국아델리움1단지, 전세가율 최고 제일파크. 국토교통부 실거래가 공개시스템 기반.">
+<meta name="twitter:image" content="https://hwik.kr/og-image.png">
 <meta name="google-site-verification" content="R2ye41AVVTRs8BxEXyEafFSTqMSiHKdb9zgTklrktSI">
 <meta name="naver-site-verification" content="367bd1e77a8ad48b74e345be3e4a0f8125c2c4e1">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
 <link rel="stylesheet" href="/danji/style.css">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css" media="(min-width: 768px)">
 <style>
 .dong-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .dong-item { padding:12px; background:var(--card); border-radius:var(--radius); cursor:pointer; transition:all .15s; }
@@ -43,56 +49,304 @@
 .trade-price { font-size:16px; font-weight:700; }
 .trade-detail { font-size:11px; color:var(--sub); margin-top:3px; }
 .trade-date { font-size:11px; color:var(--muted); align-self:center; }
+/* Hero 박스 — 모바일 다크 기본 */
+.hero-box { margin:12px 14px; padding:12px 14px; background:var(--card); border-radius:var(--radius); border-left:3px solid var(--yellow); }
+.hero-meta { font-size:11.5px; color:var(--sub); line-height:1.6; }
+.hero-tag { display:inline-block; padding:1px 6px; background:var(--yellow); color:#0a0a12; border-radius:4px; font-size:10px; font-weight:700; margin-right:4px; }
+.hero-cite { font-size:13px; color:var(--text); margin-top:6px; line-height:1.5; }
+.hero-cite a { color:var(--yellow); text-decoration:none; font-weight:600; }
+/* 1위 강조 카드 — 모바일 다크 */
+.danji-hero { position:relative; padding:18px 16px; background:linear-gradient(135deg, #2a2820 0%, #2a2515 100%); border:1px solid #3a3525; border-left:4px solid var(--yellow); border-radius:14px; margin-bottom:8px; cursor:pointer; transition:all .15s; }
+.danji-hero:active { transform:scale(0.99); }
+.danji-hero .rank-badge { display:inline-block; padding:3px 9px; background:var(--yellow); color:#0a0a12; border-radius:6px; font-size:10.5px; font-weight:800; margin-bottom:8px; letter-spacing:0.02em; }
+.danji-hero .hero-name { font-size:17px; font-weight:700; color:var(--text); letter-spacing:-0.02em; }
+.danji-hero .hero-meta { font-size:12px; color:var(--sub); margin-top:6px; line-height:1.6; }
+.danji-hero .hero-price { font-size:22px; font-weight:800; color:var(--yellow); margin-top:10px; letter-spacing:-0.02em; }
+.danji-hero .hero-price-label { font-size:11px; color:var(--muted); margin-left:6px; font-weight:500; }
+/* 2-3위 컴팩트 카드 */
+.danji-compact { display:flex; justify-content:space-between; align-items:center; padding:11px 13px; background:var(--card); border-radius:10px; cursor:pointer; transition:all .15s; }
+.danji-compact:active { transform:scale(0.98); }
+.danji-compact-rank { display:inline-block; min-width:18px; font-size:12px; font-weight:700; color:var(--muted); margin-right:8px; }
+.danji-compact-name { font-size:13px; font-weight:600; color:var(--text); }
+.danji-compact-meta { font-size:11px; color:var(--sub); margin-top:2px; }
+.danji-compact-price { font-size:14px; font-weight:700; text-align:right; color:var(--text); }
+/* 데이터 안내 details */
+.data-notice summary { font-weight:600; color:var(--text); }
+.data-notice a { color:var(--yellow); text-decoration:none; }
+/* 페이지 푸터 */
+.hwik-footer { max-width:600px; margin:24px auto 40px; padding:24px 16px 0; border-top:1px solid var(--border, #2a2a3e); text-align:center; font-size:11.5px; color:var(--sub); line-height:1.7; }
+.hwik-footer-links { margin-bottom:8px; }
+.hwik-footer-links a { color:var(--sub); text-decoration:none; margin:0 8px; }
+.hwik-footer-copy a { color:var(--muted); text-decoration:none; }
+
+/* ── D 디자인 PC 라이트 (≥768px) — 오피스텔 동일 ── */
+@media (min-width: 768px) {
+  html, body {
+    background: #F0EEE6 !important;
+    font-family: Pretendard, -apple-system, BlinkMacSystemFont,
+                 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR', sans-serif !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    text-rendering: optimizeLegibility !important;
+    color: #0f172a !important;
+  }
+  .wrap, .wrap * {
+    font-family: Pretendard, -apple-system, BlinkMacSystemFont,
+                 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR', sans-serif !important;
+  }
+  .wrap {
+    max-width: 720px !important;
+    margin: 32px auto !important;
+    background: #fff !important;
+    border-radius: 20px !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04) !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+  }
+  .breadcrumb {
+    background: #fff !important;
+    padding: 18px 14px 0 !important;
+    font-size: 12.5px !important;
+    color: #94a3b8 !important;
+  }
+  .breadcrumb a {
+    color: #64748b !important; text-decoration: none !important;
+    transition: color 0.15s ease !important;
+  }
+  .breadcrumb a:hover { color: #4338ca !important; }
+  .breadcrumb span { color: #cbd5e1 !important; }
+  .header {
+    background: #fff !important;
+    padding: 14px 14px 22px !important;
+    border-bottom: 1px solid #eef0f4 !important;
+  }
+  .header .header-top {
+    display: flex !important; align-items: center !important; gap: 12px !important;
+    background: transparent !important; padding: 0 !important;
+  }
+  .header .logo {
+    background: #facc15 !important; color: #0a0a12 !important;
+    width: 32px !important; height: 32px !important;
+    border-radius: 8px !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    font-weight: 900 !important; font-size: 16px !important;
+    flex-shrink: 0 !important;
+  }
+  .header .header-name {
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    color: #4338ca !important;
+    letter-spacing: -0.03em !important;
+    line-height: 1.25 !important;
+    margin: 0 !important;
+  }
+  .header .header-sub {
+    font-size: 12.5px !important; color: #64748b !important;
+    margin-top: 2px !important;
+  }
+  .divider { display: none !important; }
+  /* Hero 박스 PC 라이트 */
+  .hero-box {
+    margin: 16px 14px 4px !important;
+    padding: 14px 16px !important;
+    background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%) !important;
+    border: 1px solid #fde68a !important;
+    border-left: 3px solid #facc15 !important;
+    border-radius: 12px !important;
+  }
+  .hero-meta { color: #78716c !important; font-size: 12px !important; }
+  .hero-tag {
+    background: #facc15 !important; color: #0a0a12 !important;
+    padding: 2px 7px !important; border-radius: 4px !important;
+    font-size: 10.5px !important; font-weight: 800 !important;
+    letter-spacing: 0.02em !important;
+  }
+  .hero-cite { color: #1e293b !important; font-size: 13.5px !important; margin-top: 8px !important; }
+  .hero-cite a { color: #4338ca !important; font-weight: 700 !important; }
+  .hero-cite a:hover { text-decoration: underline !important; }
+  .section { padding: 20px 14px !important; }
+  .section-title {
+    font-size: 16px !important; font-weight: 700 !important;
+    color: #0f172a !important; letter-spacing: -0.025em !important;
+    margin: 0 0 14px !important;
+  }
+  /* 지표 박스 */
+  .metrics {
+    display: grid !important; grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important; padding: 16px 14px 0 !important;
+  }
+  .metric {
+    background: #f8fafc !important;
+    border: 1px solid #eef0f4 !important;
+    border-radius: 10px !important;
+    padding: 12px 10px !important; text-align: center !important;
+  }
+  .metric-label { font-size: 11px !important; color: #64748b !important; }
+  .metric-value {
+    font-size: 16px !important; font-weight: 700 !important;
+    color: #0f172a !important; margin-top: 4px !important;
+  }
+  /* 단지/거래/구/동 카드 — 라이트 */
+  .danji-item, .trade-item, .gu-item, .dong-item {
+    background: #f8fafc !important;
+    border: 1px solid #eef0f4 !important;
+    border-left: 3px solid #4338ca !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+    transition: all 0.15s ease !important;
+  }
+  .danji-item:hover, .trade-item:hover, .gu-item:hover, .dong-item:hover {
+    background: #eef2ff !important;
+    border-color: #c7d2fe !important;
+    border-left-color: #4338ca !important;
+    transform: translateX(2px) !important;
+    box-shadow: 0 4px 12px rgba(67,56,202,0.08) !important;
+  }
+  .danji-name, .gu-name, .dong-name {
+    color: #1e293b !important; font-weight: 700 !important;
+    letter-spacing: -0.015em !important;
+  }
+  .danji-item:hover .danji-name,
+  .gu-item:hover .gu-name,
+  .dong-item:hover .dong-name { color: #4338ca !important; }
+  .danji-sub, .gu-info, .dong-count {
+    color: #64748b !important; font-weight: 500 !important;
+  }
+  .danji-price, .trade-price { color: #0f172a !important; }
+  .danji-rate, .trade-detail { color: #64748b !important; }
+  .trade-date { color: #94a3b8 !important; }
+  /* 1위 강조 카드 — PC 라이트 */
+  .danji-hero {
+    background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%) !important;
+    border: 1px solid #fde68a !important;
+    border-left: 4px solid #facc15 !important;
+    padding: 20px 18px !important;
+    border-radius: 14px !important;
+    box-shadow: 0 4px 14px rgba(250,204,21,0.12) !important;
+    transition: all 0.18s ease !important;
+  }
+  .danji-hero:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 8px 22px rgba(250,204,21,0.18) !important;
+  }
+  .danji-hero .rank-badge {
+    background: #facc15 !important; color: #0a0a12 !important;
+    padding: 3px 10px !important; border-radius: 6px !important;
+    font-size: 11px !important; font-weight: 800 !important;
+    letter-spacing: 0.04em !important;
+  }
+  .danji-hero .hero-name {
+    font-size: 19px !important; font-weight: 800 !important;
+    color: #1e293b !important; letter-spacing: -0.025em !important;
+  }
+  .danji-hero .hero-meta { color: #78716c !important; font-size: 12.5px !important; line-height: 1.7 !important; }
+  .danji-hero .hero-price {
+    color: #ca8a04 !important; font-size: 24px !important;
+    font-weight: 900 !important; letter-spacing: -0.025em !important;
+  }
+  .danji-hero .hero-price-label { color: #a8a29e !important; font-weight: 600 !important; }
+  /* 2-3위 컴팩트 — PC */
+  .danji-compact {
+    background: transparent !important;
+    border: none !important; border-bottom: 1px solid #f1f5f9 !important;
+    border-radius: 0 !important;
+    padding: 12px 6px !important;
+    transition: background 0.15s ease !important;
+  }
+  .danji-compact:hover { background: #f8fafc !important; }
+  .danji-compact:last-child { border-bottom: none !important; }
+  .danji-compact-rank { color: #cbd5e1 !important; font-weight: 800 !important; font-size: 13px !important; }
+  .danji-compact-name { color: #1e293b !important; font-weight: 600 !important; }
+  .danji-compact:hover .danji-compact-name { color: #4338ca !important; }
+  .danji-compact-meta { color: #64748b !important; }
+  .danji-compact-price { color: #0f172a !important; font-weight: 700 !important; }
+  /* FAQ */
+  .faq-section { padding: 20px 14px !important; }
+  .faq-item {
+    background: #f8fafc !important; border: 1px solid #eef0f4 !important;
+    border-radius: 10px !important; padding: 14px 16px !important;
+    margin-bottom: 8px !important;
+  }
+  .faq-q { color: #1e293b !important; font-weight: 700 !important; }
+  .faq-a { color: #475569 !important; margin-top: 6px !important; line-height: 1.7 !important; }
+  /* CTA */
+  .cta-section { padding: 16px 14px !important; }
+  .btn-primary {
+    background: #4338ca !important; color: #fff !important;
+    border-radius: 12px !important; padding: 14px !important;
+    font-weight: 700 !important;
+    transition: background 0.15s ease, transform 0.15s ease !important;
+  }
+  .btn-primary:hover { background: #3730a3 !important; transform: translateY(-1px) !important; }
+  /* SEO 영역 */
+  .seo-section {
+    background: #fafafa !important; padding: 16px 14px !important;
+  }
+  .seo-text {
+    color: #475569 !important;
+    font-size: 13px !important; line-height: 1.85 !important;
+  }
+  .seo-source { color: #94a3b8 !important; font-size: 11px !important; margin-top: 8px !important; }
+  /* 데이터 안내 details */
+  .data-notice { color: #64748b !important; font-size: 12px !important; }
+  .data-notice summary {
+    cursor: pointer !important; font-weight: 700 !important; color: #1e293b !important;
+    padding: 4px 0 !important;
+  }
+  .data-notice a { color: #4338ca !important; text-decoration: none !important; }
+  .data-notice a:hover { text-decoration: underline !important; }
+  /* 페이지 푸터 */
+  .hwik-footer {
+    max-width: 720px !important;
+    margin: 24px auto 40px !important;
+    padding: 24px 16px 0 !important;
+    border-top: 1px solid #e5e7eb !important;
+    text-align: center !important;
+    font-size: 11.5px !important;
+    color: #6b7280 !important;
+    line-height: 1.7 !important;
+  }
+  .hwik-footer-links a { color: #6b7280 !important; text-decoration: none !important; margin: 0 8px !important; }
+  .hwik-footer-links a:hover { color: #4338ca !important; }
+  .hwik-footer-copy { color: #9ca3af !important; }
+  .hwik-footer-copy a { color: #9ca3af !important; text-decoration: none !important; }
+}
 </style>
-<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "남구 아파트 평균 매매가는?", "acceptedAnswer": {"@type": "Answer", "text": "남구 아파트 실거래가 기반 평균 매매가는 2억 9천입니다."}}, {"@type": "Question", "name": "남구 아파트 전세가율은?", "acceptedAnswer": {"@type": "Answer", "text": "남구 평균 전세가율은 77.5%입니다."}}]}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"}, {"@type": "ListItem", "position": 2, "name": "광주 구별 시세", "item": "https://hwik.kr/gu/"}, {"@type": "ListItem", "position": 3, "name": "남구"}]}, {"@type": "ItemList", "name": "남구 아파트 시세", "numberOfItems": 154, "itemListElement": [{"@type": "ListItem", "position": 1, "name": "백운송촌파인힐아파트", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%B1%EC%9A%B4%EB%8F%99-%EB%B0%B1%EC%9A%B4%EC%86%A1%EC%B4%8C%ED%8C%8C%EC%9D%B8%ED%9E%90%EC%95%84%ED%8C%8C%ED%8A%B8-a10020174.html"}, {"@type": "ListItem", "position": 2, "name": "봉선주월대라수어썸브릿지", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EB%B4%89%EC%84%A0%EC%A3%BC%EC%9B%94%EB%8C%80%EB%9D%BC%EC%88%98%EC%96%B4%EC%8D%B8%EB%B8%8C%EB%A6%BF%EC%A7%80-a10020309.html"}, {"@type": "ListItem", "position": 3, "name": "더 퍼스트 데시앙", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9B%94%EC%82%B0%EB%8F%99-%EB%8D%94-%ED%8D%BC%EC%8A%A4%ED%8A%B8-%EB%8D%B0%EC%8B%9C%EC%95%99-a10020451.html"}, {"@type": "ListItem", "position": 4, "name": "방림오네뜨하이브", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%A9%EB%A6%BC%EB%8F%99-%EB%B0%A9%EB%A6%BC%EC%98%A4%EB%84%A4%EB%9C%A8%ED%95%98%EC%9D%B4%EB%B8%8C-a10020773.html"}, {"@type": "ListItem", "position": 5, "name": "힐스테이트 월산아파트", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9B%94%EC%82%B0%EB%8F%99-%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-%EC%9B%94%EC%82%B0%EC%95%84%ED%8C%8C%ED%8A%B8-a10020913.html"}, {"@type": "ListItem", "position": 6, "name": "진아리채리센츠", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9B%94%EC%82%B0%EB%8F%99-%EC%A7%84%EC%95%84%EB%A6%AC%EC%B1%84%EB%A6%AC%EC%84%BC%EC%B8%A0-a10021101.html"}, {"@type": "ListItem", "position": 7, "name": "힐스테이트 지석", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A7%80%EC%84%9D%EB%8F%99-%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-%EC%A7%80%EC%84%9D-a10021111.html"}, {"@type": "ListItem", "position": 8, "name": "제일맨션", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9B%94%EC%82%B0%EB%8F%99-%EC%A0%9C%EC%9D%BC%EB%A7%A8%EC%85%98-a10021613.html"}, {"@type": "ListItem", "position": 9, "name": "대덕훼미리8차아파트", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A7%84%EC%9B%94%EB%8F%99-%EB%8C%80%EB%8D%95%ED%9B%BC%EB%AF%B8%EB%A6%AC8%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10021617.html"}, {"@type": "ListItem", "position": 10, "name": "주월마이다스빌1차", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EC%A3%BC%EC%9B%94%EB%A7%88%EC%9D%B4%EB%8B%A4%EC%8A%A4%EB%B9%8C1%EC%B0%A8-a10021826.html"}, {"@type": "ListItem", "position": 11, "name": "송림아파트", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EC%86%A1%EB%A6%BC%EC%95%84%ED%8C%8C%ED%8A%B8-a10021879.html"}, {"@type": "ListItem", "position": 12, "name": "e편한세상 봉선 셀레스티지", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-%EB%B4%89%EC%84%A0-%EC%85%80%EB%A0%88%EC%8A%A4%ED%8B%B0%EC%A7%80-a10022006.html"}, {"@type": "ListItem", "position": 13, "name": "봉선이지더원3단지", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EC%9D%B4%EC%A7%80%EB%8D%94%EC%9B%903%EB%8B%A8%EC%A7%80-a10022105.html"}, {"@type": "ListItem", "position": 14, "name": "진월1차진아하이빌", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A7%84%EC%9B%94%EB%8F%99-%EC%A7%84%EC%9B%941%EC%B0%A8%EC%A7%84%EC%95%84%ED%95%98%EC%9D%B4%EB%B9%8C-a10022115.html"}, {"@type": "ListItem", "position": 15, "name": "목우아파트", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%B1%EC%9A%B4%EB%8F%99-%EB%AA%A9%EC%9A%B0%EC%95%84%ED%8C%8C%ED%8A%B8-a10022151.html"}, {"@type": "ListItem", "position": 16, "name": "주월영무예다음1차아파트", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EC%A3%BC%EC%9B%94%EC%98%81%EB%AC%B4%EC%98%88%EB%8B%A4%EC%9D%8C1%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10022210.html"}, {"@type": "ListItem", "position": 17, "name": "무등프라자주월2차 아파트", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%AC%B4%EB%93%B1%ED%94%84%EB%9D%BC%EC%9E%90%EC%A3%BC%EC%9B%942%EC%B0%A8-%EC%95%84%ED%8C%8C%ED%8A%B8-a10022247.html"}, {"@type": "ListItem", "position": 18, "name": "금영푸르미아파트관리사무소", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EA%B8%88%EC%98%81%ED%91%B8%EB%A5%B4%EB%AF%B8%EC%95%84%ED%8C%8C%ED%8A%B8%EA%B4%80%EB%A6%AC%EC%82%AC%EB%AC%B4%EC%86%8C-a10022664.html"}, {"@type": "ListItem", "position": 19, "name": "방림 더 퍼스트 골드클래스", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%A9%EB%A6%BC%EB%8F%99-%EB%B0%A9%EB%A6%BC-%EB%8D%94-%ED%8D%BC%EC%8A%A4%ED%8A%B8-%EA%B3%A8%EB%93%9C%ED%81%B4%EB%9E%98%EC%8A%A4-a10022815.html"}, {"@type": "ListItem", "position": 20, "name": "봉선동 르오네뜨", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%A5%B4%EC%98%A4%EB%84%A4%EB%9C%A8-a10023031.html"}, {"@type": "ListItem", "position": 21, "name": "솔뫼렉스K-1아파트", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EC%86%94%EB%AB%BC%EB%A0%89%EC%8A%A4K-1%EC%95%84%ED%8C%8C%ED%8A%B8-a10023147.html"}, {"@type": "ListItem", "position": 22, "name": "주월무등파크아파트", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EC%A3%BC%EC%9B%94%EB%AC%B4%EB%93%B1%ED%8C%8C%ED%81%AC%EC%95%84%ED%8C%8C%ED%8A%B8-a10023251.html"}, {"@type": "ListItem", "position": 23, "name": "봉선중길한국아델리움5차", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%A9%EB%A6%BC%EB%8F%99-%EB%B4%89%EC%84%A0%EC%A4%91%EA%B8%B8%ED%95%9C%EA%B5%AD%EC%95%84%EB%8D%B8%EB%A6%AC%EC%9B%805%EC%B0%A8-a10023549.html"}, {"@type": "ListItem", "position": 24, "name": "에너지밸리풍경채퍼스트파크", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%95%95%EC%B4%8C%EB%8F%99-%EC%97%90%EB%84%88%EC%A7%80%EB%B0%B8%EB%A6%AC%ED%92%8D%EA%B2%BD%EC%B1%84%ED%8D%BC%EC%8A%A4%ED%8A%B8%ED%8C%8C%ED%81%AC-a10023805.html"}, {"@type": "ListItem", "position": 25, "name": "봉선동한국아델리움2단지", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8F%99%ED%95%9C%EA%B5%AD%EC%95%84%EB%8D%B8%EB%A6%AC%EC%9B%802%EB%8B%A8%EC%A7%80-a10023937.html"}, {"@type": "ListItem", "position": 26, "name": "반도 유보라 더 퍼스트 아파트", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9B%94%EC%82%B0%EB%8F%99-%EB%B0%98%EB%8F%84-%EC%9C%A0%EB%B3%B4%EB%9D%BC-%EB%8D%94-%ED%8D%BC%EC%8A%A4%ED%8A%B8-%EC%95%84%ED%8C%8C%ED%8A%B8-a10024138.html"}, {"@type": "ListItem", "position": 27, "name": "진월 한국아델리움2차아파트", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A7%84%EC%9B%94%EB%8F%99-%EC%A7%84%EC%9B%94-%ED%95%9C%EA%B5%AD%EC%95%84%EB%8D%B8%EB%A6%AC%EC%9B%802%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10024220.html"}, {"@type": "ListItem", "position": 28, "name": "주월동 골드클래스 어반시티", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EC%A3%BC%EC%9B%94%EB%8F%99-%EA%B3%A8%EB%93%9C%ED%81%B4%EB%9E%98%EC%8A%A4-%EC%96%B4%EB%B0%98%EC%8B%9C%ED%8B%B0-a10024298.html"}, {"@type": "ListItem", "position": 29, "name": "주월양우내안애 아파트", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EC%A3%BC%EC%9B%94%EC%96%91%EC%9A%B0%EB%82%B4%EC%95%88%EC%95%A0-%EC%95%84%ED%8C%8C%ED%8A%B8-a10024376.html"}, {"@type": "ListItem", "position": 30, "name": "백운코아루아팰리스힐", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%B1%EC%9A%B4%EB%8F%99-%EB%B0%B1%EC%9A%B4%EC%BD%94%EC%95%84%EB%A3%A8%EC%95%84%ED%8C%B0%EB%A6%AC%EC%8A%A4%ED%9E%90-a10024469.html"}, {"@type": "ListItem", "position": 31, "name": "광명그린아파트", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%A9%EB%A6%BC%EB%8F%99-%EA%B4%91%EB%AA%85%EA%B7%B8%EB%A6%B0%EC%95%84%ED%8C%8C%ED%8A%B8-a10024533.html"}, {"@type": "ListItem", "position": 32, "name": "효천지구 코오롱하늘채", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%86%A1%ED%95%98%EB%8F%99-%ED%9A%A8%EC%B2%9C%EC%A7%80%EA%B5%AC-%EC%BD%94%EC%98%A4%EB%A1%B1%ED%95%98%EB%8A%98%EC%B1%84-a10024563.html"}, {"@type": "ListItem", "position": 33, "name": "일진스위트포레", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A7%80%EC%84%9D%EB%8F%99-%EC%9D%BC%EC%A7%84%EC%8A%A4%EC%9C%84%ED%8A%B8%ED%8F%AC%EB%A0%88-a10024570.html"}, {"@type": "ListItem", "position": 34, "name": "효천시티프라디움아파트", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9E%84%EC%95%94%EB%8F%99-%ED%9A%A8%EC%B2%9C%EC%8B%9C%ED%8B%B0%ED%94%84%EB%9D%BC%EB%94%94%EC%9B%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10025485.html"}, {"@type": "ListItem", "position": 35, "name": "효천1중흥S클래스에코파크아파트", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9E%84%EC%95%94%EB%8F%99-%ED%9A%A8%EC%B2%9C1%EC%A4%91%ED%9D%A5S%ED%81%B4%EB%9E%98%EC%8A%A4%EC%97%90%EC%BD%94%ED%8C%8C%ED%81%AC%EC%95%84%ED%8C%8C%ED%8A%B8-a10025731.html"}, {"@type": "ListItem", "position": 36, "name": "효천1 중흥s-클래스 에코시티", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9E%84%EC%95%94%EB%8F%99-%ED%9A%A8%EC%B2%9C1-%EC%A4%91%ED%9D%A5s-%ED%81%B4%EB%9E%98%EC%8A%A4-%EC%97%90%EC%BD%94%EC%8B%9C%ED%8B%B0-a10025732.html"}, {"@type": "ListItem", "position": 37, "name": "봉선로 남해오네뜨", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EB%B4%89%EC%84%A0%EB%A1%9C-%EB%82%A8%ED%95%B4%EC%98%A4%EB%84%A4%EB%9C%A8-a10026263.html"}, {"@type": "ListItem", "position": 38, "name": "봉선동모아엘가아파트", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8F%99%EB%AA%A8%EC%95%84%EC%97%98%EA%B0%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10026325.html"}, {"@type": "ListItem", "position": 39, "name": "브라운스톤 효천 아파트", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%ED%96%89%EC%95%94%EB%8F%99-%EB%B8%8C%EB%9D%BC%EC%9A%B4%EC%8A%A4%ED%86%A4-%ED%9A%A8%EC%B2%9C-%EC%95%84%ED%8C%8C%ED%8A%B8-a10026841.html"}, {"@type": "ListItem", "position": 40, "name": "월산동이스토리", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9B%94%EC%82%B0%EB%8F%99-%EC%9B%94%EC%82%B0%EB%8F%99%EC%9D%B4%EC%8A%A4%ED%86%A0%EB%A6%AC-a10026876.html"}, {"@type": "ListItem", "position": 41, "name": "서동 영무예다음 아파트", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%84%9C%EB%8F%99-%EC%84%9C%EB%8F%99-%EC%98%81%EB%AC%B4%EC%98%88%EB%8B%A4%EC%9D%8C-%EC%95%84%ED%8C%8C%ED%8A%B8-a10027100.html"}, {"@type": "ListItem", "position": 42, "name": "봉선동 제일풍경채 아파트", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8F%99-%EC%A0%9C%EC%9D%BC%ED%92%8D%EA%B2%BD%EC%B1%84-%EC%95%84%ED%8C%8C%ED%8A%B8-a10027211.html"}, {"@type": "ListItem", "position": 43, "name": "힐스테이트 백운", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%B1%EC%9A%B4%EB%8F%99-%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-%EB%B0%B1%EC%9A%B4-a10027348.html"}, {"@type": "ListItem", "position": 44, "name": "광주효천LH천년나무 6단지", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%ED%96%89%EC%95%94%EB%8F%99-%EA%B4%91%EC%A3%BC%ED%9A%A8%EC%B2%9CLH%EC%B2%9C%EB%85%84%EB%82%98%EB%AC%B4-6%EB%8B%A8%EC%A7%80-a10027544.html"}, {"@type": "ListItem", "position": 45, "name": "봉선지웰아파트", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EC%A7%80%EC%9B%B0%EC%95%84%ED%8C%8C%ED%8A%B8-a10027650.html"}, {"@type": "ListItem", "position": 46, "name": "광주 방림 명지로드힐 아파트", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%A9%EB%A6%BC%EB%8F%99-%EA%B4%91%EC%A3%BC-%EB%B0%A9%EB%A6%BC-%EB%AA%85%EC%A7%80%EB%A1%9C%EB%93%9C%ED%9E%90-%EC%95%84%ED%8C%8C%ED%8A%B8-a10027831.html"}, {"@type": "ListItem", "position": 47, "name": "효천2지구 중흥S-클래스아파트", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%ED%96%89%EC%95%94%EB%8F%99-%ED%9A%A8%EC%B2%9C2%EC%A7%80%EA%B5%AC-%EC%A4%91%ED%9D%A5S-%ED%81%B4%EB%9E%98%EC%8A%A4%EC%95%84%ED%8C%8C%ED%8A%B8-a10027835.html"}, {"@type": "ListItem", "position": 48, "name": "송하동진아리채5차1단지아파트", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%86%A1%ED%95%98%EB%8F%99-%EC%86%A1%ED%95%98%EB%8F%99%EC%A7%84%EC%95%84%EB%A6%AC%EC%B1%845%EC%B0%A81%EB%8B%A8%EC%A7%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10028010.html"}, {"@type": "ListItem", "position": 49, "name": "봉선3차한국아델리움", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A03%EC%B0%A8%ED%95%9C%EA%B5%AD%EC%95%84%EB%8D%B8%EB%A6%AC%EC%9B%80-a10028101.html"}, {"@type": "ListItem", "position": 50, "name": "효천2지구 제일풍경채 에듀파크1차", "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%ED%96%89%EC%95%94%EB%8F%99-%ED%9A%A8%EC%B2%9C2%EC%A7%80%EA%B5%AC-%EC%A0%9C%EC%9D%BC%ED%92%8D%EA%B2%BD%EC%B1%84-%EC%97%90%EB%93%80%ED%8C%8C%ED%81%AC1%EC%B0%A8-a10028123.html"}]}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@context": "https://schema.org", "@type": "Organization", "@id": "https://hwik.kr/#org", "name": "휙 (HWIK)", "url": "https://hwik.kr", "logo": {"@type": "ImageObject", "url": "https://hwik.kr/og-image.png", "width": 1200, "height": 630}, "sameAs": ["https://hwik.kr"]}, {"@context": "https://schema.org", "@type": "CollectionPage", "name": "광주 남구 아파트 실거래가 시세 · 154개 단지", "description": "광주 남구의 아파트 154개 단지 매매·전세·월세 실거래가와 시세를 동별로 비교하세요. 봉선동·진월동·주월동 등 평균 매매가 2억 9천, 최고가 봉선동한국아델리움1단지, 전세가율 최고 제일파크. 국토교통부 실거래가 공개시스템 기반.", "url": "https://hwik.kr/gu/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC.html", "inLanguage": "ko-KR", "datePublished": "2026-01-01", "dateModified": "2026-04-27", "isPartOf": {"@type": "WebSite", "name": "휙", "url": "https://hwik.kr"}, "publisher": {"@id": "https://hwik.kr/#org"}, "about": {"@type": "AdministrativeArea", "name": "광주 남구", "containedInPlace": {"@type": "AdministrativeArea", "name": "광주", "containedInPlace": {"@type": "Country", "name": "대한민국"}}, "geo": {"@type": "GeoCoordinates", "latitude": 35.124371, "longitude": 126.900233}}, "mainEntity": {"@type": "ItemList", "name": "남구 아파트 시세", "numberOfItems": 100, "itemListElement": [{"@type": "ListItem", "position": 1, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%B1%EC%9A%B4%EB%8F%99-%EB%B0%B1%EC%9A%B4%EC%86%A1%EC%B4%8C%ED%8C%8C%EC%9D%B8%ED%9E%90%EC%95%84%ED%8C%8C%ED%8A%B8-a10020174.html", "name": "백운송촌파인힐아파트", "description": "백운동 · 147세대"}, {"@type": "ListItem", "position": 2, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EB%B4%89%EC%84%A0%EC%A3%BC%EC%9B%94%EB%8C%80%EB%9D%BC%EC%88%98%EC%96%B4%EC%8D%B8%EB%B8%8C%EB%A6%BF%EC%A7%80-a10020309.html", "name": "봉선주월대라수어썸브릿지", "description": "주월동 · 90세대"}, {"@type": "ListItem", "position": 3, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9B%94%EC%82%B0%EB%8F%99-%EB%8D%94-%ED%8D%BC%EC%8A%A4%ED%8A%B8-%EB%8D%B0%EC%8B%9C%EC%95%99-a10020451.html", "name": "더 퍼스트 데시앙", "description": "월산동 · 565세대"}, {"@type": "ListItem", "position": 4, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%A9%EB%A6%BC%EB%8F%99-%EB%B0%A9%EB%A6%BC%EC%98%A4%EB%84%A4%EB%9C%A8%ED%95%98%EC%9D%B4%EB%B8%8C-a10020773.html", "name": "방림오네뜨하이브", "description": "방림동 · 199세대"}, {"@type": "ListItem", "position": 5, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9B%94%EC%82%B0%EB%8F%99-%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-%EC%9B%94%EC%82%B0%EC%95%84%ED%8C%8C%ED%8A%B8-a10020913.html", "name": "힐스테이트 월산아파트", "description": "월산동 · 741세대"}, {"@type": "ListItem", "position": 6, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9B%94%EC%82%B0%EB%8F%99-%EC%A7%84%EC%95%84%EB%A6%AC%EC%B1%84%EB%A6%AC%EC%84%BC%EC%B8%A0-a10021101.html", "name": "진아리채리센츠", "description": "월산동 · 165세대"}, {"@type": "ListItem", "position": 7, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A7%80%EC%84%9D%EB%8F%99-%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-%EC%A7%80%EC%84%9D-a10021111.html", "name": "힐스테이트 지석", "description": "지석동 · 571세대"}, {"@type": "ListItem", "position": 8, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9B%94%EC%82%B0%EB%8F%99-%EC%A0%9C%EC%9D%BC%EB%A7%A8%EC%85%98-a10021613.html", "name": "제일맨션", "description": "월산동 · 117세대"}, {"@type": "ListItem", "position": 9, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A7%84%EC%9B%94%EB%8F%99-%EB%8C%80%EB%8D%95%ED%9B%BC%EB%AF%B8%EB%A6%AC8%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10021617.html", "name": "대덕훼미리8차아파트", "description": "진월동 · 144세대"}, {"@type": "ListItem", "position": 10, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EC%A3%BC%EC%9B%94%EB%A7%88%EC%9D%B4%EB%8B%A4%EC%8A%A4%EB%B9%8C1%EC%B0%A8-a10021826.html", "name": "주월마이다스빌1차", "description": "주월동 · 100세대"}, {"@type": "ListItem", "position": 11, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EC%86%A1%EB%A6%BC%EC%95%84%ED%8C%8C%ED%8A%B8-a10021879.html", "name": "송림아파트", "description": "봉선동 · 122세대"}, {"@type": "ListItem", "position": 12, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-%EB%B4%89%EC%84%A0-%EC%85%80%EB%A0%88%EC%8A%A4%ED%8B%B0%EC%A7%80-a10022006.html", "name": "e편한세상 봉선 셀레스티지", "description": "봉선동 · 542세대"}, {"@type": "ListItem", "position": 13, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EC%9D%B4%EC%A7%80%EB%8D%94%EC%9B%903%EB%8B%A8%EC%A7%80-a10022105.html", "name": "봉선이지더원3단지", "description": "봉선동"}, {"@type": "ListItem", "position": 14, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A7%84%EC%9B%94%EB%8F%99-%EC%A7%84%EC%9B%941%EC%B0%A8%EC%A7%84%EC%95%84%ED%95%98%EC%9D%B4%EB%B9%8C-a10022115.html", "name": "진월1차진아하이빌", "description": "진월동 · 108세대"}, {"@type": "ListItem", "position": 15, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%B1%EC%9A%B4%EB%8F%99-%EB%AA%A9%EC%9A%B0%EC%95%84%ED%8C%8C%ED%8A%B8-a10022151.html", "name": "목우아파트", "description": "백운동 · 145세대"}, {"@type": "ListItem", "position": 16, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EC%A3%BC%EC%9B%94%EC%98%81%EB%AC%B4%EC%98%88%EB%8B%A4%EC%9D%8C1%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10022210.html", "name": "주월영무예다음1차아파트", "description": "주월동 · 114세대"}, {"@type": "ListItem", "position": 17, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%AC%B4%EB%93%B1%ED%94%84%EB%9D%BC%EC%9E%90%EC%A3%BC%EC%9B%942%EC%B0%A8-%EC%95%84%ED%8C%8C%ED%8A%B8-a10022247.html", "name": "무등프라자주월2차 아파트", "description": "봉선동 · 108세대"}, {"@type": "ListItem", "position": 18, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EA%B8%88%EC%98%81%ED%91%B8%EB%A5%B4%EB%AF%B8%EC%95%84%ED%8C%8C%ED%8A%B8%EA%B4%80%EB%A6%AC%EC%82%AC%EB%AC%B4%EC%86%8C-a10022664.html", "name": "금영푸르미아파트관리사무소", "description": "주월동 · 140세대"}, {"@type": "ListItem", "position": 19, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%A9%EB%A6%BC%EB%8F%99-%EB%B0%A9%EB%A6%BC-%EB%8D%94-%ED%8D%BC%EC%8A%A4%ED%8A%B8-%EA%B3%A8%EB%93%9C%ED%81%B4%EB%9E%98%EC%8A%A4-a10022815.html", "name": "방림 더 퍼스트 골드클래스", "description": "방림동 · 418세대"}, {"@type": "ListItem", "position": 20, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%A5%B4%EC%98%A4%EB%84%A4%EB%9C%A8-a10023031.html", "name": "봉선동 르오네뜨", "description": "봉선동 · 70세대"}, {"@type": "ListItem", "position": 21, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EC%86%94%EB%AB%BC%EB%A0%89%EC%8A%A4K-1%EC%95%84%ED%8C%8C%ED%8A%B8-a10023147.html", "name": "솔뫼렉스K-1아파트", "description": "봉선동 · 65세대"}, {"@type": "ListItem", "position": 22, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EC%A3%BC%EC%9B%94%EB%AC%B4%EB%93%B1%ED%8C%8C%ED%81%AC%EC%95%84%ED%8C%8C%ED%8A%B8-a10023251.html", "name": "주월무등파크아파트", "description": "주월동 · 143세대"}, {"@type": "ListItem", "position": 23, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%A9%EB%A6%BC%EB%8F%99-%EB%B4%89%EC%84%A0%EC%A4%91%EA%B8%B8%ED%95%9C%EA%B5%AD%EC%95%84%EB%8D%B8%EB%A6%AC%EC%9B%805%EC%B0%A8-a10023549.html", "name": "봉선중길한국아델리움5차", "description": "방림동 · 271세대"}, {"@type": "ListItem", "position": 24, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%95%95%EC%B4%8C%EB%8F%99-%EC%97%90%EB%84%88%EC%A7%80%EB%B0%B8%EB%A6%AC%ED%92%8D%EA%B2%BD%EC%B1%84%ED%8D%BC%EC%8A%A4%ED%8A%B8%ED%8C%8C%ED%81%AC-a10023805.html", "name": "에너지밸리풍경채퍼스트파크", "description": "압촌동 · 533세대"}, {"@type": "ListItem", "position": 25, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8F%99%ED%95%9C%EA%B5%AD%EC%95%84%EB%8D%B8%EB%A6%AC%EC%9B%802%EB%8B%A8%EC%A7%80-a10023937.html", "name": "봉선동한국아델리움2단지", "description": "봉선동 · 74세대"}, {"@type": "ListItem", "position": 26, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9B%94%EC%82%B0%EB%8F%99-%EB%B0%98%EB%8F%84-%EC%9C%A0%EB%B3%B4%EB%9D%BC-%EB%8D%94-%ED%8D%BC%EC%8A%A4%ED%8A%B8-%EC%95%84%ED%8C%8C%ED%8A%B8-a10024138.html", "name": "반도 유보라 더 퍼스트 아파트", "description": "월산동 · 889세대"}, {"@type": "ListItem", "position": 27, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A7%84%EC%9B%94%EB%8F%99-%EC%A7%84%EC%9B%94-%ED%95%9C%EA%B5%AD%EC%95%84%EB%8D%B8%EB%A6%AC%EC%9B%802%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10024220.html", "name": "진월 한국아델리움2차아파트", "description": "진월동"}, {"@type": "ListItem", "position": 28, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EC%A3%BC%EC%9B%94%EB%8F%99-%EA%B3%A8%EB%93%9C%ED%81%B4%EB%9E%98%EC%8A%A4-%EC%96%B4%EB%B0%98%EC%8B%9C%ED%8B%B0-a10024298.html", "name": "주월동 골드클래스 어반시티", "description": "주월동 · 426세대"}, {"@type": "ListItem", "position": 29, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EC%A3%BC%EC%9B%94%EC%96%91%EC%9A%B0%EB%82%B4%EC%95%88%EC%95%A0-%EC%95%84%ED%8C%8C%ED%8A%B8-a10024376.html", "name": "주월양우내안애 아파트", "description": "주월동 · 594세대"}, {"@type": "ListItem", "position": 30, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%B1%EC%9A%B4%EB%8F%99-%EB%B0%B1%EC%9A%B4%EC%BD%94%EC%95%84%EB%A3%A8%EC%95%84%ED%8C%B0%EB%A6%AC%EC%8A%A4%ED%9E%90-a10024469.html", "name": "백운코아루아팰리스힐", "description": "백운동 · 197세대"}, {"@type": "ListItem", "position": 31, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%A9%EB%A6%BC%EB%8F%99-%EA%B4%91%EB%AA%85%EA%B7%B8%EB%A6%B0%EC%95%84%ED%8C%8C%ED%8A%B8-a10024533.html", "name": "광명그린아파트", "description": "방림동 · 192세대"}, {"@type": "ListItem", "position": 32, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%86%A1%ED%95%98%EB%8F%99-%ED%9A%A8%EC%B2%9C%EC%A7%80%EA%B5%AC-%EC%BD%94%EC%98%A4%EB%A1%B1%ED%95%98%EB%8A%98%EC%B1%84-a10024563.html", "name": "효천지구 코오롱하늘채", "description": "송하동 · 264세대"}, {"@type": "ListItem", "position": 33, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A7%80%EC%84%9D%EB%8F%99-%EC%9D%BC%EC%A7%84%EC%8A%A4%EC%9C%84%ED%8A%B8%ED%8F%AC%EB%A0%88-a10024570.html", "name": "일진스위트포레", "description": "지석동 · 347세대"}, {"@type": "ListItem", "position": 34, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9E%84%EC%95%94%EB%8F%99-%ED%9A%A8%EC%B2%9C%EC%8B%9C%ED%8B%B0%ED%94%84%EB%9D%BC%EB%94%94%EC%9B%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10025485.html", "name": "효천시티프라디움아파트", "description": "임암동 · 1,164세대"}, {"@type": "ListItem", "position": 35, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9E%84%EC%95%94%EB%8F%99-%ED%9A%A8%EC%B2%9C1%EC%A4%91%ED%9D%A5S%ED%81%B4%EB%9E%98%EC%8A%A4%EC%97%90%EC%BD%94%ED%8C%8C%ED%81%AC%EC%95%84%ED%8C%8C%ED%8A%B8-a10025731.html", "name": "효천1중흥S클래스에코파크아파트", "description": "임암동 · 695세대"}, {"@type": "ListItem", "position": 36, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9E%84%EC%95%94%EB%8F%99-%ED%9A%A8%EC%B2%9C1-%EC%A4%91%ED%9D%A5s-%ED%81%B4%EB%9E%98%EC%8A%A4-%EC%97%90%EC%BD%94%EC%8B%9C%ED%8B%B0-a10025732.html", "name": "효천1 중흥s-클래스 에코시티", "description": "임암동 · 832세대"}, {"@type": "ListItem", "position": 37, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EB%B4%89%EC%84%A0%EB%A1%9C-%EB%82%A8%ED%95%B4%EC%98%A4%EB%84%A4%EB%9C%A8-a10026263.html", "name": "봉선로 남해오네뜨", "description": "주월동 · 301세대"}, {"@type": "ListItem", "position": 38, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8F%99%EB%AA%A8%EC%95%84%EC%97%98%EA%B0%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10026325.html", "name": "봉선동모아엘가아파트", "description": "봉선동 · 128세대"}, {"@type": "ListItem", "position": 39, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%ED%96%89%EC%95%94%EB%8F%99-%EB%B8%8C%EB%9D%BC%EC%9A%B4%EC%8A%A4%ED%86%A4-%ED%9A%A8%EC%B2%9C-%EC%95%84%ED%8C%8C%ED%8A%B8-a10026841.html", "name": "브라운스톤 효천 아파트", "description": "행암동 · 521세대"}, {"@type": "ListItem", "position": 40, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9B%94%EC%82%B0%EB%8F%99-%EC%9B%94%EC%82%B0%EB%8F%99%EC%9D%B4%EC%8A%A4%ED%86%A0%EB%A6%AC-a10026876.html", "name": "월산동이스토리", "description": "월산동"}, {"@type": "ListItem", "position": 41, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%84%9C%EB%8F%99-%EC%84%9C%EB%8F%99-%EC%98%81%EB%AC%B4%EC%98%88%EB%8B%A4%EC%9D%8C-%EC%95%84%ED%8C%8C%ED%8A%B8-a10027100.html", "name": "서동 영무예다음 아파트", "description": "서동 · 310세대"}, {"@type": "ListItem", "position": 42, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8F%99-%EC%A0%9C%EC%9D%BC%ED%92%8D%EA%B2%BD%EC%B1%84-%EC%95%84%ED%8C%8C%ED%8A%B8-a10027211.html", "name": "봉선동 제일풍경채 아파트", "description": "봉선동 · 400세대"}, {"@type": "ListItem", "position": 43, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%B1%EC%9A%B4%EB%8F%99-%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-%EB%B0%B1%EC%9A%B4-a10027348.html", "name": "힐스테이트 백운", "description": "백운동 · 528세대"}, {"@type": "ListItem", "position": 44, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%ED%96%89%EC%95%94%EB%8F%99-%EA%B4%91%EC%A3%BC%ED%9A%A8%EC%B2%9CLH%EC%B2%9C%EB%85%84%EB%82%98%EB%AC%B4-6%EB%8B%A8%EC%A7%80-a10027544.html", "name": "광주효천LH천년나무 6단지", "description": "행암동 · 532세대"}, {"@type": "ListItem", "position": 45, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EC%A7%80%EC%9B%B0%EC%95%84%ED%8C%8C%ED%8A%B8-a10027650.html", "name": "봉선지웰아파트", "description": "봉선동 · 181세대"}, {"@type": "ListItem", "position": 46, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%A9%EB%A6%BC%EB%8F%99-%EA%B4%91%EC%A3%BC-%EB%B0%A9%EB%A6%BC-%EB%AA%85%EC%A7%80%EB%A1%9C%EB%93%9C%ED%9E%90-%EC%95%84%ED%8C%8C%ED%8A%B8-a10027831.html", "name": "광주 방림 명지로드힐 아파트", "description": "방림동 · 192세대"}, {"@type": "ListItem", "position": 47, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%ED%96%89%EC%95%94%EB%8F%99-%ED%9A%A8%EC%B2%9C2%EC%A7%80%EA%B5%AC-%EC%A4%91%ED%9D%A5S-%ED%81%B4%EB%9E%98%EC%8A%A4%EC%95%84%ED%8C%8C%ED%8A%B8-a10027835.html", "name": "효천2지구 중흥S-클래스아파트", "description": "행암동 · 662세대"}, {"@type": "ListItem", "position": 48, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%86%A1%ED%95%98%EB%8F%99-%EC%86%A1%ED%95%98%EB%8F%99%EC%A7%84%EC%95%84%EB%A6%AC%EC%B1%845%EC%B0%A81%EB%8B%A8%EC%A7%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10028010.html", "name": "송하동진아리채5차1단지아파트", "description": "송하동 · 99세대"}, {"@type": "ListItem", "position": 49, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A03%EC%B0%A8%ED%95%9C%EA%B5%AD%EC%95%84%EB%8D%B8%EB%A6%AC%EC%9B%80-a10028101.html", "name": "봉선3차한국아델리움", "description": "봉선동 · 279세대"}, {"@type": "ListItem", "position": 50, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%ED%96%89%EC%95%94%EB%8F%99-%ED%9A%A8%EC%B2%9C2%EC%A7%80%EA%B5%AC-%EC%A0%9C%EC%9D%BC%ED%92%8D%EA%B2%BD%EC%B1%84-%EC%97%90%EB%93%80%ED%8C%8C%ED%81%AC1%EC%B0%A8-a10028123.html", "name": "효천2지구 제일풍경채 에듀파크1차", "description": "행암동 · 270세대"}, {"@type": "ListItem", "position": 51, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%ED%96%89%EC%95%94%EB%8F%99-%ED%9A%A8%EC%B2%9C2%EC%A7%80%EA%B5%AC-%EC%A0%9C%EC%9D%BC%ED%92%8D%EA%B2%BD%EC%B1%84-%EC%97%90%EB%93%80%ED%8C%8C%ED%81%AC2%EC%B0%A8-a10028124.html", "name": "효천2지구 제일풍경채 에듀파크2차", "description": "행암동 · 430세대"}, {"@type": "ListItem", "position": 52, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A7%84%EC%9B%94%EB%8F%99-%EB%B8%8C%EB%9D%BC%EC%9A%B4%EC%8A%A4%ED%86%A4%EC%A7%84%EC%9B%94-a10028194.html", "name": "브라운스톤진월", "description": "진월동 · 201세대"}, {"@type": "ListItem", "position": 53, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%84%9C%EB%8F%99-%EC%95%84%EB%82%A8%ED%94%84%EB%9D%BC%EC%9E%90-a50301101.html", "name": "아남프라자", "description": "서동 · 193세대"}, {"@type": "ListItem", "position": 54, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%96%91%EB%A6%BC%EB%8F%99-%EC%96%91%EB%A6%BC1%ED%9C%B4%EB%A8%BC%EC%8B%9C%EC%95%84-a50304002.html", "name": "양림1휴먼시아", "description": "양림동 · 987세대"}, {"@type": "ListItem", "position": 55, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%A9%EB%A6%BC%EB%8F%99-%EA%B8%88%ED%98%B8%EB%A7%A8%EC%85%98-a50305002.html", "name": "금호맨션", "description": "방림동 · 237세대"}, {"@type": "ListItem", "position": 56, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%A9%EB%A6%BC%EB%8F%99-%EB%9D%BC%EC%9D%B8%ED%9A%A8%EC%B9%9C1%EC%B0%A8-a50305004.html", "name": "라인효친1차", "description": "방림동 · 376세대"}, {"@type": "ListItem", "position": 57, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%A9%EB%A6%BC%EB%8F%99-%EB%AA%A8%EC%95%842-2%EC%B0%A83%EC%B0%A8-a50305005.html", "name": "모아2-2차3차", "description": "방림동 · 929세대"}, {"@type": "ListItem", "position": 58, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%A9%EB%A6%BC%EB%8F%99-%EC%82%BC%EC%9D%BC%EC%95%84%ED%8C%8C%ED%8A%B8-a50305101.html", "name": "삼일아파트", "description": "방림동 · 400세대"}, {"@type": "ListItem", "position": 59, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%82%A8%EC%96%91%ED%9C%B4%ED%8A%BC1%EC%B0%A8-a50306001.html", "name": "봉선남양휴튼1차", "description": "봉선동 · 200세대"}, {"@type": "ListItem", "position": 60, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%AA%A8%EC%95%841-1%EC%B0%A8-a50306002.html", "name": "모아1-1차", "description": "봉선동 · 297세대"}, {"@type": "ListItem", "position": 61, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%AC%B4%EB%93%B1%ED%8C%8C%ED%81%AC1%EC%B0%A8-a50306003.html", "name": "무등파크1차", "description": "봉선동 · 299세대"}, {"@type": "ListItem", "position": 62, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%8C%80%ED%99%94%EC%95%84%ED%8C%8C%ED%8A%B8-a50306004.html", "name": "대화아파트", "description": "봉선동 · 315세대"}, {"@type": "ListItem", "position": 63, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%9D%BC%EC%9D%B8%EC%95%84%ED%8C%8C%ED%8A%B8-a50306005.html", "name": "라인아파트", "description": "봉선동 · 318세대"}, {"@type": "ListItem", "position": 64, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%AA%A8%EC%95%841-2%EC%B0%A8-a50306006.html", "name": "모아1-2차", "description": "봉선동 · 340세대"}, {"@type": "ListItem", "position": 65, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%9D%BC%EC%9D%B8%EA%B4%91%EC%9E%A51%EC%B0%A8-a50306007.html", "name": "라인광장1차", "description": "봉선동 · 385세대"}, {"@type": "ListItem", "position": 66, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8F%99-%EC%82%BC%EC%9D%B52%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a50306008.html", "name": "봉선동 삼익2차아파트", "description": "봉선동 · 390세대"}, {"@type": "ListItem", "position": 67, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8F%99%ED%95%9C%EA%B5%AD%EC%95%84%EB%8D%B8%EB%A6%AC%EC%9B%801%EB%8B%A8%EC%A7%80-a50306009.html", "name": "봉선동한국아델리움1단지", "description": "봉선동 · 410세대"}, {"@type": "ListItem", "position": 68, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%9D%BC%EC%9D%B8%EA%B4%91%EC%9E%A52-3%EC%B0%A8-a50306010.html", "name": "라인광장2,3차", "description": "봉선동 · 411세대"}, {"@type": "ListItem", "position": 69, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%AC%B4%EB%93%B1%ED%8C%8C%ED%81%AC%EB%B4%89%EC%84%A03%EC%B0%A81%EB%8B%A8%EC%A7%80-a50306012.html", "name": "무등파크봉선3차1단지", "description": "봉선동 · 556세대"}, {"@type": "ListItem", "position": 70, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EA%B8%88%ED%98%B81%EC%B0%A8-a50306013.html", "name": "금호1차", "description": "봉선동 · 570세대"}, {"@type": "ListItem", "position": 71, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EA%B8%88%ED%98%B82%EC%B0%A8-a50306014.html", "name": "금호2차", "description": "봉선동 · 602세대"}, {"@type": "ListItem", "position": 72, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EC%82%BC%EC%9D%B51%EC%B0%A8-a50306015.html", "name": "삼익1차", "description": "봉선동 · 756세대"}, {"@type": "ListItem", "position": 73, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8F%99%EB%AC%B4%EB%93%B1%ED%8C%8C%ED%81%AC2%EC%B0%A8-%EC%95%84%ED%8C%8C%ED%8A%B8-a50306016.html", "name": "봉선동무등파크2차 아파트", "description": "봉선동 · 803세대"}, {"@type": "ListItem", "position": 74, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%9D%BC%EC%9D%B8%ED%95%98%EC%9D%B4%EC%B8%A0-a50306017.html", "name": "라인하이츠", "description": "봉선동 · 1,134세대"}, {"@type": "ListItem", "position": 75, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%ED%8F%AC%EC%8A%A4%EC%BD%94%EB%8D%94%EC%83%B5%EC%95%84%ED%8C%8C%ED%8A%B8-a50306018.html", "name": "포스코더샵아파트", "description": "봉선동 · 1,140세대"}, {"@type": "ListItem", "position": 76, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%9D%BC%EC%9D%B82-3%EC%B0%A8-a50306201.html", "name": "라인2.3차", "description": "봉선동 · 358세대"}, {"@type": "ListItem", "position": 77, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%AC%B4%EB%93%B13%EC%B0%A82%EB%8B%A8%EC%A7%80-a50306204.html", "name": "무등3차2단지", "description": "봉선동 · 309세대"}, {"@type": "ListItem", "position": 78, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A7%80%EC%84%9D%EB%8F%99-%ED%95%9C%EC%9D%BC%EB%B2%A0%EB%9D%BC%EC%B2%B4-a50320001.html", "name": "한일베라체", "description": "지석동 · 448세대"}, {"@type": "ListItem", "position": 79, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9B%94%EC%82%B0%EB%8F%99-%EC%A0%9C%EC%9D%BC%ED%8C%8C%ED%81%AC-a50323001.html", "name": "제일파크", "description": "월산동 · 155세대"}, {"@type": "ListItem", "position": 80, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9B%94%EC%82%B0%EB%8F%99-%EC%9B%94%EC%82%B0%EB%9D%BC%EC%9D%B8-a50323002.html", "name": "월산라인", "description": "월산동 · 240세대"}, {"@type": "ListItem", "position": 81, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9B%94%EC%82%B0%EB%8F%99-%EB%8D%95%EB%A6%BC%EC%A0%9C%EC%9D%BC%ED%8C%8C%ED%81%AC-a50323003.html", "name": "덕림제일파크", "description": "월산동 · 312세대"}, {"@type": "ListItem", "position": 82, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9B%94%EC%82%B0%EB%8F%99-%EC%9B%94%EC%82%B0%EC%8B%A0%EC%9A%B0-a50323004.html", "name": "월산신우", "description": "월산동 · 370세대"}, {"@type": "ListItem", "position": 83, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9B%94%EC%82%B0%EB%8F%99-%EC%9B%94%EC%82%B0%EC%9A%B0%EB%B0%A9%EC%95%84%EC%9D%B4%EC%9C%A0%EC%89%98-a50323005.html", "name": "월산우방아이유쉘", "description": "월산동 · 281세대"}, {"@type": "ListItem", "position": 84, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%B1%EC%9A%B4%EB%8F%99-%EC%A0%9C%EC%9D%BC%ED%8C%8C%ED%81%AC-a50330002.html", "name": "제일파크", "description": "백운동 · 166세대"}, {"@type": "ListItem", "position": 85, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%B1%EC%9A%B4%EB%8F%99-%EB%8C%80%ED%9D%A5%EB%B0%B1%EC%9A%B4%EC%8A%A4%EC%B9%B4%EC%9D%B42%EC%B0%A8-a50330003.html", "name": "대흥백운스카이2차", "description": "백운동 · 214세대"}, {"@type": "ListItem", "position": 86, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%B1%EC%9A%B4%EB%8F%99-%EC%82%AC%EC%A7%81%EC%8A%A4%EC%B9%B4%EC%9D%B4-a50330004.html", "name": "사직스카이", "description": "백운동 · 240세대"}, {"@type": "ListItem", "position": 87, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%B1%EC%9A%B4%EB%8F%99-%EB%B2%BD%EC%82%B0%EC%95%84%ED%8C%8C%ED%8A%B8-a50330006.html", "name": "벽산아파트", "description": "백운동 · 326세대"}, {"@type": "ListItem", "position": 88, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%B1%EC%9A%B4%EB%8F%99-%EB%8C%80%ED%9D%A5%EB%B0%B1%EC%9A%B4%EC%8A%A4%EC%B9%B4%EC%9D%B41%EC%B0%A8-a50330007.html", "name": "대흥백운스카이1차", "description": "백운동 · 333세대"}, {"@type": "ListItem", "position": 89, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%B1%EC%9A%B4%EB%8F%99-%EB%B0%B1%EC%9A%B4%EC%9A%B0%EB%B0%A9%EC%95%84%EC%9D%B4%EC%9C%A0%EC%89%98-a50330009.html", "name": "백운우방아이유쉘", "description": "백운동 · 303세대"}, {"@type": "ListItem", "position": 90, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%ED%95%B4%ED%83%9C2%EC%B0%A8-a50331002.html", "name": "해태2차", "description": "주월동 · 157세대"}, {"@type": "ListItem", "position": 91, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EB%9D%BC%EC%9D%B8%EA%B0%80%EB%93%A01%EC%B0%A8-a50331003.html", "name": "라인가든1차", "description": "주월동 · 169세대"}, {"@type": "ListItem", "position": 92, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%ED%95%9C%EC%96%91%EC%95%84%ED%8C%8C%ED%8A%B8-a50331004.html", "name": "한양아파트", "description": "주월동 · 172세대"}, {"@type": "ListItem", "position": 93, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%ED%98%84%EB%8C%801%EC%B0%A8-a50331005.html", "name": "현대1차", "description": "주월동 · 258세대"}, {"@type": "ListItem", "position": 94, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EC%8A%A4%EC%B9%B4%EC%9D%B4%EB%A7%A8%EC%85%98-a50331007.html", "name": "스카이맨션", "description": "주월동 · 314세대"}, {"@type": "ListItem", "position": 95, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EB%8D%95%EC%82%B0%EC%95%84%ED%8C%8C%ED%8A%B8-a50331008.html", "name": "덕산아파트", "description": "주월동 · 320세대"}, {"@type": "ListItem", "position": 96, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EC%A3%BC%EC%9B%941%EB%8B%A8%EC%A7%80%EC%9D%B4%EC%A7%80%EB%8D%94%EC%9B%90-a50331011.html", "name": "주월1단지이지더원", "description": "주월동 · 177세대"}, {"@type": "ListItem", "position": 97, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EA%B8%88%EC%98%81%ED%91%B8%EB%A5%B4%EB%AF%B8-a50331012.html", "name": "금영푸르미", "description": "주월동 · 140세대"}, {"@type": "ListItem", "position": 98, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EC%A0%9C%EC%84%9D%EC%82%B0%ED%98%B8%EB%B0%98%ED%9E%90%ED%95%98%EC%9E%84-a50331013.html", "name": "제석산호반힐하임", "description": "주월동 · 687세대"}, {"@type": "ListItem", "position": 99, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EB%B4%89%EC%84%A0%EB%A1%9C%EA%B4%91%EB%AA%85%EB%A9%94%EC%9D%B4%EB%A3%A8%EC%A6%88-a50331014.html", "name": "봉선로광명메이루즈", "description": "주월동 · 343세대"}, {"@type": "ListItem", "position": 100, "url": "https://hwik.kr/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EC%A3%BC%EC%9B%94%EB%8F%99%ED%98%B8%EB%B0%98%EB%B2%A0%EB%A5%B4%EB%94%94%EC%9B%802%EC%B0%A8-a50331101.html", "name": "주월동호반베르디움2차", "description": "주월동 · 296세대"}]}}, {"@type": "AdministrativeArea", "name": "광주 남구", "containedInPlace": {"@type": "AdministrativeArea", "name": "광주", "containedInPlace": {"@type": "Country", "name": "대한민국"}}, "geo": {"@type": "GeoCoordinates", "latitude": 35.124371, "longitude": 126.900233}, "@context": "https://schema.org"}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "남구 아파트 평균 매매가는?", "acceptedAnswer": {"@type": "Answer", "text": "남구 154개 단지 평균 매매가는 2억 9천입니다. 국토교통부 실거래가 공개시스템 기준."}}, {"@type": "Question", "name": "남구 아파트 전세가율은?", "acceptedAnswer": {"@type": "Answer", "text": "남구 평균 전세가율은 77.5%입니다."}}, {"@type": "Question", "name": "남구에서 가장 비싼 아파트는?", "acceptedAnswer": {"@type": "Answer", "text": "매매가 1위는 봉선동한국아델리움1단지로 19억 5천에 거래되었습니다."}}, {"@type": "Question", "name": "남구에서 아파트 단지가 많은 동은?", "acceptedAnswer": {"@type": "Answer", "text": "남구에서는 봉선동·진월동·주월동 일대에 아파트 단지가 가장 많이 분포합니다."}}, {"@type": "Question", "name": "남구 아파트 단지 수는?", "acceptedAnswer": {"@type": "Answer", "text": "남구에는 총 154개 아파트 단지, 55,951세대가 있습니다."}}, {"@type": "Question", "name": "남구 아파트 실거래가 데이터 출처는?", "acceptedAnswer": {"@type": "Answer", "text": "국토교통부 실거래가 공개시스템(rt.molit.go.kr) 데이터를 매일 자동 수집합니다."}}]}, {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"}, {"@type": "ListItem", "position": 2, "name": "광주 구별 시세", "item": "https://hwik.kr/gu/"}, {"@type": "ListItem", "position": 3, "name": "남구"}]}]}</script>
 </head>
 <body>
 <div class="wrap">
 <header class="header"><div class="header-top">
   <a class="logo" href="/" style="text-decoration:none;">휙</a>
   <div><h1 class="header-name">남구 아파트 시세</h1>
-  <div class="header-sub">154개 단지 · 55,951세대</div></div>
+  <div class="header-sub">154개 단지 · 55,951세대 · 마지막 업데이트 2026-04-27</div></div>
 </div></header>
 <nav class="breadcrumb"><a href="/">휙</a><span>&gt;</span>
 <a href="/gu/">광주</a><span>&gt;</span>남구</nav>
+<p class="seo-text" style="font-size:13px;line-height:1.85;margin:14px 16px 4px;color:var(--sub);">광주 남구의 아파트 <b>154개 단지</b>(봉선동·진월동·주월동 등 주요 입지) 시세를 한 번에 확인하세요., 평균 매매가 <b>2억 9천</b>, 평균 전세가율 <b>77.5%</b>, 수집 거래 <b>154건</b>. 매매·전세·월세 면적별 가격, 동별 단지 비교, ㎡당 가격 순위까지 — 국토교통부 실거래가 공개시스템 기반.</p>
 <div class="metrics">
   <div class="metric"><div class="metric-label">단지 수</div><div class="metric-value">154개</div></div>
   <div class="metric"><div class="metric-label">평균 매매가</div><div class="metric-value">2억 9천</div></div>
   <div class="metric"><div class="metric-label">평균 전세가율</div><div class="metric-value">77.5%</div></div>
 </div>
 <div class="divider"></div>
-<div class="section"><h2 class="section-title">매매가 높은 단지</h2>
-<div style="display:flex;flex-direction:column;gap:8px;">
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8F%99%ED%95%9C%EA%B5%AD%EC%95%84%EB%8D%B8%EB%A6%AC%EC%9B%801%EB%8B%A8%EC%A7%80-a50306009.html">
-  <div><div class="danji-name">1. 봉선동한국아델리움1단지</div><div class="danji-sub">남구 봉선동 · 전용 193㎡</div></div>
-  <div><div class="danji-price">19억 5천</div><div class="danji-rate">최고가 기준</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EC%8C%8D%EC%9A%A9%EC%8A%A4%EC%9C%97%EB%8B%B7%ED%99%88-a50381003.html">
-  <div><div class="danji-name">2. 쌍용스윗닷홈</div><div class="danji-sub">남구 봉선동 · 전용 169㎡</div></div>
-  <div><div class="danji-price">17억 3천</div><div class="danji-rate">최고가 기준</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%ED%8F%AC%EC%8A%A4%EC%BD%94%EB%8D%94%EC%83%B5%EC%95%84%ED%8C%8C%ED%8A%B8-a50306018.html">
-  <div><div class="danji-name">3. 포스코더샵아파트</div><div class="danji-sub">남구 봉선동 · 전용 179㎡</div></div>
-  <div><div class="danji-price">15억 1천</div><div class="danji-rate">최고가 기준</div></div>
-</a>
-</div></div><div class="divider"></div>
-<div class="section"><h2 class="section-title">전세가율 높은 단지</h2>
-<div style="display:flex;flex-direction:column;gap:8px;">
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9B%94%EC%82%B0%EB%8F%99-%EC%A0%9C%EC%9D%BC%ED%8C%8C%ED%81%AC-a50323001.html">
-  <div><div class="danji-name">1. 제일파크</div><div class="danji-sub">남구 월산동 · 전용 67㎡</div></div>
-  <div><div class="danji-price">125.0%</div><div class="danji-rate">전세가율</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%A9%EB%A6%BC%EB%8F%99-%EB%AA%A8%EC%95%842-2%EC%B0%A83%EC%B0%A8-a50305005.html">
-  <div><div class="danji-name">2. 모아2-2차3차</div><div class="danji-sub">남구 방림동 · 전용 60㎡</div></div>
-  <div><div class="danji-price">120.0%</div><div class="danji-rate">전세가율</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%86%A1%ED%95%98%EB%8F%99-%EC%86%A1%ED%95%98%EC%82%BC%EC%9D%B5%EC%95%84%ED%8C%8C%ED%8A%B8-a50381902.html">
-  <div><div class="danji-name">3. 송하삼익아파트</div><div class="danji-sub">남구 송하동 · 전용 60㎡</div></div>
-  <div><div class="danji-price">114.5%</div><div class="danji-rate">전세가율</div></div>
-</a>
-</div></div>
+<p class="seo-text" style="font-size:13px;line-height:1.85;margin:4px 16px 16px;color:var(--sub);">남구에서 가장 비싼 아파트는 봉선동의 <a href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8F%99%ED%95%9C%EA%B5%AD%EC%95%84%EB%8D%B8%EB%A6%AC%EC%9B%801%EB%8B%A8%EC%A7%80-a50306009.html" title="봉선동한국아델리움1단지 실거래가 시세" style="color:var(--yellow);text-decoration:none;font-weight:700;">봉선동한국아델리움1단지</a>로 <b>19억 5천</b>에 거래됐습니다. 뒤이어 <a href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EC%8C%8D%EC%9A%A9%EC%8A%A4%EC%9C%97%EB%8B%B7%ED%99%88-a50381003.html" style="color:var(--yellow);text-decoration:none;font-weight:600;">쌍용스윗닷홈</a>·<a href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%ED%8F%AC%EC%8A%A4%EC%BD%94%EB%8D%94%EC%83%B5%EC%95%84%ED%8C%8C%ED%8A%B8-a50306018.html" style="color:var(--yellow);text-decoration:none;font-weight:600;">포스코더샵아파트</a>가 자리잡고 있습니다.</p>
+<div class="section"><h2 class="section-title">남구에서 가장 비싼 아파트는?</h2>
+<a class="danji-hero" title="봉선동한국아델리움1단지 실거래가 · 남구 매매가 1위" style="text-decoration:none;display:block;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8F%99%ED%95%9C%EA%B5%AD%EC%95%84%EB%8D%B8%EB%A6%AC%EC%9B%801%EB%8B%A8%EC%A7%80-a50306009.html"><span class="rank-badge">매매가 1위</span><div class="hero-name">봉선동한국아델리움1단지</div><div class="hero-meta">남구 봉선동 · 전용 193㎡ · 2006년 입주 · 410세대</div><div class="hero-price">19억 5천<span class="hero-price-label">최고가 기준</span></div></a>
+<div style="margin-top:6px;">
+<a class="danji-compact" title="쌍용스윗닷홈 실거래가 · 남구 매매가 2위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EC%8C%8D%EC%9A%A9%EC%8A%A4%EC%9C%97%EB%8B%B7%ED%99%88-a50381003.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">2</span><div style="min-width:0;"><div class="danji-compact-name">쌍용스윗닷홈</div><div class="danji-compact-meta">남구 봉선동 · 전용 169㎡ · 2005년</div></div></div><div class="danji-compact-price">17억 3천</div></a>
+<a class="danji-compact" title="포스코더샵아파트 실거래가 · 남구 매매가 3위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%ED%8F%AC%EC%8A%A4%EC%BD%94%EB%8D%94%EC%83%B5%EC%95%84%ED%8C%8C%ED%8A%B8-a50306018.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">3</span><div style="min-width:0;"><div class="danji-compact-name">포스코더샵아파트</div><div class="danji-compact-meta">남구 봉선동 · 전용 179㎡ · 2004년</div></div></div><div class="danji-compact-price">15억 1천</div></a>
+</div>
+</div><div class="divider"></div>
+<div class="section"><h2 class="section-title">전세가율이 높은 단지 (실거주 추천)</h2>
+<a class="danji-hero" title="제일파크 실거래가 · 남구 전세가율 1위" style="text-decoration:none;display:block;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9B%94%EC%82%B0%EB%8F%99-%EC%A0%9C%EC%9D%BC%ED%8C%8C%ED%81%AC-a50323001.html"><span class="rank-badge">전세가율 1위</span><div class="hero-name">제일파크</div><div class="hero-meta">남구 월산동 · 전용 67㎡ · 1986년 입주 · 155세대</div><div class="hero-price">125.0%<span class="hero-price-label">매매 대비 전세 비율</span></div></a>
+<div style="margin-top:6px;">
+<a class="danji-compact" title="모아2-2차3차 실거래가 · 남구 전세가율 2위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%A9%EB%A6%BC%EB%8F%99-%EB%AA%A8%EC%95%842-2%EC%B0%A83%EC%B0%A8-a50305005.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">2</span><div style="min-width:0;"><div class="danji-compact-name">모아2-2차3차</div><div class="danji-compact-meta">남구 방림동 · 전용 60㎡ · 1989년</div></div></div><div class="danji-compact-price">120.0%</div></a>
+<a class="danji-compact" title="송하삼익아파트 실거래가 · 남구 전세가율 3위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%86%A1%ED%95%98%EB%8F%99-%EC%86%A1%ED%95%98%EC%82%BC%EC%9D%B5%EC%95%84%ED%8C%8C%ED%8A%B8-a50381902.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">3</span><div style="min-width:0;"><div class="danji-compact-name">송하삼익아파트</div><div class="danji-compact-meta">남구 송하동 · 전용 60㎡ · 1997년</div></div></div><div class="danji-compact-price">114.5%</div></a>
+</div>
+</div>
 <div class="divider"></div>
-<div class="section"><h2 class="section-title">동별 단지</h2>
+<div class="section"><h2 class="section-title">남구 어느 동에 단지가 모여있나?</h2>
 <div class="dong-grid">
 <a class="dong-item" style="text-decoration:none;color:inherit;" href="/dong/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99.html">
   <div class="dong-name">봉선동</div>
@@ -152,119 +406,111 @@
 </div>
 </div></div>
 <div class="divider"></div>
-<div class="section"><h2 class="section-title">㎡당 가격 TOP 10 <span style="font-size:10px;color:var(--muted);font-weight:400;">(전용면적 기준)</span></h2>
-<div style="display:flex;flex-direction:column;gap:8px;">
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8F%99%ED%95%9C%EA%B5%AD%EC%95%84%EB%8D%B8%EB%A6%AC%EC%9B%801%EB%8B%A8%EC%A7%80-a50306009.html">
-  <div><div class="danji-name">1. 봉선동한국아델리움1단지</div><div class="danji-sub">남구 봉선동 · 전용130㎡</div></div>
-  <div><div class="danji-price">15억 5천</div><div class="danji-rate">1,192만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EC%8C%8D%EC%9A%A9%EC%8A%A4%EC%9C%97%EB%8B%B7%ED%99%88-a50381003.html">
-  <div><div class="danji-name">2. 쌍용스윗닷홈</div><div class="danji-sub">남구 봉선동 · 전용121㎡</div></div>
-  <div><div class="danji-price">13억 3천</div><div class="danji-rate">1,099만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8F%99%ED%95%9C%EA%B5%AD%EC%95%84%EB%8D%B8%EB%A6%AC%EC%9B%802%EB%8B%A8%EC%A7%80-a10023937.html">
-  <div><div class="danji-name">3. 봉선동한국아델리움2단지</div><div class="danji-sub">남구 봉선동 · 전용130㎡</div></div>
-  <div><div class="danji-price">13억 8천</div><div class="danji-rate">1,062만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A03%EC%B0%A8%ED%95%9C%EA%B5%AD%EC%95%84%EB%8D%B8%EB%A6%AC%EC%9B%80-a10028101.html">
-  <div><div class="danji-name">4. 봉선3차한국아델리움</div><div class="danji-sub">남구 봉선동 · 전용84㎡</div></div>
-  <div><div class="danji-price">8억 4천</div><div class="danji-rate">1,000만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8F%99-%EC%A0%9C%EC%9D%BC%ED%92%8D%EA%B2%BD%EC%B1%84-%EC%95%84%ED%8C%8C%ED%8A%B8-a10027211.html">
-  <div><div class="danji-name">5. 봉선동 제일풍경채 아파트</div><div class="danji-sub">남구 봉선동 · 전용85㎡</div></div>
-  <div><div class="danji-price">8억 3천</div><div class="danji-rate">976만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A02%EC%B0%A8%EB%82%A8%EC%96%91%ED%9C%B4%ED%8A%BC-a50370203.html">
-  <div><div class="danji-name">6. 봉선2차남양휴튼</div><div class="danji-sub">남구 봉선동 · 전용115㎡</div></div>
-  <div><div class="danji-price">10억 2천</div><div class="danji-rate">891만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%A5%B4%EC%98%A4%EB%84%A4%EB%9C%A8-a10023031.html">
-  <div><div class="danji-name">7. 봉선동 르오네뜨</div><div class="danji-sub">남구 봉선동 · 전용169㎡</div></div>
-  <div><div class="danji-price">15억</div><div class="danji-rate">888만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8D%94%EC%89%B4%EC%95%84%ED%8C%8C%ED%8A%B8-a50370202.html">
-  <div><div class="danji-name">8. 봉선더쉴아파트</div><div class="danji-sub">남구 봉선동 · 전용126㎡</div></div>
-  <div><div class="danji-price">9억 9천</div><div class="danji-rate">787만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%82%A8%EC%96%91%ED%9C%B4%ED%8A%BC1%EC%B0%A8-a50306001.html">
-  <div><div class="danji-name">9. 봉선남양휴튼1차</div><div class="danji-sub">남구 봉선동 · 전용129㎡</div></div>
-  <div><div class="danji-price">9억 5천</div><div class="danji-rate">736만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8F%99%EB%AA%A8%EC%95%84%EC%97%98%EA%B0%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10026325.html">
-  <div><div class="danji-name">10. 봉선동모아엘가아파트</div><div class="danji-sub">남구 봉선동 · 전용85㎡</div></div>
-  <div><div class="danji-price">5억 7천</div><div class="danji-rate">676만/㎡</div></div>
-</a>
-</div></div>
+<div class="section"><h2 class="section-title">㎡당 가격이 가장 비싼 단지는? <span style="font-size:10px;color:var(--muted);font-weight:400;">(전용면적 기준)</span></h2>
+<a class="danji-hero" title="봉선동한국아델리움1단지 ㎡당 시세 · 남구 1위" style="text-decoration:none;display:block;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8F%99%ED%95%9C%EA%B5%AD%EC%95%84%EB%8D%B8%EB%A6%AC%EC%9B%801%EB%8B%A8%EC%A7%80-a50306009.html"><span class="rank-badge">㎡당 1위</span><div class="hero-name">봉선동한국아델리움1단지</div><div class="hero-meta">남구 봉선동 · 전용 130㎡ · 거래가 15억 5천</div><div class="hero-price">1,192만<span class="hero-price-label">/㎡ 전용면적 기준</span></div></a>
+<div style="margin-top:6px;">
+<a class="danji-compact" title="쌍용스윗닷홈 ㎡당 시세 · 남구 2위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EC%8C%8D%EC%9A%A9%EC%8A%A4%EC%9C%97%EB%8B%B7%ED%99%88-a50381003.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">2</span><div style="min-width:0;"><div class="danji-compact-name">쌍용스윗닷홈</div><div class="danji-compact-meta">남구 봉선동 · 전용 121㎡</div></div></div><div class="danji-compact-price">1,099만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="봉선동한국아델리움2단지 ㎡당 시세 · 남구 3위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8F%99%ED%95%9C%EA%B5%AD%EC%95%84%EB%8D%B8%EB%A6%AC%EC%9B%802%EB%8B%A8%EC%A7%80-a10023937.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">3</span><div style="min-width:0;"><div class="danji-compact-name">봉선동한국아델리움2단지</div><div class="danji-compact-meta">남구 봉선동 · 전용 130㎡</div></div></div><div class="danji-compact-price">1,062만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="봉선3차한국아델리움 ㎡당 시세 · 남구 4위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A03%EC%B0%A8%ED%95%9C%EA%B5%AD%EC%95%84%EB%8D%B8%EB%A6%AC%EC%9B%80-a10028101.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">4</span><div style="min-width:0;"><div class="danji-compact-name">봉선3차한국아델리움</div><div class="danji-compact-meta">남구 봉선동 · 전용 84㎡</div></div></div><div class="danji-compact-price">1,000만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="봉선동 제일풍경채 아파트 ㎡당 시세 · 남구 5위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8F%99-%EC%A0%9C%EC%9D%BC%ED%92%8D%EA%B2%BD%EC%B1%84-%EC%95%84%ED%8C%8C%ED%8A%B8-a10027211.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">5</span><div style="min-width:0;"><div class="danji-compact-name">봉선동 제일풍경채 아파트</div><div class="danji-compact-meta">남구 봉선동 · 전용 85㎡</div></div></div><div class="danji-compact-price">976만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="봉선2차남양휴튼 ㎡당 시세 · 남구 6위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A02%EC%B0%A8%EB%82%A8%EC%96%91%ED%9C%B4%ED%8A%BC-a50370203.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">6</span><div style="min-width:0;"><div class="danji-compact-name">봉선2차남양휴튼</div><div class="danji-compact-meta">남구 봉선동 · 전용 115㎡</div></div></div><div class="danji-compact-price">891만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="봉선동 르오네뜨 ㎡당 시세 · 남구 7위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%A5%B4%EC%98%A4%EB%84%A4%EB%9C%A8-a10023031.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">7</span><div style="min-width:0;"><div class="danji-compact-name">봉선동 르오네뜨</div><div class="danji-compact-meta">남구 봉선동 · 전용 169㎡</div></div></div><div class="danji-compact-price">888만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="봉선더쉴아파트 ㎡당 시세 · 남구 8위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8D%94%EC%89%B4%EC%95%84%ED%8C%8C%ED%8A%B8-a50370202.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">8</span><div style="min-width:0;"><div class="danji-compact-name">봉선더쉴아파트</div><div class="danji-compact-meta">남구 봉선동 · 전용 126㎡</div></div></div><div class="danji-compact-price">787만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="봉선남양휴튼1차 ㎡당 시세 · 남구 9위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%82%A8%EC%96%91%ED%9C%B4%ED%8A%BC1%EC%B0%A8-a50306001.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">9</span><div style="min-width:0;"><div class="danji-compact-name">봉선남양휴튼1차</div><div class="danji-compact-meta">남구 봉선동 · 전용 129㎡</div></div></div><div class="danji-compact-price">736만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="봉선동모아엘가아파트 ㎡당 시세 · 남구 10위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EB%B4%89%EC%84%A0%EB%8F%99%EB%AA%A8%EC%95%84%EC%97%98%EA%B0%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10026325.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">10</span><div style="min-width:0;"><div class="danji-compact-name">봉선동모아엘가아파트</div><div class="danji-compact-meta">남구 봉선동 · 전용 85㎡</div></div></div><div class="danji-compact-price">676만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+</div>
+</div>
 <div class="divider"></div>
-<div class="section"><h2 class="section-title">최근 거래</h2>
+<div class="section"><h2 class="section-title">최근 거래된 단지</h2>
 <div style="display:flex;flex-direction:column;gap:8px;">
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A7%80%EC%84%9D%EB%8F%99-%EC%9D%BC%EC%A7%84%EC%8A%A4%EC%9C%84%ED%8A%B8%ED%8F%AC%EB%A0%88-a10024570.html">
+<a class="trade-item" title="일진스위트포레 · 남구 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A7%80%EC%84%9D%EB%8F%99-%EC%9D%BC%EC%A7%84%EC%8A%A4%EC%9C%84%ED%8A%B8%ED%8F%AC%EB%A0%88-a10024570.html">
   <div><div class="trade-price">2억 4천</div>
   <div class="trade-detail">일진스위트포레 · 78㎡ · 3층</div></div>
-  <div class="trade-date">2026-04-14</div>
+  <div class="trade-date"><time datetime="2026-04-14">2026-04-14</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%ED%96%89%EC%95%94%EB%8F%99-%EB%B8%8C%EB%9D%BC%EC%9A%B4%EC%8A%A4%ED%86%A4-%ED%9A%A8%EC%B2%9C-%EC%95%84%ED%8C%8C%ED%8A%B8-a10026841.html">
+<a class="trade-item" title="브라운스톤 효천 아파트 · 남구 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%ED%96%89%EC%95%94%EB%8F%99-%EB%B8%8C%EB%9D%BC%EC%9A%B4%EC%8A%A4%ED%86%A4-%ED%9A%A8%EC%B2%9C-%EC%95%84%ED%8C%8C%ED%8A%B8-a10026841.html">
   <div><div class="trade-price">2억 6천</div>
   <div class="trade-detail">브라운스톤 효천 아파트 · 75㎡ · 14층</div></div>
-  <div class="trade-date">2026-04-13</div>
+  <div class="trade-date"><time datetime="2026-04-13">2026-04-13</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EA%B8%88%ED%98%B81%EC%B0%A8-a50306013.html">
+<a class="trade-item" title="금호1차 · 남구 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B4%89%EC%84%A0%EB%8F%99-%EA%B8%88%ED%98%B81%EC%B0%A8-a50306013.html">
   <div><div class="trade-price">3억 2천</div>
   <div class="trade-detail">금호1차 · 85㎡ · 2층</div></div>
-  <div class="trade-date">2026-04-13</div>
+  <div class="trade-date"><time datetime="2026-04-13">2026-04-13</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A7%84%EC%9B%94%EB%8F%99-%EC%82%BC%EC%9D%B5%EC%84%B8%EB%9D%BC%EB%AF%B9-a50333017.html">
+<a class="trade-item" title="삼익세라믹 · 남구 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A7%84%EC%9B%94%EB%8F%99-%EC%82%BC%EC%9D%B5%EC%84%B8%EB%9D%BC%EB%AF%B9-a50333017.html">
   <div><div class="trade-price">2억 3천</div>
   <div class="trade-detail">삼익세라믹 · 85㎡ · 13층</div></div>
-  <div class="trade-date">2026-04-13</div>
+  <div class="trade-date"><time datetime="2026-04-13">2026-04-13</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9E%84%EC%95%94%EB%8F%99-%ED%9A%A8%EC%B2%9C%EC%8B%9C%ED%8B%B0%ED%94%84%EB%9D%BC%EB%94%94%EC%9B%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10025485.html">
+<a class="trade-item" title="효천시티프라디움아파트 · 남구 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9E%84%EC%95%94%EB%8F%99-%ED%9A%A8%EC%B2%9C%EC%8B%9C%ED%8B%B0%ED%94%84%EB%9D%BC%EB%94%94%EC%9B%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10025485.html">
   <div><div class="trade-price">4억 2천</div>
   <div class="trade-detail">효천시티프라디움아파트 · 85㎡ · 13층</div></div>
-  <div class="trade-date">2026-04-12</div>
+  <div class="trade-date"><time datetime="2026-04-12">2026-04-12</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%A9%EB%A6%BC%EB%8F%99-%EA%B4%91%EC%A3%BC-%EB%B0%A9%EB%A6%BC-%EB%AA%85%EC%A7%80%EB%A1%9C%EB%93%9C%ED%9E%90-%EC%95%84%ED%8C%8C%ED%8A%B8-a10027831.html">
+<a class="trade-item" title="광주 방림 명지로드힐 아파트 · 남구 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EB%B0%A9%EB%A6%BC%EB%8F%99-%EA%B4%91%EC%A3%BC-%EB%B0%A9%EB%A6%BC-%EB%AA%85%EC%A7%80%EB%A1%9C%EB%93%9C%ED%9E%90-%EC%95%84%ED%8C%8C%ED%8A%B8-a10027831.html">
   <div><div class="trade-price">3억 1천</div>
   <div class="trade-detail">광주 방림 명지로드힐 아파트 · 85㎡ · 19층</div></div>
-  <div class="trade-date">2026-04-12</div>
+  <div class="trade-date"><time datetime="2026-04-12">2026-04-12</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%86%A1%ED%95%98%EB%8F%99-%EC%86%A1%ED%95%98%EC%82%BC%EC%9D%B5%EC%95%84%ED%8C%8C%ED%8A%B8-a50381902.html">
+<a class="trade-item" title="송하삼익아파트 · 남구 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%86%A1%ED%95%98%EB%8F%99-%EC%86%A1%ED%95%98%EC%82%BC%EC%9D%B5%EC%95%84%ED%8C%8C%ED%8A%B8-a50381902.html">
   <div><div class="trade-price">8,300만</div>
   <div class="trade-detail">송하삼익아파트 · 60㎡ · 20층</div></div>
-  <div class="trade-date">2026-04-12</div>
+  <div class="trade-date"><time datetime="2026-04-12">2026-04-12</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9E%84%EC%95%94%EB%8F%99-%ED%9A%A8%EC%B2%9C1%EC%A4%91%ED%9D%A5S%ED%81%B4%EB%9E%98%EC%8A%A4%EC%97%90%EC%BD%94%ED%8C%8C%ED%81%AC%EC%95%84%ED%8C%8C%ED%8A%B8-a10025731.html">
+<a class="trade-item" title="효천1중흥S클래스에코파크아파트 · 남구 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%9E%84%EC%95%94%EB%8F%99-%ED%9A%A8%EC%B2%9C1%EC%A4%91%ED%9D%A5S%ED%81%B4%EB%9E%98%EC%8A%A4%EC%97%90%EC%BD%94%ED%8C%8C%ED%81%AC%EC%95%84%ED%8C%8C%ED%8A%B8-a10025731.html">
   <div><div class="trade-price">4억 3천</div>
   <div class="trade-detail">효천1중흥S클래스에코파크아파트 · 85㎡ · 7층</div></div>
-  <div class="trade-date">2026-04-11</div>
+  <div class="trade-date"><time datetime="2026-04-11">2026-04-11</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EC%8A%A4%EC%B9%B4%EC%9D%B4%EB%A7%A8%EC%85%98-a50331007.html">
+<a class="trade-item" title="스카이맨션 · 남구 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EC%8A%A4%EC%B9%B4%EC%9D%B4%EB%A7%A8%EC%85%98-a50331007.html">
   <div><div class="trade-price">8,900만</div>
   <div class="trade-detail">스카이맨션 · 59㎡ · 12층</div></div>
-  <div class="trade-date">2026-04-11</div>
+  <div class="trade-date"><time datetime="2026-04-11">2026-04-11</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EA%B2%BD%EB%82%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a50383802.html">
+<a class="trade-item" title="경남아파트 · 남구 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC-%EC%A3%BC%EC%9B%94%EB%8F%99-%EA%B2%BD%EB%82%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a50383802.html">
   <div><div class="trade-price">1억 4천</div>
   <div class="trade-detail">경남아파트 · 60㎡ · 11층</div></div>
-  <div class="trade-date">2026-04-11</div>
+  <div class="trade-date"><time datetime="2026-04-11">2026-04-11</time></div>
 </a>
 </div></div>
 <div class="divider"></div>
-<div class="section"><h2 class="section-title">광주의 다른 구/시</h2>
+<div class="section"><h2 class="section-title">남구 근처 구/시는?</h2>
 <div class="gu-grid">
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EA%B4%91%EC%A3%BC-%EA%B4%91%EC%82%B0%EA%B5%AC.html">
-  <div class="gu-name">광산구</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EA%B4%91%EC%A3%BC-%EB%8F%99%EA%B5%AC.html">
+<a class="gu-item" title="동구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EA%B4%91%EC%A3%BC-%EB%8F%99%EA%B5%AC.html">
   <div class="gu-name">동구</div><div class="gu-info">시세 보기 →</div>
 </a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EA%B4%91%EC%A3%BC-%EB%B6%81%EA%B5%AC.html">
-  <div class="gu-name">북구</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EA%B4%91%EC%A3%BC-%EC%84%9C%EA%B5%AC.html">
+<a class="gu-item" title="서구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EA%B4%91%EC%A3%BC-%EC%84%9C%EA%B5%AC.html">
   <div class="gu-name">서구</div><div class="gu-info">시세 보기 →</div>
 </a>
+<a class="gu-item" title="북구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EA%B4%91%EC%A3%BC-%EB%B6%81%EA%B5%AC.html">
+  <div class="gu-name">북구</div><div class="gu-info">시세 보기 →</div>
+</a>
+<a class="gu-item" title="광산구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EA%B4%91%EC%A3%BC-%EA%B4%91%EC%82%B0%EA%B5%AC.html">
+  <div class="gu-name">광산구</div><div class="gu-info">시세 보기 →</div>
+</a>
 </div></div>
+<div class="divider"></div>
+<div class="section"><h2 class="section-title">광주에서 단지가 많은 곳 TOP 6</h2>
+<div class="gu-grid">
+<a class="gu-item" title="북구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EA%B4%91%EC%A3%BC-%EB%B6%81%EA%B5%AC.html">
+  <div class="gu-name">북구</div><div class="gu-info">시세 보기 →</div>
+</a>
+<a class="gu-item" title="광산구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EA%B4%91%EC%A3%BC-%EA%B4%91%EC%82%B0%EA%B5%AC.html">
+  <div class="gu-name">광산구</div><div class="gu-info">시세 보기 →</div>
+</a>
+<a class="gu-item" title="서구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EA%B4%91%EC%A3%BC-%EC%84%9C%EA%B5%AC.html">
+  <div class="gu-name">서구</div><div class="gu-info">시세 보기 →</div>
+</a>
+<a class="gu-item" title="동구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EA%B4%91%EC%A3%BC-%EB%8F%99%EA%B5%AC.html">
+  <div class="gu-name">동구</div><div class="gu-info">시세 보기 →</div>
+</a>
+</div></div>
+<div class="divider"></div>
+<div class="section">
+<h2 class="section-title">남구 오피스텔도 보세요</h2>
+<a class="gu-item" title="남구 오피스텔 실거래가 시세" style="text-decoration:none;color:inherit;display:block;" href="/officetel/gu/%EA%B4%91%EC%A3%BC-%EB%82%A8%EA%B5%AC.html"><div class="gu-name">남구 오피스텔 시세</div><div class="gu-info">매매·전세·월세 실거래가 →</div></a>
+</div>
 <div class="divider"></div>
 <div class="faq-section"><h2 class="section-title">자주 묻는 질문</h2>
 <div class="faq-item"><div class="faq-q">남구 아파트 평균 시세는?</div>
@@ -280,8 +526,27 @@
 <div class="cta-section">
 <a class="btn-primary" style="display:block;text-align:center;text-decoration:none;" href="/mobile-v6.html">남구 매물 전체보기</a>
 </div>
-<div class="seo-section"><div class="seo-text">남구의 아파트 실거래가, 전세가, 시세 추이를 확인하세요. 154개 단지, 55,951세대 규모. 평균 매매가 2억 9천. 평균 전세가율 77.5%. 국토교통부 실거래가 공개시스템 데이터 기반.</div>
-<div class="seo-source">실거래가 출처: 국토교통부 · 최종 데이터 확인: 2026-04-27</div></div>
+<div class="seo-section" style="padding:16px;">
+<div class="seo-text">남구의 아파트 실거래가, 전세가, 시세 추이를 확인하세요. 154개 단지, 55,951세대 규모. 평균 매매가 2억 9천. 평균 전세가율 77.5%. 국토교통부 실거래가 공개시스템 데이터 기반.</div>
+<details open class="data-notice" style="margin-top:14px;font-size:12px;color:var(--sub);">
+<summary style="cursor:pointer;">데이터 안내</summary>
+<div style="margin-top:6px;line-height:1.8;">
+<b>실거래가</b>: 국토교통부 실거래가 공개시스템 (<a href="https://rt.molit.go.kr/" target="_blank" rel="noopener nofollow">rt.molit.go.kr</a>) · 매일 자동 수집<br>
+<b>건축정보</b>: 국토교통부 건축물대장 (전유부 · 총괄표제부)<br>
+<b>세대 수</b>: 건축물대장 전유부 등기 기준 (분양 공급 수치와 다를 수 있음)<br>
+전용면적 ㎡ 기준 표기, 공급면적은 별도 표시<br>
+거래 취소·정정 건은 반영이 지연될 수 있습니다
+</div></details>
+<div class="seo-source" style="margin-top:8px;font-size:11px;color:var(--muted);">실거래가 출처: 국토교통부 · 최종 데이터 확인: <time datetime="2026-04-27">2026-04-27</time></div>
 </div>
+</div>
+<footer class="hwik-footer">
+<div class="hwik-footer-links">
+<a href="/about.html">휙 소개</a>·
+<a href="/privacy.html">개인정보처리방침</a>·
+<a href="/terms.html">이용약관</a>
+</div>
+<div class="hwik-footer-copy">실거래가 출처: 국토교통부 · 휙(HWIK) · <a href="https://hwik.kr">hwik.kr</a></div>
+</footer>
 </body>
 </html>

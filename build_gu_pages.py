@@ -125,7 +125,8 @@ def fetch_all_danji():
             f"{SUPABASE_URL}/rest/v1/danji_pages",
             {
                 "select": "id,complex_name,location,address,categories,recent_trade,"
-                          "all_time_high,jeonse_rate,total_units,build_year,nearby_subway",
+                          "all_time_high,jeonse_rate,total_units,build_year,nearby_subway,"
+                          "lat,lng",
                 "order": "id",
                 "offset": offset,
                 "limit": PAGE_LIMIT,
@@ -157,10 +158,12 @@ def best_trade(d):
     return best, rt[best]
 
 
-def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None):
+def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None,
+                          sibling_meta=None):
     """구 상세 페이지 HTML 생성
     region_key: 지역 키 (없으면 detect_region으로 추정 — 광역시 충돌 주의)
     sibling_gus: [(gu_name, filename_slug), ...] 같은 지역의 다른 구 (상호 링크용)
+    sibling_meta: {gu_name: {"slug":..., "lat":..., "lng":..., "count":..., "trades":...}} — 인접/Top5 정렬용
     """
     if region_key is None:
         region_key = detect_region(gu_name)
@@ -246,33 +249,71 @@ def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None)
         key=lambda x: x["jeonse_rate"], reverse=True
     )[:3]
 
-    title = f"{region_label} {gu_name} 아파트 실거래가 시세 - 휙"
+    # 구 평균 좌표 (AdministrativeArea geo)
+    _lats = [d.get("lat") for d in danji_list if d.get("lat")]
+    _lngs = [d.get("lng") for d in danji_list if d.get("lng")]
+    geo_block = None
+    if _lats and _lngs:
+        geo_block = {
+            "@type": "GeoCoordinates",
+            "latitude": round(sum(_lats) / len(_lats), 6),
+            "longitude": round(sum(_lngs) / len(_lngs), 6),
+        }
+
+    # 단지 수 상위 동 3개 (description / 인트로용)
+    _top_dongs = [d for d, _ in dong_list[:3]]
+    _top_dong_str = "·".join(_top_dongs)
+
+    # 누적 거래 (단지별 best_trade 카운트로 근사)
+    _trade_total = len(trades)
+
+    title = f"{region_label} {gu_name} 아파트 실거래가 시세 · {len(danji_list):,}개 단지 | 휙"
     avg_str = f"평균 매매가 {format_price(avg_price)}" if avg_price else ""
     top_name = price_top[0][0].get("complex_name", "") if price_top else ""
     jr_top_name = jr_top[0].get("complex_name", "") if jr_top else ""
-    _parts = [
-        f"{region_label} {gu_name} 아파트 {len(danji_list)}개 단지 실거래가·전세가 시세",
-        avg_str,
-        "매매·전세·월세 면적별 가격",
-        f"최고가 {top_name}" if top_name else "",
-        f"전세가율 최고 {jr_top_name}" if jr_top_name else "",
-        "국토교통부 공개시스템 기반",
-    ]
-    desc = ". ".join(p for p in _parts if p) + "."
+    # 풍부 description (~140자, 동 이름 + 숫자 fact + 출처)
+    _focus = f"{_top_dong_str} 등 " if _top_dong_str else ""
+    desc = (f"{region_label} {gu_name}의 아파트 {len(danji_list):,}개 단지 "
+            f"매매·전세·월세 실거래가와 시세를 동별로 비교하세요. "
+            f"{_focus}{avg_str + ', ' if avg_str else ''}"
+            f"{('최고가 ' + top_name + ', ') if top_name else ''}"
+            f"{('전세가율 최고 ' + jr_top_name + '. ') if jr_top_name else ''}"
+            f"국토교통부 실거래가 공개시스템 기반.")
 
     # ── HTML 생성 ──
     lines = []
 
     # 헤더
+    _today_hdr = datetime.now(KST).strftime("%Y-%m-%d")
     lines.append(f'<header class="header"><div class="header-top">')
     lines.append(f'  <a class="logo" href="/" style="text-decoration:none;">휙</a>')
     lines.append(f'  <div><h1 class="header-name">{esc(gu_name)} 아파트 시세</h1>')
-    lines.append(f'  <div class="header-sub">{len(danji_list)}개 단지 · {total_units:,}세대</div></div>')
+    lines.append(f'  <div class="header-sub">{len(danji_list)}개 단지 · {total_units:,}세대 · 마지막 업데이트 {_today_hdr}</div></div>')
     lines.append(f'</div></header>')
 
     # 브레드크럼
     lines.append(f'<nav class="breadcrumb"><a href="/">휙</a><span>&gt;</span>')
     lines.append(f'<a href="/gu/">{esc(region_label)}</a><span>&gt;</span>{esc(gu_name)}</nav>')
+
+    # 풍부 인트로 (E-E-A-T, 롱테일 키워드)
+    _intro_parts = [
+        f"{esc(region_label)} {esc(gu_name)}의 아파트 <b>{len(danji_list):,}개 단지</b>"
+        + (f"({esc(_top_dong_str)} 등 주요 입지)" if _top_dong_str else "")
+        + f" 시세를 한 번에 확인하세요.",
+    ]
+    if avg_price:
+        _intro_parts.append(f"평균 매매가 <b>{format_price(avg_price)}</b>")
+    if avg_jr:
+        _intro_parts.append(f"평균 전세가율 <b>{avg_jr}%</b>")
+    if _trade_total:
+        _intro_parts.append(f"수집 거래 <b>{_trade_total:,}건</b>")
+    _intro_text = ", ".join(_intro_parts) if len(_intro_parts) > 1 else _intro_parts[0]
+    if not _intro_text.endswith("."):
+        _intro_text += "."
+    lines.append(f'<p class="seo-text" style="font-size:13px;line-height:1.85;'
+                 f'margin:14px 16px 4px;color:var(--sub);">{_intro_text} '
+                 f'매매·전세·월세 면적별 가격, 동별 단지 비교, ㎡당 가격 순위까지 — '
+                 f'국토교통부 실거래가 공개시스템 기반.</p>')
 
     # 지표
     lines.append(f'<div class="metrics">')
@@ -282,40 +323,171 @@ def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None)
     lines.append(f'</div>')
     lines.append(f'<div class="divider"></div>')
 
-    # 매매가 높은 단지 TOP 3
+    # 매매가 자연어 인용 (사람말 톤)
     if price_top:
-        lines.append(f'<div class="section"><h2 class="section-title">매매가 높은 단지</h2>')
-        lines.append(f'<div style="display:flex;flex-direction:column;gap:8px;">')
-        for i, (d, mp, area) in enumerate(price_top):
-            slug_d = make_danji_slug(d["complex_name"], d.get("location", ""), d["id"], d.get("address", ""))
-            area_txt = f'전용 {area}㎡' if area else ''
-            lines.append(f'<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/{url_quote(slug_d, safe="-")}.html">')
-            lines.append(f'  <div><div class="danji-name">{i+1}. {esc(d["complex_name"])}</div><div class="danji-sub">{esc(d.get("location",""))}{(" · " + area_txt) if area_txt else ""}</div></div>')
-            lines.append(f'  <div><div class="danji-price">{format_price(mp)}</div><div class="danji-rate">최고가 기준</div></div>')
-            lines.append(f'</a>')
-        lines.append(f'</div></div><div class="divider"></div>')
+        d1, mp1, _ = price_top[0]
+        slug1 = make_danji_slug(d1["complex_name"], d1.get("location", ""), d1["id"], d1.get("address", ""))
+        loc1 = (d1.get("location") or "").split(" ")
+        dong1 = loc1[1] if len(loc1) > 1 else ""
+        anchor1 = (f'<a href="/danji/{url_quote(slug1, safe="-")}.html" '
+                   f'title="{esc(d1["complex_name"])} 실거래가 시세" '
+                   f'style="color:var(--yellow);text-decoration:none;font-weight:700;">'
+                   f'{esc(d1["complex_name"])}</a>')
+        sentences = []
+        sentences.append(
+            f"{esc(gu_name)}에서 가장 비싼 아파트는 "
+            f"{(esc(dong1) + '의 ') if dong1 else ''}{anchor1}로 "
+            f"<b>{format_price(mp1)}</b>에 거래됐습니다."
+        )
+        if len(price_top) >= 3:
+            d2 = price_top[1][0]; d3 = price_top[2][0]
+            slug2 = make_danji_slug(d2["complex_name"], d2.get("location", ""), d2["id"], d2.get("address", ""))
+            slug3 = make_danji_slug(d3["complex_name"], d3.get("location", ""), d3["id"], d3.get("address", ""))
+            a2 = (f'<a href="/danji/{url_quote(slug2, safe="-")}.html" '
+                  f'style="color:var(--yellow);text-decoration:none;font-weight:600;">'
+                  f'{esc(d2["complex_name"])}</a>')
+            a3 = (f'<a href="/danji/{url_quote(slug3, safe="-")}.html" '
+                  f'style="color:var(--yellow);text-decoration:none;font-weight:600;">'
+                  f'{esc(d3["complex_name"])}</a>')
+            sentences.append(f"뒤이어 {a2}·{a3}가 자리잡고 있습니다.")
+        lines.append(
+            f'<p class="seo-text" style="font-size:13px;line-height:1.85;'
+            f'margin:4px 16px 16px;color:var(--sub);">'
+            f'{" ".join(sentences)}'
+            f'</p>'
+        )
 
-    # 전세가율 높은 단지 TOP 3
+    # 매매가 TOP 3 — 1위 hero + 2-3위 compact
+    if price_top:
+        lines.append(f'<div class="section">'
+                     f'<h2 class="section-title">{esc(gu_name)}에서 가장 비싼 아파트는?</h2>')
+        # 1위 hero
+        d1, mp1, area1 = price_top[0]
+        slug1 = make_danji_slug(d1["complex_name"], d1.get("location", ""), d1["id"], d1.get("address", ""))
+        meta_bits1 = []
+        if d1.get("location"):
+            meta_bits1.append(esc(d1["location"]))
+        if area1:
+            meta_bits1.append(f"전용 {area1}㎡")
+        if d1.get("build_year"):
+            meta_bits1.append(f"{d1['build_year']}년 입주")
+        if d1.get("total_units"):
+            try:
+                meta_bits1.append(f"{int(d1['total_units']):,}세대")
+            except Exception:
+                pass
+        meta1 = " · ".join(meta_bits1)
+        t1 = f'{esc(d1["complex_name"])} 실거래가 · {esc(gu_name)} 매매가 1위'
+        lines.append(
+            f'<a class="danji-hero" title="{t1}" style="text-decoration:none;display:block;" '
+            f'href="/danji/{url_quote(slug1, safe="-")}.html">'
+            f'<span class="rank-badge">매매가 1위</span>'
+            f'<div class="hero-name">{esc(d1["complex_name"])}</div>'
+            f'<div class="hero-meta">{meta1}</div>'
+            f'<div class="hero-price">{format_price(mp1)}'
+            f'<span class="hero-price-label">최고가 기준</span></div>'
+            f'</a>'
+        )
+        # 2-3위 compact
+        if len(price_top) > 1:
+            lines.append(f'<div style="margin-top:6px;">')
+            for i, (d, mp, area) in enumerate(price_top[1:], start=2):
+                slug_d = make_danji_slug(d["complex_name"], d.get("location", ""), d["id"], d.get("address", ""))
+                cm_bits = []
+                if d.get("location"):
+                    cm_bits.append(esc(d["location"]))
+                if area:
+                    cm_bits.append(f"전용 {area}㎡")
+                if d.get("build_year"):
+                    cm_bits.append(f"{d['build_year']}년")
+                cm_meta = " · ".join(cm_bits)
+                _t = f'{esc(d["complex_name"])} 실거래가 · {esc(gu_name)} 매매가 {i}위'
+                lines.append(
+                    f'<a class="danji-compact" title="{_t}" '
+                    f'style="text-decoration:none;color:inherit;" '
+                    f'href="/danji/{url_quote(slug_d, safe="-")}.html">'
+                    f'<div style="display:flex;align-items:center;flex:1;min-width:0;">'
+                    f'<span class="danji-compact-rank">{i}</span>'
+                    f'<div style="min-width:0;">'
+                    f'<div class="danji-compact-name">{esc(d["complex_name"])}</div>'
+                    f'<div class="danji-compact-meta">{cm_meta}</div>'
+                    f'</div></div>'
+                    f'<div class="danji-compact-price">{format_price(mp)}</div>'
+                    f'</a>'
+                )
+            lines.append(f'</div>')
+        lines.append(f'</div><div class="divider"></div>')
+
+    # 전세가율 TOP 3 — 1위 hero + 2-3위 compact
     if jr_top:
-        lines.append(f'<div class="section"><h2 class="section-title">전세가율 높은 단지</h2>')
-        lines.append(f'<div style="display:flex;flex-direction:column;gap:8px;">')
-        for i, d in enumerate(jr_top):
-            slug_d = make_danji_slug(d["complex_name"], d.get("location", ""), d["id"], d.get("address", ""))
-            rt = d.get("recent_trade") or {}
-            cats = d.get("categories") or []
-            best_c = next((c for c in cats if rt.get(c) and rt[c].get("price")), None)
-            area_txt = f'전용 {best_c}㎡' if best_c else ''
-            lines.append(f'<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/{url_quote(slug_d, safe="-")}.html">')
-            lines.append(f'  <div><div class="danji-name">{i+1}. {esc(d["complex_name"])}</div><div class="danji-sub">{esc(d.get("location",""))}{(" · " + area_txt) if area_txt else ""}</div></div>')
-            lines.append(f'  <div><div class="danji-price">{d["jeonse_rate"]}%</div><div class="danji-rate">전세가율</div></div>')
-            lines.append(f'</a>')
-        lines.append(f'</div></div>')
+        lines.append(f'<div class="section">'
+                     f'<h2 class="section-title">전세가율이 높은 단지 (실거주 추천)</h2>')
+        d1 = jr_top[0]
+        slug1 = make_danji_slug(d1["complex_name"], d1.get("location", ""), d1["id"], d1.get("address", ""))
+        rt1 = d1.get("recent_trade") or {}
+        cats1 = d1.get("categories") or []
+        best_c1 = next((c for c in cats1 if rt1.get(c) and rt1[c].get("price")), None)
+        meta_bits1 = []
+        if d1.get("location"):
+            meta_bits1.append(esc(d1["location"]))
+        if best_c1:
+            meta_bits1.append(f"전용 {best_c1}㎡")
+        if d1.get("build_year"):
+            meta_bits1.append(f"{d1['build_year']}년 입주")
+        if d1.get("total_units"):
+            try:
+                meta_bits1.append(f"{int(d1['total_units']):,}세대")
+            except Exception:
+                pass
+        meta1 = " · ".join(meta_bits1)
+        t1 = f'{esc(d1["complex_name"])} 실거래가 · {esc(gu_name)} 전세가율 1위'
+        lines.append(
+            f'<a class="danji-hero" title="{t1}" style="text-decoration:none;display:block;" '
+            f'href="/danji/{url_quote(slug1, safe="-")}.html">'
+            f'<span class="rank-badge">전세가율 1위</span>'
+            f'<div class="hero-name">{esc(d1["complex_name"])}</div>'
+            f'<div class="hero-meta">{meta1}</div>'
+            f'<div class="hero-price">{d1["jeonse_rate"]}%'
+            f'<span class="hero-price-label">매매 대비 전세 비율</span></div>'
+            f'</a>'
+        )
+        if len(jr_top) > 1:
+            lines.append(f'<div style="margin-top:6px;">')
+            for i, d in enumerate(jr_top[1:], start=2):
+                slug_d = make_danji_slug(d["complex_name"], d.get("location", ""), d["id"], d.get("address", ""))
+                rt = d.get("recent_trade") or {}
+                cats = d.get("categories") or []
+                best_c = next((c for c in cats if rt.get(c) and rt[c].get("price")), None)
+                cm_bits = []
+                if d.get("location"):
+                    cm_bits.append(esc(d["location"]))
+                if best_c:
+                    cm_bits.append(f"전용 {best_c}㎡")
+                if d.get("build_year"):
+                    cm_bits.append(f"{d['build_year']}년")
+                cm_meta = " · ".join(cm_bits)
+                _t = f'{esc(d["complex_name"])} 실거래가 · {esc(gu_name)} 전세가율 {i}위'
+                lines.append(
+                    f'<a class="danji-compact" title="{_t}" '
+                    f'style="text-decoration:none;color:inherit;" '
+                    f'href="/danji/{url_quote(slug_d, safe="-")}.html">'
+                    f'<div style="display:flex;align-items:center;flex:1;min-width:0;">'
+                    f'<span class="danji-compact-rank">{i}</span>'
+                    f'<div style="min-width:0;">'
+                    f'<div class="danji-compact-name">{esc(d["complex_name"])}</div>'
+                    f'<div class="danji-compact-meta">{cm_meta}</div>'
+                    f'</div></div>'
+                    f'<div class="danji-compact-price">{d["jeonse_rate"]}%</div>'
+                    f'</a>'
+                )
+            lines.append(f'</div>')
+        lines.append(f'</div>')
 
     lines.append(f'<div class="divider"></div>')
 
     # 동별 단지 (실제 생성된 dong 페이지만 링크)
     if dong_list:
-        lines.append(f'<div class="section"><h2 class="section-title">동별 단지</h2>')
+        lines.append(f'<div class="section"><h2 class="section-title">{esc(gu_name)} 어느 동에 단지가 모여있나?</h2>')
         lines.append(f'<div class="dong-grid">')
         for dong, info in dong_list:
             avg_p = format_price(round(sum(info["prices"]) / len(info["prices"]))) if info["prices"] else ""
@@ -336,42 +508,133 @@ def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None)
         lines.append(f'</div></div>')
         lines.append(f'<div class="divider"></div>')
 
-    # ㎡당 가격 TOP 10
+    # ㎡당 가격 TOP — 1위 hero + 2~10위 compact
     if sqm_list:
-        lines.append(f'<div class="section"><h2 class="section-title">㎡당 가격 TOP 10 <span style="font-size:10px;color:var(--muted);font-weight:400;">(전용면적 기준)</span></h2>')
-        lines.append(f'<div style="display:flex;flex-direction:column;gap:8px;">')
-        for i, d in enumerate(sqm_list[:10]):
-            slug_d = make_danji_slug(d["name"], d["location"], d["id"], d["address"])
-            lines.append(f'<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/{url_quote(slug_d, safe="-")}.html">')
-            lines.append(f'  <div><div class="danji-name">{i+1}. {esc(d["name"])}</div><div class="danji-sub">{esc(d["location"])} · 전용{d["area"]}㎡</div></div>')
-            lines.append(f'  <div><div class="danji-price">{format_price(d["price"])}</div><div class="danji-rate">{format_price(d["sqmPrice"])}/㎡</div></div>')
-            lines.append(f'</a>')
-        lines.append(f'</div></div>')
+        lines.append(f'<div class="section">'
+                     f'<h2 class="section-title">㎡당 가격이 가장 비싼 단지는? '
+                     f'<span style="font-size:10px;color:var(--muted);font-weight:400;">(전용면적 기준)</span></h2>')
+        d1 = sqm_list[0]
+        slug1 = make_danji_slug(d1["name"], d1["location"], d1["id"], d1["address"])
+        meta1 = f'{esc(d1["location"])} · 전용 {d1["area"]}㎡ · 거래가 {format_price(d1["price"])}'
+        t1 = f'{esc(d1["name"])} ㎡당 시세 · {esc(gu_name)} 1위'
+        lines.append(
+            f'<a class="danji-hero" title="{t1}" style="text-decoration:none;display:block;" '
+            f'href="/danji/{url_quote(slug1, safe="-")}.html">'
+            f'<span class="rank-badge">㎡당 1위</span>'
+            f'<div class="hero-name">{esc(d1["name"])}</div>'
+            f'<div class="hero-meta">{meta1}</div>'
+            f'<div class="hero-price">{format_price(d1["sqmPrice"])}'
+            f'<span class="hero-price-label">/㎡ 전용면적 기준</span></div>'
+            f'</a>'
+        )
+        if len(sqm_list) > 1:
+            lines.append(f'<div style="margin-top:6px;">')
+            for i, d in enumerate(sqm_list[1:10], start=2):
+                slug_d = make_danji_slug(d["name"], d["location"], d["id"], d["address"])
+                _t = f'{esc(d["name"])} ㎡당 시세 · {esc(gu_name)} {i}위'
+                lines.append(
+                    f'<a class="danji-compact" title="{_t}" '
+                    f'style="text-decoration:none;color:inherit;" '
+                    f'href="/danji/{url_quote(slug_d, safe="-")}.html">'
+                    f'<div style="display:flex;align-items:center;flex:1;min-width:0;">'
+                    f'<span class="danji-compact-rank">{i}</span>'
+                    f'<div style="min-width:0;">'
+                    f'<div class="danji-compact-name">{esc(d["name"])}</div>'
+                    f'<div class="danji-compact-meta">{esc(d["location"])} · 전용 {d["area"]}㎡</div>'
+                    f'</div></div>'
+                    f'<div class="danji-compact-price">{format_price(d["sqmPrice"])}<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div>'
+                    f'</a>'
+                )
+            lines.append(f'</div>')
+        lines.append(f'</div>')
         lines.append(f'<div class="divider"></div>')
 
     # 최근 거래
     if trades:
-        lines.append(f'<div class="section"><h2 class="section-title">최근 거래</h2>')
+        lines.append(f'<div class="section"><h2 class="section-title">최근 거래된 단지</h2>')
         lines.append(f'<div style="display:flex;flex-direction:column;gap:8px;">')
         for t in trades[:10]:
             slug_d = make_danji_slug(t["name"], t.get("location", ""), t["id"], t["address"])
-            lines.append(f'<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/{url_quote(slug_d, safe="-")}.html">')
+            _date = t.get("date", "")
+            _date_html = (f'<time datetime="{esc(_date)}">{esc(_date)}</time>' if _date else "")
+            _t_attr = f'{esc(t["name"])} · {esc(gu_name)} 최근 실거래'
+            lines.append(f'<a class="trade-item" title="{_t_attr}" style="text-decoration:none;color:inherit;" href="/danji/{url_quote(slug_d, safe="-")}.html">')
             lines.append(f'  <div><div class="trade-price">{format_price(t["price"])}</div>')
             lines.append(f'  <div class="trade-detail">{esc(t["name"])} · {t["area"]}㎡{" · "+str(t["floor"])+"층" if t.get("floor") else ""}</div></div>')
-            lines.append(f'  <div class="trade-date">{esc(t.get("date",""))}</div>')
+            lines.append(f'  <div class="trade-date">{_date_html}</div>')
             lines.append(f'</a>')
         lines.append(f'</div></div>')
         lines.append(f'<div class="divider"></div>')
 
-    # 같은 지역의 다른 구 (상호 링크)
-    if sibling_gus:
-        lines.append(f'<div class="section"><h2 class="section-title">{esc(region_label)}의 다른 구/시</h2>')
+    # 인접 구 / 같은 지역 거래량 Top — sibling_meta 기반
+    _adjacent: list[tuple[str, str]] = []
+    _top_by_count: list[tuple[str, str]] = []
+    if sibling_meta:
+        _others = [(name, m) for name, m in sibling_meta.items() if name != gu_name]
+        # 인접 5개 (현재 구 좌표로부터 거리)
+        if geo_block:
+            _cur_lat = geo_block["latitude"]
+            _cur_lng = geo_block["longitude"]
+            _with_dist = []
+            for name, m in _others:
+                if m.get("lat") and m.get("lng"):
+                    d2 = (m["lat"] - _cur_lat) ** 2 + (m["lng"] - _cur_lng) ** 2
+                    _with_dist.append((d2, name, m["slug"]))
+            _with_dist.sort()
+            _adjacent = [(name, slug) for _, name, slug in _with_dist[:6]]
+        # 거래량(=단지 수) Top 6 — 자기 자신 제외
+        _by_count = sorted(_others, key=lambda x: -(x[1].get("count") or 0))
+        _top_by_count = [(name, m["slug"]) for name, m in _by_count[:6]]
+
+    if _adjacent:
+        lines.append(f'<div class="section"><h2 class="section-title">{esc(gu_name)} 근처 구/시는?</h2>')
         lines.append(f'<div class="gu-grid">')
-        for sib_name, sib_slug in sibling_gus:
-            lines.append(f'<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/{url_quote(sib_slug, safe="-")}.html">')
+        for sib_name, sib_slug in _adjacent:
+            _t = f'{esc(sib_name)} 아파트 실거래가 시세'
+            lines.append(f'<a class="gu-item" title="{_t}" style="text-decoration:none;color:inherit;" href="/gu/{url_quote(sib_slug, safe="-")}.html">')
             lines.append(f'  <div class="gu-name">{esc(sib_name)}</div><div class="gu-info">시세 보기 →</div>')
             lines.append(f'</a>')
         lines.append(f'</div></div>')
+        lines.append(f'<div class="divider"></div>')
+
+    if _top_by_count:
+        lines.append(f'<div class="section"><h2 class="section-title">{esc(region_label)}에서 단지가 많은 곳 TOP 6</h2>')
+        lines.append(f'<div class="gu-grid">')
+        for sib_name, sib_slug in _top_by_count:
+            _t = f'{esc(sib_name)} 아파트 실거래가 시세'
+            lines.append(f'<a class="gu-item" title="{_t}" style="text-decoration:none;color:inherit;" href="/gu/{url_quote(sib_slug, safe="-")}.html">')
+            lines.append(f'  <div class="gu-name">{esc(sib_name)}</div><div class="gu-info">시세 보기 →</div>')
+            lines.append(f'</a>')
+        lines.append(f'</div></div>')
+        lines.append(f'<div class="divider"></div>')
+
+    # 같은 지역의 다른 구 (상호 링크 — 인접/Top5 없는 경우 fallback, 또는 추가 보강)
+    if sibling_gus and not (_adjacent or _top_by_count):
+        lines.append(f'<div class="section"><h2 class="section-title">{esc(region_label)} 다른 지역도 보세요</h2>')
+        lines.append(f'<div class="gu-grid">')
+        for sib_name, sib_slug in sibling_gus:
+            _t = f'{esc(sib_name)} 아파트 실거래가 시세'
+            lines.append(f'<a class="gu-item" title="{_t}" style="text-decoration:none;color:inherit;" href="/gu/{url_quote(sib_slug, safe="-")}.html">')
+            lines.append(f'  <div class="gu-name">{esc(sib_name)}</div><div class="gu-info">시세 보기 →</div>')
+            lines.append(f'</a>')
+        lines.append(f'</div></div>')
+        lines.append(f'<div class="divider"></div>')
+
+    # 오피스텔 cross-link (같은 구의 오피스텔 페이지 존재 시)
+    _offi_slug = gu_url_slug(region_label, gu_name)
+    if _offi_slug in OFFICETEL_GU_SLUG_SET:
+        lines.append(f'<div class="section">')
+        lines.append(f'<h2 class="section-title">{esc(gu_name)} 오피스텔도 보세요</h2>')
+        lines.append(
+            f'<a class="gu-item" '
+            f'title="{esc(gu_name)} 오피스텔 실거래가 시세" '
+            f'style="text-decoration:none;color:inherit;display:block;" '
+            f'href="/officetel/gu/{url_quote(_offi_slug, safe="-")}.html">'
+            f'<div class="gu-name">{esc(gu_name)} 오피스텔 시세</div>'
+            f'<div class="gu-info">매매·전세·월세 실거래가 →</div>'
+            f'</a>'
+        )
+        lines.append(f'</div>')
         lines.append(f'<div class="divider"></div>')
 
     # FAQ
@@ -394,54 +657,158 @@ def build_gu_detail_html(gu_name, danji_list, region_key=None, sibling_gus=None)
     lines.append(f'<a class="btn-primary" style="display:block;text-align:center;text-decoration:none;" href="/mobile-v6.html">{esc(gu_name)} 매물 전체보기</a>')
     lines.append(f'</div>')
 
-    # SEO
+    # SEO + 데이터 안내 (오피스텔 D 디자인 동일 패턴)
     seo_text = f"{esc(gu_name)}의 아파트 실거래가, 전세가, 시세 추이를 확인하세요. {len(danji_list)}개 단지, {total_units:,}세대 규모."
     if avg_price:
         seo_text += f" 평균 매매가 {format_price(avg_price)}."
     if avg_jr:
         seo_text += f" 평균 전세가율 {avg_jr}%."
     seo_text += " 국토교통부 실거래가 공개시스템 데이터 기반."
-    lines.append(f'<div class="seo-section"><div class="seo-text">{seo_text}</div>')
+    lines.append(f'<div class="seo-section" style="padding:16px;">')
+    lines.append(f'<div class="seo-text">{seo_text}</div>')
+    lines.append(f'<details open class="data-notice" style="margin-top:14px;font-size:12px;color:var(--sub);">')
+    lines.append(f'<summary style="cursor:pointer;">데이터 안내</summary>')
+    lines.append(f'<div style="margin-top:6px;line-height:1.8;">')
+    lines.append(f'<b>실거래가</b>: 국토교통부 실거래가 공개시스템 (<a href="https://rt.molit.go.kr/" target="_blank" rel="noopener nofollow">rt.molit.go.kr</a>) · 매일 자동 수집<br>')
+    lines.append(f'<b>건축정보</b>: 국토교통부 건축물대장 (전유부 · 총괄표제부)<br>')
+    lines.append(f'<b>세대 수</b>: 건축물대장 전유부 등기 기준 (분양 공급 수치와 다를 수 있음)<br>')
+    lines.append(f'전용면적 ㎡ 기준 표기, 공급면적은 별도 표시<br>')
+    lines.append(f'거래 취소·정정 건은 반영이 지연될 수 있습니다')
+    lines.append(f'</div></details>')
     _today = datetime.now(KST).strftime("%Y-%m-%d")
-    lines.append(f'<div class="seo-source">실거래가 출처: 국토교통부 · 최종 데이터 확인: {_today}</div></div>')
+    lines.append(f'<div class="seo-source" style="margin-top:8px;font-size:11px;color:var(--muted);">실거래가 출처: 국토교통부 · 최종 데이터 확인: <time datetime="{_today}">{_today}</time></div>')
+    lines.append(f'</div>')
 
     body = "\n".join(lines)
 
-    # JSON-LD
-    jsonld = {
+    # ── JSON-LD 강화 ─────────────────────────────────────────
+    place_block = {
+        "@type": "AdministrativeArea",
+        "name": f"{region_label} {gu_name}",
+        "containedInPlace": {
+            "@type": "AdministrativeArea",
+            "name": region_label,
+            "containedInPlace": {"@type": "Country", "name": "대한민국"},
+        },
+    }
+    if geo_block:
+        place_block["geo"] = geo_block
+
+    jsonld_org = {
         "@context": "https://schema.org",
-        "@graph": [
-            {
-                "@type": "FAQPage",
-                "mainEntity": [
-                    {"@type": "Question", "name": f"{gu_name} 아파트 평균 매매가는?",
-                     "acceptedAnswer": {"@type": "Answer", "text": f"{gu_name} 아파트 실거래가 기반 평균 매매가는 {format_price(avg_price) if avg_price else '확인 중'}입니다."}},
-                    {"@type": "Question", "name": f"{gu_name} 아파트 전세가율은?",
-                     "acceptedAnswer": {"@type": "Answer", "text": f"{gu_name} 평균 전세가율은 {avg_jr if avg_jr else '확인 중'}%입니다."}},
-                ]
-            },
-            {
-                "@type": "BreadcrumbList",
-                "itemListElement": [
-                    {"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"},
-                    {"@type": "ListItem", "position": 2, "name": f"{region_label} 구별 시세", "item": "https://hwik.kr/gu/"},
-                    {"@type": "ListItem", "position": 3, "name": gu_name},
-                ]
-            },
-            {
-                "@type": "ItemList",
-                "name": f"{gu_name} 아파트 시세",
-                "numberOfItems": len(danji_list),
-                "itemListElement": [
-                    {"@type": "ListItem", "position": i+1, "name": d["complex_name"],
-                     "url": f"https://hwik.kr/danji/{url_quote(make_danji_slug(d['complex_name'], d.get('location',''), d['id'], d.get('address','')), safe='-')}.html"}
-                    for i, d in enumerate(danji_list[:50])
-                ]
-            }
-        ]
+        "@type": "Organization",
+        "@id": "https://hwik.kr/#org",
+        "name": "휙 (HWIK)",
+        "url": "https://hwik.kr",
+        "logo": {"@type": "ImageObject", "url": "https://hwik.kr/og-image.png",
+                 "width": 1200, "height": 630},
+        "sameAs": ["https://hwik.kr"],
     }
 
-    return wrap_html(title, desc, canonical, body, json.dumps(jsonld, ensure_ascii=False))
+    item_list_elements = []
+    for i, d in enumerate(danji_list[:100]):
+        if not d.get("complex_name"):
+            continue
+        _slug = make_danji_slug(d["complex_name"], d.get("location", ""), d["id"], d.get("address", ""))
+        bits = []
+        loc_first = (d.get("location") or "").split(" ")
+        if len(loc_first) > 1:
+            bits.append(loc_first[1])
+        if d.get("total_units"):
+            try:
+                bits.append(f"{int(d['total_units']):,}세대")
+            except Exception:
+                pass
+        item = {
+            "@type": "ListItem",
+            "position": i + 1,
+            "url": f"https://hwik.kr/danji/{url_quote(_slug, safe='-')}.html",
+            "name": d["complex_name"],
+        }
+        if bits:
+            item["description"] = " · ".join(bits)
+        item_list_elements.append(item)
+
+    today_iso = datetime.now(KST).strftime("%Y-%m-%d")
+    jsonld_collection = {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": title.split(" | ")[0],
+        "description": desc,
+        "url": canonical,
+        "inLanguage": "ko-KR",
+        "datePublished": "2026-01-01",
+        "dateModified": today_iso,
+        "isPartOf": {"@type": "WebSite", "name": "휙", "url": "https://hwik.kr"},
+        "publisher": {"@id": "https://hwik.kr/#org"},
+        "about": place_block,
+        "mainEntity": {
+            "@type": "ItemList",
+            "name": f"{gu_name} 아파트 시세",
+            "numberOfItems": len(item_list_elements),
+            "itemListElement": item_list_elements,
+        },
+    }
+    jsonld_place = dict(place_block, **{"@context": "https://schema.org"})
+
+    # FAQ 풍부화
+    faq_qas = [
+        (f"{gu_name} 아파트 평균 매매가는?",
+         f"{gu_name} {len(danji_list):,}개 단지 평균 매매가는 "
+         f"{format_price(avg_price) if avg_price else '확인 중'}입니다. "
+         f"국토교통부 실거래가 공개시스템 기준."),
+    ]
+    if avg_jr:
+        faq_qas.append((
+            f"{gu_name} 아파트 전세가율은?",
+            f"{gu_name} 평균 전세가율은 {avg_jr}%입니다."
+        ))
+    if top_name and price_top:
+        _mp1 = price_top[0][1]
+        faq_qas.append((
+            f"{gu_name}에서 가장 비싼 아파트는?",
+            f"매매가 1위는 {top_name}로 {format_price(_mp1)}에 거래되었습니다."
+        ))
+    if _top_dong_str:
+        faq_qas.append((
+            f"{gu_name}에서 아파트 단지가 많은 동은?",
+            f"{gu_name}에서는 {_top_dong_str} 일대에 아파트 단지가 가장 많이 분포합니다."
+        ))
+    faq_qas.append((
+        f"{gu_name} 아파트 단지 수는?",
+        f"{gu_name}에는 총 {len(danji_list):,}개 아파트 단지, {total_units:,}세대가 있습니다."
+    ))
+    faq_qas.append((
+        f"{gu_name} 아파트 실거래가 데이터 출처는?",
+        "국토교통부 실거래가 공개시스템(rt.molit.go.kr) 데이터를 매일 자동 수집합니다."
+    ))
+    jsonld_faq = {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {"@type": "Question", "name": q,
+             "acceptedAnswer": {"@type": "Answer", "text": a}}
+            for q, a in faq_qas
+        ],
+    }
+
+    jsonld_breadcrumb = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"},
+            {"@type": "ListItem", "position": 2, "name": f"{region_label} 구별 시세",
+             "item": "https://hwik.kr/gu/"},
+            {"@type": "ListItem", "position": 3, "name": gu_name},
+        ],
+    }
+
+    jsonld_combined = {"@context": "https://schema.org", "@graph": [
+        jsonld_org, jsonld_collection, jsonld_place, jsonld_faq, jsonld_breadcrumb
+    ]}
+
+    return wrap_html(title, desc, canonical, body, json.dumps(jsonld_combined, ensure_ascii=False),
+                     modified_iso=today_iso)
 
 
 def build_gu_index_html():
@@ -490,7 +857,8 @@ def build_gu_index_html():
     return wrap_html(title, desc, canonical, body, json.dumps(jsonld, ensure_ascii=False))
 
 
-def wrap_html(title, desc, canonical, body, jsonld_str):
+def wrap_html(title, desc, canonical, body, jsonld_str, modified_iso=None):
+    _mod = modified_iso or datetime.now(KST).strftime("%Y-%m-%d")
     return f"""<!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -506,15 +874,21 @@ def wrap_html(title, desc, canonical, body, jsonld_str):
 <meta property="og:title" content="{esc(title)}">
 <meta property="og:description" content="{esc(desc)}">
 <meta property="og:image" content="https://hwik.kr/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:url" content="{canonical}">
+<meta property="article:modified_time" content="{esc(_mod)}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{esc(title)}">
 <meta name="twitter:description" content="{esc(desc)}">
+<meta name="twitter:image" content="https://hwik.kr/og-image.png">
 <meta name="google-site-verification" content="R2ye41AVVTRs8BxEXyEafFSTqMSiHKdb9zgTklrktSI">
 <meta name="naver-site-verification" content="367bd1e77a8ad48b74e345be3e4a0f8125c2c4e1">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){{dataLayer.push(arguments);}}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
 <link rel="stylesheet" href="/danji/style.css">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css" media="(min-width: 768px)">
 <style>
 .dong-grid {{ display:grid; grid-template-columns:1fr 1fr; gap:8px; }}
 .dong-item {{ padding:12px; background:var(--card); border-radius:var(--radius); cursor:pointer; transition:all .15s; }}
@@ -536,6 +910,268 @@ def wrap_html(title, desc, canonical, body, jsonld_str):
 .trade-price {{ font-size:16px; font-weight:700; }}
 .trade-detail {{ font-size:11px; color:var(--sub); margin-top:3px; }}
 .trade-date {{ font-size:11px; color:var(--muted); align-self:center; }}
+/* Hero 박스 — 모바일 다크 기본 */
+.hero-box {{ margin:12px 14px; padding:12px 14px; background:var(--card); border-radius:var(--radius); border-left:3px solid var(--yellow); }}
+.hero-meta {{ font-size:11.5px; color:var(--sub); line-height:1.6; }}
+.hero-tag {{ display:inline-block; padding:1px 6px; background:var(--yellow); color:#0a0a12; border-radius:4px; font-size:10px; font-weight:700; margin-right:4px; }}
+.hero-cite {{ font-size:13px; color:var(--text); margin-top:6px; line-height:1.5; }}
+.hero-cite a {{ color:var(--yellow); text-decoration:none; font-weight:600; }}
+/* 1위 강조 카드 — 모바일 다크 */
+.danji-hero {{ position:relative; padding:18px 16px; background:linear-gradient(135deg, #2a2820 0%, #2a2515 100%); border:1px solid #3a3525; border-left:4px solid var(--yellow); border-radius:14px; margin-bottom:8px; cursor:pointer; transition:all .15s; }}
+.danji-hero:active {{ transform:scale(0.99); }}
+.danji-hero .rank-badge {{ display:inline-block; padding:3px 9px; background:var(--yellow); color:#0a0a12; border-radius:6px; font-size:10.5px; font-weight:800; margin-bottom:8px; letter-spacing:0.02em; }}
+.danji-hero .hero-name {{ font-size:17px; font-weight:700; color:var(--text); letter-spacing:-0.02em; }}
+.danji-hero .hero-meta {{ font-size:12px; color:var(--sub); margin-top:6px; line-height:1.6; }}
+.danji-hero .hero-price {{ font-size:22px; font-weight:800; color:var(--yellow); margin-top:10px; letter-spacing:-0.02em; }}
+.danji-hero .hero-price-label {{ font-size:11px; color:var(--muted); margin-left:6px; font-weight:500; }}
+/* 2-3위 컴팩트 카드 */
+.danji-compact {{ display:flex; justify-content:space-between; align-items:center; padding:11px 13px; background:var(--card); border-radius:10px; cursor:pointer; transition:all .15s; }}
+.danji-compact:active {{ transform:scale(0.98); }}
+.danji-compact-rank {{ display:inline-block; min-width:18px; font-size:12px; font-weight:700; color:var(--muted); margin-right:8px; }}
+.danji-compact-name {{ font-size:13px; font-weight:600; color:var(--text); }}
+.danji-compact-meta {{ font-size:11px; color:var(--sub); margin-top:2px; }}
+.danji-compact-price {{ font-size:14px; font-weight:700; text-align:right; color:var(--text); }}
+/* 데이터 안내 details */
+.data-notice summary {{ font-weight:600; color:var(--text); }}
+.data-notice a {{ color:var(--yellow); text-decoration:none; }}
+/* 페이지 푸터 */
+.hwik-footer {{ max-width:600px; margin:24px auto 40px; padding:24px 16px 0; border-top:1px solid var(--border, #2a2a3e); text-align:center; font-size:11.5px; color:var(--sub); line-height:1.7; }}
+.hwik-footer-links {{ margin-bottom:8px; }}
+.hwik-footer-links a {{ color:var(--sub); text-decoration:none; margin:0 8px; }}
+.hwik-footer-copy a {{ color:var(--muted); text-decoration:none; }}
+
+/* ── D 디자인 PC 라이트 (≥768px) — 오피스텔 동일 ── */
+@media (min-width: 768px) {{
+  html, body {{
+    background: #F0EEE6 !important;
+    font-family: Pretendard, -apple-system, BlinkMacSystemFont,
+                 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR', sans-serif !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    text-rendering: optimizeLegibility !important;
+    color: #0f172a !important;
+  }}
+  .wrap, .wrap * {{
+    font-family: Pretendard, -apple-system, BlinkMacSystemFont,
+                 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR', sans-serif !important;
+  }}
+  .wrap {{
+    max-width: 720px !important;
+    margin: 32px auto !important;
+    background: #fff !important;
+    border-radius: 20px !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04) !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+  }}
+  .breadcrumb {{
+    background: #fff !important;
+    padding: 18px 14px 0 !important;
+    font-size: 12.5px !important;
+    color: #94a3b8 !important;
+  }}
+  .breadcrumb a {{
+    color: #64748b !important; text-decoration: none !important;
+    transition: color 0.15s ease !important;
+  }}
+  .breadcrumb a:hover {{ color: #4338ca !important; }}
+  .breadcrumb span {{ color: #cbd5e1 !important; }}
+  .header {{
+    background: #fff !important;
+    padding: 14px 14px 22px !important;
+    border-bottom: 1px solid #eef0f4 !important;
+  }}
+  .header .header-top {{
+    display: flex !important; align-items: center !important; gap: 12px !important;
+    background: transparent !important; padding: 0 !important;
+  }}
+  .header .logo {{
+    background: #facc15 !important; color: #0a0a12 !important;
+    width: 32px !important; height: 32px !important;
+    border-radius: 8px !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    font-weight: 900 !important; font-size: 16px !important;
+    flex-shrink: 0 !important;
+  }}
+  .header .header-name {{
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    color: #4338ca !important;
+    letter-spacing: -0.03em !important;
+    line-height: 1.25 !important;
+    margin: 0 !important;
+  }}
+  .header .header-sub {{
+    font-size: 12.5px !important; color: #64748b !important;
+    margin-top: 2px !important;
+  }}
+  .divider {{ display: none !important; }}
+  /* Hero 박스 PC 라이트 */
+  .hero-box {{
+    margin: 16px 14px 4px !important;
+    padding: 14px 16px !important;
+    background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%) !important;
+    border: 1px solid #fde68a !important;
+    border-left: 3px solid #facc15 !important;
+    border-radius: 12px !important;
+  }}
+  .hero-meta {{ color: #78716c !important; font-size: 12px !important; }}
+  .hero-tag {{
+    background: #facc15 !important; color: #0a0a12 !important;
+    padding: 2px 7px !important; border-radius: 4px !important;
+    font-size: 10.5px !important; font-weight: 800 !important;
+    letter-spacing: 0.02em !important;
+  }}
+  .hero-cite {{ color: #1e293b !important; font-size: 13.5px !important; margin-top: 8px !important; }}
+  .hero-cite a {{ color: #4338ca !important; font-weight: 700 !important; }}
+  .hero-cite a:hover {{ text-decoration: underline !important; }}
+  .section {{ padding: 20px 14px !important; }}
+  .section-title {{
+    font-size: 16px !important; font-weight: 700 !important;
+    color: #0f172a !important; letter-spacing: -0.025em !important;
+    margin: 0 0 14px !important;
+  }}
+  /* 지표 박스 */
+  .metrics {{
+    display: grid !important; grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important; padding: 16px 14px 0 !important;
+  }}
+  .metric {{
+    background: #f8fafc !important;
+    border: 1px solid #eef0f4 !important;
+    border-radius: 10px !important;
+    padding: 12px 10px !important; text-align: center !important;
+  }}
+  .metric-label {{ font-size: 11px !important; color: #64748b !important; }}
+  .metric-value {{
+    font-size: 16px !important; font-weight: 700 !important;
+    color: #0f172a !important; margin-top: 4px !important;
+  }}
+  /* 단지/거래/구/동 카드 — 라이트 */
+  .danji-item, .trade-item, .gu-item, .dong-item {{
+    background: #f8fafc !important;
+    border: 1px solid #eef0f4 !important;
+    border-left: 3px solid #4338ca !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+    transition: all 0.15s ease !important;
+  }}
+  .danji-item:hover, .trade-item:hover, .gu-item:hover, .dong-item:hover {{
+    background: #eef2ff !important;
+    border-color: #c7d2fe !important;
+    border-left-color: #4338ca !important;
+    transform: translateX(2px) !important;
+    box-shadow: 0 4px 12px rgba(67,56,202,0.08) !important;
+  }}
+  .danji-name, .gu-name, .dong-name {{
+    color: #1e293b !important; font-weight: 700 !important;
+    letter-spacing: -0.015em !important;
+  }}
+  .danji-item:hover .danji-name,
+  .gu-item:hover .gu-name,
+  .dong-item:hover .dong-name {{ color: #4338ca !important; }}
+  .danji-sub, .gu-info, .dong-count {{
+    color: #64748b !important; font-weight: 500 !important;
+  }}
+  .danji-price, .trade-price {{ color: #0f172a !important; }}
+  .danji-rate, .trade-detail {{ color: #64748b !important; }}
+  .trade-date {{ color: #94a3b8 !important; }}
+  /* 1위 강조 카드 — PC 라이트 */
+  .danji-hero {{
+    background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%) !important;
+    border: 1px solid #fde68a !important;
+    border-left: 4px solid #facc15 !important;
+    padding: 20px 18px !important;
+    border-radius: 14px !important;
+    box-shadow: 0 4px 14px rgba(250,204,21,0.12) !important;
+    transition: all 0.18s ease !important;
+  }}
+  .danji-hero:hover {{
+    transform: translateY(-1px) !important;
+    box-shadow: 0 8px 22px rgba(250,204,21,0.18) !important;
+  }}
+  .danji-hero .rank-badge {{
+    background: #facc15 !important; color: #0a0a12 !important;
+    padding: 3px 10px !important; border-radius: 6px !important;
+    font-size: 11px !important; font-weight: 800 !important;
+    letter-spacing: 0.04em !important;
+  }}
+  .danji-hero .hero-name {{
+    font-size: 19px !important; font-weight: 800 !important;
+    color: #1e293b !important; letter-spacing: -0.025em !important;
+  }}
+  .danji-hero .hero-meta {{ color: #78716c !important; font-size: 12.5px !important; line-height: 1.7 !important; }}
+  .danji-hero .hero-price {{
+    color: #ca8a04 !important; font-size: 24px !important;
+    font-weight: 900 !important; letter-spacing: -0.025em !important;
+  }}
+  .danji-hero .hero-price-label {{ color: #a8a29e !important; font-weight: 600 !important; }}
+  /* 2-3위 컴팩트 — PC */
+  .danji-compact {{
+    background: transparent !important;
+    border: none !important; border-bottom: 1px solid #f1f5f9 !important;
+    border-radius: 0 !important;
+    padding: 12px 6px !important;
+    transition: background 0.15s ease !important;
+  }}
+  .danji-compact:hover {{ background: #f8fafc !important; }}
+  .danji-compact:last-child {{ border-bottom: none !important; }}
+  .danji-compact-rank {{ color: #cbd5e1 !important; font-weight: 800 !important; font-size: 13px !important; }}
+  .danji-compact-name {{ color: #1e293b !important; font-weight: 600 !important; }}
+  .danji-compact:hover .danji-compact-name {{ color: #4338ca !important; }}
+  .danji-compact-meta {{ color: #64748b !important; }}
+  .danji-compact-price {{ color: #0f172a !important; font-weight: 700 !important; }}
+  /* FAQ */
+  .faq-section {{ padding: 20px 14px !important; }}
+  .faq-item {{
+    background: #f8fafc !important; border: 1px solid #eef0f4 !important;
+    border-radius: 10px !important; padding: 14px 16px !important;
+    margin-bottom: 8px !important;
+  }}
+  .faq-q {{ color: #1e293b !important; font-weight: 700 !important; }}
+  .faq-a {{ color: #475569 !important; margin-top: 6px !important; line-height: 1.7 !important; }}
+  /* CTA */
+  .cta-section {{ padding: 16px 14px !important; }}
+  .btn-primary {{
+    background: #4338ca !important; color: #fff !important;
+    border-radius: 12px !important; padding: 14px !important;
+    font-weight: 700 !important;
+    transition: background 0.15s ease, transform 0.15s ease !important;
+  }}
+  .btn-primary:hover {{ background: #3730a3 !important; transform: translateY(-1px) !important; }}
+  /* SEO 영역 */
+  .seo-section {{
+    background: #fafafa !important; padding: 16px 14px !important;
+  }}
+  .seo-text {{
+    color: #475569 !important;
+    font-size: 13px !important; line-height: 1.85 !important;
+  }}
+  .seo-source {{ color: #94a3b8 !important; font-size: 11px !important; margin-top: 8px !important; }}
+  /* 데이터 안내 details */
+  .data-notice {{ color: #64748b !important; font-size: 12px !important; }}
+  .data-notice summary {{
+    cursor: pointer !important; font-weight: 700 !important; color: #1e293b !important;
+    padding: 4px 0 !important;
+  }}
+  .data-notice a {{ color: #4338ca !important; text-decoration: none !important; }}
+  .data-notice a:hover {{ text-decoration: underline !important; }}
+  /* 페이지 푸터 */
+  .hwik-footer {{
+    max-width: 720px !important;
+    margin: 24px auto 40px !important;
+    padding: 24px 16px 0 !important;
+    border-top: 1px solid #e5e7eb !important;
+    text-align: center !important;
+    font-size: 11.5px !important;
+    color: #6b7280 !important;
+    line-height: 1.7 !important;
+  }}
+  .hwik-footer-links a {{ color: #6b7280 !important; text-decoration: none !important; margin: 0 8px !important; }}
+  .hwik-footer-links a:hover {{ color: #4338ca !important; }}
+  .hwik-footer-copy {{ color: #9ca3af !important; }}
+  .hwik-footer-copy a {{ color: #9ca3af !important; text-decoration: none !important; }}
+}}
 </style>
 <script type="application/ld+json">{jsonld_str}</script>
 </head>
@@ -543,6 +1179,14 @@ def wrap_html(title, desc, canonical, body, jsonld_str):
 <div class="wrap">
 {body}
 </div>
+<footer class="hwik-footer">
+<div class="hwik-footer-links">
+<a href="/about.html">휙 소개</a>·
+<a href="/privacy.html">개인정보처리방침</a>·
+<a href="/terms.html">이용약관</a>
+</div>
+<div class="hwik-footer-copy">실거래가 출처: 국토교통부 · 휙(HWIK) · <a href="https://hwik.kr">hwik.kr</a></div>
+</footer>
 </body>
 </html>"""
 
@@ -552,11 +1196,16 @@ def wrap_html(title, desc, canonical, body, jsonld_str):
 GU_SLUG_SET = set()
 DONG_SLUG_SET = set()
 DANJI_SLUG_SET = set()
+OFFICETEL_GU_SLUG_SET = set()  # cross-link 용
 
 
 def main():
     global GU_SLUG_SET, DONG_SLUG_SET, DANJI_SLUG_SET
     os.makedirs(GU_DIR, exist_ok=True)
+
+    ONE_GU = os.environ.get("ONE_GU", "").strip()
+    if ONE_GU:
+        print(f"[ONE_GU={ONE_GU}] 단일 구만 빌드 — 기존 파일 유지, 인덱스 미갱신")
 
     # dong/danji 폴더에 이미 존재하는 슬러그 로드 (gu 페이지에서 링크 필터용)
     DONG_DIR = os.path.join(BASE_DIR, "dong")
@@ -569,6 +1218,13 @@ def main():
         DANJI_SLUG_SET = {os.path.splitext(f)[0] for f in os.listdir(DANJI_DIR) if f.endswith(".html")}
     print(f"단지 슬러그 {len(DANJI_SLUG_SET)}개 인식")
 
+    # 오피스텔 gu 슬러그 (cross-link 유효성 체크)
+    global OFFICETEL_GU_SLUG_SET
+    OFFICETEL_GU_DIR = os.path.join(BASE_DIR, "officetel", "gu")
+    if os.path.isdir(OFFICETEL_GU_DIR):
+        OFFICETEL_GU_SLUG_SET = {os.path.splitext(f)[0] for f in os.listdir(OFFICETEL_GU_DIR) if f.endswith(".html")}
+    print(f"오피스텔 gu 슬러그 {len(OFFICETEL_GU_SLUG_SET)}개 인식")
+
     # ── 데이터 먼저 확보 (실패 시 기존 파일 보존) ──
     print("Supabase에서 단지 데이터 조회 중...")
     all_danji = fetch_all_danji()
@@ -577,10 +1233,11 @@ def main():
         sys.exit(1)
     print(f"  {len(all_danji)}개 단지 로드 완료")
 
-    # ── 데이터 확보 후 기존 gu HTML 전부 삭제 ──
-    for f in os.listdir(GU_DIR):
-        if f.endswith(".html"):
-            os.remove(os.path.join(GU_DIR, f))
+    # ── 데이터 확보 후 기존 gu HTML 전부 삭제 (ONE_GU 모드에선 보존) ──
+    if not ONE_GU:
+        for f in os.listdir(GU_DIR):
+            if f.endswith(".html"):
+                os.remove(os.path.join(GU_DIR, f))
 
     # 2토큰 구/시 목록 (경기+충북+충남+전북+경북+경남 하위 구) — regions.py 단일 소스
     two_token_gu = ALL_TWO_TOKEN_GU
@@ -661,9 +1318,20 @@ def main():
 
     # 지역별 sibling 맵 (상호 링크용): region_key → [(gu_name, filename_slug), ...]
     siblings_by_region = defaultdict(list)
+    # 지역별 sibling 메타: region_key → {gu_name: {slug, lat, lng, count}}
+    sibling_meta_by_region: dict = defaultdict(dict)
     for (region_key, gu_name), danji_list in gu_map.items():
         if len(danji_list) >= 3:
-            siblings_by_region[region_key].append((gu_name, gu_filename(region_key, gu_name)))
+            slug = gu_filename(region_key, gu_name)
+            siblings_by_region[region_key].append((gu_name, slug))
+            lats = [d.get("lat") for d in danji_list if d.get("lat")]
+            lngs = [d.get("lng") for d in danji_list if d.get("lng")]
+            sibling_meta_by_region[region_key][gu_name] = {
+                "slug": slug,
+                "lat": (sum(lats) / len(lats)) if lats else None,
+                "lng": (sum(lngs) / len(lngs)) if lngs else None,
+                "count": len(danji_list),
+            }
     for region_key in siblings_by_region:
         siblings_by_region[region_key].sort(key=lambda x: x[0])
 
@@ -674,19 +1342,24 @@ def main():
         if len(danji_list) < 3:
             skip += 1
             continue
+        if ONE_GU and gu_name != ONE_GU:
+            continue
         # 같은 지역의 다른 구 (자기 자신 제외, 최대 20개)
         sibs = [s for s in siblings_by_region[region_key] if s[0] != gu_name][:20]
-        html = build_gu_detail_html(gu_name, danji_list, region_key=region_key, sibling_gus=sibs)
+        sib_meta = sibling_meta_by_region.get(region_key, {})
+        html = build_gu_detail_html(gu_name, danji_list, region_key=region_key,
+                                    sibling_gus=sibs, sibling_meta=sib_meta)
         slug = gu_filename(region_key, gu_name)
         fpath = os.path.join(GU_DIR, f"{slug}.html")
         with open(fpath, "w", encoding="utf-8") as f:
             f.write(html)
         count += 1
 
-    # 인덱스 페이지 (구 슬러그 집합 기반으로 링크 필터)
-    index_html = build_gu_index_html()
-    with open(os.path.join(GU_DIR, "index.html"), "w", encoding="utf-8") as f:
-        f.write(index_html)
+    # 인덱스 페이지 (ONE_GU 모드에선 갱신 안 함)
+    if not ONE_GU:
+        index_html = build_gu_index_html()
+        with open(os.path.join(GU_DIR, "index.html"), "w", encoding="utf-8") as f:
+            f.write(index_html)
 
     print(f"\n{count}개 구 페이지 생성, {skip}개 스킵 (단지 3개 미만)")
     print(f"출력: {GU_DIR}")

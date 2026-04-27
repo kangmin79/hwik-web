@@ -3,25 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>서울 구로구 아파트 실거래가 시세 - 휙</title>
-<meta name="description" content="서울 구로구 아파트 156개 단지 실거래가·전세가 시세. 평균 매매가 6억 8천. 매매·전세·월세 면적별 가격. 최고가 신도림디큐브시티. 전세가율 최고 구로성호주상복합. 국토교통부 공개시스템 기반.">
+<title>서울 구로구 아파트 실거래가 시세 · 156개 단지 | 휙</title>
+<meta name="description" content="서울 구로구의 아파트 156개 단지 매매·전세·월세 실거래가와 시세를 동별로 비교하세요. 구로동·개봉동·고척동 등 평균 매매가 6억 8천, 최고가 신도림디큐브시티, 전세가율 최고 구로성호주상복합. 국토교통부 실거래가 공개시스템 기반.">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
 <link rel="canonical" href="https://hwik.kr/gu/%EA%B5%AC%EB%A1%9C%EA%B5%AC.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="휙">
 <meta property="og:locale" content="ko_KR">
-<meta property="og:title" content="서울 구로구 아파트 실거래가 시세 - 휙">
-<meta property="og:description" content="서울 구로구 아파트 156개 단지 실거래가·전세가 시세. 평균 매매가 6억 8천. 매매·전세·월세 면적별 가격. 최고가 신도림디큐브시티. 전세가율 최고 구로성호주상복합. 국토교통부 공개시스템 기반.">
+<meta property="og:title" content="서울 구로구 아파트 실거래가 시세 · 156개 단지 | 휙">
+<meta property="og:description" content="서울 구로구의 아파트 156개 단지 매매·전세·월세 실거래가와 시세를 동별로 비교하세요. 구로동·개봉동·고척동 등 평균 매매가 6억 8천, 최고가 신도림디큐브시티, 전세가율 최고 구로성호주상복합. 국토교통부 실거래가 공개시스템 기반.">
 <meta property="og:image" content="https://hwik.kr/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:url" content="https://hwik.kr/gu/%EA%B5%AC%EB%A1%9C%EA%B5%AC.html">
+<meta property="article:modified_time" content="2026-04-27">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="서울 구로구 아파트 실거래가 시세 - 휙">
-<meta name="twitter:description" content="서울 구로구 아파트 156개 단지 실거래가·전세가 시세. 평균 매매가 6억 8천. 매매·전세·월세 면적별 가격. 최고가 신도림디큐브시티. 전세가율 최고 구로성호주상복합. 국토교통부 공개시스템 기반.">
+<meta name="twitter:title" content="서울 구로구 아파트 실거래가 시세 · 156개 단지 | 휙">
+<meta name="twitter:description" content="서울 구로구의 아파트 156개 단지 매매·전세·월세 실거래가와 시세를 동별로 비교하세요. 구로동·개봉동·고척동 등 평균 매매가 6억 8천, 최고가 신도림디큐브시티, 전세가율 최고 구로성호주상복합. 국토교통부 실거래가 공개시스템 기반.">
+<meta name="twitter:image" content="https://hwik.kr/og-image.png">
 <meta name="google-site-verification" content="R2ye41AVVTRs8BxEXyEafFSTqMSiHKdb9zgTklrktSI">
 <meta name="naver-site-verification" content="367bd1e77a8ad48b74e345be3e4a0f8125c2c4e1">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
 <link rel="stylesheet" href="/danji/style.css">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css" media="(min-width: 768px)">
 <style>
 .dong-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .dong-item { padding:12px; background:var(--card); border-radius:var(--radius); cursor:pointer; transition:all .15s; }
@@ -43,56 +49,304 @@
 .trade-price { font-size:16px; font-weight:700; }
 .trade-detail { font-size:11px; color:var(--sub); margin-top:3px; }
 .trade-date { font-size:11px; color:var(--muted); align-self:center; }
+/* Hero 박스 — 모바일 다크 기본 */
+.hero-box { margin:12px 14px; padding:12px 14px; background:var(--card); border-radius:var(--radius); border-left:3px solid var(--yellow); }
+.hero-meta { font-size:11.5px; color:var(--sub); line-height:1.6; }
+.hero-tag { display:inline-block; padding:1px 6px; background:var(--yellow); color:#0a0a12; border-radius:4px; font-size:10px; font-weight:700; margin-right:4px; }
+.hero-cite { font-size:13px; color:var(--text); margin-top:6px; line-height:1.5; }
+.hero-cite a { color:var(--yellow); text-decoration:none; font-weight:600; }
+/* 1위 강조 카드 — 모바일 다크 */
+.danji-hero { position:relative; padding:18px 16px; background:linear-gradient(135deg, #2a2820 0%, #2a2515 100%); border:1px solid #3a3525; border-left:4px solid var(--yellow); border-radius:14px; margin-bottom:8px; cursor:pointer; transition:all .15s; }
+.danji-hero:active { transform:scale(0.99); }
+.danji-hero .rank-badge { display:inline-block; padding:3px 9px; background:var(--yellow); color:#0a0a12; border-radius:6px; font-size:10.5px; font-weight:800; margin-bottom:8px; letter-spacing:0.02em; }
+.danji-hero .hero-name { font-size:17px; font-weight:700; color:var(--text); letter-spacing:-0.02em; }
+.danji-hero .hero-meta { font-size:12px; color:var(--sub); margin-top:6px; line-height:1.6; }
+.danji-hero .hero-price { font-size:22px; font-weight:800; color:var(--yellow); margin-top:10px; letter-spacing:-0.02em; }
+.danji-hero .hero-price-label { font-size:11px; color:var(--muted); margin-left:6px; font-weight:500; }
+/* 2-3위 컴팩트 카드 */
+.danji-compact { display:flex; justify-content:space-between; align-items:center; padding:11px 13px; background:var(--card); border-radius:10px; cursor:pointer; transition:all .15s; }
+.danji-compact:active { transform:scale(0.98); }
+.danji-compact-rank { display:inline-block; min-width:18px; font-size:12px; font-weight:700; color:var(--muted); margin-right:8px; }
+.danji-compact-name { font-size:13px; font-weight:600; color:var(--text); }
+.danji-compact-meta { font-size:11px; color:var(--sub); margin-top:2px; }
+.danji-compact-price { font-size:14px; font-weight:700; text-align:right; color:var(--text); }
+/* 데이터 안내 details */
+.data-notice summary { font-weight:600; color:var(--text); }
+.data-notice a { color:var(--yellow); text-decoration:none; }
+/* 페이지 푸터 */
+.hwik-footer { max-width:600px; margin:24px auto 40px; padding:24px 16px 0; border-top:1px solid var(--border, #2a2a3e); text-align:center; font-size:11.5px; color:var(--sub); line-height:1.7; }
+.hwik-footer-links { margin-bottom:8px; }
+.hwik-footer-links a { color:var(--sub); text-decoration:none; margin:0 8px; }
+.hwik-footer-copy a { color:var(--muted); text-decoration:none; }
+
+/* ── D 디자인 PC 라이트 (≥768px) — 오피스텔 동일 ── */
+@media (min-width: 768px) {
+  html, body {
+    background: #F0EEE6 !important;
+    font-family: Pretendard, -apple-system, BlinkMacSystemFont,
+                 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR', sans-serif !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    text-rendering: optimizeLegibility !important;
+    color: #0f172a !important;
+  }
+  .wrap, .wrap * {
+    font-family: Pretendard, -apple-system, BlinkMacSystemFont,
+                 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR', sans-serif !important;
+  }
+  .wrap {
+    max-width: 720px !important;
+    margin: 32px auto !important;
+    background: #fff !important;
+    border-radius: 20px !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04) !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+  }
+  .breadcrumb {
+    background: #fff !important;
+    padding: 18px 14px 0 !important;
+    font-size: 12.5px !important;
+    color: #94a3b8 !important;
+  }
+  .breadcrumb a {
+    color: #64748b !important; text-decoration: none !important;
+    transition: color 0.15s ease !important;
+  }
+  .breadcrumb a:hover { color: #4338ca !important; }
+  .breadcrumb span { color: #cbd5e1 !important; }
+  .header {
+    background: #fff !important;
+    padding: 14px 14px 22px !important;
+    border-bottom: 1px solid #eef0f4 !important;
+  }
+  .header .header-top {
+    display: flex !important; align-items: center !important; gap: 12px !important;
+    background: transparent !important; padding: 0 !important;
+  }
+  .header .logo {
+    background: #facc15 !important; color: #0a0a12 !important;
+    width: 32px !important; height: 32px !important;
+    border-radius: 8px !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    font-weight: 900 !important; font-size: 16px !important;
+    flex-shrink: 0 !important;
+  }
+  .header .header-name {
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    color: #4338ca !important;
+    letter-spacing: -0.03em !important;
+    line-height: 1.25 !important;
+    margin: 0 !important;
+  }
+  .header .header-sub {
+    font-size: 12.5px !important; color: #64748b !important;
+    margin-top: 2px !important;
+  }
+  .divider { display: none !important; }
+  /* Hero 박스 PC 라이트 */
+  .hero-box {
+    margin: 16px 14px 4px !important;
+    padding: 14px 16px !important;
+    background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%) !important;
+    border: 1px solid #fde68a !important;
+    border-left: 3px solid #facc15 !important;
+    border-radius: 12px !important;
+  }
+  .hero-meta { color: #78716c !important; font-size: 12px !important; }
+  .hero-tag {
+    background: #facc15 !important; color: #0a0a12 !important;
+    padding: 2px 7px !important; border-radius: 4px !important;
+    font-size: 10.5px !important; font-weight: 800 !important;
+    letter-spacing: 0.02em !important;
+  }
+  .hero-cite { color: #1e293b !important; font-size: 13.5px !important; margin-top: 8px !important; }
+  .hero-cite a { color: #4338ca !important; font-weight: 700 !important; }
+  .hero-cite a:hover { text-decoration: underline !important; }
+  .section { padding: 20px 14px !important; }
+  .section-title {
+    font-size: 16px !important; font-weight: 700 !important;
+    color: #0f172a !important; letter-spacing: -0.025em !important;
+    margin: 0 0 14px !important;
+  }
+  /* 지표 박스 */
+  .metrics {
+    display: grid !important; grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important; padding: 16px 14px 0 !important;
+  }
+  .metric {
+    background: #f8fafc !important;
+    border: 1px solid #eef0f4 !important;
+    border-radius: 10px !important;
+    padding: 12px 10px !important; text-align: center !important;
+  }
+  .metric-label { font-size: 11px !important; color: #64748b !important; }
+  .metric-value {
+    font-size: 16px !important; font-weight: 700 !important;
+    color: #0f172a !important; margin-top: 4px !important;
+  }
+  /* 단지/거래/구/동 카드 — 라이트 */
+  .danji-item, .trade-item, .gu-item, .dong-item {
+    background: #f8fafc !important;
+    border: 1px solid #eef0f4 !important;
+    border-left: 3px solid #4338ca !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+    transition: all 0.15s ease !important;
+  }
+  .danji-item:hover, .trade-item:hover, .gu-item:hover, .dong-item:hover {
+    background: #eef2ff !important;
+    border-color: #c7d2fe !important;
+    border-left-color: #4338ca !important;
+    transform: translateX(2px) !important;
+    box-shadow: 0 4px 12px rgba(67,56,202,0.08) !important;
+  }
+  .danji-name, .gu-name, .dong-name {
+    color: #1e293b !important; font-weight: 700 !important;
+    letter-spacing: -0.015em !important;
+  }
+  .danji-item:hover .danji-name,
+  .gu-item:hover .gu-name,
+  .dong-item:hover .dong-name { color: #4338ca !important; }
+  .danji-sub, .gu-info, .dong-count {
+    color: #64748b !important; font-weight: 500 !important;
+  }
+  .danji-price, .trade-price { color: #0f172a !important; }
+  .danji-rate, .trade-detail { color: #64748b !important; }
+  .trade-date { color: #94a3b8 !important; }
+  /* 1위 강조 카드 — PC 라이트 */
+  .danji-hero {
+    background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%) !important;
+    border: 1px solid #fde68a !important;
+    border-left: 4px solid #facc15 !important;
+    padding: 20px 18px !important;
+    border-radius: 14px !important;
+    box-shadow: 0 4px 14px rgba(250,204,21,0.12) !important;
+    transition: all 0.18s ease !important;
+  }
+  .danji-hero:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 8px 22px rgba(250,204,21,0.18) !important;
+  }
+  .danji-hero .rank-badge {
+    background: #facc15 !important; color: #0a0a12 !important;
+    padding: 3px 10px !important; border-radius: 6px !important;
+    font-size: 11px !important; font-weight: 800 !important;
+    letter-spacing: 0.04em !important;
+  }
+  .danji-hero .hero-name {
+    font-size: 19px !important; font-weight: 800 !important;
+    color: #1e293b !important; letter-spacing: -0.025em !important;
+  }
+  .danji-hero .hero-meta { color: #78716c !important; font-size: 12.5px !important; line-height: 1.7 !important; }
+  .danji-hero .hero-price {
+    color: #ca8a04 !important; font-size: 24px !important;
+    font-weight: 900 !important; letter-spacing: -0.025em !important;
+  }
+  .danji-hero .hero-price-label { color: #a8a29e !important; font-weight: 600 !important; }
+  /* 2-3위 컴팩트 — PC */
+  .danji-compact {
+    background: transparent !important;
+    border: none !important; border-bottom: 1px solid #f1f5f9 !important;
+    border-radius: 0 !important;
+    padding: 12px 6px !important;
+    transition: background 0.15s ease !important;
+  }
+  .danji-compact:hover { background: #f8fafc !important; }
+  .danji-compact:last-child { border-bottom: none !important; }
+  .danji-compact-rank { color: #cbd5e1 !important; font-weight: 800 !important; font-size: 13px !important; }
+  .danji-compact-name { color: #1e293b !important; font-weight: 600 !important; }
+  .danji-compact:hover .danji-compact-name { color: #4338ca !important; }
+  .danji-compact-meta { color: #64748b !important; }
+  .danji-compact-price { color: #0f172a !important; font-weight: 700 !important; }
+  /* FAQ */
+  .faq-section { padding: 20px 14px !important; }
+  .faq-item {
+    background: #f8fafc !important; border: 1px solid #eef0f4 !important;
+    border-radius: 10px !important; padding: 14px 16px !important;
+    margin-bottom: 8px !important;
+  }
+  .faq-q { color: #1e293b !important; font-weight: 700 !important; }
+  .faq-a { color: #475569 !important; margin-top: 6px !important; line-height: 1.7 !important; }
+  /* CTA */
+  .cta-section { padding: 16px 14px !important; }
+  .btn-primary {
+    background: #4338ca !important; color: #fff !important;
+    border-radius: 12px !important; padding: 14px !important;
+    font-weight: 700 !important;
+    transition: background 0.15s ease, transform 0.15s ease !important;
+  }
+  .btn-primary:hover { background: #3730a3 !important; transform: translateY(-1px) !important; }
+  /* SEO 영역 */
+  .seo-section {
+    background: #fafafa !important; padding: 16px 14px !important;
+  }
+  .seo-text {
+    color: #475569 !important;
+    font-size: 13px !important; line-height: 1.85 !important;
+  }
+  .seo-source { color: #94a3b8 !important; font-size: 11px !important; margin-top: 8px !important; }
+  /* 데이터 안내 details */
+  .data-notice { color: #64748b !important; font-size: 12px !important; }
+  .data-notice summary {
+    cursor: pointer !important; font-weight: 700 !important; color: #1e293b !important;
+    padding: 4px 0 !important;
+  }
+  .data-notice a { color: #4338ca !important; text-decoration: none !important; }
+  .data-notice a:hover { text-decoration: underline !important; }
+  /* 페이지 푸터 */
+  .hwik-footer {
+    max-width: 720px !important;
+    margin: 24px auto 40px !important;
+    padding: 24px 16px 0 !important;
+    border-top: 1px solid #e5e7eb !important;
+    text-align: center !important;
+    font-size: 11.5px !important;
+    color: #6b7280 !important;
+    line-height: 1.7 !important;
+  }
+  .hwik-footer-links a { color: #6b7280 !important; text-decoration: none !important; margin: 0 8px !important; }
+  .hwik-footer-links a:hover { color: #4338ca !important; }
+  .hwik-footer-copy { color: #9ca3af !important; }
+  .hwik-footer-copy a { color: #9ca3af !important; text-decoration: none !important; }
+}
 </style>
-<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "구로구 아파트 평균 매매가는?", "acceptedAnswer": {"@type": "Answer", "text": "구로구 아파트 실거래가 기반 평균 매매가는 6억 8천입니다."}}, {"@type": "Question", "name": "구로구 아파트 전세가율은?", "acceptedAnswer": {"@type": "Answer", "text": "구로구 평균 전세가율은 59.7%입니다."}}]}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"}, {"@type": "ListItem", "position": 2, "name": "서울 구별 시세", "item": "https://hwik.kr/gu/"}, {"@type": "ListItem", "position": 3, "name": "구로구"}]}, {"@type": "ItemList", "name": "구로구 아파트 시세", "numberOfItems": 156, "itemListElement": [{"@type": "ListItem", "position": 1, "name": "천왕역모아엘가트레뷰", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%98%A4%EB%A5%98%EB%8F%99-%EC%B2%9C%EC%99%95%EC%97%AD%EB%AA%A8%EC%95%84%EC%97%98%EA%B0%80%ED%8A%B8%EB%A0%88%EB%B7%B0-a10020416.html"}, {"@type": "ListItem", "position": 2, "name": "동도센트리움 아파트 오피스텔", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EB%8F%99%EB%8F%84%EC%84%BC%ED%8A%B8%EB%A6%AC%EC%9B%80-%EC%95%84%ED%8C%8C%ED%8A%B8-%EC%98%A4%ED%94%BC%EC%8A%A4%ED%85%94-a10020664.html"}, {"@type": "ListItem", "position": 3, "name": "신도림아르디에", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EC%95%84%EB%A5%B4%EB%94%94%EC%97%90-a10020771.html"}, {"@type": "ListItem", "position": 4, "name": "신영지웰에스테이트개봉역", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EC%8B%A0%EC%98%81%EC%A7%80%EC%9B%B0%EC%97%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8%EA%B0%9C%EB%B4%89%EC%97%AD-a10020797.html"}, {"@type": "ListItem", "position": 5, "name": "현대파크빌아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%ED%98%84%EB%8C%80%ED%8C%8C%ED%81%AC%EB%B9%8C%EC%95%84%ED%8C%8C%ED%8A%B8-a10020947.html"}, {"@type": "ListItem", "position": 6, "name": "호반써밋개봉아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%ED%98%B8%EB%B0%98%EC%8D%A8%EB%B0%8B%EA%B0%9C%EB%B4%89%EC%95%84%ED%8C%8C%ED%8A%B8-a10020958.html"}, {"@type": "ListItem", "position": 7, "name": "신도림팰러티움", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%ED%8C%B0%EB%9F%AC%ED%8B%B0%EC%9B%80-a10021030.html"}, {"@type": "ListItem", "position": 8, "name": "구로현대의보아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%ED%98%84%EB%8C%80%EC%9D%98%EB%B3%B4%EC%95%84%ED%8C%8C%ED%8A%B8-a10021077.html"}, {"@type": "ListItem", "position": 9, "name": "우민늘푸른아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EC%9A%B0%EB%AF%BC%EB%8A%98%ED%91%B8%EB%A5%B8%EC%95%84%ED%8C%8C%ED%8A%B8-a10021214.html"}, {"@type": "ListItem", "position": 10, "name": "뉴홍현솔레디움아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EB%89%B4%ED%99%8D%ED%98%84%EC%86%94%EB%A0%88%EB%94%94%EC%9B%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10021330.html"}, {"@type": "ListItem", "position": 11, "name": "구로지웰아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%EC%A7%80%EC%9B%B0%EC%95%84%ED%8C%8C%ED%8A%B8-a10021345.html"}, {"@type": "ListItem", "position": 12, "name": "개봉동인아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EA%B0%9C%EB%B4%89%EB%8F%99%EC%9D%B8%EC%95%84%ED%8C%8C%ED%8A%B8-a10021547.html"}, {"@type": "ListItem", "position": 13, "name": "한양 아이클래스 구로", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%ED%95%9C%EC%96%91-%EC%95%84%EC%9D%B4%ED%81%B4%EB%9E%98%EC%8A%A4-%EA%B5%AC%EB%A1%9C-a10021629.html"}, {"@type": "ListItem", "position": 14, "name": "순영1차 웰라이빌", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EC%88%9C%EC%98%811%EC%B0%A8-%EC%9B%B0%EB%9D%BC%EC%9D%B4%EB%B9%8C-a10021636.html"}, {"@type": "ListItem", "position": 15, "name": "대림역경남아너스빌", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EB%8C%80%EB%A6%BC%EC%97%AD%EA%B2%BD%EB%82%A8%EC%95%84%EB%84%88%EC%8A%A4%EB%B9%8C-a10021832.html"}, {"@type": "ListItem", "position": 16, "name": "고척신원프라자", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B3%A0%EC%B2%99%EB%8F%99-%EA%B3%A0%EC%B2%99%EC%8B%A0%EC%9B%90%ED%94%84%EB%9D%BC%EC%9E%90-a10021933.html"}, {"@type": "ListItem", "position": 17, "name": "보람쉬움아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EB%B3%B4%EB%9E%8C%EC%89%AC%EC%9B%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10022110.html"}, {"@type": "ListItem", "position": 18, "name": "구로영화참마음아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%EC%98%81%ED%99%94%EC%B0%B8%EB%A7%88%EC%9D%8C%EC%95%84%ED%8C%8C%ED%8A%B8-a10022146.html"}, {"@type": "ListItem", "position": 19, "name": "신성은하수아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EC%84%B1%EC%9D%80%ED%95%98%EC%88%98%EC%95%84%ED%8C%8C%ED%8A%B8-a10022406.html"}, {"@type": "ListItem", "position": 20, "name": "다울숲아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EB%8B%A4%EC%9A%B8%EC%88%B2%EC%95%84%ED%8C%8C%ED%8A%B8-a10022507.html"}, {"@type": "ListItem", "position": 21, "name": "신도림2차 푸르지오 아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC2%EC%B0%A8-%ED%91%B8%EB%A5%B4%EC%A7%80%EC%98%A4-%EC%95%84%ED%8C%8C%ED%8A%B8-a10022522.html"}, {"@type": "ListItem", "position": 22, "name": "개봉상우2차아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EA%B0%9C%EB%B4%89%EC%83%81%EC%9A%B02%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10022878.html"}, {"@type": "ListItem", "position": 23, "name": "구로오네뜨시티", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%EC%98%A4%EB%84%A4%EB%9C%A8%EC%8B%9C%ED%8B%B0-a10023471.html"}, {"@type": "ListItem", "position": 24, "name": "신안타워아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EC%8B%A0%EC%95%88%ED%83%80%EC%9B%8C%EC%95%84%ED%8C%8C%ED%8A%B8-a10023681.html"}, {"@type": "ListItem", "position": 25, "name": "고척성원", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B3%A0%EC%B2%99%EB%8F%99-%EA%B3%A0%EC%B2%99%EC%84%B1%EC%9B%90-a10024846.html"}, {"@type": "ListItem", "position": 26, "name": "구로항동우남퍼스트빌", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%ED%95%AD%EB%8F%99-%EA%B5%AC%EB%A1%9C%ED%95%AD%EB%8F%99%EC%9A%B0%EB%82%A8%ED%8D%BC%EC%8A%A4%ED%8A%B8%EB%B9%8C-a10024849.html"}, {"@type": "ListItem", "position": 27, "name": "구로항동제일풍경채포레스트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%ED%95%AD%EB%8F%99-%EA%B5%AC%EB%A1%9C%ED%95%AD%EB%8F%99%EC%A0%9C%EC%9D%BC%ED%92%8D%EA%B2%BD%EC%B1%84%ED%8F%AC%EB%A0%88%EC%8A%A4%ED%8A%B8-a10024927.html"}, {"@type": "ListItem", "position": 28, "name": "항동중흥S클래스베르데카운티", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%ED%95%AD%EB%8F%99-%ED%95%AD%EB%8F%99%EC%A4%91%ED%9D%A5S%ED%81%B4%EB%9E%98%EC%8A%A4%EB%B2%A0%EB%A5%B4%EB%8D%B0%EC%B9%B4%EC%9A%B4%ED%8B%B0-a10025115.html"}, {"@type": "ListItem", "position": 29, "name": "항동 한양수자인 에듀힐즈", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%ED%95%AD%EB%8F%99-%ED%95%AD%EB%8F%99-%ED%95%9C%EC%96%91%EC%88%98%EC%9E%90%EC%9D%B8-%EC%97%90%EB%93%80%ED%9E%90%EC%A6%88-a10025193.html"}, {"@type": "ListItem", "position": 30, "name": "항동하버라인4단지아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%ED%95%AD%EB%8F%99-%ED%95%AD%EB%8F%99%ED%95%98%EB%B2%84%EB%9D%BC%EC%9D%B84%EB%8B%A8%EC%A7%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10025302.html"}, {"@type": "ListItem", "position": 31, "name": "항동하버라인2단지", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%ED%95%AD%EB%8F%99-%ED%95%AD%EB%8F%99%ED%95%98%EB%B2%84%EB%9D%BC%EC%9D%B82%EB%8B%A8%EC%A7%80-a10025387.html"}, {"@type": "ListItem", "position": 32, "name": "항동하버라인3단지", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%ED%95%AD%EB%8F%99-%ED%95%AD%EB%8F%99%ED%95%98%EB%B2%84%EB%9D%BC%EC%9D%B83%EB%8B%A8%EC%A7%80-a10025614.html"}, {"@type": "ListItem", "position": 33, "name": "희훈타워빌", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%ED%9D%AC%ED%9B%88%ED%83%80%EC%9B%8C%EB%B9%8C-a10025743.html"}, {"@type": "ListItem", "position": 34, "name": "대림아르빌아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EB%8C%80%EB%A6%BC%EC%95%84%EB%A5%B4%EB%B9%8C%EC%95%84%ED%8C%8C%ED%8A%B8-a10026989.html"}, {"@type": "ListItem", "position": 35, "name": "덕영드림아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EB%8D%95%EC%98%81%EB%93%9C%EB%A6%BC%EC%95%84%ED%8C%8C%ED%8A%B8-a10027493.html"}, {"@type": "ListItem", "position": 36, "name": "한국현대아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%ED%95%9C%EA%B5%AD%ED%98%84%EB%8C%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10027507.html"}, {"@type": "ListItem", "position": 37, "name": "우림필유아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%98%A4%EB%A5%98%EB%8F%99-%EC%9A%B0%EB%A6%BC%ED%95%84%EC%9C%A0%EC%95%84%ED%8C%8C%ED%8A%B8-a10027522.html"}, {"@type": "ListItem", "position": 38, "name": "우리유앤미", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EC%9A%B0%EB%A6%AC%EC%9C%A0%EC%95%A4%EB%AF%B8-a15205001.html"}, {"@type": "ListItem", "position": 39, "name": "구로우성(1동)", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%EC%9A%B0%EC%84%B1-1%EB%8F%99-a15205103.html"}, {"@type": "ListItem", "position": 40, "name": "구로한일유엔아이", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%ED%95%9C%EC%9D%BC%EC%9C%A0%EC%97%94%EC%95%84%EC%9D%B4-a15205104.html"}, {"@type": "ListItem", "position": 41, "name": "구일우성아파트", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EC%9D%BC%EC%9A%B0%EC%84%B1%EC%95%84%ED%8C%8C%ED%8A%B8-a15205108.html"}, {"@type": "ListItem", "position": 42, "name": "구로신성미소지움", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%EC%8B%A0%EC%84%B1%EB%AF%B8%EC%86%8C%EC%A7%80%EC%9B%80-a15205301.html"}, {"@type": "ListItem", "position": 43, "name": "구로한신휴플러스", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%ED%95%9C%EC%8B%A0%ED%9C%B4%ED%94%8C%EB%9F%AC%EC%8A%A4-a15205303.html"}, {"@type": "ListItem", "position": 44, "name": "구로두산위브", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%EB%91%90%EC%82%B0%EC%9C%84%EB%B8%8C-a15205305.html"}, {"@type": "ListItem", "position": 45, "name": "구로두산", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%EB%91%90%EC%82%B0-a15205405.html"}, {"@type": "ListItem", "position": 46, "name": "신구로자이", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EC%8B%A0%EA%B5%AC%EB%A1%9C%EC%9E%90%EC%9D%B4-a15205508.html"}, {"@type": "ListItem", "position": 47, "name": "신도림롯데", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%A1%AF%EB%8D%B0-a15205511.html"}, {"@type": "ListItem", "position": 48, "name": "신도림태영타운", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%ED%83%9C%EC%98%81%ED%83%80%EC%9A%B4-a15205513.html"}, {"@type": "ListItem", "position": 49, "name": "고척삼환로즈빌", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B3%A0%EC%B2%99%EB%8F%99-%EA%B3%A0%EC%B2%99%EC%82%BC%ED%99%98%EB%A1%9C%EC%A6%88%EB%B9%8C-a15208003.html"}, {"@type": "ListItem", "position": 50, "name": "고척마젤란", "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B3%A0%EC%B2%99%EB%8F%99-%EA%B3%A0%EC%B2%99%EB%A7%88%EC%A0%A4%EB%9E%80-a15208005.html"}]}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@context": "https://schema.org", "@type": "Organization", "@id": "https://hwik.kr/#org", "name": "휙 (HWIK)", "url": "https://hwik.kr", "logo": {"@type": "ImageObject", "url": "https://hwik.kr/og-image.png", "width": 1200, "height": 630}, "sameAs": ["https://hwik.kr"]}, {"@context": "https://schema.org", "@type": "CollectionPage", "name": "서울 구로구 아파트 실거래가 시세 · 156개 단지", "description": "서울 구로구의 아파트 156개 단지 매매·전세·월세 실거래가와 시세를 동별로 비교하세요. 구로동·개봉동·고척동 등 평균 매매가 6억 8천, 최고가 신도림디큐브시티, 전세가율 최고 구로성호주상복합. 국토교통부 실거래가 공개시스템 기반.", "url": "https://hwik.kr/gu/%EA%B5%AC%EB%A1%9C%EA%B5%AC.html", "inLanguage": "ko-KR", "datePublished": "2026-01-01", "dateModified": "2026-04-27", "isPartOf": {"@type": "WebSite", "name": "휙", "url": "https://hwik.kr"}, "publisher": {"@id": "https://hwik.kr/#org"}, "about": {"@type": "AdministrativeArea", "name": "서울 구로구", "containedInPlace": {"@type": "AdministrativeArea", "name": "서울", "containedInPlace": {"@type": "Country", "name": "대한민국"}}, "geo": {"@type": "GeoCoordinates", "latitude": 37.496824, "longitude": 126.865658}}, "mainEntity": {"@type": "ItemList", "name": "구로구 아파트 시세", "numberOfItems": 100, "itemListElement": [{"@type": "ListItem", "position": 1, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%98%A4%EB%A5%98%EB%8F%99-%EC%B2%9C%EC%99%95%EC%97%AD%EB%AA%A8%EC%95%84%EC%97%98%EA%B0%80%ED%8A%B8%EB%A0%88%EB%B7%B0-a10020416.html", "name": "천왕역모아엘가트레뷰", "description": "오류동 · 440세대"}, {"@type": "ListItem", "position": 2, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EB%8F%99%EB%8F%84%EC%84%BC%ED%8A%B8%EB%A6%AC%EC%9B%80-%EC%95%84%ED%8C%8C%ED%8A%B8-%EC%98%A4%ED%94%BC%EC%8A%A4%ED%85%94-a10020664.html", "name": "동도센트리움 아파트 오피스텔", "description": "개봉동 · 136세대"}, {"@type": "ListItem", "position": 3, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EC%95%84%EB%A5%B4%EB%94%94%EC%97%90-a10020771.html", "name": "신도림아르디에", "description": "신도림동 · 149세대"}, {"@type": "ListItem", "position": 4, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EC%8B%A0%EC%98%81%EC%A7%80%EC%9B%B0%EC%97%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8%EA%B0%9C%EB%B4%89%EC%97%AD-a10020797.html", "name": "신영지웰에스테이트개봉역", "description": "개봉동 · 122세대"}, {"@type": "ListItem", "position": 5, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%ED%98%84%EB%8C%80%ED%8C%8C%ED%81%AC%EB%B9%8C%EC%95%84%ED%8C%8C%ED%8A%B8-a10020947.html", "name": "현대파크빌아파트", "description": "구로동 · 104세대"}, {"@type": "ListItem", "position": 6, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%ED%98%B8%EB%B0%98%EC%8D%A8%EB%B0%8B%EA%B0%9C%EB%B4%89%EC%95%84%ED%8C%8C%ED%8A%B8-a10020958.html", "name": "호반써밋개봉아파트", "description": "개봉동 · 317세대"}, {"@type": "ListItem", "position": 7, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%ED%8C%B0%EB%9F%AC%ED%8B%B0%EC%9B%80-a10021030.html", "name": "신도림팰러티움", "description": "신도림동 · 96세대"}, {"@type": "ListItem", "position": 8, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%ED%98%84%EB%8C%80%EC%9D%98%EB%B3%B4%EC%95%84%ED%8C%8C%ED%8A%B8-a10021077.html", "name": "구로현대의보아파트", "description": "구로동 · 116세대"}, {"@type": "ListItem", "position": 9, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EC%9A%B0%EB%AF%BC%EB%8A%98%ED%91%B8%EB%A5%B8%EC%95%84%ED%8C%8C%ED%8A%B8-a10021214.html", "name": "우민늘푸른아파트", "description": "구로동 · 111세대"}, {"@type": "ListItem", "position": 10, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EB%89%B4%ED%99%8D%ED%98%84%EC%86%94%EB%A0%88%EB%94%94%EC%9B%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10021330.html", "name": "뉴홍현솔레디움아파트", "description": "구로동 · 109세대"}, {"@type": "ListItem", "position": 11, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%EC%A7%80%EC%9B%B0%EC%95%84%ED%8C%8C%ED%8A%B8-a10021345.html", "name": "구로지웰아파트", "description": "구로동 · 148세대"}, {"@type": "ListItem", "position": 12, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EA%B0%9C%EB%B4%89%EB%8F%99%EC%9D%B8%EC%95%84%ED%8C%8C%ED%8A%B8-a10021547.html", "name": "개봉동인아파트", "description": "개봉동 · 104세대"}, {"@type": "ListItem", "position": 13, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%ED%95%9C%EC%96%91-%EC%95%84%EC%9D%B4%ED%81%B4%EB%9E%98%EC%8A%A4-%EA%B5%AC%EB%A1%9C-a10021629.html", "name": "한양 아이클래스 구로", "description": "개봉동 · 149세대"}, {"@type": "ListItem", "position": 14, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EC%88%9C%EC%98%811%EC%B0%A8-%EC%9B%B0%EB%9D%BC%EC%9D%B4%EB%B9%8C-a10021636.html", "name": "순영1차 웰라이빌", "description": "구로동 · 102세대"}, {"@type": "ListItem", "position": 15, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EB%8C%80%EB%A6%BC%EC%97%AD%EA%B2%BD%EB%82%A8%EC%95%84%EB%84%88%EC%8A%A4%EB%B9%8C-a10021832.html", "name": "대림역경남아너스빌", "description": "구로동 · 129세대"}, {"@type": "ListItem", "position": 16, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B3%A0%EC%B2%99%EB%8F%99-%EA%B3%A0%EC%B2%99%EC%8B%A0%EC%9B%90%ED%94%84%EB%9D%BC%EC%9E%90-a10021933.html", "name": "고척신원프라자", "description": "고척동 · 123세대"}, {"@type": "ListItem", "position": 17, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EB%B3%B4%EB%9E%8C%EC%89%AC%EC%9B%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10022110.html", "name": "보람쉬움아파트", "description": "구로동 · 100세대"}, {"@type": "ListItem", "position": 18, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%EC%98%81%ED%99%94%EC%B0%B8%EB%A7%88%EC%9D%8C%EC%95%84%ED%8C%8C%ED%8A%B8-a10022146.html", "name": "구로영화참마음아파트", "description": "구로동 · 125세대"}, {"@type": "ListItem", "position": 19, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EC%84%B1%EC%9D%80%ED%95%98%EC%88%98%EC%95%84%ED%8C%8C%ED%8A%B8-a10022406.html", "name": "신성은하수아파트", "description": "신도림동 · 120세대"}, {"@type": "ListItem", "position": 20, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EB%8B%A4%EC%9A%B8%EC%88%B2%EC%95%84%ED%8C%8C%ED%8A%B8-a10022507.html", "name": "다울숲아파트", "description": "구로동 · 79세대"}, {"@type": "ListItem", "position": 21, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC2%EC%B0%A8-%ED%91%B8%EB%A5%B4%EC%A7%80%EC%98%A4-%EC%95%84%ED%8C%8C%ED%8A%B8-a10022522.html", "name": "신도림2차 푸르지오 아파트", "description": "신도림동 · 90세대"}, {"@type": "ListItem", "position": 22, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EA%B0%9C%EB%B4%89%EC%83%81%EC%9A%B02%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10022878.html", "name": "개봉상우2차아파트", "description": "개봉동 · 72세대"}, {"@type": "ListItem", "position": 23, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%EC%98%A4%EB%84%A4%EB%9C%A8%EC%8B%9C%ED%8B%B0-a10023471.html", "name": "구로오네뜨시티", "description": "구로동 · 208세대"}, {"@type": "ListItem", "position": 24, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EC%8B%A0%EC%95%88%ED%83%80%EC%9B%8C%EC%95%84%ED%8C%8C%ED%8A%B8-a10023681.html", "name": "신안타워아파트", "description": "구로동 · 98세대"}, {"@type": "ListItem", "position": 25, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B3%A0%EC%B2%99%EB%8F%99-%EA%B3%A0%EC%B2%99%EC%84%B1%EC%9B%90-a10024846.html", "name": "고척성원", "description": "고척동 · 74세대"}, {"@type": "ListItem", "position": 26, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%ED%95%AD%EB%8F%99-%EA%B5%AC%EB%A1%9C%ED%95%AD%EB%8F%99%EC%9A%B0%EB%82%A8%ED%8D%BC%EC%8A%A4%ED%8A%B8%EB%B9%8C-a10024849.html", "name": "구로항동우남퍼스트빌", "description": "항동 · 337세대"}, {"@type": "ListItem", "position": 27, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%ED%95%AD%EB%8F%99-%EA%B5%AC%EB%A1%9C%ED%95%AD%EB%8F%99%EC%A0%9C%EC%9D%BC%ED%92%8D%EA%B2%BD%EC%B1%84%ED%8F%AC%EB%A0%88%EC%8A%A4%ED%8A%B8-a10024927.html", "name": "구로항동제일풍경채포레스트", "description": "항동 · 345세대"}, {"@type": "ListItem", "position": 28, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%ED%95%AD%EB%8F%99-%ED%95%AD%EB%8F%99%EC%A4%91%ED%9D%A5S%ED%81%B4%EB%9E%98%EC%8A%A4%EB%B2%A0%EB%A5%B4%EB%8D%B0%EC%B9%B4%EC%9A%B4%ED%8B%B0-a10025115.html", "name": "항동중흥S클래스베르데카운티", "description": "항동 · 419세대"}, {"@type": "ListItem", "position": 29, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%ED%95%AD%EB%8F%99-%ED%95%AD%EB%8F%99-%ED%95%9C%EC%96%91%EC%88%98%EC%9E%90%EC%9D%B8-%EC%97%90%EB%93%80%ED%9E%90%EC%A6%88-a10025193.html", "name": "항동 한양수자인 에듀힐즈", "description": "항동 · 634세대"}, {"@type": "ListItem", "position": 30, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%ED%95%AD%EB%8F%99-%ED%95%AD%EB%8F%99%ED%95%98%EB%B2%84%EB%9D%BC%EC%9D%B84%EB%8B%A8%EC%A7%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10025302.html", "name": "항동하버라인4단지아파트", "description": "항동 · 297세대"}, {"@type": "ListItem", "position": 31, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%ED%95%AD%EB%8F%99-%ED%95%AD%EB%8F%99%ED%95%98%EB%B2%84%EB%9D%BC%EC%9D%B82%EB%8B%A8%EC%A7%80-a10025387.html", "name": "항동하버라인2단지", "description": "항동 · 646세대"}, {"@type": "ListItem", "position": 32, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%ED%95%AD%EB%8F%99-%ED%95%AD%EB%8F%99%ED%95%98%EB%B2%84%EB%9D%BC%EC%9D%B83%EB%8B%A8%EC%A7%80-a10025614.html", "name": "항동하버라인3단지", "description": "항동 · 1,170세대"}, {"@type": "ListItem", "position": 33, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%ED%9D%AC%ED%9B%88%ED%83%80%EC%9B%8C%EB%B9%8C-a10025743.html", "name": "희훈타워빌", "description": "구로동 · 73세대"}, {"@type": "ListItem", "position": 34, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EB%8C%80%EB%A6%BC%EC%95%84%EB%A5%B4%EB%B9%8C%EC%95%84%ED%8C%8C%ED%8A%B8-a10026989.html", "name": "대림아르빌아파트", "description": "구로동 · 83세대"}, {"@type": "ListItem", "position": 35, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EB%8D%95%EC%98%81%EB%93%9C%EB%A6%BC%EC%95%84%ED%8C%8C%ED%8A%B8-a10027493.html", "name": "덕영드림아파트", "description": "구로동 · 125세대"}, {"@type": "ListItem", "position": 36, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%ED%95%9C%EA%B5%AD%ED%98%84%EB%8C%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10027507.html", "name": "한국현대아파트", "description": "구로동 · 105세대"}, {"@type": "ListItem", "position": 37, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%98%A4%EB%A5%98%EB%8F%99-%EC%9A%B0%EB%A6%BC%ED%95%84%EC%9C%A0%EC%95%84%ED%8C%8C%ED%8A%B8-a10027522.html", "name": "우림필유아파트", "description": "오류동 · 120세대"}, {"@type": "ListItem", "position": 38, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EC%9A%B0%EB%A6%AC%EC%9C%A0%EC%95%A4%EB%AF%B8-a15205001.html", "name": "우리유앤미", "description": "구로동 · 216세대"}, {"@type": "ListItem", "position": 39, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%EC%9A%B0%EC%84%B1-1%EB%8F%99-a15205103.html", "name": "구로우성(1동)", "description": "구로동 · 296세대"}, {"@type": "ListItem", "position": 40, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%ED%95%9C%EC%9D%BC%EC%9C%A0%EC%97%94%EC%95%84%EC%9D%B4-a15205104.html", "name": "구로한일유엔아이", "description": "구로동 · 454세대"}, {"@type": "ListItem", "position": 41, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EC%9D%BC%EC%9A%B0%EC%84%B1%EC%95%84%ED%8C%8C%ED%8A%B8-a15205108.html", "name": "구일우성아파트", "description": "구로동 · 829세대"}, {"@type": "ListItem", "position": 42, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%EC%8B%A0%EC%84%B1%EB%AF%B8%EC%86%8C%EC%A7%80%EC%9B%80-a15205301.html", "name": "구로신성미소지움", "description": "구로동 · 240세대"}, {"@type": "ListItem", "position": 43, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%ED%95%9C%EC%8B%A0%ED%9C%B4%ED%94%8C%EB%9F%AC%EC%8A%A4-a15205303.html", "name": "구로한신휴플러스", "description": "구로동 · 498세대"}, {"@type": "ListItem", "position": 44, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%EB%91%90%EC%82%B0%EC%9C%84%EB%B8%8C-a15205305.html", "name": "구로두산위브", "description": "구로동 · 660세대"}, {"@type": "ListItem", "position": 45, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%EB%91%90%EC%82%B0-a15205405.html", "name": "구로두산", "description": "구로동 · 1,285세대"}, {"@type": "ListItem", "position": 46, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EC%8B%A0%EA%B5%AC%EB%A1%9C%EC%9E%90%EC%9D%B4-a15205508.html", "name": "신구로자이", "description": "구로동 · 299세대"}, {"@type": "ListItem", "position": 47, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%A1%AF%EB%8D%B0-a15205511.html", "name": "신도림롯데", "description": "구로동 · 718세대"}, {"@type": "ListItem", "position": 48, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%ED%83%9C%EC%98%81%ED%83%80%EC%9A%B4-a15205513.html", "name": "신도림태영타운", "description": "구로동 · 1,252세대"}, {"@type": "ListItem", "position": 49, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B3%A0%EC%B2%99%EB%8F%99-%EA%B3%A0%EC%B2%99%EC%82%BC%ED%99%98%EB%A1%9C%EC%A6%88%EB%B9%8C-a15208003.html", "name": "고척삼환로즈빌", "description": "고척동 · 600세대"}, {"@type": "ListItem", "position": 50, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B3%A0%EC%B2%99%EB%8F%99-%EA%B3%A0%EC%B2%99%EB%A7%88%EC%A0%A4%EB%9E%80-a15208005.html", "name": "고척마젤란", "description": "고척동 · 175세대"}, {"@type": "ListItem", "position": 51, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B3%A0%EC%B2%99%EB%8F%99-%EA%B3%A0%EC%B2%99%EB%B2%BD%EC%82%B0%EB%B2%A0%EC%8A%A4%ED%8A%B8%EB%B8%94%EB%A3%A8%EB%B0%8D-a15208006.html", "name": "고척벽산베스트블루밍", "description": "고척동 · 339세대"}, {"@type": "ListItem", "position": 52, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B3%A0%EC%B2%99%EB%8F%99-%EA%B3%A0%EC%B2%99%EC%9B%94%EB%93%9C%EB%A9%94%EB%A5%B4%EB%94%94%EC%95%99-a15208007.html", "name": "고척월드메르디앙", "description": "고척동 · 180세대"}, {"@type": "ListItem", "position": 53, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B3%A0%EC%B2%99%EB%8F%99-%EA%B3%A0%EC%B2%99%EC%96%91%EC%9A%B0-a15208201.html", "name": "고척양우", "description": "고척동 · 165세대"}, {"@type": "ListItem", "position": 54, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B3%A0%EC%B2%99%EB%8F%99-%EA%B3%A0%EC%B2%99%EC%82%BC%EC%9D%B51%EB%8B%A8%EC%A7%80-a15208202.html", "name": "고척삼익1단지", "description": "고척동 · 245세대"}, {"@type": "ListItem", "position": 55, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B3%A0%EC%B2%99%EB%8F%99-%EA%B3%A0%EC%B2%99%ED%95%9C%EC%9D%BC%EC%9C%A0%EC%95%A4%EC%95%84%EC%9D%B4-a15208204.html", "name": "고척한일유앤아이", "description": "고척동 · 390세대"}, {"@type": "ListItem", "position": 56, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EA%B0%9C%EB%B4%89%ED%95%9C%EB%A7%88%EC%9D%84-a15209002.html", "name": "개봉한마을", "description": "개봉동 · 1,983세대"}, {"@type": "ListItem", "position": 57, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EC%B2%AD%EC%8B%A4%EC%95%84%ED%8C%8C%ED%8A%B8-a15209003.html", "name": "청실아파트", "description": "개봉동 · 156세대"}, {"@type": "ListItem", "position": 58, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EA%B0%9C%EB%B4%89%EB%8F%99%EC%95%84%EC%9D%B4%ED%8C%8C%ED%81%AC-a15209004.html", "name": "개봉동아이파크", "description": "개봉동 · 684세대"}, {"@type": "ListItem", "position": 59, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EA%B0%9C%EB%B4%89%EA%B3%A0%EC%9A%B4%EC%95%84%ED%8C%8C%ED%8A%B8-a15209006.html", "name": "개봉고운아파트", "description": "개봉동 · 100세대"}, {"@type": "ListItem", "position": 60, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EA%B0%9C%EB%B4%89-%ED%91%B8%EB%A5%B4%EC%A7%80%EC%98%A4-a15209007.html", "name": "개봉 푸르지오", "description": "개봉동 · 978세대"}, {"@type": "ListItem", "position": 61, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EA%B0%9C%EB%B4%89%EC%83%81%EC%9A%B0-a15209201.html", "name": "개봉상우", "description": "개봉동 · 188세대"}, {"@type": "ListItem", "position": 62, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EA%B0%9C%EB%B4%89%EC%82%BC%ED%98%B8%EC%95%84%ED%8C%8C%ED%8A%B8-a15209202.html", "name": "개봉삼호아파트", "description": "개봉동 · 369세대"}, {"@type": "ListItem", "position": 63, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EA%B0%9C%EB%B4%89%EB%91%90%EC%82%B0-a15209203.html", "name": "개봉두산", "description": "개봉동 · 561세대"}, {"@type": "ListItem", "position": 64, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EC%82%BC%ED%99%98%EC%95%84%ED%8C%8C%ED%8A%B8-a15209205.html", "name": "삼환아파트", "description": "개봉동 · 783세대"}, {"@type": "ListItem", "position": 65, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EA%B0%9C%EB%B4%89%ED%98%84%EB%8C%80%ED%99%88%ED%83%80%EC%9A%B42%EB%8B%A8%EC%A7%80-a15209206.html", "name": "개봉현대홈타운2단지", "description": "개봉동 · 964세대"}, {"@type": "ListItem", "position": 66, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EA%B0%9C%EB%B4%89%EB%8F%99%ED%98%84%EB%8C%80%EC%95%84%ED%8C%8C%ED%8A%B8-a15209207.html", "name": "개봉동현대아파트", "description": "개봉동 · 2,412세대"}, {"@type": "ListItem", "position": 67, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EB%8C%80%EC%83%81-a15209303.html", "name": "대상", "description": "개봉동 · 208세대"}, {"@type": "ListItem", "position": 68, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EC%98%81%ED%99%94-%EC%95%84%EC%9D%B4%EB%8B%89%EC%8A%A4-a15209304.html", "name": "영화 아이닉스", "description": "개봉동 · 212세대"}, {"@type": "ListItem", "position": 69, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EA%B0%9C%EB%B4%89%ED%95%9C%EC%A7%84-a15209305.html", "name": "개봉한진", "description": "개봉동 · 1,371세대"}, {"@type": "ListItem", "position": 70, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%B2%9C%EC%99%95%EB%8F%99-%EC%B2%9C%EC%99%95%EC%97%B0%EC%A7%80%ED%83%80%EC%9A%B41%EB%8B%A8%EC%A7%80-a15210001.html", "name": "천왕연지타운1단지", "description": "천왕동 · 571세대"}, {"@type": "ListItem", "position": 71, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%98%A4%EB%A5%98%EB%8F%99-%EC%98%A4%EB%A5%98%EB%8F%99%EC%84%A0-a15210101.html", "name": "오류동선", "description": "오류동 · 152세대"}, {"@type": "ListItem", "position": 72, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%98%A4%EB%A5%98%EB%8F%99-%EC%98%A4%EB%A5%98%EA%B8%88%ED%98%B8%EC%96%B4%EC%9A%B8%EB%A6%BC-a15210102.html", "name": "오류금호어울림", "description": "오류동 · 182세대"}, {"@type": "ListItem", "position": 73, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%98%A4%EB%A5%98%EB%8F%99-%EB%8F%99%EB%B6%802%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a15210103.html", "name": "동부2차아파트", "description": "오류동 · 205세대"}, {"@type": "ListItem", "position": 74, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%98%A4%EB%A5%98%EB%8F%99-%EC%98%A4%EB%A5%98%EB%9D%BC%EC%9D%B8-a15210104.html", "name": "오류라인", "description": "오류동 · 218세대"}, {"@type": "ListItem", "position": 75, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%98%A4%EB%A5%98%EB%8F%99-%EC%98%A4%EB%A5%98%EB%8F%99%EB%B6%80%EB%8D%95%EA%B3%A0%EA%B0%9C-a15210105.html", "name": "오류동부덕고개", "description": "오류동 · 252세대"}, {"@type": "ListItem", "position": 76, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%98%A4%EB%A5%98%EB%8F%99-%EC%98%A4%EB%A5%98%ED%95%9C%EC%8B%A0%ED%94%8C%EB%9F%AC%EC%8A%A4%ED%83%80%EC%9A%B4-a15210106.html", "name": "오류한신플러스타운", "description": "오류동 · 299세대"}, {"@type": "ListItem", "position": 77, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%98%A4%EB%A5%98%EB%8F%99-%EC%98%A4%EB%A5%98%EB%8F%99%EB%B6%80%EA%B3%A8%EB%93%A0-a15210107.html", "name": "오류동부골든", "description": "오류동 · 932세대"}, {"@type": "ListItem", "position": 78, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%98%A4%EB%A5%98%EB%8F%99-%EC%98%A4%EB%A5%98%EA%B8%88%EA%B0%95-a15210206.html", "name": "오류금강", "description": "오류동 · 247세대"}, {"@type": "ListItem", "position": 79, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%98%A4%EB%A5%98%EB%8F%99-%EA%B2%BD%EB%82%A8%EC%95%84%EB%84%88%EC%8A%A4%EB%B9%8C-a15210207.html", "name": "경남아너스빌", "description": "오류동 · 296세대"}, {"@type": "ListItem", "position": 80, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%98%A4%EB%A5%98%EB%8F%99-%EC%98%A4%EB%A5%98%ED%91%B8%EB%A5%B4%EC%A7%80%EC%98%A4-a15210209.html", "name": "오류푸르지오", "description": "오류동 · 378세대"}, {"@type": "ListItem", "position": 81, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%98%A4%EB%A5%98%EB%8F%99-%EC%98%A4%EB%A5%98%EC%82%BC%EC%B2%9C%EB%A6%AC-a15210210.html", "name": "오류삼천리", "description": "오류동 · 423세대"}, {"@type": "ListItem", "position": 82, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%98%A4%EB%A5%98%EB%8F%99-%EC%98%A4%EB%A5%98%EA%B8%88%EA%B0%95%EC%88%98%EB%AA%A9%EC%9B%90-a15210211.html", "name": "오류금강수목원", "description": "오류동 · 620세대"}, {"@type": "ListItem", "position": 83, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%98%A4%EB%A5%98%EB%8F%99-%EC%98%A4%EB%A5%98%EB%8F%99-%EC%98%81%ED%92%8D%EB%A7%88%EB%93%9C%EB%A0%88%EB%B9%8C-a15210212.html", "name": "오류동 영풍마드레빌", "description": "오류동 · 627세대"}, {"@type": "ListItem", "position": 84, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%B2%9C%EC%99%95%EB%8F%99-%EC%B2%9C%EC%99%95%EC%9D%B4%ED%8E%9C%ED%95%98%EC%9A%B0%EC%8A%A45%EB%8B%A8%EC%A7%80-a15213001.html", "name": "천왕이펜하우스5단지", "description": "천왕동 · 522세대"}, {"@type": "ListItem", "position": 85, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%B2%9C%EC%99%95%EB%8F%99-%EC%B2%9C%EC%99%95%EC%9D%B4%ED%8E%9C%ED%95%98%EC%9A%B0%EC%8A%A46%EB%8B%A8%EC%A7%80-a15213002.html", "name": "천왕이펜하우스6단지", "description": "천왕동 · 678세대"}, {"@type": "ListItem", "position": 86, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%B2%9C%EC%99%95%EB%8F%99-%EC%B2%9C%EC%99%95%EC%9D%B4%ED%8E%9C%ED%95%98%EC%9A%B0%EC%8A%A42%EB%8B%A8%EC%A7%80-a15213003.html", "name": "천왕이펜하우스2단지", "description": "천왕동 · 526세대"}, {"@type": "ListItem", "position": 87, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%B2%9C%EC%99%95%EB%8F%99-%EC%B2%9C%EC%99%95%EC%9D%B4%ED%8E%9C%ED%95%98%EC%9A%B0%EC%8A%A44%EB%8B%A8%EC%A7%80-a15213004.html", "name": "천왕이펜하우스4단지", "description": "천왕동 · 478세대"}, {"@type": "ListItem", "position": 88, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%B2%9C%EC%99%95%EB%8F%99-%EC%B2%9C%EC%99%95%EC%9D%B4%ED%8E%9C%ED%95%98%EC%9A%B0%EC%8A%A43%EB%8B%A8%EC%A7%80-a15213005.html", "name": "천왕이펜하우스3단지", "description": "천왕동 · 1,044세대"}, {"@type": "ListItem", "position": 89, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%B2%9C%EC%99%95%EB%8F%99-%EC%B2%9C%EC%99%95%EC%9D%B4%ED%8E%9C%ED%95%98%EC%9A%B0%EC%8A%A41%EB%8B%A8%EC%A7%80-a15213006.html", "name": "천왕이펜하우스1단지", "description": "천왕동 · 314세대"}, {"@type": "ListItem", "position": 90, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%B2%9C%EC%99%95%EB%8F%99-%EC%B2%9C%EC%99%95%EC%97%B0%EC%A7%80%ED%83%80%EC%9A%B42%EB%8B%A8%EC%A7%80-a15213007.html", "name": "천왕연지타운2단지", "description": "천왕동 · 1,018세대"}, {"@type": "ListItem", "position": 91, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EC%9D%BC%EC%8B%A0%EA%B1%B4%EC%98%81%EC%95%84%ED%8C%8C%ED%8A%B8-a15270501.html", "name": "신도림일신건영아파트", "description": "구로동 · 124세대"}, {"@type": "ListItem", "position": 92, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%ED%95%AD%EB%8F%99-%EC%84%9C%EC%9A%B8%EC%88%98%EB%AA%A9%EC%9B%90%ED%98%84%EB%8C%80%ED%99%88%ED%83%80%EC%9A%B4%EC%8A%A4%EC%9C%84%ED%8A%B8-a15271601.html", "name": "서울수목원현대홈타운스위트", "description": "항동 · 245세대"}, {"@type": "ListItem", "position": 93, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EA%B0%9C%EB%B4%89%EA%B1%B4%EC%98%81-a15275101.html", "name": "개봉건영", "description": "개봉동 · 209세대"}, {"@type": "ListItem", "position": 94, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%94%94%ED%81%90%EB%B8%8C%EC%8B%9C%ED%8B%B0-a15277302.html", "name": "신도림디큐브시티", "description": "신도림동 · 524세대"}, {"@type": "ListItem", "position": 95, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%98%A4%EB%A5%98%EB%8F%99-%EB%8F%99%EB%B3%B4-a15278201.html", "name": "동보", "description": "오류동 · 90세대"}, {"@type": "ListItem", "position": 96, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%98%A8%EC%88%98%EB%8F%99-%EC%98%A8%EC%88%98%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-a15279101.html", "name": "온수힐스테이트", "description": "온수동 · 999세대"}, {"@type": "ListItem", "position": 97, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B3%A0%EC%B2%99%EB%8F%99-%EA%B3%A0%EC%B2%99%EC%B2%AD%EC%86%94%EC%9A%B0%EC%84%B1-a15279401.html", "name": "고척청솔우성", "description": "고척동 · 118세대"}, {"@type": "ListItem", "position": 98, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B3%A0%EC%B2%99%EB%8F%99-%EA%B3%A0%EC%B2%99LIG%EB%A6%AC%EA%B0%80%EC%95%84%ED%8C%8C%ED%8A%B8-a15279402.html", "name": "고척LIG리가아파트", "description": "고척동 · 421세대"}, {"@type": "ListItem", "position": 99, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B3%A0%EC%B2%99%EB%8F%99-%EA%B3%A0%EC%B2%99%ED%8C%8C%ED%81%AC%ED%91%B8%EB%A5%B4%EC%A7%80%EC%98%A4-a15279403.html", "name": "고척파크푸르지오", "description": "고척동 · 662세대"}, {"@type": "ListItem", "position": 100, "url": "https://hwik.kr/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B3%A0%EC%B2%99%EB%8F%99-%EA%B3%A0%EC%B2%99%EB%8C%80%EC%9A%B0-a15279404.html", "name": "고척대우", "description": "고척동 · 987세대"}]}}, {"@type": "AdministrativeArea", "name": "서울 구로구", "containedInPlace": {"@type": "AdministrativeArea", "name": "서울", "containedInPlace": {"@type": "Country", "name": "대한민국"}}, "geo": {"@type": "GeoCoordinates", "latitude": 37.496824, "longitude": 126.865658}, "@context": "https://schema.org"}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "구로구 아파트 평균 매매가는?", "acceptedAnswer": {"@type": "Answer", "text": "구로구 156개 단지 평균 매매가는 6억 8천입니다. 국토교통부 실거래가 공개시스템 기준."}}, {"@type": "Question", "name": "구로구 아파트 전세가율은?", "acceptedAnswer": {"@type": "Answer", "text": "구로구 평균 전세가율은 59.7%입니다."}}, {"@type": "Question", "name": "구로구에서 가장 비싼 아파트는?", "acceptedAnswer": {"@type": "Answer", "text": "매매가 1위는 신도림디큐브시티로 20억에 거래되었습니다."}}, {"@type": "Question", "name": "구로구에서 아파트 단지가 많은 동은?", "acceptedAnswer": {"@type": "Answer", "text": "구로구에서는 구로동·개봉동·고척동 일대에 아파트 단지가 가장 많이 분포합니다."}}, {"@type": "Question", "name": "구로구 아파트 단지 수는?", "acceptedAnswer": {"@type": "Answer", "text": "구로구에는 총 156개 아파트 단지, 68,806세대가 있습니다."}}, {"@type": "Question", "name": "구로구 아파트 실거래가 데이터 출처는?", "acceptedAnswer": {"@type": "Answer", "text": "국토교통부 실거래가 공개시스템(rt.molit.go.kr) 데이터를 매일 자동 수집합니다."}}]}, {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"}, {"@type": "ListItem", "position": 2, "name": "서울 구별 시세", "item": "https://hwik.kr/gu/"}, {"@type": "ListItem", "position": 3, "name": "구로구"}]}]}</script>
 </head>
 <body>
 <div class="wrap">
 <header class="header"><div class="header-top">
   <a class="logo" href="/" style="text-decoration:none;">휙</a>
   <div><h1 class="header-name">구로구 아파트 시세</h1>
-  <div class="header-sub">156개 단지 · 68,806세대</div></div>
+  <div class="header-sub">156개 단지 · 68,806세대 · 마지막 업데이트 2026-04-27</div></div>
 </div></header>
 <nav class="breadcrumb"><a href="/">휙</a><span>&gt;</span>
 <a href="/gu/">서울</a><span>&gt;</span>구로구</nav>
+<p class="seo-text" style="font-size:13px;line-height:1.85;margin:14px 16px 4px;color:var(--sub);">서울 구로구의 아파트 <b>156개 단지</b>(구로동·개봉동·고척동 등 주요 입지) 시세를 한 번에 확인하세요., 평균 매매가 <b>6억 8천</b>, 평균 전세가율 <b>59.7%</b>, 수집 거래 <b>156건</b>. 매매·전세·월세 면적별 가격, 동별 단지 비교, ㎡당 가격 순위까지 — 국토교통부 실거래가 공개시스템 기반.</p>
 <div class="metrics">
   <div class="metric"><div class="metric-label">단지 수</div><div class="metric-value">156개</div></div>
   <div class="metric"><div class="metric-label">평균 매매가</div><div class="metric-value">6억 8천</div></div>
   <div class="metric"><div class="metric-label">평균 전세가율</div><div class="metric-value">59.7%</div></div>
 </div>
 <div class="divider"></div>
-<div class="section"><h2 class="section-title">매매가 높은 단지</h2>
-<div style="display:flex;flex-direction:column;gap:8px;">
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%94%94%ED%81%90%EB%B8%8C%EC%8B%9C%ED%8B%B0-a15277302.html">
-  <div><div class="danji-name">1. 신도림디큐브시티</div><div class="danji-sub">구로구 신도림동 · 전용 177㎡</div></div>
-  <div><div class="danji-price">20억</div><div class="danji-rate">최고가 기준</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC4%EC%B0%A8e-%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-a15288812.html">
-  <div><div class="danji-name">2. 신도림4차e-편한세상</div><div class="danji-sub">구로구 신도림동 · 전용 152㎡</div></div>
-  <div><div class="danji-price">19억 9천</div><div class="danji-rate">최고가 기준</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99%EC%95%842%EC%B0%A8-a15288809.html">
-  <div><div class="danji-name">3. 신도림동아2차</div><div class="danji-sub">구로구 신도림동 · 전용 112㎡</div></div>
-  <div><div class="danji-price">18억</div><div class="danji-rate">최고가 기준</div></div>
-</a>
-</div></div><div class="divider"></div>
-<div class="section"><h2 class="section-title">전세가율 높은 단지</h2>
-<div style="display:flex;flex-direction:column;gap:8px;">
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%EC%84%B1%ED%98%B8%EC%A3%BC%EC%83%81%EB%B3%B5%ED%95%A9-a15284204.html">
-  <div><div class="danji-name">1. 구로성호주상복합</div><div class="danji-sub">구로구 구로동 · 전용 32㎡</div></div>
-  <div><div class="danji-price">107.1%</div><div class="danji-rate">전세가율</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%EC%98%A4%EB%84%A4%EB%9C%A8%EC%8B%9C%ED%8B%B0-a10023471.html">
-  <div><div class="danji-name">2. 구로오네뜨시티</div><div class="danji-sub">구로구 구로동 · 전용 17㎡</div></div>
-  <div><div class="danji-price">99.4%</div><div class="danji-rate">전세가율</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%98%A4%EB%A5%98%EB%8F%99-%EB%8F%99%EB%B3%B4-a15278201.html">
-  <div><div class="danji-name">3. 동보</div><div class="danji-sub">구로구 오류동 · 전용 60㎡</div></div>
-  <div><div class="danji-price">86.5%</div><div class="danji-rate">전세가율</div></div>
-</a>
-</div></div>
+<p class="seo-text" style="font-size:13px;line-height:1.85;margin:4px 16px 16px;color:var(--sub);">구로구에서 가장 비싼 아파트는 신도림동의 <a href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%94%94%ED%81%90%EB%B8%8C%EC%8B%9C%ED%8B%B0-a15277302.html" title="신도림디큐브시티 실거래가 시세" style="color:var(--yellow);text-decoration:none;font-weight:700;">신도림디큐브시티</a>로 <b>20억</b>에 거래됐습니다. 뒤이어 <a href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC4%EC%B0%A8e-%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-a15288812.html" style="color:var(--yellow);text-decoration:none;font-weight:600;">신도림4차e-편한세상</a>·<a href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99%EC%95%842%EC%B0%A8-a15288809.html" style="color:var(--yellow);text-decoration:none;font-weight:600;">신도림동아2차</a>가 자리잡고 있습니다.</p>
+<div class="section"><h2 class="section-title">구로구에서 가장 비싼 아파트는?</h2>
+<a class="danji-hero" title="신도림디큐브시티 실거래가 · 구로구 매매가 1위" style="text-decoration:none;display:block;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%94%94%ED%81%90%EB%B8%8C%EC%8B%9C%ED%8B%B0-a15277302.html"><span class="rank-badge">매매가 1위</span><div class="hero-name">신도림디큐브시티</div><div class="hero-meta">구로구 신도림동 · 전용 177㎡ · 2011년 입주 · 524세대</div><div class="hero-price">20억<span class="hero-price-label">최고가 기준</span></div></a>
+<div style="margin-top:6px;">
+<a class="danji-compact" title="신도림4차e-편한세상 실거래가 · 구로구 매매가 2위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC4%EC%B0%A8e-%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-a15288812.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">2</span><div style="min-width:0;"><div class="danji-compact-name">신도림4차e-편한세상</div><div class="danji-compact-meta">구로구 신도림동 · 전용 152㎡ · 2003년</div></div></div><div class="danji-compact-price">19억 9천</div></a>
+<a class="danji-compact" title="신도림동아2차 실거래가 · 구로구 매매가 3위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99%EC%95%842%EC%B0%A8-a15288809.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">3</span><div style="min-width:0;"><div class="danji-compact-name">신도림동아2차</div><div class="danji-compact-meta">구로구 신도림동 · 전용 112㎡ · 2000년</div></div></div><div class="danji-compact-price">18억</div></a>
+</div>
+</div><div class="divider"></div>
+<div class="section"><h2 class="section-title">전세가율이 높은 단지 (실거주 추천)</h2>
+<a class="danji-hero" title="구로성호주상복합 실거래가 · 구로구 전세가율 1위" style="text-decoration:none;display:block;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%EC%84%B1%ED%98%B8%EC%A3%BC%EC%83%81%EB%B3%B5%ED%95%A9-a15284204.html"><span class="rank-badge">전세가율 1위</span><div class="hero-name">구로성호주상복합</div><div class="hero-meta">구로구 구로동 · 전용 32㎡ · 2002년 입주 · 206세대</div><div class="hero-price">107.1%<span class="hero-price-label">매매 대비 전세 비율</span></div></a>
+<div style="margin-top:6px;">
+<a class="danji-compact" title="구로오네뜨시티 실거래가 · 구로구 전세가율 2위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%EC%98%A4%EB%84%A4%EB%9C%A8%EC%8B%9C%ED%8B%B0-a10023471.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">2</span><div style="min-width:0;"><div class="danji-compact-name">구로오네뜨시티</div><div class="danji-compact-meta">구로구 구로동 · 전용 17㎡ · 2022년</div></div></div><div class="danji-compact-price">99.4%</div></a>
+<a class="danji-compact" title="동보 실거래가 · 구로구 전세가율 3위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%98%A4%EB%A5%98%EB%8F%99-%EB%8F%99%EB%B3%B4-a15278201.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">3</span><div style="min-width:0;"><div class="danji-compact-name">동보</div><div class="danji-compact-meta">구로구 오류동 · 전용 60㎡</div></div></div><div class="danji-compact-price">86.5%</div></a>
+</div>
+</div>
 <div class="divider"></div>
-<div class="section"><h2 class="section-title">동별 단지</h2>
+<div class="section"><h2 class="section-title">구로구 어느 동에 단지가 모여있나?</h2>
 <div class="dong-grid">
 <a class="dong-item" style="text-decoration:none;color:inherit;" href="/dong/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99.html">
   <div class="dong-name">구로동</div>
@@ -128,167 +382,123 @@
 </div>
 </div></div>
 <div class="divider"></div>
-<div class="section"><h2 class="section-title">㎡당 가격 TOP 10 <span style="font-size:10px;color:var(--muted);font-weight:400;">(전용면적 기준)</span></h2>
-<div style="display:flex;flex-direction:column;gap:8px;">
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99%EC%95%843%EC%B0%A8-a15288810.html">
-  <div><div class="danji-name">1. 신도림동아3차</div><div class="danji-sub">구로구 신도림동 · 전용60㎡</div></div>
-  <div><div class="danji-price">14억 4천</div><div class="danji-rate">2,400만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99%EC%95%841%EC%B0%A8-a15288813.html">
-  <div><div class="danji-name">2. 신도림동아1차</div><div class="danji-sub">구로구 신도림동 · 전용60㎡</div></div>
-  <div><div class="danji-price">13억 4천</div><div class="danji-rate">2,242만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8C%80%EB%A6%BC1-2%EC%B0%A8-a15288814.html">
-  <div><div class="danji-name">3. 신도림대림1,2차</div><div class="danji-sub">구로구 신도림동 · 전용60㎡</div></div>
-  <div><div class="danji-price">13억 2천</div><div class="danji-rate">2,200만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC4%EC%B0%A8e-%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-a15288812.html">
-  <div><div class="danji-name">4. 신도림4차e-편한세상</div><div class="danji-sub">구로구 신도림동 · 전용85㎡</div></div>
-  <div><div class="danji-price">18억 5천</div><div class="danji-rate">2,176만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99%EC%95%842%EC%B0%A8-a15288809.html">
-  <div><div class="danji-name">5. 신도림동아2차</div><div class="danji-sub">구로구 신도림동 · 전용60㎡</div></div>
-  <div><div class="danji-price">13억</div><div class="danji-rate">2,167만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%ED%83%9C%EC%98%81%ED%83%80%EC%9A%B4-a15205513.html">
-  <div><div class="danji-name">6. 신도림태영타운</div><div class="danji-sub">구로구 구로동 · 전용60㎡</div></div>
-  <div><div class="danji-price">11억 2천</div><div class="danji-rate">1,867만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%ED%98%84%EB%8C%80-a15288803.html">
-  <div><div class="danji-name">7. 신도림현대</div><div class="danji-sub">구로구 신도림동 · 전용60㎡</div></div>
-  <div><div class="danji-price">10억 9천</div><div class="danji-rate">1,825만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8C%80%EB%A6%BC7%EC%B0%A8e-%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-a15288807.html">
-  <div><div class="danji-name">8. 신도림대림7차e-편한세상</div><div class="danji-sub">구로구 신도림동 · 전용85㎡</div></div>
-  <div><div class="danji-price">15억 5천</div><div class="danji-rate">1,824만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%AF%B8%EC%84%B1-a15288611.html">
-  <div><div class="danji-name">9. 신도림미성</div><div class="danji-sub">구로구 신도림동 · 전용38㎡</div></div>
-  <div><div class="danji-price">6억 5천</div><div class="danji-rate">1,724만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%A1%AF%EB%8D%B0-a15205511.html">
-  <div><div class="danji-name">10. 신도림롯데</div><div class="danji-sub">구로구 구로동 · 전용60㎡</div></div>
-  <div><div class="danji-price">10억 2천</div><div class="danji-rate">1,700만/㎡</div></div>
-</a>
-</div></div>
+<div class="section"><h2 class="section-title">㎡당 가격이 가장 비싼 단지는? <span style="font-size:10px;color:var(--muted);font-weight:400;">(전용면적 기준)</span></h2>
+<a class="danji-hero" title="신도림동아3차 ㎡당 시세 · 구로구 1위" style="text-decoration:none;display:block;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99%EC%95%843%EC%B0%A8-a15288810.html"><span class="rank-badge">㎡당 1위</span><div class="hero-name">신도림동아3차</div><div class="hero-meta">구로구 신도림동 · 전용 60㎡ · 거래가 14억 4천</div><div class="hero-price">2,400만<span class="hero-price-label">/㎡ 전용면적 기준</span></div></a>
+<div style="margin-top:6px;">
+<a class="danji-compact" title="신도림동아1차 ㎡당 시세 · 구로구 2위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99%EC%95%841%EC%B0%A8-a15288813.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">2</span><div style="min-width:0;"><div class="danji-compact-name">신도림동아1차</div><div class="danji-compact-meta">구로구 신도림동 · 전용 60㎡</div></div></div><div class="danji-compact-price">2,242만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="신도림대림1,2차 ㎡당 시세 · 구로구 3위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8C%80%EB%A6%BC1-2%EC%B0%A8-a15288814.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">3</span><div style="min-width:0;"><div class="danji-compact-name">신도림대림1,2차</div><div class="danji-compact-meta">구로구 신도림동 · 전용 60㎡</div></div></div><div class="danji-compact-price">2,200만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="신도림4차e-편한세상 ㎡당 시세 · 구로구 4위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC4%EC%B0%A8e-%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-a15288812.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">4</span><div style="min-width:0;"><div class="danji-compact-name">신도림4차e-편한세상</div><div class="danji-compact-meta">구로구 신도림동 · 전용 85㎡</div></div></div><div class="danji-compact-price">2,176만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="신도림동아2차 ㎡당 시세 · 구로구 5위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99%EC%95%842%EC%B0%A8-a15288809.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">5</span><div style="min-width:0;"><div class="danji-compact-name">신도림동아2차</div><div class="danji-compact-meta">구로구 신도림동 · 전용 60㎡</div></div></div><div class="danji-compact-price">2,167만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="신도림태영타운 ㎡당 시세 · 구로구 6위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%ED%83%9C%EC%98%81%ED%83%80%EC%9A%B4-a15205513.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">6</span><div style="min-width:0;"><div class="danji-compact-name">신도림태영타운</div><div class="danji-compact-meta">구로구 구로동 · 전용 60㎡</div></div></div><div class="danji-compact-price">1,867만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="신도림현대 ㎡당 시세 · 구로구 7위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%ED%98%84%EB%8C%80-a15288803.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">7</span><div style="min-width:0;"><div class="danji-compact-name">신도림현대</div><div class="danji-compact-meta">구로구 신도림동 · 전용 60㎡</div></div></div><div class="danji-compact-price">1,825만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="신도림대림7차e-편한세상 ㎡당 시세 · 구로구 8위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8C%80%EB%A6%BC7%EC%B0%A8e-%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-a15288807.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">8</span><div style="min-width:0;"><div class="danji-compact-name">신도림대림7차e-편한세상</div><div class="danji-compact-meta">구로구 신도림동 · 전용 85㎡</div></div></div><div class="danji-compact-price">1,824만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="신도림미성 ㎡당 시세 · 구로구 9위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%AF%B8%EC%84%B1-a15288611.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">9</span><div style="min-width:0;"><div class="danji-compact-name">신도림미성</div><div class="danji-compact-meta">구로구 신도림동 · 전용 38㎡</div></div></div><div class="danji-compact-price">1,724만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="신도림롯데 ㎡당 시세 · 구로구 10위" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EC%8B%A0%EB%8F%84%EB%A6%BC%EB%A1%AF%EB%8D%B0-a15205511.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">10</span><div style="min-width:0;"><div class="danji-compact-name">신도림롯데</div><div class="danji-compact-meta">구로구 구로동 · 전용 60㎡</div></div></div><div class="danji-compact-price">1,700만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+</div>
+</div>
 <div class="divider"></div>
-<div class="section"><h2 class="section-title">최근 거래</h2>
+<div class="section"><h2 class="section-title">최근 거래된 단지</h2>
 <div style="display:flex;flex-direction:column;gap:8px;">
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%EB%91%90%EC%82%B0-a15205405.html">
+<a class="trade-item" title="구로두산 · 구로구 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%EB%91%90%EC%82%B0-a15205405.html">
   <div><div class="trade-price">5억 5천</div>
   <div class="trade-detail">구로두산 · 45㎡ · 11층</div></div>
-  <div class="trade-date">2026-04-08</div>
+  <div class="trade-date"><time datetime="2026-04-08">2026-04-08</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B3%A0%EC%B2%99%EB%8F%99-%EA%B3%A0%EC%B2%99%EB%B2%BD%EC%82%B0%EB%B8%94%EB%A3%A8%EB%B0%8D-a15283711.html">
+<a class="trade-item" title="고척벽산블루밍 · 구로구 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B3%A0%EC%B2%99%EB%8F%99-%EA%B3%A0%EC%B2%99%EB%B2%BD%EC%82%B0%EB%B8%94%EB%A3%A8%EB%B0%8D-a15283711.html">
   <div><div class="trade-price">9억 9천</div>
   <div class="trade-detail">고척벽산블루밍 · 85㎡ · 3층</div></div>
-  <div class="trade-date">2026-04-08</div>
+  <div class="trade-date"><time datetime="2026-04-08">2026-04-08</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EA%B0%9C%EB%B4%89%ED%95%9C%EB%A7%88%EC%9D%84-a15209002.html">
+<a class="trade-item" title="개봉한마을 · 구로구 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EA%B0%9C%EB%B4%89%ED%95%9C%EB%A7%88%EC%9D%84-a15209002.html">
   <div><div class="trade-price">8억 8천</div>
   <div class="trade-detail">개봉한마을 · 60㎡ · 13층</div></div>
-  <div class="trade-date">2026-04-07</div>
+  <div class="trade-date"><time datetime="2026-04-07">2026-04-07</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EA%B0%9C%EB%B4%89%ED%95%9C%EC%A7%84-a15209305.html">
+<a class="trade-item" title="개봉한진 · 구로구 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EA%B0%9C%EB%B4%89%ED%95%9C%EC%A7%84-a15209305.html">
   <div><div class="trade-price">6억 2천</div>
   <div class="trade-detail">개봉한진 · 60㎡ · 13층</div></div>
-  <div class="trade-date">2026-04-07</div>
+  <div class="trade-date"><time datetime="2026-04-07">2026-04-07</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%EC%98%A4%EB%84%A4%EB%9C%A8%EC%8B%9C%ED%8B%B0-a10023471.html">
+<a class="trade-item" title="구로오네뜨시티 · 구로구 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B5%AC%EB%A1%9C%EB%8F%99-%EA%B5%AC%EB%A1%9C%EC%98%A4%EB%84%A4%EB%9C%A8%EC%8B%9C%ED%8B%B0-a10023471.html">
   <div><div class="trade-price">1억 5천</div>
   <div class="trade-detail">구로오네뜨시티 · 17㎡ · 14층</div></div>
-  <div class="trade-date">2026-04-06</div>
+  <div class="trade-date"><time datetime="2026-04-06">2026-04-06</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%ED%95%AD%EB%8F%99-%EA%B5%AC%EB%A1%9C%ED%95%AD%EB%8F%99%EC%A0%9C%EC%9D%BC%ED%92%8D%EA%B2%BD%EC%B1%84%ED%8F%AC%EB%A0%88%EC%8A%A4%ED%8A%B8-a10024927.html">
+<a class="trade-item" title="구로항동제일풍경채포레스트 · 구로구 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%ED%95%AD%EB%8F%99-%EA%B5%AC%EB%A1%9C%ED%95%AD%EB%8F%99%EC%A0%9C%EC%9D%BC%ED%92%8D%EA%B2%BD%EC%B1%84%ED%8F%AC%EB%A0%88%EC%8A%A4%ED%8A%B8-a10024927.html">
   <div><div class="trade-price">7억 1천</div>
   <div class="trade-detail">구로항동제일풍경채포레스트 · 85㎡ · 9층</div></div>
-  <div class="trade-date">2026-04-06</div>
+  <div class="trade-date"><time datetime="2026-04-06">2026-04-06</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%98%A8%EC%88%98%EB%8F%99-%EC%98%A8%EC%88%98%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-a15279101.html">
+<a class="trade-item" title="온수힐스테이트 · 구로구 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%98%A8%EC%88%98%EB%8F%99-%EC%98%A8%EC%88%98%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-a15279101.html">
   <div><div class="trade-price">7억</div>
   <div class="trade-detail">온수힐스테이트 · 60㎡ · 4층</div></div>
-  <div class="trade-date">2026-04-06</div>
+  <div class="trade-date"><time datetime="2026-04-06">2026-04-06</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B3%A0%EC%B2%99%EB%8F%99-%EA%B3%A0%EC%B2%99%EC%9B%94%EB%93%9C%EB%A9%94%EB%A5%B4%EB%94%94%EC%95%99-a15208007.html">
+<a class="trade-item" title="고척월드메르디앙 · 구로구 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B3%A0%EC%B2%99%EB%8F%99-%EA%B3%A0%EC%B2%99%EC%9B%94%EB%93%9C%EB%A9%94%EB%A5%B4%EB%94%94%EC%95%99-a15208007.html">
   <div><div class="trade-price">7억 8천</div>
   <div class="trade-detail">고척월드메르디앙 · 85㎡ · 20층</div></div>
-  <div class="trade-date">2026-04-04</div>
+  <div class="trade-date"><time datetime="2026-04-04">2026-04-04</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EB%8C%80%EC%83%81-a15209303.html">
+<a class="trade-item" title="대상 · 구로구 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EA%B0%9C%EB%B4%89%EB%8F%99-%EB%8C%80%EC%83%81-a15209303.html">
   <div><div class="trade-price">4억 5천</div>
   <div class="trade-detail">대상 · 60㎡ · 19층</div></div>
-  <div class="trade-date">2026-04-04</div>
+  <div class="trade-date"><time datetime="2026-04-04">2026-04-04</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%B2%9C%EC%99%95%EB%8F%99-%EC%B2%9C%EC%99%95%EC%9D%B4%ED%8E%9C%ED%95%98%EC%9A%B0%EC%8A%A45%EB%8B%A8%EC%A7%80-a15213001.html">
+<a class="trade-item" title="천왕이펜하우스5단지 · 구로구 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EC%84%9C%EC%9A%B8-%EA%B5%AC%EB%A1%9C%EA%B5%AC-%EC%B2%9C%EC%99%95%EB%8F%99-%EC%B2%9C%EC%99%95%EC%9D%B4%ED%8E%9C%ED%95%98%EC%9A%B0%EC%8A%A45%EB%8B%A8%EC%A7%80-a15213001.html">
   <div><div class="trade-price">7억 1천</div>
   <div class="trade-detail">천왕이펜하우스5단지 · 85㎡ · 13층</div></div>
-  <div class="trade-date">2026-04-04</div>
+  <div class="trade-date"><time datetime="2026-04-04">2026-04-04</time></div>
 </a>
 </div></div>
 <div class="divider"></div>
-<div class="section"><h2 class="section-title">서울의 다른 구/시</h2>
+<div class="section"><h2 class="section-title">구로구 근처 구/시는?</h2>
 <div class="gu-grid">
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EA%B0%95%EB%82%A8%EA%B5%AC.html">
-  <div class="gu-name">강남구</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EA%B0%95%EB%8F%99%EA%B5%AC.html">
-  <div class="gu-name">강동구</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EA%B0%95%EB%B6%81%EA%B5%AC.html">
-  <div class="gu-name">강북구</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EA%B0%95%EC%84%9C%EA%B5%AC.html">
-  <div class="gu-name">강서구</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EA%B4%80%EC%95%85%EA%B5%AC.html">
-  <div class="gu-name">관악구</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EA%B4%91%EC%A7%84%EA%B5%AC.html">
-  <div class="gu-name">광진구</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EA%B8%88%EC%B2%9C%EA%B5%AC.html">
-  <div class="gu-name">금천구</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EB%85%B8%EC%9B%90%EA%B5%AC.html">
-  <div class="gu-name">노원구</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EB%8F%84%EB%B4%89%EA%B5%AC.html">
-  <div class="gu-name">도봉구</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EB%8F%99%EB%8C%80%EB%AC%B8%EA%B5%AC.html">
-  <div class="gu-name">동대문구</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EB%8F%99%EC%9E%91%EA%B5%AC.html">
-  <div class="gu-name">동작구</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EB%A7%88%ED%8F%AC%EA%B5%AC.html">
-  <div class="gu-name">마포구</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EC%84%9C%EB%8C%80%EB%AC%B8%EA%B5%AC.html">
-  <div class="gu-name">서대문구</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EC%84%9C%EC%B4%88%EA%B5%AC.html">
-  <div class="gu-name">서초구</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EC%84%B1%EB%8F%99%EA%B5%AC.html">
-  <div class="gu-name">성동구</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EC%84%B1%EB%B6%81%EA%B5%AC.html">
-  <div class="gu-name">성북구</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EC%86%A1%ED%8C%8C%EA%B5%AC.html">
-  <div class="gu-name">송파구</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EC%96%91%EC%B2%9C%EA%B5%AC.html">
+<a class="gu-item" title="양천구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EC%96%91%EC%B2%9C%EA%B5%AC.html">
   <div class="gu-name">양천구</div><div class="gu-info">시세 보기 →</div>
 </a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EC%98%81%EB%93%B1%ED%8F%AC%EA%B5%AC.html">
+<a class="gu-item" title="영등포구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EC%98%81%EB%93%B1%ED%8F%AC%EA%B5%AC.html">
   <div class="gu-name">영등포구</div><div class="gu-info">시세 보기 →</div>
 </a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EC%9A%A9%EC%82%B0%EA%B5%AC.html">
-  <div class="gu-name">용산구</div><div class="gu-info">시세 보기 →</div>
+<a class="gu-item" title="금천구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EA%B8%88%EC%B2%9C%EA%B5%AC.html">
+  <div class="gu-name">금천구</div><div class="gu-info">시세 보기 →</div>
+</a>
+<a class="gu-item" title="강서구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EA%B0%95%EC%84%9C%EA%B5%AC.html">
+  <div class="gu-name">강서구</div><div class="gu-info">시세 보기 →</div>
+</a>
+<a class="gu-item" title="관악구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EA%B4%80%EC%95%85%EA%B5%AC.html">
+  <div class="gu-name">관악구</div><div class="gu-info">시세 보기 →</div>
+</a>
+<a class="gu-item" title="동작구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EB%8F%99%EC%9E%91%EA%B5%AC.html">
+  <div class="gu-name">동작구</div><div class="gu-info">시세 보기 →</div>
 </a>
 </div></div>
+<div class="divider"></div>
+<div class="section"><h2 class="section-title">서울에서 단지가 많은 곳 TOP 6</h2>
+<div class="gu-grid">
+<a class="gu-item" title="강남구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EA%B0%95%EB%82%A8%EA%B5%AC.html">
+  <div class="gu-name">강남구</div><div class="gu-info">시세 보기 →</div>
+</a>
+<a class="gu-item" title="노원구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EB%85%B8%EC%9B%90%EA%B5%AC.html">
+  <div class="gu-name">노원구</div><div class="gu-info">시세 보기 →</div>
+</a>
+<a class="gu-item" title="강서구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EA%B0%95%EC%84%9C%EA%B5%AC.html">
+  <div class="gu-name">강서구</div><div class="gu-info">시세 보기 →</div>
+</a>
+<a class="gu-item" title="서초구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EC%84%9C%EC%B4%88%EA%B5%AC.html">
+  <div class="gu-name">서초구</div><div class="gu-info">시세 보기 →</div>
+</a>
+<a class="gu-item" title="영등포구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EC%98%81%EB%93%B1%ED%8F%AC%EA%B5%AC.html">
+  <div class="gu-name">영등포구</div><div class="gu-info">시세 보기 →</div>
+</a>
+<a class="gu-item" title="송파구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EC%86%A1%ED%8C%8C%EA%B5%AC.html">
+  <div class="gu-name">송파구</div><div class="gu-info">시세 보기 →</div>
+</a>
+</div></div>
+<div class="divider"></div>
+<div class="section">
+<h2 class="section-title">구로구 오피스텔도 보세요</h2>
+<a class="gu-item" title="구로구 오피스텔 실거래가 시세" style="text-decoration:none;color:inherit;display:block;" href="/officetel/gu/%EA%B5%AC%EB%A1%9C%EA%B5%AC.html"><div class="gu-name">구로구 오피스텔 시세</div><div class="gu-info">매매·전세·월세 실거래가 →</div></a>
+</div>
 <div class="divider"></div>
 <div class="faq-section"><h2 class="section-title">자주 묻는 질문</h2>
 <div class="faq-item"><div class="faq-q">구로구 아파트 평균 시세는?</div>
@@ -304,8 +514,27 @@
 <div class="cta-section">
 <a class="btn-primary" style="display:block;text-align:center;text-decoration:none;" href="/mobile-v6.html">구로구 매물 전체보기</a>
 </div>
-<div class="seo-section"><div class="seo-text">구로구의 아파트 실거래가, 전세가, 시세 추이를 확인하세요. 156개 단지, 68,806세대 규모. 평균 매매가 6억 8천. 평균 전세가율 59.7%. 국토교통부 실거래가 공개시스템 데이터 기반.</div>
-<div class="seo-source">실거래가 출처: 국토교통부 · 최종 데이터 확인: 2026-04-27</div></div>
+<div class="seo-section" style="padding:16px;">
+<div class="seo-text">구로구의 아파트 실거래가, 전세가, 시세 추이를 확인하세요. 156개 단지, 68,806세대 규모. 평균 매매가 6억 8천. 평균 전세가율 59.7%. 국토교통부 실거래가 공개시스템 데이터 기반.</div>
+<details open class="data-notice" style="margin-top:14px;font-size:12px;color:var(--sub);">
+<summary style="cursor:pointer;">데이터 안내</summary>
+<div style="margin-top:6px;line-height:1.8;">
+<b>실거래가</b>: 국토교통부 실거래가 공개시스템 (<a href="https://rt.molit.go.kr/" target="_blank" rel="noopener nofollow">rt.molit.go.kr</a>) · 매일 자동 수집<br>
+<b>건축정보</b>: 국토교통부 건축물대장 (전유부 · 총괄표제부)<br>
+<b>세대 수</b>: 건축물대장 전유부 등기 기준 (분양 공급 수치와 다를 수 있음)<br>
+전용면적 ㎡ 기준 표기, 공급면적은 별도 표시<br>
+거래 취소·정정 건은 반영이 지연될 수 있습니다
+</div></details>
+<div class="seo-source" style="margin-top:8px;font-size:11px;color:var(--muted);">실거래가 출처: 국토교통부 · 최종 데이터 확인: <time datetime="2026-04-27">2026-04-27</time></div>
 </div>
+</div>
+<footer class="hwik-footer">
+<div class="hwik-footer-links">
+<a href="/about.html">휙 소개</a>·
+<a href="/privacy.html">개인정보처리방침</a>·
+<a href="/terms.html">이용약관</a>
+</div>
+<div class="hwik-footer-copy">실거래가 출처: 국토교통부 · 휙(HWIK) · <a href="https://hwik.kr">hwik.kr</a></div>
+</footer>
 </body>
 </html>

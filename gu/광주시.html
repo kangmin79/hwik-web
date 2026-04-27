@@ -3,25 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>경기 광주시 아파트 실거래가 시세 - 휙</title>
-<meta name="description" content="경기 광주시 아파트 124개 단지 실거래가·전세가 시세. 평균 매매가 3억 8천. 매매·전세·월세 면적별 가격. 최고가 경남아너스빌1단지. 전세가율 최고 삼주노블리제. 국토교통부 공개시스템 기반.">
+<title>경기 광주시 아파트 실거래가 시세 · 124개 단지 | 휙</title>
+<meta name="description" content="경기 광주시의 아파트 124개 단지 매매·전세·월세 실거래가와 시세를 동별로 비교하세요. 초월읍·태전동·신현동 등 평균 매매가 3억 8천, 최고가 경남아너스빌1단지, 전세가율 최고 삼주노블리제. 국토교통부 실거래가 공개시스템 기반.">
 <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
 <link rel="canonical" href="https://hwik.kr/gu/%EA%B4%91%EC%A3%BC%EC%8B%9C.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="휙">
 <meta property="og:locale" content="ko_KR">
-<meta property="og:title" content="경기 광주시 아파트 실거래가 시세 - 휙">
-<meta property="og:description" content="경기 광주시 아파트 124개 단지 실거래가·전세가 시세. 평균 매매가 3억 8천. 매매·전세·월세 면적별 가격. 최고가 경남아너스빌1단지. 전세가율 최고 삼주노블리제. 국토교통부 공개시스템 기반.">
+<meta property="og:title" content="경기 광주시 아파트 실거래가 시세 · 124개 단지 | 휙">
+<meta property="og:description" content="경기 광주시의 아파트 124개 단지 매매·전세·월세 실거래가와 시세를 동별로 비교하세요. 초월읍·태전동·신현동 등 평균 매매가 3억 8천, 최고가 경남아너스빌1단지, 전세가율 최고 삼주노블리제. 국토교통부 실거래가 공개시스템 기반.">
 <meta property="og:image" content="https://hwik.kr/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:url" content="https://hwik.kr/gu/%EA%B4%91%EC%A3%BC%EC%8B%9C.html">
+<meta property="article:modified_time" content="2026-04-27">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="경기 광주시 아파트 실거래가 시세 - 휙">
-<meta name="twitter:description" content="경기 광주시 아파트 124개 단지 실거래가·전세가 시세. 평균 매매가 3억 8천. 매매·전세·월세 면적별 가격. 최고가 경남아너스빌1단지. 전세가율 최고 삼주노블리제. 국토교통부 공개시스템 기반.">
+<meta name="twitter:title" content="경기 광주시 아파트 실거래가 시세 · 124개 단지 | 휙">
+<meta name="twitter:description" content="경기 광주시의 아파트 124개 단지 매매·전세·월세 실거래가와 시세를 동별로 비교하세요. 초월읍·태전동·신현동 등 평균 매매가 3억 8천, 최고가 경남아너스빌1단지, 전세가율 최고 삼주노블리제. 국토교통부 실거래가 공개시스템 기반.">
+<meta name="twitter:image" content="https://hwik.kr/og-image.png">
 <meta name="google-site-verification" content="R2ye41AVVTRs8BxEXyEafFSTqMSiHKdb9zgTklrktSI">
 <meta name="naver-site-verification" content="367bd1e77a8ad48b74e345be3e4a0f8125c2c4e1">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-2DVQXMLC9J"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-2DVQXMLC9J');</script>
 <link rel="stylesheet" href="/danji/style.css">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" as="style" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard-dynamic-subset.min.css" media="(min-width: 768px)">
 <style>
 .dong-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .dong-item { padding:12px; background:var(--card); border-radius:var(--radius); cursor:pointer; transition:all .15s; }
@@ -43,56 +49,304 @@
 .trade-price { font-size:16px; font-weight:700; }
 .trade-detail { font-size:11px; color:var(--sub); margin-top:3px; }
 .trade-date { font-size:11px; color:var(--muted); align-self:center; }
+/* Hero 박스 — 모바일 다크 기본 */
+.hero-box { margin:12px 14px; padding:12px 14px; background:var(--card); border-radius:var(--radius); border-left:3px solid var(--yellow); }
+.hero-meta { font-size:11.5px; color:var(--sub); line-height:1.6; }
+.hero-tag { display:inline-block; padding:1px 6px; background:var(--yellow); color:#0a0a12; border-radius:4px; font-size:10px; font-weight:700; margin-right:4px; }
+.hero-cite { font-size:13px; color:var(--text); margin-top:6px; line-height:1.5; }
+.hero-cite a { color:var(--yellow); text-decoration:none; font-weight:600; }
+/* 1위 강조 카드 — 모바일 다크 */
+.danji-hero { position:relative; padding:18px 16px; background:linear-gradient(135deg, #2a2820 0%, #2a2515 100%); border:1px solid #3a3525; border-left:4px solid var(--yellow); border-radius:14px; margin-bottom:8px; cursor:pointer; transition:all .15s; }
+.danji-hero:active { transform:scale(0.99); }
+.danji-hero .rank-badge { display:inline-block; padding:3px 9px; background:var(--yellow); color:#0a0a12; border-radius:6px; font-size:10.5px; font-weight:800; margin-bottom:8px; letter-spacing:0.02em; }
+.danji-hero .hero-name { font-size:17px; font-weight:700; color:var(--text); letter-spacing:-0.02em; }
+.danji-hero .hero-meta { font-size:12px; color:var(--sub); margin-top:6px; line-height:1.6; }
+.danji-hero .hero-price { font-size:22px; font-weight:800; color:var(--yellow); margin-top:10px; letter-spacing:-0.02em; }
+.danji-hero .hero-price-label { font-size:11px; color:var(--muted); margin-left:6px; font-weight:500; }
+/* 2-3위 컴팩트 카드 */
+.danji-compact { display:flex; justify-content:space-between; align-items:center; padding:11px 13px; background:var(--card); border-radius:10px; cursor:pointer; transition:all .15s; }
+.danji-compact:active { transform:scale(0.98); }
+.danji-compact-rank { display:inline-block; min-width:18px; font-size:12px; font-weight:700; color:var(--muted); margin-right:8px; }
+.danji-compact-name { font-size:13px; font-weight:600; color:var(--text); }
+.danji-compact-meta { font-size:11px; color:var(--sub); margin-top:2px; }
+.danji-compact-price { font-size:14px; font-weight:700; text-align:right; color:var(--text); }
+/* 데이터 안내 details */
+.data-notice summary { font-weight:600; color:var(--text); }
+.data-notice a { color:var(--yellow); text-decoration:none; }
+/* 페이지 푸터 */
+.hwik-footer { max-width:600px; margin:24px auto 40px; padding:24px 16px 0; border-top:1px solid var(--border, #2a2a3e); text-align:center; font-size:11.5px; color:var(--sub); line-height:1.7; }
+.hwik-footer-links { margin-bottom:8px; }
+.hwik-footer-links a { color:var(--sub); text-decoration:none; margin:0 8px; }
+.hwik-footer-copy a { color:var(--muted); text-decoration:none; }
+
+/* ── D 디자인 PC 라이트 (≥768px) — 오피스텔 동일 ── */
+@media (min-width: 768px) {
+  html, body {
+    background: #F0EEE6 !important;
+    font-family: Pretendard, -apple-system, BlinkMacSystemFont,
+                 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR', sans-serif !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    text-rendering: optimizeLegibility !important;
+    color: #0f172a !important;
+  }
+  .wrap, .wrap * {
+    font-family: Pretendard, -apple-system, BlinkMacSystemFont,
+                 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR', sans-serif !important;
+  }
+  .wrap {
+    max-width: 720px !important;
+    margin: 32px auto !important;
+    background: #fff !important;
+    border-radius: 20px !important;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04) !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+  }
+  .breadcrumb {
+    background: #fff !important;
+    padding: 18px 14px 0 !important;
+    font-size: 12.5px !important;
+    color: #94a3b8 !important;
+  }
+  .breadcrumb a {
+    color: #64748b !important; text-decoration: none !important;
+    transition: color 0.15s ease !important;
+  }
+  .breadcrumb a:hover { color: #4338ca !important; }
+  .breadcrumb span { color: #cbd5e1 !important; }
+  .header {
+    background: #fff !important;
+    padding: 14px 14px 22px !important;
+    border-bottom: 1px solid #eef0f4 !important;
+  }
+  .header .header-top {
+    display: flex !important; align-items: center !important; gap: 12px !important;
+    background: transparent !important; padding: 0 !important;
+  }
+  .header .logo {
+    background: #facc15 !important; color: #0a0a12 !important;
+    width: 32px !important; height: 32px !important;
+    border-radius: 8px !important;
+    display: flex !important; align-items: center !important; justify-content: center !important;
+    font-weight: 900 !important; font-size: 16px !important;
+    flex-shrink: 0 !important;
+  }
+  .header .header-name {
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    color: #4338ca !important;
+    letter-spacing: -0.03em !important;
+    line-height: 1.25 !important;
+    margin: 0 !important;
+  }
+  .header .header-sub {
+    font-size: 12.5px !important; color: #64748b !important;
+    margin-top: 2px !important;
+  }
+  .divider { display: none !important; }
+  /* Hero 박스 PC 라이트 */
+  .hero-box {
+    margin: 16px 14px 4px !important;
+    padding: 14px 16px !important;
+    background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%) !important;
+    border: 1px solid #fde68a !important;
+    border-left: 3px solid #facc15 !important;
+    border-radius: 12px !important;
+  }
+  .hero-meta { color: #78716c !important; font-size: 12px !important; }
+  .hero-tag {
+    background: #facc15 !important; color: #0a0a12 !important;
+    padding: 2px 7px !important; border-radius: 4px !important;
+    font-size: 10.5px !important; font-weight: 800 !important;
+    letter-spacing: 0.02em !important;
+  }
+  .hero-cite { color: #1e293b !important; font-size: 13.5px !important; margin-top: 8px !important; }
+  .hero-cite a { color: #4338ca !important; font-weight: 700 !important; }
+  .hero-cite a:hover { text-decoration: underline !important; }
+  .section { padding: 20px 14px !important; }
+  .section-title {
+    font-size: 16px !important; font-weight: 700 !important;
+    color: #0f172a !important; letter-spacing: -0.025em !important;
+    margin: 0 0 14px !important;
+  }
+  /* 지표 박스 */
+  .metrics {
+    display: grid !important; grid-template-columns: repeat(3, 1fr) !important;
+    gap: 8px !important; padding: 16px 14px 0 !important;
+  }
+  .metric {
+    background: #f8fafc !important;
+    border: 1px solid #eef0f4 !important;
+    border-radius: 10px !important;
+    padding: 12px 10px !important; text-align: center !important;
+  }
+  .metric-label { font-size: 11px !important; color: #64748b !important; }
+  .metric-value {
+    font-size: 16px !important; font-weight: 700 !important;
+    color: #0f172a !important; margin-top: 4px !important;
+  }
+  /* 단지/거래/구/동 카드 — 라이트 */
+  .danji-item, .trade-item, .gu-item, .dong-item {
+    background: #f8fafc !important;
+    border: 1px solid #eef0f4 !important;
+    border-left: 3px solid #4338ca !important;
+    border-radius: 10px !important;
+    box-shadow: none !important;
+    transition: all 0.15s ease !important;
+  }
+  .danji-item:hover, .trade-item:hover, .gu-item:hover, .dong-item:hover {
+    background: #eef2ff !important;
+    border-color: #c7d2fe !important;
+    border-left-color: #4338ca !important;
+    transform: translateX(2px) !important;
+    box-shadow: 0 4px 12px rgba(67,56,202,0.08) !important;
+  }
+  .danji-name, .gu-name, .dong-name {
+    color: #1e293b !important; font-weight: 700 !important;
+    letter-spacing: -0.015em !important;
+  }
+  .danji-item:hover .danji-name,
+  .gu-item:hover .gu-name,
+  .dong-item:hover .dong-name { color: #4338ca !important; }
+  .danji-sub, .gu-info, .dong-count {
+    color: #64748b !important; font-weight: 500 !important;
+  }
+  .danji-price, .trade-price { color: #0f172a !important; }
+  .danji-rate, .trade-detail { color: #64748b !important; }
+  .trade-date { color: #94a3b8 !important; }
+  /* 1위 강조 카드 — PC 라이트 */
+  .danji-hero {
+    background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%) !important;
+    border: 1px solid #fde68a !important;
+    border-left: 4px solid #facc15 !important;
+    padding: 20px 18px !important;
+    border-radius: 14px !important;
+    box-shadow: 0 4px 14px rgba(250,204,21,0.12) !important;
+    transition: all 0.18s ease !important;
+  }
+  .danji-hero:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 8px 22px rgba(250,204,21,0.18) !important;
+  }
+  .danji-hero .rank-badge {
+    background: #facc15 !important; color: #0a0a12 !important;
+    padding: 3px 10px !important; border-radius: 6px !important;
+    font-size: 11px !important; font-weight: 800 !important;
+    letter-spacing: 0.04em !important;
+  }
+  .danji-hero .hero-name {
+    font-size: 19px !important; font-weight: 800 !important;
+    color: #1e293b !important; letter-spacing: -0.025em !important;
+  }
+  .danji-hero .hero-meta { color: #78716c !important; font-size: 12.5px !important; line-height: 1.7 !important; }
+  .danji-hero .hero-price {
+    color: #ca8a04 !important; font-size: 24px !important;
+    font-weight: 900 !important; letter-spacing: -0.025em !important;
+  }
+  .danji-hero .hero-price-label { color: #a8a29e !important; font-weight: 600 !important; }
+  /* 2-3위 컴팩트 — PC */
+  .danji-compact {
+    background: transparent !important;
+    border: none !important; border-bottom: 1px solid #f1f5f9 !important;
+    border-radius: 0 !important;
+    padding: 12px 6px !important;
+    transition: background 0.15s ease !important;
+  }
+  .danji-compact:hover { background: #f8fafc !important; }
+  .danji-compact:last-child { border-bottom: none !important; }
+  .danji-compact-rank { color: #cbd5e1 !important; font-weight: 800 !important; font-size: 13px !important; }
+  .danji-compact-name { color: #1e293b !important; font-weight: 600 !important; }
+  .danji-compact:hover .danji-compact-name { color: #4338ca !important; }
+  .danji-compact-meta { color: #64748b !important; }
+  .danji-compact-price { color: #0f172a !important; font-weight: 700 !important; }
+  /* FAQ */
+  .faq-section { padding: 20px 14px !important; }
+  .faq-item {
+    background: #f8fafc !important; border: 1px solid #eef0f4 !important;
+    border-radius: 10px !important; padding: 14px 16px !important;
+    margin-bottom: 8px !important;
+  }
+  .faq-q { color: #1e293b !important; font-weight: 700 !important; }
+  .faq-a { color: #475569 !important; margin-top: 6px !important; line-height: 1.7 !important; }
+  /* CTA */
+  .cta-section { padding: 16px 14px !important; }
+  .btn-primary {
+    background: #4338ca !important; color: #fff !important;
+    border-radius: 12px !important; padding: 14px !important;
+    font-weight: 700 !important;
+    transition: background 0.15s ease, transform 0.15s ease !important;
+  }
+  .btn-primary:hover { background: #3730a3 !important; transform: translateY(-1px) !important; }
+  /* SEO 영역 */
+  .seo-section {
+    background: #fafafa !important; padding: 16px 14px !important;
+  }
+  .seo-text {
+    color: #475569 !important;
+    font-size: 13px !important; line-height: 1.85 !important;
+  }
+  .seo-source { color: #94a3b8 !important; font-size: 11px !important; margin-top: 8px !important; }
+  /* 데이터 안내 details */
+  .data-notice { color: #64748b !important; font-size: 12px !important; }
+  .data-notice summary {
+    cursor: pointer !important; font-weight: 700 !important; color: #1e293b !important;
+    padding: 4px 0 !important;
+  }
+  .data-notice a { color: #4338ca !important; text-decoration: none !important; }
+  .data-notice a:hover { text-decoration: underline !important; }
+  /* 페이지 푸터 */
+  .hwik-footer {
+    max-width: 720px !important;
+    margin: 24px auto 40px !important;
+    padding: 24px 16px 0 !important;
+    border-top: 1px solid #e5e7eb !important;
+    text-align: center !important;
+    font-size: 11.5px !important;
+    color: #6b7280 !important;
+    line-height: 1.7 !important;
+  }
+  .hwik-footer-links a { color: #6b7280 !important; text-decoration: none !important; margin: 0 8px !important; }
+  .hwik-footer-links a:hover { color: #4338ca !important; }
+  .hwik-footer-copy { color: #9ca3af !important; }
+  .hwik-footer-copy a { color: #9ca3af !important; text-decoration: none !important; }
+}
 </style>
-<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "광주시 아파트 평균 매매가는?", "acceptedAnswer": {"@type": "Answer", "text": "광주시 아파트 실거래가 기반 평균 매매가는 3억 8천입니다."}}, {"@type": "Question", "name": "광주시 아파트 전세가율은?", "acceptedAnswer": {"@type": "Answer", "text": "광주시 평균 전세가율은 74.2%입니다."}}]}, {"@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"}, {"@type": "ListItem", "position": 2, "name": "경기 구별 시세", "item": "https://hwik.kr/gu/"}, {"@type": "ListItem", "position": 3, "name": "광주시"}]}, {"@type": "ItemList", "name": "광주시 아파트 시세", "numberOfItems": 124, "itemListElement": [{"@type": "ListItem", "position": 1, "name": "오포자이디오브", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EA%B3%A0%EC%82%B0%EB%8F%99-%EC%98%A4%ED%8F%AC%EC%9E%90%EC%9D%B4%EB%94%94%EC%98%A4%EB%B8%8C-a10020492.html"}, {"@type": "ListItem", "position": 2, "name": "힐스테이트초월역", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%B4%88%EC%9B%94%EC%9D%8D-%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8%EC%B4%88%EC%9B%94%EC%97%AD-a10020544.html"}, {"@type": "ListItem", "position": 3, "name": "우림필유골드135", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EB%8A%A5%ED%8F%89%EB%8F%99-%EC%9A%B0%EB%A6%BC%ED%95%84%EC%9C%A0%EA%B3%A8%EB%93%9C135-a10021270.html"}, {"@type": "ListItem", "position": 4, "name": "이편한세상태재2단지아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-%EC%9D%B4%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81%ED%83%9C%EC%9E%AC2%EB%8B%A8%EC%A7%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10021275.html"}, {"@type": "ListItem", "position": 5, "name": "장지동금광포란재아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%9E%A5%EC%A7%80%EB%8F%99-%EC%9E%A5%EC%A7%80%EB%8F%99%EA%B8%88%EA%B4%91%ED%8F%AC%EB%9E%80%EC%9E%AC%EC%95%84%ED%8C%8C%ED%8A%B8-a10021673.html"}, {"@type": "ListItem", "position": 6, "name": "오포금강kcc", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EB%8A%A5%ED%8F%89%EB%8F%99-%EC%98%A4%ED%8F%AC%EA%B8%88%EA%B0%95kcc-a10021923.html"}, {"@type": "ListItem", "position": 7, "name": "광주탄벌 서희스타힐스2단지", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%84%EB%B2%8C%EB%8F%99-%EA%B4%91%EC%A3%BC%ED%83%84%EB%B2%8C-%EC%84%9C%ED%9D%AC%EC%8A%A4%ED%83%80%ED%9E%90%EC%8A%A42%EB%8B%A8%EC%A7%80-a10022327.html"}, {"@type": "ListItem", "position": 8, "name": "탄벌 서희스타힐스1단지", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%84%EB%B2%8C%EB%8F%99-%ED%83%84%EB%B2%8C-%EC%84%9C%ED%9D%AC%EC%8A%A4%ED%83%80%ED%9E%90%EC%8A%A41%EB%8B%A8%EC%A7%80-a10022336.html"}, {"@type": "ListItem", "position": 9, "name": "두산위브광주센트럴파크", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%84%EB%B2%8C%EB%8F%99-%EB%91%90%EC%82%B0%EC%9C%84%EB%B8%8C%EA%B4%91%EC%A3%BC%EC%84%BC%ED%8A%B8%EB%9F%B4%ED%8C%8C%ED%81%AC-a10022380.html"}, {"@type": "ListItem", "position": 10, "name": "오포자이오브제 아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EA%B3%A0%EC%82%B0%EB%8F%99-%EC%98%A4%ED%8F%AC%EC%9E%90%EC%9D%B4%EC%98%A4%EB%B8%8C%EC%A0%9C-%EC%95%84%ED%8C%8C%ED%8A%B8-a10022388.html"}, {"@type": "ListItem", "position": 11, "name": "광주행정타운아이파크", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%86%A1%EC%A0%95%EB%8F%99-%EA%B4%91%EC%A3%BC%ED%96%89%EC%A0%95%ED%83%80%EC%9A%B4%EC%95%84%EC%9D%B4%ED%8C%8C%ED%81%AC-a10022549.html"}, {"@type": "ListItem", "position": 12, "name": "더샵오포센트리체", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EA%B3%A0%EC%82%B0%EB%8F%99-%EB%8D%94%EC%83%B5%EC%98%A4%ED%8F%AC%EC%84%BC%ED%8A%B8%EB%A6%AC%EC%B2%B4-a10022856.html"}, {"@type": "ListItem", "position": 13, "name": "힐스테이트 삼동역", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%82%BC%EB%8F%99-%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-%EC%82%BC%EB%8F%99%EC%97%AD-a10023166.html"}, {"@type": "ListItem", "position": 14, "name": "초월역 한라비발디아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%B4%88%EC%9B%94%EC%9D%8D-%EC%B4%88%EC%9B%94%EC%97%AD-%ED%95%9C%EB%9D%BC%EB%B9%84%EB%B0%9C%EB%94%94%EC%95%84%ED%8C%8C%ED%8A%B8-a10023260.html"}, {"@type": "ListItem", "position": 15, "name": "광주역e편한세상센트럴아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%97%AD%EB%8F%99-%EA%B4%91%EC%A3%BC%EC%97%ADe%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81%EC%84%BC%ED%8A%B8%EB%9F%B4%EC%95%84%ED%8C%8C%ED%8A%B8-a10023363.html"}, {"@type": "ListItem", "position": 16, "name": "더샵오포센트럴포레 아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EA%B3%A0%EC%82%B0%EB%8F%99-%EB%8D%94%EC%83%B5%EC%98%A4%ED%8F%AC%EC%84%BC%ED%8A%B8%EB%9F%B4%ED%8F%AC%EB%A0%88-%EC%95%84%ED%8C%8C%ED%8A%B8-a10023699.html"}, {"@type": "ListItem", "position": 17, "name": "태전경남아너스빌시그니처", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%9E%A5%EC%A7%80%EB%8F%99-%ED%83%9C%EC%A0%84%EA%B2%BD%EB%82%A8%EC%95%84%EB%84%88%EC%8A%A4%EB%B9%8C%EC%8B%9C%EA%B7%B8%EB%8B%88%EC%B2%98-a10023851.html"}, {"@type": "ListItem", "position": 18, "name": "쌍용더플래티넘광주", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%B4%88%EC%9B%94%EC%9D%8D-%EC%8C%8D%EC%9A%A9%EB%8D%94%ED%94%8C%EB%9E%98%ED%8B%B0%EB%84%98%EA%B4%91%EC%A3%BC-a10023890.html"}, {"@type": "ListItem", "position": 19, "name": "경기광주역 금호리첸시아아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EA%B2%BD%EC%95%88%EB%8F%99-%EA%B2%BD%EA%B8%B0%EA%B4%91%EC%A3%BC%EC%97%AD-%EA%B8%88%ED%98%B8%EB%A6%AC%EC%B2%B8%EC%8B%9C%EC%95%84%EC%95%84%ED%8C%8C%ED%8A%B8-a10023961.html"}, {"@type": "ListItem", "position": 20, "name": "광주역 자연앤자이 아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%97%AD%EB%8F%99-%EA%B4%91%EC%A3%BC%EC%97%AD-%EC%9E%90%EC%97%B0%EC%95%A4%EC%9E%90%EC%9D%B4-%EC%95%84%ED%8C%8C%ED%8A%B8-a10024040.html"}, {"@type": "ListItem", "position": 21, "name": "태전파크자이", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%83%9C%EC%A0%84%ED%8C%8C%ED%81%AC%EC%9E%90%EC%9D%B4-a10024659.html"}, {"@type": "ListItem", "position": 22, "name": "초월역 모아 미래도 파크힐스 아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%B4%88%EC%9B%94%EC%9D%8D-%EC%B4%88%EC%9B%94%EC%97%AD-%EB%AA%A8%EC%95%84-%EB%AF%B8%EB%9E%98%EB%8F%84-%ED%8C%8C%ED%81%AC%ED%9E%90%EC%8A%A4-%EC%95%84%ED%8C%8C%ED%8A%B8-a10024731.html"}, {"@type": "ListItem", "position": 23, "name": "광주역우방아이유쉘아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%96%91%EB%B2%8C%EB%8F%99-%EA%B4%91%EC%A3%BC%EC%97%AD%EC%9A%B0%EB%B0%A9%EC%95%84%EC%9D%B4%EC%9C%A0%EC%89%98%EC%95%84%ED%8C%8C%ED%8A%B8-a10025136.html"}, {"@type": "ListItem", "position": 24, "name": "오포추자서희스타힐스아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%B6%94%EC%9E%90%EB%8F%99-%EC%98%A4%ED%8F%AC%EC%B6%94%EC%9E%90%EC%84%9C%ED%9D%AC%EC%8A%A4%ED%83%80%ED%9E%90%EC%8A%A4%EC%95%84%ED%8C%8C%ED%8A%B8-a10025169.html"}, {"@type": "ListItem", "position": 25, "name": "힐스테이트 태전2차 에듀포레 11블럭 아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-%ED%83%9C%EC%A0%842%EC%B0%A8-%EC%97%90%EB%93%80%ED%8F%AC%EB%A0%88-11%EB%B8%94%EB%9F%AD-%EC%95%84%ED%8C%8C%ED%8A%B8-a10025309.html"}, {"@type": "ListItem", "position": 26, "name": "힐스테이트 태전2차 에듀포레 10블럭", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-%ED%83%9C%EC%A0%842%EC%B0%A8-%EC%97%90%EB%93%80%ED%8F%AC%EB%A0%88-10%EB%B8%94%EB%9F%AD-a10025332.html"}, {"@type": "ListItem", "position": 27, "name": "힐스테이트태전 한아람마을", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8%ED%83%9C%EC%A0%84-%ED%95%9C%EC%95%84%EB%9E%8C%EB%A7%88%EC%9D%84-a10025854.html"}, {"@type": "ListItem", "position": 28, "name": "오포문형 양우내안애 아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EB%AC%B8%ED%98%95%EB%8F%99-%EC%98%A4%ED%8F%AC%EB%AC%B8%ED%98%95-%EC%96%91%EC%9A%B0%EB%82%B4%EC%95%88%EC%95%A0-%EC%95%84%ED%8C%8C%ED%8A%B8-a10025974.html"}, {"@type": "ListItem", "position": 29, "name": "힐스테이트 태전 5지구 아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-%ED%83%9C%EC%A0%84-5%EC%A7%80%EA%B5%AC-%EC%95%84%ED%8C%8C%ED%8A%B8-a10026088.html"}, {"@type": "ListItem", "position": 30, "name": "e편한세상태재1단지아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81%ED%83%9C%EC%9E%AC1%EB%8B%A8%EC%A7%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10026153.html"}, {"@type": "ListItem", "position": 31, "name": "e편한세상 테라스오포 3단지", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-%ED%85%8C%EB%9D%BC%EC%8A%A4%EC%98%A4%ED%8F%AC-3%EB%8B%A8%EC%A7%80-a10026168.html"}, {"@type": "ListItem", "position": 32, "name": "e편한세상 테라스오포 4단지", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-%ED%85%8C%EB%9D%BC%EC%8A%A4%EC%98%A4%ED%8F%AC-4%EB%8B%A8%EC%A7%80-a10026172.html"}, {"@type": "ListItem", "position": 33, "name": "e편한세상 테라스오포 2단지", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-%ED%85%8C%EB%9D%BC%EC%8A%A4%EC%98%A4%ED%8F%AC-2%EB%8B%A8%EC%A7%80-a10026174.html"}, {"@type": "ListItem", "position": 34, "name": "태전 효성해링턴플레이스 아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%83%9C%EC%A0%84-%ED%9A%A8%EC%84%B1%ED%95%B4%EB%A7%81%ED%84%B4%ED%94%8C%EB%A0%88%EC%9D%B4%EC%8A%A4-%EC%95%84%ED%8C%8C%ED%8A%B8-a10026211.html"}, {"@type": "ListItem", "position": 35, "name": "광주센트럴푸르지오", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8C%8D%EB%A0%B9%EB%8F%99-%EA%B4%91%EC%A3%BC%EC%84%BC%ED%8A%B8%EB%9F%B4%ED%91%B8%EB%A5%B4%EC%A7%80%EC%98%A4-a10026301.html"}, {"@type": "ListItem", "position": 36, "name": "이편한세상 광주 양벌 아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%96%91%EB%B2%8C%EB%8F%99-%EC%9D%B4%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-%EA%B4%91%EC%A3%BC-%EC%96%91%EB%B2%8C-%EC%95%84%ED%8C%8C%ED%8A%B8-a10026329.html"}, {"@type": "ListItem", "position": 37, "name": "힐스테이트태전 9단지아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8%ED%83%9C%EC%A0%84-9%EB%8B%A8%EC%A7%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10026552.html"}, {"@type": "ListItem", "position": 38, "name": "광주역 대광로제비앙아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8C%8D%EB%A0%B9%EB%8F%99-%EA%B4%91%EC%A3%BC%EC%97%AD-%EB%8C%80%EA%B4%91%EB%A1%9C%EC%A0%9C%EB%B9%84%EC%95%99%EC%95%84%ED%8C%8C%ED%8A%B8-a10026652.html"}, {"@type": "ListItem", "position": 39, "name": "태전아이파크아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%83%9C%EC%A0%84%EC%95%84%EC%9D%B4%ED%8C%8C%ED%81%AC%EC%95%84%ED%8C%8C%ED%8A%B8-a10026750.html"}, {"@type": "ListItem", "position": 40, "name": "태전지웰아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%83%9C%EC%A0%84%EC%A7%80%EC%9B%B0%EC%95%84%ED%8C%8C%ED%8A%B8-a10026798.html"}, {"@type": "ListItem", "position": 41, "name": "이편한세상오포3차아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-%EC%9D%B4%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81%EC%98%A4%ED%8F%AC3%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10027251.html"}, {"@type": "ListItem", "position": 42, "name": "e편한세상 광주역 3단지아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%97%AD%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-%EA%B4%91%EC%A3%BC%EC%97%AD-3%EB%8B%A8%EC%A7%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10027310.html"}, {"@type": "ListItem", "position": 43, "name": "신현라온프라이빗아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-%EC%8B%A0%ED%98%84%EB%9D%BC%EC%98%A8%ED%94%84%EB%9D%BC%EC%9D%B4%EB%B9%97%EC%95%84%ED%8C%8C%ED%8A%B8-a10027321.html"}, {"@type": "ListItem", "position": 44, "name": "e편한세상 광주역 5단지 아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%97%AD%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-%EA%B4%91%EC%A3%BC%EC%97%AD-5%EB%8B%A8%EC%A7%80-%EC%95%84%ED%8C%8C%ED%8A%B8-a10027323.html"}, {"@type": "ListItem", "position": 45, "name": "e편한세상 광주역 6단지아파트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%97%AD%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-%EA%B4%91%EC%A3%BC%EC%97%AD-6%EB%8B%A8%EC%A7%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10027326.html"}, {"@type": "ListItem", "position": 46, "name": "목현신일해피트리", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EB%AA%A9%ED%98%84%EB%8F%99-%EB%AA%A9%ED%98%84%EC%8B%A0%EC%9D%BC%ED%95%B4%ED%94%BC%ED%8A%B8%EB%A6%AC-a46403001.html"}, {"@type": "ListItem", "position": 47, "name": "삼동우남퍼스트빌", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%82%BC%EB%8F%99-%EC%82%BC%EB%8F%99%EC%9A%B0%EB%82%A8%ED%8D%BC%EC%8A%A4%ED%8A%B8%EB%B9%8C-a46404001.html"}, {"@type": "ListItem", "position": 48, "name": "곤지암현진에버빌", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EA%B3%A4%EC%A7%80%EC%95%94%EC%9D%8D-%EA%B3%A4%EC%A7%80%EC%95%94%ED%98%84%EC%A7%84%EC%97%90%EB%B2%84%EB%B9%8C-a46404002.html"}, {"@type": "ListItem", "position": 49, "name": "곤지암킴스빌리지", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EA%B3%A4%EC%A7%80%EC%95%94%EC%9D%8D-%EA%B3%A4%EC%A7%80%EC%95%94%ED%82%B4%EC%8A%A4%EB%B9%8C%EB%A6%AC%EC%A7%80-a46404003.html"}, {"@type": "ListItem", "position": 50, "name": "탄벌우림루미아트", "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%84%EB%B2%8C%EB%8F%99-%ED%83%84%EB%B2%8C%EC%9A%B0%EB%A6%BC%EB%A3%A8%EB%AF%B8%EC%95%84%ED%8A%B8-a46410003.html"}]}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@context": "https://schema.org", "@type": "Organization", "@id": "https://hwik.kr/#org", "name": "휙 (HWIK)", "url": "https://hwik.kr", "logo": {"@type": "ImageObject", "url": "https://hwik.kr/og-image.png", "width": 1200, "height": 630}, "sameAs": ["https://hwik.kr"]}, {"@context": "https://schema.org", "@type": "CollectionPage", "name": "경기 광주시 아파트 실거래가 시세 · 124개 단지", "description": "경기 광주시의 아파트 124개 단지 매매·전세·월세 실거래가와 시세를 동별로 비교하세요. 초월읍·태전동·신현동 등 평균 매매가 3억 8천, 최고가 경남아너스빌1단지, 전세가율 최고 삼주노블리제. 국토교통부 실거래가 공개시스템 기반.", "url": "https://hwik.kr/gu/%EA%B4%91%EC%A3%BC%EC%8B%9C.html", "inLanguage": "ko-KR", "datePublished": "2026-01-01", "dateModified": "2026-04-27", "isPartOf": {"@type": "WebSite", "name": "휙", "url": "https://hwik.kr"}, "publisher": {"@id": "https://hwik.kr/#org"}, "about": {"@type": "AdministrativeArea", "name": "경기 광주시", "containedInPlace": {"@type": "AdministrativeArea", "name": "경기", "containedInPlace": {"@type": "Country", "name": "대한민국"}}, "geo": {"@type": "GeoCoordinates", "latitude": 37.385629, "longitude": 127.245804}}, "mainEntity": {"@type": "ItemList", "name": "광주시 아파트 시세", "numberOfItems": 100, "itemListElement": [{"@type": "ListItem", "position": 1, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EA%B3%A0%EC%82%B0%EB%8F%99-%EC%98%A4%ED%8F%AC%EC%9E%90%EC%9D%B4%EB%94%94%EC%98%A4%EB%B8%8C-a10020492.html", "name": "오포자이디오브", "description": "고산동 · 895세대"}, {"@type": "ListItem", "position": 2, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%B4%88%EC%9B%94%EC%9D%8D-%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8%EC%B4%88%EC%9B%94%EC%97%AD-a10020544.html", "name": "힐스테이트초월역", "description": "초월읍 · 1,097세대"}, {"@type": "ListItem", "position": 3, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EB%8A%A5%ED%8F%89%EB%8F%99-%EC%9A%B0%EB%A6%BC%ED%95%84%EC%9C%A0%EA%B3%A8%EB%93%9C135-a10021270.html", "name": "우림필유골드135", "description": "능평동 · 135세대"}, {"@type": "ListItem", "position": 4, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-%EC%9D%B4%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81%ED%83%9C%EC%9E%AC2%EB%8B%A8%EC%A7%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10021275.html", "name": "이편한세상태재2단지아파트", "description": "신현동 · 144세대"}, {"@type": "ListItem", "position": 5, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%9E%A5%EC%A7%80%EB%8F%99-%EC%9E%A5%EC%A7%80%EB%8F%99%EA%B8%88%EA%B4%91%ED%8F%AC%EB%9E%80%EC%9E%AC%EC%95%84%ED%8C%8C%ED%8A%B8-a10021673.html", "name": "장지동금광포란재아파트", "description": "장지동 · 147세대"}, {"@type": "ListItem", "position": 6, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EB%8A%A5%ED%8F%89%EB%8F%99-%EC%98%A4%ED%8F%AC%EA%B8%88%EA%B0%95kcc-a10021923.html", "name": "오포금강kcc", "description": "능평동 · 116세대"}, {"@type": "ListItem", "position": 7, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%84%EB%B2%8C%EB%8F%99-%EA%B4%91%EC%A3%BC%ED%83%84%EB%B2%8C-%EC%84%9C%ED%9D%AC%EC%8A%A4%ED%83%80%ED%9E%90%EC%8A%A42%EB%8B%A8%EC%A7%80-a10022327.html", "name": "광주탄벌 서희스타힐스2단지", "description": "탄벌동 · 351세대"}, {"@type": "ListItem", "position": 8, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%84%EB%B2%8C%EB%8F%99-%ED%83%84%EB%B2%8C-%EC%84%9C%ED%9D%AC%EC%8A%A4%ED%83%80%ED%9E%90%EC%8A%A41%EB%8B%A8%EC%A7%80-a10022336.html", "name": "탄벌 서희스타힐스1단지", "description": "탄벌동 · 416세대"}, {"@type": "ListItem", "position": 9, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%84%EB%B2%8C%EB%8F%99-%EB%91%90%EC%82%B0%EC%9C%84%EB%B8%8C%EA%B4%91%EC%A3%BC%EC%84%BC%ED%8A%B8%EB%9F%B4%ED%8C%8C%ED%81%AC-a10022380.html", "name": "두산위브광주센트럴파크", "description": "탄벌동 · 693세대"}, {"@type": "ListItem", "position": 10, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EA%B3%A0%EC%82%B0%EB%8F%99-%EC%98%A4%ED%8F%AC%EC%9E%90%EC%9D%B4%EC%98%A4%EB%B8%8C%EC%A0%9C-%EC%95%84%ED%8C%8C%ED%8A%B8-a10022388.html", "name": "오포자이오브제 아파트", "description": "고산동 · 927세대"}, {"@type": "ListItem", "position": 11, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%86%A1%EC%A0%95%EB%8F%99-%EA%B4%91%EC%A3%BC%ED%96%89%EC%A0%95%ED%83%80%EC%9A%B4%EC%95%84%EC%9D%B4%ED%8C%8C%ED%81%AC-a10022549.html", "name": "광주행정타운아이파크", "description": "송정동 · 828세대"}, {"@type": "ListItem", "position": 12, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EA%B3%A0%EC%82%B0%EB%8F%99-%EB%8D%94%EC%83%B5%EC%98%A4%ED%8F%AC%EC%84%BC%ED%8A%B8%EB%A6%AC%EC%B2%B4-a10022856.html", "name": "더샵오포센트리체", "description": "고산동 · 1,475세대"}, {"@type": "ListItem", "position": 13, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%82%BC%EB%8F%99-%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-%EC%82%BC%EB%8F%99%EC%97%AD-a10023166.html", "name": "힐스테이트 삼동역", "description": "삼동 · 565세대"}, {"@type": "ListItem", "position": 14, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%B4%88%EC%9B%94%EC%9D%8D-%EC%B4%88%EC%9B%94%EC%97%AD-%ED%95%9C%EB%9D%BC%EB%B9%84%EB%B0%9C%EB%94%94%EC%95%84%ED%8C%8C%ED%8A%B8-a10023260.html", "name": "초월역 한라비발디아파트", "description": "초월읍 · 1,108세대"}, {"@type": "ListItem", "position": 15, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%97%AD%EB%8F%99-%EA%B4%91%EC%A3%BC%EC%97%ADe%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81%EC%84%BC%ED%8A%B8%EB%9F%B4%EC%95%84%ED%8C%8C%ED%8A%B8-a10023363.html", "name": "광주역e편한세상센트럴아파트", "description": "역동 · 1,061세대"}, {"@type": "ListItem", "position": 16, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EA%B3%A0%EC%82%B0%EB%8F%99-%EB%8D%94%EC%83%B5%EC%98%A4%ED%8F%AC%EC%84%BC%ED%8A%B8%EB%9F%B4%ED%8F%AC%EB%A0%88-%EC%95%84%ED%8C%8C%ED%8A%B8-a10023699.html", "name": "더샵오포센트럴포레 아파트", "description": "고산동 · 1,396세대"}, {"@type": "ListItem", "position": 17, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%9E%A5%EC%A7%80%EB%8F%99-%ED%83%9C%EC%A0%84%EA%B2%BD%EB%82%A8%EC%95%84%EB%84%88%EC%8A%A4%EB%B9%8C%EC%8B%9C%EA%B7%B8%EB%8B%88%EC%B2%98-a10023851.html", "name": "태전경남아너스빌시그니처", "description": "장지동 · 624세대"}, {"@type": "ListItem", "position": 18, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%B4%88%EC%9B%94%EC%9D%8D-%EC%8C%8D%EC%9A%A9%EB%8D%94%ED%94%8C%EB%9E%98%ED%8B%B0%EB%84%98%EA%B4%91%EC%A3%BC-a10023890.html", "name": "쌍용더플래티넘광주", "description": "초월읍 · 873세대"}, {"@type": "ListItem", "position": 19, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EA%B2%BD%EC%95%88%EB%8F%99-%EA%B2%BD%EA%B8%B0%EA%B4%91%EC%A3%BC%EC%97%AD-%EA%B8%88%ED%98%B8%EB%A6%AC%EC%B2%B8%EC%8B%9C%EC%95%84%EC%95%84%ED%8C%8C%ED%8A%B8-a10023961.html", "name": "경기광주역 금호리첸시아아파트", "description": "경안동 · 447세대"}, {"@type": "ListItem", "position": 20, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%97%AD%EB%8F%99-%EA%B4%91%EC%A3%BC%EC%97%AD-%EC%9E%90%EC%97%B0%EC%95%A4%EC%9E%90%EC%9D%B4-%EC%95%84%ED%8C%8C%ED%8A%B8-a10024040.html", "name": "광주역 자연앤자이 아파트", "description": "역동 · 1,031세대"}, {"@type": "ListItem", "position": 21, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%83%9C%EC%A0%84%ED%8C%8C%ED%81%AC%EC%9E%90%EC%9D%B4-a10024659.html", "name": "태전파크자이", "description": "태전동 · 668세대"}, {"@type": "ListItem", "position": 22, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%B4%88%EC%9B%94%EC%9D%8D-%EC%B4%88%EC%9B%94%EC%97%AD-%EB%AA%A8%EC%95%84-%EB%AF%B8%EB%9E%98%EB%8F%84-%ED%8C%8C%ED%81%AC%ED%9E%90%EC%8A%A4-%EC%95%84%ED%8C%8C%ED%8A%B8-a10024731.html", "name": "초월역 모아 미래도 파크힐스 아파트", "description": "초월읍 · 587세대"}, {"@type": "ListItem", "position": 23, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%96%91%EB%B2%8C%EB%8F%99-%EA%B4%91%EC%A3%BC%EC%97%AD%EC%9A%B0%EB%B0%A9%EC%95%84%EC%9D%B4%EC%9C%A0%EC%89%98%EC%95%84%ED%8C%8C%ED%8A%B8-a10025136.html", "name": "광주역우방아이유쉘아파트", "description": "양벌동 · 798세대"}, {"@type": "ListItem", "position": 24, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%B6%94%EC%9E%90%EB%8F%99-%EC%98%A4%ED%8F%AC%EC%B6%94%EC%9E%90%EC%84%9C%ED%9D%AC%EC%8A%A4%ED%83%80%ED%9E%90%EC%8A%A4%EC%95%84%ED%8C%8C%ED%8A%B8-a10025169.html", "name": "오포추자서희스타힐스아파트", "description": "추자동 · 605세대"}, {"@type": "ListItem", "position": 25, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-%ED%83%9C%EC%A0%842%EC%B0%A8-%EC%97%90%EB%93%80%ED%8F%AC%EB%A0%88-11%EB%B8%94%EB%9F%AD-%EC%95%84%ED%8C%8C%ED%8A%B8-a10025309.html", "name": "힐스테이트 태전2차 에듀포레 11블럭 아파트", "description": "태전동 · 706세대"}, {"@type": "ListItem", "position": 26, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-%ED%83%9C%EC%A0%842%EC%B0%A8-%EC%97%90%EB%93%80%ED%8F%AC%EB%A0%88-10%EB%B8%94%EB%9F%AD-a10025332.html", "name": "힐스테이트 태전2차 에듀포레 10블럭", "description": "태전동 · 394세대"}, {"@type": "ListItem", "position": 27, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8%ED%83%9C%EC%A0%84-%ED%95%9C%EC%95%84%EB%9E%8C%EB%A7%88%EC%9D%84-a10025854.html", "name": "힐스테이트태전 한아람마을", "description": "태전동 · 1,176세대"}, {"@type": "ListItem", "position": 28, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EB%AC%B8%ED%98%95%EB%8F%99-%EC%98%A4%ED%8F%AC%EB%AC%B8%ED%98%95-%EC%96%91%EC%9A%B0%EB%82%B4%EC%95%88%EC%95%A0-%EC%95%84%ED%8C%8C%ED%8A%B8-a10025974.html", "name": "오포문형 양우내안애 아파트", "description": "문형동 · 1,028세대"}, {"@type": "ListItem", "position": 29, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-%ED%83%9C%EC%A0%84-5%EC%A7%80%EA%B5%AC-%EC%95%84%ED%8C%8C%ED%8A%B8-a10026088.html", "name": "힐스테이트 태전 5지구 아파트", "description": "태전동 · 1,461세대"}, {"@type": "ListItem", "position": 30, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81%ED%83%9C%EC%9E%AC1%EB%8B%A8%EC%A7%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10026153.html", "name": "e편한세상태재1단지아파트", "description": "신현동 · 480세대"}, {"@type": "ListItem", "position": 31, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-%ED%85%8C%EB%9D%BC%EC%8A%A4%EC%98%A4%ED%8F%AC-3%EB%8B%A8%EC%A7%80-a10026168.html", "name": "e편한세상 테라스오포 3단지", "description": "신현동 · 211세대"}, {"@type": "ListItem", "position": 32, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-%ED%85%8C%EB%9D%BC%EC%8A%A4%EC%98%A4%ED%8F%AC-4%EB%8B%A8%EC%A7%80-a10026172.html", "name": "e편한세상 테라스오포 4단지", "description": "신현동 · 173세대"}, {"@type": "ListItem", "position": 33, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-%ED%85%8C%EB%9D%BC%EC%8A%A4%EC%98%A4%ED%8F%AC-2%EB%8B%A8%EC%A7%80-a10026174.html", "name": "e편한세상 테라스오포 2단지", "description": "신현동 · 189세대"}, {"@type": "ListItem", "position": 34, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%83%9C%EC%A0%84-%ED%9A%A8%EC%84%B1%ED%95%B4%EB%A7%81%ED%84%B4%ED%94%8C%EB%A0%88%EC%9D%B4%EC%8A%A4-%EC%95%84%ED%8C%8C%ED%8A%B8-a10026211.html", "name": "태전 효성해링턴플레이스 아파트", "description": "태전동 · 702세대"}, {"@type": "ListItem", "position": 35, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8C%8D%EB%A0%B9%EB%8F%99-%EA%B4%91%EC%A3%BC%EC%84%BC%ED%8A%B8%EB%9F%B4%ED%91%B8%EB%A5%B4%EC%A7%80%EC%98%A4-a10026301.html", "name": "광주센트럴푸르지오", "description": "쌍령동 · 1,425세대"}, {"@type": "ListItem", "position": 36, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%96%91%EB%B2%8C%EB%8F%99-%EC%9D%B4%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-%EA%B4%91%EC%A3%BC-%EC%96%91%EB%B2%8C-%EC%95%84%ED%8C%8C%ED%8A%B8-a10026329.html", "name": "이편한세상 광주 양벌 아파트", "description": "양벌동 · 388세대"}, {"@type": "ListItem", "position": 37, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8%ED%83%9C%EC%A0%84-9%EB%8B%A8%EC%A7%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10026552.html", "name": "힐스테이트태전 9단지아파트", "description": "태전동 · 509세대"}, {"@type": "ListItem", "position": 38, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8C%8D%EB%A0%B9%EB%8F%99-%EA%B4%91%EC%A3%BC%EC%97%AD-%EB%8C%80%EA%B4%91%EB%A1%9C%EC%A0%9C%EB%B9%84%EC%95%99%EC%95%84%ED%8C%8C%ED%8A%B8-a10026652.html", "name": "광주역 대광로제비앙아파트", "description": "쌍령동 · 265세대"}, {"@type": "ListItem", "position": 39, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%83%9C%EC%A0%84%EC%95%84%EC%9D%B4%ED%8C%8C%ED%81%AC%EC%95%84%ED%8C%8C%ED%8A%B8-a10026750.html", "name": "태전아이파크아파트", "description": "태전동 · 640세대"}, {"@type": "ListItem", "position": 40, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%83%9C%EC%A0%84%EC%A7%80%EC%9B%B0%EC%95%84%ED%8C%8C%ED%8A%B8-a10026798.html", "name": "태전지웰아파트", "description": "태전동 · 181세대"}, {"@type": "ListItem", "position": 41, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-%EC%9D%B4%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81%EC%98%A4%ED%8F%AC3%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10027251.html", "name": "이편한세상오포3차아파트", "description": "신현동 · 336세대"}, {"@type": "ListItem", "position": 42, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%97%AD%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-%EA%B4%91%EC%A3%BC%EC%97%AD-3%EB%8B%A8%EC%A7%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10027310.html", "name": "e편한세상 광주역 3단지아파트", "description": "역동 · 423세대"}, {"@type": "ListItem", "position": 43, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-%EC%8B%A0%ED%98%84%EB%9D%BC%EC%98%A8%ED%94%84%EB%9D%BC%EC%9D%B4%EB%B9%97%EC%95%84%ED%8C%8C%ED%8A%B8-a10027321.html", "name": "신현라온프라이빗아파트", "description": "신현동 · 223세대"}, {"@type": "ListItem", "position": 44, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%97%AD%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-%EA%B4%91%EC%A3%BC%EC%97%AD-5%EB%8B%A8%EC%A7%80-%EC%95%84%ED%8C%8C%ED%8A%B8-a10027323.html", "name": "e편한세상 광주역 5단지 아파트", "description": "역동 · 314세대"}, {"@type": "ListItem", "position": 45, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%97%AD%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-%EA%B4%91%EC%A3%BC%EC%97%AD-6%EB%8B%A8%EC%A7%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10027326.html", "name": "e편한세상 광주역 6단지아파트", "description": "역동 · 324세대"}, {"@type": "ListItem", "position": 46, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EB%AA%A9%ED%98%84%EB%8F%99-%EB%AA%A9%ED%98%84%EC%8B%A0%EC%9D%BC%ED%95%B4%ED%94%BC%ED%8A%B8%EB%A6%AC-a46403001.html", "name": "목현신일해피트리", "description": "목현동 · 294세대"}, {"@type": "ListItem", "position": 47, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%82%BC%EB%8F%99-%EC%82%BC%EB%8F%99%EC%9A%B0%EB%82%A8%ED%8D%BC%EC%8A%A4%ED%8A%B8%EB%B9%8C-a46404001.html", "name": "삼동우남퍼스트빌", "description": "삼동 · 343세대"}, {"@type": "ListItem", "position": 48, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EA%B3%A4%EC%A7%80%EC%95%94%EC%9D%8D-%EA%B3%A4%EC%A7%80%EC%95%94%ED%98%84%EC%A7%84%EC%97%90%EB%B2%84%EB%B9%8C-a46404002.html", "name": "곤지암현진에버빌", "description": "곤지암읍 · 504세대"}, {"@type": "ListItem", "position": 49, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EA%B3%A4%EC%A7%80%EC%95%94%EC%9D%8D-%EA%B3%A4%EC%A7%80%EC%95%94%ED%82%B4%EC%8A%A4%EB%B9%8C%EB%A6%AC%EC%A7%80-a46404003.html", "name": "곤지암킴스빌리지", "description": "곤지암읍 · 1,152세대"}, {"@type": "ListItem", "position": 50, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%84%EB%B2%8C%EB%8F%99-%ED%83%84%EB%B2%8C%EC%9A%B0%EB%A6%BC%EB%A3%A8%EB%AF%B8%EC%95%84%ED%8A%B8-a46410003.html", "name": "탄벌우림루미아트", "description": "탄벌동 · 267세대"}, {"@type": "ListItem", "position": 51, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%9A%8C%EB%8D%95%EB%8F%99-%ED%9A%8C%EB%8D%95%EB%B2%BD%EC%82%B0%EB%B8%94%EB%A3%A8%EB%B0%8D-a46412001.html", "name": "회덕벽산블루밍", "description": "회덕동 · 282세대"}, {"@type": "ListItem", "position": 52, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%9A%8C%EB%8D%95%EB%8F%99-%ED%9A%8C%EB%8D%95%EB%8C%80%EC%A3%BC%ED%8C%8C%ED%81%AC%EB%B9%8C-a46412002.html", "name": "회덕대주파크빌", "description": "회덕동 · 296세대"}, {"@type": "ListItem", "position": 53, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8C%8D%EB%A0%B9%EB%8F%99-%EC%8C%8D%EB%A0%B9%ED%98%84%EB%8C%802%EC%B0%A8-a46413004.html", "name": "쌍령현대2차", "description": "쌍령동 · 513세대"}, {"@type": "ListItem", "position": 54, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%84%EB%B2%8C%EB%8F%99-%ED%83%84%EB%B2%8C%ED%8C%8C%EB%9D%BC%EB%8B%A4%EC%9D%B4%EC%8A%A41%EB%8B%A8%EC%A7%80-a46470102.html", "name": "탄벌파라다이스1단지", "description": "탄벌동 · 261세대"}, {"@type": "ListItem", "position": 55, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%84%EB%B2%8C%EB%8F%99-%EA%B4%91%EC%A3%BC%EB%8F%99%EB%B3%B4%ED%97%88%EB%B8%8C%EB%B9%8C-a46470105.html", "name": "광주동보허브빌", "description": "탄벌동 · 815세대"}, {"@type": "ListItem", "position": 56, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8C%8D%EB%A0%B9%EB%8F%99-%EC%8C%8D%EB%A0%B9%EB%8F%99%EC%84%B11%EC%B0%A8-a46470203.html", "name": "쌍령동성1차", "description": "쌍령동 · 495세대"}, {"@type": "ListItem", "position": 57, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%83%9C%EC%A0%84%EB%AF%B8%EC%A7%84-a46470301.html", "name": "태전미진", "description": "태전동 · 243세대"}, {"@type": "ListItem", "position": 58, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%83%9C%EC%A0%84%EC%9A%B0%EB%A6%BC%ED%95%84%EC%9C%A0-a46470302.html", "name": "태전우림필유", "description": "태전동 · 475세대"}, {"@type": "ListItem", "position": 59, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%83%9C%EC%A0%84%EC%84%B1%EC%9B%901%EC%B0%A8-a46470408.html", "name": "태전성원1차", "description": "태전동 · 654세대"}, {"@type": "ListItem", "position": 60, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%83%9C%EC%A0%84%EC%84%B1%EC%9B%902%EC%B0%A8-a46470506.html", "name": "태전성원2차", "description": "태전동 · 435세대"}, {"@type": "ListItem", "position": 61, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%84%EB%B2%8C%EB%8F%99-%EA%B4%91%EC%A3%BC%EC%82%B0%ED%98%B8%EC%95%84%ED%8C%8C%ED%8A%B8%EC%9E%85%EC%A3%BC%EC%9E%90%EB%8C%80%ED%91%9C%ED%9A%8C%EC%9D%98-a46470601.html", "name": "광주산호아파트입주자대표회의", "description": "탄벌동 · 183세대"}, {"@type": "ListItem", "position": 62, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%9E%A5%EC%A7%80%EB%8F%99-%EC%9E%A5%EC%A7%80%ED%98%84%EB%8C%80%EC%95%84%ED%8C%8C%ED%8A%B8-a46470701.html", "name": "장지현대아파트", "description": "장지동 · 477세대"}, {"@type": "ListItem", "position": 63, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%84%EB%B2%8C%EB%8F%99-%EB%B2%BD%EC%82%B0%EB%B8%94%EB%A3%A8%EB%B0%8D1-2%EB%8B%A8%EC%A7%80-a46470702.html", "name": "벽산블루밍1, 2단지", "description": "탄벌동 · 716세대"}, {"@type": "ListItem", "position": 64, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%84%EB%B2%8C%EB%8F%99-%ED%83%84%EB%B2%8C%EB%8F%99%ED%98%84%EB%8C%80-a46470804.html", "name": "탄벌동현대", "description": "탄벌동 · 545세대"}, {"@type": "ListItem", "position": 65, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EB%A7%A4%EC%82%B0%EB%8F%99-%EC%98%A4%ED%8F%AC%EB%8C%80%EC%84%B1-a46470913.html", "name": "오포대성", "description": "매산동 · 466세대"}, {"@type": "ListItem", "position": 66, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EA%B3%A0%EC%82%B0%EB%8F%99-%EC%98%A4%ED%8F%AC%EC%9A%B0%EB%A6%BC-a46471002.html", "name": "오포우림", "description": "고산동 · 238세대"}, {"@type": "ListItem", "position": 67, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%83%9C%EC%A0%84%EC%84%B1%EC%9B%903%EC%B0%A8-a46471205.html", "name": "태전성원3차", "description": "태전동 · 427세대"}, {"@type": "ListItem", "position": 68, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8C%8D%EB%A0%B9%EB%8F%99-%EC%8C%8D%EB%A0%B9%EB%8F%99%EC%84%B12%EC%B0%A8-a46471301.html", "name": "쌍령동성2차", "description": "쌍령동 · 440세대"}, {"@type": "ListItem", "position": 69, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8C%8D%EB%A0%B9%EB%8F%99-%EC%8C%8D%EB%A0%B9%EC%84%9C%ED%9D%AC%EC%8A%A4%ED%83%80%ED%9E%90%EC%8A%A4-a46471302.html", "name": "쌍령서희스타힐스", "description": "쌍령동 · 198세대"}, {"@type": "ListItem", "position": 70, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%96%91%EB%B2%8C%EB%8F%99-%EC%96%91%EB%B2%8C%EC%9A%B0%EB%A6%BC-a46471412.html", "name": "양벌우림", "description": "양벌동 · 448세대"}, {"@type": "ListItem", "position": 71, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%B4%88%EC%9B%94%EC%9D%8D-%ED%96%87%EB%B9%9B%EB%A7%88%EC%9D%84%EC%BD%94%EC%95%84%EB%A3%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a46471505.html", "name": "햇빛마을코아루아파트", "description": "초월읍 · 363세대"}, {"@type": "ListItem", "position": 72, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%86%A1%EC%A0%95%EB%8F%99-%EC%86%A1%EC%A0%95%EB%8F%99%ED%8C%8C%EB%9D%BC%EB%8B%A4%EC%9D%B4%EC%8A%A42%EB%8B%A8%EC%A7%80-a46471702.html", "name": "송정동파라다이스2단지", "description": "송정동 · 279세대"}, {"@type": "ListItem", "position": 73, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EB%8A%A5%ED%8F%89%EB%8F%99-%EC%98%A4%ED%8F%AC%EB%B2%A0%EB%A5%B4%EB%B9%8C-a46471911.html", "name": "오포베르빌", "description": "능평동 · 436세대"}, {"@type": "ListItem", "position": 74, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%86%A1%EC%A0%95%EB%8F%99-%EA%B8%88%EA%B0%95%ED%8E%9C%ED%85%8C%EB%A6%AC%EC%9B%80-a46472001.html", "name": "금강펜테리움", "description": "송정동 · 694세대"}, {"@type": "ListItem", "position": 75, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%86%A1%EC%A0%95%EB%8F%99-%EC%86%A1%EC%A0%95%EB%8F%99%EC%9A%B0%EB%A6%BC%ED%95%84%EC%9C%A0-a46472002.html", "name": "송정동우림필유", "description": "송정동 · 368세대"}, {"@type": "ListItem", "position": 76, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%84%EB%B2%8C%EB%8F%99-%EA%B2%BD%EB%82%A8%EC%95%84%EB%84%88%EC%8A%A4%EB%B9%8C2%EB%8B%A8%EC%A7%80-a46472101.html", "name": "경남아너스빌2단지", "description": "탄벌동 · 450세대"}, {"@type": "ListItem", "position": 77, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%84%EB%B2%8C%EB%8F%99-%EA%B2%BD%EB%82%A8%EC%95%84%EB%84%88%EC%8A%A4%EB%B9%8C1%EB%8B%A8%EC%A7%80-a46472102.html", "name": "경남아너스빌1단지", "description": "탄벌동 · 435세대"}, {"@type": "ListItem", "position": 78, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%B4%88%EC%9B%94%EC%9D%8D-%EC%B4%88%EC%9B%94%EB%B2%BD%EC%82%B0%EB%B8%94%EB%A3%A8%EB%B0%8D-a46472212.html", "name": "초월벽산블루밍", "description": "초월읍 · 516세대"}, {"@type": "ListItem", "position": 79, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%83%9C%EC%A0%84%EC%84%B1%EC%9B%90%EC%83%81%EB%96%BC%EB%B9%8C5%EB%8B%A8%EC%A7%80-a46472307.html", "name": "태전성원상떼빌5단지", "description": "태전동 · 550세대"}, {"@type": "ListItem", "position": 80, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%96%91%EB%B2%8C%EB%8F%99-%EC%96%91%EC%B4%8C%ED%98%84%EB%8C%80-a46472509.html", "name": "양촌현대", "description": "양벌동 · 390세대"}, {"@type": "ListItem", "position": 81, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8C%8D%EB%A0%B9%EB%8F%99-%EC%8C%8D%EB%A0%B9%ED%98%84%EB%8C%801%EC%B0%A8-a46472602.html", "name": "쌍령현대1차", "description": "쌍령동 · 470세대"}, {"@type": "ListItem", "position": 82, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%83%9C%EC%A0%84%EC%8C%8D%EC%9A%A92%EB%8B%A8%EC%A7%80-a46472703.html", "name": "태전쌍용2단지", "description": "태전동 · 398세대"}, {"@type": "ListItem", "position": 83, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%83%9C%EC%A0%84%EC%8C%8D%EC%9A%A93%EB%8B%A8%EC%A7%80-a46472704.html", "name": "태전쌍용3단지", "description": "태전동 · 409세대"}, {"@type": "ListItem", "position": 84, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%83%9C%EC%A0%84%EC%8C%8D%EC%9A%A91%EB%8B%A8%EC%A7%80-a46472709.html", "name": "태전쌍용1단지", "description": "태전동 · 390세대"}, {"@type": "ListItem", "position": 85, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%96%91%EB%B2%8C%EB%8F%99-%EC%98%A4%ED%8F%AC%EC%84%B8%EC%96%91%EC%B2%AD%EB%A7%88%EB%A3%A8-a46472810.html", "name": "오포세양청마루", "description": "양벌동 · 408세대"}, {"@type": "ListItem", "position": 86, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%B4%88%EC%9B%94%EC%9D%8D-%EC%B4%88%EC%9B%94%EC%82%B0%EC%9D%B4%EB%A6%AC%EB%8C%80%EC%A3%BC%ED%8C%8C%ED%81%AC%EB%B9%8C-a46472911.html", "name": "초월산이리대주파크빌", "description": "초월읍 · 505세대"}, {"@type": "ListItem", "position": 87, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%96%91%EB%B2%8C%EB%8F%99-%EC%96%91%EB%B2%8C%EC%8C%8D%EC%9A%A91%EC%B0%A8-a46474006.html", "name": "양벌쌍용1차", "description": "양벌동 · 313세대"}, {"@type": "ListItem", "position": 88, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%96%91%EB%B2%8C%EB%8F%99-%EC%96%91%EB%B2%8C2%EC%B0%A8%EC%8C%8D%EC%9A%A9-a46474015.html", "name": "양벌2차쌍용", "description": "양벌동 · 492세대"}, {"@type": "ListItem", "position": 89, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%B4%88%EC%9B%94%EC%9D%8D-%EB%8F%84%ED%8F%89%EC%8B%A0%EC%9D%BC-a46474304.html", "name": "도평신일", "description": "초월읍 · 358세대"}, {"@type": "ListItem", "position": 90, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%96%91%EB%B2%8C%EB%8F%99-%EB%8C%80%EC%A3%BC%ED%8C%8C%ED%81%AC%EB%B9%8C1%EC%B0%A8-a46474418.html", "name": "대주파크빌1차", "description": "양벌동 · 832세대"}, {"@type": "ListItem", "position": 91, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%96%91%EB%B2%8C%EB%8F%99-%EB%8C%80%EC%A3%BC%ED%8C%8C%ED%81%AC%EB%B9%8C2%EC%B0%A8-a46474614.html", "name": "대주파크빌2차", "description": "양벌동 · 477세대"}, {"@type": "ListItem", "position": 92, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EA%B3%A0%EC%82%B0%EB%8F%99-%EC%98%A4%ED%8F%AC%EA%B8%88%ED%98%B8%EB%B2%A0%EC%8A%A4%ED%8A%B8%EB%B9%8C-a46474717.html", "name": "오포금호베스트빌", "description": "고산동 · 476세대"}, {"@type": "ListItem", "position": 93, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-%EC%98%A4%ED%8F%ACe%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%811%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a46474718.html", "name": "오포e편한세상1차아파트", "description": "신현동 · 248세대"}, {"@type": "ListItem", "position": 94, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-%EC%98%A4%ED%8F%AC2%EC%B0%A8-e-%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-a46474719.html", "name": "오포2차 e-편한세상", "description": "신현동 · 135세대"}, {"@type": "ListItem", "position": 95, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EB%AC%B8%ED%98%95%EB%8F%99-%EC%98%A4%ED%8F%AC%EC%9A%B0%EB%A6%BC%ED%93%A8%EC%A0%84%EB%B9%8C-a46474816.html", "name": "오포우림퓨전빌", "description": "문형동 · 498세대"}, {"@type": "ListItem", "position": 96, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EB%8A%A5%ED%8F%89%EB%8F%99-%EC%98%A4%ED%8F%AC%ED%98%84%EB%8C%80-a46474905.html", "name": "오포현대", "description": "능평동 · 300세대"}, {"@type": "ListItem", "position": 97, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-%EC%98%A4%ED%8F%AC%ED%98%84%EB%8C%80%EB%AA%A8%EB%8B%9D%EC%82%AC%EC%9D%B4%EB%93%9C1%EC%B0%A8-a46475107.html", "name": "오포현대모닝사이드1차", "description": "신현동 · 618세대"}, {"@type": "ListItem", "position": 98, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-%EC%98%A4%ED%8F%AC%ED%98%84%EB%8C%80%EB%AA%A8%EB%8B%9D%EC%82%AC%EC%9D%B4%EB%93%9C2%EC%B0%A8-a46475208.html", "name": "오포현대모닝사이드2차", "description": "신현동 · 348세대"}, {"@type": "ListItem", "position": 99, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EA%B3%A4%EC%A7%80%EC%95%94%EC%9D%8D-%EA%B3%A4%EC%A7%80%EC%95%94%EC%8C%8D%EC%9A%A92%EC%B0%A8-a46475602.html", "name": "곤지암쌍용2차", "description": "곤지암읍 · 409세대"}, {"@type": "ListItem", "position": 100, "url": "https://hwik.kr/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EA%B3%A4%EC%A7%80%EC%95%94%EC%9D%8D-%EA%B3%A4%EC%A7%80%EC%95%94%EC%8C%8D%EC%9A%A91%EC%B0%A8-a46475603.html", "name": "곤지암쌍용1차", "description": "곤지암읍 · 440세대"}]}}, {"@type": "AdministrativeArea", "name": "경기 광주시", "containedInPlace": {"@type": "AdministrativeArea", "name": "경기", "containedInPlace": {"@type": "Country", "name": "대한민국"}}, "geo": {"@type": "GeoCoordinates", "latitude": 37.385629, "longitude": 127.245804}, "@context": "https://schema.org"}, {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "광주시 아파트 평균 매매가는?", "acceptedAnswer": {"@type": "Answer", "text": "광주시 124개 단지 평균 매매가는 3억 8천입니다. 국토교통부 실거래가 공개시스템 기준."}}, {"@type": "Question", "name": "광주시 아파트 전세가율은?", "acceptedAnswer": {"@type": "Answer", "text": "광주시 평균 전세가율은 74.2%입니다."}}, {"@type": "Question", "name": "광주시에서 가장 비싼 아파트는?", "acceptedAnswer": {"@type": "Answer", "text": "매매가 1위는 경남아너스빌1단지로 11억 5천에 거래되었습니다."}}, {"@type": "Question", "name": "광주시에서 아파트 단지가 많은 동은?", "acceptedAnswer": {"@type": "Answer", "text": "광주시에서는 초월읍·태전동·신현동 일대에 아파트 단지가 가장 많이 분포합니다."}}, {"@type": "Question", "name": "광주시 아파트 단지 수는?", "acceptedAnswer": {"@type": "Answer", "text": "광주시에는 총 124개 아파트 단지, 60,861세대가 있습니다."}}, {"@type": "Question", "name": "광주시 아파트 실거래가 데이터 출처는?", "acceptedAnswer": {"@type": "Answer", "text": "국토교통부 실거래가 공개시스템(rt.molit.go.kr) 데이터를 매일 자동 수집합니다."}}]}, {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "휙", "item": "https://hwik.kr"}, {"@type": "ListItem", "position": 2, "name": "경기 구별 시세", "item": "https://hwik.kr/gu/"}, {"@type": "ListItem", "position": 3, "name": "광주시"}]}]}</script>
 </head>
 <body>
 <div class="wrap">
 <header class="header"><div class="header-top">
   <a class="logo" href="/" style="text-decoration:none;">휙</a>
   <div><h1 class="header-name">광주시 아파트 시세</h1>
-  <div class="header-sub">124개 단지 · 60,861세대</div></div>
+  <div class="header-sub">124개 단지 · 60,861세대 · 마지막 업데이트 2026-04-27</div></div>
 </div></header>
 <nav class="breadcrumb"><a href="/">휙</a><span>&gt;</span>
 <a href="/gu/">경기</a><span>&gt;</span>광주시</nav>
+<p class="seo-text" style="font-size:13px;line-height:1.85;margin:14px 16px 4px;color:var(--sub);">경기 광주시의 아파트 <b>124개 단지</b>(초월읍·태전동·신현동 등 주요 입지) 시세를 한 번에 확인하세요., 평균 매매가 <b>3억 8천</b>, 평균 전세가율 <b>74.2%</b>, 수집 거래 <b>124건</b>. 매매·전세·월세 면적별 가격, 동별 단지 비교, ㎡당 가격 순위까지 — 국토교통부 실거래가 공개시스템 기반.</p>
 <div class="metrics">
   <div class="metric"><div class="metric-label">단지 수</div><div class="metric-value">124개</div></div>
   <div class="metric"><div class="metric-label">평균 매매가</div><div class="metric-value">3억 8천</div></div>
   <div class="metric"><div class="metric-label">평균 전세가율</div><div class="metric-value">74.2%</div></div>
 </div>
 <div class="divider"></div>
-<div class="section"><h2 class="section-title">매매가 높은 단지</h2>
-<div style="display:flex;flex-direction:column;gap:8px;">
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%84%EB%B2%8C%EB%8F%99-%EA%B2%BD%EB%82%A8%EC%95%84%EB%84%88%EC%8A%A4%EB%B9%8C1%EB%8B%A8%EC%A7%80-a46472102.html">
-  <div><div class="danji-name">1. 경남아너스빌1단지</div><div class="danji-sub">광주시 탄벌동 · 전용 162㎡</div></div>
-  <div><div class="danji-price">11억 5천</div><div class="danji-rate">최고가 기준</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81%ED%83%9C%EC%9E%AC1%EB%8B%A8%EC%A7%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10026153.html">
-  <div><div class="danji-name">2. e편한세상태재1단지아파트</div><div class="danji-sub">광주시 신현동 · 전용 105㎡</div></div>
-  <div><div class="danji-price">8억 8천</div><div class="danji-rate">최고가 기준</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-%EC%98%A4%ED%8F%ACe%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%811%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a46474718.html">
-  <div><div class="danji-name">3. 오포e편한세상1차아파트</div><div class="danji-sub">광주시 신현동 · 전용 161㎡</div></div>
-  <div><div class="danji-price">8억 7천</div><div class="danji-rate">최고가 기준</div></div>
-</a>
-</div></div><div class="divider"></div>
-<div class="section"><h2 class="section-title">전세가율 높은 단지</h2>
-<div style="display:flex;flex-direction:column;gap:8px;">
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EA%B3%A4%EC%A7%80%EC%95%94%EC%9D%8D-%EC%82%BC%EC%A3%BC%EB%85%B8%EB%B8%94%EB%A6%AC%EC%A0%9C-a46487204.html">
-  <div><div class="danji-name">1. 삼주노블리제</div><div class="danji-sub">광주시 곤지암읍 · 전용 60㎡</div></div>
-  <div><div class="danji-price">113.0%</div><div class="danji-rate">전세가율</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%B4%88%EC%9B%94%EC%9D%8D-%EC%B4%88%EC%9B%94%EC%82%B0%EC%9D%B4%EB%A6%AC%EB%8C%80%EC%A3%BC%ED%8C%8C%ED%81%AC%EB%B9%8C-a46472911.html">
-  <div><div class="danji-name">2. 초월산이리대주파크빌</div><div class="danji-sub">광주시 초월읍 · 전용 60㎡</div></div>
-  <div><div class="danji-price">98.0%</div><div class="danji-rate">전세가율</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%9A%8C%EB%8D%95%EB%8F%99-%ED%9A%8C%EB%8D%95%EB%8C%80%EC%A3%BC%ED%8C%8C%ED%81%AC%EB%B9%8C-a46412002.html">
-  <div><div class="danji-name">3. 회덕대주파크빌</div><div class="danji-sub">광주시 회덕동 · 전용 60㎡</div></div>
-  <div><div class="danji-price">97.6%</div><div class="danji-rate">전세가율</div></div>
-</a>
-</div></div>
+<p class="seo-text" style="font-size:13px;line-height:1.85;margin:4px 16px 16px;color:var(--sub);">광주시에서 가장 비싼 아파트는 탄벌동의 <a href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%84%EB%B2%8C%EB%8F%99-%EA%B2%BD%EB%82%A8%EC%95%84%EB%84%88%EC%8A%A4%EB%B9%8C1%EB%8B%A8%EC%A7%80-a46472102.html" title="경남아너스빌1단지 실거래가 시세" style="color:var(--yellow);text-decoration:none;font-weight:700;">경남아너스빌1단지</a>로 <b>11억 5천</b>에 거래됐습니다. 뒤이어 <a href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81%ED%83%9C%EC%9E%AC1%EB%8B%A8%EC%A7%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10026153.html" style="color:var(--yellow);text-decoration:none;font-weight:600;">e편한세상태재1단지아파트</a>·<a href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-%EC%98%A4%ED%8F%ACe%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%811%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a46474718.html" style="color:var(--yellow);text-decoration:none;font-weight:600;">오포e편한세상1차아파트</a>가 자리잡고 있습니다.</p>
+<div class="section"><h2 class="section-title">광주시에서 가장 비싼 아파트는?</h2>
+<a class="danji-hero" title="경남아너스빌1단지 실거래가 · 광주시 매매가 1위" style="text-decoration:none;display:block;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%84%EB%B2%8C%EB%8F%99-%EA%B2%BD%EB%82%A8%EC%95%84%EB%84%88%EC%8A%A4%EB%B9%8C1%EB%8B%A8%EC%A7%80-a46472102.html"><span class="rank-badge">매매가 1위</span><div class="hero-name">경남아너스빌1단지</div><div class="hero-meta">광주시 탄벌동 · 전용 162㎡ · 2011년 입주 · 435세대</div><div class="hero-price">11억 5천<span class="hero-price-label">최고가 기준</span></div></a>
+<div style="margin-top:6px;">
+<a class="danji-compact" title="e편한세상태재1단지아파트 실거래가 · 광주시 매매가 2위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81%ED%83%9C%EC%9E%AC1%EB%8B%A8%EC%A7%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10026153.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">2</span><div style="min-width:0;"><div class="danji-compact-name">e편한세상태재1단지아파트</div><div class="danji-compact-meta">광주시 신현동 · 전용 105㎡ · 2018년</div></div></div><div class="danji-compact-price">8억 8천</div></a>
+<a class="danji-compact" title="오포e편한세상1차아파트 실거래가 · 광주시 매매가 3위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-%EC%98%A4%ED%8F%ACe%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%811%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a46474718.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">3</span><div style="min-width:0;"><div class="danji-compact-name">오포e편한세상1차아파트</div><div class="danji-compact-meta">광주시 신현동 · 전용 161㎡ · 2010년</div></div></div><div class="danji-compact-price">8억 7천</div></a>
+</div>
+</div><div class="divider"></div>
+<div class="section"><h2 class="section-title">전세가율이 높은 단지 (실거주 추천)</h2>
+<a class="danji-hero" title="삼주노블리제 실거래가 · 광주시 전세가율 1위" style="text-decoration:none;display:block;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EA%B3%A4%EC%A7%80%EC%95%94%EC%9D%8D-%EC%82%BC%EC%A3%BC%EB%85%B8%EB%B8%94%EB%A6%AC%EC%A0%9C-a46487204.html"><span class="rank-badge">전세가율 1위</span><div class="hero-name">삼주노블리제</div><div class="hero-meta">광주시 곤지암읍 · 전용 60㎡ · 2005년 입주 · 448세대</div><div class="hero-price">113.0%<span class="hero-price-label">매매 대비 전세 비율</span></div></a>
+<div style="margin-top:6px;">
+<a class="danji-compact" title="초월산이리대주파크빌 실거래가 · 광주시 전세가율 2위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%B4%88%EC%9B%94%EC%9D%8D-%EC%B4%88%EC%9B%94%EC%82%B0%EC%9D%B4%EB%A6%AC%EB%8C%80%EC%A3%BC%ED%8C%8C%ED%81%AC%EB%B9%8C-a46472911.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">2</span><div style="min-width:0;"><div class="danji-compact-name">초월산이리대주파크빌</div><div class="danji-compact-meta">광주시 초월읍 · 전용 60㎡ · 2004년</div></div></div><div class="danji-compact-price">98.0%</div></a>
+<a class="danji-compact" title="회덕대주파크빌 실거래가 · 광주시 전세가율 3위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%9A%8C%EB%8D%95%EB%8F%99-%ED%9A%8C%EB%8D%95%EB%8C%80%EC%A3%BC%ED%8C%8C%ED%81%AC%EB%B9%8C-a46412002.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">3</span><div style="min-width:0;"><div class="danji-compact-name">회덕대주파크빌</div><div class="danji-compact-meta">광주시 회덕동 · 전용 60㎡ · 2004년</div></div></div><div class="danji-compact-price">97.6%</div></a>
+</div>
+</div>
 <div class="divider"></div>
-<div class="section"><h2 class="section-title">동별 단지</h2>
+<div class="section"><h2 class="section-title">광주시 어느 동에 단지가 모여있나?</h2>
 <div class="dong-grid">
 <a class="dong-item" style="text-decoration:none;color:inherit;" href="/dong/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%B4%88%EC%9B%94%EC%9D%8D.html">
   <div class="dong-name">초월읍</div>
@@ -176,167 +430,123 @@
 </div>
 </div></div>
 <div class="divider"></div>
-<div class="section"><h2 class="section-title">㎡당 가격 TOP 10 <span style="font-size:10px;color:var(--muted);font-weight:400;">(전용면적 기준)</span></h2>
-<div style="display:flex;flex-direction:column;gap:8px;">
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%97%AD%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-%EA%B4%91%EC%A3%BC%EC%97%AD-3%EB%8B%A8%EC%A7%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10027310.html">
-  <div><div class="danji-name">1. e편한세상 광주역 3단지아파트</div><div class="danji-sub">광주시 역동 · 전용60㎡</div></div>
-  <div><div class="danji-price">6억</div><div class="danji-rate">1,000만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%97%AD%EB%8F%99-%EA%B4%91%EC%A3%BC%EC%97%ADe%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81%EC%84%BC%ED%8A%B8%EB%9F%B4%EC%95%84%ED%8C%8C%ED%8A%B8-a10023363.html">
-  <div><div class="danji-name">2. 광주역e편한세상센트럴아파트</div><div class="danji-sub">광주시 역동 · 전용60㎡</div></div>
-  <div><div class="danji-price">5억 9천</div><div class="danji-rate">997만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-%EC%9D%B4%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81%EC%98%A4%ED%8F%AC3%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10027251.html">
-  <div><div class="danji-name">3. 이편한세상오포3차아파트</div><div class="danji-sub">광주시 신현동 · 전용60㎡</div></div>
-  <div><div class="danji-price">5억 9천</div><div class="danji-rate">997만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%97%AD%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-%EA%B4%91%EC%A3%BC%EC%97%AD-6%EB%8B%A8%EC%A7%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10027326.html">
-  <div><div class="danji-name">4. e편한세상 광주역 6단지아파트</div><div class="danji-sub">광주시 역동 · 전용60㎡</div></div>
-  <div><div class="danji-price">5억 8천</div><div class="danji-rate">975만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%82%BC%EB%8F%99-%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-%EC%82%BC%EB%8F%99%EC%97%AD-a10023166.html">
-  <div><div class="danji-name">5. 힐스테이트 삼동역</div><div class="danji-sub">광주시 삼동 · 전용64㎡</div></div>
-  <div><div class="danji-price">6억 2천</div><div class="danji-rate">969만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%97%AD%EB%8F%99-%EA%B4%91%EC%A3%BC%EC%97%AD-%EC%9E%90%EC%97%B0%EC%95%A4%EC%9E%90%EC%9D%B4-%EC%95%84%ED%8C%8C%ED%8A%B8-a10024040.html">
-  <div><div class="danji-name">6. 광주역 자연앤자이 아파트</div><div class="danji-sub">광주시 역동 · 전용75㎡</div></div>
-  <div><div class="danji-price">7억 2천</div><div class="danji-rate">960만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EA%B3%A0%EC%82%B0%EB%8F%99-%EB%8D%94%EC%83%B5%EC%98%A4%ED%8F%AC%EC%84%BC%ED%8A%B8%EB%A6%AC%EC%B2%B4-a10022856.html">
-  <div><div class="danji-name">7. 더샵오포센트리체</div><div class="danji-sub">광주시 고산동 · 전용60㎡</div></div>
-  <div><div class="danji-price">5억 4천</div><div class="danji-rate">905만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-%EC%8B%A0%ED%98%84%EB%9D%BC%EC%98%A8%ED%94%84%EB%9D%BC%EC%9D%B4%EB%B9%97%EC%95%84%ED%8C%8C%ED%8A%B8-a10027321.html">
-  <div><div class="danji-name">8. 신현라온프라이빗아파트</div><div class="danji-sub">광주시 신현동 · 전용60㎡</div></div>
-  <div><div class="danji-price">5억 3천</div><div class="danji-rate">892만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%97%AD%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-%EA%B4%91%EC%A3%BC%EC%97%AD-5%EB%8B%A8%EC%A7%80-%EC%95%84%ED%8C%8C%ED%8A%B8-a10027323.html">
-  <div><div class="danji-name">9. e편한세상 광주역 5단지 아파트</div><div class="danji-sub">광주시 역동 · 전용73㎡</div></div>
-  <div><div class="danji-price">6억 4천</div><div class="danji-rate">877만/㎡</div></div>
-</a>
-<a class="danji-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EA%B3%A0%EC%82%B0%EB%8F%99-%EB%8D%94%EC%83%B5%EC%98%A4%ED%8F%AC%EC%84%BC%ED%8A%B8%EB%9F%B4%ED%8F%AC%EB%A0%88-%EC%95%84%ED%8C%8C%ED%8A%B8-a10023699.html">
-  <div><div class="danji-name">10. 더샵오포센트럴포레 아파트</div><div class="danji-sub">광주시 고산동 · 전용60㎡</div></div>
-  <div><div class="danji-price">5억 1천</div><div class="danji-rate">858만/㎡</div></div>
-</a>
-</div></div>
+<div class="section"><h2 class="section-title">㎡당 가격이 가장 비싼 단지는? <span style="font-size:10px;color:var(--muted);font-weight:400;">(전용면적 기준)</span></h2>
+<a class="danji-hero" title="e편한세상 광주역 3단지아파트 ㎡당 시세 · 광주시 1위" style="text-decoration:none;display:block;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%97%AD%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-%EA%B4%91%EC%A3%BC%EC%97%AD-3%EB%8B%A8%EC%A7%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10027310.html"><span class="rank-badge">㎡당 1위</span><div class="hero-name">e편한세상 광주역 3단지아파트</div><div class="hero-meta">광주시 역동 · 전용 60㎡ · 거래가 6억</div><div class="hero-price">1,000만<span class="hero-price-label">/㎡ 전용면적 기준</span></div></a>
+<div style="margin-top:6px;">
+<a class="danji-compact" title="광주역e편한세상센트럴아파트 ㎡당 시세 · 광주시 2위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%97%AD%EB%8F%99-%EA%B4%91%EC%A3%BC%EC%97%ADe%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81%EC%84%BC%ED%8A%B8%EB%9F%B4%EC%95%84%ED%8C%8C%ED%8A%B8-a10023363.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">2</span><div style="min-width:0;"><div class="danji-compact-name">광주역e편한세상센트럴아파트</div><div class="danji-compact-meta">광주시 역동 · 전용 60㎡</div></div></div><div class="danji-compact-price">997만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="이편한세상오포3차아파트 ㎡당 시세 · 광주시 3위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-%EC%9D%B4%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81%EC%98%A4%ED%8F%AC3%EC%B0%A8%EC%95%84%ED%8C%8C%ED%8A%B8-a10027251.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">3</span><div style="min-width:0;"><div class="danji-compact-name">이편한세상오포3차아파트</div><div class="danji-compact-meta">광주시 신현동 · 전용 60㎡</div></div></div><div class="danji-compact-price">997만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="e편한세상 광주역 6단지아파트 ㎡당 시세 · 광주시 4위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%97%AD%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-%EA%B4%91%EC%A3%BC%EC%97%AD-6%EB%8B%A8%EC%A7%80%EC%95%84%ED%8C%8C%ED%8A%B8-a10027326.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">4</span><div style="min-width:0;"><div class="danji-compact-name">e편한세상 광주역 6단지아파트</div><div class="danji-compact-meta">광주시 역동 · 전용 60㎡</div></div></div><div class="danji-compact-price">975만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="힐스테이트 삼동역 ㎡당 시세 · 광주시 5위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%82%BC%EB%8F%99-%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-%EC%82%BC%EB%8F%99%EC%97%AD-a10023166.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">5</span><div style="min-width:0;"><div class="danji-compact-name">힐스테이트 삼동역</div><div class="danji-compact-meta">광주시 삼동 · 전용 64㎡</div></div></div><div class="danji-compact-price">969만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="광주역 자연앤자이 아파트 ㎡당 시세 · 광주시 6위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%97%AD%EB%8F%99-%EA%B4%91%EC%A3%BC%EC%97%AD-%EC%9E%90%EC%97%B0%EC%95%A4%EC%9E%90%EC%9D%B4-%EC%95%84%ED%8C%8C%ED%8A%B8-a10024040.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">6</span><div style="min-width:0;"><div class="danji-compact-name">광주역 자연앤자이 아파트</div><div class="danji-compact-meta">광주시 역동 · 전용 75㎡</div></div></div><div class="danji-compact-price">960만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="더샵오포센트리체 ㎡당 시세 · 광주시 7위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EA%B3%A0%EC%82%B0%EB%8F%99-%EB%8D%94%EC%83%B5%EC%98%A4%ED%8F%AC%EC%84%BC%ED%8A%B8%EB%A6%AC%EC%B2%B4-a10022856.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">7</span><div style="min-width:0;"><div class="danji-compact-name">더샵오포센트리체</div><div class="danji-compact-meta">광주시 고산동 · 전용 60㎡</div></div></div><div class="danji-compact-price">905만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="신현라온프라이빗아파트 ㎡당 시세 · 광주시 8위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%8B%A0%ED%98%84%EB%8F%99-%EC%8B%A0%ED%98%84%EB%9D%BC%EC%98%A8%ED%94%84%EB%9D%BC%EC%9D%B4%EB%B9%97%EC%95%84%ED%8C%8C%ED%8A%B8-a10027321.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">8</span><div style="min-width:0;"><div class="danji-compact-name">신현라온프라이빗아파트</div><div class="danji-compact-meta">광주시 신현동 · 전용 60㎡</div></div></div><div class="danji-compact-price">892만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="e편한세상 광주역 5단지 아파트 ㎡당 시세 · 광주시 9위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%97%AD%EB%8F%99-e%ED%8E%B8%ED%95%9C%EC%84%B8%EC%83%81-%EA%B4%91%EC%A3%BC%EC%97%AD-5%EB%8B%A8%EC%A7%80-%EC%95%84%ED%8C%8C%ED%8A%B8-a10027323.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">9</span><div style="min-width:0;"><div class="danji-compact-name">e편한세상 광주역 5단지 아파트</div><div class="danji-compact-meta">광주시 역동 · 전용 73㎡</div></div></div><div class="danji-compact-price">877만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+<a class="danji-compact" title="더샵오포센트럴포레 아파트 ㎡당 시세 · 광주시 10위" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EA%B3%A0%EC%82%B0%EB%8F%99-%EB%8D%94%EC%83%B5%EC%98%A4%ED%8F%AC%EC%84%BC%ED%8A%B8%EB%9F%B4%ED%8F%AC%EB%A0%88-%EC%95%84%ED%8C%8C%ED%8A%B8-a10023699.html"><div style="display:flex;align-items:center;flex:1;min-width:0;"><span class="danji-compact-rank">10</span><div style="min-width:0;"><div class="danji-compact-name">더샵오포센트럴포레 아파트</div><div class="danji-compact-meta">광주시 고산동 · 전용 60㎡</div></div></div><div class="danji-compact-price">858만<span style="font-size:10px;color:var(--muted);font-weight:500;"> /㎡</span></div></a>
+</div>
+</div>
 <div class="divider"></div>
-<div class="section"><h2 class="section-title">최근 거래</h2>
+<div class="section"><h2 class="section-title">최근 거래된 단지</h2>
 <div style="display:flex;flex-direction:column;gap:8px;">
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%84%EB%B2%8C%EB%8F%99-%EA%B4%91%EC%A3%BC%EB%8F%99%EB%B3%B4%ED%97%88%EB%B8%8C%EB%B9%8C-a46470105.html">
+<a class="trade-item" title="광주동보허브빌 · 광주시 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%84%EB%B2%8C%EB%8F%99-%EA%B4%91%EC%A3%BC%EB%8F%99%EB%B3%B4%ED%97%88%EB%B8%8C%EB%B9%8C-a46470105.html">
   <div><div class="trade-price">2억 7천</div>
   <div class="trade-detail">광주동보허브빌 · 60㎡ · 12층</div></div>
-  <div class="trade-date">2026-04-13</div>
+  <div class="trade-date"><time datetime="2026-04-13">2026-04-13</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-%ED%83%9C%EC%A0%842%EC%B0%A8-%EC%97%90%EB%93%80%ED%8F%AC%EB%A0%88-11%EB%B8%94%EB%9F%AD-%EC%95%84%ED%8C%8C%ED%8A%B8-a10025309.html">
+<a class="trade-item" title="힐스테이트 태전2차 에듀포레 11블럭 아파트 · 광주시 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%9C%EC%A0%84%EB%8F%99-%ED%9E%90%EC%8A%A4%ED%85%8C%EC%9D%B4%ED%8A%B8-%ED%83%9C%EC%A0%842%EC%B0%A8-%EC%97%90%EB%93%80%ED%8F%AC%EB%A0%88-11%EB%B8%94%EB%9F%AD-%EC%95%84%ED%8C%8C%ED%8A%B8-a10025309.html">
   <div><div class="trade-price">4억 8천</div>
   <div class="trade-detail">힐스테이트 태전2차 에듀포레 11블럭 아파트 · 63㎡ · 14층</div></div>
-  <div class="trade-date">2026-04-11</div>
+  <div class="trade-date"><time datetime="2026-04-11">2026-04-11</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%84%EB%B2%8C%EB%8F%99-%ED%83%84%EB%B2%8C%ED%8C%8C%EB%9D%BC%EB%8B%A4%EC%9D%B4%EC%8A%A41%EB%8B%A8%EC%A7%80-a46470102.html">
+<a class="trade-item" title="탄벌파라다이스1단지 · 광주시 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%84%EB%B2%8C%EB%8F%99-%ED%83%84%EB%B2%8C%ED%8C%8C%EB%9D%BC%EB%8B%A4%EC%9D%B4%EC%8A%A41%EB%8B%A8%EC%A7%80-a46470102.html">
   <div><div class="trade-price">3억 4천</div>
   <div class="trade-detail">탄벌파라다이스1단지 · 85㎡ · 15층</div></div>
-  <div class="trade-date">2026-04-10</div>
+  <div class="trade-date"><time datetime="2026-04-10">2026-04-10</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%84%EB%B2%8C%EB%8F%99-%EB%B2%BD%EC%82%B0%EB%B8%94%EB%A3%A8%EB%B0%8D1-2%EB%8B%A8%EC%A7%80-a46470702.html">
+<a class="trade-item" title="벽산블루밍1, 2단지 · 광주시 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%ED%83%84%EB%B2%8C%EB%8F%99-%EB%B2%BD%EC%82%B0%EB%B8%94%EB%A3%A8%EB%B0%8D1-2%EB%8B%A8%EC%A7%80-a46470702.html">
   <div><div class="trade-price">3억 5천</div>
   <div class="trade-detail">벽산블루밍1, 2단지 · 85㎡ · 15층</div></div>
-  <div class="trade-date">2026-04-10</div>
+  <div class="trade-date"><time datetime="2026-04-10">2026-04-10</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%86%A1%EC%A0%95%EB%8F%99-%EC%86%A1%EC%A0%95%ED%98%84%EB%8C%80-a46490104.html">
+<a class="trade-item" title="송정현대 · 광주시 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%86%A1%EC%A0%95%EB%8F%99-%EC%86%A1%EC%A0%95%ED%98%84%EB%8C%80-a46490104.html">
   <div><div class="trade-price">3억 8천</div>
   <div class="trade-detail">송정현대 · 85㎡ · 14층</div></div>
-  <div class="trade-date">2026-04-10</div>
+  <div class="trade-date"><time datetime="2026-04-10">2026-04-10</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%86%A1%EC%A0%95%EB%8F%99-%EC%86%A1%EC%A0%95%EB%8F%99%EC%9A%B0%EB%A6%BC%ED%95%84%EC%9C%A0-a46472002.html">
+<a class="trade-item" title="송정동우림필유 · 광주시 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%86%A1%EC%A0%95%EB%8F%99-%EC%86%A1%EC%A0%95%EB%8F%99%EC%9A%B0%EB%A6%BC%ED%95%84%EC%9C%A0-a46472002.html">
   <div><div class="trade-price">3억 4천</div>
   <div class="trade-detail">송정동우림필유 · 85㎡ · 4층</div></div>
-  <div class="trade-date">2026-04-09</div>
+  <div class="trade-date"><time datetime="2026-04-09">2026-04-09</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EB%8F%84%EC%B2%99%EB%A9%B4-%EB%8F%84%EC%B2%99%EA%B7%BC%ED%98%95%EC%8B%AC%ED%8F%AC%EB%8B%88-a46488301.html">
+<a class="trade-item" title="도척근형심포니 · 광주시 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EB%8F%84%EC%B2%99%EB%A9%B4-%EB%8F%84%EC%B2%99%EA%B7%BC%ED%98%95%EC%8B%AC%ED%8F%AC%EB%8B%88-a46488301.html">
   <div><div class="trade-price">1억 8천</div>
   <div class="trade-detail">도척근형심포니 · 85㎡ · 10층</div></div>
-  <div class="trade-date">2026-04-09</div>
+  <div class="trade-date"><time datetime="2026-04-09">2026-04-09</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%B4%88%EC%9B%94%EC%9D%8D-%EC%B4%88%EC%9B%94%EC%82%B0%EC%9D%B4%EB%A6%AC%EB%8C%80%EC%A3%BC%ED%8C%8C%ED%81%AC%EB%B9%8C-a46472911.html">
+<a class="trade-item" title="초월산이리대주파크빌 · 광주시 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%B4%88%EC%9B%94%EC%9D%8D-%EC%B4%88%EC%9B%94%EC%82%B0%EC%9D%B4%EB%A6%AC%EB%8C%80%EC%A3%BC%ED%8C%8C%ED%81%AC%EB%B9%8C-a46472911.html">
   <div><div class="trade-price">2억 5천</div>
   <div class="trade-detail">초월산이리대주파크빌 · 60㎡ · 14층</div></div>
-  <div class="trade-date">2026-04-08</div>
+  <div class="trade-date"><time datetime="2026-04-08">2026-04-08</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%97%AD%EB%8F%99-%EA%B4%91%EC%A3%BC%EC%97%AD-%EC%9E%90%EC%97%B0%EC%95%A4%EC%9E%90%EC%9D%B4-%EC%95%84%ED%8C%8C%ED%8A%B8-a10024040.html">
+<a class="trade-item" title="광주역 자연앤자이 아파트 · 광주시 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EC%97%AD%EB%8F%99-%EA%B4%91%EC%A3%BC%EC%97%AD-%EC%9E%90%EC%97%B0%EC%95%A4%EC%9E%90%EC%9D%B4-%EC%95%84%ED%8C%8C%ED%8A%B8-a10024040.html">
   <div><div class="trade-price">7억 2천</div>
   <div class="trade-detail">광주역 자연앤자이 아파트 · 75㎡ · 6층</div></div>
-  <div class="trade-date">2026-04-07</div>
+  <div class="trade-date"><time datetime="2026-04-07">2026-04-07</time></div>
 </a>
-<a class="trade-item" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EB%AC%B8%ED%98%95%EB%8F%99-%EC%98%A4%ED%8F%AC%EC%9A%B0%EB%A6%BC%ED%93%A8%EC%A0%84%EB%B9%8C-a46474816.html">
+<a class="trade-item" title="오포우림퓨전빌 · 광주시 최근 실거래" style="text-decoration:none;color:inherit;" href="/danji/%EA%B2%BD%EA%B8%B0-%EA%B4%91%EC%A3%BC-%EB%AC%B8%ED%98%95%EB%8F%99-%EC%98%A4%ED%8F%AC%EC%9A%B0%EB%A6%BC%ED%93%A8%EC%A0%84%EB%B9%8C-a46474816.html">
   <div><div class="trade-price">2억 500</div>
   <div class="trade-detail">오포우림퓨전빌 · 84㎡ · 4층</div></div>
-  <div class="trade-date">2026-04-07</div>
+  <div class="trade-date"><time datetime="2026-04-07">2026-04-07</time></div>
 </a>
 </div></div>
 <div class="divider"></div>
-<div class="section"><h2 class="section-title">경기의 다른 구/시</h2>
+<div class="section"><h2 class="section-title">광주시 근처 구/시는?</h2>
 <div class="gu-grid">
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EA%B0%80%ED%8F%89%EA%B5%B0.html">
-  <div class="gu-name">가평군</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EA%B3%A0%EC%96%91%EC%8B%9C-%EB%8D%95%EC%96%91%EA%B5%AC.html">
-  <div class="gu-name">고양시 덕양구</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EA%B3%A0%EC%96%91%EC%8B%9C-%EC%9D%BC%EC%82%B0%EB%8F%99%EA%B5%AC.html">
-  <div class="gu-name">고양시 일산동구</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EA%B3%A0%EC%96%91%EC%8B%9C-%EC%9D%BC%EC%82%B0%EC%84%9C%EA%B5%AC.html">
-  <div class="gu-name">고양시 일산서구</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EA%B3%BC%EC%B2%9C%EC%8B%9C.html">
-  <div class="gu-name">과천시</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EA%B4%91%EB%AA%85%EC%8B%9C.html">
-  <div class="gu-name">광명시</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EA%B5%AC%EB%A6%AC%EC%8B%9C.html">
-  <div class="gu-name">구리시</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EA%B5%B0%ED%8F%AC%EC%8B%9C.html">
-  <div class="gu-name">군포시</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EA%B9%80%ED%8F%AC%EC%8B%9C.html">
-  <div class="gu-name">김포시</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EB%82%A8%EC%96%91%EC%A3%BC%EC%8B%9C.html">
-  <div class="gu-name">남양주시</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EB%8F%99%EB%91%90%EC%B2%9C%EC%8B%9C.html">
-  <div class="gu-name">동두천시</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EC%84%B1%EB%82%A8%EC%8B%9C-%EB%B6%84%EB%8B%B9%EA%B5%AC.html">
-  <div class="gu-name">성남시 분당구</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EC%84%B1%EB%82%A8%EC%8B%9C-%EC%88%98%EC%A0%95%EA%B5%AC.html">
-  <div class="gu-name">성남시 수정구</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EC%84%B1%EB%82%A8%EC%8B%9C-%EC%A4%91%EC%9B%90%EA%B5%AC.html">
+<a class="gu-item" title="성남시 중원구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EC%84%B1%EB%82%A8%EC%8B%9C-%EC%A4%91%EC%9B%90%EA%B5%AC.html">
   <div class="gu-name">성남시 중원구</div><div class="gu-info">시세 보기 →</div>
 </a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EC%88%98%EC%9B%90%EC%8B%9C-%EA%B6%8C%EC%84%A0%EA%B5%AC.html">
-  <div class="gu-name">수원시 권선구</div><div class="gu-info">시세 보기 →</div>
+<a class="gu-item" title="성남시 수정구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EC%84%B1%EB%82%A8%EC%8B%9C-%EC%88%98%EC%A0%95%EA%B5%AC.html">
+  <div class="gu-name">성남시 수정구</div><div class="gu-info">시세 보기 →</div>
 </a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EC%88%98%EC%9B%90%EC%8B%9C-%EC%98%81%ED%86%B5%EA%B5%AC.html">
-  <div class="gu-name">수원시 영통구</div><div class="gu-info">시세 보기 →</div>
+<a class="gu-item" title="성남시 분당구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EC%84%B1%EB%82%A8%EC%8B%9C-%EB%B6%84%EB%8B%B9%EA%B5%AC.html">
+  <div class="gu-name">성남시 분당구</div><div class="gu-info">시세 보기 →</div>
 </a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EC%88%98%EC%9B%90%EC%8B%9C-%EC%9E%A5%EC%95%88%EA%B5%AC.html">
-  <div class="gu-name">수원시 장안구</div><div class="gu-info">시세 보기 →</div>
+<a class="gu-item" title="용인시 처인구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EC%9A%A9%EC%9D%B8%EC%8B%9C-%EC%B2%98%EC%9D%B8%EA%B5%AC.html">
+  <div class="gu-name">용인시 처인구</div><div class="gu-info">시세 보기 →</div>
 </a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EC%88%98%EC%9B%90%EC%8B%9C-%ED%8C%94%EB%8B%AC%EA%B5%AC.html">
-  <div class="gu-name">수원시 팔달구</div><div class="gu-info">시세 보기 →</div>
+<a class="gu-item" title="하남시 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%ED%95%98%EB%82%A8%EC%8B%9C.html">
+  <div class="gu-name">하남시</div><div class="gu-info">시세 보기 →</div>
 </a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EC%8B%9C%ED%9D%A5%EC%8B%9C.html">
-  <div class="gu-name">시흥시</div><div class="gu-info">시세 보기 →</div>
-</a>
-<a class="gu-item" style="text-decoration:none;color:inherit;" href="/gu/%EC%95%88%EC%82%B0%EC%8B%9C-%EB%8B%A8%EC%9B%90%EA%B5%AC.html">
-  <div class="gu-name">안산시 단원구</div><div class="gu-info">시세 보기 →</div>
+<a class="gu-item" title="용인시 기흥구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EC%9A%A9%EC%9D%B8%EC%8B%9C-%EA%B8%B0%ED%9D%A5%EA%B5%AC.html">
+  <div class="gu-name">용인시 기흥구</div><div class="gu-info">시세 보기 →</div>
 </a>
 </div></div>
+<div class="divider"></div>
+<div class="section"><h2 class="section-title">경기에서 단지가 많은 곳 TOP 6</h2>
+<div class="gu-grid">
+<a class="gu-item" title="남양주시 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EB%82%A8%EC%96%91%EC%A3%BC%EC%8B%9C.html">
+  <div class="gu-name">남양주시</div><div class="gu-info">시세 보기 →</div>
+</a>
+<a class="gu-item" title="평택시 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%ED%8F%89%ED%83%9D%EC%8B%9C.html">
+  <div class="gu-name">평택시</div><div class="gu-info">시세 보기 →</div>
+</a>
+<a class="gu-item" title="시흥시 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EC%8B%9C%ED%9D%A5%EC%8B%9C.html">
+  <div class="gu-name">시흥시</div><div class="gu-info">시세 보기 →</div>
+</a>
+<a class="gu-item" title="의정부시 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EC%9D%98%EC%A0%95%EB%B6%80%EC%8B%9C.html">
+  <div class="gu-name">의정부시</div><div class="gu-info">시세 보기 →</div>
+</a>
+<a class="gu-item" title="용인시 기흥구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EC%9A%A9%EC%9D%B8%EC%8B%9C-%EA%B8%B0%ED%9D%A5%EA%B5%AC.html">
+  <div class="gu-name">용인시 기흥구</div><div class="gu-info">시세 보기 →</div>
+</a>
+<a class="gu-item" title="용인시 수지구 아파트 실거래가 시세" style="text-decoration:none;color:inherit;" href="/gu/%EC%9A%A9%EC%9D%B8%EC%8B%9C-%EC%88%98%EC%A7%80%EA%B5%AC.html">
+  <div class="gu-name">용인시 수지구</div><div class="gu-info">시세 보기 →</div>
+</a>
+</div></div>
+<div class="divider"></div>
+<div class="section">
+<h2 class="section-title">광주시 오피스텔도 보세요</h2>
+<a class="gu-item" title="광주시 오피스텔 실거래가 시세" style="text-decoration:none;color:inherit;display:block;" href="/officetel/gu/%EA%B4%91%EC%A3%BC%EC%8B%9C.html"><div class="gu-name">광주시 오피스텔 시세</div><div class="gu-info">매매·전세·월세 실거래가 →</div></a>
+</div>
 <div class="divider"></div>
 <div class="faq-section"><h2 class="section-title">자주 묻는 질문</h2>
 <div class="faq-item"><div class="faq-q">광주시 아파트 평균 시세는?</div>
@@ -352,8 +562,27 @@
 <div class="cta-section">
 <a class="btn-primary" style="display:block;text-align:center;text-decoration:none;" href="/mobile-v6.html">광주시 매물 전체보기</a>
 </div>
-<div class="seo-section"><div class="seo-text">광주시의 아파트 실거래가, 전세가, 시세 추이를 확인하세요. 124개 단지, 60,861세대 규모. 평균 매매가 3억 8천. 평균 전세가율 74.2%. 국토교통부 실거래가 공개시스템 데이터 기반.</div>
-<div class="seo-source">실거래가 출처: 국토교통부 · 최종 데이터 확인: 2026-04-27</div></div>
+<div class="seo-section" style="padding:16px;">
+<div class="seo-text">광주시의 아파트 실거래가, 전세가, 시세 추이를 확인하세요. 124개 단지, 60,861세대 규모. 평균 매매가 3억 8천. 평균 전세가율 74.2%. 국토교통부 실거래가 공개시스템 데이터 기반.</div>
+<details open class="data-notice" style="margin-top:14px;font-size:12px;color:var(--sub);">
+<summary style="cursor:pointer;">데이터 안내</summary>
+<div style="margin-top:6px;line-height:1.8;">
+<b>실거래가</b>: 국토교통부 실거래가 공개시스템 (<a href="https://rt.molit.go.kr/" target="_blank" rel="noopener nofollow">rt.molit.go.kr</a>) · 매일 자동 수집<br>
+<b>건축정보</b>: 국토교통부 건축물대장 (전유부 · 총괄표제부)<br>
+<b>세대 수</b>: 건축물대장 전유부 등기 기준 (분양 공급 수치와 다를 수 있음)<br>
+전용면적 ㎡ 기준 표기, 공급면적은 별도 표시<br>
+거래 취소·정정 건은 반영이 지연될 수 있습니다
+</div></details>
+<div class="seo-source" style="margin-top:8px;font-size:11px;color:var(--muted);">실거래가 출처: 국토교통부 · 최종 데이터 확인: <time datetime="2026-04-27">2026-04-27</time></div>
 </div>
+</div>
+<footer class="hwik-footer">
+<div class="hwik-footer-links">
+<a href="/about.html">휙 소개</a>·
+<a href="/privacy.html">개인정보처리방침</a>·
+<a href="/terms.html">이용약관</a>
+</div>
+<div class="hwik-footer-copy">실거래가 출처: 국토교통부 · 휙(HWIK) · <a href="https://hwik.kr">hwik.kr</a></div>
+</footer>
 </body>
 </html>
